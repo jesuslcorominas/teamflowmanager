@@ -35,6 +35,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":usecase"))
     implementation(project(":domain"))
 
     implementation(libs.androidx.core.ktx)
