@@ -123,17 +123,17 @@ The project follows Clean Architecture principles with the following dependency 
                │
 ┌──────────────▼──────────────────────┐
 │      :viewmodel (Presentation)      │
+│      depends on: usecase, domain    │
+└─────────────────────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│    :usecase (Business Logic)        │
 │         depends on: domain          │
 └─────────────────────────────────────┘
 
 ┌─────────────────────────────────────┐
-│    :usecase (Business Logic)        │
-│      depends on: viewmodel, domain  │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
 │     :data:core (Data Repository)    │
-│      depends on: usecase, domain    │
+│         depends on: domain          │
 └──────────────┬──────────────────────┘
        ┌───────┴────────┐
        │                │
