@@ -9,7 +9,6 @@ java {
 
 dependencies {
     implementation(project(":data:core"))
-    implementation(project(":domain"))
     
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.retrofit)

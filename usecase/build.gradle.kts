@@ -8,6 +8,7 @@ java {
 }
 
 dependencies {
+    implementation(project(":viewmodel"))
     implementation(project(":domain"))
     
     implementation(libs.kotlinx.coroutines.core)

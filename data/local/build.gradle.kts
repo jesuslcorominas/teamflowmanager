@@ -38,7 +38,6 @@ android {
 
 dependencies {
     implementation(project(":data:core"))
-    implementation(project(":domain"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)

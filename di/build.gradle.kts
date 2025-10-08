@@ -37,11 +37,11 @@ android {
 }
 
 dependencies {
+    implementation(project(":viewmodel"))
     implementation(project(":usecase"))
     implementation(project(":data:core"))
     implementation(project(":data:local"))
     implementation(project(":data:remote"))
-    implementation(project(":domain"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)

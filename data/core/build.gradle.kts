@@ -8,6 +8,7 @@ java {
 }
 
 dependencies {
+    implementation(project(":usecase"))
     implementation(project(":domain"))
     
     implementation(libs.kotlinx.coroutines.core)
