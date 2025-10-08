@@ -100,24 +100,25 @@ The project follows Clean Architecture principles with the following dependency 
                │
 ┌──────────────▼──────────────────────┐
 │      :viewmodel (Presentation)      │
-│         depends on: usecase         │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
+│         depends on: domain          │
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
 │    :usecase (Business Logic)        │
-│      depends on: viewmodel          │
+│      depends on: viewmodel, domain  │
 └──────────────┬──────────────────────┘
                │
 ┌──────────────▼──────────────────────┐
 │     :data:core (Data Repository)    │
-│        depends on: usecase          │
+│      depends on: usecase, domain    │
 └──────────────┬──────────────────────┘
        ┌───────┴────────┐
        │                │
 ┌──────▼─────┐   ┌──────▼──────┐
 │ :data:local│   │ :data:remote│
 │depends on: │   │depends on:  │
-│ data:core  │   │  data:core  │
+│data:core,  │   │data:core,   │
+│  domain    │   │   domain    │
 └────────────┘   └─────────────┘
 
 ┌─────────────────────────────────────┐
@@ -129,7 +130,8 @@ The project follows Clean Architecture principles with the following dependency 
 ┌─────────────────────────────────────┐
 │        :domain (Domain Models)      │
 │      Pure domain layer - no deps    │
-│   All modules depend on domain      │
+│   All modules (except :di) depend   │
+│          on :domain                 │
 └─────────────────────────────────────┘
 ```
 
