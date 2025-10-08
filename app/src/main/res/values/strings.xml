@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">TeamFlow Manager</string>
+    <string name="welcome_message">Welcome to TeamFlow Manager!</string>
+</resources>
