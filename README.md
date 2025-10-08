@@ -81,11 +81,35 @@ Dependencies are managed through Gradle Version Catalog (`gradle/libs.versions.t
 ./gradlew test
 ```
 
+### Running ktlint
+
+Check code style:
+
+```bash
+./gradlew ktlintCheck
+```
+
+Auto-format code:
+
+```bash
+./gradlew ktlintFormat
+```
+
 ### Building the APK
 
 ```bash
 ./gradlew assembleDebug
 ```
+
+## Continuous Integration
+
+The project uses GitHub Actions for continuous integration. On every pull request to `main` or `develop` branches, the following checks are automatically run:
+
+- **Build**: Compiles the entire project
+- **Tests**: Runs all unit tests
+- **Lint**: Runs ktlint to check Kotlin code style
+
+The CI workflow is defined in `.github/workflows/pr-checks.yml`.
 
 ## Architecture
 
