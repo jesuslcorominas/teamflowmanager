@@ -10,7 +10,7 @@ This project follows a modular architecture with clean separation of concerns:
 #### :app
 - **Type**: Android Application module
 - **Purpose**: Contains the UI layer of the application
-- **Technologies**: Android SDK, Jetpack Compose/View Binding, Hilt for DI
+- **Technologies**: Android SDK, Jetpack Compose/View Binding, Koin for DI
 - **Dependencies**: `:viewmodel`, `:di`
 
 #### :viewmodel
@@ -51,8 +51,8 @@ This project follows a modular architecture with clean separation of concerns:
 
 #### :di
 - **Type**: Android Library
-- **Purpose**: Dependency injection configuration using Hilt
-- **Technologies**: Hilt/Dagger
+- **Purpose**: Dependency injection configuration using Koin
+- **Technologies**: Koin
 - **Dependencies**: `:usecase`, `:data:core`, `:data:local`, `:data:remote`, `:domain`
 
 ## Build Configuration
