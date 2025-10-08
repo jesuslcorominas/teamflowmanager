@@ -58,9 +58,9 @@ This project follows a modular architecture with clean separation of concerns:
 ## Build Configuration
 
 The project uses:
-- **Gradle Version**: 8.2
-- **Kotlin Version**: 1.9.10
-- **Android Gradle Plugin**: 8.1.2
+- **Gradle Version**: 8.4
+- **Kotlin Version**: 2.0.21
+- **Android Gradle Plugin**: 8.3.2
 - **Min SDK**: 24
 - **Target SDK**: 34
 - **Compile SDK**: 34
