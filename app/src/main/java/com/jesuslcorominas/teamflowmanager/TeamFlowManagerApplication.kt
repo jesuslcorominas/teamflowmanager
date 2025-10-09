@@ -1,7 +1,7 @@
 package com.jesuslcorominas.teamflowmanager
 
 import android.app.Application
-import com.jesuslcorominas.teamflowmanager.di.appModules
+import com.jesuslcorominas.teamflowmanager.di.teamFlowManagerModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -10,7 +10,7 @@ class TeamFlowManagerApplication : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@TeamFlowManagerApplication)
-            modules(appModules)
+            modules(teamFlowManagerModule)
         }
     }
 }

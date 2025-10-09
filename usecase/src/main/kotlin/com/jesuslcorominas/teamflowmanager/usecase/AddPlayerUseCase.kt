@@ -8,7 +8,7 @@ interface AddPlayerUseCase {
 }
 
 internal class AddPlayerUseCaseImpl(
-    private val playerRepository: PlayerRepository
+    private val playerRepository: PlayerRepository,
 ) : AddPlayerUseCase {
     override suspend fun invoke(player: Player) {
         playerRepository.addPlayer(player)

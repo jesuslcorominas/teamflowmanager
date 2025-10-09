@@ -12,9 +12,8 @@ import kotlinx.coroutines.launch
 
 class PlayerViewModel(
     private val getPlayersUseCase: GetPlayersUseCase,
-    private val addPlayerUseCase: AddPlayerUseCase
+    private val addPlayerUseCase: AddPlayerUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<PlayerUiState>(PlayerUiState.Loading)
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
@@ -25,11 +24,12 @@ class PlayerViewModel(
     private fun loadPlayers() {
         viewModelScope.launch {
             getPlayersUseCase.invoke().collect { players ->
-                _uiState.value = if (players.isEmpty()) {
-                    PlayerUiState.Empty
-                } else {
-                    PlayerUiState.Success(players)
-                }
+                _uiState.value =
+                    if (players.isEmpty()) {
+                        PlayerUiState.Empty
+                    } else {
+                        PlayerUiState.Success(players)
+                    }
             }
         }
     }
@@ -43,6 +43,10 @@ class PlayerViewModel(
 
 sealed class PlayerUiState {
     data object Loading : PlayerUiState()
+
     data object Empty : PlayerUiState()
-    data class Success(val players: List<Player>) : PlayerUiState()
+
+    data class Success(
+        val players: List<Player>,
+    ) : PlayerUiState()
 }

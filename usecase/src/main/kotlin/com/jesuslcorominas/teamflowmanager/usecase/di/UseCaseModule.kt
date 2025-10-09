@@ -8,11 +8,13 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-internal val useCaseInternalModule = module {
-    singleOf(::GetPlayersUseCaseImpl) bind GetPlayersUseCase::class
-    singleOf(::AddPlayerUseCaseImpl) bind AddPlayerUseCase::class
-}
+internal val useCaseInternalModule =
+    module {
+        singleOf(::GetPlayersUseCaseImpl) bind GetPlayersUseCase::class
+        singleOf(::AddPlayerUseCaseImpl) bind AddPlayerUseCase::class
+    }
 
-val useCaseModule = module {
-    includes(useCaseInternalModule)
-}
+val useCaseModule =
+    module {
+        includes(useCaseInternalModule)
+    }

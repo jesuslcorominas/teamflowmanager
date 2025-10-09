@@ -9,9 +9,7 @@ interface GetPlayersUseCase {
 }
 
 internal class GetPlayersUseCaseImpl(
-    private val playerRepository: PlayerRepository
+    private val playerRepository: PlayerRepository,
 ) : GetPlayersUseCase {
-    override fun invoke(): Flow<List<Player>> {
-        return playerRepository.getAllPlayers()
-    }
+    override fun invoke(): Flow<List<Player>> = playerRepository.getAllPlayers()
 }

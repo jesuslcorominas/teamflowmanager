@@ -34,7 +34,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 @Composable
 fun AddPlayerDialog(
     onDismiss: () -> Unit,
-    onSave: (Player) -> Unit
+    onSave: (Player) -> Unit,
 ) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -45,21 +45,23 @@ fun AddPlayerDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Column(
-                modifier = Modifier
+            modifier =
+                Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 val focusManager = LocalFocusManager.current
 
                 Text(
                     text = stringResource(R.string.add_player),
-                    style = MaterialTheme.typography.headlineSmall
+                    style = MaterialTheme.typography.headlineSmall,
                 )
 
                 OutlinedTextField(
@@ -71,13 +73,17 @@ fun AddPlayerDialog(
                     label = { Text(stringResource(R.string.first_name)) },
                     modifier = Modifier.fillMaxWidth(),
                     isError = firstNameError,
-                    supportingText = if (firstNameError) {
-                        { Text(stringResource(R.string.first_name_required)) }
-                    } else null,
+                    supportingText =
+                        if (firstNameError) {
+                            { Text(stringResource(R.string.first_name_required)) }
+                        } else {
+                            null
+                        },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(
-                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                    )
+                    keyboardActions =
+                        KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                        ),
                 )
 
                 OutlinedTextField(
@@ -89,13 +95,17 @@ fun AddPlayerDialog(
                     label = { Text(stringResource(R.string.last_name)) },
                     modifier = Modifier.fillMaxWidth(),
                     isError = lastNameError,
-                    supportingText = if (lastNameError) {
-                        { Text(stringResource(R.string.last_name_required)) }
-                    } else null,
+                    supportingText =
+                        if (lastNameError) {
+                            { Text(stringResource(R.string.last_name_required)) }
+                        } else {
+                            null
+                        },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(
-                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                    )
+                    keyboardActions =
+                        KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                        ),
                 )
 
                 OutlinedTextField(
@@ -109,26 +119,31 @@ fun AddPlayerDialog(
                     label = { Text(stringResource(R.string.number)) },
                     modifier = Modifier.fillMaxWidth(),
                     isError = numberError,
-                    supportingText = if (numberError) {
-                        { Text(stringResource(R.string.number_required)) }
-                    } else null,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { focusManager.clearFocus() } // TODO call viewmodel to save player
-                    )
+                    supportingText =
+                        if (numberError) {
+                            { Text(stringResource(R.string.number_required)) }
+                        } else {
+                            null
+                        },
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done,
+                        ),
+                    keyboardActions =
+                        KeyboardActions(
+                            onNext = { focusManager.clearFocus() }, // TODO call viewmodel to save player
+                        ),
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
                     ) {
                         Text(stringResource(R.string.cancel))
                     }
@@ -154,11 +169,11 @@ fun AddPlayerDialog(
                                         firstName = firstName,
                                         lastName = lastName,
                                         number = number.toInt(),
-                                        positions = emptyList()
-                                    )
+                                        positions = emptyList(),
+                                    ),
                                 )
                             }
-                        }
+                        },
                     ) {
                         Text(stringResource(R.string.save))
                     }
@@ -174,7 +189,7 @@ private fun AddPlayerDialogPreview() {
     MaterialTheme {
         AddPlayerDialog(
             onDismiss = {},
-            onSave = {}
+            onSave = {},
         )
     }
 }

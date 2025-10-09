@@ -30,33 +30,33 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun PlayersScreen(
-    viewModel: PlayerViewModel = koinViewModel()
-) {
+fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddPlayerDialog by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = MaterialTheme.colorScheme.background,
         ) {
             when (uiState) {
                 is PlayerUiState.Loading -> LoadingState()
                 is PlayerUiState.Empty -> EmptyState()
-                is PlayerUiState.Success -> PlayerList(
-                    players = (uiState as PlayerUiState.Success).players
-                )
+                is PlayerUiState.Success ->
+                    PlayerList(
+                        players = (uiState as PlayerUiState.Success).players,
+                    )
             }
         }
 
         FloatingActionButton(
             onClick = { showAddPlayerDialog = true },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
         ) {
             Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_player))
         }
@@ -68,7 +68,7 @@ fun PlayersScreen(
             onSave = { player ->
                 viewModel.addPlayer(player)
                 showAddPlayerDialog = false
-            }
+            },
         )
     }
 }
@@ -77,7 +77,7 @@ fun PlayersScreen(
 private fun LoadingState() {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()
     }
@@ -87,11 +87,11 @@ private fun LoadingState() {
 private fun EmptyState() {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = stringResource(R.string.no_players_message),
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
         )
     }
 }
@@ -103,5 +103,3 @@ fun EmptyStatePreview() {
         EmptyState()
     }
 }
-
-

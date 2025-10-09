@@ -27,17 +27,19 @@ import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 @Composable
 fun PlayerList(players: List<Player>) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) {
         Text(
             text = stringResource(R.string.players_title),
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         )
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            contentPadding =
+                androidx.compose.foundation.layout
+                    .PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(players) { player ->
                 PlayerItem(player = player)
@@ -51,14 +53,15 @@ private fun PlayerItem(player: Player) {
     val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "${if (player.number < 10) "0" else ""}${player.number}",
@@ -66,16 +69,16 @@ private fun PlayerItem(player: Player) {
             )
 
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = "${player.firstName} ${player.lastName}",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
                     text = player.positions.joinToString(", ") { it.toLocalizedString(context) },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -87,11 +90,12 @@ private fun PlayerItem(player: Player) {
 private fun PlayerListPreview() {
     MaterialTheme {
         PlayerList(
-            players = listOf(
-                Player(1, "John", "Doe", 3, listOf(Position.Forward)),
-                Player(2, "Jane", "Smith", 2, listOf(Position.Midfielder, Position.Defender)),
-                Player(3, "Bob", "Johnson", 7, listOf(Position.Goalkeeper))
-            )
+            players =
+                listOf(
+                    Player(1, "John", "Doe", 3, listOf(Position.Forward)),
+                    Player(2, "Jane", "Smith", 2, listOf(Position.Midfielder, Position.Defender)),
+                    Player(3, "Bob", "Johnson", 7, listOf(Position.Goalkeeper)),
+                ),
         )
     }
 }
@@ -101,13 +105,14 @@ private fun PlayerListPreview() {
 private fun PlayerItemPreview() {
     MaterialTheme {
         PlayerItem(
-            player = Player(
-                id = 1,
-                firstName = "John",
-                lastName = "Doe",
-                number = 10,
-                positions = listOf(Position.Forward, Position.Midfielder)
-            )
+            player =
+                Player(
+                    id = 1,
+                    firstName = "John",
+                    lastName = "Doe",
+                    number = 10,
+                    positions = listOf(Position.Forward, Position.Midfielder),
+                ),
         )
     }
 }

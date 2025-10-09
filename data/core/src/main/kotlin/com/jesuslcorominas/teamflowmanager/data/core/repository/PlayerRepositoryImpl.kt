@@ -6,11 +6,9 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import kotlinx.coroutines.flow.Flow
 
 internal class PlayerRepositoryImpl(
-    private val localDataSource: PlayerLocalDataSource
+    private val localDataSource: PlayerLocalDataSource,
 ) : PlayerRepository {
-    override fun getAllPlayers(): Flow<List<Player>> {
-        return localDataSource.getAllPlayers()
-    }
+    override fun getAllPlayers(): Flow<List<Player>> = localDataSource.getAllPlayers()
 
     override suspend fun addPlayer(player: Player) {
         localDataSource.insertPlayer(player)

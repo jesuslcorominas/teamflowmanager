@@ -5,5 +5,5 @@ data class Player(
     val firstName: String,
     val lastName: String,
     val number: Int,
-    val positions: List<Position>
+    val positions: List<Position>,
 )
