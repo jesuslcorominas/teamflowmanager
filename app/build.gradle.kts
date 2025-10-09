@@ -63,6 +63,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
+    implementation(libs.compose.google.fonts)
+
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
