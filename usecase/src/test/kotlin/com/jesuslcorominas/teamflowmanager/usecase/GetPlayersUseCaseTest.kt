@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -27,8 +28,8 @@ class GetPlayersUseCaseTest {
     fun `invoke should return players from repository`() = runTest {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", listOf("Forward")),
-            Player(2, "Jane", "Smith", listOf("Midfielder"))
+            Player(1, "John", "Doe", listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
         )
         every { playerRepository.getAllPlayers() } returns flowOf(players)
 

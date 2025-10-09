@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.repository
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -27,8 +28,8 @@ class PlayerRepositoryImplTest {
     fun `getAllPlayers should return players from local data source`() = runTest {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", listOf("Forward")),
-            Player(2, "Jane", "Smith", listOf("Midfielder"))
+            Player(1, "John", "Doe", listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
         )
         every { localDataSource.getAllPlayers() } returns flowOf(players)
 

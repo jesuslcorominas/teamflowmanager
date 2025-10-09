@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import io.mockk.every
 import io.mockk.mockk
@@ -51,8 +52,8 @@ class PlayerViewModelTest {
     fun `uiState should be Success when players are loaded`() = runTest(testDispatcher) {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", listOf("Forward")),
-            Player(2, "Jane", "Smith", listOf("Midfielder"))
+            Player(1, "John", "Doe", listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
         )
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 

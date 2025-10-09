@@ -20,11 +20,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -96,6 +99,7 @@ private fun PlayerList(players: List<Player>) {
 
 @Composable
 private fun PlayerItem(player: Player) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -115,7 +119,7 @@ private fun PlayerItem(player: Player) {
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = player.positions.joinToString(", "),
+                    text = player.positions.joinToString(", ") { it.toLocalizedString(context) },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -133,7 +137,7 @@ fun PlayerItemPreview() {
                 id = 1,
                 firstName = "John",
                 lastName = "Doe",
-                positions = listOf("Forward", "Midfielder")
+                positions = listOf(Position.Forward, Position.Midfielder)
             )
         )
     }
@@ -145,9 +149,9 @@ fun PlayerListPreview() {
     MaterialTheme {
         PlayerList(
             players = listOf(
-                Player(1, "John", "Doe", listOf("Forward")),
-                Player(2, "Jane", "Smith", listOf("Midfielder", "Defender")),
-                Player(3, "Bob", "Johnson", listOf("Goalkeeper"))
+                Player(1, "John", "Doe", listOf(Position.Forward)),
+                Player(2, "Jane", "Smith", listOf(Position.Midfielder, Position.Defender)),
+                Player(3, "Bob", "Johnson", listOf(Position.Goalkeeper))
             )
         )
     }

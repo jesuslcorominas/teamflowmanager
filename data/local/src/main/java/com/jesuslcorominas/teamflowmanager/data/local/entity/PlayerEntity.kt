@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
 
 @Entity(tableName = "players")
 data class PlayerEntity(
@@ -18,6 +19,7 @@ fun PlayerEntity.toDomain(): Player {
         id = id,
         firstName = firstName,
         lastName = lastName,
-        positions = positions.split(",").filter { it.isNotBlank() }
+        positions = positions.split(",")
+            .mapNotNull { Position.fromId(it.trim()) }
     )
 }
