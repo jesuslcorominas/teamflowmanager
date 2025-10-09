@@ -2,19 +2,10 @@ package com.jesuslcorominas.teamflowmanager.data.local.callback
 
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
-import com.jesuslcorominas.teamflowmanager.data.local.entity.PlayerEntity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
-/**
- * Callback to prepopulate the database with sample data
- */
 class DatabaseCallback : RoomDatabase.Callback() {
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
-        // Prepopulate with sample data
         db.execSQL("INSERT INTO players (firstName, lastName, positions) VALUES ('Carlos', 'García', 'Portero')")
         db.execSQL("INSERT INTO players (firstName, lastName, positions) VALUES ('Miguel', 'López', 'Defensa,Lateral derecho')")
         db.execSQL("INSERT INTO players (firstName, lastName, positions) VALUES ('David', 'Martínez', 'Defensa central')")

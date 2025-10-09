@@ -6,9 +6,6 @@ import androidx.room.Query
 import com.jesuslcorominas.teamflowmanager.data.local.entity.PlayerEntity
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Data Access Object for Player operations
- */
 @Dao
 interface PlayerDao {
     @Query("SELECT * FROM players")

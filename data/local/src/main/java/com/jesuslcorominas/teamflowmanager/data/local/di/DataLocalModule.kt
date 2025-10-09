@@ -6,11 +6,10 @@ import com.jesuslcorominas.teamflowmanager.data.local.callback.DatabaseCallback
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalDataSourceImpl
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
-/**
- * Internal database module providing Room database and DAOs
- */
 internal val databaseModule = module {
     single {
         Room.databaseBuilder(
@@ -25,16 +24,10 @@ internal val databaseModule = module {
     single { get<TeamFlowManagerDatabase>().playerDao() }
 }
 
-/**
- * Internal data source module providing local data source implementations
- */
 internal val dataSourceLocalModule = module {
-    single<PlayerLocalDataSource> { PlayerLocalDataSourceImpl(get()) }
+    singleOf(::PlayerLocalDataSourceImpl) bind PlayerLocalDataSource::class
 }
 
-/**
- * Public module that exposes data:local dependencies
- */
 val dataLocalModule = module {
     includes(databaseModule, dataSourceLocalModule)
 }

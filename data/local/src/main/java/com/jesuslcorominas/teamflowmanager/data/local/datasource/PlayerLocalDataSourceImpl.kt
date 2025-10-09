@@ -7,9 +7,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/**
- * Implementation of PlayerLocalDataSource using Room
- */
 internal class PlayerLocalDataSourceImpl(
     private val playerDao: PlayerDao
 ) : PlayerLocalDataSource {

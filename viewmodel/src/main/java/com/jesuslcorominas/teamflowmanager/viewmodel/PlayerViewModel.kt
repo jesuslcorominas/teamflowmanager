@@ -9,9 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel for managing player list UI state
- */
 class PlayerViewModel(
     private val getPlayersUseCase: GetPlayersUseCase
 ) : ViewModel() {
@@ -36,9 +33,6 @@ class PlayerViewModel(
     }
 }
 
-/**
- * UI state for player list screen
- */
 sealed class PlayerUiState {
     data object Loading : PlayerUiState()
     data object Empty : PlayerUiState()
