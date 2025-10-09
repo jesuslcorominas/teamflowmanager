@@ -24,7 +24,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import java.util.Date
 
 @ExperimentalCoroutinesApi
 class PlayerViewModelTest {
@@ -66,8 +65,8 @@ class PlayerViewModelTest {
     fun `uiState should be Success when players are loaded`() = runTest(testDispatcher) {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", null, listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", null, listOf(Position.Midfielder))
+            Player(1, "John", "Doe", listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
         )
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 

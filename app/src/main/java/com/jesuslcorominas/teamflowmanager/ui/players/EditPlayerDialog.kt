@@ -2,7 +2,6 @@ package com.jesuslcorominas.teamflowmanager.ui.players
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,10 +29,6 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun EditPlayerDialog(
@@ -43,9 +38,7 @@ fun EditPlayerDialog(
 ) {
     var firstName by remember { mutableStateOf(player.firstName) }
     var lastName by remember { mutableStateOf(player.lastName) }
-    var dateOfBirth by remember { mutableStateOf(player.dateOfBirth) }
     var selectedPositions by remember { mutableStateOf(player.positions) }
-    var showDatePicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -81,13 +74,6 @@ fun EditPlayerDialog(
                 }
 
                 item {
-                    DateOfBirthField(
-                        dateOfBirth = dateOfBirth,
-                        onDateClick = { showDatePicker = true }
-                    )
-                }
-
-                item {
                     Text(
                         text = stringResource(R.string.positions_label),
                         style = MaterialTheme.typography.titleMedium,
@@ -116,7 +102,6 @@ fun EditPlayerDialog(
                     val updatedPlayer = player.copy(
                         firstName = firstName,
                         lastName = lastName,
-                        dateOfBirth = dateOfBirth,
                         positions = selectedPositions
                     )
                     onSave(updatedPlayer)
@@ -131,38 +116,6 @@ fun EditPlayerDialog(
                 Text(stringResource(R.string.cancel_button))
             }
         }
-    )
-
-    if (showDatePicker) {
-        DatePickerDialog(
-            initialDate = dateOfBirth,
-            onDateSelected = { selectedDate ->
-                dateOfBirth = selectedDate
-                showDatePicker = false
-            },
-            onDismiss = { showDatePicker = false }
-        )
-    }
-}
-
-@Composable
-private fun DateOfBirthField(
-    dateOfBirth: Date?,
-    onDateClick: () -> Unit
-) {
-    val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
-    val displayText = dateOfBirth?.let { dateFormat.format(it) }
-        ?: stringResource(R.string.no_date_selected)
-
-    OutlinedTextField(
-        value = displayText,
-        onValueChange = {},
-        label = { Text(stringResource(R.string.date_of_birth_label)) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onDateClick() },
-        readOnly = true,
-        enabled = false
     )
 }
 
@@ -191,66 +144,6 @@ private fun PositionCheckbox(
     }
 }
 
-@Composable
-private fun DatePickerDialog(
-    initialDate: Date?,
-    onDateSelected: (Date) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val calendar = Calendar.getInstance()
-    initialDate?.let { calendar.time = it }
-
-    // Simple date picker implementation using Calendar
-    var year by remember { mutableStateOf(calendar.get(Calendar.YEAR)) }
-    var month by remember { mutableStateOf(calendar.get(Calendar.MONTH)) }
-    var day by remember { mutableStateOf(calendar.get(Calendar.DAY_OF_MONTH)) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.select_date)) },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = day.toString(),
-                    onValueChange = { day = it.toIntOrNull() ?: day },
-                    label = { Text("Day") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = (month + 1).toString(),
-                    onValueChange = { month = (it.toIntOrNull()?.minus(1)) ?: month },
-                    label = { Text("Month") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = year.toString(),
-                    onValueChange = { year = it.toIntOrNull() ?: year },
-                    label = { Text("Year") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    calendar.set(year, month, day)
-                    onDateSelected(calendar.time)
-                }
-            ) {
-                Text(stringResource(R.string.save_button))
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel_button))
-            }
-        }
-    )
-}
-
 private fun getAllPositions(): List<Position> = listOf(
     Position.Goalkeeper,
     Position.Defender,
@@ -275,7 +168,6 @@ fun EditPlayerDialogPreview() {
                 id = 1,
                 firstName = "John",
                 lastName = "Doe",
-                dateOfBirth = null,
                 positions = listOf(Position.Forward)
             ),
             onDismiss = {},

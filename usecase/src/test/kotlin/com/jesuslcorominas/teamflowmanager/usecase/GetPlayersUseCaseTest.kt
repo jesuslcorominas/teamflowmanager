@@ -28,8 +28,8 @@ class GetPlayersUseCaseTest {
     fun `invoke should return players from repository`() = runTest {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", null, listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", null, listOf(Position.Midfielder))
+            Player(1, "John", "Doe", listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
         )
         every { playerRepository.getAllPlayers() } returns flowOf(players)
 

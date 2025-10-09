@@ -18,21 +18,20 @@
     <string name="position_striker">Striker</string>
 
     <string name="add_player">Add Player</string>
+    <string name="edit_player_title">Edit Player</string>
+    <string name="delete_player_title">Delete Player</string>
     <string name="first_name">First Name</string>
     <string name="last_name">Last Name</string>
     <string name="number">Number</string>
+    <string name="positions_label">Positions</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="first_name_required">First name is required</string>
     <string name="last_name_required">Last name is required</string>
     <string name="number_required">Number is required</string>
 
-    <string name="delete_player_title">Delete Player</string>
     <string name="delete_player_message">Are you sure you want to delete %1$s %2$s from the roster?</string>
     <string name="delete_player_confirm">Delete</string>
-    <string name="delete_player_cancel">Cancel</string>
     <string name="delete_player_button">Delete</string>
 
-    <string name="edit_player_title">Edit Player</string>
-    <string name="positions_label">Positions</string>
 </resources>

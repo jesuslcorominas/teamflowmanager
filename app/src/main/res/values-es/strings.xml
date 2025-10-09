@@ -18,21 +18,18 @@
     <string name="position_striker">Delantero Centro</string>
 
     <string name="add_player">Añadir Jugador</string>
+    <string name="edit_player_title">Editar Jugador</string>
+    <string name="delete_player_title">Eliminar Jugador</string>
     <string name="first_name">Nombre</string>
     <string name="last_name">Apellido</string>
     <string name="number">Dorsal</string>
+    <string name="positions_label">Posiciones</string>
     <string name="save">Guardar</string>
     <string name="cancel">Cancelar</string>
     <string name="first_name_required">El nombre es obligatorio</string>
     <string name="last_name_required">El apellido es obligatorio</string>
     <string name="number_required">El dorsal es obligatorio</string>
 
-    <string name="delete_player_title">Eliminar Jugador</string>
     <string name="delete_player_message">¿Estás seguro de que quieres eliminar a %1$s %2$s de la plantilla?</string>
-    <string name="delete_player_confirm">Eliminar</string>
-    <string name="delete_player_cancel">Cancelar</string>
     <string name="delete_player_button">Eliminar</string>
-
-    <string name="edit_player_title">Editar Jugador</string>
-    <string name="positions_label">Posiciones</string>
 </resources>

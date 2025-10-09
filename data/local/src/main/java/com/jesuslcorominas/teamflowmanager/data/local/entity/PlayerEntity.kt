@@ -21,10 +21,8 @@ fun PlayerEntity.toDomain(): Player =
         firstName = firstName,
         lastName = lastName,
         number = number,
-        positions =
-            positions
-                .split(",")
-                .mapNotNull { Position.fromId(it.trim()) },
+        positions = positions.split(",")
+            .mapNotNull { Position.fromId(it.trim()) },
     )
 
 fun Player.toEntity(): PlayerEntity =
