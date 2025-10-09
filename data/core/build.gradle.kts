@@ -16,6 +16,7 @@ dependencies {
     implementation(project(":usecase"))
     
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.koin.core)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
