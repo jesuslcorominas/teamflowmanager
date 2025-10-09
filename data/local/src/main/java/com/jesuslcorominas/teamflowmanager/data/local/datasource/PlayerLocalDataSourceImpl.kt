@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
 /**
  * Implementation of PlayerLocalDataSource using Room
  */
-class PlayerLocalDataSourceImpl(
+internal class PlayerLocalDataSourceImpl(
     private val playerDao: PlayerDao
 ) : PlayerLocalDataSource {
     override fun getAllPlayers(): Flow<List<Player>> {

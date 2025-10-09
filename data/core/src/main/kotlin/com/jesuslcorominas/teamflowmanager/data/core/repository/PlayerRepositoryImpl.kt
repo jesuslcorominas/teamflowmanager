@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Implementation of PlayerRepository
  */
-class PlayerRepositoryImpl(
+internal class PlayerRepositoryImpl(
     private val localDataSource: PlayerLocalDataSource
 ) : PlayerRepository {
     override fun getAllPlayers(): Flow<List<Player>> {

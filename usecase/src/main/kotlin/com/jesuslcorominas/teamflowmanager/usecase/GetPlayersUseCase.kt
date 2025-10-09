@@ -14,7 +14,7 @@ interface GetPlayersUseCase {
 /**
  * Implementation of GetPlayersUseCase
  */
-class GetPlayersUseCaseImpl(
+internal class GetPlayersUseCaseImpl(
     private val playerRepository: PlayerRepository
 ) : GetPlayersUseCase {
     override fun invoke(): Flow<List<Player>> {

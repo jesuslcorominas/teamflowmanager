@@ -125,13 +125,35 @@ Android Application module with Compose UI.
 Android Library module with Koin dependency injection configuration.
 
 **Files Created:**
-- `di/AppModule.kt` - Complete DI configuration:
-  - `databaseModule` - Room database with callback
-  - `dataSourceModule` - Local datasource
-  - `repositoryModule` - Repository implementation
-  - `useCaseModule` - Use case implementation
-  - `viewModelModule` - ViewModel
-  - `appModules` - List of all modules
+- `di/AppModule.kt` - Main DI configuration that includes all module dependencies:
+  - Imports `dataLocalModule` from `:data:local`
+  - Imports `dataCoreModule` from `:data:core`
+  - Imports `useCaseModule` from `:usecase`
+  - Imports `viewModelModule` from `:viewmodel`
+  - Exposes `appModules` list containing all modules
+
+**Module-specific DI files:**
+- `data:local/di/DataLocalModule.kt`:
+  - Internal `databaseModule` - Room database with callback
+  - Internal `dataSourceLocalModule` - Local datasource implementations
+  - Public `dataLocalModule` - Exposes data:local dependencies
+  
+- `data:core/di/DataCoreModule.kt`:
+  - Internal `repositoryModule` - Repository implementations
+  - Public `dataCoreModule` - Exposes data:core dependencies
+  
+- `usecase/di/UseCaseModule.kt`:
+  - Internal `useCaseInternalModule` - Use case implementations
+  - Public `useCaseModule` - Exposes usecase dependencies
+  
+- `viewmodel/di/ViewModelModule.kt`:
+  - Public `viewModelModule` - ViewModel definitions
+
+**Implementation visibility:**
+- `PlayerLocalDataSourceImpl` - internal to `:data:local`
+- `PlayerRepositoryImpl` - internal to `:data:core`
+- `GetPlayersUseCaseImpl` - internal to `:usecase`
+- Only interfaces and public modules are visible outside each module
 
 **Updated Files:**
 - `TeamFlowManagerApplication.kt` - Loads all Koin modules

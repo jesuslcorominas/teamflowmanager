@@ -62,14 +62,16 @@ The player list feature has been successfully implemented following Clean Archit
 
 ┌─────────────────────────────────────────────────────────────┐
 │         Dependency Injection (:di)                          │
-│  • Koin modules for all layers                              │
-│  • Database configuration                                   │
+│  • Includes module-specific Koin configurations             │
+│  • Each module defines internal implementations             │
+│  • Public modules expose dependencies                       │
+│  • Encapsulation through internal visibility                │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ## Files Created/Modified
 
-### New Files (26 total)
+### New Files (30 total)
 **Domain Layer:**
 - domain/model/Player.kt
 
@@ -99,12 +101,16 @@ The player list feature has been successfully implemented following Clean Archit
 
 **DI Layer:**
 - di/AppModule.kt
+- data/local/di/DataLocalModule.kt
+- data/core/di/DataCoreModule.kt
+- usecase/di/UseCaseModule.kt
+- viewmodel/di/ViewModelModule.kt
 
 **Documentation:**
 - FEATURE_US-1.1.1.md
 - IMPLEMENTATION_SUMMARY.md (this file)
 
-### Modified Files (10 total)
+### Modified Files (14 total)
 - gradle/libs.versions.toml (Added Mockk, coroutines-test, koin-compose)
 - usecase/build.gradle.kts (Added test dependencies)
 - data/core/build.gradle.kts (Added test dependencies and :usecase dependency)
@@ -115,6 +121,10 @@ The player list feature has been successfully implemented following Clean Archit
 - app/TeamFlowManagerApplication.kt (Load Koin modules)
 - app/res/values/strings.xml (Added English strings)
 - app/res/values-es/strings.xml (Added Spanish strings)
+- data/local/datasource/PlayerLocalDataSourceImpl.kt (Made internal)
+- data/core/repository/PlayerRepositoryImpl.kt (Made internal)
+- usecase/GetPlayersUseCase.kt (GetPlayersUseCaseImpl made internal)
+- di/AppModule.kt (Simplified to include module-specific DI)
 
 ## Test Coverage
 
