@@ -2,7 +2,6 @@ package com.jesuslcorominas.teamflowmanager.data.local.di
 
 import androidx.room.Room
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.local.callback.DatabaseCallback
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalDataSourceImpl
 import org.koin.android.ext.koin.androidContext
@@ -17,7 +16,6 @@ internal val databaseModule = module {
             TeamFlowManagerDatabase::class.java,
             "teamflowmanager_database"
         )
-            .addCallback(DatabaseCallback())
             .build()
     }
 

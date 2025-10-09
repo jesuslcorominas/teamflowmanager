@@ -3,7 +3,7 @@
     <string name="welcome_message">Welcome to TeamFlow Manager!</string>
     <string name="players_title">Team Roster</string>
     <string name="no_players_message">No players registered yet</string>
-    
+
     <string name="position_goalkeeper">Goalkeeper</string>
     <string name="position_defender">Defender</string>
     <string name="position_right_back">Right Back</string>
@@ -16,12 +16,14 @@
     <string name="position_forward">Forward</string>
     <string name="position_winger">Winger</string>
     <string name="position_striker">Striker</string>
-    
+
     <string name="add_player">Add Player</string>
     <string name="first_name">First Name</string>
     <string name="last_name">Last Name</string>
+    <string name="number">Number</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="first_name_required">First name is required</string>
     <string name="last_name_required">Last name is required</string>
+    <string name="number_required">Number is required</string>
 </resources>
