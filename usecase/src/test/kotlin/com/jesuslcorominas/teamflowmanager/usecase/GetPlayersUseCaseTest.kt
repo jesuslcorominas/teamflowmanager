@@ -12,7 +12,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import java.time.LocalDate
 
 class GetPlayersUseCaseTest {
 
@@ -29,8 +28,8 @@ class GetPlayersUseCaseTest {
     fun `invoke should return players from repository`() = runTest {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", LocalDate.of(2010, 5, 15), listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", LocalDate.of(2011, 3, 20), listOf(Position.Midfielder))
+            Player(1, "John", "Doe", listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
         )
         every { playerRepository.getAllPlayers() } returns flowOf(players)
 

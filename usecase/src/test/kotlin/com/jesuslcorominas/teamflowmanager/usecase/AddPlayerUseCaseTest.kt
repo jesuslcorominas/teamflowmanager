@@ -8,7 +8,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
-import java.time.LocalDate
 
 class AddPlayerUseCaseTest {
 
@@ -28,7 +27,6 @@ class AddPlayerUseCaseTest {
             id = 0,
             firstName = "John",
             lastName = "Doe",
-            dateOfBirth = LocalDate.of(2010, 5, 15),
             positions = listOf(Position.Forward)
         )
 

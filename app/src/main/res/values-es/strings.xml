@@ -20,10 +20,8 @@
     <string name="add_player">Añadir Jugador</string>
     <string name="first_name">Nombre</string>
     <string name="last_name">Apellido</string>
-    <string name="date_of_birth">Fecha de Nacimiento</string>
     <string name="save">Guardar</string>
     <string name="cancel">Cancelar</string>
     <string name="first_name_required">El nombre es obligatorio</string>
     <string name="last_name_required">El apellido es obligatorio</string>
-    <string name="date_of_birth_required">La fecha de nacimiento es obligatoria</string>
 </resources>

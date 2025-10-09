@@ -19,7 +19,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import java.time.LocalDate
 
 @ExperimentalCoroutinesApi
 class PlayerViewModelTest {
@@ -57,8 +56,8 @@ class PlayerViewModelTest {
     fun `uiState should be Success when players are loaded`() = runTest(testDispatcher) {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", LocalDate.of(2010, 5, 15), listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", LocalDate.of(2011, 3, 20), listOf(Position.Midfielder))
+            Player(1, "John", "Doe", listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
         )
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
@@ -91,7 +90,6 @@ class PlayerViewModelTest {
             id = 0,
             firstName = "John",
             lastName = "Doe",
-            dateOfBirth = LocalDate.of(2010, 5, 15),
             positions = listOf(Position.Forward)
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())

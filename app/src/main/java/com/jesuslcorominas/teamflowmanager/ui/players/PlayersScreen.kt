@@ -42,9 +42,6 @@ import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import org.koin.androidx.compose.koinViewModel
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 @Composable
 fun PlayersScreen(
@@ -173,10 +170,8 @@ private fun AddPlayerDialog(
 ) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
-    var dateOfBirth by remember { mutableStateOf("") }
     var firstNameError by remember { mutableStateOf(false) }
     var lastNameError by remember { mutableStateOf(false) }
-    var dateOfBirthError by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -223,21 +218,6 @@ private fun AddPlayerDialog(
                     } else null
                 )
 
-                OutlinedTextField(
-                    value = dateOfBirth,
-                    onValueChange = {
-                        dateOfBirth = it
-                        dateOfBirthError = false
-                    },
-                    label = { Text(stringResource(R.string.date_of_birth)) },
-                    placeholder = { Text("YYYY-MM-DD") },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = dateOfBirthError,
-                    supportingText = if (dateOfBirthError) {
-                        { Text(stringResource(R.string.date_of_birth_required)) }
-                    } else null
-                )
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
@@ -264,20 +244,11 @@ private fun AddPlayerDialog(
                                 hasError = true
                             }
 
-                            val parsedDate = try {
-                                LocalDate.parse(dateOfBirth, DateTimeFormatter.ISO_LOCAL_DATE)
-                            } catch (e: DateTimeParseException) {
-                                dateOfBirthError = true
-                                hasError = true
-                                null
-                            }
-
-                            if (!hasError && parsedDate != null) {
+                            if (!hasError) {
                                 onSave(
                                     Player(
                                         firstName = firstName,
                                         lastName = lastName,
-                                        dateOfBirth = parsedDate,
                                         positions = emptyList()
                                     )
                                 )
@@ -301,7 +272,6 @@ fun PlayerItemPreview() {
                 id = 1,
                 firstName = "John",
                 lastName = "Doe",
-                dateOfBirth = LocalDate.of(2010, 5, 15),
                 positions = listOf(Position.Forward, Position.Midfielder)
             )
         )
@@ -314,9 +284,9 @@ fun PlayerListPreview() {
     MaterialTheme {
         PlayerList(
             players = listOf(
-                Player(1, "John", "Doe", LocalDate.of(2010, 5, 15), listOf(Position.Forward)),
-                Player(2, "Jane", "Smith", LocalDate.of(2011, 3, 20), listOf(Position.Midfielder, Position.Defender)),
-                Player(3, "Bob", "Johnson", LocalDate.of(2009, 8, 10), listOf(Position.Goalkeeper))
+                Player(1, "John", "Doe", listOf(Position.Forward)),
+                Player(2, "Jane", "Smith", listOf(Position.Midfielder, Position.Defender)),
+                Player(3, "Bob", "Johnson", listOf(Position.Goalkeeper))
             )
         )
     }
