@@ -2,11 +2,16 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -26,6 +31,7 @@ class PlayerViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var addPlayerUseCase: AddPlayerUseCase
+    private lateinit var deletePlayerUseCase: DeletePlayerUseCase
     private lateinit var viewModel: PlayerViewModel
 
     @Before
@@ -33,6 +39,7 @@ class PlayerViewModelTest {
         Dispatchers.setMain(testDispatcher)
         getPlayersUseCase = mockk()
         addPlayerUseCase = mockk(relaxed = true)
+        deletePlayerUseCase = mockk()
     }
 
     @After
@@ -46,7 +53,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase)
 
         // Then
         assertEquals(PlayerUiState.Loading, viewModel.uiState.value)
@@ -62,7 +69,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase)
         advanceUntilIdle()
 
         // Then
@@ -76,7 +83,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase)
         advanceUntilIdle()
 
         // Then
@@ -93,7 +100,7 @@ class PlayerViewModelTest {
             positions = listOf(Position.Forward)
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase)
 
         // When
         viewModel.addPlayer(player)
@@ -101,5 +108,51 @@ class PlayerViewModelTest {
 
         // Then
         coVerify { addPlayerUseCase.invoke(player) }
+    }
+
+    @Test
+    fun `showDeleteConfirmation should update deleteConfirmationState`() = runTest(testDispatcher) {
+        // Given
+        val player = Player(1, "John", "Doe", listOf(Position.Forward))
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase)
+
+        // When
+        viewModel.showDeleteConfirmation(player)
+
+        // Then
+        assertEquals(DeleteConfirmationState.Confirming(player), viewModel.deleteConfirmationState.value)
+    }
+
+    @Test
+    fun `dismissDeleteConfirmation should reset deleteConfirmationState`() = runTest(testDispatcher) {
+        // Given
+        val player = Player(1, "John", "Doe", listOf(Position.Forward))
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase)
+        viewModel.showDeleteConfirmation(player)
+
+        // When
+        viewModel.dismissDeleteConfirmation()
+
+        // Then
+        assertEquals(DeleteConfirmationState.None, viewModel.deleteConfirmationState.value)
+    }
+
+    @Test
+    fun `deletePlayer should call deletePlayerUseCase and reset confirmation state`() = runTest(testDispatcher) {
+        // Given
+        val playerId = 1L
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+        coEvery { deletePlayerUseCase.invoke(playerId) } just runs
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase)
+
+        // When
+        viewModel.deletePlayer(playerId)
+        advanceUntilIdle()
+
+        // Then
+        coVerify { deletePlayerUseCase.invoke(playerId) }
+        assertEquals(DeleteConfirmationState.None, viewModel.deleteConfirmationState.value)
     }
 }

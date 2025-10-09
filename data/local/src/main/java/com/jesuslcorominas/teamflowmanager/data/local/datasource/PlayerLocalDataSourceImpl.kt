@@ -19,4 +19,8 @@ internal class PlayerLocalDataSourceImpl(
     override suspend fun insertPlayer(player: Player) {
         playerDao.insertPlayer(player.toEntity())
     }
+
+    override suspend fun deletePlayer(playerId: Long) {
+        playerDao.deletePlayer(playerId)
+    }
 }

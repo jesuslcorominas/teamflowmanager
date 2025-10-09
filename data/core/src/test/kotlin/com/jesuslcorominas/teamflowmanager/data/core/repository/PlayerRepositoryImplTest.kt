@@ -3,9 +3,12 @@ package com.jesuslcorominas.teamflowmanager.data.core.repository
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -70,5 +73,18 @@ class PlayerRepositoryImplTest {
 
         // Then
         coVerify { localDataSource.insertPlayer(player) }
+    }
+
+    @Test
+    fun `deletePlayer should delete player from local data source`() = runTest {
+        // Given
+        val playerId = 1L
+        coEvery { localDataSource.deletePlayer(playerId) } just runs
+
+        // When
+        repository.deletePlayer(playerId)
+
+        // Then
+        coVerify { localDataSource.deletePlayer(playerId) }
     }
 }

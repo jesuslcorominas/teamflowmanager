@@ -26,4 +26,10 @@
     <string name="first_name_required">El nombre es obligatorio</string>
     <string name="last_name_required">El apellido es obligatorio</string>
     <string name="number_required">El dorsal es obligatorio</string>
+
+    <string name="delete_player_title">Eliminar Jugador</string>
+    <string name="delete_player_message">¿Estás seguro de que quieres eliminar a %1$s %2$s de la plantilla?</string>
+    <string name="delete_player_confirm">Eliminar</string>
+    <string name="delete_player_cancel">Cancelar</string>
+    <string name="delete_player_button">Eliminar</string>
 </resources>
