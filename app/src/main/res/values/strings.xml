@@ -32,4 +32,7 @@
     <string name="delete_player_confirm">Delete</string>
     <string name="delete_player_cancel">Cancel</string>
     <string name="delete_player_button">Delete</string>
+
+    <string name="edit_player_title">Edit Player</string>
+    <string name="positions_label">Positions</string>
 </resources>

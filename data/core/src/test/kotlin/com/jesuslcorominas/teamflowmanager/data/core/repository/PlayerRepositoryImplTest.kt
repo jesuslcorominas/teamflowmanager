@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.util.Date
 
 class PlayerRepositoryImplTest {
 
@@ -32,8 +33,8 @@ class PlayerRepositoryImplTest {
     fun `getAllPlayers should return players from local data source`() = runTest {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
+            Player(1, "John", "Doe", null, listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", null, listOf(Position.Midfielder))
         )
         every { localDataSource.getAllPlayers() } returns flowOf(players)
 
@@ -87,4 +88,24 @@ class PlayerRepositoryImplTest {
         // Then
         coVerify { localDataSource.deletePlayer(playerId) }
     }
+
+    @Test
+    fun `updatePlayer should call local data source updatePlayer`() = runTest {
+        // Given
+        val player = Player(
+            id = 1,
+            firstName = "John",
+            lastName = "Doe",
+            dateOfBirth = Date(),
+            positions = listOf(Position.Forward)
+        )
+        coEvery { localDataSource.updatePlayer(player) } just runs
+
+        // When
+        repository.updatePlayer(player)
+
+        // Then
+        coVerify { localDataSource.updatePlayer(player) }
+    }
 }
+
