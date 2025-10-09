@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.domain.repository
+package com.jesuslcorominas.teamflowmanager.usecase.repository
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import kotlinx.coroutines.flow.Flow

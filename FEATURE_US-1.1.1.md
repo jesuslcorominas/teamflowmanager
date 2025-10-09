@@ -13,7 +13,7 @@ This document describes the implementation of the player list feature (US-1.1.1)
 ## Architecture Implementation
 
 ### 1. Domain Module (`:domain`)
-Pure Kotlin module with no dependencies - contains business models and repository interfaces.
+Pure Kotlin module with no dependencies - contains business models.
 
 **Files Created:**
 - `domain/model/Player.kt` - Domain model with:
@@ -22,13 +22,13 @@ Pure Kotlin module with no dependencies - contains business models and repositor
   - `lastName: String` - Player's last name
   - `positions: List<String>` - List of positions the player can play
 
-- `domain/repository/PlayerRepository.kt` - Repository interface defining:
-  - `getAllPlayers(): Flow<List<Player>>` - Returns Flow of players
-
 ### 2. Use Case Module (`:usecase`)
-Pure Kotlin module containing business logic.
+Pure Kotlin module containing business logic and repository interfaces.
 
 **Files Created:**
+- `usecase/repository/PlayerRepository.kt` - Repository interface defining:
+  - `getAllPlayers(): Flow<List<Player>>` - Returns Flow of players
+  
 - `usecase/GetPlayersUseCase.kt`:
   - `GetPlayersUseCase` interface
   - `GetPlayersUseCaseImpl` implementation that delegates to PlayerRepository
@@ -40,10 +40,11 @@ Pure Kotlin module containing business logic.
 
 ### 3. Data Core Module (`:data:core`)
 Pure Kotlin module with repository implementations and datasource interfaces.
+Depends on `:domain` and `:usecase` modules.
 
 **Files Created:**
 - `data/core/datasource/PlayerLocalDataSource.kt` - Interface for local data operations
-- `data/core/repository/PlayerRepositoryImpl.kt` - Repository implementation
+- `data/core/repository/PlayerRepositoryImpl.kt` - Repository implementation (implements `PlayerRepository` from usecase module)
 
 **Tests:**
 - `data/core/repository/PlayerRepositoryImplTest.kt` - Unit tests with Mockk

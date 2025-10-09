@@ -1,7 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
-import com.jesuslcorominas.teamflowmanager.domain.repository.PlayerRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

@@ -32,6 +32,7 @@ The player list feature has been successfully implemented following Clean Archit
                      │
 ┌────────────────────▼────────────────────────────────────────┐
 │              Business Logic Layer (:usecase)                │
+│  • PlayerRepository (Interface)                             │
 │  • GetPlayersUseCase (Interface + Implementation)           │
 │  • Unit Tests with Mockk                                    │
 └────────────────────┬────────────────────────────────────────┘
@@ -41,6 +42,7 @@ The player list feature has been successfully implemented following Clean Archit
 │  • PlayerRepository implementation                          │
 │  • PlayerLocalDataSource interface                          │
 │  • Unit Tests with Mockk                                    │
+│  • Depends on :domain and :usecase                          │
 └────────────────────┬────────────────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────────────────┐
@@ -55,7 +57,6 @@ The player list feature has been successfully implemented following Clean Archit
 ┌─────────────────────────────────────────────────────────────┐
 │            Domain Layer (:domain)                           │
 │  • Player (Domain model)                                    │
-│  • PlayerRepository (Interface)                             │
 │  • Pure Kotlin - No dependencies                            │
 └─────────────────────────────────────────────────────────────┘
 
@@ -71,9 +72,9 @@ The player list feature has been successfully implemented following Clean Archit
 ### New Files (26 total)
 **Domain Layer:**
 - domain/model/Player.kt
-- domain/repository/PlayerRepository.kt
 
 **Use Case Layer:**
+- usecase/repository/PlayerRepository.kt
 - usecase/GetPlayersUseCase.kt
 - usecase/GetPlayersUseCaseTest.kt (TEST)
 
@@ -106,7 +107,7 @@ The player list feature has been successfully implemented following Clean Archit
 ### Modified Files (10 total)
 - gradle/libs.versions.toml (Added Mockk, coroutines-test, koin-compose)
 - usecase/build.gradle.kts (Added test dependencies)
-- data/core/build.gradle.kts (Added test dependencies)
+- data/core/build.gradle.kts (Added test dependencies and :usecase dependency)
 - viewmodel/build.gradle.kts (Added test dependencies)
 - di/build.gradle.kts (Added Room runtime)
 - app/build.gradle.kts (Added Koin Compose)

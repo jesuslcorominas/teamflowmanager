@@ -327,7 +327,9 @@ teamflowmanager/
 ├── usecase/
 │   └── src/
 │       ├── main/.../usecase/
-│       │   └── GetPlayersUseCase.kt       ← Business Logic
+│       │   ├── GetPlayersUseCase.kt       ← Business Logic
+│       │   └── repository/
+│       │       └── PlayerRepository.kt    ← Repository Interface
 │       └── test/.../usecase/
 │           └── GetPlayersUseCaseTest.kt   ← Tests
 │
@@ -357,10 +359,8 @@ teamflowmanager/
 │
 ├── domain/
 │   └── src/main/.../domain/
-│       ├── model/
-│       │   └── Player.kt                  ← Domain Model
-│       └── repository/
-│           └── PlayerRepository.kt        ← Repository Interface
+│       └── model/
+│           └── Player.kt                  ← Domain Model
 │
 └── di/
     └── src/main/.../di/

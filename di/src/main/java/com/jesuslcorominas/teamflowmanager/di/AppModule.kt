@@ -6,9 +6,9 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.data.local.callback.DatabaseCallback
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalDataSourceImpl
-import com.jesuslcorominas.teamflowmanager.domain.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
