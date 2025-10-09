@@ -2,7 +2,9 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -17,18 +19,21 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
 
 @ExperimentalCoroutinesApi
 class PlayerViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getPlayersUseCase: GetPlayersUseCase
+    private lateinit var addPlayerUseCase: AddPlayerUseCase
     private lateinit var viewModel: PlayerViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getPlayersUseCase = mockk()
+        addPlayerUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -42,7 +47,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase)
 
         // Then
         assertEquals(PlayerUiState.Loading, viewModel.uiState.value)
@@ -52,13 +57,13 @@ class PlayerViewModelTest {
     fun `uiState should be Success when players are loaded`() = runTest(testDispatcher) {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
+            Player(1, "John", "Doe", LocalDate.of(2010, 5, 15), listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", LocalDate.of(2011, 3, 20), listOf(Position.Midfielder))
         )
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase)
         advanceUntilIdle()
 
         // Then
@@ -72,10 +77,31 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase)
         advanceUntilIdle()
 
         // Then
         assertEquals(PlayerUiState.Empty, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `addPlayer should call addPlayerUseCase`() = runTest(testDispatcher) {
+        // Given
+        val player = Player(
+            id = 0,
+            firstName = "John",
+            lastName = "Doe",
+            dateOfBirth = LocalDate.of(2010, 5, 15),
+            positions = listOf(Position.Forward)
+        )
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase)
+
+        // When
+        viewModel.addPlayer(player)
+        advanceUntilIdle()
+
+        // Then
+        coVerify { addPlayerUseCase.invoke(player) }
     }
 }

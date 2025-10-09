@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class PlayerViewModel(
-    private val getPlayersUseCase: GetPlayersUseCase
+    private val getPlayersUseCase: GetPlayersUseCase,
+    private val addPlayerUseCase: AddPlayerUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PlayerUiState>(PlayerUiState.Loading)
@@ -29,6 +31,12 @@ class PlayerViewModel(
                     PlayerUiState.Success(players)
                 }
             }
+        }
+    }
+
+    fun addPlayer(player: Player) {
+        viewModelScope.launch {
+            addPlayerUseCase.invoke(player)
         }
     }
 }

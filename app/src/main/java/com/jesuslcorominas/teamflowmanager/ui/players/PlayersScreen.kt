@@ -9,21 +9,32 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
@@ -31,24 +42,51 @@ import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @Composable
 fun PlayersScreen(
     viewModel: PlayerViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showAddPlayerDialog by remember { mutableStateOf(false) }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        when (uiState) {
-            is PlayerUiState.Loading -> LoadingState()
-            is PlayerUiState.Empty -> EmptyState()
-            is PlayerUiState.Success -> PlayerList(
-                players = (uiState as PlayerUiState.Success).players
-            )
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            when (uiState) {
+                is PlayerUiState.Loading -> LoadingState()
+                is PlayerUiState.Empty -> EmptyState()
+                is PlayerUiState.Success -> PlayerList(
+                    players = (uiState as PlayerUiState.Success).players
+                )
+            }
         }
+
+        FloatingActionButton(
+            onClick = { showAddPlayerDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_player))
+        }
+    }
+
+    if (showAddPlayerDialog) {
+        AddPlayerDialog(
+            onDismiss = { showAddPlayerDialog = false },
+            onSave = { player ->
+                viewModel.addPlayer(player)
+                showAddPlayerDialog = false
+            }
+        )
     }
 }
 
@@ -128,6 +166,132 @@ private fun PlayerItem(player: Player) {
     }
 }
 
+@Composable
+private fun AddPlayerDialog(
+    onDismiss: () -> Unit,
+    onSave: (Player) -> Unit
+) {
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var dateOfBirth by remember { mutableStateOf("") }
+    var firstNameError by remember { mutableStateOf(false) }
+    var lastNameError by remember { mutableStateOf(false) }
+    var dateOfBirthError by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.add_player),
+                    style = MaterialTheme.typography.headlineSmall
+                )
+
+                OutlinedTextField(
+                    value = firstName,
+                    onValueChange = {
+                        firstName = it
+                        firstNameError = false
+                    },
+                    label = { Text(stringResource(R.string.first_name)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = firstNameError,
+                    supportingText = if (firstNameError) {
+                        { Text(stringResource(R.string.first_name_required)) }
+                    } else null
+                )
+
+                OutlinedTextField(
+                    value = lastName,
+                    onValueChange = {
+                        lastName = it
+                        lastNameError = false
+                    },
+                    label = { Text(stringResource(R.string.last_name)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = lastNameError,
+                    supportingText = if (lastNameError) {
+                        { Text(stringResource(R.string.last_name_required)) }
+                    } else null
+                )
+
+                OutlinedTextField(
+                    value = dateOfBirth,
+                    onValueChange = {
+                        dateOfBirth = it
+                        dateOfBirthError = false
+                    },
+                    label = { Text(stringResource(R.string.date_of_birth)) },
+                    placeholder = { Text("YYYY-MM-DD") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = dateOfBirthError,
+                    supportingText = if (dateOfBirthError) {
+                        { Text(stringResource(R.string.date_of_birth_required)) }
+                    } else null
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text(stringResource(R.string.cancel))
+                    }
+
+                    Button(
+                        onClick = {
+                            var hasError = false
+
+                            if (firstName.isBlank()) {
+                                firstNameError = true
+                                hasError = true
+                            }
+
+                            if (lastName.isBlank()) {
+                                lastNameError = true
+                                hasError = true
+                            }
+
+                            val parsedDate = try {
+                                LocalDate.parse(dateOfBirth, DateTimeFormatter.ISO_LOCAL_DATE)
+                            } catch (e: DateTimeParseException) {
+                                dateOfBirthError = true
+                                hasError = true
+                                null
+                            }
+
+                            if (!hasError && parsedDate != null) {
+                                onSave(
+                                    Player(
+                                        firstName = firstName,
+                                        lastName = lastName,
+                                        dateOfBirth = parsedDate,
+                                        positions = emptyList()
+                                    )
+                                )
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.save))
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PlayerItemPreview() {
@@ -137,6 +301,7 @@ fun PlayerItemPreview() {
                 id = 1,
                 firstName = "John",
                 lastName = "Doe",
+                dateOfBirth = LocalDate.of(2010, 5, 15),
                 positions = listOf(Position.Forward, Position.Midfielder)
             )
         )
@@ -149,9 +314,9 @@ fun PlayerListPreview() {
     MaterialTheme {
         PlayerList(
             players = listOf(
-                Player(1, "John", "Doe", listOf(Position.Forward)),
-                Player(2, "Jane", "Smith", listOf(Position.Midfielder, Position.Defender)),
-                Player(3, "Bob", "Johnson", listOf(Position.Goalkeeper))
+                Player(1, "John", "Doe", LocalDate.of(2010, 5, 15), listOf(Position.Forward)),
+                Player(2, "Jane", "Smith", LocalDate.of(2011, 3, 20), listOf(Position.Midfielder, Position.Defender)),
+                Player(3, "Bob", "Johnson", LocalDate.of(2009, 8, 10), listOf(Position.Goalkeeper))
             )
         )
     }
@@ -162,5 +327,16 @@ fun PlayerListPreview() {
 fun EmptyStatePreview() {
     MaterialTheme {
         EmptyState()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddPlayerDialogPreview() {
+    MaterialTheme {
+        AddPlayerDialog(
+            onDismiss = {},
+            onSave = {}
+        )
     }
 }

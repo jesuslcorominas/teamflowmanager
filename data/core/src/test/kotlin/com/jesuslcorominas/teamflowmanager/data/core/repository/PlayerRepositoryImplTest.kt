@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.repository
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -12,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
 
 class PlayerRepositoryImplTest {
 
@@ -20,7 +22,7 @@ class PlayerRepositoryImplTest {
 
     @Before
     fun setup() {
-        localDataSource = mockk()
+        localDataSource = mockk(relaxed = true)
         repository = PlayerRepositoryImpl(localDataSource)
     }
 
@@ -28,8 +30,8 @@ class PlayerRepositoryImplTest {
     fun `getAllPlayers should return players from local data source`() = runTest {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
+            Player(1, "John", "Doe", LocalDate.of(2010, 5, 15), listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", LocalDate.of(2011, 3, 20), listOf(Position.Midfielder))
         )
         every { localDataSource.getAllPlayers() } returns flowOf(players)
 
@@ -52,5 +54,23 @@ class PlayerRepositoryImplTest {
         // Then
         assertEquals(emptyList<Player>(), result)
         verify { localDataSource.getAllPlayers() }
+    }
+
+    @Test
+    fun `addPlayer should call insertPlayer on local data source`() = runTest {
+        // Given
+        val player = Player(
+            id = 0,
+            firstName = "John",
+            lastName = "Doe",
+            dateOfBirth = LocalDate.of(2010, 5, 15),
+            positions = listOf(Position.Forward)
+        )
+
+        // When
+        repository.addPlayer(player)
+
+        // Then
+        coVerify { localDataSource.insertPlayer(player) }
     }
 }

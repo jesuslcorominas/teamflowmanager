@@ -16,4 +16,14 @@
     <string name="position_forward">Forward</string>
     <string name="position_winger">Winger</string>
     <string name="position_striker">Striker</string>
+    
+    <string name="add_player">Add Player</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="date_of_birth">Date of Birth</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="first_name_required">First name is required</string>
+    <string name="last_name_required">Last name is required</string>
+    <string name="date_of_birth_required">Date of birth is required</string>
 </resources>

@@ -11,4 +11,8 @@ internal class PlayerRepositoryImpl(
     override fun getAllPlayers(): Flow<List<Player>> {
         return localDataSource.getAllPlayers()
     }
+
+    override suspend fun addPlayer(player: Player) {
+        localDataSource.insertPlayer(player)
+    }
 }
