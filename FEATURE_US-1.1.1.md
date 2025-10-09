@@ -145,10 +145,10 @@ Android Library module with Koin dependency injection configuration.
 
 - Module build files:
   - `usecase/build.gradle.kts` - Added Mockk and coroutines-test
-  - `data/core/build.gradle.kts` - Added Mockk and coroutines-test
+  - `data/core/build.gradle.kts` - Added Mockk, coroutines-test, and :usecase dependency
   - `viewmodel/build.gradle.kts` - Added Mockk and coroutines-test
   - `di/build.gradle.kts` - Added Room runtime
-  - `app/build.gradle.kts` - Added Koin Compose
+  - `app/build.gradle.kts` - Added Koin Compose and :domain dependency
 
 ## Data Flow
 

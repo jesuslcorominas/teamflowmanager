@@ -45,6 +45,7 @@ android {
 dependencies {
     implementation(project(":viewmodel"))
     implementation(project(":di"))
+    implementation(project(":domain"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

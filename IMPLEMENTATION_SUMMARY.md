@@ -110,7 +110,7 @@ The player list feature has been successfully implemented following Clean Archit
 - data/core/build.gradle.kts (Added test dependencies and :usecase dependency)
 - viewmodel/build.gradle.kts (Added test dependencies)
 - di/build.gradle.kts (Added Room runtime)
-- app/build.gradle.kts (Added Koin Compose)
+- app/build.gradle.kts (Added Koin Compose and :domain dependency)
 - app/MainActivity.kt (Display PlayersScreen)
 - app/TeamFlowManagerApplication.kt (Load Koin modules)
 - app/res/values/strings.xml (Added English strings)
