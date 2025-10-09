@@ -4,10 +4,20 @@ import com.jesuslcorominas.teamflowmanager.data.core.di.dataCoreModule
 import com.jesuslcorominas.teamflowmanager.data.local.di.dataLocalModule
 import com.jesuslcorominas.teamflowmanager.usecase.di.useCaseModule
 import com.jesuslcorominas.teamflowmanager.viewmodel.di.viewModelModule
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import org.koin.dsl.module
 
-val appModules = listOf(
-    dataLocalModule,
-    dataCoreModule,
-    useCaseModule,
-    viewModelModule
-)
+val teamFlowManagerModule = module {
+    includes(
+        listOf(
+            dataLocalModule,
+            dataCoreModule,
+            useCaseModule,
+            viewModelModule,
+        )
+    )
+
+    single<CoroutineDispatcher> { Dispatchers.IO }
+}
+

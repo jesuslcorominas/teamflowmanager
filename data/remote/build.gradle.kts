@@ -14,7 +14,7 @@ kotlin {
 dependencies {
     implementation(project(":data:core"))
     implementation(project(":domain"))
-    
+
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)

@@ -11,15 +11,27 @@ data class PlayerEntity(
     val id: Long = 0,
     val firstName: String,
     val lastName: String,
-    val positions: String
+    val number: Int,
+    val positions: String,
 )
 
-fun PlayerEntity.toDomain(): Player {
-    return Player(
+fun PlayerEntity.toDomain(): Player =
+    Player(
         id = id,
         firstName = firstName,
         lastName = lastName,
-        positions = positions.split(",")
-            .mapNotNull { Position.fromId(it.trim()) }
+        number = number,
+        positions =
+            positions
+                .split(",")
+                .mapNotNull { Position.fromId(it.trim()) },
     )
-}
+
+fun Player.toEntity(): PlayerEntity =
+    PlayerEntity(
+        id = id,
+        firstName = firstName,
+        lastName = lastName,
+        number = number,
+        positions = positions.joinToString(",") { it.id },
+    )

@@ -6,10 +6,12 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-internal val repositoryModule = module {
-    singleOf(::PlayerRepositoryImpl) bind PlayerRepository::class
-}
+internal val repositoryModule =
+    module {
+        singleOf(::PlayerRepositoryImpl) bind PlayerRepository::class
+    }
 
-val dataCoreModule = module {
-    includes(repositoryModule)
-}
+val dataCoreModule =
+    module {
+        includes(repositoryModule)
+    }

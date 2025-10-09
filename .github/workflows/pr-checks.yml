@@ -2,12 +2,12 @@ name: PR Checks
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
   build-and-test:
     name: Build, Test and Lint
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
 
     steps:
       - name: Checkout code
