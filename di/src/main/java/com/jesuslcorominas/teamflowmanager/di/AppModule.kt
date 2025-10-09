@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.di
 import androidx.room.Room
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.local.callback.DatabaseCallback
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.domain.repository.PlayerRepository
@@ -22,7 +23,9 @@ val databaseModule = module {
             androidContext(),
             TeamFlowManagerDatabase::class.java,
             "teamflowmanager_database"
-        ).build()
+        )
+            .addCallback(DatabaseCallback())
+            .build()
     }
 
     single { get<TeamFlowManagerDatabase>().playerDao() }
