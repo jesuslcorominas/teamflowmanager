@@ -15,6 +15,9 @@ dependencies {
     implementation(project(":domain"))
     
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.koin.core)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

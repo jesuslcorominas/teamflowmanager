@@ -13,8 +13,12 @@ kotlin {
 
 dependencies {
     implementation(project(":domain"))
+    implementation(project(":usecase"))
     
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.koin.core)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

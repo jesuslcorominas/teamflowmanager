@@ -1,4 +1,19 @@
 <resources>
     <string name="app_name">TeamFlow Manager</string>
     <string name="welcome_message">¡Bienvenido a TeamFlow Manager!</string>
+    <string name="players_title">Plantilla</string>
+    <string name="no_players_message">Aún no hay jugadores registrados</string>
+    
+    <string name="position_goalkeeper">Portero</string>
+    <string name="position_defender">Defensa</string>
+    <string name="position_right_back">Lateral Derecho</string>
+    <string name="position_left_back">Lateral Izquierdo</string>
+    <string name="position_center_back">Defensa Central</string>
+    <string name="position_midfielder">Centrocampista</string>
+    <string name="position_defensive_midfielder">Pivote</string>
+    <string name="position_central_midfielder">Mediocentro</string>
+    <string name="position_attacking_midfielder">Media Punta</string>
+    <string name="position_forward">Delantero</string>
+    <string name="position_winger">Extremo</string>
+    <string name="position_striker">Delantero Centro</string>
 </resources>

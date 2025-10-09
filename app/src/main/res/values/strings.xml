@@ -1,4 +1,19 @@
 <resources>
     <string name="app_name">TeamFlow Manager</string>
     <string name="welcome_message">Welcome to TeamFlow Manager!</string>
+    <string name="players_title">Team Roster</string>
+    <string name="no_players_message">No players registered yet</string>
+    
+    <string name="position_goalkeeper">Goalkeeper</string>
+    <string name="position_defender">Defender</string>
+    <string name="position_right_back">Right Back</string>
+    <string name="position_left_back">Left Back</string>
+    <string name="position_center_back">Center Back</string>
+    <string name="position_midfielder">Midfielder</string>
+    <string name="position_defensive_midfielder">Defensive Midfielder</string>
+    <string name="position_central_midfielder">Central Midfielder</string>
+    <string name="position_attacking_midfielder">Attacking Midfielder</string>
+    <string name="position_forward">Forward</string>
+    <string name="position_winger">Winger</string>
+    <string name="position_striker">Striker</string>
 </resources>
