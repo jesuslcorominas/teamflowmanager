@@ -56,6 +56,7 @@ Android Library module with Room database implementation.
 - `data/local/entity/PlayerEntity.kt` - Room entity:
   - `@Entity(tableName = "players")`
   - Positions stored as comma-separated string for Room compatibility
+  - Extension function `toDomain()` for mapping to domain model
   
 - `data/local/dao/PlayerDao.kt` - Room DAO:
   - `getAllPlayers(): Flow<List<PlayerEntity>>` - Returns Flow for reactive updates
@@ -66,7 +67,7 @@ Android Library module with Room database implementation.
   - Contains PlayerEntity
   
 - `data/local/datasource/PlayerLocalDataSourceImpl.kt` - Datasource implementation:
-  - Maps PlayerEntity to Player domain model
+  - Uses `PlayerEntity.toDomain()` extension function for mapping
   - Converts comma-separated positions string to List<String>
   
 - `data/local/callback/DatabaseCallback.kt` - Prepopulates database with 10 sample players:
