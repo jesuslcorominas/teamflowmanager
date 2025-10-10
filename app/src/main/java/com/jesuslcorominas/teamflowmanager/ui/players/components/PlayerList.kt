@@ -105,33 +105,35 @@ private fun PlayerItem(
                 )
             }
 
-            Column(
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    text = "${player.firstName} ${player.lastName}",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = player.positions.joinToString(", ") { it.toLocalizedString(context) }
-                        .ifEmpty { stringResource(R.string.no_positions) },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            IconButton(onClick = onEditClick) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = stringResource(R.string.edit_player_title),
-                    tint = MaterialTheme.colorScheme.onBackground,
-                )
-            }
-            IconButton(onClick = onDeleteClick) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.delete),
-                    tint = MaterialTheme.colorScheme.error,
-                )
+            Row(modifier = Modifier.weight(1F)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        text = "${player.firstName} ${player.lastName}",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = player.positions.joinToString(", ") { it.toLocalizedString(context) }
+                            .ifEmpty { stringResource(R.string.no_positions) },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                IconButton(onClick = onEditClick) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.edit_player_title),
+                        tint = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.delete),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         }
     }

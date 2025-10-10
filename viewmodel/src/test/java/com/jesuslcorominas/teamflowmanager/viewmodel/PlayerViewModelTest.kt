@@ -65,8 +65,8 @@ class PlayerViewModelTest {
     fun `uiState should be Success when players are loaded`() = runTest(testDispatcher) {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", listOf(Position.Midfielder))
+            Player(1, "John", "Doe", 10, listOf(Position.Forward)),
+            Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder))
         )
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
@@ -116,7 +116,7 @@ class PlayerViewModelTest {
     @Test
     fun `showDeleteConfirmation should update deleteConfirmationState`() = runTest(testDispatcher) {
         // Given
-        val player = Player(1, "John", "Doe",2, listOf(Position.Forward))
+        val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
 
@@ -130,7 +130,7 @@ class PlayerViewModelTest {
     @Test
     fun `dismissDeleteConfirmation should reset deleteConfirmationState`() = runTest(testDispatcher) {
         // Given
-        val player = Player(1, "John", "Doe", 2,listOf(Position.Forward))
+        val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
         viewModel.showDeleteConfirmation(player)

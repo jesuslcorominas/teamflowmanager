@@ -6,4 +6,5 @@ data class Player(
     val lastName: String,
     val number: Int,
     val positions: List<Position>,
+    val teamId: Long = 1,
 )

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PlayerDao {
-    @Query("SELECT * FROM players")
+    @Query("SELECT * FROM players ORDER BY number ASC")
     fun getAllPlayers(): Flow<List<PlayerEntity>>
 
     @Insert
