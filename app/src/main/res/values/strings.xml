@@ -37,4 +37,13 @@
 
     <string name="delete_player_message">Are you sure you want to delete %1$s %2$s from the roster?</string>
 
+    <string name="team_title">Team</string>
+    <string name="create_team_title">Create Team</string>
+    <string name="team_name">Team Name</string>
+    <string name="team_name_required">Team name is required</string>
+    <string name="coach_name">Coach Name</string>
+    <string name="coach_name_required">Coach name is required</string>
+    <string name="delegate_name">Delegate Name</string>
+    <string name="delegate_name_required">Delegate name is required</string>
+
 </resources>

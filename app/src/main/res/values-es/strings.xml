@@ -37,4 +37,13 @@
 
     <string name="delete_player_message">¿Estás seguro de que quieres eliminar a %1$s %2$s de la plantilla?</string>
 
+    <string name="team_title">Equipo</string>
+    <string name="create_team_title">Crear Equipo</string>
+    <string name="team_name">Nombre del Equipo</string>
+    <string name="team_name_required">El nombre del equipo es obligatorio</string>
+    <string name="coach_name">Nombre del Entrenador</string>
+    <string name="coach_name_required">El nombre del entrenador es obligatorio</string>
+    <string name="delegate_name">Nombre del Delegado</string>
+    <string name="delegate_name_required">El nombre del delegado es obligatorio</string>
+
 </resources>
