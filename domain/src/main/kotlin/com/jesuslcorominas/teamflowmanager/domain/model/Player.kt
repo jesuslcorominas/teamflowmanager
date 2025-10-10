@@ -1,7 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.domain.model
 
 data class Player(
-    val id: Long = 0,
+    val id: Long,
     val firstName: String,
     val lastName: String,
     val number: Int,

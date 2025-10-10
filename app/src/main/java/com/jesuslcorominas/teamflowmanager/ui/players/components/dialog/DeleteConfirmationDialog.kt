@@ -18,8 +18,8 @@ fun DeleteConfirmationDialog(
     AppAlertDialog(
         onDismiss = onDismiss,
         onConfirm = onConfirm,
-        confirmText = stringResource(R.string.delete_player_confirm),
-        dismissText = stringResource(R.string.delete_player_cancel),
+        confirmText = stringResource(R.string.delete),
+        dismissText = stringResource(R.string.cancel),
         title = stringResource(R.string.delete_player_title),
         message =
             stringResource(

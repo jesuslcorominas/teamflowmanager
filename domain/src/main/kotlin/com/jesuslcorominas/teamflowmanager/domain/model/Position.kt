@@ -44,5 +44,21 @@ sealed class Position(
                 "striker" -> Striker
                 else -> null
             }
+
+        // TODO insert into database?
+        fun getAllPositions(): List<Position> = listOf(
+            Goalkeeper,
+            Defender,
+            RightBack,
+            LeftBack,
+            CenterBack,
+            Midfielder,
+            DefensiveMidfielder,
+            CentralMidfielder,
+            AttackingMidfielder,
+            Forward,
+            Winger,
+            Striker
+        )
     }
 }

@@ -87,4 +87,22 @@ class PlayerRepositoryImplTest {
         // Then
         coVerify { localDataSource.deletePlayer(playerId) }
     }
+
+    @Test
+    fun `updatePlayer should call local data source updatePlayer`() = runTest {
+        // Given
+        val player = Player(
+            id = 1,
+            firstName = "John",
+            lastName = "Doe",
+            positions = listOf(Position.Forward)
+        )
+        coEvery { localDataSource.updatePlayer(player) } just runs
+
+        // When
+        repository.updatePlayer(player)
+
+        // Then
+        coVerify { localDataSource.updatePlayer(player) }
+    }
 }
