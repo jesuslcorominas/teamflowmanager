@@ -7,7 +7,7 @@ interface DeletePlayerUseCase {
 }
 
 internal class DeletePlayerUseCaseImpl(
-    private val playerRepository: PlayerRepository
+    private val playerRepository: PlayerRepository,
 ) : DeletePlayerUseCase {
     override suspend fun invoke(playerId: Long) {
         playerRepository.deletePlayer(playerId)

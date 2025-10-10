@@ -9,5 +9,4 @@ interface PlayerLocalDataSource {
     suspend fun insertPlayer(player: Player)
 
     suspend fun deletePlayer(playerId: Long)
-
 }

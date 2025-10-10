@@ -11,7 +11,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 @Composable
 fun TFMAppTheme(
     darkTheme: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
         LocalSpacing provides TFMSpacing,

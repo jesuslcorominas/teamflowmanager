@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.players.components
 
+import TFMSpacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,8 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,49 +23,58 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMElevation
 import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 
 @Composable
-fun PlayerList(players: List<Player>) {
+fun PlayerList(
+    players: List<Player>,
+    onDeleteClick: (Player) -> Unit,
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
         Text(
             text = stringResource(R.string.players_title),
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(TFMSpacing.spacing04),
         )
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding =
                 androidx.compose.foundation.layout
-                    .PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .PaddingValues(TFMSpacing.spacing04),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
             items(players) { player ->
-                PlayerItem(player = player)
+                PlayerItem(
+                    player = player,
+                    onDeleteClick = { onDeleteClick(player) },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun PlayerItem(player: Player) {
+private fun PlayerItem(
+    player: Player,
+    onDeleteClick: () -> Unit,
+) {
     val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = TFMElevation.level1),
     ) {
         Row(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(TFMSpacing.spacing04),
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -81,6 +95,13 @@ private fun PlayerItem(player: Player) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.delete_player_button),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }
@@ -96,6 +117,7 @@ private fun PlayerListPreview() {
                     Player(2, "Jane", "Smith", 2, listOf(Position.Midfielder, Position.Defender)),
                     Player(3, "Bob", "Johnson", 7, listOf(Position.Goalkeeper)),
                 ),
+            onDeleteClick = {},
         )
     }
 }
@@ -113,6 +135,7 @@ private fun PlayerItemPreview() {
                     number = 10,
                     positions = listOf(Position.Forward, Position.Midfielder),
                 ),
+            onDeleteClick = {},
         )
     }
 }

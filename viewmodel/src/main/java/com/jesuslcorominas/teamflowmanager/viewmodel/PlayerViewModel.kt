@@ -3,8 +3,8 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
-import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 class PlayerViewModel(
     private val getPlayersUseCase: GetPlayersUseCase,
     private val addPlayerUseCase: AddPlayerUseCase,
+    private val deletePlayerUseCase: DeletePlayerUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PlayerUiState>(PlayerUiState.Loading)
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
@@ -72,5 +73,8 @@ sealed class PlayerUiState {
 
 sealed class DeleteConfirmationState {
     data object None : DeleteConfirmationState()
-    data class Confirming(val player: Player) : DeleteConfirmationState()
+
+    data class Confirming(
+        val player: Player,
+    ) : DeleteConfirmationState()
 }

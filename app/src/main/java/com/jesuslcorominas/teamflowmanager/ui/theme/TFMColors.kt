@@ -34,21 +34,22 @@ val BackgroundOverlay = Color(0x66000000)
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
 
-val LightColorScheme = lightColorScheme(
-    primary = Primary,
-    onPrimary = White,
-    primaryContainer = PrimaryLight,
-    onPrimaryContainer = ContentMain,
-    secondary = AccentEmphasis,
-    onSecondary = White,
-    secondaryContainer = AccentEmphasis10,
-    onSecondaryContainer = ContentMain,
-    tertiary = AccentAffirmative,
-    onTertiary = White,
-    error = AccentDanger,
-    onError = White,
-    background = BackgroundMain,
-    onBackground = ContentMain,
-    surface = White,
-    onSurface = ContentMain,
-)
+val LightColorScheme =
+    lightColorScheme(
+        primary = Primary,
+        onPrimary = White,
+        primaryContainer = PrimaryLight,
+        onPrimaryContainer = ContentMain,
+        secondary = AccentEmphasis,
+        onSecondary = White,
+        secondaryContainer = AccentEmphasis10,
+        onSecondaryContainer = ContentMain,
+        tertiary = AccentAffirmative,
+        onTertiary = White,
+        error = AccentDanger,
+        onError = White,
+        background = BackgroundMain,
+        onBackground = ContentMain,
+        surface = White,
+        onSurface = ContentMain,
+    )
