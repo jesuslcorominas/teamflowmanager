@@ -15,8 +15,8 @@ import kotlinx.coroutines.launch
 class PlayerViewModel(
     private val getPlayersUseCase: GetPlayersUseCase,
     private val addPlayerUseCase: AddPlayerUseCase,
+    private val updatePlayerUseCase: UpdatePlayerUseCase,
     private val deletePlayerUseCase: DeletePlayerUseCase,
-    private val updatePlayerUseCase: UpdatePlayerUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PlayerUiState>(PlayerUiState.Loading)
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()

@@ -25,8 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
-import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.AddPlayerDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.DeleteConfirmationDialog
+import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.PlayerDialog
 import com.jesuslcorominas.teamflowmanager.viewmodel.DeleteConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
@@ -50,7 +50,7 @@ fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
                 is PlayerUiState.Success ->
                     PlayerList(
                         players = (uiState as PlayerUiState.Success).players,
-                        onEditPlayer = { player -> playerToEdit = player },
+                        onEditClick = { player -> playerToEdit = player },
                         onDeleteClick = { player -> viewModel.showDeleteConfirmation(player) },
                     )
             }
@@ -63,11 +63,11 @@ fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
                     .align(Alignment.BottomEnd)
                     .padding(TFMSpacing.spacing04),
         ) {
-            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_player))
+            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_player_title))
         }
 
         playerToEdit?.let { player ->
-            EditPlayerDialog(
+            PlayerDialog(
                 player = player,
                 onDismiss = { playerToEdit = null },
                 onSave = { updatedPlayer ->
@@ -90,7 +90,7 @@ fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
     }
 
     if (showAddPlayerDialog) {
-        AddPlayerDialog(
+        PlayerDialog(
             onDismiss = { showAddPlayerDialog = false },
             onSave = { player ->
                 viewModel.addPlayer(player)

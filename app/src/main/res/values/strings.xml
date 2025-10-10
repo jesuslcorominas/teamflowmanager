@@ -1,6 +1,11 @@
 <resources>
     <string name="app_name">TeamFlow Manager</string>
     <string name="welcome_message">Welcome to TeamFlow Manager!</string>
+
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+
     <string name="players_title">Team Roster</string>
     <string name="no_players_message">No players registered yet</string>
 
@@ -17,21 +22,19 @@
     <string name="position_winger">Winger</string>
     <string name="position_striker">Striker</string>
 
-    <string name="add_player">Add Player</string>
+    <string name="add_player_title">Add Player</string>
     <string name="edit_player_title">Edit Player</string>
     <string name="delete_player_title">Delete Player</string>
+
     <string name="first_name">First Name</string>
-    <string name="last_name">Last Name</string>
-    <string name="number">Number</string>
-    <string name="positions_label">Positions</string>
-    <string name="save">Save</string>
-    <string name="cancel">Cancel</string>
     <string name="first_name_required">First name is required</string>
+    <string name="last_name">Last Name</string>
     <string name="last_name_required">Last name is required</string>
+    <string name="number">Number</string>
     <string name="number_required">Number is required</string>
+    <string name="positions">Positions</string>
+    <string name="no_positions">Not assigned position</string>
 
     <string name="delete_player_message">Are you sure you want to delete %1$s %2$s from the roster?</string>
-    <string name="delete_player_confirm">Delete</string>
-    <string name="delete_player_button">Delete</string>
 
 </resources>

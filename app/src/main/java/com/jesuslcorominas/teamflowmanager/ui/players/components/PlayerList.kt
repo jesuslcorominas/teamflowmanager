@@ -1,16 +1,21 @@
 package com.jesuslcorominas.teamflowmanager.ui.players.components
 
 import TFMSpacing
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -20,18 +25,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
+import com.jesuslcorominas.teamflowmanager.ui.theme.BebasNeueFontFamily
+import com.jesuslcorominas.teamflowmanager.ui.theme.ContentContrast
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMElevation
 import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 
 @Composable
 fun PlayerList(
     players: List<Player>,
+    onEditClick: (Player) -> Unit,
     onDeleteClick: (Player) -> Unit,
 ) {
     Column(
@@ -52,6 +63,7 @@ fun PlayerList(
             items(players) { player ->
                 PlayerItem(
                     player = player,
+                    onEditClick = { onEditClick(player) },
                     onDeleteClick = { onDeleteClick(player) },
                 )
             }
@@ -62,6 +74,7 @@ fun PlayerList(
 @Composable
 private fun PlayerItem(
     player: Player,
+    onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -77,10 +90,20 @@ private fun PlayerItem(
             horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = "${if (player.number < 10) "0" else ""}${player.number}",
-                style = MaterialTheme.typography.headlineLarge,
-            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(BackgroundContrast)
+                    .size(56.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = player.number.toString(),
+                    fontFamily = BebasNeueFontFamily,
+                    color = ContentContrast,
+                    style = MaterialTheme.typography.headlineLarge,
+                )
+            }
 
             Column(
                 modifier = Modifier.weight(1f),
@@ -90,15 +113,23 @@ private fun PlayerItem(
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = player.positions.joinToString(", ") { it.toLocalizedString(context) },
+                    text = player.positions.joinToString(", ") { it.toLocalizedString(context) }
+                        .ifEmpty { stringResource(R.string.no_positions) },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconButton(onClick = onEditClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.edit_player_title),
+                    tint = MaterialTheme.colorScheme.onBackground,
                 )
             }
             IconButton(onClick = onDeleteClick) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.delete_player_button),
+                    contentDescription = stringResource(R.string.delete),
                     tint = MaterialTheme.colorScheme.error,
                 )
             }
@@ -115,8 +146,9 @@ private fun PlayerListPreview() {
                 listOf(
                     Player(1, "John", "Doe", 3, listOf(Position.Forward)),
                     Player(2, "Jane", "Smith", 2, listOf(Position.Midfielder, Position.Defender)),
-                    Player(3, "Bob", "Johnson", 7, listOf(Position.Goalkeeper)),
+                    Player(3, "Bob", "Johnson", 17, listOf(Position.Goalkeeper)),
                 ),
+            onEditClick = {},
             onDeleteClick = {},
         )
     }
@@ -135,6 +167,7 @@ private fun PlayerItemPreview() {
                     number = 10,
                     positions = listOf(Position.Forward, Position.Midfielder),
                 ),
+            onEditClick = {},
             onDeleteClick = {},
         )
     }
