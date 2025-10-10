@@ -46,4 +46,8 @@
     <string name="delegate_name">Nombre del Delegado</string>
     <string name="delegate_name_required">El nombre del delegado es obligatorio</string>
 
+    <string name="team_info">Información del Equipo</string>
+    <string name="team_info_description">Mostrar información del equipo</string>
+    <string name="close">Cerrar</string>
+
 </resources>
