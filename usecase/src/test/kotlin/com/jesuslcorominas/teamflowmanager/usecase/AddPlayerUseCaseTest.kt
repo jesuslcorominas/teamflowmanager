@@ -27,6 +27,7 @@ class AddPlayerUseCaseTest {
             id = 0,
             firstName = "John",
             lastName = "Doe",
+            number = 10,
             positions = listOf(Position.Forward)
         )
 

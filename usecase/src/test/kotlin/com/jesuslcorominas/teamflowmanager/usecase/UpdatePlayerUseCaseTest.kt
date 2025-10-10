@@ -30,6 +30,7 @@ class UpdatePlayerUseCaseTest {
             id = 1,
             firstName = "John",
             lastName = "Doe",
+            number = 10,
             positions = listOf(Position.Forward)
         )
         coEvery { playerRepository.updatePlayer(player) } just runs
@@ -48,6 +49,7 @@ class UpdatePlayerUseCaseTest {
             id = 2,
             firstName = "Jane",
             lastName = "Smith",
+            number = 8,
             positions = listOf(Position.Midfielder, Position.Defender)
         )
         coEvery { playerRepository.updatePlayer(player) } just runs
