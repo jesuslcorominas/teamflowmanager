@@ -1,0 +1,113 @@
+package com.jesuslcorominas.teamflowmanager.viewmodel
+
+import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.runs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+
+@ExperimentalCoroutinesApi
+class TeamViewModelTest {
+    private val testDispatcher = StandardTestDispatcher()
+    private lateinit var getTeamUseCase: GetTeamUseCase
+    private lateinit var createTeamUseCase: CreateTeamUseCase
+    private lateinit var viewModel: TeamViewModel
+
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+        getTeamUseCase = mockk()
+        createTeamUseCase = mockk(relaxed = true)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `initial state should be Loading`() {
+        // Given
+        every { getTeamUseCase.invoke() } returns flowOf(null)
+
+        // When
+        viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase)
+
+        // Then
+        assertEquals(TeamUiState.Loading, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `uiState should be NoTeam when no team exists`() =
+        runTest(testDispatcher) {
+            // Given
+            every { getTeamUseCase.invoke() } returns flowOf(null)
+
+            // When
+            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(TeamUiState.NoTeam, viewModel.uiState.value)
+        }
+
+    @Test
+    fun `uiState should be TeamExists when team exists`() =
+        runTest(testDispatcher) {
+            // Given
+            val team = Team(1, "Test Team", "Coach Name", "Delegate Name")
+            every { getTeamUseCase.invoke() } returns flowOf(team)
+
+            // When
+            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase)
+            advanceUntilIdle()
+
+            // Then
+            val state = viewModel.uiState.value
+            assertEquals(TeamUiState.TeamExists(team), state)
+        }
+
+    @Test
+    fun `createTeam should call createTeamUseCase with correct parameters`() =
+        runTest(testDispatcher) {
+            // Given
+            val teamName = "Test Team"
+            val coachName = "Coach Name"
+            val delegateName = "Delegate Name"
+            every { getTeamUseCase.invoke() } returns flowOf(null)
+            coEvery { createTeamUseCase.invoke(any()) } just runs
+            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase)
+
+            // When
+            viewModel.createTeam(teamName, coachName, delegateName)
+            advanceUntilIdle()
+
+            // Then
+            coVerify {
+                createTeamUseCase.invoke(
+                    match { team ->
+                        team.name == teamName &&
+                            team.coachName == coachName &&
+                            team.delegateName == delegateName &&
+                            team.id == 0L
+                    },
+                )
+            }
+        }
+}
