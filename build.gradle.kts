@@ -12,7 +12,7 @@ subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
     extensions.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension>("ktlint") {
-        android.set(true)              // important for Android projects
+        android.set(true)
         outputToConsole.set(true)
         ignoreFailures.set(false)
         verbose.set(true)
@@ -27,7 +27,7 @@ subprojects {
 }
 
 tasks.register("ktlintFormatAll") {
-    group = "verification"
+    group = "formatting"
     description = "Runs ktlintFormat on all modules"
     dependsOn(subprojects.mapNotNull { it.tasks.findByName("ktlintFormat") })
 }

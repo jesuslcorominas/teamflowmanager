@@ -9,7 +9,8 @@ val viewModelModule =
         viewModel {
             PlayerViewModel(
                 getPlayersUseCase = get(),
-                addPlayerUseCase = get()
+                addPlayerUseCase = get(),
+                deletePlayerUseCase = get(),
             )
         }
     }

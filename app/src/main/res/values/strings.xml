@@ -26,4 +26,10 @@
     <string name="first_name_required">First name is required</string>
     <string name="last_name_required">Last name is required</string>
     <string name="number_required">Number is required</string>
+
+    <string name="delete_player_title">Delete Player</string>
+    <string name="delete_player_message">Are you sure you want to delete %1$s %2$s from the roster?</string>
+    <string name="delete_player_confirm">Delete</string>
+    <string name="delete_player_cancel">Cancel</string>
+    <string name="delete_player_button">Delete</string>
 </resources>

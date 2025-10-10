@@ -13,4 +13,8 @@ internal class PlayerRepositoryImpl(
     override suspend fun addPlayer(player: Player) {
         localDataSource.insertPlayer(player)
     }
+
+    override suspend fun deletePlayer(playerId: Long) {
+        localDataSource.deletePlayer(playerId)
+    }
 }

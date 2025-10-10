@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.players
 
+import TFMSpacing
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,10 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
-import com.jesuslcorominas.teamflowmanager.ui.players.components.AddPlayerDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
+import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.AddPlayerDialog
+import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.DeleteConfirmationDialog
+import com.jesuslcorominas.teamflowmanager.viewmodel.DeleteConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -32,11 +34,10 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+    val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
     var showAddPlayerDialog by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,
@@ -47,6 +48,7 @@ fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
                 is PlayerUiState.Success ->
                     PlayerList(
                         players = (uiState as PlayerUiState.Success).players,
+                        onDeleteClick = { player -> viewModel.showDeleteConfirmation(player) },
                     )
             }
         }
@@ -56,9 +58,20 @@ fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
             modifier =
                 Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp),
+                    .padding(TFMSpacing.spacing04),
         ) {
             Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_player))
+        }
+
+        when (val state = deleteConfirmationState) {
+            is DeleteConfirmationState.Confirming ->
+                DeleteConfirmationDialog(
+                    player = state.player,
+                    onConfirm = { viewModel.deletePlayer(state.player.id) },
+                    onDismiss = { viewModel.dismissDeleteConfirmation() },
+                )
+
+            DeleteConfirmationState.None -> {}
         }
     }
 
@@ -98,7 +111,7 @@ private fun EmptyState() {
 
 @Preview(showBackground = true)
 @Composable
-fun EmptyStatePreview() {
+private fun EmptyStatePreview() {
     MaterialTheme {
         EmptyState()
     }

@@ -16,14 +16,16 @@ class MainActivity : ComponentActivity() {
         val darkStatusBarColor = LightColorScheme.primary.toArgb()
 
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                lightScrim = lightStatusBarColor,
-                darkScrim = darkStatusBarColor
-            ),
-            navigationBarStyle = SystemBarStyle.auto(
-                lightScrim = LightColorScheme.background.toArgb(),
-                darkScrim = LightColorScheme.background.toArgb()
-            )
+            statusBarStyle =
+                SystemBarStyle.auto(
+                    lightScrim = lightStatusBarColor,
+                    darkScrim = darkStatusBarColor,
+                ),
+            navigationBarStyle =
+                SystemBarStyle.auto(
+                    lightScrim = LightColorScheme.background.toArgb(),
+                    darkScrim = LightColorScheme.background.toArgb(),
+                ),
         )
 
         super.onCreate(savedInstanceState)

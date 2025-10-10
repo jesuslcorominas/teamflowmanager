@@ -15,9 +15,14 @@ val publicSans = GoogleFont("Public Sans")
 
 val PublicSansFontFamily =
     FontFamily(
-        androidx.compose.ui.text.googlefonts.Font(publicSans, provider, FontWeight.Light),
-        androidx.compose.ui.text.googlefonts.Font(publicSans, provider, FontWeight.Normal),
-        androidx.compose.ui.text.googlefonts.Font(publicSans, provider, FontWeight.Medium),
-        androidx.compose.ui.text.googlefonts.Font(publicSans, provider, FontWeight.SemiBold),
-        androidx.compose.ui.text.googlefonts.Font(publicSans, provider, FontWeight.Bold),
+        androidx.compose.ui.text.googlefonts
+            .Font(publicSans, provider, FontWeight.Light),
+        androidx.compose.ui.text.googlefonts
+            .Font(publicSans, provider, FontWeight.Normal),
+        androidx.compose.ui.text.googlefonts
+            .Font(publicSans, provider, FontWeight.Medium),
+        androidx.compose.ui.text.googlefonts
+            .Font(publicSans, provider, FontWeight.SemiBold),
+        androidx.compose.ui.text.googlefonts
+            .Font(publicSans, provider, FontWeight.Bold),
     )

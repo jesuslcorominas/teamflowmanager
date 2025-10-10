@@ -8,16 +8,16 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.koin.dsl.module
 
-val teamFlowManagerModule = module {
-    includes(
-        listOf(
-            dataLocalModule,
-            dataCoreModule,
-            useCaseModule,
-            viewModelModule,
+val teamFlowManagerModule =
+    module {
+        includes(
+            listOf(
+                dataLocalModule,
+                dataCoreModule,
+                useCaseModule,
+                viewModelModule,
+            ),
         )
-    )
 
-    single<CoroutineDispatcher> { Dispatchers.IO }
-}
-
+        single<CoroutineDispatcher> { Dispatchers.IO }
+    }
