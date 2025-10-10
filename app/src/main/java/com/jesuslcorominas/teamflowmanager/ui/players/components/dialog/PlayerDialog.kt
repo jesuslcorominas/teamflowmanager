@@ -47,15 +47,13 @@ fun PlayerDialog(
     var formState by remember { mutableStateOf(player.toFormState()) }
 
     val validateAndSave = {
-        formState =
-            formState.copy(
-                errors =
-                    FormErrors(
-                        firstName = formState.firstName.isBlank(),
-                        lastName = formState.lastName.isBlank(),
-                        number = formState.number.isBlank()
-                    ),
-            )
+        formState = formState.copy(
+            errors = FormErrors(
+                firstName = formState.firstName.isBlank(),
+                lastName = formState.lastName.isBlank(),
+                number = formState.number.isBlank()
+            ),
+        )
 
         if (!formState.errors.hasErrors) {
             onSave(formState.toPlayer())
@@ -65,7 +63,8 @@ fun PlayerDialog(
     val focusManager = LocalFocusManager.current
 
     AppDialog(
-        title = stringResource(player?.let { R.string.edit_player_title } ?: R.string.add_player_title),
+        title = stringResource(player?.let { R.string.edit_player_title }
+            ?: R.string.add_player_title),
         onConfirm = validateAndSave,
         isConfirmEnabled = !formState.errors.hasErrors,
         confirmText = stringResource(R.string.save),
@@ -83,25 +82,22 @@ fun PlayerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     value = formState.firstName,
                     onValueChange = {
-                        formState =
-                            formState.copy(
-                                firstName = it,
-                                errors = formState.errors.copy(firstName = false),
-                            )
+                        formState = formState.copy(
+                            firstName = it,
+                            errors = formState.errors.copy(firstName = false),
+                        )
                     },
                     label = { Text(stringResource(R.string.first_name)) },
                     isError = formState.errors.firstName,
-                    supportingText =
-                        if (formState.errors.firstName) {
-                            { Text(stringResource(R.string.first_name_required)) }
-                        } else {
-                            null
-                        },
+                    supportingText = if (formState.errors.firstName) {
+                        { Text(stringResource(R.string.first_name_required)) }
+                    } else {
+                        null
+                    },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions =
-                        KeyboardActions(onNext = {
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }),
+                    keyboardActions = KeyboardActions(onNext = {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    }),
                 )
             }
 
@@ -109,26 +105,23 @@ fun PlayerDialog(
                 AppTextField(
                     value = formState.lastName,
                     onValueChange = {
-                        formState =
-                            formState.copy(
-                                lastName = it,
-                                errors = formState.errors.copy(lastName = false),
-                            )
+                        formState = formState.copy(
+                            lastName = it,
+                            errors = formState.errors.copy(lastName = false),
+                        )
                     },
                     label = { Text(stringResource(R.string.last_name)) },
                     modifier = Modifier.fillMaxWidth(),
                     isError = formState.errors.lastName,
-                    supportingText =
-                        if (formState.errors.lastName) {
-                            { Text(stringResource(R.string.last_name_required)) }
-                        } else {
-                            null
-                        },
+                    supportingText = if (formState.errors.lastName) {
+                        { Text(stringResource(R.string.last_name_required)) }
+                    } else {
+                        null
+                    },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions =
-                        KeyboardActions(onNext = {
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }),
+                    keyboardActions = KeyboardActions(onNext = {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    }),
                 )
             }
 
@@ -137,29 +130,25 @@ fun PlayerDialog(
                     value = formState.number,
                     onValueChange = { newValue ->
                         if (newValue.all { it.isDigit() }) {
-                            formState =
-                                formState.copy(
-                                    number = newValue,
-                                    errors = formState.errors.copy(number = false),
-                                )
+                            formState = formState.copy(
+                                number = newValue,
+                                errors = formState.errors.copy(number = false),
+                            )
                         }
                     },
                     label = { Text(stringResource(R.string.number)) },
                     modifier = Modifier.fillMaxWidth(),
                     isError = formState.errors.number,
-                    supportingText =
-                        if (formState.errors.number) {
-                            { Text(stringResource(R.string.number_required)) }
-                        } else {
-                            null
-                        },
-                    keyboardOptions =
-                        KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done,
-                        ),
-                    keyboardActions =
-                        KeyboardActions(onNext = { focusManager.clearFocus() }),
+                    supportingText = if (formState.errors.number) {
+                        { Text(stringResource(R.string.number_required)) }
+                    } else {
+                        null
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done,
+                    ),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
                 )
             }
 
@@ -183,7 +172,6 @@ fun PlayerDialog(
                                 formState.selectedPositions - position
                             }
                         )
-
                     }
                 )
             }
@@ -229,25 +217,23 @@ private data class PlayerFormState(
     val errors: FormErrors = FormErrors()
 )
 
-private fun Player?.toFormState(): PlayerFormState =
-    PlayerFormState(
-        id = this?.id ?: 0,
-        firstName = this?.firstName ?: "",
-        lastName = this?.lastName ?: "",
-        number = this?.number?.toString() ?: "",
-        selectedPositions = this?.positions ?: listOf()
-    )
+private fun Player?.toFormState(): PlayerFormState = PlayerFormState(
+    id = this?.id ?: 0,
+    firstName = this?.firstName ?: "",
+    lastName = this?.lastName ?: "",
+    number = this?.number?.toString() ?: "",
+    selectedPositions = this?.positions ?: listOf()
+)
 
-private fun PlayerFormState.toPlayer(): Player =
-    Player(
-        id = id,
-        firstName = firstName,
-        lastName = lastName,
-        number = number.toInt(),
-        positions = selectedPositions,
-    )
+private fun PlayerFormState.toPlayer(): Player = Player(
+    id = id,
+    firstName = firstName,
+    lastName = lastName,
+    number = number.toInt(),
+    positions = selectedPositions,
+)
 
-data class FormErrors(
+private data class FormErrors(
     val firstName: Boolean = false,
     val lastName: Boolean = false,
     val number: Boolean = false
@@ -257,7 +243,7 @@ data class FormErrors(
 
 @Preview
 @Composable
-fun EditPlayerDialogPreview() {
+private fun EditPlayerDialogPreview() {
     MaterialTheme {
         PlayerDialog(
             player = Player(

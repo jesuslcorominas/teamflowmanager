@@ -34,6 +34,10 @@ object TFMSpacing { // Design tokens Spacing in dp
     val spacing15: Dp = 104.dp
 
     val spacing16: Dp = 112.dp
+
+    val spacing17: Dp = 128.dp
+
+    val spacing18: Dp = 144.dp
 }
 
 val LocalSpacing = staticCompositionLocalOf { TFMSpacing }

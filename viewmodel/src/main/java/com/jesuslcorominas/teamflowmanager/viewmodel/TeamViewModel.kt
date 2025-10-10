@@ -34,19 +34,8 @@ class TeamViewModel(
         }
     }
 
-    fun createTeam(
-        name: String,
-        coachName: String,
-        delegateName: String,
-    ) {
+    fun createTeam(team: Team) {
         viewModelScope.launch {
-            val team =
-                Team(
-                    id = 0,
-                    name = name,
-                    coachName = coachName,
-                    delegateName = delegateName,
-                )
             createTeamUseCase.invoke(team)
         }
     }
@@ -57,7 +46,5 @@ sealed class TeamUiState {
 
     data object NoTeam : TeamUiState()
 
-    data class TeamExists(
-        val team: Team,
-    ) : TeamUiState()
+    data class TeamExists(val team: Team) : TeamUiState()
 }

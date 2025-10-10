@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.ui
+package com.jesuslcorominas.teamflowmanager.ui.main
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
