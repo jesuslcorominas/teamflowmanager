@@ -31,7 +31,7 @@ internal class SaveSessionUseCaseImpl(
         playerTimes.forEach { playerTime ->
             // Calculate final elapsed time if running
             val finalElapsedTime = if (playerTime.isRunning && playerTime.lastStartTimeMillis != null) {
-                playerTime.elapsedTimeMillis + (currentTime - playerTime.lastStartTimeMillis)
+                playerTime.elapsedTimeMillis + (currentTime - (playerTime.lastStartTimeMillis ?: 0L))
             } else {
                 playerTime.elapsedTimeMillis
             }

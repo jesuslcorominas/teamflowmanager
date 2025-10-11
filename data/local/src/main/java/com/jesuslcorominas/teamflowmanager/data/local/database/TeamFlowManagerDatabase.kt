@@ -13,7 +13,11 @@ import com.jesuslcorominas.teamflowmanager.data.local.entity.PlayerTimeEntity
 import com.jesuslcorominas.teamflowmanager.data.local.entity.PlayerTimeHistoryEntity
 import com.jesuslcorominas.teamflowmanager.data.local.entity.TeamEntity
 
-@Database(entities = [PlayerEntity::class, TeamEntity::class, MatchEntity::class, PlayerTimeEntity::class, PlayerTimeHistoryEntity::class], version = 2, exportSchema = false)
+@Database(
+    entities = [PlayerEntity::class, TeamEntity::class, MatchEntity::class, PlayerTimeEntity::class, PlayerTimeHistoryEntity::class],
+    version = 1,
+    exportSchema = false
+)
 abstract class TeamFlowManagerDatabase : RoomDatabase() {
     abstract fun playerDao(): PlayerDao
 
