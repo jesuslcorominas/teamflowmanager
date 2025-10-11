@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.components.TeamInfoDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
+import com.jesuslcorominas.teamflowmanager.ui.session.SessionScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
@@ -34,6 +35,7 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
     var teamName by remember { mutableStateOf<String?>(null) }
     var showTeamInfo by remember { mutableStateOf(false) }
     var showEditTeam by remember { mutableStateOf(false) }
+    var showSession by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
 
     val currentTeam =
@@ -71,14 +73,22 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
                     .padding(paddingValues),
             color = MaterialTheme.colorScheme.background,
         ) {
-            if (teamName == null) {
-                TeamScreen(
-                    onNavigateToPlayers = { name ->
-                        teamName = name
-                    },
-                )
-            } else {
-                PlayersScreen()
+            when {
+                teamName == null -> {
+                    TeamScreen(
+                        onNavigateToPlayers = { name ->
+                            teamName = name
+                        },
+                    )
+                }
+                showSession -> {
+                    SessionScreen()
+                }
+                else -> {
+                    PlayersScreen(
+                        onNavigateToSession = { showSession = true },
+                    )
+                }
             }
         }
 

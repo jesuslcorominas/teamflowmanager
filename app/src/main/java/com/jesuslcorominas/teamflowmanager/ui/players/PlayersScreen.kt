@@ -1,11 +1,14 @@
 package com.jesuslcorominas.teamflowmanager.ui.players
 
 import TFMSpacing
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -35,7 +38,10 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
+fun PlayersScreen(
+    viewModel: PlayerViewModel = koinViewModel(),
+    onNavigateToSession: () -> Unit = {},
+) {
     val uiState by viewModel.uiState.collectAsState()
     val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
     var showAddPlayerDialog by remember { mutableStateOf(false) }
@@ -58,13 +64,27 @@ fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
             }
         }
 
-        FloatingActionButton(
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(TFMSpacing.spacing04),
-            onClick = { showAddPlayerDialog = true },
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
-            Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.add_player_title))
+            FloatingActionButton(
+                onClick = onNavigateToSession,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            ) {
+                Icon(
+                    Icons.Outlined.PlayArrow,
+                    contentDescription = stringResource(R.string.session_title),
+                )
+            }
+
+            FloatingActionButton(
+                onClick = { showAddPlayerDialog = true },
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.add_player_title))
+            }
         }
 
         playerToEdit?.let { player ->

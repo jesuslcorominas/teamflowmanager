@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
+import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import org.koin.core.module.dsl.viewModel
@@ -20,6 +21,13 @@ val viewModelModule =
                 getTeamUseCase = get(),
                 createTeamUseCase = get(),
                 updateTeamUseCase = get(),
+            )
+        }
+        viewModel {
+            MatchViewModel(
+                getMatchUseCase = get(),
+                getAllPlayerTimesUseCase = get(),
+                getPlayersUseCase = get(),
             )
         }
     }
