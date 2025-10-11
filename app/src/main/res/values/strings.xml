@@ -46,4 +46,8 @@
     <string name="delegate_name">Delegate Name</string>
     <string name="delegate_name_required">Delegate name is required</string>
 
+    <string name="team_info">Team Info</string>
+    <string name="team_info_description">Show team information</string>
+    <string name="close">Close</string>
+
 </resources>
