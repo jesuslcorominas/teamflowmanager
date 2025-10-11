@@ -13,7 +13,23 @@ internal class MatchLocalDataSourceImpl(
 ) : MatchLocalDataSource {
     override fun getMatch(): Flow<Match?> = matchDao.getMatch().map { it?.toDomain() }
 
+    override fun getMatchById(matchId: Long): Flow<Match?> =
+        matchDao.getMatchById(matchId).map { it?.toDomain() }
+
+    override fun getAllMatches(): Flow<List<Match>> =
+        matchDao.getAllMatches().map { entities -> entities.map { it.toDomain() } }
+
     override suspend fun upsertMatch(match: Match) {
         matchDao.upsertMatch(match.toEntity())
+    }
+
+    override suspend fun insertMatch(match: Match): Long = matchDao.insertMatch(match.toEntity())
+
+    override suspend fun updateMatch(match: Match) {
+        matchDao.updateMatch(match.toEntity())
+    }
+
+    override suspend fun deleteMatch(matchId: Long) {
+        matchDao.deleteMatch(matchId)
     }
 }
