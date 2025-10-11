@@ -52,4 +52,8 @@ internal class PlayerTimeRepositoryImpl(
             localDataSource.upsertPlayerTime(updatedPlayerTime)
         }
     }
+
+    override suspend fun resetAllPlayerTimes() {
+        localDataSource.deleteAllPlayerTimes()
+    }
 }

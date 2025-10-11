@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SaveSessionUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,7 @@ class MatchViewModel(
     private val getMatchUseCase: GetMatchUseCase,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
     private val getPlayersUseCase: GetPlayersUseCase,
+    private val saveSessionUseCase: SaveSessionUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
@@ -29,6 +31,12 @@ class MatchViewModel(
     init {
         loadMatchData()
         startTimeUpdater()
+    }
+
+    fun saveSession() {
+        viewModelScope.launch {
+            saveSessionUseCase()
+        }
     }
 
     private fun loadMatchData() {

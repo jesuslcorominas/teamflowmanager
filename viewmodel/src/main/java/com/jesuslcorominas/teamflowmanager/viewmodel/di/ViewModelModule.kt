@@ -28,6 +28,7 @@ val viewModelModule =
                 getMatchUseCase = get(),
                 getAllPlayerTimesUseCase = get(),
                 getPlayersUseCase = get(),
+                saveSessionUseCase = get(),
             )
         }
     }

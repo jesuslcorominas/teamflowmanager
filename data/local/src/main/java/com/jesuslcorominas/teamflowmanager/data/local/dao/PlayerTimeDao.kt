@@ -16,4 +16,7 @@ interface PlayerTimeDao {
 
     @Upsert
     suspend fun upsert(playerTime: PlayerTimeEntity)
+
+    @Query("DELETE FROM player_time")
+    suspend fun deleteAll()
 }

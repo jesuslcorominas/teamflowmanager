@@ -24,4 +24,8 @@ internal class PlayerTimeLocalDataSourceImpl(
     override suspend fun upsertPlayerTime(playerTime: PlayerTime) {
         playerTimeDao.upsert(playerTime.toEntity())
     }
+
+    override suspend fun deleteAllPlayerTimes() {
+        playerTimeDao.deleteAll()
+    }
 }
