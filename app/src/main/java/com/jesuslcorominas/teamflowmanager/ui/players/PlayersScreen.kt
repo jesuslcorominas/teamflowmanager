@@ -5,8 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +33,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
@@ -57,13 +59,12 @@ fun PlayersScreen(viewModel: PlayerViewModel = koinViewModel()) {
         }
 
         FloatingActionButton(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(TFMSpacing.spacing04),
             onClick = { showAddPlayerDialog = true },
-            modifier =
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(TFMSpacing.spacing04),
         ) {
-            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_player_title))
+            Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.add_player_title))
         }
 
         playerToEdit?.let { player ->

@@ -74,7 +74,7 @@ fun TeamInfoDialog(
 }
 
 @Composable
-private fun TeamInfoItem(
+fun TeamInfoItem(
     label: String,
     value: String,
 ) {

@@ -3,7 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.main
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -54,7 +54,7 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
                     actions = {
                         IconButton(onClick = { showTeamInfo = true }) {
                             Icon(
-                                imageVector = Icons.Filled.Info,
+                                imageVector = Icons.Outlined.Info,
                                 contentDescription = stringResource(R.string.team_info_description),
                             )
                         }
