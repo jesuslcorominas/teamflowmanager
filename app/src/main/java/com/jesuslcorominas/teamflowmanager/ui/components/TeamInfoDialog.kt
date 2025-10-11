@@ -4,8 +4,10 @@ import TFMSpacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -24,6 +26,7 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMElevation
 fun TeamInfoDialog(
     team: Team,
     onDismiss: () -> Unit,
+    onEdit: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -64,6 +67,10 @@ fun TeamInfoDialog(
                             .padding(top = TFMSpacing.spacing02),
                     horizontalArrangement = Arrangement.End,
                 ) {
+                    Button(onClick = onEdit) {
+                        Text(stringResource(R.string.edit))
+                    }
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
                     Button(onClick = onDismiss) {
                         Text(stringResource(R.string.close))
                     }
@@ -107,6 +114,7 @@ private fun TeamInfoDialogPreview() {
                 delegateName = "Jane Smith",
             ),
             onDismiss = {},
+            onEdit = {},
         )
     }
 }

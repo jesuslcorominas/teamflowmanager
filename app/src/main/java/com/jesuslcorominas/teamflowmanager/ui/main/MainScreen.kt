@@ -33,6 +33,7 @@ import org.koin.androidx.compose.koinViewModel
 fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
     var teamName by remember { mutableStateOf<String?>(null) }
     var showTeamInfo by remember { mutableStateOf(false) }
+    var showEditTeam by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
 
     val currentTeam =
@@ -85,6 +86,21 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
             TeamInfoDialog(
                 team = currentTeam,
                 onDismiss = { showTeamInfo = false },
+                onEdit = {
+                    showTeamInfo = false
+                    showEditTeam = true
+                },
+            )
+        }
+
+        if (showEditTeam && currentTeam != null) {
+            com.jesuslcorominas.teamflowmanager.ui.components.EditTeamDialog(
+                team = currentTeam,
+                onDismiss = { showEditTeam = false },
+                onSave = { team ->
+                    viewModel.updateTeam(team)
+                    showEditTeam = false
+                },
             )
         }
     }

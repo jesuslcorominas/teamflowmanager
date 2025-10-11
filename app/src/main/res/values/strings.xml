@@ -48,6 +48,8 @@
 
     <string name="team_info">Team Info</string>
     <string name="team_info_description">Show team information</string>
+    <string name="edit">Edit</string>
+    <string name="edit_team_title">Edit Team</string>
     <string name="close">Close</string>
 
 </resources>
