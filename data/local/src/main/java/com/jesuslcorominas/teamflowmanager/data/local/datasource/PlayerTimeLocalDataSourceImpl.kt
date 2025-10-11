@@ -1,0 +1,27 @@
+package com.jesuslcorominas.teamflowmanager.data.local.datasource
+
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerTimeDao
+import com.jesuslcorominas.teamflowmanager.data.local.entity.toDomain
+import com.jesuslcorominas.teamflowmanager.data.local.entity.toEntity
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+internal class PlayerTimeLocalDataSourceImpl(
+    private val playerTimeDao: PlayerTimeDao,
+) : PlayerTimeLocalDataSource {
+    override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> =
+        playerTimeDao
+            .getPlayerTime(playerId)
+            .map { it?.toDomain() }
+
+    override fun getAllPlayerTimes(): Flow<List<PlayerTime>> =
+        playerTimeDao
+            .getAllPlayerTimes()
+            .map { list -> list.map { it.toDomain() } }
+
+    override suspend fun upsertPlayerTime(playerTime: PlayerTime) {
+        playerTimeDao.upsert(playerTime.toEntity())
+    }
+}

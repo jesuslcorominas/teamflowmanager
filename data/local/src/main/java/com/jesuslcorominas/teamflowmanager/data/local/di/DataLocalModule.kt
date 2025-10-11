@@ -3,10 +3,12 @@ package com.jesuslcorominas.teamflowmanager.data.local.di
 import androidx.room.Room
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.MatchLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.TeamLocalDataSourceImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
@@ -28,6 +30,7 @@ internal val databaseModule =
         single { get<TeamFlowManagerDatabase>().playerDao() }
         single { get<TeamFlowManagerDatabase>().teamDao() }
         single { get<TeamFlowManagerDatabase>().matchDao() }
+        single { get<TeamFlowManagerDatabase>().playerTimeDao() }
     }
 
 internal val dataSourceLocalModule =
@@ -35,6 +38,7 @@ internal val dataSourceLocalModule =
         singleOf(::PlayerLocalDataSourceImpl) bind PlayerLocalDataSource::class
         singleOf(::TeamLocalDataSourceImpl) bind TeamLocalDataSource::class
         singleOf(::MatchLocalDataSourceImpl) bind MatchLocalDataSource::class
+        singleOf(::PlayerTimeLocalDataSourceImpl) bind PlayerTimeLocalDataSource::class
     }
 
 val dataLocalModule =
