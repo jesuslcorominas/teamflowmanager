@@ -215,4 +215,17 @@ class PlayerTimeRepositoryImplTest {
                 )
             }
         }
+
+    @Test
+    fun `resetAllPlayerTimes should delete all player times from local data source`() =
+        runTest {
+            // Given
+            coEvery { localDataSource.deleteAllPlayerTimes() } returns Unit
+
+            // When
+            repository.resetAllPlayerTimes()
+
+            // Then
+            coVerify { localDataSource.deleteAllPlayerTimes() }
+        }
 }

@@ -58,5 +58,6 @@
     <string name="player_times_title">Player Times</string>
     <string name="running_indicator">ACTIVE</string>
     <string name="player_number_format">#%d</string>
+    <string name="save_session_button">Save Session</string>
 
 </resources>

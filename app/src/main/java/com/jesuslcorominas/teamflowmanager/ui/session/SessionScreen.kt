@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,7 +48,10 @@ fun SessionScreen(viewModel: MatchViewModel = koinViewModel()) {
         when (val state = uiState) {
             is MatchUiState.Loading -> LoadingState()
             is MatchUiState.NoMatch -> NoMatchState()
-            is MatchUiState.Success -> SuccessState(state)
+            is MatchUiState.Success -> SuccessState(
+                state = state,
+                onSaveSession = { viewModel.saveSession() },
+            )
         }
     }
 }
@@ -75,7 +80,10 @@ private fun NoMatchState() {
 }
 
 @Composable
-private fun SuccessState(state: MatchUiState.Success) {
+private fun SuccessState(
+    state: MatchUiState.Success,
+    onSaveSession: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -96,12 +104,21 @@ private fun SuccessState(state: MatchUiState.Success) {
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
             items(state.playerTimes) { playerTimeItem ->
                 PlayerTimeCard(playerTimeItem = playerTimeItem)
             }
+        }
+
+        Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+
+        Button(
+            onClick = onSaveSession,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = stringResource(R.string.save_session_button))
         }
     }
 }
@@ -257,6 +274,7 @@ private fun SuccessStatePreview() {
                     ),
                 ),
             ),
+            onSaveSession = {},
         )
     }
 }

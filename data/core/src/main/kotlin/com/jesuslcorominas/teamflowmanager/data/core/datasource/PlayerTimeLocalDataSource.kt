@@ -9,4 +9,6 @@ interface PlayerTimeLocalDataSource {
     fun getAllPlayerTimes(): Flow<List<PlayerTime>>
 
     suspend fun upsertPlayerTime(playerTime: PlayerTime)
+
+    suspend fun deleteAllPlayerTimes()
 }

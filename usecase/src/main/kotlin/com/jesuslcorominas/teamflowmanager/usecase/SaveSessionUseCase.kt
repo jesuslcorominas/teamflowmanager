@@ -1,0 +1,54 @@
+package com.jesuslcorominas.teamflowmanager.usecase
+
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
+import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
+import kotlinx.coroutines.flow.first
+
+interface SaveSessionUseCase {
+    suspend operator fun invoke()
+}
+
+internal class SaveSessionUseCaseImpl(
+    private val matchRepository: MatchRepository,
+    private val playerTimeRepository: PlayerTimeRepository,
+    private val playerTimeHistoryRepository: PlayerTimeHistoryRepository,
+) : SaveSessionUseCase {
+    override suspend fun invoke() {
+        val currentTime = System.currentTimeMillis()
+
+        // Get the current match
+        val match = matchRepository.getMatch().first()
+        if (match == null) {
+            return
+        }
+
+        // Get all player times
+        val playerTimes = playerTimeRepository.getAllPlayerTimes().first()
+
+        // Save each player time to history
+        playerTimes.forEach { playerTime ->
+            // Calculate final elapsed time if running
+            val finalElapsedTime = if (playerTime.isRunning && playerTime.lastStartTimeMillis != null) {
+                playerTime.elapsedTimeMillis + (currentTime - (playerTime.lastStartTimeMillis ?: 0L))
+            } else {
+                playerTime.elapsedTimeMillis
+            }
+
+            // Only save if there's time recorded
+            if (finalElapsedTime > 0) {
+                val history = PlayerTimeHistory(
+                    playerId = playerTime.playerId,
+                    matchId = match.id,
+                    elapsedTimeMillis = finalElapsedTime,
+                    savedAtMillis = currentTime,
+                )
+                playerTimeHistoryRepository.insertPlayerTimeHistory(history)
+            }
+        }
+
+        // Reset all player times
+        playerTimeRepository.resetAllPlayerTimes()
+    }
+}
