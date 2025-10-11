@@ -52,4 +52,11 @@
     <string name="edit_team_title">Edit Team</string>
     <string name="close">Close</string>
 
+    <string name="session_title">Match Session</string>
+    <string name="no_match_message">No active match</string>
+    <string name="match_time_label">Match Time</string>
+    <string name="player_times_title">Player Times</string>
+    <string name="running_indicator">ACTIVE</string>
+    <string name="player_number_format">#%d</string>
+
 </resources>
