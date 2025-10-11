@@ -41,6 +41,7 @@ import org.koin.androidx.compose.koinViewModel
 fun PlayersScreen(
     viewModel: PlayerViewModel = koinViewModel(),
     onNavigateToSession: () -> Unit = {},
+    onNavigateToMatches: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
@@ -70,6 +71,16 @@ fun PlayersScreen(
                 .padding(TFMSpacing.spacing04),
             horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
+            FloatingActionButton(
+                onClick = onNavigateToMatches,
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            ) {
+                Icon(
+                    Icons.Outlined.Add,
+                    contentDescription = stringResource(R.string.matches_title),
+                )
+            }
+
             FloatingActionButton(
                 onClick = onNavigateToSession,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
