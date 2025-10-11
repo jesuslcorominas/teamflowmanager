@@ -23,7 +23,7 @@ internal val databaseModule =
                     androidContext(),
                     TeamFlowManagerDatabase::class.java,
                     "teamflowmanager_database",
-                ).fallbackToDestructiveMigration()
+                )
                 .build()
         }
 
