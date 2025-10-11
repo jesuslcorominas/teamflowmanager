@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -27,6 +28,7 @@ class TeamViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getTeamUseCase: GetTeamUseCase
     private lateinit var createTeamUseCase: CreateTeamUseCase
+    private lateinit var updateTeamUseCase: UpdateTeamUseCase
     private lateinit var viewModel: TeamViewModel
 
     @Before
@@ -34,6 +36,7 @@ class TeamViewModelTest {
         Dispatchers.setMain(testDispatcher)
         getTeamUseCase = mockk()
         createTeamUseCase = mockk(relaxed = true)
+        updateTeamUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -47,7 +50,7 @@ class TeamViewModelTest {
         every { getTeamUseCase.invoke() } returns flowOf(null)
 
         // When
-        viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase)
+        viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
 
         // Then
         assertEquals(TeamUiState.Loading, viewModel.uiState.value)
@@ -60,7 +63,7 @@ class TeamViewModelTest {
             every { getTeamUseCase.invoke() } returns flowOf(null)
 
             // When
-            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase)
+            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
             advanceUntilIdle()
 
             // Then
@@ -75,7 +78,7 @@ class TeamViewModelTest {
             every { getTeamUseCase.invoke() } returns flowOf(team)
 
             // When
-            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase)
+            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
             advanceUntilIdle()
 
             // Then
@@ -87,27 +90,33 @@ class TeamViewModelTest {
     fun `createTeam should call createTeamUseCase with correct parameters`() =
         runTest(testDispatcher) {
             // Given
-            val teamName = "Test Team"
-            val coachName = "Coach Name"
-            val delegateName = "Delegate Name"
+            val team = Team(0, "Test Team", "Coach Name", "Delegate Name")
             every { getTeamUseCase.invoke() } returns flowOf(null)
             coEvery { createTeamUseCase.invoke(any()) } just runs
-            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase)
+            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
 
             // When
-            viewModel.createTeam(teamName, coachName, delegateName)
+            viewModel.createTeam(team)
             advanceUntilIdle()
 
             // Then
-            coVerify {
-                createTeamUseCase.invoke(
-                    match { team ->
-                        team.name == teamName &&
-                            team.coachName == coachName &&
-                            team.delegateName == delegateName &&
-                            team.id == 0L
-                    },
-                )
-            }
+            coVerify { createTeamUseCase.invoke(team) }
+        }
+
+    @Test
+    fun `updateTeam should call updateTeamUseCase with correct team`() =
+        runTest(testDispatcher) {
+            // Given
+            val team = Team(1, "Updated Team", "Updated Coach", "Updated Delegate")
+            every { getTeamUseCase.invoke() } returns flowOf(team)
+            coEvery { updateTeamUseCase.invoke(any()) } just runs
+            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
+
+            // When
+            viewModel.updateTeam(team)
+            advanceUntilIdle()
+
+            // Then
+            coVerify { updateTeamUseCase.invoke(team) }
         }
 }

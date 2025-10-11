@@ -19,6 +19,7 @@ val viewModelModule =
             TeamViewModel(
                 getTeamUseCase = get(),
                 createTeamUseCase = get(),
+                updateTeamUseCase = get(),
             )
         }
     }
