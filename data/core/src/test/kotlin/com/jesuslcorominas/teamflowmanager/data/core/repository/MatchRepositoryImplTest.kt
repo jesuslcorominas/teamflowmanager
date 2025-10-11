@@ -1,7 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.SessionLocalDataSource
-import com.jesuslcorominas.teamflowmanager.domain.model.Session
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
+import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -16,44 +16,44 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-class SessionRepositoryImplTest {
-    private lateinit var localDataSource: SessionLocalDataSource
-    private lateinit var repository: SessionRepositoryImpl
+class MatchRepositoryImplTest {
+    private lateinit var localDataSource: MatchLocalDataSource
+    private lateinit var repository: MatchRepositoryImpl
 
     @Before
     fun setup() {
         localDataSource = mockk(relaxed = true)
-        repository = SessionRepositoryImpl(localDataSource)
+        repository = MatchRepositoryImpl(localDataSource)
     }
 
     @Test
-    fun `getSession should return session from local data source`() =
+    fun `getMatch should return match from local data source`() =
         runTest {
             // Given
-            val session = Session(id = 1L, elapsedTimeMillis = 5000L, isRunning = true)
-            every { localDataSource.getSession() } returns flowOf(session)
+            val match = Match(id = 1L, elapsedTimeMillis = 5000L, isRunning = true)
+            every { localDataSource.getMatch() } returns flowOf(match)
 
             // When
-            val result = repository.getSession().first()
+            val result = repository.getMatch().first()
 
             // Then
-            assertEquals(session, result)
+            assertEquals(match, result)
         }
 
     @Test
-    fun `startTimer should create new session when none exists`() =
+    fun `startTimer should create new match when none exists`() =
         runTest {
             // Given
             val currentTime = 1000L
-            every { localDataSource.getSession() } returns flowOf(null)
-            coEvery { localDataSource.upsertSession(any()) } returns Unit
+            every { localDataSource.getMatch() } returns flowOf(null)
+            coEvery { localDataSource.upsertMatch(any()) } returns Unit
 
             // When
             repository.startTimer(currentTime)
 
             // Then
             coVerify {
-                localDataSource.upsertSession(
+                localDataSource.upsertMatch(
                     match {
                         it.id == 1L &&
                             it.elapsedTimeMillis == 0L &&
@@ -65,20 +65,20 @@ class SessionRepositoryImplTest {
         }
 
     @Test
-    fun `startTimer should update existing session to running state`() =
+    fun `startTimer should update existing match to running state`() =
         runTest {
             // Given
             val currentTime = 2000L
-            val existingSession = Session(id = 1L, elapsedTimeMillis = 5000L, isRunning = false)
-            every { localDataSource.getSession() } returns flowOf(existingSession)
-            coEvery { localDataSource.upsertSession(any()) } returns Unit
+            val existingMatch = Match(id = 1L, elapsedTimeMillis = 5000L, isRunning = false)
+            every { localDataSource.getMatch() } returns flowOf(existingMatch)
+            coEvery { localDataSource.upsertMatch(any()) } returns Unit
 
             // When
             repository.startTimer(currentTime)
 
             // Then
             coVerify {
-                localDataSource.upsertSession(
+                localDataSource.upsertMatch(
                     match {
                         it.id == 1L &&
                             it.elapsedTimeMillis == 5000L &&
@@ -95,16 +95,16 @@ class SessionRepositoryImplTest {
             // Given
             val startTime = 1000L
             val pauseTime = 3000L
-            val existingSession = Session(id = 1L, elapsedTimeMillis = 2000L, isRunning = true, lastStartTimeMillis = startTime)
-            every { localDataSource.getSession() } returns flowOf(existingSession)
-            coEvery { localDataSource.upsertSession(any()) } returns Unit
+            val existingMatch = Match(id = 1L, elapsedTimeMillis = 2000L, isRunning = true, lastStartTimeMillis = startTime)
+            every { localDataSource.getMatch() } returns flowOf(existingMatch)
+            coEvery { localDataSource.upsertMatch(any()) } returns Unit
 
             // When
             repository.pauseTimer(pauseTime)
 
             // Then
             coVerify {
-                localDataSource.upsertSession(
+                localDataSource.upsertMatch(
                     match {
                         it.id == 1L &&
                             it.elapsedTimeMillis == 4000L &&
@@ -116,31 +116,31 @@ class SessionRepositoryImplTest {
         }
 
     @Test
-    fun `pauseTimer should do nothing when session is not running`() =
+    fun `pauseTimer should do nothing when match is not running`() =
         runTest {
             // Given
             val pauseTime = 3000L
-            val existingSession = Session(id = 1L, elapsedTimeMillis = 2000L, isRunning = false)
-            every { localDataSource.getSession() } returns flowOf(existingSession)
+            val existingMatch = Match(id = 1L, elapsedTimeMillis = 2000L, isRunning = false)
+            every { localDataSource.getMatch() } returns flowOf(existingMatch)
 
             // When
             repository.pauseTimer(pauseTime)
 
             // Then
-            coVerify(exactly = 0) { localDataSource.upsertSession(any()) }
+            coVerify(exactly = 0) { localDataSource.upsertMatch(any()) }
         }
 
     @Test
-    fun `pauseTimer should do nothing when no session exists`() =
+    fun `pauseTimer should do nothing when no match exists`() =
         runTest {
             // Given
             val pauseTime = 3000L
-            every { localDataSource.getSession() } returns flowOf(null)
+            every { localDataSource.getMatch() } returns flowOf(null)
 
             // When
             repository.pauseTimer(pauseTime)
 
             // Then
-            coVerify(exactly = 0) { localDataSource.upsertSession(any()) }
+            coVerify(exactly = 0) { localDataSource.upsertMatch(any()) }
         }
 }

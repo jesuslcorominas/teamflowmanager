@@ -6,16 +6,16 @@ import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetSessionUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetSessionUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.PauseSessionTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.PauseSessionTimerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.StartSessionTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.StartSessionTimerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
@@ -33,9 +33,9 @@ internal val useCaseInternalModule =
         singleOf(::GetTeamUseCaseImpl) bind GetTeamUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
-        singleOf(::GetSessionUseCaseImpl) bind GetSessionUseCase::class
-        singleOf(::StartSessionTimerUseCaseImpl) bind StartSessionTimerUseCase::class
-        singleOf(::PauseSessionTimerUseCaseImpl) bind PauseSessionTimerUseCase::class
+        singleOf(::GetMatchUseCaseImpl) bind GetMatchUseCase::class
+        singleOf(::StartMatchTimerUseCaseImpl) bind StartMatchTimerUseCase::class
+        singleOf(::PauseMatchTimerUseCaseImpl) bind PauseMatchTimerUseCase::class
     }
 
 val useCaseModule =

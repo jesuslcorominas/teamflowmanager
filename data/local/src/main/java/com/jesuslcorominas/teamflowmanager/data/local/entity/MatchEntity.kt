@@ -2,10 +2,10 @@ package com.jesuslcorominas.teamflowmanager.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.jesuslcorominas.teamflowmanager.domain.model.Session
+import com.jesuslcorominas.teamflowmanager.domain.model.Match
 
-@Entity(tableName = "session")
-data class SessionEntity(
+@Entity(tableName = "match")
+data class MatchEntity(
     @PrimaryKey
     val id: Long = 1L,
     val elapsedTimeMillis: Long = 0L,
@@ -13,16 +13,16 @@ data class SessionEntity(
     val lastStartTimeMillis: Long? = null,
 )
 
-fun SessionEntity.toDomain(): Session =
-    Session(
+fun MatchEntity.toDomain(): Match =
+    Match(
         id = id,
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
     )
 
-fun Session.toEntity(): SessionEntity =
-    SessionEntity(
+fun Match.toEntity(): MatchEntity =
+    MatchEntity(
         id = id,
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
