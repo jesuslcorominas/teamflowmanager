@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -38,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
-import com.jesuslcorominas.teamflowmanager.ui.components.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
@@ -100,7 +100,7 @@ fun MatchDetailScreen(
                         Modifier
                             .fillMaxSize()
                             .padding(paddingValues)
-                            .padding(TFMSpacing.medium),
+                            .padding(TFMSpacing.spacing04),
                 )
             }
 
@@ -160,29 +160,35 @@ fun MatchForm(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(TFMSpacing.medium),
-        verticalArrangement = Arrangement.spacedBy(TFMSpacing.medium),
+                .padding(TFMSpacing.spacing04),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
     ) {
-        AppTextField(
+        OutlinedTextField(
             value = opponent,
             onValueChange = {
                 opponent = it
                 opponentError = null
             },
-            label = stringResource(R.string.opponent),
+            label = { Text(stringResource(R.string.opponent)) },
             isError = opponentError != null,
-            errorMessage = opponentError,
+            supportingText = if (opponentError != null) {
+                { Text(opponentError!!) }
+            } else null,
+            modifier = Modifier.fillMaxWidth(),
         )
 
-        AppTextField(
+        OutlinedTextField(
             value = location,
             onValueChange = {
                 location = it
                 locationError = null
             },
-            label = stringResource(R.string.location),
+            label = { Text(stringResource(R.string.location)) },
             isError = locationError != null,
-            errorMessage = locationError,
+            supportingText = if (locationError != null) {
+                { Text(locationError!!) }
+            } else null,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Text(
@@ -198,7 +204,7 @@ fun MatchForm(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(TFMSpacing.xxLarge * 3),
+                        .height(TFMSpacing.spacing18),
             ) {
                 items(availablePlayers) { player ->
                     PlayerSelectionItem(
@@ -230,7 +236,7 @@ fun MatchForm(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(TFMSpacing.xxLarge * 3),
+                        .height(TFMSpacing.spacing18),
             ) {
                 items(availablePlayers) { player ->
                     PlayerSelectionItem(
@@ -253,7 +259,7 @@ fun MatchForm(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.small),
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
             Button(
                 onClick = onCancel,
@@ -311,7 +317,7 @@ fun PlayerSelectionItem(
             modifier
                 .fillMaxWidth()
                 .clickable { onSelectionChange(!isSelected) }
-                .padding(TFMSpacing.small),
+                .padding(TFMSpacing.spacing02),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(
@@ -319,7 +325,7 @@ fun PlayerSelectionItem(
             onCheckedChange = onSelectionChange,
         )
         Column(
-            modifier = Modifier.padding(start = TFMSpacing.small),
+            modifier = Modifier.padding(start = TFMSpacing.spacing02),
         ) {
             Text(
                 text = "${player.number} - ${player.firstName} ${player.lastName}",

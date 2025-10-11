@@ -82,7 +82,7 @@ fun MatchListScreen(
                         modifier =
                             Modifier
                                 .align(Alignment.Center)
-                                .padding(TFMSpacing.medium),
+                                .padding(TFMSpacing.spacing04),
                     )
                 }
 
@@ -91,8 +91,8 @@ fun MatchListScreen(
                         modifier =
                             Modifier
                                 .fillMaxSize()
-                                .padding(TFMSpacing.medium),
-                        verticalArrangement = Arrangement.spacedBy(TFMSpacing.small),
+                                .padding(TFMSpacing.spacing04),
+                        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                     ) {
                         items(state.matches) { match ->
                             MatchCard(
@@ -138,7 +138,7 @@ fun MatchCard(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(TFMSpacing.medium),
+                    .padding(TFMSpacing.spacing04),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -150,21 +150,21 @@ fun MatchCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
-                Spacer(modifier = Modifier.height(TFMSpacing.extraSmall))
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
                 Text(
                     text = match.location ?: stringResource(R.string.location),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (match.date != null) {
-                    Spacer(modifier = Modifier.height(TFMSpacing.extraSmall))
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
                     Text(
                         text = DateFormatter.formatDateTime(match.date),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Spacer(modifier = Modifier.height(TFMSpacing.extraSmall))
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
                 Text(
                     text =
                         stringResource(

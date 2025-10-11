@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SaveSessionUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,7 @@ class MatchViewModelTest {
     private lateinit var getMatchUseCase: GetMatchUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var getPlayersUseCase: GetPlayersUseCase
+    private lateinit var saveSessionUseCase: SaveSessionUseCase
     private lateinit var viewModel: MatchViewModel
 
     @Before
@@ -39,6 +41,7 @@ class MatchViewModelTest {
         getMatchUseCase = mockk()
         getAllPlayerTimesUseCase = mockk()
         getPlayersUseCase = mockk()
+        saveSessionUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -54,7 +57,7 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, saveSessionUseCase)
 
         // Then
         assertEquals(MatchUiState.Loading, viewModel.uiState.value)
@@ -68,7 +71,7 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, saveSessionUseCase)
         advanceUntilIdle()
 
         // Then
@@ -98,7 +101,7 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, saveSessionUseCase)
         advanceUntilIdle()
 
         // Then
@@ -129,7 +132,7 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, saveSessionUseCase)
         advanceUntilIdle()
 
         // Then
@@ -157,7 +160,7 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, saveSessionUseCase)
         advanceUntilIdle()
 
         // Then
@@ -188,7 +191,7 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, saveSessionUseCase)
         advanceUntilIdle()
 
         // Then
@@ -214,7 +217,7 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, saveSessionUseCase)
         advanceUntilIdle()
         val initialState = viewModel.uiState.value as MatchUiState.Success
         val initialTime = initialState.matchTimeMillis
