@@ -1,0 +1,47 @@
+package com.jesuslcorominas.teamflowmanager.data.core.repository
+
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
+import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+
+internal class MatchRepositoryImpl(
+    private val localDataSource: MatchLocalDataSource,
+) : MatchRepository {
+    override fun getMatch(): Flow<Match?> = localDataSource.getMatch()
+
+    override suspend fun startTimer(currentTimeMillis: Long) {
+        val currentMatch = localDataSource.getMatch().first()
+        val match =
+            if (currentMatch != null) {
+                currentMatch.copy(
+                    isRunning = true,
+                    lastStartTimeMillis = currentTimeMillis,
+                )
+            } else {
+                Match(
+                    id = 1L,
+                    elapsedTimeMillis = 0L,
+                    isRunning = true,
+                    lastStartTimeMillis = currentTimeMillis,
+                )
+            }
+        localDataSource.upsertMatch(match)
+    }
+
+    override suspend fun pauseTimer(currentTimeMillis: Long) {
+        val currentMatch = localDataSource.getMatch().first()
+        if (currentMatch != null && currentMatch.isRunning) {
+            val lastStartTime = currentMatch.lastStartTimeMillis ?: currentTimeMillis
+            val additionalTime = currentTimeMillis - lastStartTime
+            val updatedMatch =
+                currentMatch.copy(
+                    elapsedTimeMillis = currentMatch.elapsedTimeMillis + additionalTime,
+                    isRunning = false,
+                    lastStartTimeMillis = null,
+                )
+            localDataSource.upsertMatch(updatedMatch)
+        }
+    }
+}

@@ -19,6 +19,8 @@ val AccentWarning10 = Color(0xFFFDF6E8)
 val AccentDanger = Color(0xFF960615)
 val AccentDanger10 = Color(0xFFFCE9E7)
 
+val ShirtOrange = Color(0xFFDD4E3E)
+
 val ContentMain = Color(0xFF001933)
 val ContentHigh = Color(0xFF7A7A7A)
 val ContentLow = Color(0xFFD9D9D9)

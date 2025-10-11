@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.ui.theme.AccentEmphasis
+import com.jesuslcorominas.teamflowmanager.ui.theme.ShirtOrange
 import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
 import com.jesuslcorominas.teamflowmanager.ui.theme.BebasNeueFontFamily
 import com.jesuslcorominas.teamflowmanager.ui.theme.ContentContrast
@@ -123,7 +123,7 @@ private fun PlayerItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(TFMSpacing.spacing02)
-                            .background(AccentEmphasis)
+                            .background(ShirtOrange)
                     )
                     Spacer(
                         modifier = Modifier
