@@ -42,6 +42,7 @@ class FinishMatchUseCaseTest {
             finishMatchUseCase.invoke()
 
             // Then
+            coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
             coVerify(exactly = 0) { playerTimeRepository.getAllPlayerTimes() }
             coVerify(exactly = 0) { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) }
             coVerify(exactly = 0) { playerTimeRepository.resetAllPlayerTimes() }
@@ -68,6 +69,15 @@ class FinishMatchUseCaseTest {
 
             // Then
             coVerify {
+                matchRepository.updateMatch(
+                    match.copy(
+                        isRunning = false,
+                        elapsedTimeMillis = 5000L,
+                        lastStartTimeMillis = null,
+                    ),
+                )
+            }
+            coVerify {
                 playerTimeHistoryRepository.insertPlayerTimeHistory(
                     match {
                         it.playerId == 1L &&
@@ -93,8 +103,13 @@ class FinishMatchUseCaseTest {
         runTest {
             // Given
             val matchId = 1L
-            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false)
             val startTime = 1000L
+            val match = Match(
+                id = matchId,
+                elapsedTimeMillis = 5000L,
+                isRunning = true,
+                lastStartTimeMillis = startTime,
+            )
             val playerTimes =
                 listOf(
                     PlayerTime(
@@ -113,6 +128,16 @@ class FinishMatchUseCaseTest {
             finishMatchUseCase.invoke()
 
             // Then
+            coVerify {
+                matchRepository.updateMatch(
+                    match {
+                        it.id == matchId &&
+                            it.isRunning == false &&
+                            it.elapsedTimeMillis > 5000L && // Should be 5000L + current time - startTime
+                            it.lastStartTimeMillis == null
+                    },
+                )
+            }
             coVerify {
                 playerTimeHistoryRepository.insertPlayerTimeHistory(
                     match {
