@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataS
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.local.database.MIGRATION_1_2
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.MatchLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalDataSourceImpl
@@ -26,6 +27,7 @@ internal val databaseModule =
                     TeamFlowManagerDatabase::class.java,
                     "teamflowmanager_database",
                 )
+                .addMigrations(MIGRATION_1_2)
                 .fallbackToDestructiveMigration()
                 .build()
         }

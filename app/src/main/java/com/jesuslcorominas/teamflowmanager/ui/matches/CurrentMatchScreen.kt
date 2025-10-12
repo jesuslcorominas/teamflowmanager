@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.ui.session
+package com.jesuslcorominas.teamflowmanager.ui.matches
 
 import TFMSpacing
 import androidx.compose.foundation.background
@@ -38,7 +38,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SessionScreen(viewModel: MatchViewModel = koinViewModel()) {
+fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
     Surface(
@@ -50,7 +50,7 @@ fun SessionScreen(viewModel: MatchViewModel = koinViewModel()) {
             is MatchUiState.NoMatch -> NoMatchState()
             is MatchUiState.Success -> SuccessState(
                 state = state,
-                onSaveSession = { viewModel.saveSession() },
+                onSaveMatch = { viewModel.saveMatch() },
             )
         }
     }
@@ -82,7 +82,7 @@ private fun NoMatchState() {
 @Composable
 private fun SuccessState(
     state: MatchUiState.Success,
-    onSaveSession: () -> Unit,
+    onSaveMatch: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -115,10 +115,10 @@ private fun SuccessState(
         Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
 
         Button(
-            onClick = onSaveSession,
+            onClick = onSaveMatch,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(text = stringResource(R.string.save_session_button))
+            Text(text = stringResource(R.string.finish_match_button))
         }
     }
 }
@@ -163,7 +163,10 @@ private fun MatchTimeCard(
                                 color = MaterialTheme.colorScheme.error,
                                 shape = MaterialTheme.shapes.small,
                             )
-                            .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing01),
+                            .padding(
+                                horizontal = TFMSpacing.spacing02,
+                                vertical = TFMSpacing.spacing01
+                            ),
                     ) {
                         Text(
                             text = stringResource(R.string.running_indicator),
@@ -204,7 +207,10 @@ private fun PlayerTimeCard(playerTimeItem: PlayerTimeItem) {
                     fontWeight = FontWeight.Medium,
                 )
                 Text(
-                    text = stringResource(R.string.player_number_format, playerTimeItem.player.number),
+                    text = stringResource(
+                        R.string.player_number_format,
+                        playerTimeItem.player.number
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -213,11 +219,6 @@ private fun PlayerTimeCard(playerTimeItem: PlayerTimeItem) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
             ) {
-                Text(
-                    text = formatTime(playerTimeItem.timeMillis),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                )
                 if (playerTimeItem.isRunning) {
                     Box(
                         modifier = Modifier
@@ -225,7 +226,10 @@ private fun PlayerTimeCard(playerTimeItem: PlayerTimeItem) {
                                 color = MaterialTheme.colorScheme.error,
                                 shape = MaterialTheme.shapes.small,
                             )
-                            .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing01),
+                            .padding(
+                                horizontal = TFMSpacing.spacing02,
+                                vertical = TFMSpacing.spacing01
+                            ),
                     ) {
                         Text(
                             text = stringResource(R.string.running_indicator),
@@ -234,6 +238,11 @@ private fun PlayerTimeCard(playerTimeItem: PlayerTimeItem) {
                         )
                     }
                 }
+                Text(
+                    text = formatTime(playerTimeItem.timeMillis),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }
@@ -274,7 +283,7 @@ private fun SuccessStatePreview() {
                     ),
                 ),
             ),
-            onSaveSession = {},
+            onSaveMatch = {},
         )
     }
 }

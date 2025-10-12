@@ -11,6 +11,20 @@ internal class MatchRepositoryImpl(
 ) : MatchRepository {
     override fun getMatch(): Flow<Match?> = localDataSource.getMatch()
 
+    override fun getMatchById(matchId: Long): Flow<Match?> = localDataSource.getMatchById(matchId)
+
+    override fun getAllMatches(): Flow<List<Match>> = localDataSource.getAllMatches()
+
+    override suspend fun createMatch(match: Match): Long = localDataSource.insertMatch(match)
+
+    override suspend fun updateMatch(match: Match) {
+        localDataSource.updateMatch(match)
+    }
+
+    override suspend fun deleteMatch(matchId: Long) {
+        localDataSource.deleteMatch(matchId)
+    }
+
     override suspend fun startTimer(currentTimeMillis: Long) {
         val currentMatch = localDataSource.getMatch().first()
         val match =

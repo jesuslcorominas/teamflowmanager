@@ -6,15 +6,15 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryR
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import kotlinx.coroutines.flow.first
 
-interface SaveSessionUseCase {
+interface FinishMatchUseCase {
     suspend operator fun invoke()
 }
 
-internal class SaveSessionUseCaseImpl(
+internal class FinishMatchUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val playerTimeRepository: PlayerTimeRepository,
     private val playerTimeHistoryRepository: PlayerTimeHistoryRepository,
-) : SaveSessionUseCase {
+) : FinishMatchUseCase {
     override suspend fun invoke() {
         val currentTime = System.currentTimeMillis()
 

@@ -2,12 +2,20 @@ package com.jesuslcorominas.teamflowmanager.usecase.di
 
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeUseCase
@@ -20,12 +28,14 @@ import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.SaveSessionUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SaveSessionUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
@@ -44,13 +54,18 @@ internal val useCaseInternalModule =
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
         singleOf(::GetMatchUseCaseImpl) bind GetMatchUseCase::class
+        singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
+        singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class
+        singleOf(::CreateMatchUseCaseImpl) bind CreateMatchUseCase::class
+        singleOf(::UpdateMatchUseCaseImpl) bind UpdateMatchUseCase::class
+        singleOf(::DeleteMatchUseCaseImpl) bind DeleteMatchUseCase::class
         singleOf(::StartMatchTimerUseCaseImpl) bind StartMatchTimerUseCase::class
         singleOf(::PauseMatchTimerUseCaseImpl) bind PauseMatchTimerUseCase::class
         singleOf(::GetPlayerTimeUseCaseImpl) bind GetPlayerTimeUseCase::class
         singleOf(::GetAllPlayerTimesUseCaseImpl) bind GetAllPlayerTimesUseCase::class
         singleOf(::StartPlayerTimerUseCaseImpl) bind StartPlayerTimerUseCase::class
         singleOf(::PausePlayerTimerUseCaseImpl) bind PausePlayerTimerUseCase::class
-        singleOf(::SaveSessionUseCaseImpl) bind SaveSessionUseCase::class
+        singleOf(::FinishMatchUseCaseImpl) bind FinishMatchUseCase::class
     }
 
 val useCaseModule =

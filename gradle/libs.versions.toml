@@ -1,5 +1,5 @@
 [versions]
-agp = "8.3.2"
+agp = "8.6.1"
 kotlin = "2.0.21"
 ktlint = "12.1.1"
 core-ktx = "1.13.1"
@@ -16,6 +16,7 @@ coroutines = "1.9.0"
 coroutines-test = "1.9.0"
 koin = "4.0.0"
 koin-compose = "4.0.0"
+navigationCompose = "2.9.5"
 room = "2.6.1"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
@@ -31,6 +32,7 @@ composeGoogleFonts="1.7.3"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "ktlintVersion" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 

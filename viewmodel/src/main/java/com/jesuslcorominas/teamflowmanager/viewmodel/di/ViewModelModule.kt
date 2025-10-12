@@ -1,5 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
+import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
@@ -28,7 +30,21 @@ val viewModelModule =
                 getMatchUseCase = get(),
                 getAllPlayerTimesUseCase = get(),
                 getPlayersUseCase = get(),
-                saveSessionUseCase = get(),
+                saveMatchUseCase = get(),
+            )
+        }
+        viewModel {
+            MatchListViewModel(
+                getAllMatchesUseCase = get(),
+                deleteMatchUseCase = get(),
+                createMatchUseCase = get(),
+                updateMatchUseCase = get(),
+            )
+        }
+        viewModel {
+            MatchDetailViewModel(
+                getMatchByIdUseCase = get(),
+                getPlayersUseCase = get(),
             )
         }
     }
