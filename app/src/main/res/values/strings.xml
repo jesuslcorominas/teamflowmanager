@@ -59,6 +59,7 @@
     <string name="player_times_title">Player Times</string>
     <string name="running_indicator">ACTIVE</string>
     <string name="player_number_format">#%d</string>
+    <string name="pause_match_button">Half Time</string>
     <string name="finish_match_button">Finish match</string>
 
     <!-- Match Management Strings -->

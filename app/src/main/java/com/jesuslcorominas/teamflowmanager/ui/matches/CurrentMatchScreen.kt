@@ -51,6 +51,7 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
             is MatchUiState.Success -> SuccessState(
                 state = state,
                 onSaveMatch = { viewModel.saveMatch() },
+                onPauseMatch = { viewModel.pauseMatch() },
             )
         }
     }
@@ -83,6 +84,7 @@ private fun NoMatchState() {
 private fun SuccessState(
     state: MatchUiState.Success,
     onSaveMatch: () -> Unit,
+    onPauseMatch: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -113,6 +115,15 @@ private fun SuccessState(
         }
 
         Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+
+        if (state.matchIsRunning) {
+            Button(
+                onClick = onPauseMatch,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = stringResource(R.string.pause_match_button))
+            }
+        }
 
         Button(
             onClick = onSaveMatch,
@@ -284,6 +295,7 @@ private fun SuccessStatePreview() {
                 ),
             ),
             onSaveMatch = {},
+            onPauseMatch = {},
         )
     }
 }

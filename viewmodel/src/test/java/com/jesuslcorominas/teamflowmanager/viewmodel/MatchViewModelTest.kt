@@ -8,6 +8,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +35,7 @@ class MatchViewModelTest {
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var finishMatchUseCase: FinishMatchUseCase
+    private lateinit var pauseMatchUseCase: PauseMatchUseCase
     private lateinit var viewModel: MatchViewModel
 
     @Before
@@ -42,6 +45,7 @@ class MatchViewModelTest {
         getAllPlayerTimesUseCase = mockk()
         getPlayersUseCase = mockk()
         finishMatchUseCase = mockk(relaxed = true)
+        pauseMatchUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -57,10 +61,28 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase)
 
         // Then
         assertEquals(MatchUiState.Loading, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `pauseMatch should call pauseMatchUseCase with current time`() = runTest(testDispatcher) {
+        // Given
+        every { getMatchUseCase.invoke() } returns flowOf(null)
+        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase)
+        advanceUntilIdle()
+
+        // When
+        viewModel.pauseMatch()
+        advanceUntilIdle()
+
+        // Then
+        coVerify { pauseMatchUseCase(any()) }
     }
 
     // TODO review. It's taking too long to run
