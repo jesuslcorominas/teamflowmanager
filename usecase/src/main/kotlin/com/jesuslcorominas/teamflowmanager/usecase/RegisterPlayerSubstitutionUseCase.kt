@@ -35,8 +35,8 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         val playerTimes = getAllPlayerTimesUseCase().first()
         val playerOutTime = playerTimes.find { it.playerId == playerOutId }
         
-        // Only proceed if the player being substituted out is currently playing (status JUGANDO)
-        if (playerOutTime?.status != com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus.JUGANDO) {
+        // Only proceed if the player being substituted out is currently playing (status PLAYING)
+        if (playerOutTime?.status != com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus.PLAYING) {
             return
         }
 

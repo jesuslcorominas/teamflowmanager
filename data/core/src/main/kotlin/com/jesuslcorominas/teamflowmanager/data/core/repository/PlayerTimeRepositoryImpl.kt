@@ -24,7 +24,7 @@ internal class PlayerTimeRepositoryImpl(
                 currentPlayerTime.copy(
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis,
-                    status = PlayerTimeStatus.JUGANDO,
+                    status = PlayerTimeStatus.PLAYING,
                 )
             } else {
                 PlayerTime(
@@ -32,7 +32,7 @@ internal class PlayerTimeRepositoryImpl(
                     elapsedTimeMillis = 0L,
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis,
-                    status = PlayerTimeStatus.JUGANDO,
+                    status = PlayerTimeStatus.PLAYING,
                 )
             }
         localDataSource.upsertPlayerTime(playerTime)
@@ -51,7 +51,26 @@ internal class PlayerTimeRepositoryImpl(
                     elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
                     isRunning = false,
                     lastStartTimeMillis = lastStartTime,
-                    status = PlayerTimeStatus.DESCANSO,
+                    status = PlayerTimeStatus.ON_BENCH,
+                )
+            localDataSource.upsertPlayerTime(updatedPlayerTime)
+        }
+    }
+
+    override suspend fun pauseTimerForMatchPause(
+        playerId: Long,
+        currentTimeMillis: Long,
+    ) {
+        val currentPlayerTime = localDataSource.getPlayerTime(playerId).first()
+        if (currentPlayerTime != null && currentPlayerTime.isRunning) {
+            val lastStartTime = currentPlayerTime.lastStartTimeMillis ?: currentTimeMillis
+            val additionalTime = currentTimeMillis - lastStartTime
+            val updatedPlayerTime =
+                currentPlayerTime.copy(
+                    elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
+                    isRunning = false,
+                    lastStartTimeMillis = lastStartTime,
+                    status = PlayerTimeStatus.PAUSED,
                 )
             localDataSource.upsertPlayerTime(updatedPlayerTime)
         }

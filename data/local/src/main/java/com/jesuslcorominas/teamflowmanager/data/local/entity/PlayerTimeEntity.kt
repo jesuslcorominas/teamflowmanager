@@ -25,7 +25,7 @@ data class PlayerTimeEntity(
     val elapsedTimeMillis: Long = 0L,
     val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
-    val status: String = PlayerTimeStatus.EN_BANQUILLO.name,
+    val status: String = PlayerTimeStatus.ON_BENCH.name,
 )
 
 fun PlayerTimeEntity.toDomain(): PlayerTime =
@@ -34,7 +34,7 @@ fun PlayerTimeEntity.toDomain(): PlayerTime =
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
-        status = try { PlayerTimeStatus.valueOf(status) } catch (e: Exception) { PlayerTimeStatus.EN_BANQUILLO },
+        status = try { PlayerTimeStatus.valueOf(status) } catch (e: Exception) { PlayerTimeStatus.ON_BENCH },
     )
 
 fun PlayerTime.toEntity(): PlayerTimeEntity =

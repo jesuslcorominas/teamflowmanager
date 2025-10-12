@@ -16,11 +16,11 @@ internal class ResumeMatchUseCaseImpl(
         // Resume the match timer
         startMatchTimerUseCase(currentTimeMillis)
 
-        // Get all player times and resume only the ones that were in DESCANSO state
+        // Get all player times and resume only the ones that were in PAUSED state
         // These are the players who were playing when the match was paused
         val playerTimes = getAllPlayerTimesUseCase().first()
         playerTimes
-            .filter { it.status == PlayerTimeStatus.DESCANSO }
+            .filter { it.status == PlayerTimeStatus.PAUSED }
             .forEach { playerTime ->
                 startPlayerTimerUseCase(playerTime.playerId, currentTimeMillis)
             }
