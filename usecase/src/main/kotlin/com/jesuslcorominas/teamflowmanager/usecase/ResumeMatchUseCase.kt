@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import kotlinx.coroutines.flow.first
 
 interface ResumeMatchUseCase {
@@ -15,11 +16,11 @@ internal class ResumeMatchUseCaseImpl(
         // Resume the match timer
         startMatchTimerUseCase(currentTimeMillis)
 
-        // Get all player times and resume the ones that were running when match was paused
-        // Players who were running will have lastStartTimeMillis != null after pause
+        // Get all player times and resume only the ones that were in DESCANSO state
+        // These are the players who were playing when the match was paused
         val playerTimes = getAllPlayerTimesUseCase().first()
         playerTimes
-            .filter { it.lastStartTimeMillis != null }
+            .filter { it.status == PlayerTimeStatus.DESCANSO }
             .forEach { playerTime ->
                 startPlayerTimerUseCase(playerTime.playerId, currentTimeMillis)
             }

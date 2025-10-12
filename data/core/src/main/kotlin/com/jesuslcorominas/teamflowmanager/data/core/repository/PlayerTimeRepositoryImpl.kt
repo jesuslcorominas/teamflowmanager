@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.repository
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -23,6 +24,7 @@ internal class PlayerTimeRepositoryImpl(
                 currentPlayerTime.copy(
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis,
+                    status = PlayerTimeStatus.JUGANDO,
                 )
             } else {
                 PlayerTime(
@@ -30,6 +32,7 @@ internal class PlayerTimeRepositoryImpl(
                     elapsedTimeMillis = 0L,
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis,
+                    status = PlayerTimeStatus.JUGANDO,
                 )
             }
         localDataSource.upsertPlayerTime(playerTime)
@@ -47,8 +50,8 @@ internal class PlayerTimeRepositoryImpl(
                 currentPlayerTime.copy(
                     elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
                     isRunning = false,
-                    // Keep lastStartTimeMillis to know this player was running before pause
                     lastStartTimeMillis = lastStartTime,
+                    status = PlayerTimeStatus.DESCANSO,
                 )
             localDataSource.upsertPlayerTime(updatedPlayerTime)
         }

@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 
 @Entity(tableName = "match")
 data class MatchEntity(
@@ -17,6 +18,7 @@ data class MatchEntity(
     val elapsedTimeMillis: Long = 0L,
     val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
+    val status: String = MatchStatus.PROGRAMADO.name,
 )
 
 fun MatchEntity.toDomain(): Match =
@@ -31,6 +33,7 @@ fun MatchEntity.toDomain(): Match =
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
+        status = try { MatchStatus.valueOf(status) } catch (e: Exception) { MatchStatus.PROGRAMADO },
     )
 
 fun Match.toEntity(): MatchEntity =
@@ -45,4 +48,5 @@ fun Match.toEntity(): MatchEntity =
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
+        status = status.name,
     )

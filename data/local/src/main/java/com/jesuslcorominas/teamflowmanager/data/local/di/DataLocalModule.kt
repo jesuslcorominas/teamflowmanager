@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataS
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.MatchLocalDataSourceImpl
@@ -13,6 +14,7 @@ import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalData
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerSubstitutionLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeHistoryLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeLocalDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.local.datasource.PreferencesLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.TeamLocalDataSourceImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
@@ -47,7 +49,7 @@ internal val dataSourceLocalModule =
         singleOf(::PlayerTimeLocalDataSourceImpl) bind PlayerTimeLocalDataSource::class
         singleOf(::PlayerTimeHistoryLocalDataSourceImpl) bind PlayerTimeHistoryLocalDataSource::class
         singleOf(::PlayerSubstitutionLocalDataSourceImpl) bind PlayerSubstitutionLocalDataSource::class
-        singleOf(::PreferencesLocalDataSourceImpl) bind com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesLocalDataSource::class
+        singleOf(::PreferencesLocalDataSourceImpl) bind PreferencesLocalDataSource::class
     }
 
 val dataLocalModule =
