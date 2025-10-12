@@ -42,6 +42,7 @@ val viewModelModule =
                 createMatchUseCase = get(),
                 updateMatchUseCase = get(),
                 startMatchUseCase = get(),
+                resumeMatchUseCase = get(),
             )
         }
         viewModel {

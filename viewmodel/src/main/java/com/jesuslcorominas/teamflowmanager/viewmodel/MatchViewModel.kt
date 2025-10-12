@@ -43,13 +43,19 @@ class MatchViewModel(
 
     fun pauseMatch() {
         viewModelScope.launch {
-            pauseMatchUseCase(System.currentTimeMillis())
+            val currentTime = System.currentTimeMillis()
+            pauseMatchUseCase(currentTime)
+            // Update the current time immediately to avoid race conditions
+            _currentTime.value = currentTime
         }
     }
 
     fun resumeMatch() {
         viewModelScope.launch {
-            resumeMatchUseCase(System.currentTimeMillis())
+            val currentTime = System.currentTimeMillis()
+            resumeMatchUseCase(currentTime)
+            // Update the current time immediately to avoid race conditions
+            _currentTime.value = currentTime
         }
     }
 

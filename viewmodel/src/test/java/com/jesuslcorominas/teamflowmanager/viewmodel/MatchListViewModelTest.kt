@@ -4,6 +4,8 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,6 +32,8 @@ class MatchListViewModelTest {
     private lateinit var deleteMatchUseCase: DeleteMatchUseCase
     private lateinit var createMatchUseCase: CreateMatchUseCase
     private lateinit var updateMatchUseCase: UpdateMatchUseCase
+    private lateinit var startMatchUseCase: StartMatchUseCase
+    private lateinit var resumeMatchUseCase: ResumeMatchUseCase
     private lateinit var viewModel: MatchListViewModel
 
     @Before
@@ -39,6 +43,8 @@ class MatchListViewModelTest {
         deleteMatchUseCase = mockk(relaxed = true)
         createMatchUseCase = mockk(relaxed = true)
         updateMatchUseCase = mockk(relaxed = true)
+        startMatchUseCase = mockk(relaxed = true)
+        resumeMatchUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -58,6 +64,8 @@ class MatchListViewModelTest {
                 deleteMatchUseCase,
                 createMatchUseCase,
                 updateMatchUseCase,
+                startMatchUseCase,
+                resumeMatchUseCase,
             )
 
         // Then
@@ -77,6 +85,8 @@ class MatchListViewModelTest {
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
+                startMatchUseCase,
+                resumeMatchUseCase,
                 )
             advanceUntilIdle()
 
@@ -114,6 +124,8 @@ class MatchListViewModelTest {
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
+                startMatchUseCase,
+                resumeMatchUseCase,
                 )
             advanceUntilIdle()
 
@@ -134,6 +146,8 @@ class MatchListViewModelTest {
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
+                startMatchUseCase,
+                resumeMatchUseCase,
                 )
             val match =
                 Match(
@@ -164,6 +178,8 @@ class MatchListViewModelTest {
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
+                startMatchUseCase,
+                resumeMatchUseCase,
                 )
             val match =
                 Match(
@@ -193,6 +209,8 @@ class MatchListViewModelTest {
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
+                startMatchUseCase,
+                resumeMatchUseCase,
                 )
             val match =
                 Match(
@@ -224,6 +242,8 @@ class MatchListViewModelTest {
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
+                startMatchUseCase,
+                resumeMatchUseCase,
                 )
             val match =
                 Match(
@@ -255,6 +275,8 @@ class MatchListViewModelTest {
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
+                startMatchUseCase,
+                resumeMatchUseCase,
                 )
             val match =
                 Match(
