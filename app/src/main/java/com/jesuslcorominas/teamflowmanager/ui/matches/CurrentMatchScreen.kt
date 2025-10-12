@@ -290,25 +290,6 @@ private fun PlayerTimeCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
             ) {
-                if (playerTimeItem.isRunning) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.error,
-                                shape = MaterialTheme.shapes.small,
-                            )
-                            .padding(
-                                horizontal = TFMSpacing.spacing02,
-                                vertical = TFMSpacing.spacing01
-                            ),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.running_indicator),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onError,
-                        )
-                    }
-                }
                 Text(
                     text = formatTime(playerTimeItem.timeMillis),
                     style = MaterialTheme.typography.titleLarge,

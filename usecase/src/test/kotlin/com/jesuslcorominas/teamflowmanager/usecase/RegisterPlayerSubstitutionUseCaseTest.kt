@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
@@ -19,6 +20,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
     private lateinit var matchRepository: MatchRepository
     private lateinit var playerTimeRepository: PlayerTimeRepository
     private lateinit var playerSubstitutionRepository: PlayerSubstitutionRepository
+    private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase
 
     @Before
@@ -26,11 +28,13 @@ class RegisterPlayerSubstitutionUseCaseTest {
         matchRepository = mockk(relaxed = true)
         playerTimeRepository = mockk(relaxed = true)
         playerSubstitutionRepository = mockk(relaxed = true)
+        getAllPlayerTimesUseCase = mockk(relaxed = true)
         registerPlayerSubstitutionUseCase =
             RegisterPlayerSubstitutionUseCaseImpl(
                 matchRepository,
                 playerTimeRepository,
                 playerSubstitutionRepository,
+                getAllPlayerTimesUseCase,
             )
     }
 
@@ -51,6 +55,13 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     lastStartTimeMillis = currentTimeMillis - 60000L,
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
+            
+            // Mock player times - playerOut is running
+            val playerTimes = listOf(
+                PlayerTime(playerId = playerOutId, elapsedTimeMillis = 300000L, isRunning = true, lastStartTimeMillis = currentTimeMillis - 60000L),
+                PlayerTime(playerId = playerInId, elapsedTimeMillis = 0L, isRunning = false, lastStartTimeMillis = null),
+            )
+            coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
 
             val substitutionSlot = slot<PlayerSubstitution>()
             coEvery { playerSubstitutionRepository.insertSubstitution(capture(substitutionSlot)) } returns 1L
@@ -89,6 +100,12 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     lastStartTimeMillis = lastStartTimeMillis,
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
+            
+            // Mock player times - playerOut is running
+            val playerTimes = listOf(
+                PlayerTime(playerId = playerOutId, elapsedTimeMillis = 300000L, isRunning = true, lastStartTimeMillis = lastStartTimeMillis),
+            )
+            coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
 
             val substitutionSlot = slot<PlayerSubstitution>()
             coEvery { playerSubstitutionRepository.insertSubstitution(capture(substitutionSlot)) } returns 1L
@@ -118,6 +135,12 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     lastStartTimeMillis = null,
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
+            
+            // Mock player times - playerOut is running
+            val playerTimes = listOf(
+                PlayerTime(playerId = playerOutId, elapsedTimeMillis = 300000L, isRunning = true, lastStartTimeMillis = null),
+            )
+            coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
 
             val substitutionSlot = slot<PlayerSubstitution>()
             coEvery { playerSubstitutionRepository.insertSubstitution(capture(substitutionSlot)) } returns 1L
@@ -128,5 +151,39 @@ class RegisterPlayerSubstitutionUseCaseTest {
             // Then
             val substitution = substitutionSlot.captured
             assertEquals(600000L, substitution.matchElapsedTimeMillis)
+        }
+    
+    @Test
+    fun `invoke should not substitute if player out is not running`() =
+        runTest {
+            // Given
+            val matchId = 1L
+            val playerOutId = 2L
+            val playerInId = 3L
+            val currentTimeMillis = System.currentTimeMillis()
+            val match =
+                Match(
+                    id = matchId,
+                    teamId = 1L,
+                    elapsedTimeMillis = 600000L,
+                    isRunning = true,
+                    lastStartTimeMillis = currentTimeMillis - 60000L,
+                )
+            coEvery { matchRepository.getMatch() } returns flowOf(match)
+            
+            // Mock player times - playerOut is NOT running (on bench)
+            val playerTimes = listOf(
+                PlayerTime(playerId = playerOutId, elapsedTimeMillis = 300000L, isRunning = false, lastStartTimeMillis = null),
+                PlayerTime(playerId = playerInId, elapsedTimeMillis = 0L, isRunning = false, lastStartTimeMillis = null),
+            )
+            coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
+
+            // When
+            registerPlayerSubstitutionUseCase(matchId, playerOutId, playerInId, currentTimeMillis)
+
+            // Then - no timer operations should be called
+            coVerify(exactly = 0) { playerTimeRepository.pauseTimer(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.startTimer(any(), any()) }
+            coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
         }
 }

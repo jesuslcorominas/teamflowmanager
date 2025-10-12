@@ -19,6 +19,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val playerTimeRepository: PlayerTimeRepository,
     private val playerSubstitutionRepository: PlayerSubstitutionRepository,
+    private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
 ) : RegisterPlayerSubstitutionUseCase {
     override suspend fun invoke(
         matchId: Long,
@@ -29,6 +30,15 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         // Get match to calculate elapsed time
         val match = matchRepository.getMatch().first()
         requireNotNull(match) { "No active match found" }
+
+        // Get all player times to check if playerOut is actually playing
+        val playerTimes = getAllPlayerTimesUseCase().first()
+        val playerOutTime = playerTimes.find { it.playerId == playerOutId }
+        
+        // Only proceed if the player being substituted out is currently running
+        if (playerOutTime?.isRunning != true) {
+            return
+        }
 
         val matchElapsedTime = if (match.isRunning && match.lastStartTimeMillis != null) {
             match.elapsedTimeMillis + (currentTimeMillis - match.lastStartTimeMillis)
