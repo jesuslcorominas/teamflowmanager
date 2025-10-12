@@ -1,12 +1,16 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.jesuslcorominas.teamflowmanager.R
 
 sealed class Route(
     val path: String,
-    @DrawableRes val icon: Int? = null,
+    val icon: ImageVector? = null,
     @StringRes val label: Int? = null,
     val showTopBar: Boolean = false,
     val showBottomBar: Boolean = false,
@@ -62,7 +66,7 @@ sealed class Route(
 
     object Players : Route(
         path = "players",
-        icon = R.drawable.ic_launcher,
+        icon = Icons.Default.Group,
         label = R.string.nav_players,
         showTopBar = true,
         showBottomBar = true,
@@ -71,7 +75,7 @@ sealed class Route(
 
     object TeamDetail : Route(
         path = "team_detail",
-        icon = R.drawable.ic_launcher,
+        icon = Icons.Default.Groups,
         label = R.string.nav_team,
         showTopBar = true,
         showBottomBar = true,
@@ -80,7 +84,7 @@ sealed class Route(
 
     object Matches : Route(
         path = "matches",
-        icon = R.drawable.ic_launcher,
+        icon = Icons.Default.SportsSoccer,
         label = R.string.nav_matches,
         showTopBar = true,
         showBottomBar = true,

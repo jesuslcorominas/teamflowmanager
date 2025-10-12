@@ -6,7 +6,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -29,9 +28,9 @@ fun BottomNavigationBar(
             val selected = currentRoute == route.path
             NavigationBarItem(
                 icon = {
-                    route.icon?.let { iconRes ->
+                    route.icon?.let { icon ->
                         Icon(
-                            painter = painterResource(id = iconRes),
+                            imageVector = icon,
                             contentDescription = route.label?.let { stringResource(it) },
                         )
                     }
