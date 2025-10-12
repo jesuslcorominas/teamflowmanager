@@ -24,6 +24,21 @@ internal class FinishMatchUseCaseImpl(
             return
         }
 
+        // Calculate final elapsed time for the match
+        val matchFinalElapsedTime = if (match.isRunning && match.lastStartTimeMillis != null) {
+            match.elapsedTimeMillis + (currentTime - (match.lastStartTimeMillis ?: 0L))
+        } else {
+            match.elapsedTimeMillis
+        }
+
+        // Update match to mark it as finished
+        val finishedMatch = match.copy(
+            isRunning = false,
+            elapsedTimeMillis = matchFinalElapsedTime,
+            lastStartTimeMillis = null,
+        )
+        matchRepository.updateMatch(finishedMatch)
+
         // Get all player times
         val playerTimes = playerTimeRepository.getAllPlayerTimes().first()
 

@@ -118,6 +118,7 @@ fun MatchListScreen(
                                     onDelete = { viewModel.requestDeleteMatch(match) },
                                     onStart = { 
                                         if (!hasActiveMatch) {
+                                            viewModel.startMatch(match.id)
                                             onNavigateToCurrentMatch()
                                         }
                                     },
