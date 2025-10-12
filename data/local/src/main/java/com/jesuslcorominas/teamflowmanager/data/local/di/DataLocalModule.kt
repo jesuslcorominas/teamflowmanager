@@ -28,7 +28,6 @@ internal val databaseModule =
                     TeamFlowManagerDatabase::class.java,
                     "teamflowmanager_database",
                 )
-                .fallbackToDestructiveMigration()
                 .build()
         }
 
@@ -48,6 +47,7 @@ internal val dataSourceLocalModule =
         singleOf(::PlayerTimeLocalDataSourceImpl) bind PlayerTimeLocalDataSource::class
         singleOf(::PlayerTimeHistoryLocalDataSourceImpl) bind PlayerTimeHistoryLocalDataSource::class
         singleOf(::PlayerSubstitutionLocalDataSourceImpl) bind PlayerSubstitutionLocalDataSource::class
+        singleOf(::PreferencesLocalDataSourceImpl) bind com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesLocalDataSource::class
     }
 
 val dataLocalModule =

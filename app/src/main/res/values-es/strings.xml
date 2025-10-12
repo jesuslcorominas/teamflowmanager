@@ -108,5 +108,6 @@
     <string name="select_player_in_message">Toca al jugador que entra al campo</string>
     <string name="invalid_substitution_title">Cambio Inválido</string>
     <string name="invalid_substitution_message">Debes seleccionar primero un jugador que esté actualmente en el campo para sustituir.</string>
+    <string name="dont_show_again">No mostrar más</string>
 
 </resources>

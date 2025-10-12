@@ -34,6 +34,7 @@ val viewModelModule =
                 pauseMatchUseCase = get(),
                 resumeMatchUseCase = get(),
                 registerPlayerSubstitutionUseCase = get(),
+                preferencesRepository = get(),
             )
         }
         viewModel {

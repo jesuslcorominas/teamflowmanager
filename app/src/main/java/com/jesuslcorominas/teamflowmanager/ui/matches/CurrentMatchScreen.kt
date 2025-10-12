@@ -76,28 +76,10 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
         
         // Show alert if trying to select an inactive player
         if (showInvalidSubstitutionAlert) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = { viewModel.dismissInvalidSubstitutionAlert() },
-                title = { 
-                    androidx.compose.material3.Text(
-                        stringResource(R.string.invalid_substitution_title),
-                        style = MaterialTheme.typography.titleLarge
-                    ) 
-                },
-                text = { 
-                    androidx.compose.material3.Text(
-                        stringResource(R.string.invalid_substitution_message),
-                        style = MaterialTheme.typography.bodyMedium
-                    ) 
-                },
-                confirmButton = {
-                    androidx.compose.material3.TextButton(
-                        onClick = { viewModel.dismissInvalidSubstitutionAlert() }
-                    ) {
-                        androidx.compose.material3.Text(stringResource(R.string.close))
-                    }
-                },
-                shape = MaterialTheme.shapes.medium,
+            InvalidSubstitutionAlertDialog(
+                onDismiss = { dontShowAgain ->
+                    viewModel.dismissInvalidSubstitutionAlert(dontShowAgain)
+                }
             )
         }
     }
@@ -347,4 +329,52 @@ private fun SuccessStatePreview() {
             onPlayerClick = {},
         )
     }
+}
+
+@Composable
+private fun InvalidSubstitutionAlertDialog(
+    onDismiss: (dontShowAgain: Boolean) -> Unit,
+) {
+    var dontShowAgain by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { onDismiss(false) },
+        title = { 
+            Text(
+                stringResource(R.string.invalid_substitution_title),
+                style = MaterialTheme.typography.titleLarge
+            ) 
+        },
+        text = { 
+            Column {
+                Text(
+                    stringResource(R.string.invalid_substitution_message),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = TFMSpacing.spacing02)
+                ) {
+                    androidx.compose.material3.Checkbox(
+                        checked = dontShowAgain,
+                        onCheckedChange = { dontShowAgain = it }
+                    )
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
+                    Text(
+                        stringResource(R.string.dont_show_again),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = { onDismiss(dontShowAgain) }
+            ) {
+                Text(stringResource(R.string.close))
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
 }

@@ -41,7 +41,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         }
 
         val matchElapsedTime = if (match.isRunning && match.lastStartTimeMillis != null) {
-            match.elapsedTimeMillis + (currentTimeMillis - match.lastStartTimeMillis)
+            match.elapsedTimeMillis + (currentTimeMillis - (match.lastStartTimeMillis ?: 0L))
         } else {
             match.elapsedTimeMillis
         }

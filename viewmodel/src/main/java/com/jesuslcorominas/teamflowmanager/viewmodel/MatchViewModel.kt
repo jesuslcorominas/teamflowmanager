@@ -26,6 +26,7 @@ class MatchViewModel(
     private val pauseMatchUseCase: PauseMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
+    private val preferencesRepository: com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
@@ -74,8 +75,10 @@ class MatchViewModel(
             if (player?.isRunning == true) {
                 _selectedPlayerOut.value = playerId
             } else {
-                // Player is not currently playing, show alert
-                _showInvalidSubstitutionAlert.value = true
+                // Player is not currently playing, show alert if preferences allow
+                if (preferencesRepository.shouldShowInvalidSubstitutionAlert()) {
+                    _showInvalidSubstitutionAlert.value = true
+                }
             }
         }
     }
@@ -84,8 +87,11 @@ class MatchViewModel(
         _selectedPlayerOut.value = null
     }
     
-    fun dismissInvalidSubstitutionAlert() {
+    fun dismissInvalidSubstitutionAlert(dontShowAgain: Boolean = false) {
         _showInvalidSubstitutionAlert.value = false
+        if (dontShowAgain) {
+            preferencesRepository.setShouldShowInvalidSubstitutionAlert(false)
+        }
     }
 
     fun substitutePlayer(playerInId: Long) {
