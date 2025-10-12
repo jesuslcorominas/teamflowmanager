@@ -106,5 +106,7 @@
     
     <!-- Player Substitution -->
     <string name="select_player_in_message">Tap on the player to bring in</string>
+    <string name="invalid_substitution_title">Invalid Substitution</string>
+    <string name="invalid_substitution_message">You must first select a player who is currently on the field to substitute out.</string>
 
 </resources>

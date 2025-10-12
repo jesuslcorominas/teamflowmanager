@@ -47,7 +47,8 @@ internal class PlayerTimeRepositoryImpl(
                 currentPlayerTime.copy(
                     elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
                     isRunning = false,
-                    lastStartTimeMillis = null,
+                    // Keep lastStartTimeMillis to know this player was running before pause
+                    lastStartTimeMillis = lastStartTime,
                 )
             localDataSource.upsertPlayerTime(updatedPlayerTime)
         }

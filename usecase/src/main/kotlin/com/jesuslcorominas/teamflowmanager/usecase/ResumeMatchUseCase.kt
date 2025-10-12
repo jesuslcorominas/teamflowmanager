@@ -15,10 +15,11 @@ internal class ResumeMatchUseCaseImpl(
         // Resume the match timer
         startMatchTimerUseCase(currentTimeMillis)
 
-        // Get all player times and resume only the ones that were running before pause
+        // Get all player times and resume the ones that were running when match was paused
+        // Players who were running will have lastStartTimeMillis != null after pause
         val playerTimes = getAllPlayerTimesUseCase().first()
         playerTimes
-            .filter { it.isRunning }
+            .filter { it.lastStartTimeMillis != null }
             .forEach { playerTime ->
                 startPlayerTimerUseCase(playerTime.playerId, currentTimeMillis)
             }

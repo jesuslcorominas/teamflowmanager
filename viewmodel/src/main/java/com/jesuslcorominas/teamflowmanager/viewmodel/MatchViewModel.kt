@@ -34,6 +34,9 @@ class MatchViewModel(
 
     private val _selectedPlayerOut = MutableStateFlow<Long?>(null)
     val selectedPlayerOut: StateFlow<Long?> = _selectedPlayerOut.asStateFlow()
+    
+    private val _showInvalidSubstitutionAlert = MutableStateFlow(false)
+    val showInvalidSubstitutionAlert: StateFlow<Boolean> = _showInvalidSubstitutionAlert.asStateFlow()
 
     init {
         loadMatchData()
@@ -65,11 +68,24 @@ class MatchViewModel(
     }
 
     fun selectPlayerOut(playerId: Long) {
-        _selectedPlayerOut.value = playerId
+        val currentState = _uiState.value
+        if (currentState is MatchUiState.Success) {
+            val player = currentState.playerTimes.find { it.player.id == playerId }
+            if (player?.isRunning == true) {
+                _selectedPlayerOut.value = playerId
+            } else {
+                // Player is not currently playing, show alert
+                _showInvalidSubstitutionAlert.value = true
+            }
+        }
     }
 
     fun clearPlayerOutSelection() {
         _selectedPlayerOut.value = null
+    }
+    
+    fun dismissInvalidSubstitutionAlert() {
+        _showInvalidSubstitutionAlert.value = false
     }
 
     fun substitutePlayer(playerInId: Long) {

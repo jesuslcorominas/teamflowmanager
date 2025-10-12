@@ -47,6 +47,7 @@ import org.koin.androidx.compose.koinViewModel
 fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
+    val showInvalidSubstitutionAlert by viewModel.showInvalidSubstitutionAlert.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -70,6 +71,33 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                         viewModel.substitutePlayer(playerId)
                     }
                 },
+            )
+        }
+        
+        // Show alert if trying to select an inactive player
+        if (showInvalidSubstitutionAlert) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { viewModel.dismissInvalidSubstitutionAlert() },
+                title = { 
+                    androidx.compose.material3.Text(
+                        stringResource(R.string.invalid_substitution_title),
+                        style = MaterialTheme.typography.titleLarge
+                    ) 
+                },
+                text = { 
+                    androidx.compose.material3.Text(
+                        stringResource(R.string.invalid_substitution_message),
+                        style = MaterialTheme.typography.bodyMedium
+                    ) 
+                },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(
+                        onClick = { viewModel.dismissInvalidSubstitutionAlert() }
+                    ) {
+                        androidx.compose.material3.Text(stringResource(R.string.close))
+                    }
+                },
+                shape = MaterialTheme.shapes.medium,
             )
         }
     }
@@ -211,36 +239,12 @@ private fun MatchTimeCard(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
-            ) {
-                Text(
-                    text = formatTime(timeMillis),
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-                if (isRunning) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.error,
-                                shape = MaterialTheme.shapes.small,
-                            )
-                            .padding(
-                                horizontal = TFMSpacing.spacing02,
-                                vertical = TFMSpacing.spacing01
-                            ),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.running_indicator),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onError,
-                        )
-                    }
-                }
-            }
+            Text(
+                text = formatTime(timeMillis),
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
         }
     }
 }
