@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,6 +48,7 @@ import org.koin.androidx.compose.koinViewModel
 fun MatchListScreen(
     onNavigateToAddMatch: () -> Unit,
     onNavigateToEditMatch: (Long) -> Unit,
+    onNavigateToCurrentMatch: () -> Unit,
     viewModel: MatchListViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -86,6 +89,10 @@ fun MatchListScreen(
                 }
 
                 is MatchListUiState.Success -> {
+                    val pendingMatches = state.matches.filter { it.elapsedTimeMillis == 0L }
+                    val playedMatches = state.matches.filter { it.elapsedTimeMillis > 0L }
+                    val hasActiveMatch = state.matches.any { it.isRunning }
+
                     LazyColumn(
                         modifier =
                             Modifier
@@ -93,12 +100,47 @@ fun MatchListScreen(
                                 .padding(TFMSpacing.spacing04),
                         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                     ) {
-                        items(state.matches) { match ->
-                            MatchCard(
-                                match = match,
-                                onEdit = { onNavigateToEditMatch(match.id) },
-                                onDelete = { viewModel.requestDeleteMatch(match) },
-                            )
+                        // Pending matches section
+                        if (pendingMatches.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = stringResource(R.string.pending_matches),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
+                                )
+                            }
+                            items(pendingMatches) { match ->
+                                PendingMatchCard(
+                                    match = match,
+                                    hasActiveMatch = hasActiveMatch,
+                                    onEdit = { onNavigateToEditMatch(match.id) },
+                                    onDelete = { viewModel.requestDeleteMatch(match) },
+                                    onStart = { 
+                                        if (!hasActiveMatch) {
+                                            onNavigateToCurrentMatch()
+                                        }
+                                    },
+                                )
+                            }
+                        }
+
+                        // Played matches section
+                        if (playedMatches.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+                                Text(
+                                    text = stringResource(R.string.played_matches),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
+                                )
+                            }
+                            items(playedMatches) { match ->
+                                PlayedMatchCard(
+                                    match = match,
+                                )
+                            }
                         }
                     }
                 }
@@ -120,24 +162,107 @@ fun MatchListScreen(
 }
 
 @Composable
-fun MatchCard(
+fun PendingMatchCard(
     match: Match,
+    hasActiveMatch: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onStart: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier =
-            modifier
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column(
+            modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onEdit() },
+                .padding(TFMSpacing.spacing04),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        text = match.opponent ?: stringResource(R.string.opponent),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
+                    Text(
+                        text = match.location ?: stringResource(R.string.location),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (match.date != null) {
+                        Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
+                        Text(
+                            text = match.date?.let { DateFormatter.formatDateTime(it) } ?: "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Row {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit),
+                        )
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+            
+            Button(
+                onClick = onStart,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !hasActiveMatch,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                )
+                Spacer(modifier = Modifier.padding(start = TFMSpacing.spacing01))
+                Text(text = stringResource(R.string.start_match))
+            }
+
+            if (hasActiveMatch) {
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
+                Text(
+                    text = stringResource(R.string.match_active_warning),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PlayedMatchCard(
+    match: Match,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(TFMSpacing.spacing04),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TFMSpacing.spacing04),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -163,33 +288,14 @@ fun MatchCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
-                Text(
-                    text =
-                        stringResource(
-                            R.string.starting_lineup,
-                        ) + ": ${match.startingLineupIds.size}",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                Text(
-                    text = stringResource(R.string.substitutes) + ": ${match.substituteIds.size}",
-                    style = MaterialTheme.typography.bodySmall,
-                )
             }
-            Row {
-                IconButton(onClick = onEdit) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.edit),
-                    )
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                    )
-                }
-            }
+            
+            // TODO: Show actual score when score tracking is implemented
+            Text(
+                text = stringResource(R.string.match_score, 0, 0),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
         }
     }
 }

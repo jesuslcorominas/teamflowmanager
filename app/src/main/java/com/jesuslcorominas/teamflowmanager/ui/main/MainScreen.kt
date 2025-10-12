@@ -1,154 +1,75 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jesuslcorominas.teamflowmanager.R
-import com.jesuslcorominas.teamflowmanager.ui.components.TeamInfoDialog
-import com.jesuslcorominas.teamflowmanager.ui.matches.MatchDetailScreen
-import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
-import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
-import com.jesuslcorominas.teamflowmanager.ui.matches.CurrentMatchScreen
-import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
+import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
+import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
+import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import org.koin.androidx.compose.koinViewModel
 
-enum class Screen {
-    PLAYERS,
-    CURRENT_MATCH,
-    MATCHES,
-    MATCH_DETAIL,
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
-
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
-
-    var teamName by remember { mutableStateOf<String?>(null) }
-    var showTeamInfo by remember { mutableStateOf(false) }
-    var showEditTeam by remember { mutableStateOf(false) }
-    var currentScreen by remember { mutableStateOf(Screen.PLAYERS) }
-    var matchDetailId by remember { mutableLongStateOf(0L) }
+    val currentRoute = backStackEntry?.destination?.route
     val uiState by viewModel.uiState.collectAsState()
 
-    val currentTeam =
-        when (val state = uiState) {
-            is TeamUiState.TeamExists -> state.team
-            else -> null
+    val route = Route.fromValue(currentRoute)
+    val uiConfig = route?.uiConfig(null)
+
+    val teamName = when (val state = uiState) {
+        is TeamUiState.TeamExists -> state.team.name
+        else -> null
+    }
+
+    // Handle back button for CreateTeam screen - should exit app
+    if (currentRoute == Route.CreateTeam.path) {
+        BackHandler {
+            // Close the app by doing nothing - the system will handle it
         }
+    }
 
     Scaffold(
         topBar = {
-            if (teamName != null) {
+            if (uiConfig?.showTopBar == true && teamName != null) {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = teamName ?: "",
+                            text = teamName,
                             style = MaterialTheme.typography.titleLarge,
                         )
-                    },
-                    actions = {
-                        IconButton(onClick = { showTeamInfo = true }) {
-                            Icon(
-                                imageVector = Icons.Outlined.Info,
-                                contentDescription = stringResource(R.string.team_info_description),
-                            )
-                        }
                     },
                 )
             }
         },
-        bottomBar = { /* No bottom bar for now */ },
-    ) { paddingValues ->
-        Surface(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-            color = MaterialTheme.colorScheme.background,
-        ) {
-            when {
-                teamName == null -> {
-                    TeamScreen(
-                        onNavigateToPlayers = { name ->
-                            teamName = name
-                        },
-                    )
-                }
-                currentScreen == Screen.CURRENT_MATCH -> {
-                    CurrentMatchScreen()
-                }
-                currentScreen == Screen.MATCHES -> {
-                    MatchListScreen(
-                        onNavigateToAddMatch = {
-                            matchDetailId = 0L
-                            currentScreen = Screen.MATCH_DETAIL
-                        },
-                        onNavigateToEditMatch = { matchId ->
-                            matchDetailId = matchId
-                            currentScreen = Screen.MATCH_DETAIL
-                        },
-                    )
-                }
-                currentScreen == Screen.MATCH_DETAIL -> {
-                    MatchDetailScreen(
-                        matchId = if (matchDetailId == 0L) null else matchDetailId,
-                        onNavigateBack = { currentScreen = Screen.MATCHES },
-                    )
-                }
-                else -> {
-                    PlayersScreen(
-                        onNavigateToCurrentMatch = { currentScreen = Screen.CURRENT_MATCH },
-                        onNavigateToMatches = { currentScreen = Screen.MATCHES },
-                    )
-                }
+        bottomBar = {
+            if (uiConfig?.showBottomBar == true) {
+                BottomNavigationBar(navController = navController)
             }
-        }
-
-        if (showTeamInfo && currentTeam != null) {
-            TeamInfoDialog(
-                team = currentTeam,
-                onDismiss = { showTeamInfo = false },
-                onEdit = {
-                    showTeamInfo = false
-                    showEditTeam = true
-                },
-            )
-        }
-
-        if (showEditTeam && currentTeam != null) {
-            com.jesuslcorominas.teamflowmanager.ui.components.EditTeamDialog(
-                team = currentTeam,
-                onDismiss = { showEditTeam = false },
-                onSave = { team ->
-                    viewModel.updateTeam(team)
-                    showEditTeam = false
-                },
-            )
-        }
+        },
+    ) { paddingValues ->
+        Navigation(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            navController = navController,
+        )
     }
 }
