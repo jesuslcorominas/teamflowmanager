@@ -26,7 +26,7 @@ internal class FinishMatchUseCaseImpl(
 
         // Calculate final elapsed time for the match
         val matchFinalElapsedTime = if (match.isRunning && match.lastStartTimeMillis != null) {
-            match.elapsedTimeMillis + (currentTime - match.lastStartTimeMillis)
+            match.elapsedTimeMillis + (currentTime - (match.lastStartTimeMillis ?: 0L))
         } else {
             match.elapsedTimeMillis
         }
