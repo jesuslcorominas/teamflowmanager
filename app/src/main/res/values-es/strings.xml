@@ -103,5 +103,8 @@
     <string name="view_match">Ver Detalle</string>
     <string name="match_score">%1$d - %2$d</string>
     <string name="match_active_warning">Ya hay un partido activo</string>
+    
+    <!-- Player Substitution -->
+    <string name="select_player_in_message">Toca al jugador que entra al campo</string>
 
 </resources>

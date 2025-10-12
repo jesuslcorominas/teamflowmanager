@@ -46,6 +46,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+    val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -56,9 +57,19 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
             is MatchUiState.NoMatch -> NoMatchState()
             is MatchUiState.Success -> SuccessState(
                 state = state,
+                selectedPlayerOut = selectedPlayerOut,
                 onSaveMatch = { viewModel.saveMatch() },
                 onPauseMatch = { viewModel.pauseMatch() },
                 onResumeMatch = { viewModel.resumeMatch() },
+                onPlayerClick = { playerId ->
+                    if (selectedPlayerOut == null) {
+                        viewModel.selectPlayerOut(playerId)
+                    } else if (selectedPlayerOut == playerId) {
+                        viewModel.clearPlayerOutSelection()
+                    } else {
+                        viewModel.substitutePlayer(playerId)
+                    }
+                },
             )
         }
     }
@@ -90,9 +101,11 @@ private fun NoMatchState() {
 @Composable
 private fun SuccessState(
     state: MatchUiState.Success,
+    selectedPlayerOut: Long?,
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
+    onPlayerClick: (Long) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -113,12 +126,25 @@ private fun SuccessState(
             ),
         )
 
+        if (selectedPlayerOut != null) {
+            Text(
+                text = stringResource(R.string.select_player_in_message),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = TFMSpacing.spacing02),
+            )
+        }
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
             items(state.playerTimes) { playerTimeItem ->
-                PlayerTimeCard(playerTimeItem = playerTimeItem)
+                PlayerTimeCard(
+                    playerTimeItem = playerTimeItem,
+                    isSelected = selectedPlayerOut == playerTimeItem.player.id,
+                    onClick = { onPlayerClick(playerTimeItem.player.id) },
+                )
             }
         }
 
@@ -220,14 +246,20 @@ private fun MatchTimeCard(
 }
 
 @Composable
-private fun PlayerTimeCard(playerTimeItem: PlayerTimeItem) {
+private fun PlayerTimeCard(
+    playerTimeItem: PlayerTimeItem,
+    isSelected: Boolean = false,
+    onClick: () -> Unit = {},
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
+        onClick = onClick,
         colors = CardDefaults.cardColors(
-            containerColor = if (playerTimeItem.isRunning) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                MaterialTheme.colorScheme.surface
+            containerColor = when {
+                isSelected -> MaterialTheme.colorScheme.primaryContainer
+                playerTimeItem.isRunning -> MaterialTheme.colorScheme.secondaryContainer
+                else -> MaterialTheme.colorScheme.surface
             },
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -293,6 +325,7 @@ private fun SuccessStatePreview() {
     MaterialTheme {
         SuccessState(
             state = MatchUiState.Success(
+                matchId = 1,
                 matchTimeMillis = 900000L,
                 matchIsRunning = true,
                 playerTimes = listOf(
@@ -322,9 +355,11 @@ private fun SuccessStatePreview() {
                     ),
                 ),
             ),
+            selectedPlayerOut = null,
             onSaveMatch = {},
             onPauseMatch = {},
             onResumeMatch = {},
+            onPlayerClick = {},
         )
     }
 }

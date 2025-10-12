@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,11 +25,15 @@ class MatchViewModel(
     private val saveMatchUseCase: FinishMatchUseCase,
     private val pauseMatchUseCase: PauseMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
+    private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
 
     private val _currentTime = MutableStateFlow(System.currentTimeMillis())
+
+    private val _selectedPlayerOut = MutableStateFlow<Long?>(null)
+    val selectedPlayerOut: StateFlow<Long?> = _selectedPlayerOut.asStateFlow()
 
     init {
         loadMatchData()
@@ -56,6 +61,32 @@ class MatchViewModel(
             resumeMatchUseCase(currentTime)
             // Update the current time immediately to avoid race conditions
             _currentTime.value = currentTime
+        }
+    }
+
+    fun selectPlayerOut(playerId: Long) {
+        _selectedPlayerOut.value = playerId
+    }
+
+    fun clearPlayerOutSelection() {
+        _selectedPlayerOut.value = null
+    }
+
+    fun substitutePlayer(playerInId: Long) {
+        viewModelScope.launch {
+            val playerOutId = _selectedPlayerOut.value
+            val currentState = _uiState.value
+            if (playerOutId != null && currentState is MatchUiState.Success) {
+                val currentTime = System.currentTimeMillis()
+                registerPlayerSubstitutionUseCase(
+                    matchId = currentState.matchId,
+                    playerOutId = playerOutId,
+                    playerInId = playerInId,
+                    currentTimeMillis = currentTime,
+                )
+                _selectedPlayerOut.value = null
+                _currentTime.value = currentTime
+            }
         }
     }
 
@@ -97,6 +128,7 @@ class MatchViewModel(
                     }
 
                     MatchUiState.Success(
+                        matchId = match.id,
                         matchTimeMillis = matchTime,
                         matchIsRunning = match.isRunning,
                         playerTimes = playerTimeItems,
@@ -141,6 +173,7 @@ sealed class MatchUiState {
     data object Loading : MatchUiState()
     data object NoMatch : MatchUiState()
     data class Success(
+        val matchId: Long,
         val matchTimeMillis: Long,
         val matchIsRunning: Boolean,
         val playerTimes: List<PlayerTimeItem>,

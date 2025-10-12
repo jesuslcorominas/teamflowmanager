@@ -103,5 +103,8 @@
     <string name="view_match">View Detail</string>
     <string name="match_score">%1$d - %2$d</string>
     <string name="match_active_warning">There is already an active match</string>
+    
+    <!-- Player Substitution -->
+    <string name="select_player_in_message">Tap on the player to bring in</string>
 
 </resources>

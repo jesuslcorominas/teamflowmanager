@@ -33,6 +33,7 @@ val viewModelModule =
                 saveMatchUseCase = get(),
                 pauseMatchUseCase = get(),
                 resumeMatchUseCase = get(),
+                registerPlayerSubstitutionUseCase = get(),
             )
         }
         viewModel {
