@@ -89,11 +89,16 @@ fun MatchListScreen(
                 }
 
                 is MatchListUiState.Success -> {
+                    val currentMatchId = state.currentMatchId
                     val pendingMatches = state.matches.filter { it.elapsedTimeMillis == 0L && !it.isRunning }
-                    val pausedMatches = state.matches.filter { it.elapsedTimeMillis > 0L && !it.isRunning }
-                    val playedMatches = pausedMatches  // For now, paused matches show in the same section
+                    val pausedMatch = if (currentMatchId != null) {
+                        state.matches.find { it.id == currentMatchId && !it.isRunning }
+                    } else null
+                    val playedMatches = state.matches.filter { 
+                        it.elapsedTimeMillis > 0L && !it.isRunning && it.id != currentMatchId 
+                    }
                     val hasActiveMatch = state.matches.any { it.isRunning }
-                    val hasPausedMatch = pausedMatches.isNotEmpty()
+                    val hasPausedMatch = pausedMatch != null
 
                     LazyColumn(
                         modifier =
@@ -103,7 +108,7 @@ fun MatchListScreen(
                         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                     ) {
                         // Paused match section (if exists, show at top)
-                        if (hasPausedMatch) {
+                        if (hasPausedMatch && pausedMatch != null) {
                             item {
                                 Text(
                                     text = stringResource(R.string.paused_match),
@@ -112,9 +117,9 @@ fun MatchListScreen(
                                     modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
                                 )
                             }
-                            items(pausedMatches) { match ->
+                            item {
                                 PausedMatchCard(
-                                    match = match,
+                                    match = pausedMatch,
                                     onResume = { 
                                         viewModel.resumeMatch()
                                         onNavigateToCurrentMatch()
@@ -146,6 +151,24 @@ fun MatchListScreen(
                                             onNavigateToCurrentMatch()
                                         }
                                     },
+                                )
+                            }
+                        }
+
+                        // Played matches section
+                        if (playedMatches.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+                                Text(
+                                    text = stringResource(R.string.played_matches),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
+                                )
+                            }
+                            items(playedMatches) { match ->
+                                PlayedMatchCard(
+                                    match = match,
                                 )
                             }
                         }

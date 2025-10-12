@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
@@ -29,6 +30,7 @@ import org.junit.Test
 class MatchListViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getAllMatchesUseCase: GetAllMatchesUseCase
+    private lateinit var getMatchUseCase: GetMatchUseCase
     private lateinit var deleteMatchUseCase: DeleteMatchUseCase
     private lateinit var createMatchUseCase: CreateMatchUseCase
     private lateinit var updateMatchUseCase: UpdateMatchUseCase
@@ -40,6 +42,7 @@ class MatchListViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getAllMatchesUseCase = mockk()
+        getMatchUseCase = mockk()
         deleteMatchUseCase = mockk(relaxed = true)
         createMatchUseCase = mockk(relaxed = true)
         updateMatchUseCase = mockk(relaxed = true)
@@ -56,10 +59,13 @@ class MatchListViewModelTest {
     fun `initial state should be Loading`() {
         // Given
         every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+        every { getMatchUseCase.invoke() } returns flowOf(null)
 
         // When
         viewModel =
             MatchListViewModel(
+                getAllMatchesUseCase,
+                getMatchUseCase,
                 getAllMatchesUseCase,
                 deleteMatchUseCase,
                 createMatchUseCase,
@@ -77,10 +83,13 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+        every { getMatchUseCase.invoke() } returns flowOf(null)
 
             // When
             viewModel =
                 MatchListViewModel(
+                getAllMatchesUseCase,
+                getMatchUseCase,
                     getAllMatchesUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -116,10 +125,13 @@ class MatchListViewModelTest {
                     ),
                 )
             every { getAllMatchesUseCase.invoke() } returns flowOf(matches)
+            every { getMatchUseCase.invoke() } returns flowOf(null)
 
             // When
             viewModel =
                 MatchListViewModel(
+                getAllMatchesUseCase,
+                getMatchUseCase,
                     getAllMatchesUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -140,8 +152,11 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+        every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
+                getAllMatchesUseCase,
+                getMatchUseCase,
                     getAllMatchesUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -172,8 +187,11 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+        every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
+                getAllMatchesUseCase,
+                getMatchUseCase,
                     getAllMatchesUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -203,8 +221,11 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+        every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
+                getAllMatchesUseCase,
+                getMatchUseCase,
                     getAllMatchesUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -236,8 +257,11 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+        every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
+                getAllMatchesUseCase,
+                getMatchUseCase,
                     getAllMatchesUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -269,8 +293,11 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+        every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
+                getAllMatchesUseCase,
+                getMatchUseCase,
                     getAllMatchesUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
