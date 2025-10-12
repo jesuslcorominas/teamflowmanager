@@ -88,4 +88,16 @@
     <string name="player_selected">Seleccionado</string>
     <string name="player_not_selected">No Seleccionado</string>
 
+    <!-- Navigation -->
+    <string name="nav_players">Plantilla</string>
+    <string name="nav_team">Equipo</string>
+    <string name="nav_matches">Partidos</string>
+    
+    <!-- Match Status -->
+    <string name="pending_matches">Partidos Pendientes</string>
+    <string name="played_matches">Partidos Jugados</string>
+    <string name="start_match">Empezar</string>
+    <string name="match_score">%1$d - %2$d</string>
+    <string name="match_active_warning">Ya hay un partido activo</string>
+
 </resources>
