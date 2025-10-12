@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.ui.components.AppAlertDialog
-import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.DateFormatter
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDeleteConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListUiState
@@ -159,7 +158,7 @@ fun MatchCard(
                 if (match.date != null) {
                     Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
                     Text(
-                        text = DateFormatter.formatDateTime(match.date),
+                        text = match.date?.let { DateFormatter.formatDateTime(it) } ?: "",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

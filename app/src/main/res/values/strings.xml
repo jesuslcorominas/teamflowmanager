@@ -53,13 +53,13 @@
     <string name="edit_team_title">Edit Team</string>
     <string name="close">Close</string>
 
-    <string name="session_title">Match Session</string>
+    <string name="current_match_title">Current Match</string>
     <string name="no_match_message">No active match</string>
     <string name="match_time_label">Match Time</string>
     <string name="player_times_title">Player Times</string>
     <string name="running_indicator">ACTIVE</string>
     <string name="player_number_format">#%d</string>
-    <string name="save_session_button">Save Session</string>
+    <string name="finish_match_button">Finish match</string>
 
     <!-- Match Management Strings -->
     <string name="matches_title">Matches</string>

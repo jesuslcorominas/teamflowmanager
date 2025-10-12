@@ -21,12 +21,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.components.TeamInfoDialog
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
-import com.jesuslcorominas.teamflowmanager.ui.session.SessionScreen
+import com.jesuslcorominas.teamflowmanager.ui.matches.CurrentMatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
@@ -34,7 +36,7 @@ import org.koin.androidx.compose.koinViewModel
 
 enum class Screen {
     PLAYERS,
-    SESSION,
+    CURRENT_MATCH,
     MATCHES,
     MATCH_DETAIL,
 }
@@ -42,6 +44,10 @@ enum class Screen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
+
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+
     var teamName by remember { mutableStateOf<String?>(null) }
     var showTeamInfo by remember { mutableStateOf(false) }
     var showEditTeam by remember { mutableStateOf(false) }
@@ -76,6 +82,7 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
                 )
             }
         },
+        bottomBar = { /* No bottom bar for now */ },
     ) { paddingValues ->
         Surface(
             modifier =
@@ -92,8 +99,8 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
                         },
                     )
                 }
-                currentScreen == Screen.SESSION -> {
-                    SessionScreen()
+                currentScreen == Screen.CURRENT_MATCH -> {
+                    CurrentMatchScreen()
                 }
                 currentScreen == Screen.MATCHES -> {
                     MatchListScreen(
@@ -115,7 +122,7 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
                 }
                 else -> {
                     PlayersScreen(
-                        onNavigateToSession = { currentScreen = Screen.SESSION },
+                        onNavigateToCurrentMatch = { currentScreen = Screen.CURRENT_MATCH },
                         onNavigateToMatches = { currentScreen = Screen.MATCHES },
                     )
                 }

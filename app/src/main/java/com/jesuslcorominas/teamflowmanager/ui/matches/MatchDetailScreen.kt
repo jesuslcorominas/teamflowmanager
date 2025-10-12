@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches
 
+import TFMSpacing
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -21,7 +22,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,7 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
-import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.components.AppTextField
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
@@ -75,7 +75,7 @@ fun MatchDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.close),
                         )
                     }
@@ -163,7 +163,7 @@ fun MatchForm(
                 .padding(TFMSpacing.spacing04),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
     ) {
-        OutlinedTextField(
+        AppTextField(
             value = opponent,
             onValueChange = {
                 opponent = it
@@ -177,7 +177,7 @@ fun MatchForm(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        OutlinedTextField(
+        AppTextField(
             value = location,
             onValueChange = {
                 location = it

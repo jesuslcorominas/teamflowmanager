@@ -2,7 +2,6 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
-import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
@@ -15,18 +14,18 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
-class SaveSessionUseCaseTest {
+class FinishMatchUseCaseTest {
     private lateinit var matchRepository: MatchRepository
     private lateinit var playerTimeRepository: PlayerTimeRepository
     private lateinit var playerTimeHistoryRepository: PlayerTimeHistoryRepository
-    private lateinit var saveSessionUseCase: SaveSessionUseCase
+    private lateinit var finishMatchUseCase: FinishMatchUseCase
 
     @Before
     fun setup() {
         matchRepository = mockk(relaxed = true)
         playerTimeRepository = mockk(relaxed = true)
         playerTimeHistoryRepository = mockk(relaxed = true)
-        saveSessionUseCase = SaveSessionUseCaseImpl(
+        finishMatchUseCase = FinishMatchUseCaseImpl(
             matchRepository = matchRepository,
             playerTimeRepository = playerTimeRepository,
             playerTimeHistoryRepository = playerTimeHistoryRepository,
@@ -40,7 +39,7 @@ class SaveSessionUseCaseTest {
             every { matchRepository.getMatch() } returns flowOf(null)
 
             // When
-            saveSessionUseCase.invoke()
+            finishMatchUseCase.invoke()
 
             // Then
             coVerify(exactly = 0) { playerTimeRepository.getAllPlayerTimes() }
@@ -65,7 +64,7 @@ class SaveSessionUseCaseTest {
             coEvery { playerTimeRepository.resetAllPlayerTimes() } returns Unit
 
             // When
-            saveSessionUseCase.invoke()
+            finishMatchUseCase.invoke()
 
             // Then
             coVerify {
@@ -111,7 +110,7 @@ class SaveSessionUseCaseTest {
             coEvery { playerTimeRepository.resetAllPlayerTimes() } returns Unit
 
             // When
-            saveSessionUseCase.invoke()
+            finishMatchUseCase.invoke()
 
             // Then
             coVerify {
@@ -143,7 +142,7 @@ class SaveSessionUseCaseTest {
             coEvery { playerTimeRepository.resetAllPlayerTimes() } returns Unit
 
             // When
-            saveSessionUseCase.invoke()
+            finishMatchUseCase.invoke()
 
             // Then
             coVerify(exactly = 0) {
@@ -174,7 +173,7 @@ class SaveSessionUseCaseTest {
             coEvery { playerTimeRepository.resetAllPlayerTimes() } returns Unit
 
             // When
-            saveSessionUseCase.invoke()
+            finishMatchUseCase.invoke()
 
             // Then
             coVerify(exactly = 0) { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) }

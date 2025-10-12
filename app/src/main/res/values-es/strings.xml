@@ -53,13 +53,13 @@
     <string name="edit_team_title">Editar Equipo</string>
     <string name="close">Cerrar</string>
 
-    <string name="session_title">Sesión de Partido</string>
+    <string name="current_match_title">Partido</string>
     <string name="no_match_message">No hay partido activo</string>
     <string name="match_time_label">Tiempo de Partido</string>
     <string name="player_times_title">Tiempos de Jugadores</string>
     <string name="running_indicator">ACTIVO</string>
     <string name="player_number_format">#%d</string>
-    <string name="save_session_button">Guardar Sesión</string>
+    <string name="finish_match_button">Finalizar partido</string>
 
     <!-- Match Management Strings -->
     <string name="matches_title">Partidos</string>

@@ -55,7 +55,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
 
         // Then
         assertEquals(PlayerUiState.Loading, viewModel.uiState.value)
@@ -71,7 +71,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
         advanceUntilIdle()
 
         // Then
@@ -85,7 +85,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
         advanceUntilIdle()
 
         // Then
@@ -103,7 +103,7 @@ class PlayerViewModelTest {
             positions = listOf(Position.Forward)
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
 
         // When
         viewModel.addPlayer(player)
@@ -118,7 +118,7 @@ class PlayerViewModelTest {
         // Given
         val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
 
         // When
         viewModel.showDeleteConfirmation(player)
@@ -132,7 +132,7 @@ class PlayerViewModelTest {
         // Given
         val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
         viewModel.showDeleteConfirmation(player)
 
         // When
@@ -148,7 +148,7 @@ class PlayerViewModelTest {
         val playerId = 1L
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { deletePlayerUseCase(playerId) } just runs
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
 
         // When
         viewModel.deletePlayer(playerId)
@@ -172,7 +172,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { updatePlayerUseCase.invoke(player) } just runs
 
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, deletePlayerUseCase, updatePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
         advanceUntilIdle()
 
         // When
