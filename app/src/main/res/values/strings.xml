@@ -59,6 +59,8 @@
     <string name="player_times_title">Player Times</string>
     <string name="running_indicator">ACTIVE</string>
     <string name="player_number_format">#%d</string>
+    <string name="pause_match_button">Half Time</string>
+    <string name="resume_match_button">Resume</string>
     <string name="finish_match_button">Finish match</string>
 
     <!-- Match Management Strings -->
@@ -95,8 +97,10 @@
     
     <!-- Match Status -->
     <string name="pending_matches">Pending Matches</string>
+    <string name="paused_match">Match in Progress: Half Time</string>
     <string name="played_matches">Played Matches</string>
     <string name="start_match">Start</string>
+    <string name="view_match">View Detail</string>
     <string name="match_score">%1$d - %2$d</string>
     <string name="match_active_warning">There is already an active match</string>
 

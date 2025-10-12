@@ -6,19 +6,24 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class MatchListViewModel(
     private val getAllMatchesUseCase: GetAllMatchesUseCase,
+    private val getMatchUseCase: GetMatchUseCase,
     private val deleteMatchUseCase: DeleteMatchUseCase,
     private val createMatchUseCase: CreateMatchUseCase,
     private val updateMatchUseCase: UpdateMatchUseCase,
     private val startMatchUseCase: StartMatchUseCase,
+    private val resumeMatchUseCase: ResumeMatchUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
@@ -32,13 +37,20 @@ class MatchListViewModel(
 
     private fun loadMatches() {
         viewModelScope.launch {
-            getAllMatchesUseCase.invoke().collect { matches ->
-                _uiState.value =
-                    if (matches.isEmpty()) {
-                        MatchListUiState.Empty
-                    } else {
-                        MatchListUiState.Success(matches)
-                    }
+            combine(
+                getAllMatchesUseCase.invoke(),
+                getMatchUseCase.invoke()
+            ) { allMatches, currentMatch ->
+                if (allMatches.isEmpty()) {
+                    MatchListUiState.Empty
+                } else {
+                    MatchListUiState.Success(
+                        matches = allMatches,
+                        currentMatchId = currentMatch?.id
+                    )
+                }
+            }.collect { state ->
+                _uiState.value = state
             }
         }
     }
@@ -58,6 +70,12 @@ class MatchListViewModel(
     fun startMatch(matchId: Long) {
         viewModelScope.launch {
             startMatchUseCase.invoke(matchId, System.currentTimeMillis())
+        }
+    }
+
+    fun resumeMatch() {
+        viewModelScope.launch {
+            resumeMatchUseCase.invoke(System.currentTimeMillis())
         }
     }
 
@@ -83,7 +101,10 @@ class MatchListViewModel(
 sealed class MatchListUiState {
     data object Loading : MatchListUiState()
     data object Empty : MatchListUiState()
-    data class Success(val matches: List<Match>) : MatchListUiState()
+    data class Success(
+        val matches: List<Match>,
+        val currentMatchId: Long? = null
+    ) : MatchListUiState()
 }
 
 sealed class MatchDeleteConfirmationState {

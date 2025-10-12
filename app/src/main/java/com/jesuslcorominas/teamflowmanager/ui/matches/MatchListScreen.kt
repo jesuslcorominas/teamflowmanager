@@ -89,9 +89,16 @@ fun MatchListScreen(
                 }
 
                 is MatchListUiState.Success -> {
-                    val pendingMatches = state.matches.filter { it.elapsedTimeMillis == 0L }
-                    val playedMatches = state.matches.filter { it.elapsedTimeMillis > 0L }
+                    val currentMatchId = state.currentMatchId
+                    val pendingMatches = state.matches.filter { it.elapsedTimeMillis == 0L && !it.isRunning }
+                    val pausedMatch = if (currentMatchId != null) {
+                        state.matches.find { it.id == currentMatchId && !it.isRunning }
+                    } else null
+                    val playedMatches = state.matches.filter { 
+                        it.elapsedTimeMillis > 0L && !it.isRunning && it.id != currentMatchId 
+                    }
                     val hasActiveMatch = state.matches.any { it.isRunning }
+                    val hasPausedMatch = pausedMatch != null
 
                     LazyColumn(
                         modifier =
@@ -100,6 +107,28 @@ fun MatchListScreen(
                                 .padding(TFMSpacing.spacing04),
                         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                     ) {
+                        // Paused match section (if exists, show at top)
+                        if (hasPausedMatch && pausedMatch != null) {
+                            item {
+                                Text(
+                                    text = stringResource(R.string.paused_match),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
+                                )
+                            }
+                            item {
+                                PausedMatchCard(
+                                    match = pausedMatch,
+                                    onResume = { 
+                                        viewModel.resumeMatch()
+                                        onNavigateToCurrentMatch()
+                                    },
+                                    onNavigateToDetail = { onNavigateToCurrentMatch() },
+                                )
+                            }
+                        }
+
                         // Pending matches section
                         if (pendingMatches.isNotEmpty()) {
                             item {
@@ -113,11 +142,11 @@ fun MatchListScreen(
                             items(pendingMatches) { match ->
                                 PendingMatchCard(
                                     match = match,
-                                    hasActiveMatch = hasActiveMatch,
+                                    hasActiveMatch = hasActiveMatch || hasPausedMatch,
                                     onEdit = { onNavigateToEditMatch(match.id) },
                                     onDelete = { viewModel.requestDeleteMatch(match) },
                                     onStart = { 
-                                        if (!hasActiveMatch) {
+                                        if (!hasActiveMatch && !hasPausedMatch) {
                                             viewModel.startMatch(match.id)
                                             onNavigateToCurrentMatch()
                                         }
@@ -238,14 +267,85 @@ fun PendingMatchCard(
                 Spacer(modifier = Modifier.padding(start = TFMSpacing.spacing01))
                 Text(text = stringResource(R.string.start_match))
             }
+        }
+    }
+}
 
-            if (hasActiveMatch) {
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
-                Text(
-                    text = stringResource(R.string.match_active_warning),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
+@Composable
+fun PausedMatchCard(
+    match: Match,
+    onResume: () -> Unit,
+    onNavigateToDetail: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToDetail() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TFMSpacing.spacing04),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        text = match.opponent ?: stringResource(R.string.opponent),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
+                    Text(
+                        text = match.location ?: stringResource(R.string.location),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    match.date?.let {
+                        Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
+                        Text(
+                            text = DateFormatter.formatDate(it),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+            ) {
+                Button(
+                    onClick = onResume,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.padding(start = TFMSpacing.spacing01))
+                    Text(text = stringResource(R.string.resume_match_button))
+                }
+                
+                Button(
+                    onClick = onNavigateToDetail,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(text = stringResource(R.string.view_match))
+                }
             }
         }
     }

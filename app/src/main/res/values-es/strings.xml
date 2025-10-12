@@ -59,6 +59,8 @@
     <string name="player_times_title">Tiempos de Jugadores</string>
     <string name="running_indicator">ACTIVO</string>
     <string name="player_number_format">#%d</string>
+    <string name="pause_match_button">Descanso</string>
+    <string name="resume_match_button">Reanudar</string>
     <string name="finish_match_button">Finalizar partido</string>
 
     <!-- Match Management Strings -->
@@ -95,8 +97,10 @@
     
     <!-- Match Status -->
     <string name="pending_matches">Partidos Pendientes</string>
+    <string name="paused_match">Partido en curso: Descanso</string>
     <string name="played_matches">Partidos Jugados</string>
     <string name="start_match">Empezar</string>
+    <string name="view_match">Ver Detalle</string>
     <string name="match_score">%1$d - %2$d</string>
     <string name="match_active_warning">Ya hay un partido activo</string>
 

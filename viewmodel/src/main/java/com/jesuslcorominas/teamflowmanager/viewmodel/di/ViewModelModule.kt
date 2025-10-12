@@ -31,15 +31,19 @@ val viewModelModule =
                 getAllPlayerTimesUseCase = get(),
                 getPlayersUseCase = get(),
                 saveMatchUseCase = get(),
+                pauseMatchUseCase = get(),
+                resumeMatchUseCase = get(),
             )
         }
         viewModel {
             MatchListViewModel(
                 getAllMatchesUseCase = get(),
+                getMatchUseCase = get(),
                 deleteMatchUseCase = get(),
                 createMatchUseCase = get(),
                 updateMatchUseCase = get(),
                 startMatchUseCase = get(),
+                resumeMatchUseCase = get(),
             )
         }
         viewModel {
