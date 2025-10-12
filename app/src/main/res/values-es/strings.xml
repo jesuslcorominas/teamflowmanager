@@ -60,6 +60,7 @@
     <string name="running_indicator">ACTIVO</string>
     <string name="player_number_format">#%d</string>
     <string name="pause_match_button">Descanso</string>
+    <string name="resume_match_button">Reanudar</string>
     <string name="finish_match_button">Finalizar partido</string>
 
     <!-- Match Management Strings -->

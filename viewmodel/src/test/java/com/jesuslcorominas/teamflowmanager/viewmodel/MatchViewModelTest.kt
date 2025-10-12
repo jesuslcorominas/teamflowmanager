@@ -9,6 +9,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -36,6 +37,7 @@ class MatchViewModelTest {
     private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var finishMatchUseCase: FinishMatchUseCase
     private lateinit var pauseMatchUseCase: PauseMatchUseCase
+    private lateinit var resumeMatchUseCase: ResumeMatchUseCase
     private lateinit var viewModel: MatchViewModel
 
     @Before
@@ -46,6 +48,7 @@ class MatchViewModelTest {
         getPlayersUseCase = mockk()
         finishMatchUseCase = mockk(relaxed = true)
         pauseMatchUseCase = mockk(relaxed = true)
+        resumeMatchUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -61,7 +64,7 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase)
 
         // Then
         assertEquals(MatchUiState.Loading, viewModel.uiState.value)
@@ -74,7 +77,7 @@ class MatchViewModelTest {
         every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase)
         advanceUntilIdle()
 
         // When
@@ -83,6 +86,24 @@ class MatchViewModelTest {
 
         // Then
         coVerify { pauseMatchUseCase(any()) }
+    }
+
+    @Test
+    fun `resumeMatch should call resumeMatchUseCase with current time`() = runTest(testDispatcher) {
+        // Given
+        every { getMatchUseCase.invoke() } returns flowOf(null)
+        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase)
+        advanceUntilIdle()
+
+        // When
+        viewModel.resumeMatch()
+        advanceUntilIdle()
+
+        // Then
+        coVerify { resumeMatchUseCase(any()) }
     }
 
     // TODO review. It's taking too long to run

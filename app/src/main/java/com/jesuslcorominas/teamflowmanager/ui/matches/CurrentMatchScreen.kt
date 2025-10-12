@@ -7,15 +7,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,6 +59,7 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                 state = state,
                 onSaveMatch = { viewModel.saveMatch() },
                 onPauseMatch = { viewModel.pauseMatch() },
+                onResumeMatch = { viewModel.resumeMatch() },
             )
         }
     }
@@ -85,6 +93,7 @@ private fun SuccessState(
     state: MatchUiState.Success,
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
+    onResumeMatch: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -116,20 +125,40 @@ private fun SuccessState(
 
         Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
 
-        if (state.matchIsRunning) {
-            Button(
-                onClick = onPauseMatch,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(text = stringResource(R.string.pause_match_button))
-            }
-        }
-
-        Button(
-            onClick = onSaveMatch,
+        Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(text = stringResource(R.string.finish_match_button))
+            // Play/Pause button
+            IconButton(
+                onClick = if (state.matchIsRunning) onPauseMatch else onResumeMatch,
+                modifier = Modifier.size(64.dp),
+            ) {
+                Icon(
+                    imageVector = if (state.matchIsRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    contentDescription = if (state.matchIsRunning) {
+                        stringResource(R.string.pause_match_button)
+                    } else {
+                        stringResource(R.string.resume_match_button)
+                    },
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+
+            // Stop/Finish button
+            IconButton(
+                onClick = onSaveMatch,
+                modifier = Modifier.size(64.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Stop,
+                    contentDescription = stringResource(R.string.finish_match_button),
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }
@@ -296,6 +325,7 @@ private fun SuccessStatePreview() {
             ),
             onSaveMatch = {},
             onPauseMatch = {},
+            onResumeMatch = {},
         )
     }
 }
