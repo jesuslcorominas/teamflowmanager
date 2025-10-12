@@ -38,6 +38,7 @@ class MatchViewModelTest {
     private lateinit var finishMatchUseCase: FinishMatchUseCase
     private lateinit var pauseMatchUseCase: PauseMatchUseCase
     private lateinit var resumeMatchUseCase: ResumeMatchUseCase
+    private lateinit var registerPlayerSubstitutionUseCase: com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
     private lateinit var viewModel: MatchViewModel
 
     @Before
@@ -49,6 +50,7 @@ class MatchViewModelTest {
         finishMatchUseCase = mockk(relaxed = true)
         pauseMatchUseCase = mockk(relaxed = true)
         resumeMatchUseCase = mockk(relaxed = true)
+        registerPlayerSubstitutionUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -64,7 +66,7 @@ class MatchViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase, registerPlayerSubstitutionUseCase)
 
         // Then
         assertEquals(MatchUiState.Loading, viewModel.uiState.value)
@@ -77,7 +79,7 @@ class MatchViewModelTest {
         every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase, registerPlayerSubstitutionUseCase)
         advanceUntilIdle()
 
         // When
@@ -95,7 +97,7 @@ class MatchViewModelTest {
         every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
-        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase)
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase, registerPlayerSubstitutionUseCase)
         advanceUntilIdle()
 
         // When
@@ -104,6 +106,71 @@ class MatchViewModelTest {
 
         // Then
         coVerify { resumeMatchUseCase(any()) }
+    }
+
+    @Test
+    fun `selectPlayerOut should update selected player out state`() = runTest(testDispatcher) {
+        // Given
+        every { getMatchUseCase.invoke() } returns flowOf(null)
+        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase, registerPlayerSubstitutionUseCase)
+        advanceUntilIdle()
+
+        // When
+        viewModel.selectPlayerOut(5L)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(5L, viewModel.selectedPlayerOut.value)
+    }
+
+    @Test
+    fun `clearPlayerOutSelection should clear selected player out state`() = runTest(testDispatcher) {
+        // Given
+        every { getMatchUseCase.invoke() } returns flowOf(null)
+        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase, registerPlayerSubstitutionUseCase)
+        advanceUntilIdle()
+        viewModel.selectPlayerOut(5L)
+        advanceUntilIdle()
+
+        // When
+        viewModel.clearPlayerOutSelection()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(null, viewModel.selectedPlayerOut.value)
+    }
+
+    @Test
+    fun `substitutePlayer should call registerPlayerSubstitutionUseCase and clear selection`() = runTest(testDispatcher) {
+        // Given
+        val match = Match(
+            id = 1L,
+            elapsedTimeMillis = 300000L,
+            isRunning = true,
+            lastStartTimeMillis = System.currentTimeMillis(),
+        )
+        every { getMatchUseCase.invoke() } returns flowOf(match)
+        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+
+        viewModel = MatchViewModel(getMatchUseCase, getAllPlayerTimesUseCase, getPlayersUseCase, finishMatchUseCase, pauseMatchUseCase, resumeMatchUseCase, registerPlayerSubstitutionUseCase)
+        advanceUntilIdle()
+        viewModel.selectPlayerOut(2L)
+        advanceUntilIdle()
+
+        // When
+        viewModel.substitutePlayer(3L)
+        advanceUntilIdle()
+
+        // Then
+        coVerify { registerPlayerSubstitutionUseCase(1L, 2L, 3L, any()) }
+        assertEquals(null, viewModel.selectedPlayerOut.value)
     }
 
     // TODO review. It's taking too long to run
