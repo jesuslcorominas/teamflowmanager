@@ -97,7 +97,7 @@
     
     <!-- Match Status -->
     <string name="pending_matches">Partidos Pendientes</string>
-    <string name="paused_match">Partido Pausado</string>
+    <string name="paused_match">Partido en curso: Descanso</string>
     <string name="played_matches">Partidos Jugados</string>
     <string name="start_match">Empezar</string>
     <string name="view_match">Ver Detalle</string>

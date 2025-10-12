@@ -97,7 +97,7 @@
     
     <!-- Match Status -->
     <string name="pending_matches">Pending Matches</string>
-    <string name="paused_match">Paused Match</string>
+    <string name="paused_match">Match in Progress: Half Time</string>
     <string name="played_matches">Played Matches</string>
     <string name="start_match">Start</string>
     <string name="view_match">View Detail</string>

@@ -244,15 +244,6 @@ fun PendingMatchCard(
                 Spacer(modifier = Modifier.padding(start = TFMSpacing.spacing01))
                 Text(text = stringResource(R.string.start_match))
             }
-
-            if (hasActiveMatch) {
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
-                Text(
-                    text = stringResource(R.string.match_active_warning),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
         }
     }
 }
