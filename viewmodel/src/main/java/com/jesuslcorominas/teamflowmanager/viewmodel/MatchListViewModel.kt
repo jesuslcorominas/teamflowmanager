@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ class MatchListViewModel(
     private val deleteMatchUseCase: DeleteMatchUseCase,
     private val createMatchUseCase: CreateMatchUseCase,
     private val updateMatchUseCase: UpdateMatchUseCase,
+    private val startMatchUseCase: StartMatchUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
@@ -50,6 +52,12 @@ class MatchListViewModel(
     fun updateMatch(match: Match) {
         viewModelScope.launch {
             updateMatchUseCase.invoke(match)
+        }
+    }
+
+    fun startMatch(matchId: Long) {
+        viewModelScope.launch {
+            startMatchUseCase.invoke(matchId, System.currentTimeMillis())
         }
     }
 

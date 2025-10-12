@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MatchDao {
-    @Query("SELECT * FROM match WHERE id = 1 LIMIT 1")
+    @Query("SELECT * FROM match WHERE isRunning = 1 LIMIT 1")
     fun getMatch(): Flow<MatchEntity?>
 
     @Query("SELECT * FROM match WHERE id = :matchId LIMIT 1")
