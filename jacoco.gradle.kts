@@ -22,7 +22,7 @@ afterEvaluate {
     tasks.register<JacocoReport>("test${variantName.capitalize()}UnitTestCoverage") {
         dependsOn(
             ":app:test${variantName.capitalize()}UnitTest",
-//            ":viewmodel:test${variantName.capitalize()}UnitTest",
+            ":viewmodel:test${variantName.capitalize()}UnitTest",
             ":data:local:test${variantName.capitalize()}UnitTest",
             ":data:core:test",
             ":data:remote:test",
@@ -50,12 +50,12 @@ afterEvaluate {
                 )
             ),
 
-//            fileTree(
-//                mapOf(
-//                    "dir" to "$rootDir/viewmodel/build/tmp/kotlin-classes/${variantName}",
-//                    "excludes" to excludes
-//                )
-//            ),
+            fileTree(
+                mapOf(
+                    "dir" to "$rootDir/viewmodel/build/tmp/kotlin-classes/${variantName}",
+                    "excludes" to excludes
+                )
+            ),
 
             fileTree(
                 mapOf(
@@ -88,7 +88,7 @@ afterEvaluate {
 
         val coverageSourceDirs = listOf(
             "$rootDir/app/src/main/java",
-//            "$rootDir/viewmodel/src/main/java",
+            "$rootDir/viewmodel/src/main/java",
             "$rootDir/usecase/src/main/java",
             "$rootDir/data/core/src/main/java",
             "$rootDir/data/local/src/main/java",
@@ -101,7 +101,7 @@ afterEvaluate {
 
         val execFiles = listOf(
             "$rootDir/domain/build/jacoco/test.exec",
-//            "$rootDir/viewmodel/build/jacoco/test.exec",
+            "$rootDir/viewmodel/build/jacoco/test${variantName.capitalize()}UnitTest.exec",
             "$rootDir/data/core/build/jacoco/test.exec",
             "$rootDir/data/remote/build/jacoco/test.exec",
             "$rootDir/usecase/build/jacoco/test.exec",
