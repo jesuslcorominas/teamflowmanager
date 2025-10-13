@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
@@ -14,7 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -22,6 +22,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 class TeamViewModelTest {
@@ -45,7 +46,7 @@ class TeamViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() {
+    fun `initial state should be Loading`() = runTest {
         // Given
         every { getTeamUseCase.invoke() } returns flowOf(null)
 
@@ -53,7 +54,10 @@ class TeamViewModelTest {
         viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
 
         // Then
-        assertEquals(TeamUiState.Loading, viewModel.uiState.value)
+        viewModel.uiState.test(timeout = 2.seconds) {
+            assertEquals(TeamUiState.Loading, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -64,10 +68,13 @@ class TeamViewModelTest {
 
             // When
             viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
-            advanceUntilIdle()
 
             // Then
-            assertEquals(TeamUiState.NoTeam, viewModel.uiState.value)
+            viewModel.uiState.test(timeout = 2.seconds) {
+                assertEquals(TeamUiState.Loading, awaitItem())
+                assertEquals(TeamUiState.NoTeam, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test
@@ -79,11 +86,14 @@ class TeamViewModelTest {
 
             // When
             viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
-            advanceUntilIdle()
 
             // Then
-            val state = viewModel.uiState.value
-            assertEquals(TeamUiState.TeamExists(team), state)
+            viewModel.uiState.test(timeout = 2.seconds) {
+                assertEquals(TeamUiState.Loading, awaitItem())
+                val state = awaitItem()
+                assertEquals(TeamUiState.TeamExists(team), state)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test
@@ -97,7 +107,6 @@ class TeamViewModelTest {
 
             // When
             viewModel.createTeam(team)
-            advanceUntilIdle()
 
             // Then
             coVerify { createTeamUseCase.invoke(team) }
@@ -114,7 +123,6 @@ class TeamViewModelTest {
 
             // When
             viewModel.updateTeam(team)
-            advanceUntilIdle()
 
             // Then
             coVerify { updateTeamUseCase.invoke(team) }

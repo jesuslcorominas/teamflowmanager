@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
@@ -16,7 +17,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -25,6 +25,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 class MatchListViewModelTest {
@@ -56,7 +57,7 @@ class MatchListViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() {
+    fun `initial state should be Loading`() = runTest {
         // Given
         every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -74,7 +75,10 @@ class MatchListViewModelTest {
             )
 
         // Then
-        assertEquals(MatchListUiState.Loading, viewModel.uiState.value)
+        viewModel.uiState.test(timeout = 2.seconds) {
+            assertEquals(MatchListUiState.Loading, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -95,10 +99,13 @@ class MatchListViewModelTest {
                     startMatchUseCase,
                     resumeMatchUseCase,
                 )
-            advanceUntilIdle()
 
             // Then
-            assertEquals(MatchListUiState.Empty, viewModel.uiState.value)
+            viewModel.uiState.test(timeout = 2.seconds) {
+                assertEquals(MatchListUiState.Loading, awaitItem())
+                assertEquals(MatchListUiState.Empty, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test
@@ -136,12 +143,15 @@ class MatchListViewModelTest {
                     startMatchUseCase,
                     resumeMatchUseCase,
                 )
-            advanceUntilIdle()
 
             // Then
-            val state = viewModel.uiState.value
-            assertTrue(state is MatchListUiState.Success)
-            assertEquals(matches, (state as MatchListUiState.Success).matches)
+            viewModel.uiState.test(timeout = 2.seconds) {
+                assertEquals(MatchListUiState.Loading, awaitItem())
+                val state = awaitItem()
+                assertTrue(state is MatchListUiState.Success)
+                assertEquals(matches, (state as MatchListUiState.Success).matches)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test
@@ -172,7 +182,6 @@ class MatchListViewModelTest {
 
             // When
             viewModel.createMatch(match)
-            advanceUntilIdle()
 
             // Then
             coVerify { createMatchUseCase.invoke(match) }
@@ -205,7 +214,6 @@ class MatchListViewModelTest {
 
             // When
             viewModel.updateMatch(match)
-            advanceUntilIdle()
 
             // Then
             coVerify { updateMatchUseCase.invoke(match) }
@@ -238,7 +246,6 @@ class MatchListViewModelTest {
 
             // When
             viewModel.requestDeleteMatch(match)
-            advanceUntilIdle()
 
             // Then
             val state = viewModel.deleteConfirmationState.value
@@ -274,7 +281,6 @@ class MatchListViewModelTest {
 
             // When
             viewModel.confirmDeleteMatch()
-            advanceUntilIdle()
 
             // Then
             coVerify { deleteMatchUseCase.invoke(match.id) }

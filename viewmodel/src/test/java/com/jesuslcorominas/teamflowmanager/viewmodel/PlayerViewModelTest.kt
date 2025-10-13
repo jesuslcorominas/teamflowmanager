@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
@@ -16,7 +17,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -24,6 +24,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 class PlayerViewModelTest {
@@ -50,7 +51,7 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() {
+    fun `initial state should be Loading`() = runTest {
         // Given
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
@@ -58,7 +59,10 @@ class PlayerViewModelTest {
         viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
 
         // Then
-        assertEquals(PlayerUiState.Loading, viewModel.uiState.value)
+        viewModel.uiState.test(timeout = 2.seconds) {
+            assertEquals(PlayerUiState.Loading, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -72,11 +76,13 @@ class PlayerViewModelTest {
 
         // When
         viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.value
-        assertEquals(PlayerUiState.Success(players), state)
+        viewModel.uiState.test(timeout = 2.seconds) {
+            assertEquals(PlayerUiState.Loading, awaitItem())
+            assertEquals(PlayerUiState.Success(players), awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -86,10 +92,13 @@ class PlayerViewModelTest {
 
         // When
         viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
-        advanceUntilIdle()
 
         // Then
-        assertEquals(PlayerUiState.Empty, viewModel.uiState.value)
+        viewModel.uiState.test(timeout = 2.seconds) {
+            assertEquals(PlayerUiState.Loading, awaitItem())
+            assertEquals(PlayerUiState.Empty, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -107,7 +116,6 @@ class PlayerViewModelTest {
 
         // When
         viewModel.addPlayer(player)
-        advanceUntilIdle()
 
         // Then
         coVerify { addPlayerUseCase.invoke(player) }
@@ -152,7 +160,6 @@ class PlayerViewModelTest {
 
         // When
         viewModel.deletePlayer(playerId)
-        advanceUntilIdle()
 
         // Then
         coVerify { deletePlayerUseCase.invoke(playerId) }
@@ -173,11 +180,9 @@ class PlayerViewModelTest {
         coEvery { updatePlayerUseCase.invoke(player) } just runs
 
         viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
-        advanceUntilIdle()
 
         // When
         viewModel.updatePlayer(player)
-        advanceUntilIdle()
 
         // Then
         coVerify { updatePlayerUseCase.invoke(player) }
