@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -35,9 +36,9 @@ class ResumeMatchUseCaseTest {
             val currentTime = 1000L
             val pausedPlayerTimes =
                 listOf(
-                    PlayerTime(playerId = 1L, isRunning = false, elapsedTimeMillis = 500L),
-                    PlayerTime(playerId = 2L, isRunning = false, elapsedTimeMillis = 300L),
-                    PlayerTime(playerId = 3L, isRunning = false, elapsedTimeMillis = 0L),
+                    PlayerTime(playerId = 1L, isRunning = false, elapsedTimeMillis = 500L, status = PlayerTimeStatus.PAUSED),
+                    PlayerTime(playerId = 2L, isRunning = false, elapsedTimeMillis = 300L, status = PlayerTimeStatus.PAUSED),
+                    PlayerTime(playerId = 3L, isRunning = false, elapsedTimeMillis = 0L, status = PlayerTimeStatus.ON_BENCH),
                 )
 
             coEvery { getAllPlayerTimesUseCase() } returns flowOf(pausedPlayerTimes)

@@ -40,7 +40,7 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
     }
 
     // Handle back button for CreateTeam screen - should exit app
-    if (currentRoute == Route.CreateTeam.path) {
+    if (currentRoute == Route.CreateTeam.createRoute()) {
         BackHandler {
             // Close the app by doing nothing - the system will handle it
         }

@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.teamdetail
 
-import TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -80,12 +80,12 @@ private fun TeamDetailContent(team: Team) {
             label = stringResource(R.string.team_name),
             value = team.name,
         )
-        
+
         InfoRow(
             label = stringResource(R.string.coach_name),
             value = team.coachName,
         )
-        
+
         InfoRow(
             label = stringResource(R.string.delegate_name),
             value = team.delegateName,

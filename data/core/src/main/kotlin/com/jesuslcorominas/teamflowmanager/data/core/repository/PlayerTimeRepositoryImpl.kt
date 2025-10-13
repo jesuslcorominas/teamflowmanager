@@ -50,7 +50,7 @@ internal class PlayerTimeRepositoryImpl(
                 currentPlayerTime.copy(
                     elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
                     isRunning = false,
-                    lastStartTimeMillis = lastStartTime,
+                    lastStartTimeMillis = null,
                     status = PlayerTimeStatus.ON_BENCH,
                 )
             localDataSource.upsertPlayerTime(updatedPlayerTime)

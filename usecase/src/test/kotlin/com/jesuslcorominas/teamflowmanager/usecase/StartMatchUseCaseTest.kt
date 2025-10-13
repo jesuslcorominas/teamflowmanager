@@ -7,7 +7,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -92,19 +92,19 @@ class StartMatchUseCaseTest {
         }
 
     @Test
-    fun `invoke should throw exception when match not found`() =
-        runTest {
-            // Given
-            val matchId = 999L
-            val currentTime = 1000L
+    fun `invoke should throw exception when match not found`() = runTest {
+        // Given
+        val matchId = 999L
+        val currentTime = 1000L
 
-            coEvery { getMatchByIdUseCase(matchId) } returns flowOf(null)
+        coEvery { getMatchByIdUseCase(matchId) } returns flowOf(null)
 
-            // When / Then
-            assertThrows(IllegalArgumentException::class.java) {
-                runTest {
-                    startMatchUseCase.invoke(matchId, currentTime)
-                }
-            }
+        // When
+        val result = runCatching {
+            startMatchUseCase.invoke(matchId, currentTime)
         }
+
+        // Then
+        assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+    }
 }

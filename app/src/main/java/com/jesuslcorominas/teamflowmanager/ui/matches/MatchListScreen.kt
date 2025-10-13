@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.ui.components.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.DateFormatter
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDeleteConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListUiState
@@ -94,8 +95,8 @@ fun MatchListScreen(
                     val pausedMatch = if (currentMatchId != null) {
                         state.matches.find { it.id == currentMatchId && !it.isRunning }
                     } else null
-                    val playedMatches = state.matches.filter { 
-                        it.elapsedTimeMillis > 0L && !it.isRunning && it.id != currentMatchId 
+                    val playedMatches = state.matches.filter {
+                        it.elapsedTimeMillis > 0L && !it.isRunning && it.id != currentMatchId
                     }
                     val hasActiveMatch = state.matches.any { it.isRunning }
                     val hasPausedMatch = pausedMatch != null
@@ -120,7 +121,7 @@ fun MatchListScreen(
                             item {
                                 PausedMatchCard(
                                     match = pausedMatch,
-                                    onResume = { 
+                                    onResume = {
                                         viewModel.resumeMatch()
                                         onNavigateToCurrentMatch()
                                     },
@@ -145,7 +146,7 @@ fun MatchListScreen(
                                     hasActiveMatch = hasActiveMatch || hasPausedMatch,
                                     onEdit = { onNavigateToEditMatch(match.id) },
                                     onDelete = { viewModel.requestDeleteMatch(match) },
-                                    onStart = { 
+                                    onStart = {
                                         if (!hasActiveMatch && !hasPausedMatch) {
                                             viewModel.startMatch(match.id)
                                             onNavigateToCurrentMatch()
@@ -254,7 +255,7 @@ fun PendingMatchCard(
             }
 
             Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-            
+
             Button(
                 onClick = onStart,
                 modifier = Modifier.fillMaxWidth(),
@@ -323,7 +324,7 @@ fun PausedMatchCard(
             }
 
             Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
@@ -339,7 +340,7 @@ fun PausedMatchCard(
                     Spacer(modifier = Modifier.padding(start = TFMSpacing.spacing01))
                     Text(text = stringResource(R.string.resume_match_button))
                 }
-                
+
                 Button(
                     onClick = onNavigateToDetail,
                     modifier = Modifier.weight(1f),
@@ -390,7 +391,7 @@ fun PlayedMatchCard(
                     )
                 }
             }
-            
+
             // TODO: Show actual score when score tracking is implemented
             Text(
                 text = stringResource(R.string.match_score, 0, 0),
