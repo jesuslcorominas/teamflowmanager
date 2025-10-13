@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
@@ -11,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -41,12 +41,15 @@ class MatchDetailViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() {
+    fun `initial state should be Loading`() = runTest {
         // Given/When
         viewModel = MatchDetailViewModel(getMatchByIdUseCase, getPlayersUseCase)
 
         // Then
-        assertEquals(MatchDetailUiState.Loading, viewModel.uiState.value)
+        viewModel.uiState.test {
+            assertEquals(MatchDetailUiState.Loading, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -61,14 +64,15 @@ class MatchDetailViewModelTest {
             every { getPlayersUseCase.invoke() } returns flowOf(players)
             viewModel = MatchDetailViewModel(getMatchByIdUseCase, getPlayersUseCase)
 
-            // When
-            viewModel.loadMatch(null)
-            advanceUntilIdle()
-
-            // Then
-            val state = viewModel.uiState.value
-            assertTrue(state is MatchDetailUiState.Create)
-            assertEquals(players, (state as MatchDetailUiState.Create).availablePlayers)
+            // When/Then
+            viewModel.uiState.test {
+                assertEquals(MatchDetailUiState.Loading, awaitItem())
+                viewModel.loadMatch(null)
+                val state = awaitItem()
+                assertTrue(state is MatchDetailUiState.Create)
+                assertEquals(players, (state as MatchDetailUiState.Create).availablePlayers)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test
@@ -96,15 +100,16 @@ class MatchDetailViewModelTest {
             every { getPlayersUseCase.invoke() } returns flowOf(players)
             viewModel = MatchDetailViewModel(getMatchByIdUseCase, getPlayersUseCase)
 
-            // When
-            viewModel.loadMatch(matchId)
-            advanceUntilIdle()
-
-            // Then
-            val state = viewModel.uiState.value
-            assertTrue(state is MatchDetailUiState.Edit)
-            assertEquals(match, (state as MatchDetailUiState.Edit).match)
-            assertEquals(players, state.availablePlayers)
+            // When/Then
+            viewModel.uiState.test {
+                assertEquals(MatchDetailUiState.Loading, awaitItem())
+                viewModel.loadMatch(matchId)
+                val state = awaitItem()
+                assertTrue(state is MatchDetailUiState.Edit)
+                assertEquals(match, (state as MatchDetailUiState.Edit).match)
+                assertEquals(players, state.availablePlayers)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test
@@ -120,11 +125,13 @@ class MatchDetailViewModelTest {
             every { getPlayersUseCase.invoke() } returns flowOf(players)
             viewModel = MatchDetailViewModel(getMatchByIdUseCase, getPlayersUseCase)
 
-            // When
-            viewModel.loadMatch(matchId)
-            advanceUntilIdle()
-
-            // Then
-            assertEquals(MatchDetailUiState.NotFound, viewModel.uiState.value)
+            // When/Then
+            viewModel.uiState.test {
+                assertEquals(MatchDetailUiState.Loading, awaitItem())
+                viewModel.loadMatch(matchId)
+                assertEquals(MatchDetailUiState.NotFound, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
         }
+}
 }
