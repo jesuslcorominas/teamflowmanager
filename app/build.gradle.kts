@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+apply(from = "$rootDir/jacoco.gradle.kts")
+
 android {
     namespace = "com.jesuslcorominas.teamflowmanager"
     compileSdk = 36

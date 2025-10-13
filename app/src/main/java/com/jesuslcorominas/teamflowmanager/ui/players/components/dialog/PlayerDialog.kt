@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.players.components.dialog
 
-import TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

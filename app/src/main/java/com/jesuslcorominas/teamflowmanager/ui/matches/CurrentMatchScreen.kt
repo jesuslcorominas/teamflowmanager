@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches
 
-import TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,7 +75,7 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                 },
             )
         }
-        
+
         // Show alert if trying to select an inactive player
         if (showInvalidSubstitutionAlert) {
             InvalidSubstitutionAlertDialog(
@@ -338,16 +338,16 @@ private fun InvalidSubstitutionAlertDialog(
     onDismiss: (dontShowAgain: Boolean) -> Unit,
 ) {
     var dontShowAgain by remember { mutableStateOf(false) }
-    
+
     androidx.compose.material3.AlertDialog(
         onDismissRequest = { onDismiss(false) },
-        title = { 
+        title = {
             Text(
                 stringResource(R.string.invalid_substitution_title),
                 style = MaterialTheme.typography.titleLarge
-            ) 
+            )
         },
-        text = { 
+        text = {
             Column {
                 Text(
                     stringResource(R.string.invalid_substitution_message),

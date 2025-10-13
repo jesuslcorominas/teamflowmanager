@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.players
 
-import TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding

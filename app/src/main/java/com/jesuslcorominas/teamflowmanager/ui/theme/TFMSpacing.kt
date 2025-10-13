@@ -1,3 +1,5 @@
+package com.jesuslcorominas.teamflowmanager.ui.theme
+
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp

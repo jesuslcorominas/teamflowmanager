@@ -66,7 +66,6 @@ class MatchListViewModelTest {
             MatchListViewModel(
                 getAllMatchesUseCase,
                 getMatchUseCase,
-                getAllMatchesUseCase,
                 deleteMatchUseCase,
                 createMatchUseCase,
                 updateMatchUseCase,
@@ -88,14 +87,13 @@ class MatchListViewModelTest {
             // When
             viewModel =
                 MatchListViewModel(
-                getAllMatchesUseCase,
-                getMatchUseCase,
                     getAllMatchesUseCase,
+                    getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
-                startMatchUseCase,
-                resumeMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
                 )
             advanceUntilIdle()
 
@@ -130,14 +128,13 @@ class MatchListViewModelTest {
             // When
             viewModel =
                 MatchListViewModel(
-                getAllMatchesUseCase,
-                getMatchUseCase,
                     getAllMatchesUseCase,
+                    getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
-                startMatchUseCase,
-                resumeMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
                 )
             advanceUntilIdle()
 
@@ -155,14 +152,13 @@ class MatchListViewModelTest {
         every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
-                getAllMatchesUseCase,
-                getMatchUseCase,
                     getAllMatchesUseCase,
+                    getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
-                startMatchUseCase,
-                resumeMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
                 )
             val match =
                 Match(
@@ -190,14 +186,13 @@ class MatchListViewModelTest {
         every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
-                getAllMatchesUseCase,
-                getMatchUseCase,
                     getAllMatchesUseCase,
+                    getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
-                startMatchUseCase,
-                resumeMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
                 )
             val match =
                 Match(
@@ -224,14 +219,13 @@ class MatchListViewModelTest {
         every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
-                getAllMatchesUseCase,
-                getMatchUseCase,
                     getAllMatchesUseCase,
+                    getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
-                startMatchUseCase,
-                resumeMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
                 )
             val match =
                 Match(
@@ -260,14 +254,13 @@ class MatchListViewModelTest {
         every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
-                getAllMatchesUseCase,
-                getMatchUseCase,
                     getAllMatchesUseCase,
+                    getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
-                startMatchUseCase,
-                resumeMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
                 )
             val match =
                 Match(
@@ -296,14 +289,13 @@ class MatchListViewModelTest {
         every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
-                getAllMatchesUseCase,
-                getMatchUseCase,
                     getAllMatchesUseCase,
+                    getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
-                startMatchUseCase,
-                resumeMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
                 )
             val match =
                 Match(
