@@ -57,7 +57,7 @@ class MatchListViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() = runTest {
+    fun `initial state should be Loading`() = runTest(testDispatcher) {
         // Given
         every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -83,7 +83,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `should emit Empty state when no matches available`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -110,7 +110,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `should emit Success state with matches when matches are available`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             val matches =
                 listOf(
@@ -156,7 +156,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `createMatch should invoke createMatchUseCase`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -189,7 +189,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `updateMatch should invoke updateMatchUseCase`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -221,7 +221,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `requestDeleteMatch should update deleteConfirmationState to Requested`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -255,7 +255,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `confirmDeleteMatch should invoke deleteMatchUseCase and reset deleteConfirmationState`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -289,7 +289,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `cancelDeleteMatch should reset deleteConfirmationState to None`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
