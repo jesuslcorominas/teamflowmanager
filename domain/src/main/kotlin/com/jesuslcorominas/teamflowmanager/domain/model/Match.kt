@@ -11,4 +11,5 @@ data class Match(
     val elapsedTimeMillis: Long = 0L,
     val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
+    val status: MatchStatus = MatchStatus.SCHEDULED,
 )

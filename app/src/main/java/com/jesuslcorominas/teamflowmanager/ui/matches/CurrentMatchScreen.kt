@@ -1,7 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches
 
 import TFMSpacing
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +27,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -46,6 +48,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+    val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
+    val showInvalidSubstitutionAlert by viewModel.showInvalidSubstitutionAlert.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -56,9 +60,28 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
             is MatchUiState.NoMatch -> NoMatchState()
             is MatchUiState.Success -> SuccessState(
                 state = state,
+                selectedPlayerOut = selectedPlayerOut,
                 onSaveMatch = { viewModel.saveMatch() },
                 onPauseMatch = { viewModel.pauseMatch() },
                 onResumeMatch = { viewModel.resumeMatch() },
+                onPlayerClick = { playerId ->
+                    if (selectedPlayerOut == null) {
+                        viewModel.selectPlayerOut(playerId)
+                    } else if (selectedPlayerOut == playerId) {
+                        viewModel.clearPlayerOutSelection()
+                    } else {
+                        viewModel.substitutePlayer(playerId)
+                    }
+                },
+            )
+        }
+        
+        // Show alert if trying to select an inactive player
+        if (showInvalidSubstitutionAlert) {
+            InvalidSubstitutionAlertDialog(
+                onDismiss = { dontShowAgain ->
+                    viewModel.dismissInvalidSubstitutionAlert(dontShowAgain)
+                }
             )
         }
     }
@@ -90,9 +113,11 @@ private fun NoMatchState() {
 @Composable
 private fun SuccessState(
     state: MatchUiState.Success,
+    selectedPlayerOut: Long?,
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
+    onPlayerClick: (Long) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -113,12 +138,25 @@ private fun SuccessState(
             ),
         )
 
+        if (selectedPlayerOut != null) {
+            Text(
+                text = stringResource(R.string.select_player_in_message),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = TFMSpacing.spacing02),
+            )
+        }
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
             items(state.playerTimes) { playerTimeItem ->
-                PlayerTimeCard(playerTimeItem = playerTimeItem)
+                PlayerTimeCard(
+                    playerTimeItem = playerTimeItem,
+                    isSelected = selectedPlayerOut == playerTimeItem.player.id,
+                    onClick = { onPlayerClick(playerTimeItem.player.id) },
+                )
             }
         }
 
@@ -185,49 +223,31 @@ private fun MatchTimeCard(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
-            ) {
-                Text(
-                    text = formatTime(timeMillis),
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-                if (isRunning) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.error,
-                                shape = MaterialTheme.shapes.small,
-                            )
-                            .padding(
-                                horizontal = TFMSpacing.spacing02,
-                                vertical = TFMSpacing.spacing01
-                            ),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.running_indicator),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onError,
-                        )
-                    }
-                }
-            }
+            Text(
+                text = formatTime(timeMillis),
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
         }
     }
 }
 
 @Composable
-private fun PlayerTimeCard(playerTimeItem: PlayerTimeItem) {
+private fun PlayerTimeCard(
+    playerTimeItem: PlayerTimeItem,
+    isSelected: Boolean = false,
+    onClick: () -> Unit = {},
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
+        onClick = onClick,
         colors = CardDefaults.cardColors(
-            containerColor = if (playerTimeItem.isRunning) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                MaterialTheme.colorScheme.surface
+            containerColor = when {
+                isSelected -> MaterialTheme.colorScheme.primaryContainer
+                playerTimeItem.isRunning -> MaterialTheme.colorScheme.secondaryContainer
+                else -> MaterialTheme.colorScheme.surface
             },
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -258,25 +278,6 @@ private fun PlayerTimeCard(playerTimeItem: PlayerTimeItem) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
             ) {
-                if (playerTimeItem.isRunning) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.error,
-                                shape = MaterialTheme.shapes.small,
-                            )
-                            .padding(
-                                horizontal = TFMSpacing.spacing02,
-                                vertical = TFMSpacing.spacing01
-                            ),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.running_indicator),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onError,
-                        )
-                    }
-                }
                 Text(
                     text = formatTime(playerTimeItem.timeMillis),
                     style = MaterialTheme.typography.titleLarge,
@@ -293,6 +294,7 @@ private fun SuccessStatePreview() {
     MaterialTheme {
         SuccessState(
             state = MatchUiState.Success(
+                matchId = 1,
                 matchTimeMillis = 900000L,
                 matchIsRunning = true,
                 playerTimes = listOf(
@@ -322,9 +324,59 @@ private fun SuccessStatePreview() {
                     ),
                 ),
             ),
+            selectedPlayerOut = null,
             onSaveMatch = {},
             onPauseMatch = {},
             onResumeMatch = {},
+            onPlayerClick = {},
         )
     }
+}
+
+@Composable
+private fun InvalidSubstitutionAlertDialog(
+    onDismiss: (dontShowAgain: Boolean) -> Unit,
+) {
+    var dontShowAgain by remember { mutableStateOf(false) }
+    
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { onDismiss(false) },
+        title = { 
+            Text(
+                stringResource(R.string.invalid_substitution_title),
+                style = MaterialTheme.typography.titleLarge
+            ) 
+        },
+        text = { 
+            Column {
+                Text(
+                    stringResource(R.string.invalid_substitution_message),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = TFMSpacing.spacing02)
+                ) {
+                    androidx.compose.material3.Checkbox(
+                        checked = dontShowAgain,
+                        onCheckedChange = { dontShowAgain = it }
+                    )
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
+                    Text(
+                        stringResource(R.string.dont_show_again),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = { onDismiss(dontShowAgain) }
+            ) {
+                Text(stringResource(R.string.close))
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
 }

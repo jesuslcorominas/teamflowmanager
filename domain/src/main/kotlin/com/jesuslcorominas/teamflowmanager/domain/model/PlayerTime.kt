@@ -5,4 +5,5 @@ data class PlayerTime(
     val elapsedTimeMillis: Long = 0L,
     val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
+    val status: PlayerTimeStatus = PlayerTimeStatus.ON_BENCH,
 )

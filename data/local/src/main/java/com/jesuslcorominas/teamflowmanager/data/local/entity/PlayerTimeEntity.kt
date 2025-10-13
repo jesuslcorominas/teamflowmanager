@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 
 @Entity(
     tableName = "player_time",
@@ -24,6 +25,7 @@ data class PlayerTimeEntity(
     val elapsedTimeMillis: Long = 0L,
     val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
+    val status: String = PlayerTimeStatus.ON_BENCH.name,
 )
 
 fun PlayerTimeEntity.toDomain(): PlayerTime =
@@ -32,6 +34,7 @@ fun PlayerTimeEntity.toDomain(): PlayerTime =
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
+        status = try { PlayerTimeStatus.valueOf(status) } catch (e: Exception) { PlayerTimeStatus.ON_BENCH },
     )
 
 fun PlayerTime.toEntity(): PlayerTimeEntity =
@@ -40,4 +43,5 @@ fun PlayerTime.toEntity(): PlayerTimeEntity =
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
+        status = status.name,
     )

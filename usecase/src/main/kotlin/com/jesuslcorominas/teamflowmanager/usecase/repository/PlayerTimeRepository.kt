@@ -18,5 +18,10 @@ interface PlayerTimeRepository {
         currentTimeMillis: Long,
     )
 
+    suspend fun pauseTimerForMatchPause(
+        playerId: Long,
+        currentTimeMillis: Long,
+    )
+
     suspend fun resetAllPlayerTimes()
 }

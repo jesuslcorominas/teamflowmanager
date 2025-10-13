@@ -103,5 +103,11 @@
     <string name="view_match">View Detail</string>
     <string name="match_score">%1$d - %2$d</string>
     <string name="match_active_warning">There is already an active match</string>
+    
+    <!-- Player Substitution -->
+    <string name="select_player_in_message">Tap on the player to bring in</string>
+    <string name="invalid_substitution_title">Invalid Substitution</string>
+    <string name="invalid_substitution_message">You must first select a player who is currently on the field to substitute out.</string>
+    <string name="dont_show_again">Don\'t show this again</string>
 
 </resources>
