@@ -18,7 +18,7 @@ data class MatchEntity(
     val elapsedTimeMillis: Long = 0L,
     val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
-    val status: String = MatchStatus.PROGRAMADO.name,
+    val status: String = MatchStatus.SCHEDULED.name,
 )
 
 fun MatchEntity.toDomain(): Match =
@@ -33,7 +33,7 @@ fun MatchEntity.toDomain(): Match =
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
-        status = try { MatchStatus.valueOf(status) } catch (e: Exception) { MatchStatus.PROGRAMADO },
+        status = try { MatchStatus.valueOf(status) } catch (e: Exception) { MatchStatus.SCHEDULED },
     )
 
 fun Match.toEntity(): MatchEntity =

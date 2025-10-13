@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
@@ -34,9 +35,9 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         // Get all player times to check if playerOut is actually playing
         val playerTimes = getAllPlayerTimesUseCase().first()
         val playerOutTime = playerTimes.find { it.playerId == playerOutId }
-        
+
         // Only proceed if the player being substituted out is currently playing (status PLAYING)
-        if (playerOutTime?.status != com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus.PLAYING) {
+        if (playerOutTime?.status != PlayerTimeStatus.PLAYING) {
             return
         }
 

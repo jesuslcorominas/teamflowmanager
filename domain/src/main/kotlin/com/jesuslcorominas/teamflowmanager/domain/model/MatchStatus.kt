@@ -1,8 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.domain.model
 
 enum class MatchStatus {
-    PROGRAMADO,  // Scheduled
-    EN_CURSO,    // In progress
-    DESCANSO,    // Half time
-    FINALIZADO   // Finished
+    SCHEDULED,  // Scheduled
+    IN_PROGRESS,    // In progress
+    ON_BENCH,    // Half time
+    FINISHED   // Finished
 }
