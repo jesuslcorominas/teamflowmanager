@@ -19,7 +19,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -33,7 +33,7 @@ import kotlin.time.Duration.Companion.seconds
 @ExperimentalCoroutinesApi
 class MatchViewModelTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var getMatchUseCase: GetMatchUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var getPlayersUseCase: GetPlayersUseCase
@@ -79,7 +79,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // Then
@@ -104,7 +105,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // When
@@ -129,7 +131,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // When
@@ -163,7 +166,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // When
@@ -199,7 +203,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // When/Then
@@ -239,7 +244,8 @@ class MatchViewModelTest {
                 pauseMatchUseCase = pauseMatchUseCase,
                 resumeMatchUseCase = resumeMatchUseCase,
                 registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-                preferencesRepository = preferencesRepository
+                preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
             )
 
             // When/Then
@@ -272,7 +278,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // Then
@@ -314,7 +321,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // Then
@@ -357,7 +365,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // Then
@@ -397,7 +406,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // Then
@@ -440,7 +450,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // Then
@@ -479,7 +490,8 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository
+            preferencesRepository = preferencesRepository,
+            dispatcher = testDispatcher
         )
 
         // Then
