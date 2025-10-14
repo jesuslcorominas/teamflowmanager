@@ -26,4 +26,5 @@ extra["excludes"] = listOf<String>(
     "**/*NavGraph*.*",
     "**/components/**",
     "**/database/**",
+    "**/*Entity**",
 )
