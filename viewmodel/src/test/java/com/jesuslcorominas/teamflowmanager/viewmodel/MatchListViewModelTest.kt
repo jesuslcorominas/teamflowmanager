@@ -16,7 +16,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -29,7 +29,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 class MatchListViewModelTest {
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var getAllMatchesUseCase: GetAllMatchesUseCase
     private lateinit var getMatchUseCase: GetMatchUseCase
     private lateinit var deleteMatchUseCase: DeleteMatchUseCase
@@ -72,6 +72,7 @@ class MatchListViewModelTest {
                 updateMatchUseCase,
                 startMatchUseCase,
                 resumeMatchUseCase,
+                testDispatcher,
             )
 
         // Then
@@ -98,6 +99,7 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                testDispatcher,
                 )
 
             // Then
@@ -142,6 +144,7 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                testDispatcher,
                 )
 
             // Then
@@ -169,6 +172,7 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                testDispatcher,
                 )
             val match =
                 Match(
@@ -202,6 +206,7 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                testDispatcher,
                 )
             val match =
                 Match(
@@ -234,6 +239,7 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                testDispatcher,
                 )
             val match =
                 Match(
@@ -268,6 +274,7 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                testDispatcher,
                 )
             val match =
                 Match(
@@ -302,6 +309,7 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                testDispatcher,
                 )
             val match =
                 Match(

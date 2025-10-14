@@ -7,6 +7,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +19,7 @@ class PlayerViewModel(
     private val addPlayerUseCase: AddPlayerUseCase,
     private val updatePlayerUseCase: UpdatePlayerUseCase,
     private val deletePlayerUseCase: DeletePlayerUseCase,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PlayerUiState>(PlayerUiState.Loading)
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
@@ -29,7 +32,7 @@ class PlayerViewModel(
     }
 
     private fun loadPlayers() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             getPlayersUseCase.invoke().collect { players ->
                 _uiState.value =
                     if (players.isEmpty()) {

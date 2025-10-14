@@ -6,6 +6,8 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +17,7 @@ class TeamViewModel(
     private val getTeamUseCase: GetTeamUseCase,
     private val createTeamUseCase: CreateTeamUseCase,
     private val updateTeamUseCase: UpdateTeamUseCase,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TeamUiState>(TeamUiState.Loading)
     val uiState: StateFlow<TeamUiState> = _uiState.asStateFlow()
@@ -24,7 +27,7 @@ class TeamViewModel(
     }
 
     private fun loadTeam() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             getTeamUseCase.invoke().collect { team ->
                 _uiState.value =
                     if (team == null) {

@@ -16,7 +16,7 @@ import io.mockk.runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -29,7 +29,7 @@ import kotlin.time.Duration.Companion.seconds
 @ExperimentalCoroutinesApi
 class PlayerViewModelTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var addPlayerUseCase: AddPlayerUseCase
     private lateinit var deletePlayerUseCase: DeletePlayerUseCase
@@ -51,12 +51,12 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() = runTest {
+    fun `initial state should be Loading`() = runTest(testDispatcher) {
         // Given
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
 
         // Then
         viewModel.uiState.test(timeout = 2.seconds) {
@@ -75,7 +75,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
 
         // Then
         viewModel.uiState.test(timeout = 2.seconds) {
@@ -91,7 +91,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
 
         // Then
         viewModel.uiState.test(timeout = 2.seconds) {
@@ -112,7 +112,7 @@ class PlayerViewModelTest {
             positions = listOf(Position.Forward)
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
 
         // When
         viewModel.addPlayer(player)
@@ -126,7 +126,7 @@ class PlayerViewModelTest {
         // Given
         val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
 
         // When
         viewModel.showDeleteConfirmation(player)
@@ -140,7 +140,7 @@ class PlayerViewModelTest {
         // Given
         val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
         viewModel.showDeleteConfirmation(player)
 
         // When
@@ -156,7 +156,7 @@ class PlayerViewModelTest {
         val playerId = 1L
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { deletePlayerUseCase(playerId) } just runs
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
 
         // When
         viewModel.deletePlayer(playerId)
@@ -179,7 +179,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { updatePlayerUseCase.invoke(player) } just runs
 
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
 
         // When
         viewModel.updatePlayer(player)
