@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
@@ -16,7 +15,8 @@ import io.mockk.runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -24,12 +24,11 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 class PlayerViewModelTest {
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var addPlayerUseCase: AddPlayerUseCase
     private lateinit var deletePlayerUseCase: DeletePlayerUseCase
@@ -51,18 +50,15 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() = runTest(testDispatcher) {
+    fun `initial state should be Loading`() {
         // Given
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
 
         // Then
-        viewModel.uiState.test(timeout = 2.seconds) {
-            assertEquals(PlayerUiState.Loading, awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
+        assertEquals(PlayerUiState.Loading, viewModel.uiState.value)
     }
 
     @Test
@@ -75,14 +71,12 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        advanceUntilIdle()
 
         // Then
-        viewModel.uiState.test(timeout = 2.seconds) {
-            assertEquals(PlayerUiState.Loading, awaitItem())
-            assertEquals(PlayerUiState.Success(players), awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
+        val state = viewModel.uiState.value
+        assertEquals(PlayerUiState.Success(players), state)
     }
 
     @Test
@@ -91,14 +85,11 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        advanceUntilIdle()
 
         // Then
-        viewModel.uiState.test(timeout = 2.seconds) {
-            assertEquals(PlayerUiState.Loading, awaitItem())
-            assertEquals(PlayerUiState.Empty, awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
+        assertEquals(PlayerUiState.Empty, viewModel.uiState.value)
     }
 
     @Test
@@ -112,10 +103,11 @@ class PlayerViewModelTest {
             positions = listOf(Position.Forward)
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
 
         // When
         viewModel.addPlayer(player)
+        advanceUntilIdle()
 
         // Then
         coVerify { addPlayerUseCase.invoke(player) }
@@ -126,7 +118,7 @@ class PlayerViewModelTest {
         // Given
         val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
 
         // When
         viewModel.showDeleteConfirmation(player)
@@ -140,7 +132,7 @@ class PlayerViewModelTest {
         // Given
         val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
         viewModel.showDeleteConfirmation(player)
 
         // When
@@ -156,10 +148,11 @@ class PlayerViewModelTest {
         val playerId = 1L
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { deletePlayerUseCase(playerId) } just runs
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
 
         // When
         viewModel.deletePlayer(playerId)
+        advanceUntilIdle()
 
         // Then
         coVerify { deletePlayerUseCase.invoke(playerId) }
@@ -179,10 +172,12 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { updatePlayerUseCase.invoke(player) } just runs
 
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase, testDispatcher)
+        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        advanceUntilIdle()
 
         // When
         viewModel.updatePlayer(player)
+        advanceUntilIdle()
 
         // Then
         coVerify { updatePlayerUseCase.invoke(player) }

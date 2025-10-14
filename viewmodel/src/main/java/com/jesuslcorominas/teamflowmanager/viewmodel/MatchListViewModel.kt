@@ -10,8 +10,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +24,6 @@ class MatchListViewModel(
     private val updateMatchUseCase: UpdateMatchUseCase,
     private val startMatchUseCase: StartMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
@@ -39,7 +36,7 @@ class MatchListViewModel(
     }
 
     private fun loadMatches() {
-        viewModelScope.launch(dispatcher) {
+        viewModelScope.launch {
             combine(
                 getAllMatchesUseCase.invoke(),
                 getMatchUseCase.invoke()

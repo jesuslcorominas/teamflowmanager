@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
@@ -16,7 +15,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -25,11 +25,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 class MatchListViewModelTest {
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var getAllMatchesUseCase: GetAllMatchesUseCase
     private lateinit var getMatchUseCase: GetMatchUseCase
     private lateinit var deleteMatchUseCase: DeleteMatchUseCase
@@ -57,7 +56,7 @@ class MatchListViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() = runTest(testDispatcher) {
+    fun `initial state should be Loading`() {
         // Given
         every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -72,19 +71,15 @@ class MatchListViewModelTest {
                 updateMatchUseCase,
                 startMatchUseCase,
                 resumeMatchUseCase,
-                testDispatcher,
             )
 
         // Then
-        viewModel.uiState.test(timeout = 2.seconds) {
-            assertEquals(MatchListUiState.Loading, awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
+        assertEquals(MatchListUiState.Loading, viewModel.uiState.value)
     }
 
     @Test
     fun `should emit Empty state when no matches available`() =
-        runTest(testDispatcher) {
+        runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -99,20 +94,16 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
-                testDispatcher,
                 )
+            advanceUntilIdle()
 
             // Then
-            viewModel.uiState.test(timeout = 2.seconds) {
-                assertEquals(MatchListUiState.Loading, awaitItem())
-                assertEquals(MatchListUiState.Empty, awaitItem())
-                cancelAndIgnoreRemainingEvents()
-            }
+            assertEquals(MatchListUiState.Empty, viewModel.uiState.value)
         }
 
     @Test
     fun `should emit Success state with matches when matches are available`() =
-        runTest(testDispatcher) {
+        runTest {
             // Given
             val matches =
                 listOf(
@@ -144,22 +135,18 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
-                testDispatcher,
                 )
+            advanceUntilIdle()
 
             // Then
-            viewModel.uiState.test(timeout = 2.seconds) {
-                assertEquals(MatchListUiState.Loading, awaitItem())
-                val state = awaitItem()
-                assertTrue(state is MatchListUiState.Success)
-                assertEquals(matches, (state as MatchListUiState.Success).matches)
-                cancelAndIgnoreRemainingEvents()
-            }
+            val state = viewModel.uiState.value
+            assertTrue(state is MatchListUiState.Success)
+            assertEquals(matches, (state as MatchListUiState.Success).matches)
         }
 
     @Test
     fun `createMatch should invoke createMatchUseCase`() =
-        runTest(testDispatcher) {
+        runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -172,7 +159,6 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
-                testDispatcher,
                 )
             val match =
                 Match(
@@ -186,6 +172,7 @@ class MatchListViewModelTest {
 
             // When
             viewModel.createMatch(match)
+            advanceUntilIdle()
 
             // Then
             coVerify { createMatchUseCase.invoke(match) }
@@ -193,7 +180,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `updateMatch should invoke updateMatchUseCase`() =
-        runTest(testDispatcher) {
+        runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -206,7 +193,6 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
-                testDispatcher,
                 )
             val match =
                 Match(
@@ -219,6 +205,7 @@ class MatchListViewModelTest {
 
             // When
             viewModel.updateMatch(match)
+            advanceUntilIdle()
 
             // Then
             coVerify { updateMatchUseCase.invoke(match) }
@@ -226,7 +213,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `requestDeleteMatch should update deleteConfirmationState to Requested`() =
-        runTest(testDispatcher) {
+        runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -239,7 +226,6 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
-                testDispatcher,
                 )
             val match =
                 Match(
@@ -252,6 +238,7 @@ class MatchListViewModelTest {
 
             // When
             viewModel.requestDeleteMatch(match)
+            advanceUntilIdle()
 
             // Then
             val state = viewModel.deleteConfirmationState.value
@@ -261,7 +248,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `confirmDeleteMatch should invoke deleteMatchUseCase and reset deleteConfirmationState`() =
-        runTest(testDispatcher) {
+        runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -274,7 +261,6 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
-                testDispatcher,
                 )
             val match =
                 Match(
@@ -288,6 +274,7 @@ class MatchListViewModelTest {
 
             // When
             viewModel.confirmDeleteMatch()
+            advanceUntilIdle()
 
             // Then
             coVerify { deleteMatchUseCase.invoke(match.id) }
@@ -296,7 +283,7 @@ class MatchListViewModelTest {
 
     @Test
     fun `cancelDeleteMatch should reset deleteConfirmationState to None`() =
-        runTest(testDispatcher) {
+        runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
         every { getMatchUseCase.invoke() } returns flowOf(null)
@@ -309,7 +296,6 @@ class MatchListViewModelTest {
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
-                testDispatcher,
                 )
             val match =
                 Match(

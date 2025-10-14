@@ -19,7 +19,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -33,7 +33,7 @@ import kotlin.time.Duration.Companion.seconds
 @ExperimentalCoroutinesApi
 class MatchViewModelTest {
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var getMatchUseCase: GetMatchUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var getPlayersUseCase: GetPlayersUseCase
@@ -64,7 +64,7 @@ class MatchViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() = runTest(testDispatcher) {
+    fun `initial state should be Loading`() = runTest {
         // Given
         every { getMatchUseCase.invoke() } returns flowOf(null)
         every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
@@ -79,8 +79,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // Then
@@ -105,8 +104,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // When
@@ -131,8 +129,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // When
@@ -166,8 +163,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // When
@@ -203,8 +199,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // When/Then
@@ -244,8 +239,7 @@ class MatchViewModelTest {
                 pauseMatchUseCase = pauseMatchUseCase,
                 resumeMatchUseCase = resumeMatchUseCase,
                 registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-                preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+                preferencesRepository = preferencesRepository
             )
 
             // When/Then
@@ -278,8 +272,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // Then
@@ -321,8 +314,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // Then
@@ -365,8 +357,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // Then
@@ -406,8 +397,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // Then
@@ -450,8 +440,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // Then
@@ -490,8 +479,7 @@ class MatchViewModelTest {
             pauseMatchUseCase = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            preferencesRepository = preferencesRepository,
-            dispatcher = testDispatcher
+            preferencesRepository = preferencesRepository
         )
 
         // Then

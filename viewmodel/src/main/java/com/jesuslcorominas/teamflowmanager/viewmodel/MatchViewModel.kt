@@ -10,8 +10,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +27,6 @@ class MatchViewModel(
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
     private val preferencesRepository: com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
@@ -116,7 +113,7 @@ class MatchViewModel(
     }
 
     private fun loadMatchData() {
-        viewModelScope.launch(dispatcher) {
+        viewModelScope.launch {
             combine(
                 getMatchUseCase(),
                 getAllPlayerTimesUseCase(),
@@ -166,7 +163,7 @@ class MatchViewModel(
     }
 
     private fun startTimeUpdater() {
-        viewModelScope.launch(dispatcher) {
+        viewModelScope.launch {
             while (isActive) {
                 delay(1000)
                 _currentTime.value = System.currentTimeMillis()
