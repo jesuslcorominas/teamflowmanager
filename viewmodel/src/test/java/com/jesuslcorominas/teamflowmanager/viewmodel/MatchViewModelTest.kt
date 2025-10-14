@@ -64,7 +64,7 @@ class MatchViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() = runTest {
+    fun `initial state should be Loading`() = runTest(testDispatcher) {
         // Given
         every { getMatchUseCase.invoke() } returns flowOf(null)
         every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
