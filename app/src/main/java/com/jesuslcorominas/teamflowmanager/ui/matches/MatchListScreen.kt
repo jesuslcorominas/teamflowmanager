@@ -170,6 +170,7 @@ fun MatchListScreen(
                             items(playedMatches) { match ->
                                 PlayedMatchCard(
                                     match = match,
+                                    onNavigateToDetail = { onNavigateToEditMatch(match.id) },
                                 )
                             }
                         }
@@ -355,10 +356,13 @@ fun PausedMatchCard(
 @Composable
 fun PlayedMatchCard(
     match: Match,
+    onNavigateToDetail: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToDetail() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(

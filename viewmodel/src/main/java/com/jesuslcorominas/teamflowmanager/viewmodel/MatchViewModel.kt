@@ -2,8 +2,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
@@ -41,6 +43,7 @@ class MatchViewModel(
     private val pauseMatchUseCase: PauseMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
+    private val getMatchSummaryUseCase: GetMatchSummaryUseCase,
     private val preferencesRepository: PreferencesRepository,
     private val timeTicker: TimeTicker,
 ) : ViewModel() {
@@ -138,6 +141,9 @@ class MatchViewModel(
             ) { match, playerTimes, players, currentTime ->
                 if (match == null) {
                     MatchUiState.NoMatch
+                } else if (match.status == MatchStatus.FINISHED) {
+                    // Match is finished, load summary from history
+                    null // Will be handled separately
                 } else {
                     val matchTime = calculateCurrentTime(
                         match.elapsedTimeMillis,
@@ -173,7 +179,39 @@ class MatchViewModel(
                     )
                 }
             }.collect { state ->
-                _uiState.value = state
+                if (state != null) {
+                    _uiState.value = state
+                } else {
+                    // Load finished match summary
+                    getMatchUseCase().collect { match ->
+                        if (match != null && match.status == MatchStatus.FINISHED) {
+                            getMatchSummaryUseCase(match.id).collect { summary ->
+                                if (summary != null) {
+                                    _uiState.value = MatchUiState.Finished(
+                                        matchId = summary.match.id,
+                                        matchTimeMillis = summary.match.elapsedTimeMillis,
+                                        opponent = summary.match.opponent ?: "",
+                                        location = summary.match.location ?: "",
+                                        playerTimes = summary.playerTimes.map { playerTimeSummary ->
+                                            PlayerTimeItem(
+                                                player = playerTimeSummary.player,
+                                                timeMillis = playerTimeSummary.elapsedTimeMillis,
+                                                isRunning = false,
+                                            )
+                                        },
+                                        substitutions = summary.substitutions.map { sub ->
+                                            SubstitutionItem(
+                                                playerOut = sub.playerOut,
+                                                playerIn = sub.playerIn,
+                                                matchElapsedTimeMillis = sub.matchElapsedTimeMillis,
+                                            )
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -215,4 +253,18 @@ sealed class MatchUiState {
         val matchIsRunning: Boolean,
         val playerTimes: List<PlayerTimeItem>,
     ) : MatchUiState()
+    data class Finished(
+        val matchId: Long,
+        val matchTimeMillis: Long,
+        val opponent: String,
+        val location: String,
+        val playerTimes: List<PlayerTimeItem>,
+        val substitutions: List<SubstitutionItem>,
+    ) : MatchUiState()
 }
+
+data class SubstitutionItem(
+    val playerOut: Player,
+    val playerIn: Player,
+    val matchElapsedTimeMillis: Long,
+)

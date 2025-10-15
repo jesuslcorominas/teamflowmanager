@@ -109,5 +109,12 @@
     <string name="invalid_substitution_title">Invalid Substitution</string>
     <string name="invalid_substitution_message">You must first select a player who is currently on the field to substitute out.</string>
     <string name="dont_show_again">Don\'t show this again</string>
+    
+    <!-- Match Summary -->
+    <string name="match_finished">Match Finished</string>
+    <string name="total_time_label">Total Time</string>
+    <string name="substitutions_title">Substitutions</string>
+    <string name="player_out">Player Out</string>
+    <string name="player_in">Player In</string>
 
 </resources>
