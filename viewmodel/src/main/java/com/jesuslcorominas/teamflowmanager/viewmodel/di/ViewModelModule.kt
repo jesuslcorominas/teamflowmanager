@@ -4,8 +4,11 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.RealTimeTicker
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.TimeTicker
 import org.koin.core.module.dsl.viewModel
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val viewModelModule =
@@ -35,6 +38,7 @@ val viewModelModule =
                 resumeMatchUseCase = get(),
                 registerPlayerSubstitutionUseCase = get(),
                 preferencesRepository = get(),
+                timeTicker = get()
             )
         }
         viewModel {
@@ -54,4 +58,6 @@ val viewModelModule =
                 getPlayersUseCase = get(),
             )
         }
+
+        factory { RealTimeTicker() } bind TimeTicker::class
     }

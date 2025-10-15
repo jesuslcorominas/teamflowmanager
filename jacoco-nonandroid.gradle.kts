@@ -48,10 +48,10 @@ afterEvaluate {
         )
 
         val coverageSourceDirs = listOf(
-            "$rootDir/usecase/src/main/java",
-            "$rootDir/data/core/src/main/java",
-            "$rootDir/data/remote/src/main/java",
-            "$rootDir/domain/src/main/java"
+            "$rootDir/usecase/src/main/kotlin",
+            "$rootDir/data/core/src/main/kotlin",
+            "$rootDir/data/remote/src/main/kotlin",
+            "$rootDir/domain/src/main/kotlin"
         )
 
         additionalSourceDirs.setFrom(files(coverageSourceDirs))
