@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.Card
@@ -36,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
@@ -339,73 +342,104 @@ private fun SubstitutionCard(substitution: SubstitutionItem) {
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(TFMSpacing.spacing04),
         ) {
-            // Time display
-            Text(
-                text = formatTime(substitution.matchElapsedTimeMillis),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = TFMSpacing.spacing03),
-            )
-            
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Player Out
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f),
+                // Players and arrows row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowDownward,
-                        contentDescription = stringResource(R.string.player_out),
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(32.dp),
-                    )
-                    Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-                    JerseyBadge(
-                        number = substitution.playerOut.number,
-                        size = 64,
-                    )
-                    Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-                    Text(
-                        text = "${substitution.playerOut.firstName} ${substitution.playerOut.lastName}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
-                
-                Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
+                    // Player In (left side)
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            JerseyBadge(
+                                number = substitution.playerIn.number,
+                                size = 64,
+                            )
+                        }
+                        
+                        // Name above badge
+                        Text(
+                            text = "${substitution.playerIn.firstName} ${substitution.playerIn.lastName}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .fillMaxWidth(0.5f),
+                        )
+                    }
 
-                // Player In
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowUpward,
-                        contentDescription = stringResource(R.string.player_in),
-                        tint = Color(0xFF4CAF50), // Green color
-                        modifier = Modifier.size(32.dp),
-                    )
-                    Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-                    JerseyBadge(
-                        number = substitution.playerIn.number,
-                        size = 64,
-                    )
-                    Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-                    Text(
-                        text = "${substitution.playerIn.firstName} ${substitution.playerIn.lastName}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                    )
+                    // Arrows in center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = stringResource(R.string.player_in),
+                            tint = Color(0xFF4CAF50), // Green color
+                            modifier = Modifier.size(32.dp),
+                        )
+                        Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.player_out),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(32.dp),
+                        )
+                    }
+
+                    // Player Out (right side)
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            JerseyBadge(
+                                number = substitution.playerOut.number,
+                                size = 64,
+                            )
+                        }
+                        
+                        // Name above badge
+                        Text(
+                            text = "${substitution.playerOut.firstName} ${substitution.playerOut.lastName}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .fillMaxWidth(0.5f),
+                        )
+                    }
                 }
+
+                // Time below centered
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing03))
+                Text(
+                    text = formatTime(substitution.matchElapsedTimeMillis),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }
