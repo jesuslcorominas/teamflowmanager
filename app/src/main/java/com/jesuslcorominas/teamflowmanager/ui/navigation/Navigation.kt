@@ -62,7 +62,7 @@ fun Navigation(
         composable(Route.Matches.path) {
             MatchListScreen(
                 onNavigateToAddMatch = {
-                    navController.navigate(Route.MatchDetail.createRoute(null))
+                    navController.navigate(Route.CreateMatch.createRoute())
                 },
                 onNavigateToEditMatch = { matchId ->
                     navController.navigate(Route.MatchDetail.createRoute(matchId))
@@ -72,6 +72,14 @@ fun Navigation(
                 },
                 onNavigateToCurrentMatch = {
                     navController.navigate(Route.CurrentMatch.createRoute())
+                },
+            )
+        }
+        
+        composable(Route.CreateMatch.path) {
+            com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 },
             )
         }
@@ -91,15 +99,6 @@ fun Navigation(
             val matchId = backStackEntry.arguments?.getLong("matchId")
             MatchDetailScreen(
                 matchId = matchId,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-            )
-        }
-
-        composable(Route.MatchDetail.path) {
-            MatchDetailScreen(
-                matchId = null,
                 onNavigateBack = {
                     navController.popBackStack()
                 },

@@ -123,4 +123,36 @@
     <string name="player_out">Jugador Sale</string>
     <string name="player_in">Jugador Entra</string>
 
+    <!-- Match Creation Wizard -->
+    <string name="wizard_step_general_data">Paso 1: Datos Generales</string>
+    <string name="wizard_step_squad_callup">Paso 2: Convocatoria</string>
+    <string name="wizard_step_captain">Paso 3: Capitán</string>
+    <string name="wizard_step_lineup">Paso 4: Alineación</string>
+    
+    <string name="next">Siguiente</string>
+    <string name="previous">Anterior</string>
+    <string name="create">Crear</string>
+    
+    <string name="squad_callup_title">Seleccionar Convocatoria</string>
+    <string name="squad_callup_subtitle">Selecciona los jugadores para este partido (mínimo 5)</string>
+    <string name="squad_callup_count">Seleccionados: %d jugadores</string>
+    <string name="squad_callup_min_error">Debes seleccionar al menos 5 jugadores</string>
+    <string name="squad_callup_no_goalkeeper_warning">No hay portero seleccionado</string>
+    <string name="squad_callup_no_goalkeeper_message">No has seleccionado ningún portero en la convocatoria. ¿Deseas continuar de todos modos?</string>
+    
+    <string name="captain_selection_title">Seleccionar Capitán</string>
+    <string name="captain_selection_subtitle">Elige el capitán para este partido</string>
+    <string name="make_default_captain_title">¿Hacer Capitán por Defecto?</string>
+    <string name="make_default_captain_message">%s ha sido capitán en los últimos 2 partidos. ¿Te gustaría hacerlo capitán por defecto? Se seleccionará automáticamente en futuros partidos.</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+    
+    <string name="starting_lineup_title">Seleccionar Once Inicial</string>
+    <string name="starting_lineup_subtitle">Selecciona exactamente 5 jugadores para comenzar</string>
+    <string name="starting_lineup_count">Seleccionados: %d/5 jugadores</string>
+    <string name="starting_lineup_max_error">Solo puedes seleccionar hasta 5 jugadores</string>
+    <string name="starting_lineup_min_error">Debes seleccionar exactamente 5 jugadores</string>
+    <string name="starting_lineup_no_goalkeeper_warning">No hay portero en el once inicial</string>
+    <string name="starting_lineup_no_goalkeeper_message">No has seleccionado un portero en el once inicial. ¿Deseas continuar de todos modos?</string>
+
 </resources>

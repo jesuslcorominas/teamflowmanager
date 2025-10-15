@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
+import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchSummaryViewModel
@@ -63,6 +64,14 @@ val viewModelModule =
         viewModel {
             MatchSummaryViewModel(
                 getMatchSummaryUseCase = get(),
+            )
+        }
+        viewModel {
+            MatchCreationWizardViewModel(
+                getPlayersUseCase = get(),
+                getPreviousCaptainsUseCase = get(),
+                getDefaultCaptainUseCase = get(),
+                saveDefaultCaptainUseCase = get(),
             )
         }
 
