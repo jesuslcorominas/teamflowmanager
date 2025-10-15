@@ -10,13 +10,28 @@ import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+
+interface TimeTicker {
+    val timeFlow: Flow<Long>
+}
+
+class RealTimeTicker : TimeTicker {
+    override val timeFlow: Flow<Long> = flow {
+        while (true) {
+            emit(System.currentTimeMillis())
+            delay(1000)
+        }
+    }
+}
 
 class MatchViewModel(
     private val getMatchUseCase: GetMatchUseCase,
@@ -26,7 +41,8 @@ class MatchViewModel(
     private val pauseMatchUseCase: PauseMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
-    private val preferencesRepository: com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository,
+    private val preferencesRepository: PreferencesRepository,
+    private val timeTicker: TimeTicker,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
@@ -35,13 +51,13 @@ class MatchViewModel(
 
     private val _selectedPlayerOut = MutableStateFlow<Long?>(null)
     val selectedPlayerOut: StateFlow<Long?> = _selectedPlayerOut.asStateFlow()
-    
+
     private val _showInvalidSubstitutionAlert = MutableStateFlow(false)
     val showInvalidSubstitutionAlert: StateFlow<Boolean> = _showInvalidSubstitutionAlert.asStateFlow()
 
     init {
         loadMatchData()
-        startTimeUpdater()
+        observeTime()
     }
 
     fun saveMatch() {
@@ -86,7 +102,7 @@ class MatchViewModel(
     fun clearPlayerOutSelection() {
         _selectedPlayerOut.value = null
     }
-    
+
     fun dismissInvalidSubstitutionAlert(dontShowAgain: Boolean = false) {
         _showInvalidSubstitutionAlert.value = false
         if (dontShowAgain) {
@@ -162,11 +178,10 @@ class MatchViewModel(
         }
     }
 
-    private fun startTimeUpdater() {
+    private fun observeTime() {
         viewModelScope.launch {
-            while (isActive) {
-                delay(1000)
-                _currentTime.value = System.currentTimeMillis()
+            timeTicker.timeFlow.collect { now ->
+                _currentTime.value = now
             }
         }
     }
