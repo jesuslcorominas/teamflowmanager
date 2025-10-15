@@ -43,7 +43,7 @@ internal class GetMatchSummaryUseCaseImpl(
             matchRepository.getMatchById(matchId),
             playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId),
             playerSubstitutionRepository.getMatchSubstitutions(matchId),
-            playerRepository.getPlayers(),
+            playerRepository.getAllPlayers(),
         ) { match, playerTimes, substitutions, players ->
             if (match == null) {
                 null
