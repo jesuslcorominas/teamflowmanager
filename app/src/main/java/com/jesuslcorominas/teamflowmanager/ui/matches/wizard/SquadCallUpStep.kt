@@ -180,8 +180,15 @@ private fun PlayerCheckboxItem(
         Column(
             modifier = Modifier.padding(start = TFMSpacing.spacing02),
         ) {
+            val isGoalkeeper = player.positions.any { it is Position.Goalkeeper }
+            val displayName = buildString {
+                append("${player.number} - ${player.firstName} ${player.lastName}")
+                if (isGoalkeeper) {
+                    append(" (P)")
+                }
+            }
             Text(
-                text = "${player.number} - ${player.firstName} ${player.lastName}",
+                text = displayName,
                 style = MaterialTheme.typography.bodyMedium,
             )
         }

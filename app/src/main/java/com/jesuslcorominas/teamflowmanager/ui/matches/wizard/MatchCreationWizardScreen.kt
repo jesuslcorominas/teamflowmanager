@@ -51,8 +51,10 @@ fun MatchCreationWizardScreen(
                                 initialOpponent = wizardViewModel.getOpponent(),
                                 initialLocation = wizardViewModel.getLocation(),
                                 initialDate = wizardViewModel.getDate(),
-                                onDataChanged = { opponent, location, date, time, numberOfPeriods, periodDurationMinutes ->
-                                    wizardViewModel.setGeneralData(opponent, location, date, time, numberOfPeriods, periodDurationMinutes)
+                                initialTime = wizardViewModel.getTime(),
+                                initialNumberOfPeriods = wizardViewModel.getNumberOfPeriods(),
+                                onDataChanged = { opponent, location, date, time, numberOfPeriods ->
+                                    wizardViewModel.setGeneralData(opponent, location, date, time, numberOfPeriods)
                                 },
                                 onNext = {
                                     wizardViewModel.goToNextStep()
@@ -117,6 +119,7 @@ fun MatchCreationWizardScreen(
                             StartingLineupStep(
                                 players = squadPlayers,
                                 selectedPlayerIds = wizardViewModel.getStartingLineupIds(),
+                                captainId = wizardViewModel.getCaptainId(),
                                 hasGoalkeepersInSquad = wizardViewModel.hasGoalkeepersInSquad(),
                                 onSelectionChanged = { playerIds ->
                                     wizardViewModel.setStartingLineup(playerIds)

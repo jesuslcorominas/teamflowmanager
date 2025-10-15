@@ -35,6 +35,7 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 fun StartingLineupStep(
     players: List<Player>,
     selectedPlayerIds: Set<Long>,
+    captainId: Long?,
     hasGoalkeepersInSquad: Boolean,
     onSelectionChanged: (Set<Long>) -> Unit,
     onCreate: () -> Unit,
@@ -91,6 +92,7 @@ fun StartingLineupStep(
                     PlayerCheckboxItem(
                         player = player,
                         isSelected = player.id in currentSelection,
+                        isCaptain = player.id == captainId,
                         onSelectionChange = { isSelected ->
                             if (isSelected) {
                                 if (currentSelection.size >= 5) {
@@ -185,6 +187,7 @@ fun StartingLineupStep(
 private fun PlayerCheckboxItem(
     player: Player,
     isSelected: Boolean,
+    isCaptain: Boolean,
     onSelectionChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -202,8 +205,18 @@ private fun PlayerCheckboxItem(
         Column(
             modifier = Modifier.padding(start = TFMSpacing.spacing02),
         ) {
+            val isGoalkeeper = player.positions.any { it is Position.Goalkeeper }
+            val displayName = buildString {
+                append("${player.number} - ${player.firstName} ${player.lastName}")
+                if (isGoalkeeper) {
+                    append(" (P)")
+                }
+                if (isCaptain) {
+                    append(" (C)")
+                }
+            }
             Text(
-                text = "${player.number} - ${player.firstName} ${player.lastName}",
+                text = displayName,
                 style = MaterialTheme.typography.bodyMedium,
             )
         }

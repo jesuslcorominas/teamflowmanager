@@ -81,6 +81,8 @@
     <string name="match_time_required">Match time is required</string>
     <string name="number_of_periods">Number of Periods</string>
     <string name="period_duration">Period Duration (minutes)</string>
+    <string name="two_halves">2 Halves</string>
+    <string name="four_quarters">4 Quarters</string>
 
     <string name="starting_lineup">Starting Lineup</string>
     <string name="initial_lineup">Initial Lineup</string>

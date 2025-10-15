@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,7 +57,9 @@ fun GeneralDataStep(
     initialOpponent: String,
     initialLocation: String,
     initialDate: Long?,
-    onDataChanged: (String, String, Long?, Long?, Int, Int) -> Unit,
+    initialTime: Long?,
+    initialNumberOfPeriods: Int,
+    onDataChanged: (String, String, Long?, Long?, Int) -> Unit,
     onNext: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
@@ -64,9 +67,8 @@ fun GeneralDataStep(
     var opponent by remember { mutableStateOf(initialOpponent) }
     var location by remember { mutableStateOf(initialLocation) }
     var selectedDateMillis by remember { mutableLongStateOf(initialDate ?: System.currentTimeMillis()) }
-    var selectedTimeMillis by remember { mutableLongStateOf(0L) }
-    var numberOfPeriods by remember { mutableIntStateOf(2) }
-    var periodDurationMinutes by remember { mutableIntStateOf(25) }
+    var selectedTimeMillis by remember { mutableLongStateOf(initialTime ?: 0L) }
+    var numberOfPeriods by remember { mutableIntStateOf(initialNumberOfPeriods) }
     
     var opponentError by remember { mutableStateOf<String?>(null) }
     var locationError by remember { mutableStateOf<String?>(null) }
@@ -77,7 +79,6 @@ fun GeneralDataStep(
     var showTimePicker by remember { mutableStateOf(false) }
     
     val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
-    val timeFormatter = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
     
     val formattedDate = remember(selectedDateMillis) {
         dateFormatter.format(Date(selectedDateMillis))
@@ -169,78 +170,51 @@ fun GeneralDataStep(
             modifier = Modifier.fillMaxWidth()
         )
         
-        // Number of Periods
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        // Number of Periods - Radio Buttons
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = stringResource(R.string.number_of_periods),
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                IconButton(
-                    onClick = { 
-                        if (numberOfPeriods > 1) {
-                            numberOfPeriods--
-                            // Adjust period duration based on number of periods
-                            periodDurationMinutes = if (numberOfPeriods == 2) 25 else 12
-                        }
-                    }
+                // 2 Halves
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { numberOfPeriods = 2 }
                 ) {
-                    Icon(Icons.Default.Remove, contentDescription = "Decrease")
+                    androidx.compose.material3.RadioButton(
+                        selected = numberOfPeriods == 2,
+                        onClick = { numberOfPeriods = 2 }
+                    )
+                    Text(
+                        text = stringResource(R.string.two_halves),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
                 }
-                Text(
-                    text = numberOfPeriods.toString(),
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.width(40.dp)
-                )
-                IconButton(
-                    onClick = { 
-                        numberOfPeriods++
-                        // Adjust period duration based on number of periods
-                        periodDurationMinutes = if (numberOfPeriods == 2) 25 else 12
-                    }
+                
+                // 4 Quarters
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { numberOfPeriods = 4 }
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Increase")
-                }
-            }
-        }
-        
-        // Period Duration
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.period_duration),
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                IconButton(
-                    onClick = { if (periodDurationMinutes > 1) periodDurationMinutes-- }
-                ) {
-                    Icon(Icons.Default.Remove, contentDescription = "Decrease")
-                }
-                Text(
-                    text = periodDurationMinutes.toString(),
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.width(40.dp)
-                )
-                IconButton(
-                    onClick = { periodDurationMinutes++ }
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Increase")
+                    androidx.compose.material3.RadioButton(
+                        selected = numberOfPeriods == 4,
+                        onClick = { numberOfPeriods = 4 }
+                    )
+                    Text(
+                        text = stringResource(R.string.four_quarters),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
                 }
             }
         }
@@ -275,7 +249,7 @@ fun GeneralDataStep(
                     }
                     
                     if (!hasError) {
-                        onDataChanged(opponent, location, selectedDateMillis, selectedTimeMillis, numberOfPeriods, periodDurationMinutes)
+                        onDataChanged(opponent, location, selectedDateMillis, selectedTimeMillis, numberOfPeriods)
                         onNext()
                     }
                 },

@@ -81,6 +81,8 @@
     <string name="match_time_required">La hora del partido es obligatoria</string>
     <string name="number_of_periods">Nº de Tiempos</string>
     <string name="period_duration">Duración de cada Tiempo (minutos)</string>
+    <string name="two_halves">2 Partes</string>
+    <string name="four_quarters">4 Cuartos</string>
 
     <string name="starting_lineup">Once Inicial</string>
     <string name="initial_lineup">Alineación Inicial</string>

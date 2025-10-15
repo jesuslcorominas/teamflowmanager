@@ -7,8 +7,7 @@ data class Match(
     val location: String? = null,
     val date: Long? = null, // Date in milliseconds
     val time: Long? = null, // Time in milliseconds (hours and minutes of day)
-    val numberOfPeriods: Int = 2, // Number of periods (default 2)
-    val periodDurationMinutes: Int = 25, // Duration of each period in minutes (default 25)
+    val numberOfPeriods: Int = 2, // Number of periods: 2 for halves, 4 for quarters
     val squadCallUpIds: List<Long> = emptyList(), // Players selected for match squad (convocatoria)
     val captainId: Long? = null, // Captain for this match
     val startingLineupIds: List<Long> = emptyList(),

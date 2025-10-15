@@ -34,7 +34,6 @@ class MatchCreationWizardViewModel(
     private var date: Long? = null
     private var time: Long? = null
     private var numberOfPeriods: Int = 2
-    private var periodDurationMinutes: Int = 25
     private var squadCallUpIds: Set<Long> = emptySet()
     private var captainId: Long? = null
     private var startingLineupIds: Set<Long> = emptySet()
@@ -52,13 +51,12 @@ class MatchCreationWizardViewModel(
         }
     }
     
-    fun setGeneralData(opponent: String, location: String, date: Long?, time: Long?, numberOfPeriods: Int, periodDurationMinutes: Int) {
+    fun setGeneralData(opponent: String, location: String, date: Long?, time: Long?, numberOfPeriods: Int) {
         this.opponent = opponent
         this.location = location
         this.date = date
         this.time = time
         this.numberOfPeriods = numberOfPeriods
-        this.periodDurationMinutes = periodDurationMinutes
     }
     
     fun setSquadCallUp(playerIds: Set<Long>) {
@@ -78,7 +76,6 @@ class MatchCreationWizardViewModel(
     fun getDate() = date
     fun getTime() = time
     fun getNumberOfPeriods() = numberOfPeriods
-    fun getPeriodDurationMinutes() = periodDurationMinutes
     fun getSquadCallUpIds() = squadCallUpIds
     fun getCaptainId() = captainId
     fun getStartingLineupIds() = startingLineupIds
@@ -160,7 +157,6 @@ class MatchCreationWizardViewModel(
             date = date,
             time = time,
             numberOfPeriods = numberOfPeriods,
-            periodDurationMinutes = periodDurationMinutes,
             squadCallUpIds = squadCallUpIds.toList(),
             captainId = captainId,
             startingLineupIds = startingLineupIds.toList(),

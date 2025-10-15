@@ -284,7 +284,6 @@ fun MatchForm(
                                 date = match?.date,
                                 time = match?.time,
                                 numberOfPeriods = match?.numberOfPeriods ?: 2,
-                                periodDurationMinutes = match?.periodDurationMinutes ?: 25,
                                 squadCallUpIds = match?.squadCallUpIds ?: emptyList(),
                                 captainId = match?.captainId,
                                 startingLineupIds = selectedStartingLineup.toList(),
