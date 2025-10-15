@@ -128,11 +128,11 @@ class GetMatchSummaryUseCaseTest {
             assertEquals(2, result?.substitutions?.size)
             // Sorted by match elapsed time ascending
             assertEquals(900000L, result?.substitutions?.get(0)?.matchElapsedTimeMillis)
-            assertEquals(2L, result?.substitutions?.get(0)?.playerOutId)
-            assertEquals(3L, result?.substitutions?.get(0)?.playerInId)
+            assertEquals(2L, result?.substitutions?.get(0)?.playerOut?.id)
+            assertEquals(3L, result?.substitutions?.get(0)?.playerIn?.id)
             assertEquals(1500000L, result?.substitutions?.get(1)?.matchElapsedTimeMillis)
-            assertEquals(1L, result?.substitutions?.get(1)?.playerOutId)
-            assertEquals(2L, result?.substitutions?.get(1)?.playerInId)
+            assertEquals(1L, result?.substitutions?.get(1)?.playerOut?.id)
+            assertEquals(2L, result?.substitutions?.get(1)?.playerIn?.id)
         }
 
     @Test
