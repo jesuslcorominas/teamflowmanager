@@ -4,4 +4,8 @@ interface PreferencesLocalDataSource {
     fun shouldShowInvalidSubstitutionAlert(): Boolean
     
     fun setShouldShowInvalidSubstitutionAlert(shouldShow: Boolean)
+    
+    fun getDefaultCaptainId(): Long?
+    
+    fun setDefaultCaptainId(playerId: Long?)
 }

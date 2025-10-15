@@ -14,6 +14,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCase
@@ -26,6 +28,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCase
@@ -42,6 +46,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
@@ -87,6 +93,9 @@ internal val useCaseInternalModule =
         singleOf(::RegisterPlayerSubstitutionUseCaseImpl) bind RegisterPlayerSubstitutionUseCase::class
         singleOf(::GetMatchSubstitutionsUseCaseImpl) bind GetMatchSubstitutionsUseCase::class
         singleOf(::GetMatchSummaryUseCaseImpl) bind GetMatchSummaryUseCase::class
+        singleOf(::GetPreviousCaptainsUseCaseImpl) bind GetPreviousCaptainsUseCase::class
+        singleOf(::GetDefaultCaptainUseCaseImpl) bind GetDefaultCaptainUseCase::class
+        singleOf(::SaveDefaultCaptainUseCaseImpl) bind SaveDefaultCaptainUseCase::class
     }
 
 val useCaseModule =
