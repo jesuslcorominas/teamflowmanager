@@ -132,9 +132,6 @@ private fun PlayerRadioItem(
                 if (isGoalkeeper) {
                     append(" (P)")
                 }
-                if (isSelected) {
-                    append(" (C)")
-                }
             }
             Text(
                 text = displayName,

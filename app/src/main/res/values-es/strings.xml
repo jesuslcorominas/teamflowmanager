@@ -84,13 +84,13 @@
     <string name="two_halves">2 Partes</string>
     <string name="four_quarters">4 Cuartos</string>
 
-    <string name="starting_lineup">Once Inicial</string>
+    <string name="starting_lineup">Alineación Inicial</string>
     <string name="initial_lineup">Alineación Inicial</string>
     <string name="substitutes">Suplentes</string>
     <string name="select_players">Seleccionar Jugadores</string>
-    <string name="no_starting_lineup">No hay once inicial seleccionado</string>
+    <string name="no_starting_lineup">No hay alineación inicial seleccionada</string>
     <string name="no_substitutes">No hay suplentes seleccionados</string>
-    <string name="select_starting_lineup">Seleccionar Once Inicial</string>
+    <string name="select_starting_lineup">Seleccionar Alineación Inicial</string>
     <string name="select_substitutes">Seleccionar Suplentes</string>
     <string name="player_selected">Seleccionado</string>
     <string name="player_not_selected">No Seleccionado</string>
@@ -157,7 +157,7 @@
     <string name="starting_lineup_count">Seleccionados: %d/5 jugadores</string>
     <string name="starting_lineup_max_error">Solo puedes seleccionar hasta 5 jugadores</string>
     <string name="starting_lineup_min_error">Debes seleccionar exactamente 5 jugadores</string>
-    <string name="starting_lineup_no_goalkeeper_warning">No hay portero en el once inicial</string>
-    <string name="starting_lineup_no_goalkeeper_message">No has seleccionado un portero en el once inicial. ¿Deseas continuar de todos modos?</string>
+    <string name="starting_lineup_no_goalkeeper_warning">No hay portero en la alineación inicial</string>
+    <string name="starting_lineup_no_goalkeeper_message">No has seleccionado un portero en la alineación inicial. ¿Deseas continuar de todos modos?</string>
 
 </resources>

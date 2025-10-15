@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Remove
@@ -149,7 +150,9 @@ fun GeneralDataStep(
                     Icon(Icons.Default.DateRange, contentDescription = null)
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showDatePicker = true }
         )
         
         // Time Picker
@@ -164,10 +167,12 @@ fun GeneralDataStep(
             } else null,
             trailingIcon = {
                 IconButton(onClick = { showTimePicker = true }) {
-                    Icon(Icons.Default.DateRange, contentDescription = null)
+                    Icon(Icons.Default.AccessTime, contentDescription = null)
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showTimePicker = true }
         )
         
         // Number of Periods - Radio Buttons
