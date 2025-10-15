@@ -112,6 +112,8 @@
     
     <!-- Match Summary -->
     <string name="match_finished">Match Finished</string>
+    <string name="match_summary_title">Match Summary</string>
+    <string name="match_not_found">Match not found</string>
     <string name="total_time_label">Total Time</string>
     <string name="substitutions_title">Substitutions</string>
     <string name="player_out">Player Out</string>
