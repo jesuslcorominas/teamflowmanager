@@ -36,6 +36,7 @@ internal class FinishMatchUseCaseImpl(
             isRunning = false,
             elapsedTimeMillis = matchFinalElapsedTime,
             lastStartTimeMillis = null,
+            status = com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus.FINISHED,
         )
         matchRepository.updateMatch(finishedMatch)
 

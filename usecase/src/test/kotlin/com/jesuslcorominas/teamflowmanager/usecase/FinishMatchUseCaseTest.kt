@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
@@ -74,6 +75,7 @@ class FinishMatchUseCaseTest {
                         isRunning = false,
                         elapsedTimeMillis = 5000L,
                         lastStartTimeMillis = null,
+                        status = MatchStatus.FINISHED,
                     ),
                 )
             }
@@ -134,7 +136,8 @@ class FinishMatchUseCaseTest {
                         it.id == matchId &&
                             it.isRunning == false &&
                             it.elapsedTimeMillis > 5000L && // Should be 5000L + current time - startTime
-                            it.lastStartTimeMillis == null
+                            it.lastStartTimeMillis == null &&
+                            it.status == MatchStatus.FINISHED
                     },
                 )
             }

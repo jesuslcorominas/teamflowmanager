@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.MatchSummaryViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.RealTimeTicker
@@ -37,6 +38,7 @@ val viewModelModule =
                 pauseMatchUseCase = get(),
                 resumeMatchUseCase = get(),
                 registerPlayerSubstitutionUseCase = get(),
+                getMatchSummaryUseCase = get(),
                 preferencesRepository = get(),
                 timeTicker = get()
             )
@@ -56,6 +58,11 @@ val viewModelModule =
             MatchDetailViewModel(
                 getMatchByIdUseCase = get(),
                 getPlayersUseCase = get(),
+            )
+        }
+        viewModel {
+            MatchSummaryViewModel(
+                getMatchSummaryUseCase = get(),
             )
         }
 

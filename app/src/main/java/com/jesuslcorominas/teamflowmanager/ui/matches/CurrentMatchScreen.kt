@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches
 
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,15 +11,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +49,7 @@ import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
+import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -74,6 +81,7 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                     }
                 },
             )
+            is MatchUiState.Finished -> FinishedMatchState(state = state)
         }
 
         // Show alert if trying to select an inactive player
@@ -330,6 +338,180 @@ private fun SuccessStatePreview() {
             onResumeMatch = {},
             onPlayerClick = {},
         )
+    }
+}
+
+@Composable
+private fun FinishedMatchState(state: MatchUiState.Finished) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(TFMSpacing.spacing04),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+    ) {
+        // Match header
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TFMSpacing.spacing04),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = stringResource(R.string.match_finished),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
+                    Text(
+                        text = state.opponent,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Text(
+                        text = state.location,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+                    Text(
+                        text = stringResource(R.string.total_time_label),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Text(
+                        text = formatTime(state.matchTimeMillis),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
+        }
+
+        // Player times section
+        item {
+            Text(
+                text = stringResource(R.string.player_times_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+
+        items(state.playerTimes) { playerTimeItem ->
+            PlayerTimeCard(
+                playerTimeItem = playerTimeItem,
+                isSelected = false,
+                onClick = { /* Read-only, no click action */ },
+            )
+        }
+
+        // Substitutions section
+        if (state.substitutions.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+                Text(
+                    text = stringResource(R.string.substitutions_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            items(state.substitutions) { substitution ->
+                SubstitutionCard(substitution = substitution)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubstitutionCard(substitution: SubstitutionItem) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TFMSpacing.spacing04),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Time
+            Text(
+                text = formatTime(substitution.matchElapsedTimeMillis),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+            )
+
+            Spacer(modifier = Modifier.width(TFMSpacing.spacing03))
+
+            // Player Out
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowDownward,
+                    contentDescription = stringResource(R.string.player_out),
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
+                Column {
+                    Text(
+                        text = "${substitution.playerOut.firstName} ${substitution.playerOut.lastName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.player_number_format,
+                            substitution.playerOut.number
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
+
+            // Player In
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowUpward,
+                    contentDescription = stringResource(R.string.player_in),
+                    tint = Color(0xFF4CAF50), // Green color
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
+                Column {
+                    Text(
+                        text = "${substitution.playerIn.firstName} ${substitution.playerIn.lastName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.player_number_format,
+                            substitution.playerIn.number
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
     }
 }
 

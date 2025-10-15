@@ -18,6 +18,7 @@ sealed class Route(
                 Matches,
                 CurrentMatch,
                 MatchDetail,
+                MatchSummary,
             )
         }
 
@@ -92,6 +93,17 @@ sealed class Route(
     ) {
         fun createRoute(matchId: Long?): String {
             return if (matchId != null) "$path/$matchId" else path
+        }
+    }
+
+    object MatchSummary : Route(
+        path = "match_summary",
+        showTopBar = true,
+        showBottomBar = false,
+        canGoBack = true,
+    ) {
+        fun createRoute(matchId: Long): String {
+            return "$path/$matchId"
         }
     }
 }

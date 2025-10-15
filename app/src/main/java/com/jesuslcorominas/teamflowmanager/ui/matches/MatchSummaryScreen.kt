@@ -1,0 +1,459 @@
+package com.jesuslcorominas.teamflowmanager.ui.matches
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
+import com.jesuslcorominas.teamflowmanager.ui.theme.BebasNeueFontFamily
+import com.jesuslcorominas.teamflowmanager.ui.theme.ContentContrast
+import com.jesuslcorominas.teamflowmanager.ui.theme.ShirtOrange
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.theme.White
+import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
+import com.jesuslcorominas.teamflowmanager.viewmodel.MatchSummaryUiState
+import com.jesuslcorominas.teamflowmanager.viewmodel.MatchSummaryViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
+import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
+import org.koin.androidx.compose.koinViewModel
+
+@Composable
+fun MatchSummaryScreen(
+    matchId: Long,
+    onNavigateBack: () -> Unit,
+    viewModel: MatchSummaryViewModel = koinViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(matchId) {
+        viewModel.loadMatchSummary(matchId)
+    }
+
+    when (val state = uiState) {
+        is MatchSummaryUiState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is MatchSummaryUiState.NotFound -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.match_not_found),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+        }
+
+        is MatchSummaryUiState.Success -> {
+            MatchSummaryContent(state = state)
+        }
+    }
+}
+
+@Composable
+private fun MatchSummaryContent(
+    state: MatchSummaryUiState.Success,
+    modifier: Modifier = Modifier,
+) {
+    val halfTimeMillis = 25 * 60 * 1000L // 25 minutes in milliseconds
+    val firstHalfMillis = minOf(state.matchTimeMillis, halfTimeMillis)
+    val secondHalfMillis = maxOf(0L, state.matchTimeMillis - halfTimeMillis)
+    val firstHalfStoppage = maxOf(0L, firstHalfMillis - halfTimeMillis)
+    val secondHalfStoppage = maxOf(0L, secondHalfMillis - halfTimeMillis)
+
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(TFMSpacing.spacing04),
+        contentPadding = PaddingValues(bottom = TFMSpacing.spacing04),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+    ) {
+        // Match header
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TFMSpacing.spacing04),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = stringResource(R.string.match_finished),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
+                    Text(
+                        text = state.opponent,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = state.location,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+
+                    // Total time
+                    Text(
+                        text = stringResource(R.string.total_time_label),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = formatTime(state.matchTimeMillis),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+
+                    // Half times
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = stringResource(R.string.first_half_label),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            Text(
+                                text = if (firstHalfStoppage > 0) {
+                                    stringResource(
+                                        R.string.stoppage_time_format,
+                                        formatTime(halfTimeMillis),
+                                        formatTime(firstHalfStoppage)
+                                    )
+                                } else {
+                                    formatTime(firstHalfMillis)
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        if (secondHalfMillis > 0) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = stringResource(R.string.second_half_label),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                Text(
+                                    text = if (secondHalfStoppage > 0) {
+                                        stringResource(
+                                            R.string.stoppage_time_format,
+                                            formatTime(halfTimeMillis),
+                                            formatTime(secondHalfStoppage)
+                                        )
+                                    } else {
+                                        formatTime(secondHalfMillis)
+                                    },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Player times section
+        item {
+            Text(
+                text = stringResource(R.string.player_times_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+
+        items(state.playerTimes) { playerTimeItem ->
+            PlayerTimeCard(
+                playerTimeItem = playerTimeItem,
+                isSelected = false,
+                onClick = { /* Read-only, no click action */ },
+            )
+        }
+
+        // Substitutions section
+        if (state.substitutions.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+                Text(
+                    text = stringResource(R.string.substitutions_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            items(state.substitutions) { substitution ->
+                SubstitutionCard(substitution = substitution)
+            }
+        }
+    }
+}
+
+@Composable
+private fun JerseyBadge(
+    number: Int,
+    modifier: Modifier = Modifier,
+    size: Int = 56,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(BackgroundContrast)
+            .size(size.dp),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                modifier = Modifier.padding(top = TFMSpacing.spacing02),
+                text = number.toString(),
+                fontFamily = BebasNeueFontFamily,
+                color = ContentContrast,
+                style = if (size >= 56) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.titleLarge,
+            )
+        }
+
+        Column {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(TFMSpacing.spacing02)
+                    .background(ShirtOrange)
+            )
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(TFMSpacing.spacing01)
+                    .background(White)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlayerTimeCard(
+    playerTimeItem: PlayerTimeItem,
+    isSelected: Boolean = false,
+    onClick: () -> Unit = {},
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        onClick = onClick,
+        colors = CardDefaults.cardColors(
+            containerColor = when {
+                isSelected -> MaterialTheme.colorScheme.primaryContainer
+                playerTimeItem.isRunning -> MaterialTheme.colorScheme.secondaryContainer
+                else -> MaterialTheme.colorScheme.surface
+            },
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TFMSpacing.spacing04),
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            JerseyBadge(number = playerTimeItem.player.number)
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "${playerTimeItem.player.firstName} ${playerTimeItem.player.lastName}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                )
+                if (playerTimeItem.substitutionCount > 0) {
+                    Text(
+                        text = stringResource(R.string.substitution_count, playerTimeItem.substitutionCount),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Text(
+                text = formatTime(playerTimeItem.timeMillis),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SubstitutionCard(substitution: SubstitutionItem) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TFMSpacing.spacing04),
+        ) {
+            // Players and arrows row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Player In (left side)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${substitution.playerIn.firstName} ${substitution.playerIn.lastName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    JerseyBadge(
+                        number = substitution.playerIn.number,
+                        size = 64,
+                    )
+
+                    // Name above badge
+
+                }
+
+                // Arrows in center
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_in),
+                        contentDescription = stringResource(R.string.player_in),
+                        tint = Color(0xFF4CAF50), // Green color
+                        modifier = Modifier
+                            .size(32.dp),
+                    )
+                    Text(
+                        text = formatTime(substitution.matchElapsedTimeMillis),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_out),
+                        contentDescription = stringResource(R.string.player_out),
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .graphicsLayer(scaleY = -1f),
+                    )
+                }
+
+                // Player Out (right side)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${substitution.playerOut.firstName} ${substitution.playerOut.lastName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    JerseyBadge(
+                        number = substitution.playerOut.number,
+                        size = 64,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun SubstitutionCardPreview() {
+    val substitution = SubstitutionItem(
+        matchElapsedTimeMillis = 150000L,
+        playerOut = Player(
+            id = 1,
+            firstName = "John",
+            lastName = "Doe",
+            number = 10,
+            positions = listOf(Position.Forward),
+            teamId = 1,
+        ),
+        playerIn = Player(
+            id = 2,
+            firstName = "Jane",
+            lastName = "Smith",
+            number = 5,
+            positions = listOf(Position.Defender),
+            teamId = 1,
+        ),
+    )
+
+    MaterialTheme {
+        SubstitutionCard(substitution)
+    }
+}

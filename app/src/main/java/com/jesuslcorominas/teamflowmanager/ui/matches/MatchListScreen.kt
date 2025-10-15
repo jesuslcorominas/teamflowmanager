@@ -49,6 +49,7 @@ import org.koin.androidx.compose.koinViewModel
 fun MatchListScreen(
     onNavigateToAddMatch: () -> Unit,
     onNavigateToEditMatch: (Long) -> Unit,
+    onNavigateToMatchSummary: (Long) -> Unit,
     onNavigateToCurrentMatch: () -> Unit,
     viewModel: MatchListViewModel = koinViewModel(),
 ) {
@@ -170,6 +171,7 @@ fun MatchListScreen(
                             items(playedMatches) { match ->
                                 PlayedMatchCard(
                                     match = match,
+                                    onNavigateToDetail = { onNavigateToMatchSummary(match.id) },
                                 )
                             }
                         }
@@ -355,10 +357,13 @@ fun PausedMatchCard(
 @Composable
 fun PlayedMatchCard(
     match: Match,
+    onNavigateToDetail: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToDetail() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(

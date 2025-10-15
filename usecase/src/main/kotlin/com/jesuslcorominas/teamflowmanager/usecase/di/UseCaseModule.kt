@@ -18,6 +18,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeUseCase
@@ -84,6 +86,7 @@ internal val useCaseInternalModule =
         singleOf(::FinishMatchUseCaseImpl) bind FinishMatchUseCase::class
         singleOf(::RegisterPlayerSubstitutionUseCaseImpl) bind RegisterPlayerSubstitutionUseCase::class
         singleOf(::GetMatchSubstitutionsUseCaseImpl) bind GetMatchSubstitutionsUseCase::class
+        singleOf(::GetMatchSummaryUseCaseImpl) bind GetMatchSummaryUseCase::class
     }
 
 val useCaseModule =
