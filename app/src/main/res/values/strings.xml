@@ -79,8 +79,11 @@
     <string name="match_date_required">Match date is required</string>
     <string name="match_time">Match Time</string>
     <string name="match_time_required">Match time is required</string>
+    <string name="number_of_periods">Number of Periods</string>
+    <string name="period_duration">Period Duration (minutes)</string>
 
     <string name="starting_lineup">Starting Lineup</string>
+    <string name="initial_lineup">Initial Lineup</string>
     <string name="substitutes">Substitutes</string>
     <string name="select_players">Select Players</string>
     <string name="no_starting_lineup">No starting lineup selected</string>
@@ -147,7 +150,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     
-    <string name="starting_lineup_title">Select Starting Lineup</string>
+    <string name="starting_lineup_title">Select Initial Lineup</string>
     <string name="starting_lineup_subtitle">Select exactly 5 players to start</string>
     <string name="starting_lineup_count">Selected: %d/5 players</string>
     <string name="starting_lineup_max_error">You can only select up to 5 players</string>

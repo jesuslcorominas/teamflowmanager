@@ -83,7 +83,7 @@ sealed class Route(
         path = "create_match",
         showTopBar = true,
         showBottomBar = false,
-        canGoBack = true,
+        canGoBack = false,
     )
 
     object CurrentMatch : Route(

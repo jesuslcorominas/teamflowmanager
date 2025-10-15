@@ -79,8 +79,11 @@
     <string name="match_date_required">La fecha del partido es obligatoria</string>
     <string name="match_time">Hora del Partido</string>
     <string name="match_time_required">La hora del partido es obligatoria</string>
+    <string name="number_of_periods">Nº de Tiempos</string>
+    <string name="period_duration">Duración de cada Tiempo (minutos)</string>
 
     <string name="starting_lineup">Once Inicial</string>
+    <string name="initial_lineup">Alineación Inicial</string>
     <string name="substitutes">Suplentes</string>
     <string name="select_players">Seleccionar Jugadores</string>
     <string name="no_starting_lineup">No hay once inicial seleccionado</string>
@@ -147,7 +150,7 @@
     <string name="yes">Sí</string>
     <string name="no">No</string>
     
-    <string name="starting_lineup_title">Seleccionar Once Inicial</string>
+    <string name="starting_lineup_title">Seleccionar Alineación Inicial</string>
     <string name="starting_lineup_subtitle">Selecciona exactamente 5 jugadores para comenzar</string>
     <string name="starting_lineup_count">Seleccionados: %d/5 jugadores</string>
     <string name="starting_lineup_max_error">Solo puedes seleccionar hasta 5 jugadores</string>
