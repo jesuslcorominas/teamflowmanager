@@ -115,7 +115,11 @@
     <string name="match_summary_title">Match Summary</string>
     <string name="match_not_found">Match not found</string>
     <string name="total_time_label">Total Time</string>
+    <string name="first_half_label">First Half</string>
+    <string name="second_half_label">Second Half</string>
+    <string name="stoppage_time_format">%1$s + %2$s</string>
     <string name="substitutions_title">Substitutions</string>
+    <string name="substitution_count">%d substitution(s)</string>
     <string name="player_out">Player Out</string>
     <string name="player_in">Player In</string>
 

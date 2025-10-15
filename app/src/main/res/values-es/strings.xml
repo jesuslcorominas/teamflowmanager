@@ -115,7 +115,11 @@
     <string name="match_summary_title">Resumen del Partido</string>
     <string name="match_not_found">Partido no encontrado</string>
     <string name="total_time_label">Tiempo Total</string>
+    <string name="first_half_label">Primera Parte</string>
+    <string name="second_half_label">Segunda Parte</string>
+    <string name="stoppage_time_format">%1$s + %2$s</string>
     <string name="substitutions_title">Cambios</string>
+    <string name="substitution_count">%d cambio(s)</string>
     <string name="player_out">Jugador Sale</string>
     <string name="player_in">Jugador Entra</string>
 

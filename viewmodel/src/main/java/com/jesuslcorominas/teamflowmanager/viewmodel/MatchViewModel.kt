@@ -242,6 +242,7 @@ data class PlayerTimeItem(
     val player: Player,
     val timeMillis: Long,
     val isRunning: Boolean,
+    val substitutionCount: Int = 0,
 )
 
 sealed class MatchUiState {

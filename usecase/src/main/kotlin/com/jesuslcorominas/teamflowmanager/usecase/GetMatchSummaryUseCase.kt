@@ -20,6 +20,7 @@ data class MatchSummary(
 data class PlayerTimeSummary(
     val player: Player,
     val elapsedTimeMillis: Long,
+    val substitutionCount: Int,
 )
 
 data class SubstitutionSummary(
@@ -50,9 +51,13 @@ internal class GetMatchSummaryUseCaseImpl(
             } else {
                 val playerTimeSummaries = playerTimes.map { playerTime ->
                     val player = players.find { it.id == playerTime.playerId }
+                    val substitutionCount = substitutions.count { 
+                        it.playerOutId == playerTime.playerId || it.playerInId == playerTime.playerId 
+                    }
                     PlayerTimeSummary(
                         player = player ?: throw IllegalStateException("Player not found: ${playerTime.playerId}"),
                         elapsedTimeMillis = playerTime.elapsedTimeMillis,
+                        substitutionCount = substitutionCount,
                     )
                 }.sortedByDescending { it.elapsedTimeMillis }
 

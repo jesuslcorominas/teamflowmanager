@@ -30,6 +30,7 @@ class MatchSummaryViewModel(
                                 player = playerTimeSummary.player,
                                 timeMillis = playerTimeSummary.elapsedTimeMillis,
                                 isRunning = false,
+                                substitutionCount = playerTimeSummary.substitutionCount,
                             )
                         },
                         substitutions = summary.substitutions.map { sub ->
