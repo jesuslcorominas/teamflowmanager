@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -21,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,9 +57,7 @@ fun MatchListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         when (val state = uiState) {
             is MatchListUiState.Loading -> {
                 CircularProgressIndicator(
@@ -187,18 +187,30 @@ fun MatchListScreen(
                 }
             }
         }
-    }
 
-    // Delete confirmation dialog
-    if (deleteConfirmationState is MatchDeleteConfirmationState.Requested) {
-        AppAlertDialog(
-            title = stringResource(R.string.delete_match_title),
-            message = stringResource(R.string.delete_match_message),
-            confirmText = stringResource(R.string.delete),
-            dismissText = stringResource(R.string.cancel),
-            onConfirm = { viewModel.confirmDeleteMatch() },
-            onDismiss = { viewModel.cancelDeleteMatch() },
-        )
+        FloatingActionButton(
+            onClick = onNavigateToAddMatch,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(TFMSpacing.spacing04),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = stringResource(R.string.add_match_title),
+            )
+        }
+
+        // Delete confirmation dialog
+        if (deleteConfirmationState is MatchDeleteConfirmationState.Requested) {
+            AppAlertDialog(
+                title = stringResource(R.string.delete_match_title),
+                message = stringResource(R.string.delete_match_message),
+                confirmText = stringResource(R.string.delete),
+                dismissText = stringResource(R.string.cancel),
+                onConfirm = { viewModel.confirmDeleteMatch() },
+                onDismiss = { viewModel.cancelDeleteMatch() },
+            )
+        }
     }
 }
 
