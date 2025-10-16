@@ -166,4 +166,22 @@
     <string name="starting_lineup_no_goalkeeper_warning">No goalkeeper in starting lineup</string>
     <string name="starting_lineup_no_goalkeeper_message">You haven\'t selected a goalkeeper in the starting lineup. Do you want to continue anyway?</string>
 
+    <!-- Match View Improvements -->
+    <string name="sort_by_time_desc">Most Time First</string>
+    <string name="sort_by_time_asc">Least Time First</string>
+    <string name="sort_by_active">Active First</string>
+    <string name="captain_badge">C</string>
+    <string name="period_label">Period %1$d/%2$d</string>
+    <string name="first_quarter">1st Quarter</string>
+    <string name="second_quarter">2nd Quarter</string>
+    <string name="third_quarter">3rd Quarter</string>
+    <string name="fourth_quarter">4th Quarter</string>
+    <string name="first_half">1st Half</string>
+    <string name="second_half">2nd Half</string>
+    <string name="period_time_label">Period Time</string>
+    <string name="stop_match_early_title">Stop Match Early?</string>
+    <string name="stop_match_early_message">The match is not in the final period. Are you sure you want to stop it now?</string>
+    <string name="pause_limit_reached">Cannot pause. Maximum pauses reached.</string>
+    <string name="begin_match">Begin Match</string>
+
 </resources>

@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SetCurrentMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
@@ -42,6 +43,7 @@ class MatchListViewModelTest {
     private lateinit var resumeMatchUseCase: ResumeMatchUseCase
     private lateinit var archiveMatchUseCase: ArchiveMatchUseCase
     private lateinit var unarchiveMatchUseCase: UnarchiveMatchUseCase
+    private lateinit var setCurrentMatchUseCase: SetCurrentMatchUseCase
     private lateinit var viewModel: MatchListViewModel
 
     @Before
@@ -57,6 +59,7 @@ class MatchListViewModelTest {
         resumeMatchUseCase = mockk(relaxed = true)
         archiveMatchUseCase = mockk(relaxed = true)
         unarchiveMatchUseCase = mockk(relaxed = true)
+        setCurrentMatchUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -80,6 +83,7 @@ class MatchListViewModelTest {
                 createMatchUseCase,
                 updateMatchUseCase,
                 startMatchUseCase,
+                setCurrentMatchUseCase,
                 resumeMatchUseCase,
                 archiveMatchUseCase,
                 unarchiveMatchUseCase,
@@ -106,6 +110,7 @@ class MatchListViewModelTest {
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
+                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
@@ -150,6 +155,7 @@ class MatchListViewModelTest {
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
+                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
@@ -177,6 +183,7 @@ class MatchListViewModelTest {
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
+                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
@@ -214,6 +221,7 @@ class MatchListViewModelTest {
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
+                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
@@ -250,6 +258,7 @@ class MatchListViewModelTest {
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
+                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
@@ -288,6 +297,7 @@ class MatchListViewModelTest {
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
+                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
@@ -326,6 +336,7 @@ class MatchListViewModelTest {
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
+                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
@@ -362,6 +373,7 @@ class MatchListViewModelTest {
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
+                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
@@ -391,6 +403,7 @@ class MatchListViewModelTest {
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
+                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,

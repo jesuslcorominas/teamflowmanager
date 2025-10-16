@@ -24,6 +24,8 @@ data class MatchEntity(
     val lastStartTimeMillis: Long? = null,
     val status: String = MatchStatus.SCHEDULED.name,
     val archived: Boolean = false,
+    val currentPeriod: Int = 1,
+    val pauseCount: Int = 0,
 )
 
 fun MatchEntity.toDomain(): Match =
@@ -44,6 +46,8 @@ fun MatchEntity.toDomain(): Match =
         lastStartTimeMillis = lastStartTimeMillis,
         status = try { MatchStatus.valueOf(status) } catch (e: Exception) { MatchStatus.SCHEDULED },
         archived = archived,
+        currentPeriod = currentPeriod,
+        pauseCount = pauseCount,
     )
 
 fun Match.toEntity(): MatchEntity =
@@ -64,4 +68,6 @@ fun Match.toEntity(): MatchEntity =
         lastStartTimeMillis = lastStartTimeMillis,
         status = status.name,
         archived = archived,
+        currentPeriod = currentPeriod,
+        pauseCount = pauseCount,
     )

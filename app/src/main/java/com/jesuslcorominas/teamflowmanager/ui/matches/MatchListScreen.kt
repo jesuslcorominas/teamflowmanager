@@ -91,13 +91,14 @@ fun MatchListScreen(
             is MatchListUiState.Success -> {
                 val currentMatchId = state.currentMatchId
                 val pendingMatches = state.matches.filter { it.elapsedTimeMillis == 0L && !it.isRunning }
+                val activeMatch = state.matches.find { it.isRunning }
                 val pausedMatch = if (currentMatchId != null) {
                     state.matches.find { it.id == currentMatchId && !it.isRunning }
                 } else null
                 val playedMatches = state.matches.filter {
                     it.elapsedTimeMillis > 0L && !it.isRunning && it.id != currentMatchId
                 }
-                val hasActiveMatch = state.matches.any { it.isRunning }
+                val hasActiveMatch = activeMatch != null
                 val hasPausedMatch = pausedMatch != null
 
                 LazyColumn(
@@ -112,6 +113,25 @@ fun MatchListScreen(
                         ArchivedMatchesNavigationCard(
                             onClick = onNavigateToArchivedMatches,
                         )
+                    }
+
+                    // Active match section (if exists, show at top)
+                    if (hasActiveMatch && activeMatch != null) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.current_match_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
+                            )
+                        }
+                        item {
+                            PausedMatchCard(
+                                match = activeMatch,
+                                onResume = { onNavigateToCurrentMatch() },
+                                onNavigateToDetail = { onNavigateToCurrentMatch() },
+                            )
+                        }
                     }
 
                     // Paused match section (if exists, show at top)
@@ -154,7 +174,8 @@ fun MatchListScreen(
                                 onDelete = { viewModel.requestDeleteMatch(match) },
                                 onStart = {
                                     if (!hasActiveMatch && !hasPausedMatch) {
-                                        viewModel.startMatch(match.id)
+                                        // Set as current match without starting timer, navigate to detail
+                                        viewModel.setCurrentMatch(match.id)
                                         onNavigateToCurrentMatch()
                                     }
                                 },

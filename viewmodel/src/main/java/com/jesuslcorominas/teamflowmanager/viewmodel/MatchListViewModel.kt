@@ -10,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SetCurrentMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
@@ -27,6 +28,7 @@ class MatchListViewModel(
     private val createMatchUseCase: CreateMatchUseCase,
     private val updateMatchUseCase: UpdateMatchUseCase,
     private val startMatchUseCase: StartMatchUseCase,
+    private val setCurrentMatchUseCase: SetCurrentMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val archiveMatchUseCase: ArchiveMatchUseCase,
     private val unarchiveMatchUseCase: UnarchiveMatchUseCase,
@@ -76,6 +78,12 @@ class MatchListViewModel(
     fun startMatch(matchId: Long) {
         viewModelScope.launch {
             startMatchUseCase.invoke(matchId, System.currentTimeMillis())
+        }
+    }
+
+    fun setCurrentMatch(matchId: Long) {
+        viewModelScope.launch {
+            setCurrentMatchUseCase.invoke(matchId)
         }
     }
 

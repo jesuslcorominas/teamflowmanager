@@ -166,4 +166,22 @@
     <string name="starting_lineup_no_goalkeeper_warning">No hay portero en la alineación inicial</string>
     <string name="starting_lineup_no_goalkeeper_message">No has seleccionado un portero en la alineación inicial. ¿Deseas continuar de todos modos?</string>
 
+    <!-- Match View Improvements -->
+    <string name="sort_by_time_desc">Más Tiempo Primero</string>
+    <string name="sort_by_time_asc">Menos Tiempo Primero</string>
+    <string name="sort_by_active">Activos Primero</string>
+    <string name="captain_badge">C</string>
+    <string name="period_label">Periodo %1$d/%2$d</string>
+    <string name="first_quarter">1º Cuarto</string>
+    <string name="second_quarter">2º Cuarto</string>
+    <string name="third_quarter">3º Cuarto</string>
+    <string name="fourth_quarter">4º Cuarto</string>
+    <string name="first_half">1ª Parte</string>
+    <string name="second_half">2ª Parte</string>
+    <string name="period_time_label">Tiempo de Periodo</string>
+    <string name="stop_match_early_title">¿Detener Partido Antes de Tiempo?</string>
+    <string name="stop_match_early_message">El partido no está en el periodo final. ¿Estás seguro de que deseas detenerlo ahora?</string>
+    <string name="pause_limit_reached">No se puede pausar. Máximo de pausas alcanzado.</string>
+    <string name="begin_match">Comenzar Partido</string>
+
 </resources>
