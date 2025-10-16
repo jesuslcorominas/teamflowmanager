@@ -26,11 +26,14 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -52,8 +55,11 @@ import com.jesuslcorominas.teamflowmanager.ui.util.DateFormatter
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDeleteConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
+import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchListScreen(
     onNavigateToEditMatch: (Long) -> Unit,
@@ -61,13 +67,49 @@ fun MatchListScreen(
     onNavigateToCurrentMatch: () -> Unit,
     onNavigateToArchivedMatches: () -> Unit,
     viewModel: MatchListViewModel = koinViewModel(),
+    teamViewModel: TeamViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
     val filterState by viewModel.filterState.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
+    val teamUiState by teamViewModel.uiState.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    val teamName = when (val state = teamUiState) {
+        is TeamUiState.TeamExists -> state.team.name
+        else -> ""
+    }
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = teamName,
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.toggleFilterMode() }) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = stringResource(R.string.filter_matches),
+                            tint = if (filterState.isFilterModeEnabled) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
+                        )
+                    }
+                },
+            )
+        },
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
         when (val state = uiState) {
             is MatchListUiState.Loading -> {
                 CircularProgressIndicator(
@@ -83,12 +125,6 @@ fun MatchListScreen(
                             .padding(TFMSpacing.spacing04),
                     verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                 ) {
-                    // Filter button
-                    FilterButton(
-                        isFilterModeEnabled = filterState.isFilterModeEnabled,
-                        onClick = { viewModel.toggleFilterMode() },
-                    )
-
                     // Search bar (only show when filter mode is enabled)
                     if (filterState.isFilterModeEnabled) {
                         SearchBar(
@@ -132,14 +168,7 @@ fun MatchListScreen(
                                 .padding(TFMSpacing.spacing04),
                         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                     ) {
-                        // Filter controls
-                        item {
-                            FilterButton(
-                                isFilterModeEnabled = filterState.isFilterModeEnabled,
-                                onClick = { viewModel.toggleFilterMode() },
-                            )
-                        }
-                        
+                        // Search bar
                         item {
                             SearchBar(
                                 searchText = filterState.searchText,
@@ -184,14 +213,6 @@ fun MatchListScreen(
                                 .padding(TFMSpacing.spacing04),
                         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                     ) {
-                        // Filter button
-                        item {
-                            FilterButton(
-                                isFilterModeEnabled = filterState.isFilterModeEnabled,
-                                onClick = { viewModel.toggleFilterMode() },
-                            )
-                        }
-
                         // Archived matches navigation item (WhatsApp-style)
                         item {
                             ArchivedMatchesNavigationCard(
@@ -281,6 +302,7 @@ fun MatchListScreen(
                 onConfirm = { viewModel.confirmDeleteMatch() },
                 onDismiss = { viewModel.cancelDeleteMatch() },
             )
+        }
         }
     }
 }
@@ -553,30 +575,6 @@ fun ArchivedMatchesNavigationCard(
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun FilterButton(
-    isFilterModeEnabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.CenterEnd,
-    ) {
-        IconButton(onClick = onClick) {
-            Icon(
-                imageVector = Icons.Default.FilterList,
-                contentDescription = stringResource(R.string.filter_matches),
-                tint = if (isFilterModeEnabled) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                }
-            )
         }
     }
 }

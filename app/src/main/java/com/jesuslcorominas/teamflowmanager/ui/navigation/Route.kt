@@ -78,7 +78,7 @@ sealed class Route(
 
     object Matches : Route(
         path = "matches",
-        showTopBar = true,
+        showTopBar = false,
         showBottomBar = true,
         canGoBack = false,
         showFab = true,
