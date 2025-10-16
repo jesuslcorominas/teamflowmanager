@@ -6,6 +6,12 @@ import kotlinx.coroutines.flow.Flow
 interface PlayerLocalDataSource {
     fun getAllPlayers(): Flow<List<Player>>
 
+    suspend fun getCaptainPlayer(): Player?
+
+    suspend fun setPlayerAsCaptain(playerId: Long)
+
+    suspend fun removePlayerAsCaptain(playerId: Long)
+
     suspend fun updatePlayer(player: Player)
 
     suspend fun insertPlayer(player: Player)

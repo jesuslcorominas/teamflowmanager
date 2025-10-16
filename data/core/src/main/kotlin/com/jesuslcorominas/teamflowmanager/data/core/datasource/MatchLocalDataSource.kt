@@ -12,6 +12,10 @@ interface MatchLocalDataSource {
 
     fun getArchivedMatches(): Flow<List<Match>>
 
+    suspend fun getScheduledMatches(): List<Match>
+
+    suspend fun updateMatchCaptain(matchId: Long, captainId: Long?)
+
     suspend fun upsertMatch(match: Match)
 
     suspend fun insertMatch(match: Match): Long

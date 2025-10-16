@@ -7,4 +7,5 @@ data class Player(
     val number: Int,
     val positions: List<Position>,
     val teamId: Long = 1,
+    val isCaptain: Boolean = false,
 )

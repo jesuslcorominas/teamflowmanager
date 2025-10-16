@@ -22,6 +22,13 @@ internal class MatchLocalDataSourceImpl(
     override fun getArchivedMatches(): Flow<List<Match>> =
         matchDao.getArchivedMatches().map { entities -> entities.map { it.toDomain() } }
 
+    override suspend fun getScheduledMatches(): List<Match> =
+        matchDao.getScheduledMatches().map { it.toDomain() }
+
+    override suspend fun updateMatchCaptain(matchId: Long, captainId: Long?) {
+        matchDao.updateMatchCaptain(matchId, captainId)
+    }
+
     override suspend fun upsertMatch(match: Match) {
         matchDao.upsertMatch(match.toEntity())
     }

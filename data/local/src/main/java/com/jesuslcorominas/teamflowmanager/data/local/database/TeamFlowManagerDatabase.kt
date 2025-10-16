@@ -17,7 +17,7 @@ import com.jesuslcorominas.teamflowmanager.data.local.entity.TeamEntity
 
 @Database(
     entities = [PlayerEntity::class, TeamEntity::class, MatchEntity::class, PlayerTimeEntity::class, PlayerTimeHistoryEntity::class, PlayerSubstitutionEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class TeamFlowManagerDatabase : RoomDatabase() {
@@ -32,4 +32,10 @@ abstract class TeamFlowManagerDatabase : RoomDatabase() {
     abstract fun playerTimeHistoryDao(): PlayerTimeHistoryDao
 
     abstract fun playerSubstitutionDao(): PlayerSubstitutionDao
+
+    suspend fun <T> runInTransaction(block: suspend () -> T): T {
+        return this.withTransaction {
+            block()
+        }
+    }
 }

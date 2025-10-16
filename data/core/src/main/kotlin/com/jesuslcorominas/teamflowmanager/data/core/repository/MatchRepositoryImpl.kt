@@ -17,6 +17,12 @@ internal class MatchRepositoryImpl(
 
     override fun getArchivedMatches(): Flow<List<Match>> = localDataSource.getArchivedMatches()
 
+    override suspend fun getScheduledMatches(): List<Match> = localDataSource.getScheduledMatches()
+
+    override suspend fun updateMatchCaptain(matchId: Long, captainId: Long?) {
+        localDataSource.updateMatchCaptain(matchId, captainId)
+    }
+
     override suspend fun createMatch(match: Match): Long = localDataSource.insertMatch(match)
 
     override suspend fun updateMatch(match: Match) {
