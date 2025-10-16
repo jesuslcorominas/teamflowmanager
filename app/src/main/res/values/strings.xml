@@ -104,10 +104,15 @@
     <string name="pending_matches">Pending Matches</string>
     <string name="paused_match">Match in Progress: Half Time</string>
     <string name="played_matches">Played Matches</string>
+    <string name="archived_matches">Archived</string>
     <string name="start_match">Start</string>
     <string name="view_match">View Detail</string>
     <string name="match_score">%1$d - %2$d</string>
     <string name="match_active_warning">There is already an active match</string>
+    <string name="archive_match">Archive</string>
+    <string name="unarchive_match">Unarchive</string>
+    <string name="archive_match_title">Archive Match</string>
+    <string name="archive_match_message">Are you sure you want to archive this match? You can unarchive it later from the Archived section.</string>
     
     <!-- Player Substitution -->
     <string name="select_player_in_message">Tap on the player to bring in</string>

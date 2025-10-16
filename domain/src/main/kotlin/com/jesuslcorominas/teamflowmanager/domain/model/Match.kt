@@ -16,4 +16,5 @@ data class Match(
     val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
     val status: MatchStatus = MatchStatus.SCHEDULED,
+    val archived: Boolean = false,
 )

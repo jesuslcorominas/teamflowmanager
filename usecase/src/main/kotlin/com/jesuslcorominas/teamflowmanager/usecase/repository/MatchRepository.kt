@@ -10,6 +10,8 @@ interface MatchRepository {
 
     fun getAllMatches(): Flow<List<Match>>
 
+    fun getArchivedMatches(): Flow<List<Match>>
+
     suspend fun createMatch(match: Match): Long
 
     suspend fun updateMatch(match: Match)
@@ -19,4 +21,8 @@ interface MatchRepository {
     suspend fun startTimer(currentTimeMillis: Long)
 
     suspend fun pauseTimer(currentTimeMillis: Long)
+
+    suspend fun archiveMatch(matchId: Long)
+
+    suspend fun unarchiveMatch(matchId: Long)
 }

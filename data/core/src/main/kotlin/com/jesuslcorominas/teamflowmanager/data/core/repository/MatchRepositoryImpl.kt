@@ -15,6 +15,8 @@ internal class MatchRepositoryImpl(
 
     override fun getAllMatches(): Flow<List<Match>> = localDataSource.getAllMatches()
 
+    override fun getArchivedMatches(): Flow<List<Match>> = localDataSource.getArchivedMatches()
+
     override suspend fun createMatch(match: Match): Long = localDataSource.insertMatch(match)
 
     override suspend fun updateMatch(match: Match) {
@@ -56,6 +58,20 @@ internal class MatchRepositoryImpl(
                     lastStartTimeMillis = null,
                 )
             localDataSource.upsertMatch(updatedMatch)
+        }
+    }
+
+    override suspend fun archiveMatch(matchId: Long) {
+        val match = localDataSource.getMatchById(matchId).first()
+        if (match != null) {
+            localDataSource.updateMatch(match.copy(archived = true))
+        }
+    }
+
+    override suspend fun unarchiveMatch(matchId: Long) {
+        val match = localDataSource.getMatchById(matchId).first()
+        if (match != null) {
+            localDataSource.updateMatch(match.copy(archived = false))
         }
     }
 }
