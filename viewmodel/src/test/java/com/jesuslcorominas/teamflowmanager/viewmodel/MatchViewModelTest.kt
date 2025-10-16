@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
@@ -533,6 +534,7 @@ class MatchViewModelTest {
     private val pauseMatchUseCase: PauseMatchUseCase = mockk()
     private val resumeMatchUseCase: ResumeMatchUseCase = mockk()
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase = mockk()
+    private val getMatchSummaryUseCase: GetMatchSummaryUseCase = mockk()
     private val preferencesRepository: PreferencesRepository = mockk()
 
     private lateinit var fakeTicker: FakeTimeTicker
@@ -573,15 +575,16 @@ class MatchViewModelTest {
         fakeTicker = FakeTimeTicker()
 
         viewModel = MatchViewModel(
-            getMatchUseCase,
-            getAllPlayerTimesUseCase,
-            getPlayersUseCase,
-            finishMatchUseCase,
-            pauseMatchUseCase,
-            resumeMatchUseCase,
-            registerPlayerSubstitutionUseCase,
-            preferencesRepository,
-            timeTicker = fakeTicker,
+             getMatchUseCase = getMatchUseCase,
+         getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
+        getPlayersUseCase = getPlayersUseCase,
+        saveMatchUseCase = finishMatchUseCase,
+         pauseMatchUseCase = pauseMatchUseCase,
+        resumeMatchUseCase = resumeMatchUseCase,
+        registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
+ getMatchSummaryUseCase = getMatchSummaryUseCase,
+ preferencesRepository = preferencesRepository,
+ timeTicker = fakeTicker,
         )
     }
 

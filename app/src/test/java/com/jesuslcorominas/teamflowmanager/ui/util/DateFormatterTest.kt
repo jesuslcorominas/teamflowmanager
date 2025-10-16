@@ -35,7 +35,7 @@ class DateFormatterTest {
         val timeMillis = (14 * 60 * 60 * 1000) + (30 * 60 * 1000)
 
         // When
-        val result = DateFormatter.formatTimeOfDay(timeMillis)
+        val result = DateFormatter.formatTimeOfDay(timeMillis.toLong())
 
         // Then
         assertEquals("14:30", result)
@@ -47,7 +47,7 @@ class DateFormatterTest {
         val timeMillis = (23 * 60 * 60 * 1000) + (59 * 60 * 1000)
 
         // When
-        val result = DateFormatter.formatTimeOfDay(timeMillis)
+        val result = DateFormatter.formatTimeOfDay(timeMillis.toLong())
 
         // Then
         assertEquals("23:59", result)
@@ -71,7 +71,7 @@ class DateFormatterTest {
         val timeMillis = (9 * 60 * 60 * 1000) + (5 * 60 * 1000)
 
         // When
-        val result = DateFormatter.formatTimeOfDay(timeMillis)
+        val result = DateFormatter.formatTimeOfDay(timeMillis.toLong())
 
         // Then
         assertEquals("09:05", result)

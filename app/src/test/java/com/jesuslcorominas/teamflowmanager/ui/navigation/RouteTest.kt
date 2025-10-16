@@ -64,8 +64,12 @@ class RouteTest {
             "players",
             "team_detail",
             "matches",
+            "archived_matches",
+            "create_match",
             "current_match",
-            "match_detail"
+            "match_detail",
+            "current_match",
+            "match_summary",
         )
 
         val actualPaths = Route.all.map { it.createRoute() }.toSet()
