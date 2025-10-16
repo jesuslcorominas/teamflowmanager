@@ -90,8 +90,8 @@ class MatchSummaryViewModelTest {
             val summary = MatchSummary(
                 match = match,
                 playerTimes = listOf(
-                    PlayerTimeSummary(player = player1, elapsedTimeMillis = 1500000L),
-                    PlayerTimeSummary(player = player2, elapsedTimeMillis = 2000000L),
+                    PlayerTimeSummary(player = player1, elapsedTimeMillis = 1500000L, substitutionCount = 2),
+                    PlayerTimeSummary(player = player2, elapsedTimeMillis = 2000000L, substitutionCount = 1),
                 ),
                 substitutions = listOf(
                     SubstitutionSummary(
