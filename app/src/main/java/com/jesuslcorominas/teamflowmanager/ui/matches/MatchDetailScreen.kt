@@ -56,21 +56,16 @@ fun MatchDetailScreen(
     val uiState by detailViewModel.uiState.collectAsState()
 
     LaunchedEffect(matchId) {
-        detailViewModel.loadMatch(matchId)
+        if (matchId != null) {
+            detailViewModel.loadMatch(matchId)
+        }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text =
-                            if (matchId == null) {
-                                stringResource(R.string.add_match_title)
-                            } else {
-                                stringResource(R.string.edit_match_title)
-                            },
-                    )
+                    Text(text = stringResource(R.string.edit_match_title))
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -104,19 +99,6 @@ fun MatchDetailScreen(
                 )
             }
 
-            is MatchDetailUiState.Create -> {
-                MatchForm(
-                    match = null,
-                    availablePlayers = state.availablePlayers,
-                    onSave = { match ->
-                        listViewModel.createMatch(match)
-                        onNavigateBack()
-                    },
-                    onCancel = onNavigateBack,
-                    modifier = Modifier.padding(paddingValues),
-                )
-            }
-
             is MatchDetailUiState.Edit -> {
                 MatchForm(
                     match = state.match,
@@ -127,6 +109,18 @@ fun MatchDetailScreen(
                     },
                     onCancel = onNavigateBack,
                     modifier = Modifier.padding(paddingValues),
+                )
+            }
+
+            is MatchDetailUiState.Create -> {
+                // Should not happen anymore, but keeping for safety
+                Text(
+                    text = "Please use the match creation wizard",
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                            .padding(TFMSpacing.spacing04),
                 )
             }
         }
@@ -287,7 +281,11 @@ fun MatchForm(
                                 teamId = match?.teamId ?: 1L,
                                 opponent = opponent,
                                 location = location,
-                                date = match?.date ?: System.currentTimeMillis(),
+                                date = match?.date,
+                                time = match?.time,
+                                numberOfPeriods = match?.numberOfPeriods ?: 2,
+                                squadCallUpIds = match?.squadCallUpIds ?: emptyList(),
+                                captainId = match?.captainId,
                                 startingLineupIds = selectedStartingLineup.toList(),
                                 substituteIds = selectedSubstitutes.toList(),
                                 elapsedTimeMillis = match?.elapsedTimeMillis ?: 0L,

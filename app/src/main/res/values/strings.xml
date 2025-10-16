@@ -79,8 +79,13 @@
     <string name="match_date_required">Match date is required</string>
     <string name="match_time">Match Time</string>
     <string name="match_time_required">Match time is required</string>
+    <string name="number_of_periods">Number of Periods</string>
+    <string name="period_duration">Period Duration (minutes)</string>
+    <string name="two_halves">2 Halves</string>
+    <string name="four_quarters">4 Quarters</string>
 
     <string name="starting_lineup">Starting Lineup</string>
+    <string name="initial_lineup">Initial Lineup</string>
     <string name="substitutes">Substitutes</string>
     <string name="select_players">Select Players</string>
     <string name="no_starting_lineup">No starting lineup selected</string>
@@ -122,5 +127,38 @@
     <string name="substitution_count">%d substitution(s)</string>
     <string name="player_out">Player Out</string>
     <string name="player_in">Player In</string>
+
+    <!-- Match Creation Wizard -->
+    <string name="wizard_step_general_data">General Data</string>
+    <string name="wizard_step_squad_callup">Squad Call-Up</string>
+    <string name="wizard_step_captain">Captain</string>
+    <string name="wizard_step_lineup">Starting Lineup</string>
+    
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="create">Create</string>
+    
+    <string name="squad_callup_title">Select Squad Call-Up</string>
+    <string name="squad_callup_subtitle">Select players for this match (minimum 5)</string>
+    <string name="squad_callup_count">Selected: %d players</string>
+    <string name="squad_callup_select_all">Select All</string>
+    <string name="squad_callup_min_error">You must select at least 5 players</string>
+    <string name="squad_callup_no_goalkeeper_warning">No goalkeeper selected</string>
+    <string name="squad_callup_no_goalkeeper_message">You haven\'t selected any goalkeeper for the squad. Do you want to continue anyway?</string>
+    
+    <string name="captain_selection_title">Select Captain</string>
+    <string name="captain_selection_subtitle">Choose the captain for this match</string>
+    <string name="make_default_captain_title">Make Default Captain?</string>
+    <string name="make_default_captain_message">%s has been captain for the last 2 matches. Would you like to make them the default captain? This will auto-select them for future matches.</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    
+    <string name="starting_lineup_title">Select Initial Lineup</string>
+    <string name="starting_lineup_subtitle">Select exactly 5 players to start</string>
+    <string name="starting_lineup_count">Selected: %d/5 players</string>
+    <string name="starting_lineup_max_error">You can only select up to 5 players</string>
+    <string name="starting_lineup_min_error">You must select exactly 5 players</string>
+    <string name="starting_lineup_no_goalkeeper_warning">No goalkeeper in starting lineup</string>
+    <string name="starting_lineup_no_goalkeeper_message">You haven\'t selected a goalkeeper in the starting lineup. Do you want to continue anyway?</string>
 
 </resources>

@@ -11,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.CurrentMatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchSummaryScreen
+import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
@@ -62,7 +63,7 @@ fun Navigation(
         composable(Route.Matches.path) {
             MatchListScreen(
                 onNavigateToAddMatch = {
-                    navController.navigate(Route.MatchDetail.createRoute(null))
+                    navController.navigate(Route.CreateMatch.createRoute())
                 },
                 onNavigateToEditMatch = { matchId ->
                     navController.navigate(Route.MatchDetail.createRoute(matchId))
@@ -72,6 +73,14 @@ fun Navigation(
                 },
                 onNavigateToCurrentMatch = {
                     navController.navigate(Route.CurrentMatch.createRoute())
+                },
+            )
+        }
+
+        composable(Route.CreateMatch.path) {
+            MatchCreationWizardScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 },
             )
         }
@@ -91,15 +100,6 @@ fun Navigation(
             val matchId = backStackEntry.arguments?.getLong("matchId")
             MatchDetailScreen(
                 matchId = matchId,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-            )
-        }
-
-        composable(Route.MatchDetail.path) {
-            MatchDetailScreen(
-                matchId = null,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
