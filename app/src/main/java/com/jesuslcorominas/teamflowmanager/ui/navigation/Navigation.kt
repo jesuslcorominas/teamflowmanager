@@ -63,9 +63,6 @@ fun Navigation(
 
         composable(Route.Matches.path) {
             MatchListScreen(
-                onNavigateToAddMatch = {
-                    navController.navigate(Route.CreateMatch.createRoute())
-                },
                 onNavigateToEditMatch = { matchId ->
                     navController.navigate(Route.MatchDetail.createRoute(matchId))
                 },
