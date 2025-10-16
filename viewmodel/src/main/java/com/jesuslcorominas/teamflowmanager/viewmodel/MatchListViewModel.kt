@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.FilterMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
 class MatchListViewModel(
@@ -30,6 +32,7 @@ class MatchListViewModel(
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val archiveMatchUseCase: ArchiveMatchUseCase,
     private val unarchiveMatchUseCase: UnarchiveMatchUseCase,
+    private val filterMatchesUseCase: FilterMatchesUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
@@ -37,21 +40,33 @@ class MatchListViewModel(
     private val _deleteConfirmationState = MutableStateFlow<MatchDeleteConfirmationState>(MatchDeleteConfirmationState.None)
     val deleteConfirmationState: StateFlow<MatchDeleteConfirmationState> = _deleteConfirmationState.asStateFlow()
 
+    private val _filterState = MutableStateFlow<FilterState>(FilterState())
+    val filterState: StateFlow<FilterState> = _filterState.asStateFlow()
+
     init {
         loadMatches()
     }
 
     private fun loadMatches() {
         viewModelScope.launch {
-            combine(
-                getAllMatchesUseCase.invoke(),
-                getMatchUseCase.invoke()
-            ) { allMatches, currentMatch ->
-                if (allMatches.isEmpty()) {
+            filterState.flatMapLatest { filter ->
+                if (filter.isActive) {
+                    // Use filter use case when filtering is active
+                    filterMatchesUseCase.invoke(
+                        filterText = filter.searchText,
+                        startDate = filter.startDate,
+                        endDate = filter.endDate
+                    )
+                } else {
+                    // Use normal getAllMatches when not filtering
+                    getAllMatchesUseCase.invoke()
+                }
+            }.combine(getMatchUseCase.invoke()) { matches, currentMatch ->
+                if (matches.isEmpty()) {
                     MatchListUiState.Empty
                 } else {
                     MatchListUiState.Success(
-                        matches = allMatches,
+                        matches = matches,
                         currentMatchId = currentMatch?.id
                     )
                 }
@@ -114,6 +129,30 @@ class MatchListViewModel(
             unarchiveMatchUseCase.invoke(matchId)
         }
     }
+
+    fun toggleFilterMode() {
+        _filterState.value = _filterState.value.copy(
+            isFilterModeEnabled = !_filterState.value.isFilterModeEnabled,
+            searchText = if (_filterState.value.isFilterModeEnabled) "" else _filterState.value.searchText,
+            startDate = if (_filterState.value.isFilterModeEnabled) null else _filterState.value.startDate,
+            endDate = if (_filterState.value.isFilterModeEnabled) null else _filterState.value.endDate,
+        )
+    }
+
+    fun updateSearchText(text: String) {
+        _filterState.value = _filterState.value.copy(searchText = text)
+    }
+
+    fun updateDateRange(startDate: Long?, endDate: Long?) {
+        _filterState.value = _filterState.value.copy(
+            startDate = startDate,
+            endDate = endDate,
+        )
+    }
+
+    fun clearFilters() {
+        _filterState.value = FilterState(isFilterModeEnabled = _filterState.value.isFilterModeEnabled)
+    }
 }
 
 sealed class MatchListUiState {
@@ -128,4 +167,14 @@ sealed class MatchListUiState {
 sealed class MatchDeleteConfirmationState {
     data object None : MatchDeleteConfirmationState()
     data class Requested(val match: Match) : MatchDeleteConfirmationState()
+}
+
+data class FilterState(
+    val isFilterModeEnabled: Boolean = false,
+    val searchText: String = "",
+    val startDate: Long? = null,
+    val endDate: Long? = null,
+) {
+    val isActive: Boolean
+        get() = isFilterModeEnabled && (searchText.isNotBlank() || (startDate != null && endDate != null))
 }

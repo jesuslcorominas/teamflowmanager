@@ -166,4 +166,14 @@
     <string name="starting_lineup_no_goalkeeper_warning">No goalkeeper in starting lineup</string>
     <string name="starting_lineup_no_goalkeeper_message">You haven\'t selected a goalkeeper in the starting lineup. Do you want to continue anyway?</string>
 
+    <!-- Filter -->
+    <string name="filter_matches">Filter</string>
+    <string name="search_matches">Search matches</string>
+    <string name="search_by_opponent_or_location">Search by opponent or location</string>
+    <string name="clear_filters">Clear filters</string>
+    <string name="archived_indicator">Archived</string>
+    <string name="filter_by_date_range">Filter by date range</string>
+    <string name="start_date">Start date</string>
+    <string name="end_date">End date</string>
+
 </resources>

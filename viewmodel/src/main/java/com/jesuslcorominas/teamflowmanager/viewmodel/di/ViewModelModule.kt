@@ -57,6 +57,7 @@ val viewModelModule =
                 resumeMatchUseCase = get(),
                 archiveMatchUseCase = get(),
                 unarchiveMatchUseCase = get(),
+                filterMatchesUseCase = get(),
             )
         }
         viewModel {
