@@ -563,9 +563,9 @@ fun FilterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Box(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
+        contentAlignment = Alignment.CenterEnd,
     ) {
         IconButton(onClick = onClick) {
             Icon(
