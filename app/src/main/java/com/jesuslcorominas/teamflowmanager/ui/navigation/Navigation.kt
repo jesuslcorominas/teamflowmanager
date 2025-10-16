@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.CurrentMatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
@@ -73,6 +74,20 @@ fun Navigation(
                 },
                 onNavigateToCurrentMatch = {
                     navController.navigate(Route.CurrentMatch.createRoute())
+                },
+                onNavigateToArchivedMatches = {
+                    navController.navigate(Route.ArchivedMatches.createRoute())
+                },
+            )
+        }
+
+        composable(Route.ArchivedMatches.path) {
+            ArchivedMatchesScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToMatchSummary = { matchId ->
+                    navController.navigate(Route.MatchSummary.createRoute(matchId))
                 },
             )
         }
