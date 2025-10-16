@@ -12,7 +12,10 @@ import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +45,8 @@ class MatchViewModel(
     private val saveMatchUseCase: FinishMatchUseCase,
     private val pauseMatchUseCase: PauseMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
+    private val startMatchTimerUseCase: com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase,
+    private val startPlayerTimerUseCase: com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase,
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
     private val getMatchSummaryUseCase: GetMatchSummaryUseCase,
     private val preferencesRepository: PreferencesRepository,
@@ -74,7 +79,18 @@ class MatchViewModel(
             val currentState = _uiState.value
             if (currentState is MatchUiState.Success && !currentState.isMatchStarted) {
                 val currentTime = System.currentTimeMillis()
-                resumeMatchUseCase(currentTime)
+                // Start the match timer and player timers for starting lineup
+                startMatchTimerUseCase(currentTime)
+                
+                // Get the current match to access starting lineup
+                val match = getMatchUseCase().first()
+                if (match != null) {
+                    // Start timers for all players in the starting lineup
+                    match.startingLineupIds.forEach { playerId ->
+                        startPlayerTimerUseCase(playerId, currentTime)
+                    }
+                }
+                
                 _currentTime.value = currentTime
             }
         }
