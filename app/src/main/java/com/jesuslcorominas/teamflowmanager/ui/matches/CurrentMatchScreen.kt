@@ -185,9 +185,13 @@ private fun PreMatchView(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                containerColor = Color.Transparent,
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            border = androidx.compose.foundation.BorderStroke(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -199,6 +203,7 @@ private fun PreMatchView(
                     text = stringResource(R.string.current_match_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = stringResource(
@@ -207,6 +212,7 @@ private fun PreMatchView(
                         state.numberOfPeriods
                     ),
                     style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
@@ -358,19 +364,16 @@ private fun MatchTimeCard(
     numberOfPeriods: Int,
     currentPeriod: Int,
 ) {
-    // Calculate period duration and remaining time
+    // Calculate period duration
     val periodDurationMillis = if (numberOfPeriods == 2) {
         25 * 60 * 1000L // 25 minutes
     } else {
         (12 * 60 + 30) * 1000L // 12 minutes 30 seconds
     }
     
-    // Calculate elapsed time in current period
-    val elapsedInPreviousPeriods = (currentPeriod - 1) * periodDurationMillis
-    val elapsedInCurrentPeriod = timeMillis - elapsedInPreviousPeriods
-    
+    // Use elapsed time directly for current period (not accumulating across periods)
     // Calculate remaining time (can be negative for stoppage time)
-    val remainingTime = periodDurationMillis - elapsedInCurrentPeriod
+    val remainingTime = periodDurationMillis - timeMillis
     val isStoppageTime = remainingTime < 0
     val displayTime = if (isStoppageTime) -remainingTime else remainingTime
     
