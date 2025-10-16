@@ -129,10 +129,10 @@
     <string name="player_in">Player In</string>
 
     <!-- Match Creation Wizard -->
-    <string name="wizard_step_general_data">Step 1: General Data</string>
-    <string name="wizard_step_squad_callup">Step 2: Squad Call-Up</string>
-    <string name="wizard_step_captain">Step 3: Captain</string>
-    <string name="wizard_step_lineup">Step 4: Starting Lineup</string>
+    <string name="wizard_step_general_data">General Data</string>
+    <string name="wizard_step_squad_callup">Squad Call-Up</string>
+    <string name="wizard_step_captain">Captain</string>
+    <string name="wizard_step_lineup">Starting Lineup</string>
     
     <string name="next">Next</string>
     <string name="previous">Previous</string>
@@ -141,6 +141,7 @@
     <string name="squad_callup_title">Select Squad Call-Up</string>
     <string name="squad_callup_subtitle">Select players for this match (minimum 5)</string>
     <string name="squad_callup_count">Selected: %d players</string>
+    <string name="squad_callup_select_all">Select All</string>
     <string name="squad_callup_min_error">You must select at least 5 players</string>
     <string name="squad_callup_no_goalkeeper_warning">No goalkeeper selected</string>
     <string name="squad_callup_no_goalkeeper_message">You haven\'t selected any goalkeeper for the squad. Do you want to continue anyway?</string>

@@ -75,6 +75,38 @@ fun SquadCallUpStep(
             }
         )
         
+        // Select All checkbox
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    currentSelection = if (currentSelection.size == players.size) {
+                        emptySet()
+                    } else {
+                        players.map { it.id }.toSet()
+                    }
+                }
+                .padding(vertical = TFMSpacing.spacing02),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = currentSelection.size == players.size,
+                onCheckedChange = { isChecked ->
+                    currentSelection = if (isChecked) {
+                        players.map { it.id }.toSet()
+                    } else {
+                        emptySet()
+                    }
+                }
+            )
+            Text(
+                text = stringResource(R.string.squad_callup_select_all),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = TFMSpacing.spacing02)
+            )
+        }
+        
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
         
         Card(
