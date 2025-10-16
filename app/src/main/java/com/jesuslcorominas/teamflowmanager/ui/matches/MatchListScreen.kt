@@ -258,7 +258,7 @@ fun PendingMatchCard(
                     )
 
                     val date = match.date?.let { DateFormatter.formatDate(it) } ?: ""
-                    val time = match.time?.let { DateFormatter.formatTime(it) } ?: ""
+                    val time = match.time?.let { DateFormatter.formatTimeOfDay(it) } ?: ""
 
                     val dateTime = listOf(date, time).filter { it.isNotEmpty() }.joinToString(" ")
 
