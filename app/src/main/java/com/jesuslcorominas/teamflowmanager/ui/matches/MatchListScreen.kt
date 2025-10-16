@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -83,14 +84,29 @@ fun MatchListScreen(
                 }
 
                 is MatchListUiState.Empty -> {
-                    Text(
-                        text = stringResource(R.string.no_matches_message),
-                        style = MaterialTheme.typography.bodyLarge,
+                    Column(
                         modifier =
                             Modifier
-                                .align(Alignment.Center)
+                                .fillMaxSize()
                                 .padding(TFMSpacing.spacing04),
-                    )
+                        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                    ) {
+                        ArchivedMatchesNavigationCard(
+                            onClick = onNavigateToArchivedMatches,
+                        )
+                        
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.no_matches_message),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
                 }
 
                 is MatchListUiState.Success -> {
