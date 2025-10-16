@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -19,7 +18,6 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -94,7 +92,7 @@ fun MatchListScreen(
                         ArchivedMatchesNavigationCard(
                             onClick = onNavigateToArchivedMatches,
                         )
-                        
+
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -389,10 +387,10 @@ fun PausedMatchCard(
 
 @Composable
 fun PlayedMatchCard(
+    modifier: Modifier = Modifier,
     match: Match,
     onNavigateToDetail: () -> Unit = {},
     onArchive: () -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier
@@ -440,7 +438,7 @@ fun PlayedMatchCard(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
-                
+
                 IconButton(onClick = onArchive) {
                     Icon(
                         imageVector = Icons.Default.Archive,
