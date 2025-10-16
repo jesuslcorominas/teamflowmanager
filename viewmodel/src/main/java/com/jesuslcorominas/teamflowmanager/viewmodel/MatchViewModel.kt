@@ -58,23 +58,64 @@ class MatchViewModel(
     private val _showInvalidSubstitutionAlert = MutableStateFlow(false)
     val showInvalidSubstitutionAlert: StateFlow<Boolean> = _showInvalidSubstitutionAlert.asStateFlow()
 
+    private val _showStopConfirmation = MutableStateFlow(false)
+    val showStopConfirmation: StateFlow<Boolean> = _showStopConfirmation.asStateFlow()
+
+    private val _currentSortOrder = MutableStateFlow(PlayerSortOrder.BY_ACTIVE_FIRST)
+    val currentSortOrder: StateFlow<PlayerSortOrder> = _currentSortOrder.asStateFlow()
+
     init {
         loadMatchData()
         observeTime()
     }
 
+    fun beginMatch() {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState is MatchUiState.Success && !currentState.isMatchStarted) {
+                val currentTime = System.currentTimeMillis()
+                resumeMatchUseCase(currentTime)
+                _currentTime.value = currentTime
+            }
+        }
+    }
+
     fun saveMatch() {
         viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState is MatchUiState.Success) {
+                // Check if we're in the last period
+                if (!currentState.isLastPeriod) {
+                    _showStopConfirmation.value = true
+                } else {
+                    confirmStopMatch()
+                }
+            } else {
+                saveMatchUseCase()
+            }
+        }
+    }
+
+    fun confirmStopMatch() {
+        viewModelScope.launch {
+            _showStopConfirmation.value = false
             saveMatchUseCase()
         }
     }
 
+    fun dismissStopConfirmation() {
+        _showStopConfirmation.value = false
+    }
+
     fun pauseMatch() {
         viewModelScope.launch {
-            val currentTime = System.currentTimeMillis()
-            pauseMatchUseCase(currentTime)
-            // Update the current time immediately to avoid race conditions
-            _currentTime.value = currentTime
+            val currentState = _uiState.value
+            if (currentState is MatchUiState.Success && currentState.canPause) {
+                val currentTime = System.currentTimeMillis()
+                pauseMatchUseCase(currentTime)
+                // Update the current time immediately to avoid race conditions
+                _currentTime.value = currentTime
+            }
         }
     }
 
@@ -85,6 +126,10 @@ class MatchViewModel(
             // Update the current time immediately to avoid race conditions
             _currentTime.value = currentTime
         }
+    }
+
+    fun setSortOrder(sortOrder: PlayerSortOrder) {
+        _currentSortOrder.value = sortOrder
     }
 
     fun selectPlayerOut(playerId: Long) {
@@ -138,7 +183,8 @@ class MatchViewModel(
                 getAllPlayerTimesUseCase(),
                 getPlayersUseCase(),
                 _currentTime,
-            ) { match, playerTimes, players, currentTime ->
+                _currentSortOrder,
+            ) { match, playerTimes, players, currentTime, sortOrder ->
                 if (match == null) {
                     MatchUiState.NoMatch
                 } else if (match.status == MatchStatus.FINISHED) {
@@ -168,6 +214,17 @@ class MatchViewModel(
                             player = player,
                             timeMillis = displayTime,
                             isRunning = playerTime?.isRunning ?: false,
+                            isCaptain = player.id == match.captainId,
+                        )
+                    }
+
+                    // Sort players based on current sort order
+                    val sortedPlayers = when (sortOrder) {
+                        PlayerSortOrder.BY_TIME_DESC -> playerTimeItems.sortedByDescending { it.timeMillis }
+                        PlayerSortOrder.BY_TIME_ASC -> playerTimeItems.sortedBy { it.timeMillis }
+                        PlayerSortOrder.BY_ACTIVE_FIRST -> playerTimeItems.sortedWith(
+                            compareByDescending<PlayerTimeItem> { it.isRunning }
+                                .thenByDescending { it.timeMillis }
                         )
                     }
 
@@ -175,7 +232,14 @@ class MatchViewModel(
                         matchId = match.id,
                         matchTimeMillis = matchTime,
                         matchIsRunning = match.isRunning,
-                        playerTimes = playerTimeItems,
+                        playerTimes = sortedPlayers,
+                        numberOfPeriods = match.numberOfPeriods,
+                        currentPeriod = match.currentPeriod,
+                        pauseCount = match.pauseCount,
+                        canPause = match.canPause(),
+                        isLastPeriod = match.isLastPeriod(),
+                        sortOrder = sortOrder,
+                        isMatchStarted = match.elapsedTimeMillis > 0 || match.isRunning,
                     )
                 }
             }.collect { state ->
@@ -197,6 +261,7 @@ class MatchViewModel(
                                                 player = playerTimeSummary.player,
                                                 timeMillis = playerTimeSummary.elapsedTimeMillis,
                                                 isRunning = false,
+                                                isCaptain = playerTimeSummary.player.id == summary.match.captainId,
                                             )
                                         },
                                         substitutions = summary.substitutions.map { sub ->
@@ -243,7 +308,14 @@ data class PlayerTimeItem(
     val timeMillis: Long,
     val isRunning: Boolean,
     val substitutionCount: Int = 0,
+    val isCaptain: Boolean = false,
 )
+
+enum class PlayerSortOrder {
+    BY_TIME_DESC,      // Most time played first
+    BY_TIME_ASC,       // Least time played first
+    BY_ACTIVE_FIRST,   // Active players first, then by time
+}
 
 sealed class MatchUiState {
     data object Loading : MatchUiState()
@@ -253,6 +325,13 @@ sealed class MatchUiState {
         val matchTimeMillis: Long,
         val matchIsRunning: Boolean,
         val playerTimes: List<PlayerTimeItem>,
+        val numberOfPeriods: Int = 2,
+        val currentPeriod: Int = 1,
+        val pauseCount: Int = 0,
+        val canPause: Boolean = true,
+        val isLastPeriod: Boolean = false,
+        val sortOrder: PlayerSortOrder = PlayerSortOrder.BY_ACTIVE_FIRST,
+        val isMatchStarted: Boolean = false,
     ) : MatchUiState()
     data class Finished(
         val matchId: Long,

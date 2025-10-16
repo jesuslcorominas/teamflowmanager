@@ -154,7 +154,8 @@ fun MatchListScreen(
                                 onDelete = { viewModel.requestDeleteMatch(match) },
                                 onStart = {
                                     if (!hasActiveMatch && !hasPausedMatch) {
-                                        viewModel.startMatch(match.id)
+                                        // Set as current match without starting timer, navigate to detail
+                                        viewModel.setCurrentMatch(match.id)
                                         onNavigateToCurrentMatch()
                                     }
                                 },

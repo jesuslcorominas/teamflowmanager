@@ -54,6 +54,7 @@ val viewModelModule =
                 createMatchUseCase = get(),
                 updateMatchUseCase = get(),
                 startMatchUseCase = get(),
+                setCurrentMatchUseCase = get(),
                 resumeMatchUseCase = get(),
                 archiveMatchUseCase = get(),
                 unarchiveMatchUseCase = get(),

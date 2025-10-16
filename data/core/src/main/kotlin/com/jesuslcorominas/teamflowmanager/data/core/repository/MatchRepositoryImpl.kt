@@ -56,6 +56,8 @@ internal class MatchRepositoryImpl(
                     elapsedTimeMillis = currentMatch.elapsedTimeMillis + additionalTime,
                     isRunning = false,
                     lastStartTimeMillis = null,
+                    pauseCount = currentMatch.pauseCount + 1,
+                    currentPeriod = minOf(currentMatch.currentPeriod + 1, currentMatch.numberOfPeriods),
                 )
             localDataSource.upsertMatch(updatedMatch)
         }

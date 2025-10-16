@@ -12,14 +12,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +53,7 @@ import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
+import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerSortOrder
 import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 import org.koin.androidx.compose.koinViewModel
 
@@ -57,6 +62,8 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
     val showInvalidSubstitutionAlert by viewModel.showInvalidSubstitutionAlert.collectAsState()
+    val showStopConfirmation by viewModel.showStopConfirmation.collectAsState()
+    val currentSortOrder by viewModel.currentSortOrder.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -68,6 +75,7 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
             is MatchUiState.Success -> SuccessState(
                 state = state,
                 selectedPlayerOut = selectedPlayerOut,
+                currentSortOrder = currentSortOrder,
                 onSaveMatch = { viewModel.saveMatch() },
                 onPauseMatch = { viewModel.pauseMatch() },
                 onResumeMatch = { viewModel.resumeMatch() },
@@ -80,6 +88,7 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                         viewModel.substitutePlayer(playerId)
                     }
                 },
+                onSortOrderChange = { viewModel.setSortOrder(it) },
             )
             is MatchUiState.Finished -> FinishedMatchState(state = state)
         }
@@ -90,6 +99,14 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                 onDismiss = { dontShowAgain ->
                     viewModel.dismissInvalidSubstitutionAlert(dontShowAgain)
                 }
+            )
+        }
+
+        // Show confirmation dialog if stopping match early
+        if (showStopConfirmation) {
+            StopMatchEarlyConfirmationDialog(
+                onConfirm = { viewModel.confirmStopMatch() },
+                onDismiss = { viewModel.dismissStopConfirmation() }
             )
         }
     }
@@ -122,29 +139,150 @@ private fun NoMatchState() {
 private fun SuccessState(
     state: MatchUiState.Success,
     selectedPlayerOut: Long?,
+    currentSortOrder: PlayerSortOrder,
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
     onPlayerClick: (Long) -> Unit,
+    onSortOrderChange: (PlayerSortOrder) -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(TFMSpacing.spacing04),
     ) {
-        MatchTimeCard(
-            timeMillis = state.matchTimeMillis,
-            isRunning = state.matchIsRunning,
-        )
+        if (!state.isMatchStarted) {
+            // Pre-match state - show begin match button
+            PreMatchView(
+                state = state,
+            )
+        } else {
+            // Match is ongoing
+            OngoingMatchView(
+                state = state,
+                selectedPlayerOut = selectedPlayerOut,
+                currentSortOrder = currentSortOrder,
+                onSaveMatch = onSaveMatch,
+                onPauseMatch = onPauseMatch,
+                onResumeMatch = onResumeMatch,
+                onPlayerClick = onPlayerClick,
+                onSortOrderChange = onSortOrderChange,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PreMatchView(
+    state: MatchUiState.Success,
+) {
+    val viewModel: MatchViewModel = koinViewModel()
+    
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing04),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = stringResource(R.string.current_match_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = stringResource(
+                        R.string.period_label,
+                        state.currentPeriod,
+                        state.numberOfPeriods
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+        }
 
         Text(
             text = stringResource(R.string.player_times_title),
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(
-                top = TFMSpacing.spacing05,
-                bottom = TFMSpacing.spacing03,
-            ),
+            fontWeight = FontWeight.Bold,
         )
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+        ) {
+            items(state.playerTimes) { playerTimeItem ->
+                PlayerTimeCard(
+                    playerTimeItem = playerTimeItem,
+                    isSelected = false,
+                    onClick = { },
+                )
+            }
+        }
+
+        Button(
+            onClick = { viewModel.beginMatch() },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = null,
+            )
+            Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
+            Text(text = stringResource(R.string.begin_match))
+        }
+    }
+}
+
+@Composable
+private fun OngoingMatchView(
+    state: MatchUiState.Success,
+    selectedPlayerOut: Long?,
+    currentSortOrder: PlayerSortOrder,
+    onSaveMatch: () -> Unit,
+    onPauseMatch: () -> Unit,
+    onResumeMatch: () -> Unit,
+    onPlayerClick: (Long) -> Unit,
+    onSortOrderChange: (PlayerSortOrder) -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        MatchTimeCard(
+            timeMillis = state.matchTimeMillis,
+            isRunning = state.matchIsRunning,
+            numberOfPeriods = state.numberOfPeriods,
+            currentPeriod = state.currentPeriod,
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TFMSpacing.spacing03, bottom = TFMSpacing.spacing02),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.player_times_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            
+            // Sort order dropdown
+            SortOrderSelector(
+                currentSortOrder = currentSortOrder,
+                onSortOrderChange = onSortOrderChange,
+            )
+        }
 
         if (selectedPlayerOut != null) {
             Text(
@@ -179,6 +317,7 @@ private fun SuccessState(
             IconButton(
                 onClick = if (state.matchIsRunning) onPauseMatch else onResumeMatch,
                 modifier = Modifier.size(64.dp),
+                enabled = if (state.matchIsRunning) state.canPause else true,
             ) {
                 Icon(
                     imageVector = if (state.matchIsRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
@@ -188,7 +327,11 @@ private fun SuccessState(
                         stringResource(R.string.resume_match_button)
                     },
                     modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = if (state.canPause || !state.matchIsRunning) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    },
                 )
             }
 
@@ -212,13 +355,46 @@ private fun SuccessState(
 private fun MatchTimeCard(
     timeMillis: Long,
     isRunning: Boolean,
+    numberOfPeriods: Int,
+    currentPeriod: Int,
 ) {
+    // Calculate period duration and remaining time
+    val periodDurationMillis = if (numberOfPeriods == 2) {
+        25 * 60 * 1000L // 25 minutes
+    } else {
+        (12 * 60 + 30) * 1000L // 12 minutes 30 seconds
+    }
+    
+    // Calculate elapsed time in current period
+    val elapsedInPreviousPeriods = (currentPeriod - 1) * periodDurationMillis
+    val elapsedInCurrentPeriod = timeMillis - elapsedInPreviousPeriods
+    
+    // Calculate remaining time (can be negative for stoppage time)
+    val remainingTime = periodDurationMillis - elapsedInCurrentPeriod
+    val isStoppageTime = remainingTime < 0
+    val displayTime = if (isStoppageTime) -remainingTime else remainingTime
+    
+    // Determine period name
+    val periodName = when {
+        numberOfPeriods == 2 && currentPeriod == 1 -> stringResource(R.string.first_half)
+        numberOfPeriods == 2 && currentPeriod == 2 -> stringResource(R.string.second_half)
+        numberOfPeriods == 4 && currentPeriod == 1 -> stringResource(R.string.first_quarter)
+        numberOfPeriods == 4 && currentPeriod == 2 -> stringResource(R.string.second_quarter)
+        numberOfPeriods == 4 && currentPeriod == 3 -> stringResource(R.string.third_quarter)
+        numberOfPeriods == 4 && currentPeriod == 4 -> stringResource(R.string.fourth_quarter)
+        else -> stringResource(R.string.period_label, currentPeriod, numberOfPeriods)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            containerColor = Color.Transparent,
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 2.dp,
+            color = MaterialTheme.colorScheme.primary
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
             modifier = Modifier
@@ -227,16 +403,43 @@ private fun MatchTimeCard(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = stringResource(R.string.match_time_label),
+                text = periodName,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Text(
-                text = formatTime(timeMillis),
-                style = MaterialTheme.typography.displayMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                if (isStoppageTime) {
+                    Text(
+                        text = formatTime(periodDurationMillis),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = " + ",
+                        style = MaterialTheme.typography.displaySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    Text(
+                        text = formatTime(displayTime),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                } else {
+                    Text(
+                        text = formatTime(displayTime),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
         }
     }
 }
@@ -264,24 +467,77 @@ private fun PlayerTimeCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(TFMSpacing.spacing04),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "${playerTimeItem.player.firstName} ${playerTimeItem.player.lastName}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                )
-                Text(
-                    text = stringResource(
-                        R.string.player_number_format,
-                        playerTimeItem.player.number
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            // Jersey number with shirt style
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast)
+                    .size(56.dp),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        modifier = Modifier.padding(top = TFMSpacing.spacing02),
+                        text = playerTimeItem.player.number.toString(),
+                        fontFamily = com.jesuslcorominas.teamflowmanager.ui.theme.BebasNeueFontFamily,
+                        color = com.jesuslcorominas.teamflowmanager.ui.theme.ContentContrast,
+                        style = MaterialTheme.typography.headlineLarge,
+                    )
+                }
+
+                Column {
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(TFMSpacing.spacing02)
+                            .background(com.jesuslcorominas.teamflowmanager.ui.theme.ShirtOrange)
+                    )
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(TFMSpacing.spacing01)
+                            .background(com.jesuslcorominas.teamflowmanager.ui.theme.White)
+                    )
+                }
             }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
+                ) {
+                    Text(
+                        text = "${playerTimeItem.player.firstName} ${playerTimeItem.player.lastName}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    
+                    // Captain badge
+                    if (playerTimeItem.isCaptain) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(MaterialTheme.colorScheme.primary),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.captain_badge),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
+            
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
@@ -562,3 +818,91 @@ private fun InvalidSubstitutionAlertDialog(
         shape = MaterialTheme.shapes.medium,
     )
 }
+
+@Composable
+private fun StopMatchEarlyConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                stringResource(R.string.stop_match_early_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Text(
+                stringResource(R.string.stop_match_early_message),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onConfirm
+            ) {
+                Text(stringResource(R.string.yes))
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDismiss
+            ) {
+                Text(stringResource(R.string.no))
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
+
+@Composable
+private fun SortOrderSelector(
+    currentSortOrder: PlayerSortOrder,
+    onSortOrderChange: (PlayerSortOrder) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        androidx.compose.material3.TextButton(
+            onClick = { expanded = true }
+        ) {
+            Text(
+                text = when (currentSortOrder) {
+                    PlayerSortOrder.BY_TIME_DESC -> stringResource(R.string.sort_by_time_desc)
+                    PlayerSortOrder.BY_TIME_ASC -> stringResource(R.string.sort_by_time_asc)
+                    PlayerSortOrder.BY_ACTIVE_FIRST -> stringResource(R.string.sort_by_active)
+                },
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+
+        androidx.compose.material3.DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            androidx.compose.material3.DropdownMenuItem(
+                text = { Text(stringResource(R.string.sort_by_active)) },
+                onClick = {
+                    onSortOrderChange(PlayerSortOrder.BY_ACTIVE_FIRST)
+                    expanded = false
+                }
+            )
+            androidx.compose.material3.DropdownMenuItem(
+                text = { Text(stringResource(R.string.sort_by_time_desc)) },
+                onClick = {
+                    onSortOrderChange(PlayerSortOrder.BY_TIME_DESC)
+                    expanded = false
+                }
+            )
+            androidx.compose.material3.DropdownMenuItem(
+                text = { Text(stringResource(R.string.sort_by_time_asc)) },
+                onClick = {
+                    onSortOrderChange(PlayerSortOrder.BY_TIME_ASC)
+                    expanded = false
+                }
+            )
+        }
+    }
+}
+
