@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.FilterMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
@@ -25,6 +26,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -42,6 +44,7 @@ class MatchListViewModelTest {
     private lateinit var resumeMatchUseCase: ResumeMatchUseCase
     private lateinit var archiveMatchUseCase: ArchiveMatchUseCase
     private lateinit var unarchiveMatchUseCase: UnarchiveMatchUseCase
+    private lateinit var filterMatchesUseCase: FilterMatchesUseCase
     private lateinit var viewModel: MatchListViewModel
 
     @Before
@@ -57,6 +60,7 @@ class MatchListViewModelTest {
         resumeMatchUseCase = mockk(relaxed = true)
         archiveMatchUseCase = mockk(relaxed = true)
         unarchiveMatchUseCase = mockk(relaxed = true)
+        filterMatchesUseCase = mockk()
     }
 
     @After
@@ -83,6 +87,7 @@ class MatchListViewModelTest {
                 resumeMatchUseCase,
                 archiveMatchUseCase,
                 unarchiveMatchUseCase,
+                filterMatchesUseCase,
             )
 
         // Then
@@ -109,6 +114,7 @@ class MatchListViewModelTest {
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
+                filterMatchesUseCase,
                 )
             advanceUntilIdle()
 
@@ -153,6 +159,7 @@ class MatchListViewModelTest {
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
+                filterMatchesUseCase,
                 )
             advanceUntilIdle()
 
@@ -180,6 +187,7 @@ class MatchListViewModelTest {
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
+                filterMatchesUseCase,
                 )
             val match =
                 Match(
@@ -217,6 +225,7 @@ class MatchListViewModelTest {
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
+                filterMatchesUseCase,
                 )
             val match =
                 Match(
@@ -253,6 +262,7 @@ class MatchListViewModelTest {
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
+                filterMatchesUseCase,
                 )
             val match =
                 Match(
@@ -291,6 +301,7 @@ class MatchListViewModelTest {
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
+                filterMatchesUseCase,
                 )
             val match =
                 Match(
@@ -329,6 +340,7 @@ class MatchListViewModelTest {
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
+                filterMatchesUseCase,
                 )
             val match =
                 Match(
@@ -365,6 +377,7 @@ class MatchListViewModelTest {
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
+                filterMatchesUseCase,
                 )
             val matchId = 1L
 
@@ -394,6 +407,7 @@ class MatchListViewModelTest {
                     resumeMatchUseCase,
                     archiveMatchUseCase,
                     unarchiveMatchUseCase,
+                filterMatchesUseCase,
                 )
             val matchId = 1L
 
@@ -403,5 +417,245 @@ class MatchListViewModelTest {
 
             // Then
             coVerify(exactly = 1) { unarchiveMatchUseCase.invoke(matchId) }
+        }
+
+    @Test
+    fun `toggleFilterMode should enable filter mode`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+            every { getMatchUseCase.invoke() } returns flowOf(null)
+            viewModel =
+                MatchListViewModel(
+                    getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
+                    getMatchUseCase,
+                    deleteMatchUseCase,
+                    createMatchUseCase,
+                    updateMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
+                    filterMatchesUseCase,
+                )
+            advanceUntilIdle()
+
+            // Initial state
+            assertFalse(viewModel.filterState.value.isFilterModeEnabled)
+
+            // When
+            viewModel.toggleFilterMode()
+            advanceUntilIdle()
+
+            // Then
+            assertTrue(viewModel.filterState.value.isFilterModeEnabled)
+        }
+
+    @Test
+    fun `toggleFilterMode should disable filter mode and clear filters`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+            every { getMatchUseCase.invoke() } returns flowOf(null)
+            viewModel =
+                MatchListViewModel(
+                    getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
+                    getMatchUseCase,
+                    deleteMatchUseCase,
+                    createMatchUseCase,
+                    updateMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
+                    filterMatchesUseCase,
+                )
+            advanceUntilIdle()
+
+            // Enable filter mode and set some filters
+            viewModel.toggleFilterMode()
+            viewModel.updateSearchText("Barcelona")
+            advanceUntilIdle()
+
+            // When - disable filter mode
+            viewModel.toggleFilterMode()
+            advanceUntilIdle()
+
+            // Then
+            assertFalse(viewModel.filterState.value.isFilterModeEnabled)
+            assertEquals("", viewModel.filterState.value.searchText)
+        }
+
+    @Test
+    fun `updateSearchText should update filter state`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+            every { getMatchUseCase.invoke() } returns flowOf(null)
+            viewModel =
+                MatchListViewModel(
+                    getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
+                    getMatchUseCase,
+                    deleteMatchUseCase,
+                    createMatchUseCase,
+                    updateMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
+                    filterMatchesUseCase,
+                )
+            advanceUntilIdle()
+
+            val searchText = "Real Madrid"
+
+            // When
+            viewModel.updateSearchText(searchText)
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(searchText, viewModel.filterState.value.searchText)
+        }
+
+    @Test
+    fun `clearFilters should reset all filter values`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+            every { getMatchUseCase.invoke() } returns flowOf(null)
+            viewModel =
+                MatchListViewModel(
+                    getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
+                    getMatchUseCase,
+                    deleteMatchUseCase,
+                    createMatchUseCase,
+                    updateMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
+                    filterMatchesUseCase,
+                )
+            advanceUntilIdle()
+
+            // Set some filter values
+            viewModel.toggleFilterMode()
+            viewModel.updateSearchText("Barcelona")
+            viewModel.updateDateRange(1000L, 2000L)
+            advanceUntilIdle()
+
+            // When
+            viewModel.clearFilters()
+            advanceUntilIdle()
+
+            // Then
+            assertTrue(viewModel.filterState.value.isFilterModeEnabled) // Should remain enabled
+            assertEquals("", viewModel.filterState.value.searchText)
+            assertEquals(null, viewModel.filterState.value.startDate)
+            assertEquals(null, viewModel.filterState.value.endDate)
+        }
+
+    @Test
+    fun `should use filterMatchesUseCase when filter is active`() =
+        runTest {
+            // Given
+            val filteredMatches = listOf(
+                Match(id = 1L, opponent = "Real Madrid", location = "Bernabeu"),
+            )
+            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+            every { getMatchUseCase.invoke() } returns flowOf(null)
+            every { filterMatchesUseCase.invoke(any(), any(), any()) } returns flowOf(filteredMatches)
+
+            viewModel =
+                MatchListViewModel(
+                    getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
+                    getMatchUseCase,
+                    deleteMatchUseCase,
+                    createMatchUseCase,
+                    updateMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
+                    filterMatchesUseCase,
+                )
+            advanceUntilIdle()
+
+            // When - enable filter and enter search text
+            viewModel.toggleFilterMode()
+            viewModel.updateSearchText("Madrid")
+            advanceUntilIdle()
+
+            // Then - should use filtered matches
+            val state = viewModel.uiState.value
+            assertTrue(state is MatchListUiState.Success)
+            assertEquals(1, (state as MatchListUiState.Success).matches.size)
+            assertEquals("Real Madrid", state.matches.first().opponent)
+        }
+
+    @Test
+    fun `filterState isActive should be true when filter mode is enabled and search text is not blank`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+            every { getMatchUseCase.invoke() } returns flowOf(null)
+            viewModel =
+                MatchListViewModel(
+                    getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
+                    getMatchUseCase,
+                    deleteMatchUseCase,
+                    createMatchUseCase,
+                    updateMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
+                    filterMatchesUseCase,
+                )
+            advanceUntilIdle()
+
+            // When
+            viewModel.toggleFilterMode()
+            viewModel.updateSearchText("Madrid")
+            advanceUntilIdle()
+
+            // Then
+            assertTrue(viewModel.filterState.value.isActive)
+        }
+
+    @Test
+    fun `filterState isActive should be false when filter mode is enabled but search text is blank`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+            every { getMatchUseCase.invoke() } returns flowOf(null)
+            viewModel =
+                MatchListViewModel(
+                    getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
+                    getMatchUseCase,
+                    deleteMatchUseCase,
+                    createMatchUseCase,
+                    updateMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
+                    filterMatchesUseCase,
+                )
+            advanceUntilIdle()
+
+            // When
+            viewModel.toggleFilterMode()
+            advanceUntilIdle()
+
+            // Then
+            assertFalse(viewModel.filterState.value.isActive)
         }
 }
