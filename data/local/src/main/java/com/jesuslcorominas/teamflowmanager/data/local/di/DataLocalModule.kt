@@ -29,6 +29,13 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE match ADD COLUMN currentPeriod INTEGER NOT NULL DEFAULT 1")
+        db.execSQL("ALTER TABLE match ADD COLUMN pauseCount INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
 internal val databaseModule =
     module {
         single {
@@ -38,7 +45,7 @@ internal val databaseModule =
                     TeamFlowManagerDatabase::class.java,
                     "teamflowmanager_database",
                 )
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
         }
 
