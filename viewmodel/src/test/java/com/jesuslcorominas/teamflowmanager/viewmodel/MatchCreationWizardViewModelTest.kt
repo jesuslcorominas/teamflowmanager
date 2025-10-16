@@ -215,7 +215,7 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        viewModel.setGeneralData("Opponent", "Location", 1000L)
+        viewModel.setGeneralData("Opponent", "Location", 1000L, 3600000L, 2)
         viewModel.setSquadCallUp(setOf(1L, 2L, 3L, 4L, 5L, 6L))
         viewModel.setCaptain(2L)
         viewModel.setStartingLineup(setOf(1L, 2L, 3L, 4L, 5L))
@@ -227,9 +227,51 @@ class MatchCreationWizardViewModelTest {
         assertEquals("Opponent", match.opponent)
         assertEquals("Location", match.location)
         assertEquals(1000L, match.date)
+        assertEquals(3600000L, match.time)
         assertEquals(6, match.squadCallUpIds.size)
         assertEquals(2L, match.captainId)
         assertEquals(5, match.startingLineupIds.size)
         assertEquals(1, match.substituteIds.size) // 6 - 5 = 1 substitute
+    }
+
+    @Test
+    fun `setGeneralData should accept 00-00 time correctly`() = runTest {
+        // Given
+        viewModel = createViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // When - Setting time to 00:00 (0L milliseconds from midnight)
+        viewModel.setGeneralData("Opponent", "Location", 1000L, 0L, 2)
+
+        // Then - Time should be 0L, not null
+        assertEquals(0L, viewModel.getTime())
+        assertEquals("Opponent", viewModel.getOpponent())
+        assertEquals("Location", viewModel.getLocation())
+        assertEquals(1000L, viewModel.getDate())
+        assertEquals(2, viewModel.getNumberOfPeriods())
+    }
+
+    @Test
+    fun `buildMatch should create match with 00-00 time`() = runTest {
+        // Given
+        viewModel = createViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.setGeneralData("Opponent", "Location", 1000L, 0L, 2) // 00:00 time
+        viewModel.setSquadCallUp(setOf(1L, 2L, 3L, 4L, 5L, 6L))
+        viewModel.setCaptain(2L)
+        viewModel.setStartingLineup(setOf(1L, 2L, 3L, 4L, 5L))
+
+        // When
+        val match = viewModel.buildMatch()
+
+        // Then
+        assertEquals("Opponent", match.opponent)
+        assertEquals("Location", match.location)
+        assertEquals(1000L, match.date)
+        assertEquals(0L, match.time) // 00:00 should be 0L, not null
+        assertEquals(6, match.squadCallUpIds.size)
+        assertEquals(2L, match.captainId)
+        assertEquals(5, match.startingLineupIds.size)
+        assertEquals(1, match.substituteIds.size)
     }
 }

@@ -63,7 +63,7 @@ fun GeneralDataStep(
     var opponent by remember { mutableStateOf(initialOpponent) }
     var location by remember { mutableStateOf(initialLocation) }
     var selectedDateMillis by remember { mutableLongStateOf(initialDate ?: 0L) }
-    var selectedTimeMillis by remember { mutableLongStateOf(initialTime ?: 0L) }
+    var selectedTimeMillis by remember { mutableStateOf<Long?>(initialTime) }
     var numberOfPeriods by remember { mutableIntStateOf(initialNumberOfPeriods) }
     var opponentError by remember { mutableStateOf<String?>(null) }
     var locationError by remember { mutableStateOf<String?>(null) }
@@ -80,13 +80,11 @@ fun GeneralDataStep(
     }
 
     val formattedTime = remember(selectedTimeMillis) {
-        if (selectedTimeMillis > 0) {
-            val hours = ((selectedTimeMillis / (60 * 60 * 1000)) % 24).toInt()
-            val minutes = ((selectedTimeMillis / (60 * 1000)) % 60).toInt()
+        selectedTimeMillis?.let {
+            val hours = ((it / (60 * 60 * 1000)) % 24).toInt()
+            val minutes = ((it / (60 * 1000)) % 60).toInt()
             String.format(Locale.getDefault(), "%02d:%02d", hours, minutes)
-        } else {
-            ""
-        }
+        } ?: ""
     }
 
     Column(
@@ -265,7 +263,7 @@ fun GeneralDataStep(
                         locationError = locationRequired
                         hasError = true
                     }
-                    if (selectedTimeMillis == 0L) {
+                    if (selectedTimeMillis == null) {
                         timeError = timeRequired
                         hasError = true
                     }
@@ -317,16 +315,12 @@ fun GeneralDataStep(
 
     // Time Picker Dialog
     if (showTimePicker) {
-        val initialHour = if (selectedTimeMillis > 0) {
-            ((selectedTimeMillis / (60 * 60 * 1000)) % 24).toInt()
-        } else {
-            0
-        }
-        val initialMinute = if (selectedTimeMillis > 0) {
-            ((selectedTimeMillis / (60 * 1000)) % 60).toInt()
-        } else {
-            0
-        }
+        val initialHour = selectedTimeMillis?.let {
+            ((it / (60 * 60 * 1000)) % 24).toInt()
+        } ?: 0
+        val initialMinute = selectedTimeMillis?.let {
+            ((it / (60 * 1000)) % 60).toInt()
+        } ?: 0
         val timePickerState = rememberTimePickerState(
             initialHour = initialHour,
             initialMinute = initialMinute
