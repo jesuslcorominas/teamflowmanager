@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
@@ -20,6 +21,7 @@ class MatchCreationWizardViewModel(
     private val getPreviousCaptainsUseCase: GetPreviousCaptainsUseCase,
     private val getDefaultCaptainUseCase: GetDefaultCaptainUseCase,
     private val saveDefaultCaptainUseCase: SaveDefaultCaptainUseCase,
+    private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow<MatchCreationWizardUiState>(MatchCreationWizardUiState.Loading)
@@ -81,20 +83,43 @@ class MatchCreationWizardViewModel(
     fun getStartingLineupIds() = startingLineupIds
     
     fun goToNextStep() {
-        _currentStep.value = when (_currentStep.value) {
-            WizardStep.GENERAL_DATA -> WizardStep.SQUAD_CALLUP
-            WizardStep.SQUAD_CALLUP -> WizardStep.CAPTAIN
-            WizardStep.CAPTAIN -> WizardStep.STARTING_LINEUP
-            WizardStep.STARTING_LINEUP -> WizardStep.STARTING_LINEUP // Final step
+        viewModelScope.launch {
+            _currentStep.value = when (_currentStep.value) {
+                WizardStep.GENERAL_DATA -> WizardStep.SQUAD_CALLUP
+                WizardStep.SQUAD_CALLUP -> {
+                    // Check if there's a fixed captain
+                    val fixedCaptain = getCaptainPlayerUseCase.invoke()
+                    if (fixedCaptain != null && fixedCaptain.id in squadCallUpIds) {
+                        // Auto-select the fixed captain and skip to starting lineup
+                        captainId = fixedCaptain.id
+                        WizardStep.STARTING_LINEUP
+                    } else {
+                        WizardStep.CAPTAIN
+                    }
+                }
+                WizardStep.CAPTAIN -> WizardStep.STARTING_LINEUP
+                WizardStep.STARTING_LINEUP -> WizardStep.STARTING_LINEUP // Final step
+            }
         }
     }
     
     fun goToPreviousStep() {
-        _currentStep.value = when (_currentStep.value) {
-            WizardStep.GENERAL_DATA -> WizardStep.GENERAL_DATA // First step
-            WizardStep.SQUAD_CALLUP -> WizardStep.GENERAL_DATA
-            WizardStep.CAPTAIN -> WizardStep.SQUAD_CALLUP
-            WizardStep.STARTING_LINEUP -> WizardStep.CAPTAIN
+        viewModelScope.launch {
+            _currentStep.value = when (_currentStep.value) {
+                WizardStep.GENERAL_DATA -> WizardStep.GENERAL_DATA // First step
+                WizardStep.SQUAD_CALLUP -> WizardStep.GENERAL_DATA
+                WizardStep.CAPTAIN -> WizardStep.SQUAD_CALLUP
+                WizardStep.STARTING_LINEUP -> {
+                    // Check if we have a fixed captain
+                    val fixedCaptain = getCaptainPlayerUseCase.invoke()
+                    if (fixedCaptain != null && captainId == fixedCaptain.id) {
+                        // We skipped captain selection, go back to squad callup
+                        WizardStep.SQUAD_CALLUP
+                    } else {
+                        WizardStep.CAPTAIN
+                    }
+                }
+            }
         }
     }
     

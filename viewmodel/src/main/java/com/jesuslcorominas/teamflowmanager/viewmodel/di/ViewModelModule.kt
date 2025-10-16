@@ -33,6 +33,8 @@ val viewModelModule =
                 getTeamUseCase = get(),
                 createTeamUseCase = get(),
                 updateTeamUseCase = get(),
+                getCaptainPlayerUseCase = get(),
+                playerRepository = get(),
             )
         }
         viewModel {
@@ -89,6 +91,7 @@ val viewModelModule =
                 getPreviousCaptainsUseCase = get(),
                 getDefaultCaptainUseCase = get(),
                 saveDefaultCaptainUseCase = get(),
+                getCaptainPlayerUseCase = get(),
             )
         }
 
