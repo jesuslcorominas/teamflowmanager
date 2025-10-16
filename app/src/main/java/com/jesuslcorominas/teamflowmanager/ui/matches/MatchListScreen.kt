@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
@@ -51,6 +52,7 @@ fun MatchListScreen(
     onNavigateToEditMatch: (Long) -> Unit,
     onNavigateToMatchSummary: (Long) -> Unit,
     onNavigateToCurrentMatch: () -> Unit,
+    onNavigateToArchivedMatches: () -> Unit,
     viewModel: MatchListViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -80,14 +82,29 @@ fun MatchListScreen(
                 }
 
                 is MatchListUiState.Empty -> {
-                    Text(
-                        text = stringResource(R.string.no_matches_message),
-                        style = MaterialTheme.typography.bodyLarge,
+                    Column(
                         modifier =
                             Modifier
-                                .align(Alignment.Center)
+                                .fillMaxSize()
                                 .padding(TFMSpacing.spacing04),
-                    )
+                        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                    ) {
+                        ArchivedMatchesNavigationCard(
+                            onClick = onNavigateToArchivedMatches,
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.no_matches_message),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
                 }
 
                 is MatchListUiState.Success -> {
@@ -109,6 +126,13 @@ fun MatchListScreen(
                                 .padding(TFMSpacing.spacing04),
                         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                     ) {
+                        // Archived matches navigation item (WhatsApp-style)
+                        item {
+                            ArchivedMatchesNavigationCard(
+                                onClick = onNavigateToArchivedMatches,
+                            )
+                        }
+
                         // Paused match section (if exists, show at top)
                         if (hasPausedMatch) {
                             item {
@@ -172,6 +196,7 @@ fun MatchListScreen(
                                 PlayedMatchCard(
                                     match = match,
                                     onNavigateToDetail = { onNavigateToMatchSummary(match.id) },
+                                    onArchive = { viewModel.archiveMatch(match.id) },
                                 )
                             }
                         }
@@ -362,9 +387,10 @@ fun PausedMatchCard(
 
 @Composable
 fun PlayedMatchCard(
+    modifier: Modifier = Modifier,
     match: Match,
     onNavigateToDetail: () -> Unit = {},
-    modifier: Modifier = Modifier,
+    onArchive: () -> Unit = {},
 ) {
     Card(
         modifier = modifier
@@ -403,12 +429,64 @@ fun PlayedMatchCard(
                 }
             }
 
-            // TODO: Show actual score when score tracking is implemented
-            Text(
-                text = stringResource(R.string.match_score, 0, 0),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // TODO: Show actual score when score tracking is implemented
+                Text(
+                    text = stringResource(R.string.match_score, 0, 0),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+
+                IconButton(onClick = onArchive) {
+                    Icon(
+                        imageVector = Icons.Default.Archive,
+                        contentDescription = stringResource(R.string.archive_match),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ArchivedMatchesNavigationCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TFMSpacing.spacing04),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Archive,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(modifier = Modifier.padding(start = TFMSpacing.spacing03))
+                Text(
+                    text = stringResource(R.string.archived_matches),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }

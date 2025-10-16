@@ -3,12 +3,15 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,12 +21,15 @@ import kotlinx.coroutines.launch
 
 class MatchListViewModel(
     private val getAllMatchesUseCase: GetAllMatchesUseCase,
+    private val getArchivedMatchesUseCase: GetArchivedMatchesUseCase,
     private val getMatchUseCase: GetMatchUseCase,
     private val deleteMatchUseCase: DeleteMatchUseCase,
     private val createMatchUseCase: CreateMatchUseCase,
     private val updateMatchUseCase: UpdateMatchUseCase,
     private val startMatchUseCase: StartMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
+    private val archiveMatchUseCase: ArchiveMatchUseCase,
+    private val unarchiveMatchUseCase: UnarchiveMatchUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
@@ -95,6 +101,18 @@ class MatchListViewModel(
 
     fun cancelDeleteMatch() {
         _deleteConfirmationState.value = MatchDeleteConfirmationState.None
+    }
+
+    fun archiveMatch(matchId: Long) {
+        viewModelScope.launch {
+            archiveMatchUseCase.invoke(matchId)
+        }
+    }
+
+    fun unarchiveMatch(matchId: Long) {
+        viewModelScope.launch {
+            unarchiveMatchUseCase.invoke(matchId)
+        }
     }
 }
 

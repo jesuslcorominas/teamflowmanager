@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
+import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
@@ -47,12 +48,21 @@ val viewModelModule =
         viewModel {
             MatchListViewModel(
                 getAllMatchesUseCase = get(),
+                getArchivedMatchesUseCase = get(),
                 getMatchUseCase = get(),
                 deleteMatchUseCase = get(),
                 createMatchUseCase = get(),
                 updateMatchUseCase = get(),
                 startMatchUseCase = get(),
                 resumeMatchUseCase = get(),
+                archiveMatchUseCase = get(),
+                unarchiveMatchUseCase = get(),
+            )
+        }
+        viewModel {
+            ArchivedMatchesViewModel(
+                getArchivedMatchesUseCase = get(),
+                unarchiveMatchUseCase = get(),
             )
         }
         viewModel {

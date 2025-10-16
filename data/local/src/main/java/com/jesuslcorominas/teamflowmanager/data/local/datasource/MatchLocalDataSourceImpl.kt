@@ -19,6 +19,9 @@ internal class MatchLocalDataSourceImpl(
     override fun getAllMatches(): Flow<List<Match>> =
         matchDao.getAllMatches().map { entities -> entities.map { it.toDomain() } }
 
+    override fun getArchivedMatches(): Flow<List<Match>> =
+        matchDao.getArchivedMatches().map { entities -> entities.map { it.toDomain() } }
+
     override suspend fun upsertMatch(match: Match) {
         matchDao.upsertMatch(match.toEntity())
     }

@@ -1,12 +1,15 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,24 +33,30 @@ import org.junit.Test
 class MatchListViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getAllMatchesUseCase: GetAllMatchesUseCase
+    private lateinit var getArchivedMatchesUseCase: GetArchivedMatchesUseCase
     private lateinit var getMatchUseCase: GetMatchUseCase
     private lateinit var deleteMatchUseCase: DeleteMatchUseCase
     private lateinit var createMatchUseCase: CreateMatchUseCase
     private lateinit var updateMatchUseCase: UpdateMatchUseCase
     private lateinit var startMatchUseCase: StartMatchUseCase
     private lateinit var resumeMatchUseCase: ResumeMatchUseCase
+    private lateinit var archiveMatchUseCase: ArchiveMatchUseCase
+    private lateinit var unarchiveMatchUseCase: UnarchiveMatchUseCase
     private lateinit var viewModel: MatchListViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getAllMatchesUseCase = mockk()
+        getArchivedMatchesUseCase = mockk()
         getMatchUseCase = mockk()
         deleteMatchUseCase = mockk(relaxed = true)
         createMatchUseCase = mockk(relaxed = true)
         updateMatchUseCase = mockk(relaxed = true)
         startMatchUseCase = mockk(relaxed = true)
         resumeMatchUseCase = mockk(relaxed = true)
+        archiveMatchUseCase = mockk(relaxed = true)
+        unarchiveMatchUseCase = mockk(relaxed = true)
     }
 
     @After
@@ -65,12 +74,15 @@ class MatchListViewModelTest {
         viewModel =
             MatchListViewModel(
                 getAllMatchesUseCase,
+                getArchivedMatchesUseCase,
                 getMatchUseCase,
                 deleteMatchUseCase,
                 createMatchUseCase,
                 updateMatchUseCase,
                 startMatchUseCase,
                 resumeMatchUseCase,
+                archiveMatchUseCase,
+                unarchiveMatchUseCase,
             )
 
         // Then
@@ -88,12 +100,15 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
                 )
             advanceUntilIdle()
 
@@ -129,12 +144,15 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
                 )
             advanceUntilIdle()
 
@@ -153,12 +171,15 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
                 )
             val match =
                 Match(
@@ -187,12 +208,15 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
                 )
             val match =
                 Match(
@@ -220,12 +244,15 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
                 )
             val match =
                 Match(
@@ -255,12 +282,15 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
                 )
             val match =
                 Match(
@@ -290,12 +320,15 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
                     updateMatchUseCase,
                     startMatchUseCase,
                     resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
                 )
             val match =
                 Match(
@@ -312,5 +345,63 @@ class MatchListViewModelTest {
 
             // Then
             assertEquals(MatchDeleteConfirmationState.None, viewModel.deleteConfirmationState.value)
+        }
+
+    @Test
+    fun `archiveMatch should call archiveMatchUseCase`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+            every { getMatchUseCase.invoke() } returns flowOf(null)
+            viewModel =
+                MatchListViewModel(
+                    getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
+                    getMatchUseCase,
+                    deleteMatchUseCase,
+                    createMatchUseCase,
+                    updateMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
+                )
+            val matchId = 1L
+
+            // When
+            viewModel.archiveMatch(matchId)
+            advanceUntilIdle()
+
+            // Then
+            coVerify(exactly = 1) { archiveMatchUseCase.invoke(matchId) }
+        }
+
+    @Test
+    fun `unarchiveMatch should call unarchiveMatchUseCase`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
+            every { getMatchUseCase.invoke() } returns flowOf(null)
+            viewModel =
+                MatchListViewModel(
+                    getAllMatchesUseCase,
+                    getArchivedMatchesUseCase,
+                    getMatchUseCase,
+                    deleteMatchUseCase,
+                    createMatchUseCase,
+                    updateMatchUseCase,
+                    startMatchUseCase,
+                    resumeMatchUseCase,
+                    archiveMatchUseCase,
+                    unarchiveMatchUseCase,
+                )
+            val matchId = 1L
+
+            // When
+            viewModel.unarchiveMatch(matchId)
+            advanceUntilIdle()
+
+            // Then
+            coVerify(exactly = 1) { unarchiveMatchUseCase.invoke(matchId) }
         }
 }

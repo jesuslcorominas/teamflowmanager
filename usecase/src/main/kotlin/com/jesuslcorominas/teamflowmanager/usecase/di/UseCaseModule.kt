@@ -2,6 +2,8 @@ package com.jesuslcorominas.teamflowmanager.usecase.di
 
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
@@ -14,6 +16,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
@@ -54,6 +58,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
@@ -76,9 +82,12 @@ internal val useCaseInternalModule =
         singleOf(::GetMatchUseCaseImpl) bind GetMatchUseCase::class
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class
+        singleOf(::GetArchivedMatchesUseCaseImpl) bind GetArchivedMatchesUseCase::class
         singleOf(::CreateMatchUseCaseImpl) bind CreateMatchUseCase::class
         singleOf(::UpdateMatchUseCaseImpl) bind UpdateMatchUseCase::class
         singleOf(::DeleteMatchUseCaseImpl) bind DeleteMatchUseCase::class
+        singleOf(::ArchiveMatchUseCaseImpl) bind ArchiveMatchUseCase::class
+        singleOf(::UnarchiveMatchUseCaseImpl) bind UnarchiveMatchUseCase::class
         singleOf(::StartMatchTimerUseCaseImpl) bind StartMatchTimerUseCase::class
         singleOf(::StartMatchUseCaseImpl) bind StartMatchUseCase::class
         singleOf(::PauseMatchTimerUseCaseImpl) bind PauseMatchTimerUseCase::class

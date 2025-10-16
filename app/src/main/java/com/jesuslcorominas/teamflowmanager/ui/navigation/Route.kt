@@ -16,6 +16,7 @@ sealed class Route(
                 Players,
                 TeamDetail,
                 Matches,
+                ArchivedMatches,
                 CreateMatch,
                 CurrentMatch,
                 MatchDetail,
@@ -77,6 +78,13 @@ sealed class Route(
         showTopBar = true,
         showBottomBar = true,
         canGoBack = false,
+    )
+
+    object ArchivedMatches : Route(
+        path = "archived_matches",
+        showTopBar = false,
+        showBottomBar = false,
+        canGoBack = true,
     )
     
     object CreateMatch : Route(

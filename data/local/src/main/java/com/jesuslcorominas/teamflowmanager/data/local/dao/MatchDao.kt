@@ -22,8 +22,11 @@ interface MatchDao {
     @Query("SELECT * FROM match WHERE id = :matchId LIMIT 1")
     fun getMatchById(matchId: Long): Flow<MatchEntity?>
 
-    @Query("SELECT * FROM match ORDER BY date DESC")
+    @Query("SELECT * FROM match WHERE archived = 0 ORDER BY date DESC")
     fun getAllMatches(): Flow<List<MatchEntity>>
+
+    @Query("SELECT * FROM match WHERE archived = 1 ORDER BY date DESC")
+    fun getArchivedMatches(): Flow<List<MatchEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertMatch(match: MatchEntity)

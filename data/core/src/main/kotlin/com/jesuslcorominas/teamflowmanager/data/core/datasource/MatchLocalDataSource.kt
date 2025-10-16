@@ -10,6 +10,8 @@ interface MatchLocalDataSource {
 
     fun getAllMatches(): Flow<List<Match>>
 
+    fun getArchivedMatches(): Flow<List<Match>>
+
     suspend fun upsertMatch(match: Match)
 
     suspend fun insertMatch(match: Match): Long
