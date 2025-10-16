@@ -11,12 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -24,7 +22,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,7 +29,6 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -43,14 +39,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
-import com.jesuslcorominas.teamflowmanager.ui.components.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -69,34 +62,33 @@ fun GeneralDataStep(
 ) {
     var opponent by remember { mutableStateOf(initialOpponent) }
     var location by remember { mutableStateOf(initialLocation) }
-    var selectedDateMillis by remember { mutableLongStateOf(initialDate ?: System.currentTimeMillis()) }
+    var selectedDateMillis by remember { mutableLongStateOf(initialDate ?: 0L) }
     var selectedTimeMillis by remember { mutableLongStateOf(initialTime ?: 0L) }
     var numberOfPeriods by remember { mutableIntStateOf(initialNumberOfPeriods) }
-    
     var opponentError by remember { mutableStateOf<String?>(null) }
     var locationError by remember { mutableStateOf<String?>(null) }
     var dateError by remember { mutableStateOf<String?>(null) }
     var timeError by remember { mutableStateOf<String?>(null) }
-    
+
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
-    
+
     val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
-    
+
     val formattedDate = remember(selectedDateMillis) {
-        dateFormatter.format(Date(selectedDateMillis))
+        if (selectedDateMillis == 0L) "" else dateFormatter.format(Date(selectedDateMillis))
     }
-    
+
     val formattedTime = remember(selectedTimeMillis) {
         if (selectedTimeMillis > 0) {
             val hours = ((selectedTimeMillis / (60 * 60 * 1000)) % 24).toInt()
             val minutes = ((selectedTimeMillis / (60 * 1000)) % 60).toInt()
-            String.format("%02d:%02d", hours, minutes)
+            String.format(Locale.getDefault(), "%02d:%02d", hours, minutes)
         } else {
             ""
         }
     }
-    
+
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
@@ -106,9 +98,9 @@ fun GeneralDataStep(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        
+
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-        
+
         AppTextField(
             value = opponent,
             onValueChange = {
@@ -122,7 +114,7 @@ fun GeneralDataStep(
             } else null,
             modifier = Modifier.fillMaxWidth(),
         )
-        
+
         AppTextField(
             value = location,
             onValueChange = {
@@ -136,7 +128,7 @@ fun GeneralDataStep(
             } else null,
             modifier = Modifier.fillMaxWidth(),
         )
-        
+
         // Date Picker
         OutlinedTextField(
             value = formattedDate,
@@ -157,14 +149,14 @@ fun GeneralDataStep(
                 .also { interactionSource ->
                     androidx.compose.runtime.LaunchedEffect(interactionSource) {
                         interactionSource.interactions.collect {
-                            if (it is androidx.compose.foundation.interaction.PressInteraction.Release) {
+                            if (it is PressInteraction.Release) {
                                 showDatePicker = true
                             }
                         }
                     }
                 }
         )
-        
+
         // Time Picker
         OutlinedTextField(
             value = formattedTime,
@@ -185,15 +177,15 @@ fun GeneralDataStep(
                 .also { interactionSource ->
                     androidx.compose.runtime.LaunchedEffect(interactionSource) {
                         interactionSource.interactions.collect {
-                            if (it is androidx.compose.foundation.interaction.PressInteraction.Release) {
+                            if (it is PressInteraction.Release) {
                                 showTimePicker = true
                             }
                         }
                     }
                 }
         )
-        
-        // Number of Periods - Radio Buttons
+
+        // Number of Periods- Radio Buttons
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -215,14 +207,16 @@ fun GeneralDataStep(
                 ) {
                     androidx.compose.material3.RadioButton(
                         selected = numberOfPeriods == 2,
-                        onClick = { numberOfPeriods = 2 }
+                        onClick = {
+                            numberOfPeriods = 2
+                        }
                     )
                     Text(
                         text = stringResource(R.string.two_halves),
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
-                
+
                 // 4 Quarters
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -241,9 +235,9 @@ fun GeneralDataStep(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.weight(1f))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
@@ -254,23 +248,32 @@ fun GeneralDataStep(
             ) {
                 Text(stringResource(R.string.cancel))
             }
-            
+
+            val opponentRequired = stringResource(R.string.opponent_required)
+            val locationRequired = stringResource(R.string.location_required)
+            val timeRequired = stringResource(R.string.match_time_required)
+            val dateRequired = stringResource(R.string.match_date_required)
+
             Button(
                 onClick = {
                     var hasError = false
                     if (opponent.isBlank()) {
-                        opponentError = stringResource(R.string.opponent_required)
+                        opponentError = opponentRequired
                         hasError = true
                     }
                     if (location.isBlank()) {
-                        locationError = stringResource(R.string.location_required)
+                        locationError = locationRequired
                         hasError = true
                     }
                     if (selectedTimeMillis == 0L) {
-                        timeError = stringResource(R.string.match_time_required)
+                        timeError = timeRequired
                         hasError = true
                     }
-                    
+                    if (selectedDateMillis == 0L) {
+                        dateError = dateRequired
+                        hasError = true
+                    }
+
                     if (!hasError) {
                         onDataChanged(opponent, location, selectedDateMillis, selectedTimeMillis, numberOfPeriods)
                         onNext()
@@ -282,10 +285,11 @@ fun GeneralDataStep(
             }
         }
     }
-    
+
     // Date Picker Dialog
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDateMillis)
+        val datePickerState =
+            rememberDatePickerState(initialSelectedDateMillis = if (selectedDateMillis == 0L) System.currentTimeMillis() else selectedDateMillis)
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
@@ -310,7 +314,7 @@ fun GeneralDataStep(
             DatePicker(state = datePickerState)
         }
     }
-    
+
     // Time Picker Dialog
     if (showTimePicker) {
         val initialHour = if (selectedTimeMillis > 0) {
@@ -327,8 +331,8 @@ fun GeneralDataStep(
             initialHour = initialHour,
             initialMinute = initialMinute
         )
-        
-        androidx.compose.material3.AlertDialog(
+
+        AlertDialog(
             onDismissRequest = { showTimePicker = false },
             title = { Text(stringResource(R.string.match_time)) },
             text = {
@@ -341,8 +345,8 @@ fun GeneralDataStep(
                 TextButton(
                     onClick = {
                         // Store only time of day as milliseconds from midnight
-                        val timeInMillis = (timePickerState.hour * 60 * 60 * 1000) + 
-                                          (timePickerState.minute * 60 * 1000)
+                        val timeInMillis = (timePickerState.hour * 60 * 60 * 1000) +
+                            (timePickerState.minute * 60 * 1000)
                         selectedTimeMillis = timeInMillis.toLong()
                         timeError = null
                         showTimePicker = false

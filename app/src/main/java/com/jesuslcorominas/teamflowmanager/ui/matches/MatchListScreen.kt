@@ -110,7 +110,7 @@ fun MatchListScreen(
                         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                     ) {
                         // Paused match section (if exists, show at top)
-                        if (hasPausedMatch && pausedMatch != null) {
+                        if (hasPausedMatch) {
                             item {
                                 Text(
                                     text = stringResource(R.string.paused_match),
@@ -231,10 +231,16 @@ fun PendingMatchCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (match.date != null) {
+
+                    val date = match.date?.let { DateFormatter.formatDate(it) } ?: ""
+                    val time = match.time?.let { DateFormatter.formatTime(it) } ?: ""
+
+                    val dateTime = listOf(date, time).filter { it.isNotEmpty() }.joinToString(" ")
+
+                    if (dateTime.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
                         Text(
-                            text = match.date?.let { DateFormatter.formatDateTime(it) } ?: "",
+                            text = dateTime,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

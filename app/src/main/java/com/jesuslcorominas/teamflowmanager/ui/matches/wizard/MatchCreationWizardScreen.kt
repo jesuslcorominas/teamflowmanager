@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -13,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.ui.components.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardUiState
@@ -31,10 +33,10 @@ fun MatchCreationWizardScreen(
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
     val scope = rememberCoroutineScope()
-    
+
     var showDefaultCaptainDialog by remember { mutableStateOf(false) }
-    var captainForDialog by remember { mutableStateOf<com.jesuslcorominas.teamflowmanager.domain.model.Player?>(null) }
-    
+    var captainForDialog by remember { mutableStateOf<Player?>(null) }
+
     when (val state = uiState) {
         is MatchCreationWizardUiState.Loading -> {
             CircularProgressIndicator(
@@ -141,7 +143,7 @@ fun MatchCreationWizardScreen(
             }
         }
     }
-    
+
     // Default captain dialog
     if (showDefaultCaptainDialog && captainForDialog != null) {
         AppAlertDialog(

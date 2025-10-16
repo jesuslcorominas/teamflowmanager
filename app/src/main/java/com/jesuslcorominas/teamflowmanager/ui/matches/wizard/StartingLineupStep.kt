@@ -46,11 +46,11 @@ fun StartingLineupStep(
     var showMaxError by remember { mutableStateOf(false) }
     var showGoalkeeperWarning by remember { mutableStateOf(false) }
     var pendingCreate by remember { mutableStateOf(false) }
-    
+
     val hasGoalkeeperSelected = players.any { player ->
         player.id in currentSelection && player.positions.any { it is Position.Goalkeeper }
     }
-    
+
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
@@ -60,13 +60,13 @@ fun StartingLineupStep(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        
+
         Text(
             text = stringResource(R.string.starting_lineup_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Text(
             text = stringResource(R.string.starting_lineup_count, currentSelection.size),
             style = MaterialTheme.typography.bodyLarge,
@@ -77,9 +77,9 @@ fun StartingLineupStep(
                 MaterialTheme.colorScheme.error
             }
         )
-        
+
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-        
+
         Card(
             modifier = Modifier
                 .weight(1f)
@@ -108,9 +108,9 @@ fun StartingLineupStep(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
@@ -121,16 +121,16 @@ fun StartingLineupStep(
             ) {
                 Text(stringResource(R.string.previous))
             }
-            
+
             Button(
                 onClick = {
                     if (currentSelection.size != 5) {
                         // Should not happen because button is disabled
                         return@Button
                     }
-                    
+
                     onSelectionChanged(currentSelection)
-                    
+
                     // Check if has goalkeeper only if there are goalkeepers in the squad
                     if (hasGoalkeepersInSquad && !hasGoalkeeperSelected) {
                         pendingCreate = true
@@ -146,7 +146,7 @@ fun StartingLineupStep(
             }
         }
     }
-    
+
     // Max selection error dialog
     if (showMaxError) {
         AppAlertDialog(
@@ -155,13 +155,10 @@ fun StartingLineupStep(
             confirmText = stringResource(R.string.close),
             onConfirm = {
                 showMaxError = false
-            },
-            onDismiss = {
-                showMaxError = false
             }
         )
     }
-    
+
     // Goalkeeper warning dialog
     if (showGoalkeeperWarning) {
         AppAlertDialog(

@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
 @Composable
@@ -39,7 +40,7 @@ fun CaptainSelectionStep(
     modifier: Modifier = Modifier,
 ) {
     var currentCaptainId by remember(selectedCaptainId) { mutableStateOf(selectedCaptainId) }
-    
+
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
@@ -49,15 +50,15 @@ fun CaptainSelectionStep(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        
+
         Text(
             text = stringResource(R.string.captain_selection_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-        
+
         Card(
             modifier = Modifier
                 .weight(1f)
@@ -77,9 +78,9 @@ fun CaptainSelectionStep(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
@@ -90,7 +91,7 @@ fun CaptainSelectionStep(
             ) {
                 Text(stringResource(R.string.previous))
             }
-            
+
             Button(
                 onClick = {
                     onCaptainChanged(currentCaptainId)

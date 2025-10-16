@@ -11,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.CurrentMatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchSummaryScreen
+import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
@@ -75,9 +76,9 @@ fun Navigation(
                 },
             )
         }
-        
+
         composable(Route.CreateMatch.path) {
-            com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen(
+            MatchCreationWizardScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },

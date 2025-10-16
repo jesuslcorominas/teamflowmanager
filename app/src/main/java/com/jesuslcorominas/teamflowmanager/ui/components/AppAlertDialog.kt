@@ -14,9 +14,9 @@ fun AppAlertDialog(
     title: String,
     message: String,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
+    onDismiss: () -> Unit = {},
     confirmText: String,
-    dismissText: String,
+    dismissText: String? = null,
     icon: ImageVector? = null,
     iconContentDescription: String? = null,
     isDestructive: Boolean = false,
@@ -44,8 +44,10 @@ fun AppAlertDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(dismissText)
+            if (!dismissText.isNullOrBlank()) {
+                TextButton(onClick = onDismiss) {
+                    Text(dismissText)
+                }
             }
         },
         shape = MaterialTheme.shapes.medium,
