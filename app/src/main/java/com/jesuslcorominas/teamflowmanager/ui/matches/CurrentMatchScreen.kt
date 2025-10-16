@@ -1,18 +1,17 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches
 
-import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,7 +25,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,8 +33,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,11 +47,12 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerSortOrder
+import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 import org.koin.androidx.compose.koinViewModel
 
@@ -90,6 +89,7 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                 },
                 onSortOrderChange = { viewModel.setSortOrder(it) },
             )
+
             is MatchUiState.Finished -> FinishedMatchState(state = state)
         }
 
@@ -177,7 +177,7 @@ private fun PreMatchView(
     state: MatchUiState.Success,
 ) {
     val viewModel: MatchViewModel = koinViewModel()
-    
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
@@ -282,7 +282,7 @@ private fun OngoingMatchView(
                 text = stringResource(R.string.player_times_title),
                 style = MaterialTheme.typography.titleMedium,
             )
-            
+
             // Sort order dropdown
             SortOrderSelector(
                 currentSortOrder = currentSortOrder,
@@ -370,18 +370,18 @@ private fun MatchTimeCard(
     } else {
         (12 * 60 + 30) * 1000L // 12 minutes 30 seconds
     }
-    
+
     // Calculate elapsed time in current period
     // Assume each previous period ran for its full duration
     // (This is an approximation since we don't track actual period durations)
     val elapsedInPreviousPeriods = (currentPeriod - 1) * periodDurationMillis
     val elapsedInCurrentPeriod = maxOf(0L, timeMillis - elapsedInPreviousPeriods)
-    
+
     // Calculate remaining time (can be negative for stoppage time)
     val remainingTime = periodDurationMillis - elapsedInCurrentPeriod
     val isStoppageTime = remainingTime < 0
     val displayTime = if (isStoppageTime) -remainingTime else remainingTime
-    
+
     // Determine period name
     val periodName = when {
         numberOfPeriods == 2 && currentPeriod == 1 -> stringResource(R.string.first_half)
@@ -416,7 +416,7 @@ private fun MatchTimeCard(
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
             )
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
@@ -525,7 +525,7 @@ private fun PlayerTimeCard(
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                     )
-                    
+
                     // Captain badge
                     if (playerTimeItem.isCaptain) {
                         Box(
@@ -545,7 +545,7 @@ private fun PlayerTimeCard(
                     }
                 }
             }
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
@@ -601,6 +601,8 @@ private fun SuccessStatePreview() {
             onPauseMatch = {},
             onResumeMatch = {},
             onPlayerClick = {},
+            currentSortOrder = PlayerSortOrder.BY_ACTIVE_FIRST,
+            onSortOrderChange = {}
         )
     }
 }
