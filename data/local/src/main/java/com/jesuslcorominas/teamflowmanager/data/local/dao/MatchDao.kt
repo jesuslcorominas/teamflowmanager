@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.Flow
 interface MatchDao {
     @Query("""
         SELECT * FROM match 
-        WHERE isRunning = 1 
+        WHERE status = 'IN_PROGRESS'
+           OR isRunning = 1 
            OR (elapsedTimeMillis > 0 AND EXISTS (SELECT 1 FROM player_time LIMIT 1))
         ORDER BY CASE WHEN isRunning = 1 THEN 0 ELSE 1 END, date DESC 
         LIMIT 1
