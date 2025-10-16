@@ -6,6 +6,7 @@ sealed class Route(
     val showTopBar: Boolean = false,
     val showBottomBar: Boolean = false,
     val canGoBack: Boolean = false,
+    val showFab: Boolean = false,
 ) {
 
     companion object {
@@ -37,12 +38,14 @@ sealed class Route(
             showTopBar = showTopBar,
             showBottomBar = showBottomBar,
             canGoBack = canGoBack,
+            showFab = showFab,
         )
 
     data class UiConfig(
         val showTopBar: Boolean,
         val showBottomBar: Boolean,
         val canGoBack: Boolean,
+        val showFab: Boolean,
     )
 
     object Splash : Route(
@@ -78,6 +81,7 @@ sealed class Route(
         showTopBar = true,
         showBottomBar = true,
         canGoBack = false,
+        showFab = true,
     )
 
     object ArchivedMatches : Route(

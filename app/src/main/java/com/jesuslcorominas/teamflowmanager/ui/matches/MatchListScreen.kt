@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -22,11 +21,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -48,7 +45,6 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MatchListScreen(
-    onNavigateToAddMatch: () -> Unit,
     onNavigateToEditMatch: (Long) -> Unit,
     onNavigateToMatchSummary: (Long) -> Unit,
     onNavigateToCurrentMatch: () -> Unit,
@@ -58,147 +54,131 @@ fun MatchListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToAddMatch) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.add_match_title),
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val state = uiState) {
+            is MatchListUiState.Loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
                 )
             }
-        },
-    ) { paddingValues ->
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-        ) {
-            when (val state = uiState) {
-                is MatchListUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                }
 
-                is MatchListUiState.Empty -> {
-                    Column(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(TFMSpacing.spacing04),
-                        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+            is MatchListUiState.Empty -> {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(TFMSpacing.spacing04),
+                    verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                ) {
+                    ArchivedMatchesNavigationCard(
+                        onClick = onNavigateToArchivedMatches,
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center,
                     ) {
+                        Text(
+                            text = stringResource(R.string.no_matches_message),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+            }
+
+            is MatchListUiState.Success -> {
+                val currentMatchId = state.currentMatchId
+                val pendingMatches = state.matches.filter { it.elapsedTimeMillis == 0L && !it.isRunning }
+                val pausedMatch = if (currentMatchId != null) {
+                    state.matches.find { it.id == currentMatchId && !it.isRunning }
+                } else null
+                val playedMatches = state.matches.filter {
+                    it.elapsedTimeMillis > 0L && !it.isRunning && it.id != currentMatchId
+                }
+                val hasActiveMatch = state.matches.any { it.isRunning }
+                val hasPausedMatch = pausedMatch != null
+
+                LazyColumn(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(TFMSpacing.spacing04),
+                    verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                ) {
+                    // Archived matches navigation item (WhatsApp-style)
+                    item {
                         ArchivedMatchesNavigationCard(
                             onClick = onNavigateToArchivedMatches,
                         )
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.no_matches_message),
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        }
                     }
-                }
 
-                is MatchListUiState.Success -> {
-                    val currentMatchId = state.currentMatchId
-                    val pendingMatches = state.matches.filter { it.elapsedTimeMillis == 0L && !it.isRunning }
-                    val pausedMatch = if (currentMatchId != null) {
-                        state.matches.find { it.id == currentMatchId && !it.isRunning }
-                    } else null
-                    val playedMatches = state.matches.filter {
-                        it.elapsedTimeMillis > 0L && !it.isRunning && it.id != currentMatchId
-                    }
-                    val hasActiveMatch = state.matches.any { it.isRunning }
-                    val hasPausedMatch = pausedMatch != null
-
-                    LazyColumn(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(TFMSpacing.spacing04),
-                        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
-                    ) {
-                        // Archived matches navigation item (WhatsApp-style)
+                    // Paused match section (if exists, show at top)
+                    if (hasPausedMatch) {
                         item {
-                            ArchivedMatchesNavigationCard(
-                                onClick = onNavigateToArchivedMatches,
+                            Text(
+                                text = stringResource(R.string.paused_match),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
                             )
                         }
+                        item {
+                            PausedMatchCard(
+                                match = pausedMatch,
+                                onResume = {
+                                    viewModel.resumeMatch()
+                                    onNavigateToCurrentMatch()
+                                },
+                                onNavigateToDetail = { onNavigateToCurrentMatch() },
+                            )
+                        }
+                    }
 
-                        // Paused match section (if exists, show at top)
-                        if (hasPausedMatch) {
-                            item {
-                                Text(
-                                    text = stringResource(R.string.paused_match),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
-                                )
-                            }
-                            item {
-                                PausedMatchCard(
-                                    match = pausedMatch,
-                                    onResume = {
-                                        viewModel.resumeMatch()
+                    // Pending matches section
+                    if (pendingMatches.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.pending_matches),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
+                            )
+                        }
+                        items(pendingMatches) { match ->
+                            PendingMatchCard(
+                                match = match,
+                                hasActiveMatch = hasActiveMatch || hasPausedMatch,
+                                onEdit = { onNavigateToEditMatch(match.id) },
+                                onDelete = { viewModel.requestDeleteMatch(match) },
+                                onStart = {
+                                    if (!hasActiveMatch && !hasPausedMatch) {
+                                        viewModel.startMatch(match.id)
                                         onNavigateToCurrentMatch()
-                                    },
-                                    onNavigateToDetail = { onNavigateToCurrentMatch() },
-                                )
-                            }
+                                    }
+                                },
+                            )
                         }
+                    }
 
-                        // Pending matches section
-                        if (pendingMatches.isNotEmpty()) {
-                            item {
-                                Text(
-                                    text = stringResource(R.string.pending_matches),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
-                                )
-                            }
-                            items(pendingMatches) { match ->
-                                PendingMatchCard(
-                                    match = match,
-                                    hasActiveMatch = hasActiveMatch || hasPausedMatch,
-                                    onEdit = { onNavigateToEditMatch(match.id) },
-                                    onDelete = { viewModel.requestDeleteMatch(match) },
-                                    onStart = {
-                                        if (!hasActiveMatch && !hasPausedMatch) {
-                                            viewModel.startMatch(match.id)
-                                            onNavigateToCurrentMatch()
-                                        }
-                                    },
-                                )
-                            }
+                    // Played matches section
+                    if (playedMatches.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+                            Text(
+                                text = stringResource(R.string.played_matches),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
+                            )
                         }
-
-                        // Played matches section
-                        if (playedMatches.isNotEmpty()) {
-                            item {
-                                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
-                                Text(
-                                    text = stringResource(R.string.played_matches),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
-                                )
-                            }
-                            items(playedMatches) { match ->
-                                PlayedMatchCard(
-                                    match = match,
-                                    onNavigateToDetail = { onNavigateToMatchSummary(match.id) },
-                                    onArchive = { viewModel.archiveMatch(match.id) },
-                                )
-                            }
+                        items(playedMatches) { match ->
+                            PlayedMatchCard(
+                                match = match,
+                                onNavigateToDetail = { onNavigateToMatchSummary(match.id) },
+                                onArchive = { viewModel.archiveMatch(match.id) },
+                            )
                         }
                     }
                 }

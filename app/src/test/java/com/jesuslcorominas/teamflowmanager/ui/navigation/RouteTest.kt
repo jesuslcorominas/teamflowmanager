@@ -38,16 +38,25 @@ class RouteTest {
         assertFalse(splashConfig.showTopBar)
         assertFalse(splashConfig.showBottomBar)
         assertFalse(splashConfig.canGoBack)
+        assertFalse(splashConfig.showFab)
 
         val playersConfig = Route.Players.uiConfig(null)
         assertTrue(playersConfig.showTopBar)
         assertTrue(playersConfig.showBottomBar)
         assertFalse(playersConfig.canGoBack)
+        assertFalse(playersConfig.showFab)
 
         val currentMatchConfig = Route.CurrentMatch.uiConfig(null)
         assertTrue(currentMatchConfig.showTopBar)
         assertFalse(currentMatchConfig.showBottomBar)
         assertTrue(currentMatchConfig.canGoBack)
+        assertFalse(currentMatchConfig.showFab)
+
+        val matchesConfig = Route.Matches.uiConfig(null)
+        assertTrue(matchesConfig.showTopBar)
+        assertTrue(matchesConfig.showBottomBar)
+        assertFalse(matchesConfig.canGoBack)
+        assertTrue(matchesConfig.showFab)
     }
 
     @Test
@@ -81,7 +90,8 @@ class RouteTest {
         val config = Route.UiConfig(
             showTopBar = true,
             showBottomBar = false,
-            canGoBack = true
+            canGoBack = true,
+            showFab = false,
         )
 
         val copy = config.copy()
