@@ -51,11 +51,9 @@ internal class MatchRepositoryImpl(
         if (currentMatch != null && currentMatch.isRunning) {
             val lastStartTime = currentMatch.lastStartTimeMillis ?: currentTimeMillis
             val additionalTime = currentTimeMillis - lastStartTime
-            // When pausing between periods, reset elapsed time for the new period
-            // Each period is independent
             val updatedMatch =
                 currentMatch.copy(
-                    elapsedTimeMillis = 0L, // Reset for new period
+                    elapsedTimeMillis = currentMatch.elapsedTimeMillis + additionalTime,
                     isRunning = false,
                     lastStartTimeMillis = null,
                     pauseCount = currentMatch.pauseCount + 1,

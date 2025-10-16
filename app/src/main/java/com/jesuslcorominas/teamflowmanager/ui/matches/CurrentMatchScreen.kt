@@ -371,9 +371,14 @@ private fun MatchTimeCard(
         (12 * 60 + 30) * 1000L // 12 minutes 30 seconds
     }
     
-    // Use elapsed time directly for current period (not accumulating across periods)
+    // Calculate elapsed time in current period
+    // Assume each previous period ran for its full duration
+    // (This is an approximation since we don't track actual period durations)
+    val elapsedInPreviousPeriods = (currentPeriod - 1) * periodDurationMillis
+    val elapsedInCurrentPeriod = maxOf(0L, timeMillis - elapsedInPreviousPeriods)
+    
     // Calculate remaining time (can be negative for stoppage time)
-    val remainingTime = periodDurationMillis - timeMillis
+    val remainingTime = periodDurationMillis - elapsedInCurrentPeriod
     val isStoppageTime = remainingTime < 0
     val displayTime = if (isStoppageTime) -remainingTime else remainingTime
     
