@@ -1,6 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -87,9 +89,9 @@ fun GeneralDataStep(
     
     val formattedTime = remember(selectedTimeMillis) {
         if (selectedTimeMillis > 0) {
-            val calendar = Calendar.getInstance()
-            calendar.timeInMillis = selectedTimeMillis
-            String.format("%02d:%02d", calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE))
+            val hours = ((selectedTimeMillis / (60 * 60 * 1000)) % 24).toInt()
+            val minutes = ((selectedTimeMillis / (60 * 1000)) % 60).toInt()
+            String.format("%02d:%02d", hours, minutes)
         } else {
             ""
         }
@@ -150,9 +152,17 @@ fun GeneralDataStep(
                     Icon(Icons.Default.DateRange, contentDescription = null)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showDatePicker = true }
+            modifier = Modifier.fillMaxWidth(),
+            interactionSource = remember { MutableInteractionSource() }
+                .also { interactionSource ->
+                    androidx.compose.runtime.LaunchedEffect(interactionSource) {
+                        interactionSource.interactions.collect {
+                            if (it is androidx.compose.foundation.interaction.PressInteraction.Release) {
+                                showDatePicker = true
+                            }
+                        }
+                    }
+                }
         )
         
         // Time Picker
@@ -170,9 +180,17 @@ fun GeneralDataStep(
                     Icon(Icons.Default.AccessTime, contentDescription = null)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showTimePicker = true }
+            modifier = Modifier.fillMaxWidth(),
+            interactionSource = remember { MutableInteractionSource() }
+                .also { interactionSource ->
+                    androidx.compose.runtime.LaunchedEffect(interactionSource) {
+                        interactionSource.interactions.collect {
+                            if (it is androidx.compose.foundation.interaction.PressInteraction.Release) {
+                                showTimePicker = true
+                            }
+                        }
+                    }
+                }
         )
         
         // Number of Periods - Radio Buttons
@@ -295,13 +313,19 @@ fun GeneralDataStep(
     
     // Time Picker Dialog
     if (showTimePicker) {
-        val calendar = Calendar.getInstance()
-        if (selectedTimeMillis > 0) {
-            calendar.timeInMillis = selectedTimeMillis
+        val initialHour = if (selectedTimeMillis > 0) {
+            ((selectedTimeMillis / (60 * 60 * 1000)) % 24).toInt()
+        } else {
+            0
+        }
+        val initialMinute = if (selectedTimeMillis > 0) {
+            ((selectedTimeMillis / (60 * 1000)) % 60).toInt()
+        } else {
+            0
         }
         val timePickerState = rememberTimePickerState(
-            initialHour = calendar.get(Calendar.HOUR_OF_DAY),
-            initialMinute = calendar.get(Calendar.MINUTE)
+            initialHour = initialHour,
+            initialMinute = initialMinute
         )
         
         androidx.compose.material3.AlertDialog(
@@ -316,12 +340,10 @@ fun GeneralDataStep(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val timeCalendar = Calendar.getInstance()
-                        timeCalendar.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                        timeCalendar.set(Calendar.MINUTE, timePickerState.minute)
-                        timeCalendar.set(Calendar.SECOND, 0)
-                        timeCalendar.set(Calendar.MILLISECOND, 0)
-                        selectedTimeMillis = timeCalendar.timeInMillis
+                        // Store only time of day as milliseconds from midnight
+                        val timeInMillis = (timePickerState.hour * 60 * 60 * 1000) + 
+                                          (timePickerState.minute * 60 * 1000)
+                        selectedTimeMillis = timeInMillis.toLong()
                         timeError = null
                         showTimePicker = false
                     }
