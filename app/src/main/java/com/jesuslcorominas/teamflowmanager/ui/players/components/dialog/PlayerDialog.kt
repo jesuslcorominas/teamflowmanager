@@ -175,6 +175,37 @@ fun PlayerDialog(
                     }
                 )
             }
+
+            item {
+                Text(
+                    text = stringResource(R.string.is_captain),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { formState = formState.copy(isCaptain = !formState.isCaptain) }
+                        .padding(vertical = TFMSpacing.spacing01),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01)
+                ) {
+                    Checkbox(
+                        modifier = Modifier
+                            .size(TFMSpacing.spacing06)
+                            .scale(.9F),
+                        checked = formState.isCaptain,
+                        onCheckedChange = { formState = formState.copy(isCaptain = it) }
+                    )
+                    Text(
+                        text = stringResource(R.string.team_captain),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
         }
     }
 }
@@ -214,6 +245,7 @@ private data class PlayerFormState(
     val lastName: String = "",
     val number: String = "",
     val selectedPositions: List<Position> = emptyList(),
+    val isCaptain: Boolean = false,
     val errors: FormErrors = FormErrors()
 )
 
@@ -222,7 +254,8 @@ private fun Player?.toFormState(): PlayerFormState = PlayerFormState(
     firstName = this?.firstName ?: "",
     lastName = this?.lastName ?: "",
     number = this?.number?.toString() ?: "",
-    selectedPositions = this?.positions ?: listOf()
+    selectedPositions = this?.positions ?: listOf(),
+    isCaptain = this?.isCaptain ?: false
 )
 
 private fun PlayerFormState.toPlayer(): Player = Player(
@@ -231,6 +264,7 @@ private fun PlayerFormState.toPlayer(): Player = Player(
     lastName = lastName,
     number = number.toInt(),
     positions = selectedPositions,
+    isCaptain = isCaptain,
 )
 
 private data class FormErrors(

@@ -18,6 +18,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
@@ -66,6 +68,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.UpdateScheduledMatchesCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.UpdateScheduledMatchesCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCaseImpl
 import org.koin.core.module.dsl.singleOf
@@ -108,6 +112,8 @@ internal val useCaseInternalModule =
         singleOf(::GetPreviousCaptainsUseCaseImpl) bind GetPreviousCaptainsUseCase::class
         singleOf(::GetDefaultCaptainUseCaseImpl) bind GetDefaultCaptainUseCase::class
         singleOf(::SaveDefaultCaptainUseCaseImpl) bind SaveDefaultCaptainUseCase::class
+        singleOf(::GetCaptainPlayerUseCaseImpl) bind GetCaptainPlayerUseCase::class
+        singleOf(::UpdateScheduledMatchesCaptainUseCaseImpl) bind UpdateScheduledMatchesCaptainUseCase::class
     }
 
 val useCaseModule =

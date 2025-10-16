@@ -22,6 +22,10 @@ val viewModelModule =
                 addPlayerUseCase = get(),
                 updatePlayerUseCase = get(),
                 deletePlayerUseCase = get(),
+                getCaptainPlayerUseCase = get(),
+                updateScheduledMatchesCaptainUseCase = get(),
+                playerRepository = get(),
+                matchRepository = get(),
             )
         }
         viewModel {

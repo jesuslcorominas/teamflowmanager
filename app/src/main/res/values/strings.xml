@@ -35,6 +35,19 @@
     <string name="number_required">Number is required</string>
     <string name="positions">Positions</string>
     <string name="no_positions">Not assigned position</string>
+    <string name="is_captain">Team Captain</string>
+    <string name="captain_confirm_title">Change Team Captain?</string>
+    <string name="captain_confirm_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. Continue?</string>
+    <string name="captain_remove_title">Remove Team Captain?</string>
+    <string name="captain_remove_message">By unchecking this, %1$s %2$s will no longer be the team captain. The captain will be selected for each match. Continue?</string>
+    <string name="captain_remove_with_matches_message">By unchecking this, %1$s %2$s will no longer be the team captain. There are %3$d scheduled matches. What do you want to do?</string>
+    <string name="keep_captain_for_matches">Keep as captain in scheduled matches</string>
+    <string name="remove_captain_from_matches">Remove from scheduled matches</string>
+    <string name="update_matches_captain_title">Update Scheduled Matches</string>
+    <string name="update_matches_captain_message">There are %1$d scheduled matches. Do you want to update them with the new captain?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="team_captain">Captain</string>
 
     <string name="delete_player_message">Are you sure you want to delete %1$s %2$s from the roster?</string>
 
