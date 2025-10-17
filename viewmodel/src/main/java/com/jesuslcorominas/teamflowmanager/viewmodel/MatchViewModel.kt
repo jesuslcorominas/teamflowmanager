@@ -74,6 +74,9 @@ class MatchViewModel(
     private val _showGoalScorerDialog = MutableStateFlow(false)
     val showGoalScorerDialog: StateFlow<Boolean> = _showGoalScorerDialog.asStateFlow()
 
+    private val _showOpponentGoalDialog = MutableStateFlow(false)
+    val showOpponentGoalDialog: StateFlow<Boolean> = _showOpponentGoalDialog.asStateFlow()
+
     init {
         loadMatchData()
         observeTime()
@@ -214,8 +217,35 @@ class MatchViewModel(
                     matchId = currentState.matchId,
                     scorerId = scorerId,
                     currentTimeMillis = currentTime,
+                    isOpponentGoal = false,
                 )
                 _showGoalScorerDialog.value = false
+                _currentTime.value = currentTime
+            }
+        }
+    }
+
+    fun showOpponentGoalDialog() {
+        _showOpponentGoalDialog.value = true
+    }
+
+    fun dismissOpponentGoalDialog() {
+        _showOpponentGoalDialog.value = false
+    }
+
+    fun registerOpponentGoal() {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState is MatchUiState.Success) {
+                val currentTime = System.currentTimeMillis()
+                // For opponent goals, we use a dummy scorer ID (0) since opponent players are not tracked
+                registerGoalUseCase(
+                    matchId = currentState.matchId,
+                    scorerId = 0L,
+                    currentTimeMillis = currentTime,
+                    isOpponentGoal = true,
+                )
+                _showOpponentGoalDialog.value = false
                 _currentTime.value = currentTime
             }
         }
@@ -243,8 +273,10 @@ class MatchViewModel(
                         currentTime,
                     )
 
-                    // Get goals count for the match
-                    val goalsCount = getGoalsForMatchUseCase(match.id).first().size
+                    // Get goals count for the match, separated by team and opponent
+                    val allGoals = getGoalsForMatchUseCase(match.id).first()
+                    val teamGoalsCount = allGoals.count { !it.isOpponentGoal }
+                    val opponentGoalsCount = allGoals.count { it.isOpponentGoal }
 
                     val playerTimeItems = players.map { player ->
                         val playerTime = playerTimes.find { it.playerId == player.id }
@@ -288,7 +320,8 @@ class MatchViewModel(
                         isLastPeriod = match.isLastPeriod(),
                         sortOrder = sortOrder,
                         isMatchStarted = match.elapsedTimeMillis > 0 || match.isRunning,
-                        goalsCount = goalsCount,
+                        goalsCount = teamGoalsCount,
+                        opponentGoalsCount = opponentGoalsCount,
                     )
                 }
             }.collect { state ->
@@ -382,6 +415,7 @@ sealed class MatchUiState {
         val sortOrder: PlayerSortOrder = PlayerSortOrder.BY_ACTIVE_FIRST,
         val isMatchStarted: Boolean = false,
         val goalsCount: Int = 0,
+        val opponentGoalsCount: Int = 0,
     ) : MatchUiState()
     data class Finished(
         val matchId: Long,

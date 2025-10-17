@@ -10,6 +10,7 @@ interface RegisterGoalUseCase {
         matchId: Long,
         scorerId: Long,
         currentTimeMillis: Long,
+        isOpponentGoal: Boolean = false,
     ): Long
 }
 
@@ -21,6 +22,7 @@ internal class RegisterGoalUseCaseImpl(
         matchId: Long,
         scorerId: Long,
         currentTimeMillis: Long,
+        isOpponentGoal: Boolean,
     ): Long {
         // Get match to calculate elapsed time
         val match = matchRepository.getMatch().first()
@@ -38,6 +40,7 @@ internal class RegisterGoalUseCaseImpl(
             scorerId = scorerId,
             goalTimeMillis = currentTimeMillis,
             matchElapsedTimeMillis = matchElapsedTime,
+            isOpponentGoal = isOpponentGoal,
         )
 
         return goalRepository.insertGoal(goal)

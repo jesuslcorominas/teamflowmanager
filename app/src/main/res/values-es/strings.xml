@@ -74,7 +74,12 @@
     <string name="resume_match_button">Reanudar</string>
     <string name="finish_match_button">Finalizar partido</string>
     <string name="add_goal_button">Añadir Gol</string>
+    <string name="add_opponent_goal_button">Añadir Gol Rival</string>
+    <string name="add_opponent_goal_title">Añadir Gol al Marcador Contrario</string>
+    <string name="add_opponent_goal_message">¿Quieres añadir un gol al equipo rival?</string>
     <string name="scoreboard_label">Marcador</string>
+    <string name="my_team_label">Mi Equipo</string>
+    <string name="opponent_team_label">Rival</string>
     <string name="select_goal_scorer_title">Seleccionar Goleador</string>
 
     <!-- Match Management Strings -->

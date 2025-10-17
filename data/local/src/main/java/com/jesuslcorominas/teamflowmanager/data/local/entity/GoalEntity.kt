@@ -31,6 +31,7 @@ data class GoalEntity(
     val scorerId: Long,
     val goalTimeMillis: Long,
     val matchElapsedTimeMillis: Long,
+    val isOpponentGoal: Boolean = false,
 )
 
 fun GoalEntity.toDomain(): Goal =
@@ -40,6 +41,7 @@ fun GoalEntity.toDomain(): Goal =
         scorerId = scorerId,
         goalTimeMillis = goalTimeMillis,
         matchElapsedTimeMillis = matchElapsedTimeMillis,
+        isOpponentGoal = isOpponentGoal,
     )
 
 fun Goal.toEntity(): GoalEntity =
@@ -49,4 +51,5 @@ fun Goal.toEntity(): GoalEntity =
         scorerId = scorerId,
         goalTimeMillis = goalTimeMillis,
         matchElapsedTimeMillis = matchElapsedTimeMillis,
+        isOpponentGoal = isOpponentGoal,
     )
