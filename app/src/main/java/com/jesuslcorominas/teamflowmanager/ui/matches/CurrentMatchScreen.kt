@@ -63,6 +63,7 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val showInvalidSubstitutionAlert by viewModel.showInvalidSubstitutionAlert.collectAsState()
     val showStopConfirmation by viewModel.showStopConfirmation.collectAsState()
     val currentSortOrder by viewModel.currentSortOrder.collectAsState()
+    val showGoalScorerDialog by viewModel.showGoalScorerDialog.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -88,6 +89,7 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                     }
                 },
                 onSortOrderChange = { viewModel.setSortOrder(it) },
+                onAddGoal = { viewModel.showGoalScorerDialog() },
             )
 
             is MatchUiState.Finished -> FinishedMatchState(state = state)
@@ -108,6 +110,20 @@ fun CurrentMatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                 onConfirm = { viewModel.confirmStopMatch() },
                 onDismiss = { viewModel.dismissStopConfirmation() }
             )
+        }
+
+        // Show goal scorer selection dialog
+        if (showGoalScorerDialog) {
+            val state = uiState
+            if (state is MatchUiState.Success) {
+                GoalScorerSelectionDialog(
+                    players = state.playerTimes.map { it.player },
+                    onPlayerSelected = { playerId ->
+                        viewModel.registerGoal(playerId)
+                    },
+                    onDismiss = { viewModel.dismissGoalScorerDialog() }
+                )
+            }
         }
     }
 }
@@ -145,6 +161,7 @@ private fun SuccessState(
     onResumeMatch: () -> Unit,
     onPlayerClick: (Long) -> Unit,
     onSortOrderChange: (PlayerSortOrder) -> Unit,
+    onAddGoal: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -167,6 +184,7 @@ private fun SuccessState(
                 onResumeMatch = onResumeMatch,
                 onPlayerClick = onPlayerClick,
                 onSortOrderChange = onSortOrderChange,
+                onAddGoal = onAddGoal,
             )
         }
     }
@@ -260,6 +278,7 @@ private fun OngoingMatchView(
     onResumeMatch: () -> Unit,
     onPlayerClick: (Long) -> Unit,
     onSortOrderChange: (PlayerSortOrder) -> Unit,
+    onAddGoal: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -269,6 +288,7 @@ private fun OngoingMatchView(
             isRunning = state.matchIsRunning,
             numberOfPeriods = state.numberOfPeriods,
             currentPeriod = state.currentPeriod,
+            goalsCount = state.goalsCount,
         )
 
         Row(
@@ -313,6 +333,17 @@ private fun OngoingMatchView(
         }
 
         Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+
+        // Add goal button
+        Button(
+            onClick = onAddGoal,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = state.matchIsRunning,
+        ) {
+            Text(text = stringResource(R.string.add_goal_button))
+        }
+
+        Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -363,6 +394,7 @@ private fun MatchTimeCard(
     isRunning: Boolean,
     numberOfPeriods: Int,
     currentPeriod: Int,
+    goalsCount: Int = 0,
 ) {
     // Calculate period duration
     val periodDurationMillis = if (numberOfPeriods == 2) {
@@ -416,6 +448,21 @@ private fun MatchTimeCard(
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
             )
+
+            // Scoreboard
+            Text(
+                text = stringResource(R.string.scoreboard_label),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = "$goalsCount",
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+
+            Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -602,7 +649,8 @@ private fun SuccessStatePreview() {
             onResumeMatch = {},
             onPlayerClick = {},
             currentSortOrder = PlayerSortOrder.BY_ACTIVE_FIRST,
-            onSortOrderChange = {}
+            onSortOrderChange = {},
+            onAddGoal = {}
         )
     }
 }
@@ -916,3 +964,58 @@ private fun SortOrderSelector(
     }
 }
 
+@Composable
+private fun GoalScorerSelectionDialog(
+    players: List<Player>,
+    onPlayerSelected: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                stringResource(R.string.select_goal_scorer_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            LazyColumn {
+                items(players) { player ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = TFMSpacing.spacing01),
+                        onClick = { onPlayerSelected(player.id) },
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(TFMSpacing.spacing03),
+                            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = player.number.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "${player.firstName} ${player.lastName}",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDismiss
+            ) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
