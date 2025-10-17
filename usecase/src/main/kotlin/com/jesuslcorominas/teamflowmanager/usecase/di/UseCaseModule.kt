@@ -12,6 +12,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
@@ -22,6 +24,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetGoalsForMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetGoalsForMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCase
@@ -42,16 +46,16 @@ import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetCurrentMatchUseCase
@@ -114,6 +118,8 @@ internal val useCaseInternalModule =
         singleOf(::SaveDefaultCaptainUseCaseImpl) bind SaveDefaultCaptainUseCase::class
         singleOf(::GetCaptainPlayerUseCaseImpl) bind GetCaptainPlayerUseCase::class
         singleOf(::UpdateScheduledMatchesCaptainUseCaseImpl) bind UpdateScheduledMatchesCaptainUseCase::class
+        singleOf(::RegisterGoalUseCaseImpl) bind RegisterGoalUseCase::class
+        singleOf(::GetGoalsForMatchUseCaseImpl) bind GetGoalsForMatchUseCase::class
     }
 
 val useCaseModule =

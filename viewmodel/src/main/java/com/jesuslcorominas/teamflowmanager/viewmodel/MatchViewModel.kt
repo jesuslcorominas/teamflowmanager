@@ -49,6 +49,8 @@ class MatchViewModel(
     private val startPlayerTimerUseCase: com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase,
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
     private val getMatchSummaryUseCase: GetMatchSummaryUseCase,
+    private val registerGoalUseCase: com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCase,
+    private val getGoalsForMatchUseCase: com.jesuslcorominas.teamflowmanager.usecase.GetGoalsForMatchUseCase,
     private val preferencesRepository: PreferencesRepository,
     private val timeTicker: TimeTicker,
 ) : ViewModel() {
@@ -68,6 +70,9 @@ class MatchViewModel(
 
     private val _currentSortOrder = MutableStateFlow(PlayerSortOrder.BY_ACTIVE_FIRST)
     val currentSortOrder: StateFlow<PlayerSortOrder> = _currentSortOrder.asStateFlow()
+
+    private val _showGoalScorerDialog = MutableStateFlow(false)
+    val showGoalScorerDialog: StateFlow<Boolean> = _showGoalScorerDialog.asStateFlow()
 
     init {
         loadMatchData()
@@ -192,6 +197,30 @@ class MatchViewModel(
         }
     }
 
+    fun showGoalScorerDialog() {
+        _showGoalScorerDialog.value = true
+    }
+
+    fun dismissGoalScorerDialog() {
+        _showGoalScorerDialog.value = false
+    }
+
+    fun registerGoal(scorerId: Long) {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState is MatchUiState.Success) {
+                val currentTime = System.currentTimeMillis()
+                registerGoalUseCase(
+                    matchId = currentState.matchId,
+                    scorerId = scorerId,
+                    currentTimeMillis = currentTime,
+                )
+                _showGoalScorerDialog.value = false
+                _currentTime.value = currentTime
+            }
+        }
+    }
+
     private fun loadMatchData() {
         viewModelScope.launch {
             combine(
@@ -213,6 +242,9 @@ class MatchViewModel(
                         match.lastStartTimeMillis,
                         currentTime,
                     )
+
+                    // Get goals count for the match
+                    val goalsCount = getGoalsForMatchUseCase(match.id).first().size
 
                     val playerTimeItems = players.map { player ->
                         val playerTime = playerTimes.find { it.playerId == player.id }
@@ -256,6 +288,7 @@ class MatchViewModel(
                         isLastPeriod = match.isLastPeriod(),
                         sortOrder = sortOrder,
                         isMatchStarted = match.elapsedTimeMillis > 0 || match.isRunning,
+                        goalsCount = goalsCount,
                     )
                 }
             }.collect { state ->
@@ -348,6 +381,7 @@ sealed class MatchUiState {
         val isLastPeriod: Boolean = false,
         val sortOrder: PlayerSortOrder = PlayerSortOrder.BY_ACTIVE_FIRST,
         val isMatchStarted: Boolean = false,
+        val goalsCount: Int = 0,
     ) : MatchUiState()
     data class Finished(
         val matchId: Long,

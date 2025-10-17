@@ -73,6 +73,9 @@
     <string name="pause_match_button">Descanso</string>
     <string name="resume_match_button">Reanudar</string>
     <string name="finish_match_button">Finalizar partido</string>
+    <string name="add_goal_button">Añadir Gol</string>
+    <string name="scoreboard_label">Marcador</string>
+    <string name="select_goal_scorer_title">Seleccionar Goleador</string>
 
     <!-- Match Management Strings -->
     <string name="matches_title">Partidos</string>

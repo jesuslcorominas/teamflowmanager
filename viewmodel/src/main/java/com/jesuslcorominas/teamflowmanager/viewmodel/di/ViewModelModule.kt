@@ -49,6 +49,8 @@ val viewModelModule =
                 startPlayerTimerUseCase = get(),
                 registerPlayerSubstitutionUseCase = get(),
                 getMatchSummaryUseCase = get(),
+                registerGoalUseCase = get(),
+                getGoalsForMatchUseCase = get(),
                 preferencesRepository = get(),
                 timeTicker = get()
             )

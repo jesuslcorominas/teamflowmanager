@@ -73,6 +73,9 @@
     <string name="pause_match_button">Half Time</string>
     <string name="resume_match_button">Resume</string>
     <string name="finish_match_button">Finish match</string>
+    <string name="add_goal_button">Add Goal</string>
+    <string name="scoreboard_label">Scoreboard</string>
+    <string name="select_goal_scorer_title">Select Goal Scorer</string>
 
     <!-- Match Management Strings -->
     <string name="matches_title">Matches</string>
