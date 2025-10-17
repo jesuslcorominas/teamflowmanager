@@ -19,7 +19,7 @@ import com.jesuslcorominas.teamflowmanager.data.local.entity.TeamEntity
 
 @Database(
     entities = [PlayerEntity::class, TeamEntity::class, MatchEntity::class, PlayerTimeEntity::class, PlayerTimeHistoryEntity::class, PlayerSubstitutionEntity::class, GoalEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class TeamFlowManagerDatabase : RoomDatabase() {

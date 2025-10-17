@@ -238,10 +238,10 @@ class MatchViewModel(
             val currentState = _uiState.value
             if (currentState is MatchUiState.Success) {
                 val currentTime = System.currentTimeMillis()
-                // For opponent goals, we use a dummy scorer ID (0) since opponent players are not tracked
+                // For opponent goals, scorerId is null since opponent players are not tracked
                 registerGoalUseCase(
                     matchId = currentState.matchId,
-                    scorerId = 0L,
+                    scorerId = null,
                     currentTimeMillis = currentTime,
                     isOpponentGoal = true,
                 )

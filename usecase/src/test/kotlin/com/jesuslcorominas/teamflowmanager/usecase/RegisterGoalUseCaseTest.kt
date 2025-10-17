@@ -141,7 +141,7 @@ class RegisterGoalUseCaseTest {
         runTest {
             // Given
             val matchId = 1L
-            val scorerId = 0L // Dummy scorer ID for opponent
+            val scorerId = null // Null scorer ID for opponent goals
             val currentTimeMillis = System.currentTimeMillis()
             val match =
                 Match(

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.first
 interface RegisterGoalUseCase {
     suspend operator fun invoke(
         matchId: Long,
-        scorerId: Long,
+        scorerId: Long?,
         currentTimeMillis: Long,
         isOpponentGoal: Boolean = false,
     ): Long
@@ -20,7 +20,7 @@ internal class RegisterGoalUseCaseImpl(
 ) : RegisterGoalUseCase {
     override suspend fun invoke(
         matchId: Long,
-        scorerId: Long,
+        scorerId: Long?,
         currentTimeMillis: Long,
         isOpponentGoal: Boolean,
     ): Long {

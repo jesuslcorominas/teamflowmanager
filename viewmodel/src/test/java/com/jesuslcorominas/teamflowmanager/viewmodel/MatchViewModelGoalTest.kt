@@ -287,7 +287,7 @@ class MatchViewModelGoalTest {
             advanceUntilIdle()
 
             // Then
-            coVerify { registerGoalUseCase(match.id, 0L, any(), true) }
+            coVerify { registerGoalUseCase(match.id, null, any(), true) }
             assertFalse(viewModel.showOpponentGoalDialog.value)
         }
 
@@ -308,7 +308,7 @@ class MatchViewModelGoalTest {
                     Goal(
                         id = 2L,
                         matchId = match.id,
-                        scorerId = 0L,
+                        scorerId = null,
                         goalTimeMillis = 2000L,
                         matchElapsedTimeMillis = 700000L,
                         isOpponentGoal = true,
@@ -316,7 +316,7 @@ class MatchViewModelGoalTest {
                     Goal(
                         id = 3L,
                         matchId = match.id,
-                        scorerId = 0L,
+                        scorerId = null,
                         goalTimeMillis = 3000L,
                         matchElapsedTimeMillis = 900000L,
                         isOpponentGoal = true,
