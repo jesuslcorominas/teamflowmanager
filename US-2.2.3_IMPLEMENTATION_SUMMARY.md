@@ -11,6 +11,25 @@ This user story implements the functionality for a coach to add goals to the opp
 - [x] Los goles del equipo propio y del oponente se distinguen claramente en el marcador
 - [x] Se puede añadir goles al equipo oponente solo cuando el partido está en curso
 - [x] El marcador muestra ambos equipos (Mi Equipo - Rival) durante el partido
+- [x] **Bug Fix**: No crash when adding opponent goals (foreign key issue resolved)
+
+## 🐛 Bug Fix: Foreign Key Crash (Resolved)
+
+**Issue Reported**: The app crashed when adding opponent goals due to a foreign key constraint violation.
+
+**Root Cause**: 
+- Initial implementation used `scorerId = 0L` for opponent goals
+- `GoalEntity` had a foreign key constraint on `scorerId` referencing `PlayerEntity`
+- No player with ID 0 exists in the database, causing the foreign key constraint to fail
+
+**Solution**:
+- Made `scorerId` nullable (`Long?`) in all layers (Domain, Data, UseCase, ViewModel)
+- Removed the foreign key constraint on `scorerId` from `GoalEntity`
+- Opponent goals now use `scorerId = null` instead of `0L`
+- Team goals still require valid player IDs for data integrity
+- Database version incremented from 2 to 3
+
+**Commit**: `dba95aa` - Fix foreign key crash: make scorerId nullable for opponent goals
 
 ## Technical Implementation
 
@@ -19,17 +38,20 @@ This user story implements the functionality for a coach to add goals to the opp
 
 **Changes:**
 - Added `isOpponentGoal: Boolean = false` field to distinguish between team and opponent goals
+- Made `scorerId` nullable (`Long?`) to support opponent goals without player references
 
 ```kotlin
 data class Goal(
     val id: Long = 0L,
     val matchId: Long,
-    val scorerId: Long,
+    val scorerId: Long?,  // Nullable to support opponent goals
     val goalTimeMillis: Long,
     val matchElapsedTimeMillis: Long,
     val isOpponentGoal: Boolean = false,
 )
 ```
+
+**Rationale**: Opponent goals don't have an associated player from our team, so `scorerId` can be null for opponent goals while remaining required for team goals.
 
 ### 2. Database Layer Updates
 
@@ -38,14 +60,30 @@ data class Goal(
 
 **Changes:**
 - Added `isOpponentGoal: Boolean = false` field to entity
-- Updated `toDomain()` mapper to include the new field
-- Updated `toEntity()` mapper to include the new field
+- Made `scorerId` nullable (`Long?`) to support opponent goals
+- **Removed foreign key constraint** on `scorerId` to avoid crashes with null values
+- Kept foreign key constraint on `matchId` for data integrity
+- Updated `toDomain()` mapper to include the new fields
+- Updated `toEntity()` mapper to include the new fields
+
+**Foreign Keys**:
+```kotlin
+foreignKeys = [
+    ForeignKey(
+        entity = MatchEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["matchId"],
+        onDelete = ForeignKey.CASCADE,
+    ),
+    // scorerId foreign key removed to support null values for opponent goals
+]
+```
 
 #### Database Version
 **Location:** `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/database/TeamFlowManagerDatabase.kt`
 
 **Changes:**
-- Incremented database version from 1 to 2
+- Incremented database version from 1 to 3 (v2 was initial opponent goals, v3 fixes foreign key issue)
 - Database will use fallback to destructive migration (existing functionality)
 
 ### 3. Use Case Updates
@@ -62,7 +100,7 @@ data class Goal(
 interface RegisterGoalUseCase {
     suspend operator fun invoke(
         matchId: Long,
-        scorerId: Long,
+        scorerId: Long?,  // Nullable to support opponent goals
         currentTimeMillis: Long,
         isOpponentGoal: Boolean = false,
     ): Long
@@ -86,7 +124,7 @@ interface RegisterGoalUseCase {
 **New Methods:**
 - `showOpponentGoalDialog()` - Shows the opponent goal confirmation dialog
 - `dismissOpponentGoalDialog()` - Dismisses the opponent goal confirmation dialog
-- `registerOpponentGoal()` - Registers an opponent goal with scorerId = 0L (dummy ID)
+- `registerOpponentGoal()` - Registers an opponent goal with `scorerId = null` (no player reference)
 
 **Updated Methods:**
 - `registerGoal()` - Now explicitly passes `isOpponentGoal = false`
@@ -214,15 +252,19 @@ UI Layer (CurrentMatchScreen.MatchTimeCard)
 
 ## Technical Decisions
 
-1. **Opponent Goal Scorer ID:**
-   - Used scorerId = 0L as a dummy value for opponent goals
+1. **Opponent Goal Scorer ID (Updated after bug fix):**
+   - ~~Initially used scorerId = 0L as a dummy value~~ ❌ (caused foreign key crash)
+   - **Now uses `scorerId = null`** for opponent goals ✅
    - Opponent players are not tracked in the system
    - This avoids needing to create a separate entity for opponent teams/players
+   - Made `scorerId` nullable to support this approach without foreign key violations
 
 2. **Database Schema:**
    - Added `isOpponentGoal` boolean field instead of creating separate tables
    - Keeps the data model simple and maintainable
    - Allows for easy filtering of goals by type
+   - **Removed foreign key constraint** on `scorerId` to support null values
+   - Maintained foreign key on `matchId` for data integrity
 
 3. **UI Design:**
    - Side-by-side scoreboard display (Team - Opponent)
@@ -235,7 +277,8 @@ UI Layer (CurrentMatchScreen.MatchTimeCard)
    - Prevents accidental goal registration during pause or before match starts
 
 5. **Database Version:**
-   - Incremented version to 2 to trigger schema update
+   - Version 2: Initial opponent goals implementation (had foreign key issue)
+   - **Version 3: Fixed foreign key crash by making scorerId nullable**
    - Uses fallback to destructive migration (existing approach)
    - For production, proper migration scripts should be implemented
 
@@ -243,13 +286,14 @@ UI Layer (CurrentMatchScreen.MatchTimeCard)
 
 ### Unit Tests Created/Updated:
 
-1. **RegisterGoalUseCaseTest** - Added 1 new test
+1. **RegisterGoalUseCaseTest** - Added 1 new test (updated after bug fix)
    - ✅ Records opponent goal correctly with isOpponentGoal flag
+   - ✅ Verifies `scorerId = null` for opponent goals
 
-2. **MatchViewModelGoalTest** - Added 4 new tests
+2. **MatchViewModelGoalTest** - Added 4 new tests (updated after bug fix)
    - ✅ showOpponentGoalDialog sets state to true
    - ✅ dismissOpponentGoalDialog sets state to false
-   - ✅ registerOpponentGoal calls use case with correct parameters
+   - ✅ registerOpponentGoal calls use case with `scorerId = null`
    - ✅ Opponent goals count is reflected in UI state separately from team goals
 
 ### Total Test Coverage:
@@ -277,7 +321,7 @@ UI Layer (CurrentMatchScreen.MatchTimeCard)
 
 This implementation successfully adds opponent goal tracking functionality to the TeamFlow Manager application. Coaches can now:
 - View both team and opponent scoreboards side by side during matches
-- Add goals to the opponent team's scoreboard
+- Add goals to the opponent team's scoreboard **without crashes**
 - Have opponent goals automatically tracked with the correct match and time information
 - See goals persist in the database with proper distinction between team and opponent
 
@@ -289,3 +333,6 @@ The scoreboard display clearly shows:
 - **Rival** (Opponent) score in error/red color
 
 This visual distinction helps coaches quickly understand the match status at a glance.
+
+### Bug Fix Applied
+The initial implementation had a foreign key constraint issue that caused crashes when adding opponent goals. This was resolved by making `scorerId` nullable and removing the foreign key constraint, allowing opponent goals to be stored with `scorerId = null` while team goals maintain data integrity with valid player references.
