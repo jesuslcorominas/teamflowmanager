@@ -11,6 +11,7 @@ data class TeamEntity(
     val name: String,
     val coachName: String,
     val delegateName: String,
+    val captainId: Long? = null,
 )
 
 fun TeamEntity.toDomain(): Team =
@@ -19,6 +20,7 @@ fun TeamEntity.toDomain(): Team =
         name = name,
         coachName = coachName,
         delegateName = delegateName,
+        captainId = captainId,
     )
 
 fun Team.toEntity(): TeamEntity =
@@ -27,4 +29,5 @@ fun Team.toEntity(): TeamEntity =
         name = name,
         coachName = coachName,
         delegateName = delegateName,
+        captainId = captainId,
     )

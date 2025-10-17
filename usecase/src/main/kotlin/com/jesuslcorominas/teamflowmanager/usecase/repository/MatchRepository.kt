@@ -12,6 +12,10 @@ interface MatchRepository {
 
     fun getArchivedMatches(): Flow<List<Match>>
 
+    suspend fun getScheduledMatches(): List<Match>
+
+    suspend fun updateMatchCaptain(matchId: Long, captainId: Long?)
+
     suspend fun createMatch(match: Match): Long
 
     suspend fun updateMatch(match: Match)

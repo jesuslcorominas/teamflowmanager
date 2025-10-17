@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.local.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.withTransaction
 import com.jesuslcorominas.teamflowmanager.data.local.dao.MatchDao
 import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerDao
 import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerSubstitutionDao
@@ -32,4 +33,10 @@ abstract class TeamFlowManagerDatabase : RoomDatabase() {
     abstract fun playerTimeHistoryDao(): PlayerTimeHistoryDao
 
     abstract fun playerSubstitutionDao(): PlayerSubstitutionDao
+
+    suspend fun <T> runInTransaction(block: suspend () -> T): T {
+        return this.withTransaction {
+            block()
+        }
+    }
 }

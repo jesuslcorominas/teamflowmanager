@@ -16,6 +16,17 @@ internal class PlayerLocalDataSourceImpl(
             entities.map { it.toDomain() }
         }
 
+    override suspend fun getCaptainPlayer(): Player? =
+        playerDao.getCaptainPlayer()?.toDomain()
+
+    override suspend fun setPlayerAsCaptain(playerId: Long) {
+        playerDao.setPlayerAsCaptain(playerId)
+    }
+
+    override suspend fun removePlayerAsCaptain(playerId: Long) {
+        playerDao.removePlayerAsCaptain(playerId)
+    }
+
     override suspend fun insertPlayer(player: Player) {
         playerDao.insertPlayer(player.toEntity())
     }

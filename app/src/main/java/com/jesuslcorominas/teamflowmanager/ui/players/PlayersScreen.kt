@@ -26,8 +26,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
+import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.CaptainConfirmationDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.DeleteConfirmationDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.PlayerDialog
+import com.jesuslcorominas.teamflowmanager.viewmodel.CaptainConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.DeleteConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
@@ -40,6 +42,7 @@ fun PlayersScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
+    val captainConfirmationState by viewModel.captainConfirmationState.collectAsState()
     var showAddPlayerDialog by remember { mutableStateOf(false) }
     var playerToEdit by remember { mutableStateOf<Player?>(null) }
 
@@ -89,6 +92,31 @@ fun PlayersScreen(
                 )
 
             DeleteConfirmationState.None -> {}
+        }
+
+        when (val state = captainConfirmationState) {
+            is CaptainConfirmationState.ConfirmReplace -> {
+                CaptainConfirmationDialog(
+                    state = state,
+                    onConfirm = { viewModel.confirmCaptainChange() },
+                    onDismiss = { viewModel.cancelCaptainChange() },
+                )
+            }
+            is CaptainConfirmationState.ConfirmRemove -> {
+                CaptainConfirmationDialog(
+                    state = state,
+                    onConfirm = { viewModel.confirmCaptainChange() },
+                    onDismiss = { viewModel.cancelCaptainChange() },
+                )
+            }
+            is CaptainConfirmationState.ConfirmRemoveWithMatches -> {
+                CaptainConfirmationDialog(
+                    state = state,
+                    onConfirm = { keepInMatches -> viewModel.confirmCaptainChange(keepInMatches) },
+                    onDismiss = { viewModel.cancelCaptainChange() },
+                )
+            }
+            CaptainConfirmationState.None -> {}
         }
     }
 

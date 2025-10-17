@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.components.EditTeamDialog
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
@@ -41,7 +42,10 @@ fun TeamDetailScreen(
                 CircularProgressIndicator(modifier = Modifier.padding(TFMSpacing.spacing04))
             }
             is TeamUiState.TeamExists -> {
-                TeamDetailContent(team = state.team)
+                TeamDetailContent(
+                    team = state.team,
+                    captain = state.captain
+                )
             }
             is TeamUiState.NoTeam -> {
                 // Should not happen if navigation is correct
@@ -69,7 +73,7 @@ fun TeamDetailScreen(
 }
 
 @Composable
-private fun TeamDetailContent(team: Team) {
+private fun TeamDetailContent(team: Team, captain: Player? = null) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -90,6 +94,13 @@ private fun TeamDetailContent(team: Team) {
             label = stringResource(R.string.delegate_name),
             value = team.delegateName,
         )
+
+        if (captain != null) {
+            InfoRow(
+                label = stringResource(R.string.team_captain),
+                value = "${captain.firstName} ${captain.lastName} (#${captain.number})",
+            )
+        }
     }
 }
 
