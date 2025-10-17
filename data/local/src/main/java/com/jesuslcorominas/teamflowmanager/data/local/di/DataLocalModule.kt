@@ -32,7 +32,6 @@ internal val databaseModule =
                     TeamFlowManagerDatabase::class.java,
                     "teamflowmanager_database",
                 )
-                .fallbackToDestructiveMigration()
                 .build()
         }
 
