@@ -1,8 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.local.di
 
 import androidx.room.Room
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionLocalDataSource
@@ -23,15 +21,6 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-private val MIGRATION_1_2 = object : Migration(1, 2) {
-    override fun migrate(db: SupportSQLiteDatabase) {
-        // Add isCaptain column to players table
-        db.execSQL("ALTER TABLE `players` ADD COLUMN `isCaptain` INTEGER NOT NULL DEFAULT 0")
-        // Add captainId column to team table
-        db.execSQL("ALTER TABLE `team` ADD COLUMN `captainId` INTEGER")
-    }
-}
-
 internal val databaseModule =
     module {
         single {
@@ -41,7 +30,6 @@ internal val databaseModule =
                     TeamFlowManagerDatabase::class.java,
                     "teamflowmanager_database",
                 )
-                .addMigrations(MIGRATION_1_2)
                 .build()
         }
 

@@ -45,8 +45,6 @@
     <string name="remove_captain_from_matches">Remove from scheduled matches</string>
     <string name="update_matches_captain_title">Update Scheduled Matches</string>
     <string name="update_matches_captain_message">There are %1$d scheduled matches. Do you want to update them with the new captain?</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
     <string name="team_captain">Captain</string>
 
     <string name="delete_player_message">Are you sure you want to delete %1$s %2$s from the roster?</string>
@@ -112,7 +110,7 @@
     <string name="nav_players">Team Roster</string>
     <string name="nav_team">Team</string>
     <string name="nav_matches">Matches</string>
-    
+
     <!-- Match Status -->
     <string name="pending_matches">Pending Matches</string>
     <string name="paused_match">Match in Progress: Half Time</string>
@@ -126,13 +124,13 @@
     <string name="unarchive_match">Unarchive</string>
     <string name="archive_match_title">Archive Match</string>
     <string name="archive_match_message">Are you sure you want to archive this match? You can unarchive it later from the Archived section.</string>
-    
+
     <!-- Player Substitution -->
     <string name="select_player_in_message">Tap on the player to bring in</string>
     <string name="invalid_substitution_title">Invalid Substitution</string>
     <string name="invalid_substitution_message">You must first select a player who is currently on the field to substitute out.</string>
     <string name="dont_show_again">Don\'t show this again</string>
-    
+
     <!-- Match Summary -->
     <string name="match_finished">Match Finished</string>
     <string name="match_summary_title">Match Summary</string>
@@ -151,11 +149,11 @@
     <string name="wizard_step_squad_callup">Squad Call-Up</string>
     <string name="wizard_step_captain">Captain</string>
     <string name="wizard_step_lineup">Starting Lineup</string>
-    
+
     <string name="next">Next</string>
     <string name="previous">Previous</string>
     <string name="create">Create</string>
-    
+
     <string name="squad_callup_title">Select Squad Call-Up</string>
     <string name="squad_callup_subtitle">Select players for this match (minimum 5)</string>
     <string name="squad_callup_count">Selected: %d players</string>
@@ -163,14 +161,14 @@
     <string name="squad_callup_min_error">You must select at least 5 players</string>
     <string name="squad_callup_no_goalkeeper_warning">No goalkeeper selected</string>
     <string name="squad_callup_no_goalkeeper_message">You haven\'t selected any goalkeeper for the squad. Do you want to continue anyway?</string>
-    
+
     <string name="captain_selection_title">Select Captain</string>
     <string name="captain_selection_subtitle">Choose the captain for this match</string>
     <string name="make_default_captain_title">Make Default Captain?</string>
     <string name="make_default_captain_message">%s has been captain for the last 2 matches. Would you like to make them the default captain? This will auto-select them for future matches.</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    
+
     <string name="starting_lineup_title">Select Initial Lineup</string>
     <string name="starting_lineup_subtitle">Select exactly 5 players to start</string>
     <string name="starting_lineup_count">Selected: %d/5 players</string>

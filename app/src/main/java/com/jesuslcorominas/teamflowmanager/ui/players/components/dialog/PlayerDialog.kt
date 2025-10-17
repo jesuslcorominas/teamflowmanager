@@ -154,30 +154,6 @@ fun PlayerDialog(
 
             item {
                 Text(
-                    text = stringResource(R.string.positions),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            items(getAllPositions()) { position ->
-                PositionCheckbox(
-                    position = position,
-                    isSelected = formState.selectedPositions.contains(position),
-                    onCheckedChange = { isChecked ->
-                        formState = formState.copy(
-                            selectedPositions = if (isChecked) {
-                                formState.selectedPositions + position
-                            } else {
-                                formState.selectedPositions - position
-                            }
-                        )
-                    }
-                )
-            }
-
-            item {
-                Text(
                     text = stringResource(R.string.is_captain),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 8.dp)
@@ -205,6 +181,30 @@ fun PlayerDialog(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
+            }
+
+            item {
+                Text(
+                    text = stringResource(R.string.positions),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            items(getAllPositions()) { position ->
+                PositionCheckbox(
+                    position = position,
+                    isSelected = formState.selectedPositions.contains(position),
+                    onCheckedChange = { isChecked ->
+                        formState = formState.copy(
+                            selectedPositions = if (isChecked) {
+                                formState.selectedPositions + position
+                            } else {
+                                formState.selectedPositions - position
+                            }
+                        )
+                    }
+                )
             }
         }
     }

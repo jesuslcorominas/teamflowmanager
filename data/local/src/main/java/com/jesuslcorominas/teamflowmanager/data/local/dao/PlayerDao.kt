@@ -6,16 +6,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.jesuslcorominas.teamflowmanager.data.local.entity.PlayerEntity
 import kotlinx.coroutines.flow.Flow
-
-package com.jesuslcorominas.teamflowmanager.data.local.dao
-
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
 import androidx.room.Transaction
-import androidx.room.Update
-import com.jesuslcorominas.teamflowmanager.data.local.entity.PlayerEntity
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PlayerDao {
