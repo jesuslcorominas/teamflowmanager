@@ -13,12 +13,12 @@ internal class GetPreviousCaptainsUseCaseImpl(
 ) : GetPreviousCaptainsUseCase {
     override suspend fun invoke(count: Int): List<Long?> {
         val allMatches = matchRepository.getAllMatches().first()
-        
+
         // Filter out matches that haven't been played yet (no elapsed time)
         val playedMatches = allMatches
             .filter { it.elapsedTimeMillis > 0 || it.captainId != null }
-            .sortedByDescending { it.date ?: 0 }
-        
+            .sortedByDescending { it.dateTime ?: 0 }
+
         return playedMatches
             .take(count)
             .map { it.captainId }

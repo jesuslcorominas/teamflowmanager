@@ -18,6 +18,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -64,6 +65,7 @@ class MatchViewModelGoalTest {
             teamId = 1L,
             elapsedTimeMillis = 900000L,
             isRunning = true,
+            teamName = "My Team",
             lastStartTimeMillis = System.currentTimeMillis() - 60000L,
         )
 

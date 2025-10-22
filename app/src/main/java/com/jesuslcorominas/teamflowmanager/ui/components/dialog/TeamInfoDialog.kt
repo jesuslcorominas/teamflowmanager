@@ -1,9 +1,10 @@
-package com.jesuslcorominas.teamflowmanager.ui.components
+package com.jesuslcorominas.teamflowmanager.ui.components.dialog
 
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -69,7 +70,7 @@ fun TeamInfoDialog(
                     Button(onClick = onEdit) {
                         Text(stringResource(R.string.edit))
                     }
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
+                    Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
                     Button(onClick = onDismiss) {
                         Text(stringResource(R.string.close))
                     }

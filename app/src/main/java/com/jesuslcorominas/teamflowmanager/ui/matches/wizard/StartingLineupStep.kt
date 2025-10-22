@@ -3,16 +3,14 @@ package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,7 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.ui.components.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
 @Composable
@@ -80,34 +79,25 @@ fun StartingLineupStep(
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(players) { player ->
-                    PlayerCheckboxItem(
-                        player = player,
-                        isSelected = player.id in currentSelection,
-                        isCaptain = player.id == captainId,
-                        onSelectionChange = { isSelected ->
-                            if (isSelected) {
-                                if (currentSelection.size >= 5) {
-                                    showMaxError = true
-                                } else {
-                                    currentSelection = currentSelection + player.id
-                                }
-                            } else {
-                                currentSelection = currentSelection - player.id
-                            }
-                        },
-                    )
+        // TODO use captainId to show C
+        PlayerList(
+            modifier = Modifier.weight(1F),
+            players = players,
+            selectedPlayerIds = currentSelection,
+            showPositions = false,
+            paddingValues = PaddingValues(TFMSpacing.spacing02),
+            onMultiSelectionChange = { player, isSelected ->
+                if (isSelected) {
+                    if (currentSelection.size >= 5) {
+                        showMaxError = true
+                    } else {
+                        currentSelection = currentSelection + player.id
+                    }
+                } else {
+                    currentSelection = currentSelection - player.id
                 }
             }
-        }
+        )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 

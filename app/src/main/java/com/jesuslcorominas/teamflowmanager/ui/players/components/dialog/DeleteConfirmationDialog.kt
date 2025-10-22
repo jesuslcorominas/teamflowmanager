@@ -7,7 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.ui.components.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 
 @Composable
 fun DeleteConfirmationDialog(

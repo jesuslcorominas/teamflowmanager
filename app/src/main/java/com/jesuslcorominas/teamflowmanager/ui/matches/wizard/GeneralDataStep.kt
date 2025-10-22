@@ -41,7 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
-import com.jesuslcorominas.teamflowmanager.ui.components.AppTextField
+import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import java.text.SimpleDateFormat
 import java.util.Date

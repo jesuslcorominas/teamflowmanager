@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.repository
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -9,7 +10,7 @@ import kotlinx.coroutines.flow.first
 internal class MatchRepositoryImpl(
     private val localDataSource: MatchLocalDataSource,
 ) : MatchRepository {
-    override fun getMatch(): Flow<Match?> = localDataSource.getMatch()
+    override fun getMatch(): Flow<Match?> = localDataSource.getRunningMatch()
 
     override fun getMatchById(matchId: Long): Flow<Match?> = localDataSource.getMatchById(matchId)
 
@@ -33,34 +34,26 @@ internal class MatchRepositoryImpl(
         localDataSource.deleteMatch(matchId)
     }
 
-    override suspend fun startTimer(currentTimeMillis: Long) {
-        val currentMatch = localDataSource.getMatch().first()
-        val match =
-            if (currentMatch != null) {
-                currentMatch.copy(
-                    isRunning = true,
-                    lastStartTimeMillis = currentTimeMillis,
-                )
-            } else {
-                Match(
-                    id = 1L,
-                    elapsedTimeMillis = 0L,
-                    isRunning = true,
-                    lastStartTimeMillis = currentTimeMillis,
-                )
-            }
-        localDataSource.upsertMatch(match)
+    override suspend fun startTimer(matchId: Long, currentTimeMillis: Long) {
+        localDataSource.getMatchById(matchId).first()?.let { currentMatch ->
+            currentMatch.copy(
+                status = MatchStatus.IN_PROGRESS,
+                lastStartTimeMillis = currentTimeMillis,
+            )
+
+            localDataSource.upsertMatch(currentMatch)
+        }
     }
 
     override suspend fun pauseTimer(currentTimeMillis: Long) {
-        val currentMatch = localDataSource.getMatch().first()
-        if (currentMatch != null && currentMatch.isRunning) {
+        val currentMatch = localDataSource.getRunningMatch().first()
+        if (currentMatch != null && currentMatch.status == MatchStatus.IN_PROGRESS) {
             val lastStartTime = currentMatch.lastStartTimeMillis ?: currentTimeMillis
             val additionalTime = currentTimeMillis - lastStartTime
             val updatedMatch =
                 currentMatch.copy(
                     elapsedTimeMillis = currentMatch.elapsedTimeMillis + additionalTime,
-                    isRunning = false,
+                    status = MatchStatus.PAUSED,
                     lastStartTimeMillis = null,
                     pauseCount = currentMatch.pauseCount + 1,
                     currentPeriod = minOf(currentMatch.currentPeriod + 1, currentMatch.numberOfPeriods),

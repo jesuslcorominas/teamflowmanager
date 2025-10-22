@@ -8,7 +8,7 @@ class MatchTest {
     @Test
     fun `getPeriodDurationMillis returns 25 minutes for 2 periods`() {
         // Given
-        val match = Match(numberOfPeriods = 2)
+        val match = Match(numberOfPeriods = 2, teamName = "Team A")
 
         // When
         val duration = match.getPeriodDurationMillis()
@@ -20,7 +20,7 @@ class MatchTest {
     @Test
     fun `getPeriodDurationMillis returns 12 minutes 30 seconds for 4 periods`() {
         // Given
-        val match = Match(numberOfPeriods = 4)
+        val match = Match(numberOfPeriods = 4, teamName = "Team A")
 
         // When
         val duration = match.getPeriodDurationMillis()
@@ -32,7 +32,7 @@ class MatchTest {
     @Test
     fun `getMaxPauses returns 1 for 2 periods`() {
         // Given
-        val match = Match(numberOfPeriods = 2)
+        val match = Match(numberOfPeriods = 2, teamName = "Team A")
 
         // When
         val maxPauses = match.getMaxPauses()
@@ -44,7 +44,7 @@ class MatchTest {
     @Test
     fun `getMaxPauses returns 3 for 4 periods`() {
         // Given
-        val match = Match(numberOfPeriods = 4)
+        val match = Match(numberOfPeriods = 4, teamName = "Team A")
 
         // When
         val maxPauses = match.getMaxPauses()
@@ -56,7 +56,7 @@ class MatchTest {
     @Test
     fun `canPause returns true when pause count is less than max`() {
         // Given
-        val match = Match(numberOfPeriods = 2, pauseCount = 0)
+        val match = Match(numberOfPeriods = 2, pauseCount = 0, teamName = "Team A")
 
         // When
         val canPause = match.canPause()
@@ -68,7 +68,7 @@ class MatchTest {
     @Test
     fun `canPause returns false when pause count equals max`() {
         // Given
-        val match = Match(numberOfPeriods = 2, pauseCount = 1)
+        val match = Match(numberOfPeriods = 2, pauseCount = 1, teamName = "Team A")
 
         // When
         val canPause = match.canPause()
@@ -80,7 +80,7 @@ class MatchTest {
     @Test
     fun `canPause returns false when pause count exceeds max`() {
         // Given
-        val match = Match(numberOfPeriods = 2, pauseCount = 2)
+        val match = Match(numberOfPeriods = 2, pauseCount = 2, teamName = "Team A")
 
         // When
         val canPause = match.canPause()
@@ -92,7 +92,7 @@ class MatchTest {
     @Test
     fun `isLastPeriod returns false when current period is less than total`() {
         // Given
-        val match = Match(numberOfPeriods = 2, currentPeriod = 1)
+        val match = Match(numberOfPeriods = 2, currentPeriod = 1, teamName = "Team A")
 
         // When
         val isLast = match.isLastPeriod()
@@ -104,7 +104,7 @@ class MatchTest {
     @Test
     fun `isLastPeriod returns true when current period equals total`() {
         // Given
-        val match = Match(numberOfPeriods = 2, currentPeriod = 2)
+        val match = Match(numberOfPeriods = 2, currentPeriod = 2, teamName = "Team A")
 
         // When
         val isLast = match.isLastPeriod()
@@ -116,7 +116,7 @@ class MatchTest {
     @Test
     fun `isLastPeriod returns true when current period exceeds total`() {
         // Given
-        val match = Match(numberOfPeriods = 2, currentPeriod = 3)
+        val match = Match(numberOfPeriods = 2, currentPeriod = 3, teamName = "Team A")
 
         // When
         val isLast = match.isLastPeriod()

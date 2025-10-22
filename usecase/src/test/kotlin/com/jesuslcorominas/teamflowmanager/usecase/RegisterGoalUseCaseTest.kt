@@ -44,6 +44,7 @@ class RegisterGoalUseCaseTest {
                     elapsedTimeMillis = 900000L,
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis - 60000L,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
@@ -78,6 +79,7 @@ class RegisterGoalUseCaseTest {
                     elapsedTimeMillis = 600000L,
                     isRunning = false,
                     lastStartTimeMillis = null,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
@@ -107,6 +109,7 @@ class RegisterGoalUseCaseTest {
                     elapsedTimeMillis = 300000L,
                     isRunning = true,
                     lastStartTimeMillis = lastStartTimeMillis,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
@@ -150,6 +153,7 @@ class RegisterGoalUseCaseTest {
                     elapsedTimeMillis = 500000L,
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis - 30000L,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 

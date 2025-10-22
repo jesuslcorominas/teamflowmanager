@@ -22,7 +22,7 @@ interface MatchRepository {
 
     suspend fun deleteMatch(matchId: Long)
 
-    suspend fun startTimer(currentTimeMillis: Long)
+    suspend fun startTimer(matchId: Long, currentTimeMillis: Long)
 
     suspend fun pauseTimer(currentTimeMillis: Long)
 

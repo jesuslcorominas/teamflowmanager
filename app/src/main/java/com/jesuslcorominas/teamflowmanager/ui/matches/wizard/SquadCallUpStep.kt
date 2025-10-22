@@ -3,16 +3,14 @@ package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,10 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.ui.components.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
 @Composable
@@ -43,11 +44,11 @@ fun SquadCallUpStep(
     var currentSelection by remember(selectedPlayerIds) { mutableStateOf(selectedPlayerIds) }
     var showGoalkeeperWarning by remember { mutableStateOf(false) }
     var pendingNext by remember { mutableStateOf(false) }
-    
+
     val hasGoalkeeper = players.any { player ->
         player.id in currentSelection && player.positions.any { it is Position.Goalkeeper }
     }
-    
+
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
@@ -57,13 +58,13 @@ fun SquadCallUpStep(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        
+
         Text(
             text = stringResource(R.string.squad_callup_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Text(
             text = stringResource(R.string.squad_callup_count, currentSelection.size),
             style = MaterialTheme.typography.bodyLarge,
@@ -74,8 +75,7 @@ fun SquadCallUpStep(
                 MaterialTheme.colorScheme.error
             }
         )
-        
-        // Select All checkbox
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,35 +106,24 @@ fun SquadCallUpStep(
                 modifier = Modifier.padding(start = TFMSpacing.spacing02)
             )
         }
-        
-        Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-        
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(players) { player ->
-                    PlayerCheckboxItem(
-                        player = player,
-                        isSelected = player.id in currentSelection,
-                        onSelectionChange = { isSelected ->
-                            currentSelection = if (isSelected) {
-                                currentSelection + player.id
-                            } else {
-                                currentSelection - player.id
-                            }
-                        },
-                    )
+
+        PlayerList(
+            modifier = Modifier.weight(1F),
+            paddingValues = PaddingValues(TFMSpacing.spacing02),
+            players = players,
+            showPositions = false,
+            selectedPlayerIds = currentSelection,
+            onMultiSelectionChange = { player, isSelected ->
+                currentSelection = if (isSelected) {
+                    currentSelection + player.id
+                } else {
+                    currentSelection - player.id
                 }
             }
-        }
-        
+        )
+
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
@@ -145,16 +134,16 @@ fun SquadCallUpStep(
             ) {
                 Text(stringResource(R.string.previous))
             }
-            
+
             Button(
                 onClick = {
                     if (currentSelection.size < 5) {
                         // Show error, cannot proceed
                         return@Button
                     }
-                    
+
                     onSelectionChanged(currentSelection)
-                    
+
                     if (!hasGoalkeeper) {
                         pendingNext = true
                         showGoalkeeperWarning = true
@@ -169,7 +158,7 @@ fun SquadCallUpStep(
             }
         }
     }
-    
+
     // Goalkeeper warning dialog
     if (showGoalkeeperWarning) {
         AppAlertDialog(
@@ -191,38 +180,30 @@ fun SquadCallUpStep(
     }
 }
 
+@Preview(
+    name = "Pixel 7 Pro",
+    device = "spec:width=1440px,height=3120px,dpi=512",
+    showSystemUi = true,
+    showBackground = true
+)
 @Composable
-private fun PlayerCheckboxItem(
-    player: Player,
-    isSelected: Boolean,
-    onSelectionChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onSelectionChange(!isSelected) }
-            .padding(TFMSpacing.spacing02),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Checkbox(
-            checked = isSelected,
-            onCheckedChange = onSelectionChange,
+private fun SquadCallUpStepPreview() {
+    TFMAppTheme {
+        SquadCallUpStep(
+            players =
+                (1..3).map {
+                    Player(
+                        id = it.toLong(),
+                        firstName = "John",
+                        lastName = "Doe",
+                        number = 10,
+                        positions = listOf(Position.Forward, Position.Midfielder),
+                    )
+                },
+            selectedPlayerIds = emptySet(),
+            onSelectionChanged = {},
+            onNext = {},
+            onPrevious = {},
         )
-        Column(
-            modifier = Modifier.padding(start = TFMSpacing.spacing02),
-        ) {
-            val isGoalkeeper = player.positions.any { it is Position.Goalkeeper }
-            val displayName = buildString {
-                append("${player.number} - ${player.firstName} ${player.lastName}")
-                if (isGoalkeeper) {
-                    append(" (P)")
-                }
-            }
-            Text(
-                text = displayName,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
     }
 }

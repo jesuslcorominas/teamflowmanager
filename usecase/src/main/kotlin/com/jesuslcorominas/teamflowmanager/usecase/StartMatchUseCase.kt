@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import kotlinx.coroutines.flow.first
 
@@ -23,7 +24,7 @@ internal class StartMatchUseCaseImpl(
         // Update the match to mark it as running
         val updatedMatch =
             match.copy(
-                isRunning = true,
+                status = MatchStatus.IN_PROGRESS,
                 lastStartTimeMillis = currentTimeMillis,
             )
         matchRepository.updateMatch(updatedMatch)

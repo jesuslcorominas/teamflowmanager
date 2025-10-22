@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 internal class MatchLocalDataSourceImpl(
     private val matchDao: MatchDao,
 ) : MatchLocalDataSource {
-    override fun getMatch(): Flow<Match?> = matchDao.getMatch().map { it?.toDomain() }
+    override fun getRunningMatch(): Flow<Match?> = matchDao.getRunningMatch().map { it?.toDomain() }
 
     override fun getMatchById(matchId: Long): Flow<Match?> =
         matchDao.getMatchById(matchId).map { it?.toDomain() }

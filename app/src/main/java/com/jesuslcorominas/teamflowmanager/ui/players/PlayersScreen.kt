@@ -1,12 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.ui.players
 
-import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -25,10 +23,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
+import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.CaptainConfirmationDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.DeleteConfirmationDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.PlayerDialog
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.CaptainConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.DeleteConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerUiState
@@ -52,10 +53,10 @@ fun PlayersScreen(
             color = MaterialTheme.colorScheme.background,
         ) {
             when (uiState) {
-                is PlayerUiState.Loading -> LoadingState()
-                is PlayerUiState.Empty -> EmptyState()
+                is PlayerUiState.Loading -> Loading()
+                is PlayerUiState.Empty -> EmptyContent(stringResource(R.string.no_players_message))
                 is PlayerUiState.Success ->
-                    PlayerList(
+                    PlayersListSuccess(
                         players = (uiState as PlayerUiState.Success).players,
                         onEditClick = { player -> playerToEdit = player },
                         onDeleteClick = { player -> viewModel.showDeleteConfirmation(player) },
@@ -102,6 +103,7 @@ fun PlayersScreen(
                     onDismiss = { viewModel.cancelCaptainChange() },
                 )
             }
+
             is CaptainConfirmationState.ConfirmRemove -> {
                 CaptainConfirmationDialog(
                     state = state,
@@ -109,6 +111,7 @@ fun PlayersScreen(
                     onDismiss = { viewModel.cancelCaptainChange() },
                 )
             }
+
             is CaptainConfirmationState.ConfirmRemoveWithMatches -> {
                 CaptainConfirmationDialog(
                     state = state,
@@ -116,6 +119,7 @@ fun PlayersScreen(
                     onDismiss = { viewModel.cancelCaptainChange() },
                 )
             }
+
             CaptainConfirmationState.None -> {}
         }
     }
@@ -132,32 +136,43 @@ fun PlayersScreen(
 }
 
 @Composable
-private fun LoadingState() {
-    Box(
+private fun PlayersListSuccess(
+    players: List<Player>,
+    onEditClick: (Player) -> Unit,
+    onDeleteClick: (Player) -> Unit,
+) {
+    PlayerList(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
-private fun EmptyState() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = stringResource(R.string.no_players_message),
-            style = MaterialTheme.typography.bodyLarge,
-        )
-    }
+        players = players,
+        onEditClick = onEditClick,
+        onDeleteClick = onDeleteClick,
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun EmptyStatePreview() {
+private fun PlayersListSuccessPreview() {
     MaterialTheme {
-        EmptyState()
+        PlayersListSuccess(
+            players =
+                listOf(
+                    Player(
+                        id = 1,
+                        firstName = "John",
+                        lastName = "Doe",
+                        number = 10,
+                        positions = emptyList(),
+                    ),
+                    Player(
+                        id = 2,
+                        firstName = "Jane",
+                        lastName = "Smith",
+                        number = 8,
+                        positions = emptyList(),
+                    ),
+                ),
+            onEditClick = {},
+            onDeleteClick = {},
+        )
     }
 }

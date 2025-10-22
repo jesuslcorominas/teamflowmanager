@@ -33,6 +33,7 @@ class CreateMatchUseCaseTest {
                     date = System.currentTimeMillis(),
                     startingLineupIds = listOf(1L, 2L, 3L),
                     substituteIds = listOf(4L, 5L),
+                    teamName = "Team A"
                 )
             val expectedId = 123L
             coEvery { matchRepository.createMatch(match) } returns expectedId

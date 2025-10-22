@@ -32,8 +32,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
@@ -58,8 +56,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.SetCurrentMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SetCurrentMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
@@ -86,10 +82,11 @@ internal val useCaseInternalModule =
         singleOf(::AddPlayerUseCaseImpl) bind AddPlayerUseCase::class
         singleOf(::DeletePlayerUseCaseImpl) bind DeletePlayerUseCase::class
         singleOf(::UpdatePlayerUseCaseImpl) bind UpdatePlayerUseCase::class
+
         singleOf(::GetTeamUseCaseImpl) bind GetTeamUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
-        singleOf(::GetMatchUseCaseImpl) bind GetMatchUseCase::class
+
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class
         singleOf(::GetArchivedMatchesUseCaseImpl) bind GetArchivedMatchesUseCase::class
@@ -100,24 +97,27 @@ internal val useCaseInternalModule =
         singleOf(::UnarchiveMatchUseCaseImpl) bind UnarchiveMatchUseCase::class
         singleOf(::StartMatchTimerUseCaseImpl) bind StartMatchTimerUseCase::class
         singleOf(::StartMatchUseCaseImpl) bind StartMatchUseCase::class
-        singleOf(::SetCurrentMatchUseCaseImpl) bind SetCurrentMatchUseCase::class
         singleOf(::PauseMatchTimerUseCaseImpl) bind PauseMatchTimerUseCase::class
         singleOf(::PauseMatchUseCaseImpl) bind PauseMatchUseCase::class
         singleOf(::ResumeMatchUseCaseImpl) bind ResumeMatchUseCase::class
+        singleOf(::FinishMatchUseCaseImpl) bind FinishMatchUseCase::class
+        singleOf(::GetMatchSummaryUseCaseImpl) bind GetMatchSummaryUseCase::class
+
         singleOf(::GetPlayerTimeUseCaseImpl) bind GetPlayerTimeUseCase::class
         singleOf(::GetAllPlayerTimesUseCaseImpl) bind GetAllPlayerTimesUseCase::class
         singleOf(::StartPlayerTimerUseCaseImpl) bind StartPlayerTimerUseCase::class
         singleOf(::PausePlayerTimerUseCaseImpl) bind PausePlayerTimerUseCase::class
         singleOf(::PausePlayerTimerForMatchPauseUseCaseImpl) bind PausePlayerTimerForMatchPauseUseCase::class
-        singleOf(::FinishMatchUseCaseImpl) bind FinishMatchUseCase::class
+
         singleOf(::RegisterPlayerSubstitutionUseCaseImpl) bind RegisterPlayerSubstitutionUseCase::class
         singleOf(::GetMatchSubstitutionsUseCaseImpl) bind GetMatchSubstitutionsUseCase::class
-        singleOf(::GetMatchSummaryUseCaseImpl) bind GetMatchSummaryUseCase::class
+
         singleOf(::GetPreviousCaptainsUseCaseImpl) bind GetPreviousCaptainsUseCase::class
         singleOf(::GetDefaultCaptainUseCaseImpl) bind GetDefaultCaptainUseCase::class
         singleOf(::SaveDefaultCaptainUseCaseImpl) bind SaveDefaultCaptainUseCase::class
         singleOf(::GetCaptainPlayerUseCaseImpl) bind GetCaptainPlayerUseCase::class
         singleOf(::UpdateScheduledMatchesCaptainUseCaseImpl) bind UpdateScheduledMatchesCaptainUseCase::class
+
         singleOf(::RegisterGoalUseCaseImpl) bind RegisterGoalUseCase::class
         singleOf(::GetGoalsForMatchUseCaseImpl) bind GetGoalsForMatchUseCase::class
     }

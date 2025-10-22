@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
@@ -25,7 +26,7 @@ internal class FinishMatchUseCaseImpl(
         }
 
         // Calculate final elapsed time for the match
-        val matchFinalElapsedTime = if (match.isRunning && match.lastStartTimeMillis != null) {
+        val matchFinalElapsedTime = if (match.status == MatchStatus.IN_PROGRESS && match.lastStartTimeMillis != null) {
             match.elapsedTimeMillis + (currentTime - (match.lastStartTimeMillis ?: 0L))
         } else {
             match.elapsedTimeMillis
@@ -33,10 +34,9 @@ internal class FinishMatchUseCaseImpl(
 
         // Update match to mark it as finished
         val finishedMatch = match.copy(
-            isRunning = false,
             elapsedTimeMillis = matchFinalElapsedTime,
             lastStartTimeMillis = null,
-            status = com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus.FINISHED,
+            status = MatchStatus.FINISHED,
         )
         matchRepository.updateMatch(finishedMatch)
 

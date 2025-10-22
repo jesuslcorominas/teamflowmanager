@@ -545,6 +545,7 @@ class MatchViewModelTest {
 
     private val fakeMatch = Match(
         id = 1L,
+        teamName = "My Team",
         elapsedTimeMillis = 10_000L,
         isRunning = true,
         lastStartTimeMillis = 1_000L,
@@ -569,22 +570,26 @@ class MatchViewModelTest {
         coEvery { preferencesRepository.setShouldShowInvalidSubstitutionAlert(any()) } just runs
         coEvery { finishMatchUseCase() } just runs
         coEvery { pauseMatchUseCase(any()) } just runs
-        coEvery { resumeMatchUseCase(any()) } just runs
+        coEvery { resumeMatchUseCase(any(), any()) } just runs
         coEvery { registerPlayerSubstitutionUseCase(any(), any(), any(), any()) } just runs
 
         fakeTicker = FakeTimeTicker()
 
         viewModel = MatchViewModel(
-             getMatchUseCase = getMatchUseCase,
-         getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-        getPlayersUseCase = getPlayersUseCase,
-        saveMatchUseCase = finishMatchUseCase,
-         pauseMatchUseCase = pauseMatchUseCase,
-        resumeMatchUseCase = resumeMatchUseCase,
-        registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
- getMatchSummaryUseCase = getMatchSummaryUseCase,
- preferencesRepository = preferencesRepository,
- timeTicker = fakeTicker,
+            getMatchById = getMatchUseCase,
+            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
+            getPlayersUseCase = getPlayersUseCase,
+            saveMatchUseCase = finishMatchUseCase,
+            pauseMatchUseCase = pauseMatchUseCase,
+            resumeMatchUseCase = resumeMatchUseCase,
+            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
+            getMatchSummaryUseCase = getMatchSummaryUseCase,
+            preferencesRepository = preferencesRepository,
+            timeTicker = fakeTicker,
+            startMatchTimerUseCase = TODO(),
+            startPlayerTimerUseCase = TODO(),
+            registerGoalUseCase = TODO(),
+            getGoalsForMatchUseCase = TODO(),
         )
     }
 
@@ -606,9 +611,11 @@ class MatchViewModelTest {
     fun `saveMatch - calls FinishMatchUseCase`() = runTest {
         val successState = MatchUiState.Success(
             matchId = 1L,
+            teamName = "My Team",
+            opponent = "Other team",
             matchTimeMillis = 0L,
             matchIsRunning = true,
-            playerTimes = emptyList()
+            playerTimes = emptyList(),
         )
         val uiStateField = MatchViewModel::class.java.getDeclaredField("_uiState").apply { isAccessible = true }
         (uiStateField.get(viewModel) as MutableStateFlow<MatchUiState>).value = successState
@@ -624,6 +631,8 @@ class MatchViewModelTest {
         // Forzamos un estado Success válido
         val successState = MatchUiState.Success(
             matchId = 1L,
+            teamName = "My Team",
+            opponent = "Other team",
             matchTimeMillis = 0L,
             matchIsRunning = true,
             playerTimes = emptyList()
@@ -643,6 +652,8 @@ class MatchViewModelTest {
     fun `resumeMatch - calls ResumeMatchUseCase with current time`() = runTest {
         val successState = MatchUiState.Success(
             matchId = 1L,
+            teamName = "My Team",
+            opponent = "Other team",
             matchTimeMillis = 0L,
             matchIsRunning = true,
             playerTimes = emptyList()
@@ -654,13 +665,15 @@ class MatchViewModelTest {
         viewModel.resumeMatch()
         advanceUntilIdle()
 
-        coVerify { resumeMatchUseCase(withArg { assertTrue(it >= before) }) }
+        coVerify { resumeMatchUseCase(any(), withArg { it -> assertTrue(it >= before) }) }
     }
 
     @Test
     fun `selectPlayerOut - selects running player`() = runTest {
         val successState = MatchUiState.Success(
             matchId = 1L,
+            teamName = "My Team",
+            opponent = "Other team",
             matchTimeMillis = 0L,
             matchIsRunning = true,
             playerTimes = listOf(
@@ -681,6 +694,8 @@ class MatchViewModelTest {
     fun `selectPlayerOut - shows invalid substitution alert when player not running`() = runTest {
         val successState = MatchUiState.Success(
             matchId = 1L,
+            teamName = "My Team",
+            opponent = "Other team",
             matchTimeMillis = 0L,
             matchIsRunning = true,
             playerTimes = listOf(
@@ -712,6 +727,8 @@ class MatchViewModelTest {
     fun `substitutePlayer - calls RegisterPlayerSubstitutionUseCase and clears selection`() = runTest {
         val successState = MatchUiState.Success(
             matchId = 1L,
+            teamName = "My Team",
+            opponent = "Other team",
             matchTimeMillis = 0L,
             matchIsRunning = true,
             playerTimes = listOf(
@@ -720,7 +737,8 @@ class MatchViewModelTest {
         )
 
         val uiStateField = MatchViewModel::class.java.getDeclaredField("_uiState").apply { isAccessible = true }
-        val selectedField = MatchViewModel::class.java.getDeclaredField("_selectedPlayerOut").apply { isAccessible = true }
+        val selectedField =
+            MatchViewModel::class.java.getDeclaredField("_selectedPlayerOut").apply { isAccessible = true }
 
         (uiStateField.get(viewModel) as MutableStateFlow<MatchUiState>).value = successState
         (selectedField.get(viewModel) as MutableStateFlow<Long?>).value = 1L
@@ -755,7 +773,6 @@ class MatchViewModelTest {
         assertTrue(flow.value >= now)
     }
 }
-
 
 
 class FakeTimeTicker : TimeTicker {

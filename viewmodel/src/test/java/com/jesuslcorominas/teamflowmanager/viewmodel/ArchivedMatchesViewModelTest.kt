@@ -84,12 +84,14 @@ class ArchivedMatchesViewModelTest {
                         id = 1L,
                         opponent = "Team A",
                         status = MatchStatus.FINISHED,
+                        teamName = "Home Team",
                         archived = true,
                     ),
                     Match(
                         id = 2L,
                         opponent = "Team B",
                         status = MatchStatus.FINISHED,
+                        teamName = "Home Team",
                         archived = true,
                     ),
                 )

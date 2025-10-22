@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.ui.components
+package com.jesuslcorominas.teamflowmanager.ui.components.dialog
 
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.layout.Arrangement

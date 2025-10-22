@@ -2,8 +2,9 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
 import io.mockk.coEvery
@@ -33,6 +34,7 @@ class PlayerViewModelTest {
     private lateinit var addPlayerUseCase: AddPlayerUseCase
     private lateinit var deletePlayerUseCase: DeletePlayerUseCase
     private lateinit var updatePlayerUseCase: UpdatePlayerUseCase
+    private lateinit var getCaptainPlayerUseCase: GetCaptainPlayerUseCase
     private lateinit var viewModel: PlayerViewModel
 
     @Before
@@ -42,6 +44,7 @@ class PlayerViewModelTest {
         addPlayerUseCase = mockk(relaxed = true)
         deletePlayerUseCase = mockk()
         updatePlayerUseCase = mockk()
+        getCaptainPlayerUseCase = mockk()
     }
 
     @After
@@ -55,7 +58,16 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(
+            getPlayersUseCase = getPlayersUseCase,
+            addPlayerUseCase = addPlayerUseCase,
+            updatePlayerUseCase = updatePlayerUseCase,
+            deletePlayerUseCase = deletePlayerUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            updateScheduledMatchesCaptainUseCase = TODO(),
+            playerRepository = TODO(),
+            matchRepository = TODO()
+        )
 
         // Then
         assertEquals(PlayerUiState.Loading, viewModel.uiState.value)
@@ -71,7 +83,16 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(
+            getPlayersUseCase = getPlayersUseCase,
+            addPlayerUseCase = addPlayerUseCase,
+            updatePlayerUseCase = updatePlayerUseCase,
+            deletePlayerUseCase = deletePlayerUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            updateScheduledMatchesCaptainUseCase = TODO(),
+            playerRepository = TODO(),
+            matchRepository = TODO()
+        )
         advanceUntilIdle()
 
         // Then
@@ -85,7 +106,16 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(
+            getPlayersUseCase = getPlayersUseCase,
+            addPlayerUseCase = addPlayerUseCase,
+            updatePlayerUseCase = updatePlayerUseCase,
+            deletePlayerUseCase = deletePlayerUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            updateScheduledMatchesCaptainUseCase = TODO(),
+            playerRepository = TODO(),
+            matchRepository = TODO()
+        )
         advanceUntilIdle()
 
         // Then
@@ -103,7 +133,16 @@ class PlayerViewModelTest {
             positions = listOf(Position.Forward)
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(
+            getPlayersUseCase = getPlayersUseCase,
+            addPlayerUseCase = addPlayerUseCase,
+            updatePlayerUseCase = updatePlayerUseCase,
+            deletePlayerUseCase = deletePlayerUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            updateScheduledMatchesCaptainUseCase = TODO(),
+            playerRepository = TODO(),
+            matchRepository = TODO()
+        )
 
         // When
         viewModel.addPlayer(player)
@@ -118,7 +157,16 @@ class PlayerViewModelTest {
         // Given
         val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(
+            getPlayersUseCase = getPlayersUseCase,
+            addPlayerUseCase = addPlayerUseCase,
+            updatePlayerUseCase = updatePlayerUseCase,
+            deletePlayerUseCase = deletePlayerUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            updateScheduledMatchesCaptainUseCase = TODO(),
+            playerRepository = TODO(),
+            matchRepository = TODO()
+        )
 
         // When
         viewModel.showDeleteConfirmation(player)
@@ -132,7 +180,16 @@ class PlayerViewModelTest {
         // Given
         val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(
+            getPlayersUseCase = getPlayersUseCase,
+            addPlayerUseCase = addPlayerUseCase,
+            updatePlayerUseCase = updatePlayerUseCase,
+            deletePlayerUseCase = deletePlayerUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            updateScheduledMatchesCaptainUseCase = TODO(),
+            playerRepository = TODO(),
+            matchRepository = TODO()
+        )
         viewModel.showDeleteConfirmation(player)
 
         // When
@@ -148,7 +205,16 @@ class PlayerViewModelTest {
         val playerId = 1L
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { deletePlayerUseCase(playerId) } just runs
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(
+            getPlayersUseCase = getPlayersUseCase,
+            addPlayerUseCase = addPlayerUseCase,
+            updatePlayerUseCase = updatePlayerUseCase,
+            deletePlayerUseCase = deletePlayerUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            updateScheduledMatchesCaptainUseCase = TODO(),
+            playerRepository = TODO(),
+            matchRepository = TODO()
+        )
 
         // When
         viewModel.deletePlayer(playerId)
@@ -172,7 +238,16 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { updatePlayerUseCase.invoke(player) } just runs
 
-        viewModel = PlayerViewModel(getPlayersUseCase, addPlayerUseCase, updatePlayerUseCase, deletePlayerUseCase)
+        viewModel = PlayerViewModel(
+            getPlayersUseCase = getPlayersUseCase,
+            addPlayerUseCase = addPlayerUseCase,
+            updatePlayerUseCase = updatePlayerUseCase,
+            deletePlayerUseCase = deletePlayerUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            updateScheduledMatchesCaptainUseCase = TODO(),
+            playerRepository = TODO(),
+            matchRepository = TODO()
+        )
         advanceUntilIdle()
 
         // When

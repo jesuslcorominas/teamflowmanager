@@ -6,6 +6,8 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="add">Add</string>
+    <string name="expand">Expand</string>
+    <string name="collapse">Collapse</string>
 
     <string name="players_title">Team Roster</string>
     <string name="no_players_message">No players registered yet</string>
@@ -73,8 +75,8 @@
     <string name="pause_match_button">Half Time</string>
     <string name="resume_match_button">Resume</string>
     <string name="finish_match_button">Finish match</string>
-    <string name="add_goal_button">Add Goal</string>
-    <string name="add_opponent_goal_button">Add Opponent Goal</string>
+    <string name="add_goal_button">Goal</string>
+    <string name="add_opponent_goal_button">Opponent Goal</string>
     <string name="add_opponent_goal_title">Add Opponent Goal</string>
     <string name="add_opponent_goal_message">Do you want to add a goal for the opponent team?</string>
     <string name="scoreboard_label">Scoreboard</string>
@@ -121,7 +123,8 @@
 
     <!-- Match Status -->
     <string name="pending_matches">Pending Matches</string>
-    <string name="paused_match">Match in Progress: Half Time</string>
+    <string name="paused_match_half_time">Match in Progress: Half Time</string>
+    <string name="paused_match_quarter_break">Match in Progress: Quarter Break</string>
     <string name="played_matches">Played Matches</string>
     <string name="archived_matches">Archived</string>
     <string name="start_match">Start</string>
@@ -132,15 +135,16 @@
     <string name="unarchive_match">Unarchive</string>
     <string name="archive_match_title">Archive Match</string>
     <string name="archive_match_message">Are you sure you want to archive this match? You can unarchive it later from the Archived section.</string>
+    <string name="no_archived_matches">No matches archived yet</string>
 
     <!-- Player Substitution -->
-    <string name="select_player_in_message">Tap on the player to bring in</string>
     <string name="invalid_substitution_title">Invalid Substitution</string>
     <string name="invalid_substitution_message">You must first select a player who is currently on the field to substitute out.</string>
     <string name="dont_show_again">Don\'t show this again</string>
 
     <!-- Match Summary -->
     <string name="match_finished">Match Finished</string>
+    <string name="match_next">Upcoming Match</string>
     <string name="match_summary_title">Match Summary</string>
     <string name="match_not_found">Match not found</string>
     <string name="total_time_label">Total Time</string>
@@ -186,9 +190,12 @@
     <string name="starting_lineup_no_goalkeeper_message">You haven\'t selected a goalkeeper in the starting lineup. Do you want to continue anyway?</string>
 
     <!-- Match View Improvements -->
+    <string name="sort_players">Sort Players By</string>
+    <string name="sort_by_number">Shirt number</string>
     <string name="sort_by_time_desc">Most Time First</string>
     <string name="sort_by_time_asc">Least Time First</string>
     <string name="sort_by_active">Active First</string>
+    <string name="goalkeeper_badge">G</string>
     <string name="captain_badge">C</string>
     <string name="period_label">Period %1$d/%2$d</string>
     <string name="first_quarter">1st Quarter</string>
@@ -203,4 +210,6 @@
     <string name="pause_limit_reached">Cannot pause. Maximum pauses reached.</string>
     <string name="begin_match">Begin Match</string>
 
+    <string name="list_single">%1$s</string>
+    <string name="list_multiple">%1$s and %2$d more</string>
 </resources>

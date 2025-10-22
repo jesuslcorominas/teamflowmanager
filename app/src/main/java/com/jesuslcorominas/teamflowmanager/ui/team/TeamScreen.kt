@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,7 +32,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
-import com.jesuslcorominas.teamflowmanager.ui.components.AppTextField
+import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
@@ -42,39 +42,23 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun TeamScreen(
     viewModel: TeamViewModel = koinViewModel(),
-    onNavigateToPlayers: (String) -> Unit,
+    onNavigateToMatches: (String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     when (uiState) {
-        is TeamUiState.Loading -> LoadingState()
+        is TeamUiState.Loading -> Loading()
         is TeamUiState.NoTeam ->
             CreateTeamForm(
                 onSave = { team ->
                     viewModel.createTeam(team)
-                    onNavigateToPlayers(team.name)
+                    onNavigateToMatches(team.name)
                 },
             )
 
         is TeamUiState.TeamExists -> {
             val team = (uiState as TeamUiState.TeamExists).team
-            onNavigateToPlayers(team.name)
-        }
-    }
-}
-
-@Composable
-private fun LoadingState() {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            CircularProgressIndicator()
+            onNavigateToMatches(team.name)
         }
     }
 }

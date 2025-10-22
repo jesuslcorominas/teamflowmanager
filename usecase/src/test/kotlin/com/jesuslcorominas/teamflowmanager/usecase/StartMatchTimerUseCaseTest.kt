@@ -22,11 +22,12 @@ class StartMatchTimerUseCaseTest {
         runTest {
             // Given
             val currentTime = 1000L
+            val matchId = 1L
 
             // When
-            startMatchTimerUseCase.invoke(currentTime)
+            startMatchTimerUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { matchRepository.startTimer(currentTime) }
+            coVerify { matchRepository.startTimer(matchId, currentTime) }
         }
 }

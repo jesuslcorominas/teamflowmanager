@@ -3,7 +3,6 @@ package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -15,7 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
-import com.jesuslcorominas.teamflowmanager.ui.components.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
@@ -27,8 +27,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun MatchCreationWizardScreen(
     onNavigateBack: () -> Unit,
-    wizardViewModel: MatchCreationWizardViewModel = koinViewModel(),
-    listViewModel: MatchListViewModel = koinViewModel(),
+    wizardViewModel: MatchCreationWizardViewModel = koinViewModel()
 ) {
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
@@ -38,11 +37,7 @@ fun MatchCreationWizardScreen(
     var captainForDialog by remember { mutableStateOf<Player?>(null) }
 
     when (val state = uiState) {
-        is MatchCreationWizardUiState.Loading -> {
-            CircularProgressIndicator(
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+        is MatchCreationWizardUiState.Loading -> Loading()
         is MatchCreationWizardUiState.Ready -> {
             Column(
                 modifier = Modifier.fillMaxSize()
@@ -128,7 +123,7 @@ fun MatchCreationWizardScreen(
                                 },
                                 onCreate = {
                                     val match = wizardViewModel.buildMatch()
-                                    listViewModel.createMatch(match)
+                                    wizardViewModel.createMatch(match)
                                     onNavigateBack()
                                 },
                                 onPrevious = {

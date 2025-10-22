@@ -68,6 +68,7 @@ class MatchSummaryViewModelTest {
                 id = matchId,
                 opponent = "Team A",
                 location = "Stadium",
+                teamName = "My Team",
                 status = MatchStatus.FINISHED,
                 elapsedTimeMillis = 3000000L,
             )

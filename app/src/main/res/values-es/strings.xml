@@ -6,6 +6,8 @@
     <string name="cancel">Cancelar</string>
     <string name="delete">Eliminar</string>
     <string name="add">Añadir</string>
+    <string name="expand">Abrir</string>
+    <string name="collapse">Cerrar</string>
 
     <string name="players_title">Plantilla</string>
     <string name="no_players_message">Aún no hay jugadores registrados</string>
@@ -73,8 +75,8 @@
     <string name="pause_match_button">Descanso</string>
     <string name="resume_match_button">Reanudar</string>
     <string name="finish_match_button">Finalizar partido</string>
-    <string name="add_goal_button">Añadir Gol</string>
-    <string name="add_opponent_goal_button">Añadir Gol Rival</string>
+    <string name="add_goal_button">Gol</string>
+    <string name="add_opponent_goal_button">Gol Rival</string>
     <string name="add_opponent_goal_title">Añadir Gol al Marcador Contrario</string>
     <string name="add_opponent_goal_message">¿Quieres añadir un gol al equipo rival?</string>
     <string name="scoreboard_label">Marcador</string>
@@ -121,7 +123,8 @@
 
     <!-- Match Status -->
     <string name="pending_matches">Partidos Pendientes</string>
-    <string name="paused_match">Partido en curso: Descanso</string>
+    <string name="paused_match_half_time">Partido en curso: Descanso</string>
+    <string name="paused_match_quarter_break">Partido en curso: Entrecuarto</string>
     <string name="played_matches">Partidos Jugados</string>
     <string name="archived_matches">Archivados</string>
     <string name="start_match">Empezar</string>
@@ -132,14 +135,15 @@
     <string name="unarchive_match">Desarchivar</string>
     <string name="archive_match_title">Archivar Partido</string>
     <string name="archive_match_message">¿Estás seguro de que deseas archivar este partido? Puedes desarchivarlo más tarde desde la sección de Archivados.</string>
+    <string name="no_archived_matches">Aún no hay partidos archivados</string>
 
     <!-- Player Substitution -->
-    <string name="select_player_in_message">Toca al jugador que entra al campo</string>
     <string name="invalid_substitution_title">Cambio Inválido</string>
     <string name="invalid_substitution_message">Debes seleccionar primero un jugador que esté actualmente en el campo para sustituir.</string>
     <string name="dont_show_again">No mostrar más</string>
 
     <!-- Match Summary -->
+    <string name="match_next">Próximamente</string>
     <string name="match_finished">Partido Finalizado</string>
     <string name="match_summary_title">Resumen del Partido</string>
     <string name="match_not_found">Partido no encontrado</string>
@@ -186,9 +190,12 @@
     <string name="starting_lineup_no_goalkeeper_message">No has seleccionado un portero en la alineación inicial. ¿Deseas continuar de todos modos?</string>
 
     <!-- Match View Improvements -->
+    <string name="sort_players">Ordenar jugadores por</string>
+    <string name="sort_by_number">Dorsal</string>
     <string name="sort_by_time_desc">Más Tiempo Primero</string>
     <string name="sort_by_time_asc">Menos Tiempo Primero</string>
     <string name="sort_by_active">Activos Primero</string>
+    <string name="goalkeeper_badge">P</string>
     <string name="captain_badge">C</string>
     <string name="period_label">Periodo %1$d/%2$d</string>
     <string name="first_quarter">1º Cuarto</string>
@@ -203,4 +210,6 @@
     <string name="pause_limit_reached">No se puede pausar. Máximo de pausas alcanzado.</string>
     <string name="begin_match">Comenzar Partido</string>
 
+    <string name="list_single">%1$s</string>
+    <string name="list_multiple">%1$s y %2$d más</string>
 </resources>

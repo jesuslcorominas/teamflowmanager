@@ -2,8 +2,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -29,6 +31,8 @@ class TeamViewModelTest {
     private lateinit var getTeamUseCase: GetTeamUseCase
     private lateinit var createTeamUseCase: CreateTeamUseCase
     private lateinit var updateTeamUseCase: UpdateTeamUseCase
+    private lateinit var getCaptainPlayerUseCase: GetCaptainPlayerUseCase
+    private lateinit var playerRepository: PlayerRepository
     private lateinit var viewModel: TeamViewModel
 
     @Before
@@ -37,6 +41,8 @@ class TeamViewModelTest {
         getTeamUseCase = mockk()
         createTeamUseCase = mockk(relaxed = true)
         updateTeamUseCase = mockk(relaxed = true)
+        getCaptainPlayerUseCase = mockk()
+        playerRepository = mockk()
     }
 
     @After
@@ -50,7 +56,13 @@ class TeamViewModelTest {
         every { getTeamUseCase.invoke() } returns flowOf(null)
 
         // When
-        viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
+        viewModel = TeamViewModel(
+            getTeamUseCase = getTeamUseCase,
+            createTeamUseCase = createTeamUseCase,
+            updateTeamUseCase = updateTeamUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            playerRepository = playerRepository
+        )
 
         // Then
         assertEquals(TeamUiState.Loading, viewModel.uiState.value)
@@ -63,7 +75,13 @@ class TeamViewModelTest {
             every { getTeamUseCase.invoke() } returns flowOf(null)
 
             // When
-            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
+            viewModel = TeamViewModel(
+                getTeamUseCase = getTeamUseCase,
+                createTeamUseCase = createTeamUseCase,
+                updateTeamUseCase = updateTeamUseCase,
+                getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+                playerRepository = playerRepository
+            )
             advanceUntilIdle()
 
             // Then
@@ -78,7 +96,13 @@ class TeamViewModelTest {
             every { getTeamUseCase.invoke() } returns flowOf(team)
 
             // When
-            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
+            viewModel = TeamViewModel(
+                getTeamUseCase = getTeamUseCase,
+                createTeamUseCase = createTeamUseCase,
+                updateTeamUseCase = updateTeamUseCase,
+                getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+                playerRepository = playerRepository
+            )
             advanceUntilIdle()
 
             // Then
@@ -93,7 +117,13 @@ class TeamViewModelTest {
             val team = Team(0, "Test Team", "Coach Name", "Delegate Name")
             every { getTeamUseCase.invoke() } returns flowOf(null)
             coEvery { createTeamUseCase.invoke(any()) } just runs
-            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
+            viewModel = TeamViewModel(
+                getTeamUseCase = getTeamUseCase,
+                createTeamUseCase = createTeamUseCase,
+                updateTeamUseCase = updateTeamUseCase,
+                getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+                playerRepository = playerRepository
+            )
 
             // When
             viewModel.createTeam(team)
@@ -110,7 +140,13 @@ class TeamViewModelTest {
             val team = Team(1, "Updated Team", "Updated Coach", "Updated Delegate")
             every { getTeamUseCase.invoke() } returns flowOf(team)
             coEvery { updateTeamUseCase.invoke(any()) } just runs
-            viewModel = TeamViewModel(getTeamUseCase, createTeamUseCase, updateTeamUseCase)
+            viewModel = TeamViewModel(
+                getTeamUseCase = getTeamUseCase,
+                createTeamUseCase = createTeamUseCase,
+                updateTeamUseCase = updateTeamUseCase,
+                getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+                playerRepository = playerRepository
+            )
 
             // When
             viewModel.updateTeam(team)

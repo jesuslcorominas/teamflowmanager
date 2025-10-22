@@ -34,8 +34,8 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.Position.Companion.getAllPositions
-import com.jesuslcorominas.teamflowmanager.ui.components.AppDialog
-import com.jesuslcorominas.teamflowmanager.ui.components.AppTextField
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppDialog
+import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 
 @Composable

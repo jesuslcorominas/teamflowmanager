@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -21,7 +20,8 @@ import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
-import com.jesuslcorominas.teamflowmanager.ui.components.EditTeamDialog
+import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.EditTeamDialog
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -38,9 +38,7 @@ fun TeamDetailScreen(
         color = MaterialTheme.colorScheme.background,
     ) {
         when (val state = uiState) {
-            is TeamUiState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.padding(TFMSpacing.spacing04))
-            }
+            is TeamUiState.Loading -> Loading()
             is TeamUiState.TeamExists -> {
                 TeamDetailContent(
                     team = state.team,

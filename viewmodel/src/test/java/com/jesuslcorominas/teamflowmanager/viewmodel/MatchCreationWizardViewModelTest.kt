@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
@@ -33,6 +34,8 @@ class MatchCreationWizardViewModelTest {
     private lateinit var getPreviousCaptainsUseCase: GetPreviousCaptainsUseCase
     private lateinit var getDefaultCaptainUseCase: GetDefaultCaptainUseCase
     private lateinit var saveDefaultCaptainUseCase: SaveDefaultCaptainUseCase
+    private lateinit var getCaptainPlayerUseCase: GetCaptainPlayerUseCase
+
     private lateinit var viewModel: MatchCreationWizardViewModel
 
     private val testDispatcher = StandardTestDispatcher()
@@ -64,10 +67,11 @@ class MatchCreationWizardViewModelTest {
 
     private fun createViewModel(): MatchCreationWizardViewModel {
         return MatchCreationWizardViewModel(
-            getPlayersUseCase,
-            getPreviousCaptainsUseCase,
-            getDefaultCaptainUseCase,
-            saveDefaultCaptainUseCase
+            getPlayersUseCase = getPlayersUseCase,
+            getPreviousCaptainsUseCase = getPreviousCaptainsUseCase,
+            getDefaultCaptainUseCase = getDefaultCaptainUseCase,
+            saveDefaultCaptainUseCase = saveDefaultCaptainUseCase,
+            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
         )
     }
 
@@ -103,13 +107,13 @@ class MatchCreationWizardViewModelTest {
 
         // When & Then
         assertEquals(WizardStep.GENERAL_DATA, viewModel.currentStep.value)
-        
+
         viewModel.goToNextStep()
         assertEquals(WizardStep.SQUAD_CALLUP, viewModel.currentStep.value)
-        
+
         viewModel.goToNextStep()
         assertEquals(WizardStep.CAPTAIN, viewModel.currentStep.value)
-        
+
         viewModel.goToNextStep()
         assertEquals(WizardStep.STARTING_LINEUP, viewModel.currentStep.value)
     }
@@ -127,10 +131,10 @@ class MatchCreationWizardViewModelTest {
         // When & Then
         viewModel.goToPreviousStep()
         assertEquals(WizardStep.CAPTAIN, viewModel.currentStep.value)
-        
+
         viewModel.goToPreviousStep()
         assertEquals(WizardStep.SQUAD_CALLUP, viewModel.currentStep.value)
-        
+
         viewModel.goToPreviousStep()
         assertEquals(WizardStep.GENERAL_DATA, viewModel.currentStep.value)
     }

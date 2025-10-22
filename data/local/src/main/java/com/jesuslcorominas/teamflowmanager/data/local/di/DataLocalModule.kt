@@ -1,6 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.data.local.di
 
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
@@ -9,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistor
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.local.BuildConfig
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.GoalLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.MatchLocalDataSourceImpl
@@ -32,6 +35,17 @@ internal val databaseModule =
                     TeamFlowManagerDatabase::class.java,
                     "teamflowmanager_database",
                 )
+                .addCallback(
+                    object : RoomDatabase.Callback() {
+                        override fun onCreate(db: SupportSQLiteDatabase) {
+                            super.onCreate(db)
+
+                            if (BuildConfig.DEBUG) {
+                                initDatabase(db)
+                            }
+                        }
+                    }
+                )
                 .build()
         }
 
@@ -43,6 +57,52 @@ internal val databaseModule =
         single { get<TeamFlowManagerDatabase>().playerSubstitutionDao() }
         single { get<TeamFlowManagerDatabase>().goalDao() }
     }
+
+private fun initDatabase(db: SupportSQLiteDatabase) {
+    db.execSQL("INSERT INTO team (id, name, coachName, delegateName) VALUES (1, 'Loyola D', 'Rubén', 'Oliver');\n")
+    db.execSQL(
+        "INSERT INTO players (id, firstName, lastName, number, positions, teamId, isCaptain) VALUES\n" +
+            "(1, 'Adrián', 'López Díaz', 2, 'defender,center_back', 1, 1),\n" +
+            "(2, 'Daniel', 'Menéndez Iglesias', 6, 'right_back', 1, 0),\n" +
+            "(3, 'Valeria', 'García García', 26, 'forward', 1, 0),\n" +
+            "(4, 'Álvaro', 'Rodríguez', 7, 'forward', 1, 0),\n" +
+            "(5, 'Alejandra', '-', 1, 'goalkeeper', 1, 0),\n" +
+            "(6, 'Paz', '-', 15, 'midfielder', 1, 0),\n" +
+            "(7, 'Martín', '-', 52, 'attacking_midfielder,defender', 1, 0),\n" +
+            "(8, 'Sira', '-', 32, 'striker', 1, 0),\n" +
+            "(9, 'Anuel', ',', 22, 'left_back,forward', 1, 0),\n" +
+            "(10, 'Briana', ',', 12, 'left_back', 1, 0)"
+    )
+    db.execSQL("INSERT INTO \"match\" VALUES(1,1,'Loyola D','EFRO','Colegio Loyola',1760781600000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,2,7)\n")
+    db.execSQL("INSERT INTO \"match\" VALUES(3,1,'Loyola D','Loyola C','Colegio Loyola',1761382800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,1,15)")
+    db.execSQL("INSERT INTO \"match\" VALUES(4,1,'Loyola D','Fozaneldi B','Las Campas',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,5,8)")
+    db.execSQL("INSERT INTO \"match\" VALUES(5,1,'Loyola D','Juvencia A','Colegio Loyola',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,3,14)")
+
+    db.execSQL(
+        "INSERT INTO player_time_history VALUES(1,1,1,1369195,1760778126922),\n" +
+            "(2,2,1,1372675,1760778126922),\n" +
+            "(3,3,1,1789681,1760778126922),\n" +
+            "(4,4,1,2036847,1760778126922),\n" +
+            "(5,5,1,3140655,1760778126922),\n" +
+            "(6,6,1,630021,1760778126922),\n" +
+            "(7,7,1,1509232,1760778126922),\n" +
+            "(8,8,1,1234812,1760778126922),\n" +
+            "(9,9,1,2167796,1760778126922),\n" +
+            "(10,10,1,452361,1760778126922)\n"
+    )
+    db.execSQL("INSERT INTO goal VALUES(1,1,9,1760776838452,1852185,0), (2,1,4,1760776959713,1973446,0);")
+    db.execSQL(
+        "INSERT INTO player_substitution VALUES(8,1,7,1,1760776921774,1935507),\n" +
+            "(9,1,3,2,1760776928546,1942279),\n" +
+            "(10,1,9,8,1760777524896,2538629),\n" +
+            "(11,1,4,6,1760777532057,2545790),\n" +
+            "(12,1,1,3,1760777651311,2665044),\n" +
+            "(13,1,2,7,1760777655261,2668994),\n" +
+            "(14,1,6,9,1760777851795,2865528),\n" +
+            "(15,1,7,10,1760777868644,2882377);"
+    )
+
+}
 
 internal val dataSourceLocalModule =
     module {

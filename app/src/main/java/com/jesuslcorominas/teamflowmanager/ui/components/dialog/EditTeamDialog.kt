@@ -1,7 +1,8 @@
-package com.jesuslcorominas.teamflowmanager.ui.components
+package com.jesuslcorominas.teamflowmanager.ui.components.dialog
 
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 
 @Composable
@@ -55,7 +57,7 @@ fun EditTeamDialog(
         onDismiss = onDismiss,
         dismissText = stringResource(R.string.cancel),
     ) {
-        androidx.compose.foundation.layout.Column(
+        Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {

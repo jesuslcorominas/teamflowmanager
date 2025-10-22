@@ -7,9 +7,9 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchSummaryViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.RealTimeTicker
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.TimeTicker
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.RealTimeTicker
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -39,7 +39,7 @@ val viewModelModule =
         }
         viewModel {
             MatchViewModel(
-                getMatchUseCase = get(),
+                getMatchById = get(),
                 getAllPlayerTimesUseCase = get(),
                 getPlayersUseCase = get(),
                 saveMatchUseCase = get(),
@@ -52,22 +52,17 @@ val viewModelModule =
                 registerGoalUseCase = get(),
                 getGoalsForMatchUseCase = get(),
                 preferencesRepository = get(),
-                timeTicker = get()
+                timeTicker = get(),
+                savedStateHandle = get()
             )
         }
         viewModel {
             MatchListViewModel(
                 getAllMatchesUseCase = get(),
-                getArchivedMatchesUseCase = get(),
-                getMatchUseCase = get(),
                 deleteMatchUseCase = get(),
-                createMatchUseCase = get(),
                 updateMatchUseCase = get(),
-                startMatchUseCase = get(),
-                setCurrentMatchUseCase = get(),
                 resumeMatchUseCase = get(),
                 archiveMatchUseCase = get(),
-                unarchiveMatchUseCase = get(),
             )
         }
         viewModel {
@@ -94,6 +89,7 @@ val viewModelModule =
                 getDefaultCaptainUseCase = get(),
                 saveDefaultCaptainUseCase = get(),
                 getCaptainPlayerUseCase = get(),
+                createMatch = get()
             )
         }
 

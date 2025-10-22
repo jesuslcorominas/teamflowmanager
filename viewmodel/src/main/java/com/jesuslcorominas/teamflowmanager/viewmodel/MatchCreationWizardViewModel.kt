@@ -2,9 +2,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
+import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
@@ -22,14 +23,15 @@ class MatchCreationWizardViewModel(
     private val getDefaultCaptainUseCase: GetDefaultCaptainUseCase,
     private val saveDefaultCaptainUseCase: SaveDefaultCaptainUseCase,
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
+    private val createMatch: CreateMatchUseCase
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow<MatchCreationWizardUiState>(MatchCreationWizardUiState.Loading)
     val uiState: StateFlow<MatchCreationWizardUiState> = _uiState.asStateFlow()
-    
+
     private val _currentStep = MutableStateFlow(WizardStep.GENERAL_DATA)
     val currentStep: StateFlow<WizardStep> = _currentStep.asStateFlow()
-    
+
     // Match data being built
     private var opponent: String = ""
     private var location: String = ""
@@ -39,20 +41,20 @@ class MatchCreationWizardViewModel(
     private var squadCallUpIds: Set<Long> = emptySet()
     private var captainId: Long? = null
     private var startingLineupIds: Set<Long> = emptySet()
-    
+
     private var allPlayers: List<Player> = emptyList()
-    
+
     init {
         loadPlayers()
     }
-    
+
     private fun loadPlayers() {
         viewModelScope.launch {
             allPlayers = getPlayersUseCase.invoke().first()
             _uiState.value = MatchCreationWizardUiState.Ready(allPlayers)
         }
     }
-    
+
     fun setGeneralData(opponent: String, location: String, date: Long?, time: Long?, numberOfPeriods: Int) {
         this.opponent = opponent
         this.location = location
@@ -60,19 +62,19 @@ class MatchCreationWizardViewModel(
         this.time = time
         this.numberOfPeriods = numberOfPeriods
     }
-    
+
     fun setSquadCallUp(playerIds: Set<Long>) {
         this.squadCallUpIds = playerIds
     }
-    
+
     fun setCaptain(playerId: Long?) {
         this.captainId = playerId
     }
-    
+
     fun setStartingLineup(playerIds: Set<Long>) {
         this.startingLineupIds = playerIds
     }
-    
+
     fun getOpponent() = opponent
     fun getLocation() = location
     fun getDate() = date
@@ -81,7 +83,7 @@ class MatchCreationWizardViewModel(
     fun getSquadCallUpIds() = squadCallUpIds
     fun getCaptainId() = captainId
     fun getStartingLineupIds() = startingLineupIds
-    
+
     fun goToNextStep() {
         viewModelScope.launch {
             _currentStep.value = when (_currentStep.value) {
@@ -102,7 +104,7 @@ class MatchCreationWizardViewModel(
             }
         }
     }
-    
+
     fun goToPreviousStep() {
         viewModelScope.launch {
             _currentStep.value = when (_currentStep.value) {
@@ -122,72 +124,70 @@ class MatchCreationWizardViewModel(
             }
         }
     }
-    
+
     fun hasGoalkeepersInSquad(): Boolean {
         val squadPlayers = allPlayers.filter { it.id in squadCallUpIds }
         return squadPlayers.any { player ->
             player.positions.any { it is Position.Goalkeeper }
         }
     }
-    
+
     fun hasGoalkeeperInStartingLineup(): Boolean {
         val startingPlayers = allPlayers.filter { it.id in startingLineupIds }
         return startingPlayers.any { player ->
             player.positions.any { it is Position.Goalkeeper }
         }
     }
-    
+
     suspend fun checkIfShouldAskForDefaultCaptain(): Pair<Boolean, Player?> {
         if (captainId == null) return Pair(false, null)
-        
+
         // Get default captain
         val defaultCaptainId = getDefaultCaptainUseCase.invoke()
         if (defaultCaptainId != null) {
             // Already has a default captain, don't ask
             return Pair(false, null)
         }
-        
+
         // Check if this captain was in the last 2 matches
         val previousCaptains = getPreviousCaptainsUseCase.invoke(2)
         val sameCaptainCount = previousCaptains.count { it == captainId }
-        
+
         if (sameCaptainCount >= 2) {
             val captain = allPlayers.find { it.id == captainId }
             return Pair(true, captain)
         }
-        
+
         return Pair(false, null)
     }
-    
+
     fun setDefaultCaptain(playerId: Long) {
         saveDefaultCaptainUseCase.invoke(playerId)
     }
-    
+
     suspend fun loadDefaultCaptainIfExists() {
         val defaultCaptainId = getDefaultCaptainUseCase.invoke()
         if (defaultCaptainId != null && defaultCaptainId in squadCallUpIds) {
             captainId = defaultCaptainId
         }
     }
-    
-    fun buildMatch(): Match {
-        val allSelectedIds = startingLineupIds + squadCallUpIds
-        val substituteIds = allSelectedIds - startingLineupIds
-        
-        return Match(
-            id = 0L,
-            teamId = 1L,
-            opponent = opponent,
-            location = location,
-            date = date,
-            time = time,
-            numberOfPeriods = numberOfPeriods,
-            squadCallUpIds = squadCallUpIds.toList(),
-            captainId = captainId,
-            startingLineupIds = startingLineupIds.toList(),
-            substituteIds = substituteIds.toList(),
-        )
+
+    fun buildMatch(): SkeletonMatch = SkeletonMatch(
+        opponent = opponent,
+        location = location,
+        dateTime = date?.plus(time ?: 0L),
+        numberOfPeriods = numberOfPeriods,
+        captainId = captainId,
+        squadCallUpIds = squadCallUpIds.toList(),
+        startingLineupIds = startingLineupIds.toList(),
+    )
+
+    fun createMatch(skeletonMatch: SkeletonMatch) {
+        viewModelScope.launch {
+            createMatch.invoke(skeletonMatch)
+        }
     }
+
 }
 
 sealed class MatchCreationWizardUiState {

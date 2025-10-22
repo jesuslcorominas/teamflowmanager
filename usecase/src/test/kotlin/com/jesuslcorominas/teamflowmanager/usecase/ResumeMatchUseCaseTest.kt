@@ -34,6 +34,7 @@ class ResumeMatchUseCaseTest {
         runTest {
             // Given
             val currentTime = 1000L
+            val matchId = 1L
             val pausedPlayerTimes =
                 listOf(
                     PlayerTime(playerId = 1L, isRunning = false, elapsedTimeMillis = 500L, status = PlayerTimeStatus.PAUSED),
@@ -44,10 +45,10 @@ class ResumeMatchUseCaseTest {
             coEvery { getAllPlayerTimesUseCase() } returns flowOf(pausedPlayerTimes)
 
             // When
-            resumeMatchUseCase.invoke(currentTime)
+            resumeMatchUseCase.invoke(1L, currentTime)
 
             // Then
-            coVerify { startMatchTimerUseCase(currentTime) }
+            coVerify { startMatchTimerUseCase(matchId, currentTime) }
             coVerify { startPlayerTimerUseCase(1L, currentTime) }
             coVerify { startPlayerTimerUseCase(2L, currentTime) }
             coVerify(exactly = 0) { startPlayerTimerUseCase(3L, any()) }
@@ -58,6 +59,7 @@ class ResumeMatchUseCaseTest {
         runTest {
             // Given
             val currentTime = 1000L
+            val matchId = 1L
             val playerTimes =
                 listOf(
                     PlayerTime(playerId = 1L, isRunning = false, elapsedTimeMillis = 0L),
@@ -67,10 +69,10 @@ class ResumeMatchUseCaseTest {
             coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
 
             // When
-            resumeMatchUseCase.invoke(currentTime)
+            resumeMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { startMatchTimerUseCase(currentTime) }
+            coVerify { startMatchTimerUseCase(matchId,currentTime) }
             coVerify(exactly = 0) { startPlayerTimerUseCase(any(), any()) }
         }
 
@@ -79,13 +81,14 @@ class ResumeMatchUseCaseTest {
         runTest {
             // Given
             val currentTime = 1000L
+            val matchId = 1L
             coEvery { getAllPlayerTimesUseCase() } returns flowOf(emptyList())
 
             // When
-            resumeMatchUseCase.invoke(currentTime)
+            resumeMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { startMatchTimerUseCase(currentTime) }
+            coVerify { startMatchTimerUseCase(matchId, currentTime) }
             coVerify(exactly = 0) { startPlayerTimerUseCase(any(), any()) }
         }
 }

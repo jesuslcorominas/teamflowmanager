@@ -1,5 +1,8 @@
+
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import android.annotation.SuppressLint
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -10,6 +13,8 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 
 class MainActivity : ComponentActivity() {
+
+    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         val lightStatusBarColor = LightColorScheme.primary.toArgb()
         val darkStatusBarColor = LightColorScheme.primary.toArgb()
@@ -28,6 +33,9 @@ class MainActivity : ComponentActivity() {
         )
 
         super.onCreate(savedInstanceState)
+
+        requestedOrientation = SCREEN_ORIENTATION_USER_PORTRAIT
+
         setContent {
             TFMAppTheme {
                 MainScreen()
