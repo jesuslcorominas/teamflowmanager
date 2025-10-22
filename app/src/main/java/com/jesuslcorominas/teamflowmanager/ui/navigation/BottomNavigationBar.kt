@@ -83,7 +83,12 @@ fun BottomNavigationBar(
                     selected = selected,
                     onClick = {
                         if (!selected) {
-                            navController.navigate(route.createRoute()) {
+                            val destination = when (route) {
+                                is Route.TeamDetail -> route.createRoute(Route.TeamDetail.MODE_VIEW)
+                                else -> route.createRoute()
+                            }
+
+                            navController.navigate(destination) {
                                 // Pop up to the start destination of the graph to
                                 // avoid building up a large stack of destinations
                                 // on the back stack as users select items

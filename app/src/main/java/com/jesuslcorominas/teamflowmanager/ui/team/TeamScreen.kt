@@ -1,7 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.ui.team
 
-import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +33,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -49,7 +48,7 @@ fun TeamScreen(
     when (uiState) {
         is TeamUiState.Loading -> Loading()
         is TeamUiState.NoTeam ->
-            CreateTeamForm(
+            TeamForm(
                 onSave = { team ->
                     viewModel.createTeam(team)
                     onNavigateToMatches(team.name)
@@ -60,14 +59,19 @@ fun TeamScreen(
             val team = (uiState as TeamUiState.TeamExists).team
             onNavigateToMatches(team.name)
         }
+
+        is TeamUiState.EditTeam -> {
+            // TODO implement edit team form
+        }
     }
 }
 
-@Composable
-private fun CreateTeamForm(onSave: (Team) -> Unit) {
 
+
+@Composable
+fun TeamForm(team: Team? = null, onSave: (Team) -> Unit) {
     val focusManager = LocalFocusManager.current
-    var formState by remember { mutableStateOf(TeamFormState()) }
+    var formState by remember { mutableStateOf(team.toTeamFormState()) }
     val validateAndSave = {
         formState = formState.copy(
             errors = FormErrors(
@@ -82,7 +86,6 @@ private fun CreateTeamForm(onSave: (Team) -> Unit) {
         }
     }
 
-
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
@@ -93,20 +96,22 @@ private fun CreateTeamForm(onSave: (Team) -> Unit) {
                 .padding(TFMSpacing.spacing04),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Icon(
-                modifier = Modifier.size(TFMSpacing.spacing18),
-                painter = painterResource(id = R.drawable.ic_launcher),
-                contentDescription = stringResource(R.string.app_name),
-                tint = Color.Unspecified
-            )
+            if (team == null) {
+                Icon(
+                    modifier = Modifier.size(TFMSpacing.spacing18),
+                    painter = painterResource(id = R.drawable.ic_launcher),
+                    contentDescription = stringResource(R.string.app_name),
+                    tint = Color.Unspecified
+                )
 
-            Text(
-                modifier = Modifier.padding(
-                    bottom = TFMSpacing.spacing04
-                ),
-                text = stringResource(R.string.create_team_title),
-                style = MaterialTheme.typography.headlineMedium,
-            )
+                Text(
+                    modifier = Modifier.padding(
+                        bottom = TFMSpacing.spacing04
+                    ),
+                    text = stringResource(id = R.string.create_team_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+            }
 
             AppTextField(
                 modifier = Modifier
@@ -198,19 +203,21 @@ private data class TeamFormState(
     val errors: FormErrors = FormErrors()
 )
 
-private fun Team?.toFormState(): TeamFormState = TeamFormState(
-    id = this?.id ?: 0,
-    name = this?.name ?: "",
-    coachName = this?.coachName ?: "",
-    delegateName = this?.delegateName ?: ""
-)
-
 private fun TeamFormState.toTeam(): Team = Team(
     id = id,
     name = name,
     coachName = coachName,
     delegateName = delegateName
 )
+
+private fun Team?.toTeamFormState() = this?.let {
+    TeamFormState(
+        id = it.id,
+        name = it.name,
+        coachName = it.coachName,
+        delegateName = it.delegateName
+    )
+} ?: TeamFormState()
 
 data class FormErrors(
     val name: Boolean = false,
@@ -224,7 +231,7 @@ data class FormErrors(
 @Composable
 private fun EditPlayerDialogPreview() {
     TFMAppTheme {
-        CreateTeamForm(
+        TeamForm(
             onSave = {}
         )
     }

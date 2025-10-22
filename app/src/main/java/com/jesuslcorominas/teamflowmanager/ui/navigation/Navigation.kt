@@ -25,6 +25,7 @@ import com.jesuslcorominas.teamflowmanager.ui.teamdetail.TeamDetailScreen
 fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
+    currentBackHandler: BackHandlerController
 ) {
     NavHost(
         modifier = modifier,
@@ -56,12 +57,22 @@ fun Navigation(
             )
         }
 
-        composable(Route.Players.createRoute()) {
-            PlayersScreen()
+        composable(
+            route = Route.TeamDetail.FULL_ROUTE,
+            arguments = listOf(
+                navArgument(Route.TeamDetail.ARG_MODE) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            TeamDetailScreen(
+                onNavigateBackRequest = { navController.popBackStack() },
+                currentBackHandler = currentBackHandler,
+            )
         }
 
-        composable(Route.TeamDetail.createRoute()) {
-            TeamDetailScreen()
+        composable(Route.Players.createRoute()) {
+            PlayersScreen()
         }
 
         composable(Route.Matches.createRoute()) {
@@ -80,18 +91,14 @@ fun Navigation(
 
         composable(Route.ArchivedMatches.createRoute()) {
             ArchivedMatchesScreen(
-                onNavigateToMatchSummary = { matchId, team, opponent ->
-                    navController.navigate(Route.Match.createRoute(matchId, team, opponent))
+                onNavigateToMatchSummary = { match ->
+                    navController.navigate(Route.Match.createRoute(match.id, match.teamName, match.opponent))
                 },
             )
         }
 
         composable(Route.CreateMatch.createRoute()) {
-            MatchCreationWizardScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-            )
+            MatchCreationWizardScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(
@@ -111,6 +118,7 @@ fun Navigation(
             MatchScreen()
         }
 
+        // TODO remove this screen
         composable(
             route = "${Route.MatchDetail.createRoute()}/{matchId}",
             arguments = listOf(
@@ -133,18 +141,18 @@ fun Navigation(
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
     BackHandler {
-        when (currentRoute) {
-            Route.CreateTeam.createRoute() -> activity?.finish()
+        currentBackHandler.onBackRequested?.invoke() ?: run {
+            when (currentRoute) {
+                Route.CreateTeam.createRoute() -> activity?.finish()
+                Route.TeamDetail.createRoute() -> navController.navigate(Route.Matches.createRoute()) {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                    launchSingleTop = true
+                    restoreState = true
+                }
 
-            Route.TeamDetail.createRoute(),
-            Route.Players.createRoute() -> navController.navigate(Route.Matches.createRoute()) {
-                popUpTo(navController.graph.startDestinationId) { inclusive = false }
-                launchSingleTop = true
-                restoreState = true
+                Route.Matches.createRoute() -> activity?.finish()
+                else -> navController.popBackStack()
             }
-
-            Route.Matches.createRoute() -> activity?.finish()
-            else -> navController.popBackStack()
         }
     }
 }

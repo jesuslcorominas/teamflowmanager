@@ -8,6 +8,7 @@
     <string name="add">Añadir</string>
     <string name="expand">Abrir</string>
     <string name="collapse">Cerrar</string>
+    <string name="discard">Descargar</string>
 
     <string name="players_title">Plantilla</string>
     <string name="no_players_message">Aún no hay jugadores registrados</string>
@@ -212,4 +213,7 @@
 
     <string name="list_single">%1$s</string>
     <string name="list_multiple">%1$s y %2$d más</string>
+
+    <string name="unsaved_changes_title">Cambios Sin Guardar</string>
+    <string name="discard_message">Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?</string>
 </resources>

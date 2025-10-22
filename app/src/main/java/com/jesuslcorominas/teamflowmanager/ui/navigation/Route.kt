@@ -52,9 +52,29 @@ sealed class Route(
 
     data object CreateTeam : Route(path = "create_team", showTopBar = false)
 
-    data object Players : Route(path = "players", showBottomBar = true)
+    data object TeamDetail : Route(
+        path = "team_detail",
+        showBottomBar = true
+    ) {
+        private const val PATH = "team_detail"
+        const val ARG_MODE = "mode"
+        const val MODE_VIEW = "view"
+        const val MODE_EDIT = "edit"
 
-    data object TeamDetail : Route(path = "team_detail", showBottomBar = true)
+        const val FULL_ROUTE = "$PATH/{$ARG_MODE}"
+
+        override fun uiConfig(arguments: Map<String, Any?>?): UiConfig {
+            val mode = arguments?.get(ARG_MODE) as? String ?: MODE_VIEW
+            return UiConfig(
+                showTopBar = true,
+                showBottomBar = true,
+                canGoBack = mode == MODE_EDIT,
+                showFab = mode == MODE_VIEW
+            )
+        }
+    }
+
+    data object Players : Route(path = "players", showBottomBar = true)
 
     data object Matches : Route(
         path = "matches",
@@ -79,6 +99,7 @@ sealed class Route(
         const val FULL_ROUTE = "$PATH/{$ARG_MATCH_ID}/{$ARG_TEAM}/{$ARG_OPPONENT}"
     }
 
+    // TODO remove this screen
     data object MatchDetail : Route(path = "match_detail", canGoBack = true) {
         const val ARG_MATCH_ID = "matchId"
     }

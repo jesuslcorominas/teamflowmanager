@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -16,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
@@ -23,6 +25,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
@@ -34,8 +37,16 @@ fun MainScreen() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
+    val backHandlerController = remember { BackHandlerController() }
+
     val route = Route.fromValue(currentRoute)
-    val uiConfig = route?.uiConfig(null)
+
+    val arguments = backStackEntry
+        ?.arguments
+        ?.keySet()
+        ?.associateWith { key -> backStackEntry?.arguments?.get(key) }
+
+    val uiConfig = route?.uiConfig(arguments)
 
     val title = route?.toTitle(backStackEntry)
 
@@ -51,7 +62,12 @@ fun MainScreen() {
                     },
                     navigationIcon = {
                         if (uiConfig.canGoBack) {
-                            IconButton(onClick = { navController.popBackStack() }) {
+                            IconButton(
+                                onClick = {
+                                    backHandlerController.onBackRequested?.invoke()
+                                        ?: navController.popBackStack()
+                                }
+                            ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = stringResource(R.string.close),
@@ -78,6 +94,7 @@ fun MainScreen() {
                 .fillMaxSize()
                 .padding(paddingValues),
             navController = navController,
+            currentBackHandler = backHandlerController,
         )
     }
 }
@@ -107,6 +124,7 @@ private fun Route.toFABContentDescriptionRes(): Int? = when (this) {
 }
 
 private fun Route.toDestination() = when (this) {
+    Route.TeamDetail -> Route.TeamDetail.createRoute(Route.TeamDetail.MODE_EDIT)
     Route.Matches -> Route.CreateMatch.createRoute()
     else -> null
 }
@@ -114,7 +132,7 @@ private fun Route.toDestination() = when (this) {
 @Composable
 private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (this) {
     Route.Players -> stringResource(R.string.players_title)
-    Route.TeamDetail -> stringResource(R.string.team_title)
+    Route.TeamDetail -> stringResource((this as Route.TeamDetail).toTitleRes(backStackEntry))
     Route.Matches -> stringResource(R.string.matches_title)
     Route.ArchivedMatches -> stringResource(R.string.archived_matches)
     Route.Match ->
@@ -123,4 +141,15 @@ private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (t
         }"
 
     else -> null
+}
+
+@StringRes
+private fun Route.TeamDetail.toTitleRes(backStackEntry: NavBackStackEntry?): Int {
+    val mode = backStackEntry?.arguments?.getString(Route.TeamDetail.ARG_MODE)
+
+    return if (mode == Route.TeamDetail.MODE_EDIT) {
+        R.string.edit_team_title
+    } else {
+        R.string.team_title
+    }
 }

@@ -5,13 +5,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
-import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
-import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel.UiState
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SplashScreen(
-    viewModel: TeamViewModel = koinViewModel(),
+    viewModel: SplashViewModel = koinViewModel(),
     onNavigateToCreateTeam: () -> Unit,
     onNavigateToMatches: () -> Unit,
 ) {
@@ -19,9 +19,9 @@ fun SplashScreen(
 
     LaunchedEffect(uiState) {
         when (uiState) {
-            is TeamUiState.NoTeam -> onNavigateToCreateTeam()
-            is TeamUiState.TeamExists -> onNavigateToMatches()
-            is TeamUiState.Loading -> {
+            is UiState.NoTeam -> onNavigateToCreateTeam()
+            is UiState.TeamExists -> onNavigateToMatches()
+            is UiState.Loading -> {
                 // Wait for loading to finish
             }
         }

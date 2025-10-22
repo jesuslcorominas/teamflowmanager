@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchSummaryViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.RealTimeTicker
@@ -16,6 +17,10 @@ import org.koin.dsl.module
 
 val viewModelModule =
     module {
+        viewModel {
+            SplashViewModel(getTeam = get())
+        }
+
         viewModel {
             PlayerViewModel(
                 getPlayersUseCase = get(),
@@ -35,6 +40,7 @@ val viewModelModule =
                 updateTeamUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 playerRepository = get(),
+                savedStateHandle = get()
             )
         }
         viewModel {

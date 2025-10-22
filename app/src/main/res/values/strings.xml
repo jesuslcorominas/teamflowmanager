@@ -8,6 +8,7 @@
     <string name="add">Add</string>
     <string name="expand">Expand</string>
     <string name="collapse">Collapse</string>
+    <string name="discard">Discard</string>
 
     <string name="players_title">Team Roster</string>
     <string name="no_players_message">No players registered yet</string>
@@ -212,4 +213,7 @@
 
     <string name="list_single">%1$s</string>
     <string name="list_multiple">%1$s and %2$d more</string>
+
+    <string name="unsaved_changes_title">Unsaved changes</string>
+    <string name="discard_message">You have unsaved changes. Are you sure you want to exit?</string>
 </resources>

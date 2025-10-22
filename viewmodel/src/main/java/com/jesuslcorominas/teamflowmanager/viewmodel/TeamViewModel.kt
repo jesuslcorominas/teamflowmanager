@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
@@ -20,22 +21,29 @@ class TeamViewModel(
     private val updateTeamUseCase: UpdateTeamUseCase,
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
     private val playerRepository: PlayerRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TeamUiState>(TeamUiState.Loading)
     val uiState: StateFlow<TeamUiState> = _uiState.asStateFlow()
 
+    private val _showExitDialog = MutableStateFlow(false)
+    val showExitDialog: StateFlow<Boolean> = _showExitDialog
+
+    val isEditMode: Boolean = (savedStateHandle["mode"] as? String) == "edit"
+
     init {
-        loadTeam()
+        loadTeam(isEditMode)
     }
 
-    private fun loadTeam() {
+    private fun loadTeam(isEditMode: Boolean) {
         viewModelScope.launch {
             getTeamUseCase.invoke().collect { team ->
                 if (team == null) {
                     _uiState.value = TeamUiState.NoTeam
                 } else {
                     val captain = getCaptainPlayerUseCase.invoke()
-                    _uiState.value = TeamUiState.TeamExists(team, captain)
+                    _uiState.value =
+                        if (isEditMode) TeamUiState.EditTeam(team, captain) else TeamUiState.TeamExists(team, captain)
                 }
             }
         }
@@ -61,12 +69,31 @@ class TeamViewModel(
             }
         }
     }
+
+    fun requestBack(onNavigateBack: () -> Unit, hasUnsavedChanges: Boolean) {
+        if (isEditMode && hasUnsavedChanges) {
+            _showExitDialog.value = true
+        } else {
+            onNavigateBack()
+        }
+    }
+
+    fun discardChanges(onNavigateBack: () -> Unit) {
+        _showExitDialog.value = false
+        onNavigateBack()
+    }
+
+    fun dismissExitDialog() {
+        _showExitDialog.value = false
+    }
 }
 
-sealed class TeamUiState {
-    data object Loading : TeamUiState()
+sealed interface TeamUiState {
+    data object Loading : TeamUiState
 
-    data object NoTeam : TeamUiState()
+    data object NoTeam : TeamUiState
 
-    data class TeamExists(val team: Team, val captain: Player? = null) : TeamUiState()
+    data class TeamExists(val team: Team, val captain: Player? = null) : TeamUiState
+
+    data class EditTeam(val team: Team, val captain: Player? = null) : TeamUiState
 }

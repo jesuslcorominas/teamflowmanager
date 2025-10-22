@@ -28,7 +28,7 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchivedMatchesScreen(
-    onNavigateToMatchSummary: (Long, String, String) -> Unit,
+    onNavigateToMatchSummary: (Match) -> Unit,
     viewModel: ArchivedMatchesViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -53,7 +53,7 @@ fun ArchivedMatchesScreen(
 @Composable
 private fun ArchivedMatches(
     matches: List<Match>,
-    onNavigateToMatchSummary: (Long, String, String) -> Unit,
+    onNavigateToMatchSummary: (Match) -> Unit,
     unarchiveMatch: (Long) -> Unit
 ) {
     LazyColumn(
@@ -66,7 +66,7 @@ private fun ArchivedMatches(
         items(matches) { match ->
             ArchivedMatchCard(
                 match = match,
-                onNavigateToDetail = { onNavigateToMatchSummary(match.id, match.teamName, match.opponent) },
+                onNavigateToDetail = { onNavigateToMatchSummary(match) },
                 onUnarchive = { unarchiveMatch(match.id) },
             )
         }
@@ -105,7 +105,7 @@ private fun ArchivedMatchesPreview() {
         }.let { matches ->
             ArchivedMatches(
                 matches = matches,
-                onNavigateToMatchSummary = { _, _, _ -> },
+                onNavigateToMatchSummary = { },
                 unarchiveMatch = {}
             )
         }
