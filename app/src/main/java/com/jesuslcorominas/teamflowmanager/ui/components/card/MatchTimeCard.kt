@@ -51,7 +51,8 @@ fun MatchTimeCard(
     match: Match,
     elapsedTimeMillis: Long? = null
 ) {
-    val timeMillis = elapsedTimeMillis ?: match.elapsedTimeMillis
+    // Use calculated elapsed time if provided, otherwise use stored value
+    val cumulativeTimeMillis = elapsedTimeMillis ?: match.elapsedTimeMillis
     val matchStatus = match.status
     val numberOfPeriods = match.numberOfPeriods
     val currentPeriod = match.currentPeriod
@@ -65,12 +66,11 @@ fun MatchTimeCard(
     }
 
     // Calculate elapsed time in current period
-    // Assume each previous period ran for its full duration
-    // (This is an approximation since we don't track actual period durations)
+    // The cumulative time includes all previous periods, so we subtract them
     val elapsedInPreviousPeriods = (currentPeriod - 1) * periodDurationMillis
-    val elapsedInCurrentPeriod = maxOf(0L, timeMillis - elapsedInPreviousPeriods)
+    val elapsedInCurrentPeriod = maxOf(0L, cumulativeTimeMillis - elapsedInPreviousPeriods)
 
-    // Calculate remaining time (can be negative for stoppage time)
+    // Calculate remaining time in current period (can be negative for stoppage time)
     val remainingTime = periodDurationMillis - elapsedInCurrentPeriod
     val isStoppageTime = remainingTime < 0
     val displayTime = if (isStoppageTime) -remainingTime else remainingTime
