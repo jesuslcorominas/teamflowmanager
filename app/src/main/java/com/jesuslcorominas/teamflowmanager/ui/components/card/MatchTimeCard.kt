@@ -49,24 +49,28 @@ import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
 @Composable
 fun MatchTimeCard(
     match: Match,
-    elapsedTimeMillis: Long? = null
+    matchTimeMillis: Long? = null
 ) {
-    // Use calculated elapsed time if provided, otherwise use stored value
-    val cumulativeTimeMillis = elapsedTimeMillis ?: match.elapsedTimeMillis
+    val timeMillis = matchTimeMillis ?: match.elapsedTimeMillis
     val matchStatus = match.status
     val numberOfPeriods = match.numberOfPeriods
     val currentPeriod = match.currentPeriod
     val numberOfPauses = match.pauseCount
 
-    // Get period duration from the match model to ensure consistency
-    val periodDurationMillis = match.getPeriodDurationMillis()
+    // Calculate period duration
+    val periodDurationMillis = if (numberOfPeriods == 2) {
+        25 * 60 * 1000L // 25 minutes
+    } else {
+        (12 * 60 + 30) * 1000L // 12 minutes 30 seconds
+    }
 
     // Calculate elapsed time in current period
-    // The cumulative time includes all previous periods, so we subtract them
+    // Assume each previous period ran for its full duration
+    // (This is an approximation since we don't track actual period durations)
     val elapsedInPreviousPeriods = (currentPeriod - 1) * periodDurationMillis
-    val elapsedInCurrentPeriod = maxOf(0L, cumulativeTimeMillis - elapsedInPreviousPeriods)
+    val elapsedInCurrentPeriod = maxOf(0L, timeMillis - elapsedInPreviousPeriods)
 
-    // Calculate remaining time in current period (can be negative for stoppage time)
+    // Calculate remaining time (can be negative for stoppage time)
     val remainingTime = periodDurationMillis - elapsedInCurrentPeriod
     val isStoppageTime = remainingTime < 0
     val displayTime = if (isStoppageTime) -remainingTime else remainingTime
