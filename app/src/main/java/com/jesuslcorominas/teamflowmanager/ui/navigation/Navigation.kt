@@ -1,76 +1,84 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
-import com.jesuslcorominas.teamflowmanager.ui.matches.CurrentMatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
-import com.jesuslcorominas.teamflowmanager.ui.matches.MatchSummaryScreen
+import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
-import com.jesuslcorominas.teamflowmanager.ui.teamdetail.TeamDetailScreen
 
 @Composable
 fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
+    currentBackHandler: BackHandlerController
 ) {
     NavHost(
         modifier = modifier,
         navController = navController,
         startDestination = Route.Splash.createRoute(),
     ) {
-        composable(Route.Splash.path) {
+        composable(Route.Splash.createRoute()) {
             SplashScreen(
                 onNavigateToCreateTeam = {
-                    navController.navigate(Route.CreateTeam.createRoute()) {
-                        popUpTo(Route.Splash.path) { inclusive = true }
+                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
-                onNavigateToPlayers = {
-                    navController.navigate(Route.Players.createRoute()) {
-                        popUpTo(Route.Splash.path) { inclusive = true }
+                onNavigateToMatches = {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
             )
         }
 
-        composable(Route.CreateTeam.path) {
+        composable(
+            route = Route.Team.FULL_ROUTE,
+            arguments = listOf(
+                navArgument(Route.Team.ARG_MODE) {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val mode = backStackEntry.arguments?.getString(Route.Team.ARG_MODE) ?: ""
+
             TeamScreen(
-                onNavigateToPlayers = { _ ->
-                    navController.navigate(Route.Players.createRoute()) {
-                        popUpTo(Route.CreateTeam.path) { inclusive = true }
+                onNavigateToMatches = { _ ->
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
                     }
                 },
+                onNavigateBackRequest = { navController.popBackStack() },
+                currentBackHandler = if (mode == Route.Team.MODE_EDIT) currentBackHandler else null,
             )
         }
 
-        composable(Route.Players.path) {
+        composable(Route.Players.createRoute()) {
             PlayersScreen()
         }
 
-        composable(Route.TeamDetail.path) {
-            TeamDetailScreen()
-        }
-
-        composable(Route.Matches.path) {
+        composable(Route.Matches.createRoute()) {
             MatchListScreen(
                 onNavigateToEditMatch = { matchId ->
                     navController.navigate(Route.MatchDetail.createRoute(matchId))
                 },
-                onNavigateToMatchSummary = { matchId ->
-                    navController.navigate(Route.MatchSummary.createRoute(matchId))
-                },
-                onNavigateToCurrentMatch = {
-                    navController.navigate(Route.CurrentMatch.createRoute())
+                onNavigateToMatch = { match ->
+                    navController.navigate(Route.Match.createRoute(match.id, match.teamName, match.opponent))
                 },
                 onNavigateToArchivedMatches = {
                     navController.navigate(Route.ArchivedMatches.createRoute())
@@ -78,38 +86,45 @@ fun Navigation(
             )
         }
 
-        composable(Route.ArchivedMatches.path) {
+        composable(Route.ArchivedMatches.createRoute()) {
             ArchivedMatchesScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToMatchSummary = { matchId ->
-                    navController.navigate(Route.MatchSummary.createRoute(matchId))
+                onNavigateToMatchSummary = { match ->
+                    navController.navigate(Route.Match.createRoute(match.id, match.teamName, match.opponent))
                 },
             )
         }
 
-        composable(Route.CreateMatch.path) {
-            MatchCreationWizardScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-            )
-        }
-
-        composable(Route.CurrentMatch.path) {
-            CurrentMatchScreen()
+        composable(Route.CreateMatch.createRoute()) {
+            MatchCreationWizardScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(
-            route = "${Route.MatchDetail.path}/{matchId}",
+            route = Route.Match.FULL_ROUTE,
             arguments = listOf(
-                navArgument("matchId") {
+                navArgument(Route.Match.ARG_MATCH_ID) {
+                    type = NavType.LongType
+                },
+                navArgument(Route.Match.ARG_TEAM) {
+                    type = NavType.StringType
+                },
+                navArgument(Route.Match.ARG_OPPONENT) {
+                    type = NavType.StringType
+                },
+            )
+        ) {
+            MatchScreen()
+        }
+
+        // TODO remove this screen
+        composable(
+            route = "${Route.MatchDetail.createRoute()}/{matchId}",
+            arguments = listOf(
+                navArgument(Route.MatchDetail.ARG_MATCH_ID) {
                     type = NavType.LongType
                 },
             ),
         ) { backStackEntry ->
-            val matchId = backStackEntry.arguments?.getLong("matchId")
+            val matchId = backStackEntry.arguments?.getLong(Route.MatchDetail.ARG_MATCH_ID)
             MatchDetailScreen(
                 matchId = matchId,
                 onNavigateBack = {
@@ -117,22 +132,37 @@ fun Navigation(
                 },
             )
         }
+    }
 
-        composable(
-            route = "${Route.MatchSummary.path}/{matchId}",
-            arguments = listOf(
-                navArgument("matchId") {
-                    type = NavType.LongType
-                },
-            ),
-        ) { backStackEntry ->
-            val matchId = backStackEntry.arguments?.getLong("matchId") ?: 0L
-            MatchSummaryScreen(
-                matchId = matchId,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-            )
+    val activity = LocalContext.current as? Activity
+
+    val backStackEntry by navController.currentBackStackEntryAsState()
+
+    val route = Route.fromValue(backStackEntry?.destination?.route)
+
+    BackHandler {
+        when (route) {
+            Route.Matches -> activity?.finish()
+
+            Route.Team -> {
+                val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)
+
+                when (mode) {
+                    Route.Team.MODE_CREATE -> activity?.finish()
+                    Route.Team.MODE_VIEW -> navController.navigateToMatches()
+                }
+            }
+            Route.Players -> navController.navigateToMatches()
+
+            else -> navController.popBackStack()
         }
+    }
+}
+
+private fun NavHostController.navigateToMatches() {
+    navigate(Route.Matches.createRoute()) {
+        popUpTo(graph.startDestinationId) { inclusive = false }
+        launchSingleTop = true
+        restoreState = true
     }
 }

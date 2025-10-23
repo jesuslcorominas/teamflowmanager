@@ -34,6 +34,7 @@ class GetMatchByIdUseCaseTest {
                     opponent = "Rival FC",
                     location = "Stadium",
                     date = System.currentTimeMillis(),
+                    teamName = "Team B"
                 )
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
 

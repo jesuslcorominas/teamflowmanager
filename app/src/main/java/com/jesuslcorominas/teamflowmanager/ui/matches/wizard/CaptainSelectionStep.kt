@@ -1,33 +1,30 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
 @Composable
@@ -59,25 +56,16 @@ fun CaptainSelectionStep(
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(players) { player ->
-                    PlayerRadioItem(
-                        player = player,
-                        isSelected = player.id == currentCaptainId,
-                        onSelectionChange = {
-                            currentCaptainId = player.id
-                        },
-                    )
-                }
+        PlayerList(
+            players = players,
+            modifier = Modifier.weight(1F),
+            showPositions = false,
+            paddingValues = PaddingValues(TFMSpacing.spacing02),
+            selectedPlayerIds = setOf(currentCaptainId).mapNotNull { it }.toSet(),
+            onSingleSelectionChange = { player ->
+                currentCaptainId = player.id
             }
-        }
+        )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
@@ -106,38 +94,32 @@ fun CaptainSelectionStep(
     }
 }
 
+@Preview(
+    name = "Pixel 7 Pro",
+    device = "spec:width=1440px,height=3120px,dpi=512",
+    showSystemUi = true,
+    showBackground = true
+)
 @Composable
-private fun PlayerRadioItem(
-    player: Player,
-    isSelected: Boolean,
-    onSelectionChange: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onSelectionChange() }
-            .padding(TFMSpacing.spacing02),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(
-            selected = isSelected,
-            onClick = onSelectionChange,
+fun CaptainSelectionStepPreview() {
+    TFMAppTheme {
+        CaptainSelectionStep(
+            players =
+                (1..5).map {
+                    Player(
+                        id = it.toLong(),
+                        firstName = "John",
+                        lastName = "Doe",
+                        number = 10,
+                        positions = listOf(Position.Forward, Position.Midfielder),
+                        teamId = 1,
+                        isCaptain = false
+                    )
+                },
+            selectedCaptainId = null,
+            onCaptainChanged = {},
+            onNext = {},
+            onPrevious = {}
         )
-        Column(
-            modifier = Modifier.padding(start = TFMSpacing.spacing02),
-        ) {
-            val isGoalkeeper = player.positions.any { it is Position.Goalkeeper }
-            val displayName = buildString {
-                append("${player.number} - ${player.firstName} ${player.lastName}")
-                if (isGoalkeeper) {
-                    append(" (P)")
-                }
-            }
-            Text(
-                text = displayName,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
     }
 }

@@ -43,6 +43,7 @@ class StartMatchUseCaseTest {
                     startingLineupIds = startingLineupIds,
                     isRunning = false,
                     lastStartTimeMillis = null,
+                    teamName = "Team B"
                 )
 
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
@@ -74,6 +75,7 @@ class StartMatchUseCaseTest {
                     startingLineupIds = emptyList(),
                     isRunning = false,
                     lastStartTimeMillis = null,
+                    teamName = "Team B"
                 )
 
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)

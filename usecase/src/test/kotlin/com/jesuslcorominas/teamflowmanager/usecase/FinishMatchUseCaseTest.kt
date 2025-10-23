@@ -54,7 +54,7 @@ class FinishMatchUseCaseTest {
         runTest {
             // Given
             val matchId = 1L
-            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false)
+            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false, teamName = "Team A")
             val playerTimes =
                 listOf(
                     PlayerTime(playerId = 1L, elapsedTimeMillis = 3000L, isRunning = false),
@@ -111,6 +111,7 @@ class FinishMatchUseCaseTest {
                 elapsedTimeMillis = 5000L,
                 isRunning = true,
                 lastStartTimeMillis = startTime,
+                teamName = "Team A"
             )
             val playerTimes =
                 listOf(
@@ -158,7 +159,7 @@ class FinishMatchUseCaseTest {
         runTest {
             // Given
             val matchId = 1L
-            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false)
+            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false, teamName = "Team A")
             val playerTimes =
                 listOf(
                     PlayerTime(playerId = 1L, elapsedTimeMillis = 0L, isRunning = false),
@@ -195,7 +196,7 @@ class FinishMatchUseCaseTest {
         runTest {
             // Given
             val matchId = 1L
-            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false)
+            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false, teamName = "Team A")
             every { matchRepository.getMatch() } returns flowOf(match)
             every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
             coEvery { playerTimeRepository.resetAllPlayerTimes() } returns Unit

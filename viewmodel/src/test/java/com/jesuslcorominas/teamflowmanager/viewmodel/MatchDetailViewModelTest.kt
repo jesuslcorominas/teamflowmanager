@@ -85,6 +85,7 @@ class MatchDetailViewModelTest {
                     id = matchId,
                     teamId = 1L,
                     opponent = "Rival FC",
+                    teamName = "My Team",
                     location = "Stadium",
                     date = System.currentTimeMillis(),
                     startingLineupIds = listOf(1L, 2L),

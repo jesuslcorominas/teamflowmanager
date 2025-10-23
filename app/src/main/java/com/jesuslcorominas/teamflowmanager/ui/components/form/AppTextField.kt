@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.ui.components
+package com.jesuslcorominas.teamflowmanager.ui.components.form
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions

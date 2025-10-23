@@ -30,14 +30,16 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
                 opponent = "Team A",
                 squadCallUpIds = listOf(1L, 2L, 3L),
                 captainId = 1L,
-                status = MatchStatus.SCHEDULED
+                status = MatchStatus.SCHEDULED,
+                teamName = "Team B"
             ),
             Match(
                 id = 2L,
                 opponent = "Team B",
                 squadCallUpIds = listOf(1L, 2L, 3L),
                 captainId = 1L,
-                status = MatchStatus.SCHEDULED
+                status = MatchStatus.SCHEDULED,
+                teamName = "Team B"
             )
         )
         coEvery { matchRepository.getScheduledMatches() } returns scheduledMatches
@@ -59,7 +61,8 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
                 opponent = "Team A",
                 squadCallUpIds = listOf(1L, 2L, 3L),
                 captainId = 42L,
-                status = MatchStatus.SCHEDULED
+                status = MatchStatus.SCHEDULED,
+                teamName = "Team B"
             )
         )
         coEvery { matchRepository.getScheduledMatches() } returns scheduledMatches

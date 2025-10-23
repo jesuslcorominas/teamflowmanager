@@ -3,22 +3,22 @@ package com.jesuslcorominas.teamflowmanager.domain.model
 data class Match(
     val id: Long = 0L,
     val teamId: Long = 1L,
-    val opponent: String? = null,
-    val location: String? = null,
-    val date: Long? = null, // Date in milliseconds
-    val time: Long? = null, // Time in milliseconds (hours and minutes of day)
-    val numberOfPeriods: Int = 2, // Number of periods: 2 for halves, 4 for quarters
-    val squadCallUpIds: List<Long> = emptyList(), // Players selected for match squad (convocatoria)
-    val captainId: Long? = null, // Captain for this match
+    val teamName: String,
+    val opponent: String,
+    val location: String,
+    val dateTime: Long? = null,
+    val numberOfPeriods: Int,
+    val squadCallUpIds: List<Long> = emptyList(),
+    val captainId: Long? = null,
     val startingLineupIds: List<Long> = emptyList(),
-    val substituteIds: List<Long> = emptyList(),
     val elapsedTimeMillis: Long = 0L,
-    val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
     val status: MatchStatus = MatchStatus.SCHEDULED,
     val archived: Boolean = false,
-    val currentPeriod: Int = 1, // Current period (1-based index)
-    val pauseCount: Int = 0, // Number of times the match has been paused
+    val currentPeriod: Int = 1,
+    val pauseCount: Int = 0,
+    val goals: Int = 0,
+    val opponentGoals: Int = 0,
 ) {
     /**
      * Get the duration of each period in milliseconds
@@ -55,4 +55,10 @@ data class Match(
     fun isLastPeriod(): Boolean {
         return currentPeriod >= numberOfPeriods
     }
+
+    val isInProgress: Boolean
+        get() = status == MatchStatus.IN_PROGRESS
+
+    val isStarted: Boolean
+        get() = status == MatchStatus.IN_PROGRESS || status == MatchStatus.PAUSED
 }

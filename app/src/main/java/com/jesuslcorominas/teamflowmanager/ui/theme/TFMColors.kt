@@ -36,6 +36,11 @@ val BackgroundOverlay = Color(0x66000000)
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
 
+val SubstitutionGreen = Color(0xFF4CAF50)
+val SubstitutionRed = Color(0xFF960615)
+
+val GoalKeeperBadge = Color(0xFF960615)
+
 val LightColorScheme =
     lightColorScheme(
         primary = Primary,

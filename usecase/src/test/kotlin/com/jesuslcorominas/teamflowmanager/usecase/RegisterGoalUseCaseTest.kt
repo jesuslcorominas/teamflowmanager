@@ -44,6 +44,7 @@ class RegisterGoalUseCaseTest {
                     elapsedTimeMillis = 900000L,
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis - 60000L,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
@@ -78,6 +79,7 @@ class RegisterGoalUseCaseTest {
                     elapsedTimeMillis = 600000L,
                     isRunning = false,
                     lastStartTimeMillis = null,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
@@ -107,6 +109,7 @@ class RegisterGoalUseCaseTest {
                     elapsedTimeMillis = 300000L,
                     isRunning = true,
                     lastStartTimeMillis = lastStartTimeMillis,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
@@ -134,5 +137,41 @@ class RegisterGoalUseCaseTest {
             registerGoalUseCase(matchId, scorerId, currentTimeMillis)
 
             // Then - should throw exception
+        }
+
+    @Test
+    fun `invoke should record opponent goal correctly`() =
+        runTest {
+            // Given
+            val matchId = 1L
+            val scorerId = null // Null scorer ID for opponent goals
+            val currentTimeMillis = System.currentTimeMillis()
+            val match =
+                Match(
+                    id = matchId,
+                    teamId = 1L,
+                    elapsedTimeMillis = 500000L,
+                    isRunning = true,
+                    lastStartTimeMillis = currentTimeMillis - 30000L,
+                    teamName = "Team B"
+                )
+            coEvery { matchRepository.getMatch() } returns flowOf(match)
+
+            val goalSlot = slot<Goal>()
+            coEvery { goalRepository.insertGoal(capture(goalSlot)) } returns 1L
+
+            // When
+            val result = registerGoalUseCase(matchId, scorerId, currentTimeMillis, isOpponentGoal = true)
+
+            // Then
+            coVerify { goalRepository.insertGoal(any()) }
+
+            val goal = goalSlot.captured
+            assertEquals(matchId, goal.matchId)
+            assertEquals(scorerId, goal.scorerId)
+            assertEquals(currentTimeMillis, goal.goalTimeMillis)
+            assertEquals(530000L, goal.matchElapsedTimeMillis) // 500000 + 30000
+            assertEquals(true, goal.isOpponentGoal)
+            assertEquals(1L, result)
         }
 }

@@ -69,6 +69,7 @@ class GetMatchSummaryUseCaseTest {
                 location = "Stadium",
                 status = MatchStatus.FINISHED,
                 elapsedTimeMillis = 3000000L,
+                teamName = "Team B"
             )
             val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L)
             val player2 = Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = 1L)
@@ -106,6 +107,7 @@ class GetMatchSummaryUseCaseTest {
                 location = "Stadium",
                 status = MatchStatus.FINISHED,
                 elapsedTimeMillis = 3000000L,
+                teamName = "Team B"
             )
             val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L)
             val player2 = Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = 1L)
@@ -146,6 +148,7 @@ class GetMatchSummaryUseCaseTest {
                 location = "Stadium",
                 status = MatchStatus.FINISHED,
                 elapsedTimeMillis = 3000000L,
+                teamName = "Team B"
             )
 
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)

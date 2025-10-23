@@ -15,22 +15,17 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Goal
             childColumns = ["matchId"],
             onDelete = ForeignKey.CASCADE,
         ),
-        ForeignKey(
-            entity = PlayerEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["scorerId"],
-            onDelete = ForeignKey.CASCADE,
-        ),
     ],
-    indices = [Index("matchId"), Index("scorerId")],
+    indices = [Index("matchId")],
 )
 data class GoalEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
     val matchId: Long,
-    val scorerId: Long,
+    val scorerId: Long?,
     val goalTimeMillis: Long,
     val matchElapsedTimeMillis: Long,
+    val isOpponentGoal: Boolean = false,
 )
 
 fun GoalEntity.toDomain(): Goal =
@@ -40,6 +35,7 @@ fun GoalEntity.toDomain(): Goal =
         scorerId = scorerId,
         goalTimeMillis = goalTimeMillis,
         matchElapsedTimeMillis = matchElapsedTimeMillis,
+        isOpponentGoal = isOpponentGoal,
     )
 
 fun Goal.toEntity(): GoalEntity =
@@ -49,4 +45,5 @@ fun Goal.toEntity(): GoalEntity =
         scorerId = scorerId,
         goalTimeMillis = goalTimeMillis,
         matchElapsedTimeMillis = matchElapsedTimeMillis,
+        isOpponentGoal = isOpponentGoal,
     )

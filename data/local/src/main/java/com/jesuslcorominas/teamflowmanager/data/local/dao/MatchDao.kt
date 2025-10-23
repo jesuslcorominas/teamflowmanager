@@ -11,26 +11,24 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MatchDao {
     @Query("""
-        SELECT * FROM match 
-        WHERE status = 'IN_PROGRESS' 
-           OR isRunning = 1 
-           OR status = 'FINISHED'
+        SELECT * FROM match
+        WHERE status = 'IN_PROGRESS'
+           OR status = 'PAUSED'
            OR (elapsedTimeMillis > 0 AND EXISTS (SELECT 1 FROM player_time LIMIT 1))
-        ORDER BY CASE WHEN isRunning = 1 THEN 0 
-                      WHEN status = 'IN_PROGRESS' THEN 1
-                      WHEN status = 'FINISHED' THEN 2
-                      ELSE 3 END, date DESC 
+        ORDER BY CASE WHEN status = 'IN_PROGRESS' THEN 0
+                      WHEN status = 'PAUSED' THEN 1
+                      ELSE 2 END, dateTime DESC
         LIMIT 1
     """)
-    fun getMatch(): Flow<MatchEntity?>
+    fun getRunningMatch(): Flow<MatchEntity?>
 
     @Query("SELECT * FROM match WHERE id = :matchId LIMIT 1")
     fun getMatchById(matchId: Long): Flow<MatchEntity?>
 
-    @Query("SELECT * FROM match WHERE archived = 0 ORDER BY date DESC")
+    @Query("SELECT * FROM match WHERE archived = 0 ORDER BY dateTime DESC")
     fun getAllMatches(): Flow<List<MatchEntity>>
 
-    @Query("SELECT * FROM match WHERE archived = 1 ORDER BY date DESC")
+    @Query("SELECT * FROM match WHERE archived = 1 ORDER BY dateTime DESC")
     fun getArchivedMatches(): Flow<List<MatchEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -18,6 +18,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -64,6 +65,7 @@ class MatchViewModelGoalTest {
             teamId = 1L,
             elapsedTimeMillis = 900000L,
             isRunning = true,
+            teamName = "My Team",
             lastStartTimeMillis = System.currentTimeMillis() - 60000L,
         )
 
@@ -207,6 +209,7 @@ class MatchViewModelGoalTest {
                         scorerId = 1L,
                         goalTimeMillis = 1000L,
                         matchElapsedTimeMillis = 500000L,
+                        isOpponentGoal = false,
                     ),
                     Goal(
                         id = 2L,
@@ -214,6 +217,7 @@ class MatchViewModelGoalTest {
                         scorerId = 2L,
                         goalTimeMillis = 2000L,
                         matchElapsedTimeMillis = 900000L,
+                        isOpponentGoal = false,
                     ),
                 )
             every { getGoalsForMatchUseCase(match.id) } returns flowOf(goals)
@@ -243,6 +247,111 @@ class MatchViewModelGoalTest {
             val state = viewModel.uiState.value
             assertTrue(state is MatchUiState.Success)
             assertEquals(2, (state as MatchUiState.Success).goalsCount)
+        }
+
+    @Test
+    fun `showOpponentGoalDialog should set showOpponentGoalDialog to true`() =
+        runTest(testDispatcher) {
+            // When
+            viewModel.showOpponentGoalDialog()
+            advanceUntilIdle()
+
+            // Then
+            assertTrue(viewModel.showOpponentGoalDialog.value)
+        }
+
+    @Test
+    fun `dismissOpponentGoalDialog should set showOpponentGoalDialog to false`() =
+        runTest(testDispatcher) {
+            // Given
+            viewModel.showOpponentGoalDialog()
+            advanceUntilIdle()
+
+            // When
+            viewModel.dismissOpponentGoalDialog()
+            advanceUntilIdle()
+
+            // Then
+            assertFalse(viewModel.showOpponentGoalDialog.value)
+        }
+
+    @Test
+    fun `registerOpponentGoal should call registerGoalUseCase with isOpponentGoal true`() =
+        runTest(testDispatcher) {
+            // Given
+            coEvery { registerGoalUseCase(any(), any(), any(), any()) } returns 1L
+
+            viewModel.showOpponentGoalDialog()
+            advanceUntilIdle()
+
+            // When
+            viewModel.registerOpponentGoal()
+            advanceUntilIdle()
+
+            // Then
+            coVerify { registerGoalUseCase(match.id, null, any(), true) }
+            assertFalse(viewModel.showOpponentGoalDialog.value)
+        }
+
+    @Test
+    fun `opponent goals count should be reflected in UI state`() =
+        runTest(testDispatcher) {
+            // Given
+            val goals =
+                listOf(
+                    Goal(
+                        id = 1L,
+                        matchId = match.id,
+                        scorerId = 1L,
+                        goalTimeMillis = 1000L,
+                        matchElapsedTimeMillis = 500000L,
+                        isOpponentGoal = false,
+                    ),
+                    Goal(
+                        id = 2L,
+                        matchId = match.id,
+                        scorerId = null,
+                        goalTimeMillis = 2000L,
+                        matchElapsedTimeMillis = 700000L,
+                        isOpponentGoal = true,
+                    ),
+                    Goal(
+                        id = 3L,
+                        matchId = match.id,
+                        scorerId = null,
+                        goalTimeMillis = 3000L,
+                        matchElapsedTimeMillis = 900000L,
+                        isOpponentGoal = true,
+                    ),
+                )
+            every { getGoalsForMatchUseCase(match.id) } returns flowOf(goals)
+
+            // Recreate viewModel to pick up new goals
+            viewModel =
+                MatchViewModel(
+                    getMatchUseCase,
+                    getAllPlayerTimesUseCase,
+                    getPlayersUseCase,
+                    finishMatchUseCase,
+                    pauseMatchUseCase,
+                    resumeMatchUseCase,
+                    startMatchTimerUseCase,
+                    startPlayerTimerUseCase,
+                    registerPlayerSubstitutionUseCase,
+                    getMatchSummaryUseCase,
+                    registerGoalUseCase,
+                    getGoalsForMatchUseCase,
+                    preferencesRepository,
+                    timeTicker,
+                )
+
+            advanceUntilIdle()
+
+            // Then
+            val state = viewModel.uiState.value
+            assertTrue(state is MatchUiState.Success)
+            assertEquals(1, (state as MatchUiState.Success).goalsCount)
+            assertEquals(2, state.opponentGoalsCount)
         }
 
     private class TestTimeTicker : TimeTicker {

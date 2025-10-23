@@ -1,11 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
-import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -15,56 +16,61 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
-import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
-import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
+fun MainScreen() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val uiState by viewModel.uiState.collectAsState()
+
+    val backHandlerController = remember { BackHandlerController() }
 
     val route = Route.fromValue(currentRoute)
-    val uiConfig = route?.uiConfig(null)
 
-    val teamName = when (val state = uiState) {
-        is TeamUiState.TeamExists -> state.team.name
-        else -> null
-    }
+    val arguments = backStackEntry
+        ?.arguments
+        ?.keySet()
+        ?.associateWith { key -> backStackEntry?.arguments?.get(key) }
 
-    // Handle back button for CreateTeam screen - should exit app
-    if (currentRoute == Route.CreateTeam.createRoute()) {
-        BackHandler {
-            // Close the app by doing nothing - the system will handle it
-        }
-    }
+    val uiConfig = route?.uiConfig(arguments)
+
+    val title = route?.toTitle(backStackEntry)
 
     Scaffold(
         topBar = {
-            if (uiConfig?.showTopBar == true && teamName != null) {
+            if (uiConfig?.showTopBar == true) {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = teamName,
+                            text = title ?: "",
+                            maxLines = 1,
                             style = MaterialTheme.typography.titleLarge,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     },
                     navigationIcon = {
                         if (uiConfig.canGoBack) {
-                            IconButton(onClick = { navController.popBackStack() }) {
+                            IconButton(
+                                onClick = {
+                                    backHandlerController.onBackRequested?.invoke()
+                                        ?: navController.popBackStack()
+                                }
+                            ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = stringResource(R.string.close),
@@ -82,19 +88,7 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
         },
         floatingActionButton = {
             if (uiConfig?.showFab == true) {
-                FloatingActionButton(
-                    onClick = {
-                        when (route) {
-                            Route.Matches -> navController.navigate(Route.CreateMatch.createRoute())
-                            else -> {}
-                        }
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add_match_title),
-                    )
-                }
+                RouteFloatingActionButton(route, navController)
             }
         },
     ) { paddingValues ->
@@ -103,6 +97,62 @@ fun MainScreen(viewModel: TeamViewModel = koinViewModel()) {
                 .fillMaxSize()
                 .padding(paddingValues),
             navController = navController,
+            currentBackHandler = backHandlerController,
         )
+    }
+}
+
+@Composable
+private fun RouteFloatingActionButton(route: Route, navController: NavHostController) {
+    FloatingActionButton(
+        onClick = { route.toDestination()?.let { navController.navigate(it) } },
+    ) {
+        Icon(
+            imageVector = route.toFABIcon(),
+            contentDescription = route.toFABContentDescriptionRes()?.let { stringResource(it) } ?: ""
+        )
+    }
+}
+
+private fun Route.toFABIcon() = when (this) {
+    Route.Team -> Icons.Default.Edit
+    else -> Icons.Default.Add
+}
+
+private fun Route.toFABContentDescriptionRes(): Int? = when (this) {
+    Route.Players -> R.string.add_player_title
+    Route.Team -> R.string.edit_team_title
+    Route.Matches -> R.string.add_match_title
+    else -> null
+}
+
+private fun Route.toDestination() = when (this) {
+    Route.Team -> Route.Team.createRoute(Route.Team.MODE_EDIT)
+    Route.Matches -> Route.CreateMatch.createRoute()
+    else -> null
+}
+
+@Composable
+private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (this) {
+    Route.Players -> stringResource(R.string.players_title)
+    Route.Team -> stringResource((this as Route.Team).toTitleRes(backStackEntry))
+    Route.Matches -> stringResource(R.string.matches_title)
+    Route.ArchivedMatches -> stringResource(R.string.archived_matches)
+    Route.Match ->
+        "${backStackEntry?.arguments?.getString(Route.Match.ARG_TEAM)} - ${
+            backStackEntry?.arguments?.getString(Route.Match.ARG_OPPONENT)
+        }"
+
+    else -> null
+}
+
+@StringRes
+private fun Route.Team.toTitleRes(backStackEntry: NavBackStackEntry?): Int {
+    val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)
+
+    return if (mode == Route.Team.MODE_EDIT) {
+        R.string.edit_team_title
+    } else {
+        R.string.team_title
     }
 }

@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +13,6 @@ class MatchSummaryViewModel(
     private val getMatchSummaryUseCase: GetMatchSummaryUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchSummaryUiState>(MatchSummaryUiState.Loading)
-    val uiState: StateFlow<MatchSummaryUiState> = _uiState.asStateFlow()
 
     fun loadMatchSummary(matchId: Long) {
         viewModelScope.launch {
@@ -21,10 +21,7 @@ class MatchSummaryViewModel(
                     _uiState.value = MatchSummaryUiState.NotFound
                 } else {
                     _uiState.value = MatchSummaryUiState.Success(
-                        matchId = summary.match.id,
-                        opponent = summary.match.opponent ?: "",
-                        location = summary.match.location ?: "",
-                        matchTimeMillis = summary.match.elapsedTimeMillis,
+                        match = summary.match,
                         playerTimes = summary.playerTimes.map { playerTimeSummary ->
                             PlayerTimeItem(
                                 player = playerTimeSummary.player,
@@ -51,10 +48,7 @@ sealed class MatchSummaryUiState {
     data object Loading : MatchSummaryUiState()
     data object NotFound : MatchSummaryUiState()
     data class Success(
-        val matchId: Long,
-        val opponent: String,
-        val location: String,
-        val matchTimeMillis: Long,
+        val match: Match,
         val playerTimes: List<PlayerTimeItem>,
         val substitutions: List<SubstitutionItem>,
     ) : MatchSummaryUiState()

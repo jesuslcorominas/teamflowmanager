@@ -23,6 +23,7 @@ class ArchivedMatchesViewModel(
 
     private fun loadArchivedMatches() {
         viewModelScope.launch {
+            // TODO archived should be a MatchStatus not a separate variable
             getArchivedMatchesUseCase.invoke().collect { matches ->
                 _uiState.value =
                     if (matches.isEmpty()) {

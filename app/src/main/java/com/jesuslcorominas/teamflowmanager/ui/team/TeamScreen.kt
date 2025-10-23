@@ -1,247 +1,110 @@
 package com.jesuslcorominas.teamflowmanager.ui.team
 
-import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
-import com.jesuslcorominas.teamflowmanager.domain.model.Team
-import com.jesuslcorominas.teamflowmanager.ui.components.AppTextField
-import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
+import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
+import com.jesuslcorominas.teamflowmanager.ui.team.components.TeamDetailContent
+import com.jesuslcorominas.teamflowmanager.ui.team.components.TeamForm
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun TeamScreen(
-    viewModel: TeamViewModel = koinViewModel(),
-    onNavigateToPlayers: (String) -> Unit,
+    onNavigateToMatches: (String) -> Unit,
+    onNavigateBackRequest: () -> Unit,
+    currentBackHandler: BackHandlerController?,
+    viewModel: TeamViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val showExitDialog by viewModel.showExitDialog.collectAsState()
 
-    when (uiState) {
-        is TeamUiState.Loading -> LoadingState()
-        is TeamUiState.NoTeam ->
-            CreateTeamForm(
-                onSave = { team ->
-                    viewModel.createTeam(team)
-                    onNavigateToPlayers(team.name)
-                },
-            )
+    val hasUnsavedChanges = remember { mutableStateOf(true) }
 
-        is TeamUiState.TeamExists -> {
-            val team = (uiState as TeamUiState.TeamExists).team
-            onNavigateToPlayers(team.name)
-        }
-    }
-}
-
-@Composable
-private fun LoadingState() {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            CircularProgressIndicator()
-        }
-    }
-}
-
-@Composable
-private fun CreateTeamForm(onSave: (Team) -> Unit) {
-
-    val focusManager = LocalFocusManager.current
-    var formState by remember { mutableStateOf(TeamFormState()) }
-    val validateAndSave = {
-        formState = formState.copy(
-            errors = FormErrors(
-                name = formState.name.isBlank(),
-                coachName = formState.coachName.isBlank(),
-                delegateName = formState.delegateName.isBlank()
-            ),
-        )
-
-        if (!formState.errors.hasErrors) {
-            onSave(formState.toTeam())
-        }
+    val latestAction = rememberUpdatedState {
+        viewModel.requestBack(onNavigateBackRequest)
     }
 
+    currentBackHandler?.let {
+        DisposableEffect(currentBackHandler, hasUnsavedChanges.value) {
+            val newCallback: () -> Unit = { latestAction.value.invoke() }
+            currentBackHandler.onBackRequested = newCallback
+
+            onDispose {
+                // Only clear the callback if this composable was the one that registered it.
+                // This prevents accidentally removing a newer callback that might have replaced ours
+                // due to recompositions or navigation changes happening in parallel.
+                if (currentBackHandler.onBackRequested === newCallback) {
+                    currentBackHandler.onBackRequested = null
+                }
+            }
+        }
+
+        BackHandler(enabled = !showExitDialog) {
+            viewModel.requestBack(onNavigateBackRequest)
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TFMSpacing.spacing04),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Icon(
-                modifier = Modifier.size(TFMSpacing.spacing18),
-                painter = painterResource(id = R.drawable.ic_launcher),
-                contentDescription = stringResource(R.string.app_name),
-                tint = Color.Unspecified
-            )
+        when (val state = uiState) {
+            is TeamUiState.Loading -> Loading()
+            is TeamUiState.Success -> if (viewModel.isEditMode) {
+                TeamForm(team = state.team, players = state.players) { team, captainId ->
+                    viewModel.updateTeam(team, captainId)
+                    onNavigateBackRequest()
+                }
+            } else {
+                TeamDetailContent(
+                    team = state.team,
+                    captain = state.players.firstOrNull { it.isCaptain }
+                )
+            }
 
-            Text(
-                modifier = Modifier.padding(
-                    bottom = TFMSpacing.spacing04
-                ),
-                text = stringResource(R.string.create_team_title),
-                style = MaterialTheme.typography.headlineMedium,
-            )
-
-            AppTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = TFMSpacing.spacing03),
-                value = formState.name,
-                onValueChange = {
-                    formState = formState.copy(
-                        name = it,
-                        errors = formState.errors.copy(name = false)
-                    )
-                },
-                label = { Text(stringResource(R.string.team_name)) },
-                isError = formState.errors.name,
-                supportingText = if (formState.errors.name) {
-                    { Text(stringResource(R.string.team_name_required)) }
-                } else {
-                    null
-                },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = {
-                    focusManager.moveFocus(FocusDirection.Down)
-                }),
-            )
-
-            AppTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = TFMSpacing.spacing03),
-                value = formState.coachName,
-                onValueChange = {
-                    formState = formState.copy(
-                        coachName = it,
-                        errors = formState.errors.copy(coachName = false)
-                    )
-                },
-                label = { Text(stringResource(R.string.coach_name)) },
-                isError = formState.errors.coachName,
-                supportingText = if (formState.errors.coachName) {
-                    { Text(stringResource(R.string.first_name_required)) }
-                } else {
-                    null
-                },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = {
-                    focusManager.moveFocus(FocusDirection.Down)
-                }),
-            )
-
-            AppTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = TFMSpacing.spacing04),
-                value = formState.delegateName,
-                onValueChange = {
-                    formState = formState.copy(
-                        delegateName = it,
-                        errors = formState.errors.copy(delegateName = false)
-                    )
-                },
-                label = { Text(stringResource(R.string.delegate_name)) },
-                isError = formState.errors.delegateName,
-                supportingText = if (formState.errors.delegateName) {
-                    { Text(stringResource(R.string.delegate_name_required)) }
-                } else {
-                    null
-                },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { validateAndSave() },
-            ) {
-                Text(text = stringResource(R.string.save))
+            is TeamUiState.NoTeam -> {
+                TeamForm(
+                    onSave = { team, _ ->
+                        viewModel.createTeam(team)
+                        onNavigateToMatches(team.name)
+                    },
+                )
             }
         }
     }
-}
 
-private data class TeamFormState(
-    val id: Long = 0,
-    val name: String = "",
-    val coachName: String = "",
-    val delegateName: String = "",
-    val errors: FormErrors = FormErrors()
-)
-
-private fun Team?.toFormState(): TeamFormState = TeamFormState(
-    id = this?.id ?: 0,
-    name = this?.name ?: "",
-    coachName = this?.coachName ?: "",
-    delegateName = this?.delegateName ?: ""
-)
-
-private fun TeamFormState.toTeam(): Team = Team(
-    id = id,
-    name = name,
-    coachName = coachName,
-    delegateName = delegateName
-)
-
-data class FormErrors(
-    val name: Boolean = false,
-    val coachName: Boolean = false,
-    val delegateName: Boolean = false
-) {
-    val hasErrors: Boolean = name || coachName || delegateName
-}
-
-@Preview
-@Composable
-private fun EditPlayerDialogPreview() {
-    TFMAppTheme {
-        CreateTeamForm(
-            onSave = {}
+    if (showExitDialog) {
+        AlertDialog(
+            title = { Text(stringResource(R.string.unsaved_changes_title)) },
+            onDismissRequest = { viewModel.dismissExitDialog() },
+            confirmButton = {
+                TextButton(onClick = { viewModel.discardChanges(onNavigateBackRequest) }) {
+                    Text(stringResource(R.string.discard))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissExitDialog() }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            text = { Text(stringResource(R.string.discard_message)) }
         )
     }
 }

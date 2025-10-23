@@ -34,6 +34,7 @@ class GetAllMatchesUseCaseTest {
                         opponent = "Rival FC",
                         location = "Stadium 1",
                         date = System.currentTimeMillis(),
+                        teamName = "Team A"
                     ),
                     Match(
                         id = 2L,
@@ -41,6 +42,7 @@ class GetAllMatchesUseCaseTest {
                         opponent = "Team B",
                         location = "Stadium 2",
                         date = System.currentTimeMillis(),
+                        teamName = "Team A"
                     ),
                 )
             every { matchRepository.getAllMatches() } returns flowOf(matches)

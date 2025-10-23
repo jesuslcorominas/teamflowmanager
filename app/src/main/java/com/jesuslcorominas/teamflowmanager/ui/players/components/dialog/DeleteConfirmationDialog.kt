@@ -7,7 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.ui.components.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 
 @Composable
 fun DeleteConfirmationDialog(
@@ -43,6 +43,8 @@ private fun DeleteConfirmationDialogPreview() {
                     lastName = "Doe",
                     number = 10,
                     positions = listOf(Position.Forward),
+                    teamId = 1,
+                    isCaptain = false
                 ),
             onConfirm = {},
             onDismiss = {},

@@ -4,39 +4,28 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SetCurrentMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.StartMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MatchListViewModel(
     private val getAllMatchesUseCase: GetAllMatchesUseCase,
-    private val getArchivedMatchesUseCase: GetArchivedMatchesUseCase,
-    private val getMatchUseCase: GetMatchUseCase,
     private val deleteMatchUseCase: DeleteMatchUseCase,
-    private val createMatchUseCase: CreateMatchUseCase,
     private val updateMatchUseCase: UpdateMatchUseCase,
-    private val startMatchUseCase: StartMatchUseCase,
-    private val setCurrentMatchUseCase: SetCurrentMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val archiveMatchUseCase: ArchiveMatchUseCase,
-    private val unarchiveMatchUseCase: UnarchiveMatchUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
 
-    private val _deleteConfirmationState = MutableStateFlow<MatchDeleteConfirmationState>(MatchDeleteConfirmationState.None)
+    private val _deleteConfirmationState =
+        MutableStateFlow<MatchDeleteConfirmationState>(MatchDeleteConfirmationState.None)
     val deleteConfirmationState: StateFlow<MatchDeleteConfirmationState> = _deleteConfirmationState.asStateFlow()
 
     init {
@@ -45,27 +34,11 @@ class MatchListViewModel(
 
     private fun loadMatches() {
         viewModelScope.launch {
-            combine(
-                getAllMatchesUseCase.invoke(),
-                getMatchUseCase.invoke()
-            ) { allMatches, currentMatch ->
-                if (allMatches.isEmpty()) {
-                    MatchListUiState.Empty
-                } else {
-                    MatchListUiState.Success(
-                        matches = allMatches,
-                        currentMatchId = currentMatch?.id
-                    )
+            getAllMatchesUseCase.invoke().collect { allMatches ->
+                _uiState.update { previousState ->
+                    if (allMatches.isEmpty()) MatchListUiState.Empty else MatchListUiState.Success(matches = allMatches)
                 }
-            }.collect { state ->
-                _uiState.value = state
             }
-        }
-    }
-
-    fun createMatch(match: Match) {
-        viewModelScope.launch {
-            createMatchUseCase.invoke(match)
         }
     }
 
@@ -75,21 +48,9 @@ class MatchListViewModel(
         }
     }
 
-    fun startMatch(matchId: Long) {
+    fun resumeMatch(matchId: Long) {
         viewModelScope.launch {
-            startMatchUseCase.invoke(matchId, System.currentTimeMillis())
-        }
-    }
-
-    fun setCurrentMatch(matchId: Long) {
-        viewModelScope.launch {
-            setCurrentMatchUseCase.invoke(matchId)
-        }
-    }
-
-    fun resumeMatch() {
-        viewModelScope.launch {
-            resumeMatchUseCase.invoke(System.currentTimeMillis())
+            resumeMatchUseCase.invoke(matchId, System.currentTimeMillis())
         }
     }
 
@@ -116,21 +77,12 @@ class MatchListViewModel(
             archiveMatchUseCase.invoke(matchId)
         }
     }
-
-    fun unarchiveMatch(matchId: Long) {
-        viewModelScope.launch {
-            unarchiveMatchUseCase.invoke(matchId)
-        }
-    }
 }
 
 sealed class MatchListUiState {
     data object Loading : MatchListUiState()
     data object Empty : MatchListUiState()
-    data class Success(
-        val matches: List<Match>,
-        val currentMatchId: Long? = null
-    ) : MatchListUiState()
+    data class Success(val matches: List<Match>) : MatchListUiState()
 }
 
 sealed class MatchDeleteConfirmationState {

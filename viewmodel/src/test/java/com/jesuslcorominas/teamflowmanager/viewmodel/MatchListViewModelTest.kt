@@ -77,7 +77,6 @@ class MatchListViewModelTest {
         viewModel =
             MatchListViewModel(
                 getAllMatchesUseCase,
-                getArchivedMatchesUseCase,
                 getMatchUseCase,
                 deleteMatchUseCase,
                 createMatchUseCase,
@@ -104,7 +103,6 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -131,6 +129,7 @@ class MatchListViewModelTest {
                         id = 1L,
                         teamId = 1L,
                         opponent = "Rival FC",
+                        teamName = "My Team",
                         location = "Stadium",
                         date = System.currentTimeMillis(),
                     ),
@@ -138,6 +137,7 @@ class MatchListViewModelTest {
                         id = 2L,
                         teamId = 1L,
                         opponent = "Team B",
+                        teamName = "My Team",
                         location = "Stadium 2",
                         date = System.currentTimeMillis(),
                     ),
@@ -149,7 +149,6 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -169,44 +168,6 @@ class MatchListViewModelTest {
         }
 
     @Test
-    fun `createMatch should invoke createMatchUseCase`() =
-        runTest {
-            // Given
-            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
-        every { getMatchUseCase.invoke() } returns flowOf(null)
-            viewModel =
-                MatchListViewModel(
-                    getAllMatchesUseCase,
-                    getArchivedMatchesUseCase,
-                    getMatchUseCase,
-                    deleteMatchUseCase,
-                    createMatchUseCase,
-                    updateMatchUseCase,
-                    startMatchUseCase,
-                    setCurrentMatchUseCase,
-                    resumeMatchUseCase,
-                    archiveMatchUseCase,
-                    unarchiveMatchUseCase,
-                )
-            val match =
-                Match(
-                    id = 0L,
-                    teamId = 1L,
-                    opponent = "New Rival",
-                    location = "New Stadium",
-                    date = System.currentTimeMillis(),
-                )
-            coEvery { createMatchUseCase.invoke(match) } returns 1L
-
-            // When
-            viewModel.createMatch(match)
-            advanceUntilIdle()
-
-            // Then
-            coVerify { createMatchUseCase.invoke(match) }
-        }
-
-    @Test
     fun `updateMatch should invoke updateMatchUseCase`() =
         runTest {
             // Given
@@ -215,7 +176,6 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -230,6 +190,7 @@ class MatchListViewModelTest {
                 Match(
                     id = 1L,
                     teamId = 1L,
+                    teamName = "My Team",
                     opponent = "Updated Rival",
                     location = "Updated Stadium",
                     date = System.currentTimeMillis(),
@@ -252,7 +213,6 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -267,6 +227,7 @@ class MatchListViewModelTest {
                 Match(
                     id = 1L,
                     teamId = 1L,
+                    teamName = "My Team",
                     opponent = "Rival FC",
                     location = "Stadium",
                     date = System.currentTimeMillis(),
@@ -291,7 +252,6 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -306,6 +266,7 @@ class MatchListViewModelTest {
                 Match(
                     id = 1L,
                     teamId = 1L,
+                    teamName = "My Team",
                     opponent = "Rival FC",
                     location = "Stadium",
                     date = System.currentTimeMillis(),
@@ -330,7 +291,6 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -346,6 +306,7 @@ class MatchListViewModelTest {
                     id = 1L,
                     teamId = 1L,
                     opponent = "Rival FC",
+                    teamName = "My Team",
                     location = "Stadium",
                     date = System.currentTimeMillis(),
                 )
@@ -367,7 +328,6 @@ class MatchListViewModelTest {
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getArchivedMatchesUseCase,
                     getMatchUseCase,
                     deleteMatchUseCase,
                     createMatchUseCase,
@@ -386,35 +346,5 @@ class MatchListViewModelTest {
 
             // Then
             coVerify(exactly = 1) { archiveMatchUseCase.invoke(matchId) }
-        }
-
-    @Test
-    fun `unarchiveMatch should call unarchiveMatchUseCase`() =
-        runTest {
-            // Given
-            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
-            every { getMatchUseCase.invoke() } returns flowOf(null)
-            viewModel =
-                MatchListViewModel(
-                    getAllMatchesUseCase,
-                    getArchivedMatchesUseCase,
-                    getMatchUseCase,
-                    deleteMatchUseCase,
-                    createMatchUseCase,
-                    updateMatchUseCase,
-                    startMatchUseCase,
-                    setCurrentMatchUseCase,
-                    resumeMatchUseCase,
-                    archiveMatchUseCase,
-                    unarchiveMatchUseCase,
-                )
-            val matchId = 1L
-
-            // When
-            viewModel.unarchiveMatch(matchId)
-            advanceUntilIdle()
-
-            // Then
-            coVerify(exactly = 1) { unarchiveMatchUseCase.invoke(matchId) }
         }
 }

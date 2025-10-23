@@ -46,7 +46,7 @@ class RouteTest {
         assertFalse(playersConfig.canGoBack)
         assertFalse(playersConfig.showFab)
 
-        val currentMatchConfig = Route.CurrentMatch.uiConfig(null)
+        val currentMatchConfig = Route.Match.uiConfig(null)
         assertTrue(currentMatchConfig.showTopBar)
         assertFalse(currentMatchConfig.showBottomBar)
         assertTrue(currentMatchConfig.canGoBack)

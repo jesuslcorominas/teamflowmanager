@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.ui.components
+package com.jesuslcorominas.teamflowmanager.ui.components.dialog
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults

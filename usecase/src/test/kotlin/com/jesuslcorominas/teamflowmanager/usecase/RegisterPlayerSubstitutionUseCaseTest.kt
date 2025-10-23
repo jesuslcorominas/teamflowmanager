@@ -54,6 +54,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     elapsedTimeMillis = 900000L,
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis - 60000L,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
@@ -99,6 +100,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     elapsedTimeMillis = 300000L,
                     isRunning = true,
                     lastStartTimeMillis = lastStartTimeMillis,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
@@ -134,6 +136,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     elapsedTimeMillis = 600000L,
                     isRunning = false,
                     lastStartTimeMillis = null,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
@@ -169,6 +172,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     elapsedTimeMillis = 600000L,
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis - 60000L,
+                    teamName = "Team B"
                 )
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 

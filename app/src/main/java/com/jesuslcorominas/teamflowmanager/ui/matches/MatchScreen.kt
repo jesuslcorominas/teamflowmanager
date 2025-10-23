@@ -1,0 +1,715 @@
+package com.jesuslcorominas.teamflowmanager.ui.matches
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
+import com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard
+import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
+import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
+import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.util.scrollToItem
+import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
+import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerSortOrderBy
+import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
+import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
+import org.koin.androidx.compose.koinViewModel
+
+private const val SUBSTITUTIONS_HEADER = "substitutions_header"
+
+@Composable
+fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    // TODO try to extract this from viewmodel
+    val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
+    val showInvalidSubstitutionAlert by viewModel.showInvalidSubstitutionAlert.collectAsState()
+    val showStopConfirmation by viewModel.showStopConfirmation.collectAsState()
+    val showGoalScorerDialog by viewModel.showGoalScorerDialog.collectAsState()
+    val showOpponentGoalDialog by viewModel.showOpponentGoalDialog.collectAsState()
+
+    var currentSortOrder: PlayerSortOrderBy by remember { mutableStateOf(PlayerSortOrderBy.BY_ACTIVE_FIRST) }
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
+    ) {
+        when (val state = uiState) {
+            is MatchUiState.Loading -> Loading()
+            is MatchUiState.NoMatch -> NoMatchState()
+            is MatchUiState.Success -> SuccessState(
+                state = state,
+                selectedPlayerOut = selectedPlayerOut,
+                currentSortOrder = currentSortOrder,
+                onSaveMatch = { viewModel.saveMatch() },
+                onPauseMatch = { viewModel.pauseMatch() },
+                onResumeMatch = { viewModel.resumeMatch(state.match.id) },
+                onPlayerClick = { playerId ->
+                    when (selectedPlayerOut) {
+                        null -> viewModel.selectPlayerOut(playerId)
+                        playerId -> viewModel.clearPlayerOutSelection()
+                        else -> viewModel.substitutePlayer(playerId)
+                    }
+                },
+                onSortOrderChange = { currentSortOrder = it },
+                onAddGoal = { viewModel.showGoalScorerDialog() },
+                onAddOpponentGoal = { viewModel.showOpponentGoalDialog() },
+                onBeginMatch = { viewModel.beginMatch(state.match.id) }
+            )
+
+            is MatchUiState.Finished -> {
+                if (currentSortOrder == PlayerSortOrderBy.BY_ACTIVE_FIRST) {
+                    currentSortOrder = PlayerSortOrderBy.BY_TIME_DESC
+                }
+
+                FinishedMatchState(
+                    state = state,
+                    currentSortOrder = currentSortOrder,
+                    onSortOrderChange = { currentSortOrder = it }
+                )
+            }
+        }
+
+        // Show alert if trying to select an inactive player
+        if (showInvalidSubstitutionAlert) {
+            InvalidSubstitutionAlertDialog(
+                onDismiss = { dontShowAgain ->
+                    viewModel.dismissInvalidSubstitutionAlert(dontShowAgain)
+                }
+            )
+        }
+
+        // Show confirmation dialog if stopping match early
+        if (showStopConfirmation) {
+            StopMatchEarlyConfirmationDialog(
+                onConfirm = { viewModel.confirmStopMatch() },
+                onDismiss = { viewModel.dismissStopConfirmation() }
+            )
+        }
+
+        // Show goal scorer selection dialog
+        if (showGoalScorerDialog) {
+            val state = uiState
+            if (state is MatchUiState.Success) {
+                GoalScorerSelectionDialog(
+                    players = state.playerTimes.map { it.player },
+                    onPlayerSelected = { playerId ->
+                        viewModel.registerGoal(playerId)
+                    },
+                    onDismiss = { viewModel.dismissGoalScorerDialog() }
+                )
+            }
+        }
+
+        // Show opponent goal confirmation dialog
+        if (showOpponentGoalDialog) {
+            OpponentGoalConfirmationDialog(
+                onConfirm = { viewModel.registerOpponentGoal() },
+                onDismiss = { viewModel.dismissOpponentGoalDialog() }
+            )
+        }
+    }
+}
+
+@Composable
+private fun NoMatchState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.no_match_message),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
+private fun SuccessState(
+    state: MatchUiState.Success,
+    selectedPlayerOut: Long?,
+    currentSortOrder: PlayerSortOrderBy,
+    onSaveMatch: () -> Unit,
+    onPauseMatch: () -> Unit,
+    onResumeMatch: () -> Unit,
+    onPlayerClick: (Long) -> Unit,
+    onSortOrderChange: (PlayerSortOrderBy) -> Unit,
+    onAddGoal: () -> Unit,
+    onAddOpponentGoal: () -> Unit,
+    onBeginMatch: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                start = TFMSpacing.spacing04,
+                end = TFMSpacing.spacing04,
+                bottom = TFMSpacing.spacing02
+            )
+    ) {
+        MatchDetailContent(
+            state = state,
+            selectedPlayerOut = selectedPlayerOut,
+            currentSortOrder = currentSortOrder,
+            onSaveMatch = onSaveMatch,
+            onPauseMatch = onPauseMatch,
+            onResumeMatch = onResumeMatch,
+            onPlayerClick = onPlayerClick,
+            onSortOrderChange = onSortOrderChange,
+            onAddGoal = onAddGoal,
+            onAddOpponentGoal = onAddOpponentGoal,
+            onBeginMatch = onBeginMatch
+        )
+    }
+}
+
+@Composable
+private fun MatchDetailContent(
+    state: MatchUiState.Success,
+    selectedPlayerOut: Long?,
+    currentSortOrder: PlayerSortOrderBy,
+    onSaveMatch: () -> Unit,
+    onPauseMatch: () -> Unit,
+    onResumeMatch: () -> Unit,
+    onPlayerClick: (Long) -> Unit,
+    onSortOrderChange: (PlayerSortOrderBy) -> Unit,
+    onAddGoal: () -> Unit,
+    onAddOpponentGoal: () -> Unit,
+    onBeginMatch: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        MatchTimeCard(match = state.match)
+
+        PlayerSortOrder(
+            currentSortOrder = currentSortOrder,
+            onSortOrderChange = onSortOrderChange
+        )
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+        ) {
+            items(state.playerTimes.sortedBy(currentSortOrder)) { playerTimeItem ->
+                PlayerItem(
+                    player = playerTimeItem.player,
+                    showPositions = false,
+                    isPlaying = if (state.match.isInProgress) playerTimeItem.isRunning else false,
+                    timeMillis = playerTimeItem.timeMillis,
+                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                    isSelected = if (state.match.isInProgress) selectedPlayerOut == playerTimeItem.player.id else false,
+                    onClick = if (state.match.isInProgress) {
+                        { onPlayerClick(playerTimeItem.player.id) }
+                    } else null,
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+
+        BottomButtons(
+            state = state,
+            onSaveMatch = onSaveMatch,
+            onPauseMatch = onPauseMatch,
+            onResumeMatch = onResumeMatch,
+            onAddGoal = onAddGoal,
+            onAddOpponentGoal = onAddOpponentGoal,
+            onBeginMatch = onBeginMatch
+        )
+    }
+}
+
+private fun List<PlayerTimeItem>.sortedBy(sortOrder: PlayerSortOrderBy): List<PlayerTimeItem> = when (sortOrder) {
+    PlayerSortOrderBy.BY_NUMBER -> sortedBy { it.player.number }
+    PlayerSortOrderBy.BY_TIME_DESC -> sortedByDescending { it.timeMillis }
+    PlayerSortOrderBy.BY_TIME_ASC -> sortedBy { it.timeMillis }
+    PlayerSortOrderBy.BY_ACTIVE_FIRST -> sortedWith(compareByDescending<PlayerTimeItem> { it.isRunning }.thenByDescending { it.timeMillis })
+}
+
+
+@Composable
+fun PlayerSortOrder(
+    availableSorts: List<PlayerSortOrderBy> = PlayerSortOrderBy.entries,
+    currentSortOrder: PlayerSortOrderBy,
+    onSortOrderChange: (PlayerSortOrderBy) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = TFMSpacing.spacing01),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PlayerSortOrderSelector(
+            availableSorts = availableSorts,
+            currentSortOrder = currentSortOrder,
+            onSortOrderChange = onSortOrderChange,
+        )
+    }
+}
+
+@Composable
+private fun BottomButtons(
+    state: MatchUiState.Success,
+    onSaveMatch: () -> Unit,
+    onPauseMatch: () -> Unit,
+    onResumeMatch: () -> Unit,
+    onAddGoal: () -> Unit,
+    onAddOpponentGoal: () -> Unit,
+    onBeginMatch: () -> Unit
+) {
+    if (state.match.isStarted) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+            ) {
+                GoalButton(
+                    modifier = Modifier.weight(1F),
+                    enabled = state.match.isInProgress,
+                    onAddGoal = onAddGoal
+                )
+
+                IconButton(
+                    onClick = if (state.match.isInProgress) onPauseMatch else onResumeMatch,
+                    modifier = Modifier.size(64.dp),
+                    enabled = if (state.match.isInProgress) state.match.canPause() else true,
+                ) {
+                    Icon(
+                        imageVector = if (state.match.isInProgress) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        contentDescription = if (state.match.isInProgress) {
+                            stringResource(R.string.pause_match_button)
+                        } else {
+                            stringResource(R.string.resume_match_button)
+                        },
+                        modifier = Modifier.size(48.dp),
+                        tint = if (state.match.canPause() || !state.match.isInProgress) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        },
+                    )
+                }
+
+                IconButton(
+                    onClick = onSaveMatch,
+                    modifier = Modifier.size(64.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Stop,
+                        contentDescription = stringResource(R.string.finish_match_button),
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                }
+
+                GoalButton(
+                    modifier = Modifier.weight(1F),
+                    enabled = state.match.isInProgress,
+                    isOpponent = true,
+                    onAddGoal = onAddOpponentGoal
+                )
+            }
+        }
+    } else {
+        Button(
+            onClick = onBeginMatch,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = stringResource(R.string.begin_match),
+            )
+            Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
+            Text(text = stringResource(R.string.begin_match))
+        }
+    }
+}
+
+@Composable
+private fun GoalButton(
+    modifier: Modifier = Modifier,
+    enabled: Boolean,
+    isOpponent: Boolean = false,
+    onAddGoal: () -> Unit
+) {
+    IconButton(
+        modifier = modifier
+            .height(64.dp),
+        enabled = enabled,
+        onClick = onAddGoal,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_goal),
+            contentDescription = stringResource(R.string.add_goal_button),
+            modifier = Modifier
+                .size(48.dp)
+                .then(if (isOpponent) Modifier.graphicsLayer(scaleX = -1f) else Modifier),
+            tint = when {
+                !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                isOpponent -> MaterialTheme.colorScheme.error
+                else -> MaterialTheme.colorScheme.primary
+            }
+        )
+    }
+}
+
+@Composable
+private fun FinishedMatchState(
+    state: MatchUiState.Finished,
+    currentSortOrder: PlayerSortOrderBy,
+    onSortOrderChange: (PlayerSortOrderBy) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(TFMSpacing.spacing04),
+        state = listState,
+        contentPadding = PaddingValues(bottom = TFMSpacing.spacing04),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+    ) {
+        item { MatchTimeCard(state.match) }
+
+        item {
+            PlayerSortOrder(
+                availableSorts = PlayerSortOrderBy.entries.minus(PlayerSortOrderBy.BY_ACTIVE_FIRST),
+                currentSortOrder = currentSortOrder,
+                onSortOrderChange = onSortOrderChange,
+            )
+        }
+
+        items(state.playerTimes.sortedBy(currentSortOrder)) { playerTimeItem ->
+            PlayerItem(
+                player = playerTimeItem.player,
+                showPositions = false,
+                isPlaying = false,
+                timeMillis = playerTimeItem.timeMillis,
+                showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                isSelected = false,
+            )
+        }
+
+        if (state.substitutions.isNotEmpty()) {
+            substitutionsSection(
+                substitutions = state.substitutions,
+                expanded = expanded,
+                onExpandToggle = {
+                    expanded = !expanded
+
+                    if (expanded) {
+                        scrollToItem(SUBSTITUTIONS_HEADER, listState, coroutineScope)
+                    }
+                }
+            )
+        }
+    }
+}
+
+private fun LazyListScope.substitutionsSection(
+    substitutions: List<SubstitutionItem>,
+    expanded: Boolean,
+    onExpandToggle: () -> Unit,
+) {
+    item(key = SUBSTITUTIONS_HEADER) {
+        ExpandableTitle(
+            title = stringResource(R.string.substitutions_title),
+            expanded = expanded,
+            onClick = onExpandToggle
+        )
+    }
+
+    if (expanded) {
+        items(substitutions) { substitution ->
+            SubstitutionCard(substitution = substitution)
+        }
+    }
+}
+
+// region Dialogs
+
+@Composable
+private fun InvalidSubstitutionAlertDialog(
+    onDismiss: (dontShowAgain: Boolean) -> Unit,
+) {
+    var dontShowAgain by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss(false) },
+        title = {
+            Text(
+                stringResource(R.string.invalid_substitution_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    stringResource(R.string.invalid_substitution_message),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = TFMSpacing.spacing02)
+                ) {
+                    androidx.compose.material3.Checkbox(
+                        checked = dontShowAgain,
+                        onCheckedChange = { dontShowAgain = it }
+                    )
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
+                    Text(
+                        stringResource(R.string.dont_show_again),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = { onDismiss(dontShowAgain) }
+            ) {
+                Text(stringResource(R.string.close))
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
+
+@Composable
+private fun StopMatchEarlyConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                stringResource(R.string.stop_match_early_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Text(
+                stringResource(R.string.stop_match_early_message),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onConfirm
+            ) {
+                Text(stringResource(R.string.yes))
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDismiss
+            ) {
+                Text(stringResource(R.string.no))
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
+
+@Composable
+private fun GoalScorerSelectionDialog(
+    players: List<Player>,
+    onPlayerSelected: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                stringResource(R.string.select_goal_scorer_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            LazyColumn {
+                items(players) { player ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = TFMSpacing.spacing01),
+                        onClick = { onPlayerSelected(player.id) },
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(TFMSpacing.spacing03),
+                            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = player.number.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "${player.firstName} ${player.lastName}",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDismiss
+            ) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
+
+@Composable
+private fun OpponentGoalConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                stringResource(R.string.add_opponent_goal_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Text(
+                stringResource(R.string.add_opponent_goal_message),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onConfirm
+            ) {
+                Text(stringResource(R.string.add))
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDismiss
+            ) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
+
+// endregion
+
+@Preview(showBackground = true)
+@Composable
+private fun OngoingMatchViewPreview() {
+    TFMAppTheme {
+        MatchDetailContent(
+            state = MatchUiState.Success(
+                match = Match(
+                    id = 1,
+                    teamName = "Loyola D",
+                    opponent = "EFRO",
+                    location = "FUNDOMA",
+                    status = MatchStatus.IN_PROGRESS,
+                    elapsedTimeMillis = 15 * 60 * 1000L,
+                    numberOfPeriods = 2,
+                    currentPeriod = 1,
+                    pauseCount = 0,
+                    goals = 1,
+                    opponentGoals = 0,
+                ),
+                matchTimeMillis = 20 * 60 * 1000L,
+                playerTimes = (1..3).map {
+                    PlayerTimeItem(
+                        player = Player(
+                            id = 1L,
+                            firstName = "John",
+                            lastName = "Doe",
+                            number = 10,
+                            positions = listOf(Position.Forward),
+                            teamId = 1,
+                            isCaptain = false
+                        ),
+                        timeMillis = it * 5 * 60 * 1000L,
+                        isCaptain = it == 1,
+                        isRunning = it % 2 == 0,
+                        substitutionCount = 2
+                    )
+                },
+            ),
+            selectedPlayerOut = 1L,
+            currentSortOrder = PlayerSortOrderBy.BY_NUMBER,
+            onSaveMatch = {},
+            onPauseMatch = {},
+            onResumeMatch = {},
+            onPlayerClick = {},
+            onSortOrderChange = {},
+            onAddGoal = {},
+            onAddOpponentGoal = {},
+            onBeginMatch = {}
+        )
+    }
+}

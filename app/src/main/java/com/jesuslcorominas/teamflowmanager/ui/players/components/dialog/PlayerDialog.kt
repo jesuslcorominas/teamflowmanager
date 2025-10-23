@@ -34,8 +34,8 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.Position.Companion.getAllPositions
-import com.jesuslcorominas.teamflowmanager.ui.components.AppDialog
-import com.jesuslcorominas.teamflowmanager.ui.components.AppTextField
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppDialog
+import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 
 @Composable
@@ -265,6 +265,7 @@ private fun PlayerFormState.toPlayer(): Player = Player(
     number = number.toInt(),
     positions = selectedPositions,
     isCaptain = isCaptain,
+    teamId = 1 // TODO WARNING!! Check this. We are using a dummy teamId=1 here
 )
 
 private data class FormErrors(
@@ -285,7 +286,9 @@ private fun EditPlayerDialogPreview() {
                 firstName = "John",
                 lastName = "Doe",
                 number = 10,
-                positions = listOf(Position.Forward)
+                positions = listOf(Position.Forward),
+                teamId = 1,
+                isCaptain = false
             ),
             onDismiss = {},
             onSave = {}

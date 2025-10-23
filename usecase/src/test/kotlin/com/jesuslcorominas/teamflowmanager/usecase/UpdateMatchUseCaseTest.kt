@@ -31,6 +31,7 @@ class UpdateMatchUseCaseTest {
                     date = System.currentTimeMillis(),
                     startingLineupIds = listOf(1L, 2L, 3L),
                     substituteIds = listOf(4L, 5L),
+                    teamName = "Team B"
                 )
 
             // When

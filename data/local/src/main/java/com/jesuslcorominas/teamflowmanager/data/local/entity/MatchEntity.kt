@@ -10,64 +10,68 @@ data class MatchEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
     val teamId: Long = 1L,
-    val opponent: String? = null,
-    val location: String? = null,
-    val date: Long? = null,
-    val time: Long? = null,
+    val teamName: String = "",
+    val opponent: String = "",
+    val location: String = "",
+    val dateTime: Long? = null,
     val numberOfPeriods: Int = 2,
-    val squadCallUpIds: String = "", // Comma-separated IDs for squad call-up (convocatoria)
-    val captainId: Long? = null, // Captain for this match
-    val startingLineupIds: String = "", // Comma-separated IDs
-    val substituteIds: String = "", // Comma-separated IDs
+    val squadCallUpIds: String = "",
+    val captainId: Long? = null,
+    val startingLineupIds: String = "",
     val elapsedTimeMillis: Long = 0L,
-    val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
     val status: String = MatchStatus.SCHEDULED.name,
     val archived: Boolean = false,
     val currentPeriod: Int = 1,
     val pauseCount: Int = 0,
+    val goals: Int = 0,
+    val opponentGoals: Int = 0,
 )
 
 fun MatchEntity.toDomain(): Match =
     Match(
         id = id,
         teamId = teamId,
+        teamName = teamName,
         opponent = opponent,
         location = location,
-        date = date,
-        time = time,
+        dateTime = dateTime,
         numberOfPeriods = numberOfPeriods,
         squadCallUpIds = squadCallUpIds.split(",").mapNotNull { it.toLongOrNull() },
         captainId = captainId,
         startingLineupIds = startingLineupIds.split(",").mapNotNull { it.toLongOrNull() },
-        substituteIds = substituteIds.split(",").mapNotNull { it.toLongOrNull() },
         elapsedTimeMillis = elapsedTimeMillis,
-        isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
-        status = try { MatchStatus.valueOf(status) } catch (e: Exception) { MatchStatus.SCHEDULED },
+        status = try {
+            MatchStatus.valueOf(status)
+        } catch (e: Exception) {
+            MatchStatus.SCHEDULED
+        },
         archived = archived,
         currentPeriod = currentPeriod,
         pauseCount = pauseCount,
+        goals = goals,
+        opponentGoals = opponentGoals,
     )
 
 fun Match.toEntity(): MatchEntity =
     MatchEntity(
         id = id,
         teamId = teamId,
+        teamName = teamName,
         opponent = opponent,
         location = location,
-        date = date,
-        time = time,
+        dateTime = dateTime,
         numberOfPeriods = numberOfPeriods,
         squadCallUpIds = squadCallUpIds.joinToString(","),
         captainId = captainId,
         startingLineupIds = startingLineupIds.joinToString(","),
-        substituteIds = substituteIds.joinToString(","),
         elapsedTimeMillis = elapsedTimeMillis,
-        isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
         status = status.name,
         archived = archived,
         currentPeriod = currentPeriod,
         pauseCount = pauseCount,
+        goals = goals,
+        opponentGoals = opponentGoals,
     )

@@ -1,7 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches
 
-import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,12 +10,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,18 +30,28 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
-import com.jesuslcorominas.teamflowmanager.ui.components.AppTextField
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
+import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import org.koin.androidx.compose.koinViewModel
+
+// TODO delete this screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,14 +87,7 @@ fun MatchDetailScreen(
         },
     ) { paddingValues ->
         when (val state = uiState) {
-            is MatchDetailUiState.Loading -> {
-                CircularProgressIndicator(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                )
-            }
+            is MatchDetailUiState.Loading -> Loading()
 
             is MatchDetailUiState.NotFound -> {
                 Text(
@@ -135,6 +136,8 @@ fun MatchForm(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val focusManager = LocalFocusManager.current
+
     var opponent by remember { mutableStateOf(match?.opponent ?: "") }
     var location by remember { mutableStateOf(match?.location ?: "") }
     var selectedStartingLineup by remember {
@@ -142,11 +145,7 @@ fun MatchForm(
             match?.startingLineupIds?.toSet() ?: emptySet(),
         )
     }
-    var selectedSubstitutes by remember {
-        mutableStateOf(
-            match?.substituteIds?.toSet() ?: emptySet(),
-        )
-    }
+    var selectedSubstitutes by remember { mutableStateOf(emptySet<Long>()) }
     var opponentError by remember { mutableStateOf<String?>(null) }
     var locationError by remember { mutableStateOf<String?>(null) }
 
@@ -158,20 +157,28 @@ fun MatchForm(
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
     ) {
         AppTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = opponent,
             onValueChange = {
                 opponent = it
                 opponentError = null
             },
             label = { Text(stringResource(R.string.opponent)) },
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Words
+            ),
+            keyboardActions = KeyboardActions(onNext = {
+                focusManager.moveFocus(FocusDirection.Down)
+            }),
             isError = opponentError != null,
             supportingText = if (opponentError != null) {
                 { Text(opponentError!!) }
             } else null,
-            modifier = Modifier.fillMaxWidth(),
         )
 
         AppTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = location,
             onValueChange = {
                 location = it
@@ -182,7 +189,11 @@ fun MatchForm(
             supportingText = if (locationError != null) {
                 { Text(locationError!!) }
             } else null,
-            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done,
+                capitalization = KeyboardCapitalization.Words
+            ),
+            keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
         )
 
         Text(
@@ -279,17 +290,15 @@ fun MatchForm(
                             Match(
                                 id = match?.id ?: 0L,
                                 teamId = match?.teamId ?: 1L,
+                                teamName = match?.teamName ?: "",
                                 opponent = opponent,
                                 location = location,
-                                date = match?.date,
-                                time = match?.time,
+                                dateTime = match?.dateTime,
                                 numberOfPeriods = match?.numberOfPeriods ?: 2,
                                 squadCallUpIds = match?.squadCallUpIds ?: emptyList(),
                                 captainId = match?.captainId,
                                 startingLineupIds = selectedStartingLineup.toList(),
-                                substituteIds = selectedSubstitutes.toList(),
                                 elapsedTimeMillis = match?.elapsedTimeMillis ?: 0L,
-                                isRunning = match?.isRunning ?: false,
                                 lastStartTimeMillis = match?.lastStartTimeMillis,
                             )
                         onSave(newMatch)
@@ -308,27 +317,49 @@ fun PlayerSelectionItem(
     player: Player,
     isSelected: Boolean,
     onSelectionChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .clickable { onSelectionChange(!isSelected) }
-                .padding(TFMSpacing.spacing02),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Checkbox(
-            checked = isSelected,
-            onCheckedChange = onSelectionChange,
+    PlayerItem(
+        player = player,
+        showPositions = false,
+        isSelected = isSelected,
+        onMultiSelectionChange = onSelectionChange,
+    )
+}
+
+
+@Preview(
+    name = "Pixel 7 Pro",
+    device = "spec:width=1440px,height=3120px,dpi=512",
+    showSystemUi = true,
+    showBackground = true
+)
+@Composable
+private fun DefaultPreview() {
+    MaterialTheme {
+        MatchForm(
+            match =
+                Match(
+                    id = 1L,
+                    teamId = 1L,
+                    teamName = "My Team",
+                    opponent = "Rival Team",
+                    location = "Home Stadium",
+                    dateTime = System.currentTimeMillis(),
+                    numberOfPeriods = 2,
+                    squadCallUpIds = listOf(1L, 2L, 3L, 4L, 5L),
+                    captainId = 1L,
+                    startingLineupIds = listOf(1L, 2L, 3L),
+                ),
+            availablePlayers =
+                listOf(
+                    Player(id = 1L, firstName = "John", lastName = "Doe", number = 9, listOf(Position.Goalkeeper), teamId = 1, isCaptain = false),
+                    Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 10, listOf(Position.Defender), teamId = 1, isCaptain = false),
+                    Player(id = 3L, firstName = "Mike", lastName = "Johnson", number = 11, listOf(Position.Midfielder), teamId = 1, isCaptain = false),
+                    Player(id = 4L, firstName = "Emily", lastName = "Davis", number = 7, listOf(Position.Forward), teamId = 1, isCaptain = false),
+                    Player(id = 5L, firstName = "David", lastName = "Wilson", number = 8, listOf(Position.Midfielder), teamId = 1, isCaptain = false),
+                ),
+            onSave = {},
+            onCancel = {},
         )
-        Column(
-            modifier = Modifier.padding(start = TFMSpacing.spacing02),
-        ) {
-            Text(
-                text = "${player.number} - ${player.firstName} ${player.lastName}",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
     }
 }

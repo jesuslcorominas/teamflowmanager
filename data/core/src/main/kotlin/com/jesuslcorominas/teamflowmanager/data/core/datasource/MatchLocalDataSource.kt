@@ -4,7 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import kotlinx.coroutines.flow.Flow
 
 interface MatchLocalDataSource {
-    fun getMatch(): Flow<Match?>
+    fun getRunningMatch(): Flow<Match?>
 
     fun getMatchById(matchId: Long): Flow<Match?>
 
