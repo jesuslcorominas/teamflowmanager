@@ -58,12 +58,8 @@ fun MatchTimeCard(
     val currentPeriod = match.currentPeriod
     val numberOfPauses = match.pauseCount
 
-    // Calculate period duration
-    val periodDurationMillis = if (numberOfPeriods == 2) {
-        25 * 60 * 1000L // 25 minutes
-    } else {
-        (12 * 60 + 30) * 1000L // 12 minutes 30 seconds
-    }
+    // Get period duration from the match model to ensure consistency
+    val periodDurationMillis = match.getPeriodDurationMillis()
 
     // Calculate elapsed time in current period
     // The cumulative time includes all previous periods, so we subtract them
