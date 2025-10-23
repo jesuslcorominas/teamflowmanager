@@ -261,6 +261,12 @@ class MatchViewModel(
                     val teamGoalsCount = allGoals.count { !it.isOpponentGoal }
                     val opponentGoalsCount = allGoals.count { it.isOpponentGoal }
 
+                    // Update match with current goal counts
+                    val matchWithGoals = match.copy(
+                        goals = teamGoalsCount,
+                        opponentGoals = opponentGoalsCount
+                    )
+
                     val playerTimeItems = players.map { player ->
                         val playerTime = playerTimes.find { it.playerId == player.id }
                         val displayTime = if (playerTime != null) {
@@ -282,7 +288,7 @@ class MatchViewModel(
                     }
 
                     MatchUiState.Success(
-                        match = match,
+                        match = matchWithGoals,
                         matchTimeMillis = matchTime,
                         playerTimes = playerTimeItems,
                     )
