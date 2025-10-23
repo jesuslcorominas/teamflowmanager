@@ -227,7 +227,7 @@ private fun MatchDetailContent(
     onBeginMatch: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        MatchTimeCard(match = state.match)
+        MatchTimeCard(match = state.match, elapsedTimeMillis = state.matchTimeMillis)
 
         PlayerSortOrder(
             currentSortOrder = currentSortOrder,

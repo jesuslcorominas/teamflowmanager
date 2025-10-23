@@ -48,9 +48,10 @@ import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
 
 @Composable
 fun MatchTimeCard(
-    match: Match
+    match: Match,
+    elapsedTimeMillis: Long? = null
 ) {
-    val timeMillis = match.elapsedTimeMillis
+    val timeMillis = elapsedTimeMillis ?: match.elapsedTimeMillis
     val matchStatus = match.status
     val numberOfPeriods = match.numberOfPeriods
     val currentPeriod = match.currentPeriod
