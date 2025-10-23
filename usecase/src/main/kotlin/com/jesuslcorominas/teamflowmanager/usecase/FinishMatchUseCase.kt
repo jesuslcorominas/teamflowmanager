@@ -8,7 +8,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeReposito
 import kotlinx.coroutines.flow.first
 
 interface FinishMatchUseCase {
-    suspend operator fun invoke()
+    suspend operator fun invoke(matchId: Long)
 }
 
 internal class FinishMatchUseCaseImpl(
@@ -16,11 +16,11 @@ internal class FinishMatchUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
     private val playerTimeHistoryRepository: PlayerTimeHistoryRepository,
 ) : FinishMatchUseCase {
-    override suspend fun invoke() {
+    override suspend fun invoke(matchId: Long) {
         val currentTime = System.currentTimeMillis()
 
         // Get the current match
-        val match = matchRepository.getMatch().first()
+        val match = matchRepository.getMatchById(matchId).first()
         if (match == null) {
             return
         }

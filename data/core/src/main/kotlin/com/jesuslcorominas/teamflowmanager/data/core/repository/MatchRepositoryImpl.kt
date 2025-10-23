@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.first
 internal class MatchRepositoryImpl(
     private val localDataSource: MatchLocalDataSource,
 ) : MatchRepository {
-    override fun getMatch(): Flow<Match?> = localDataSource.getRunningMatch()
-
     override fun getMatchById(matchId: Long): Flow<Match?> = localDataSource.getMatchById(matchId)
 
     override fun getAllMatches(): Flow<List<Match>> = localDataSource.getAllMatches()
@@ -45,8 +43,8 @@ internal class MatchRepositoryImpl(
         }
     }
 
-    override suspend fun pauseTimer(currentTimeMillis: Long) {
-        val currentMatch = localDataSource.getRunningMatch().first()
+    override suspend fun pauseTimer(matchId: Long, currentTimeMillis: Long) {
+        val currentMatch = localDataSource.getMatchById(matchId).first()
         if (currentMatch != null && currentMatch.status == MatchStatus.IN_PROGRESS) {
             val lastStartTime = currentMatch.lastStartTimeMillis ?: currentTimeMillis
             val additionalTime = currentTimeMillis - lastStartTime
@@ -58,6 +56,7 @@ internal class MatchRepositoryImpl(
                     pauseCount = currentMatch.pauseCount + 1,
                     currentPeriod = minOf(currentMatch.currentPeriod + 1, currentMatch.numberOfPeriods),
                 )
+
             localDataSource.upsertMatch(updatedMatch)
         }
     }

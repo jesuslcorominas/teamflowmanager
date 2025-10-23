@@ -4,8 +4,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import kotlinx.coroutines.flow.Flow
 
 interface MatchRepository {
-    fun getMatch(): Flow<Match?>
-
     fun getMatchById(matchId: Long): Flow<Match?>
 
     fun getAllMatches(): Flow<List<Match>>
@@ -24,7 +22,7 @@ interface MatchRepository {
 
     suspend fun startTimer(matchId: Long, currentTimeMillis: Long)
 
-    suspend fun pauseTimer(currentTimeMillis: Long)
+    suspend fun pauseTimer(matchId: Long, currentTimeMillis: Long)
 
     suspend fun archiveMatch(matchId: Long)
 

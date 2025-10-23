@@ -14,6 +14,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -580,7 +581,7 @@ class MatchViewModelTest {
             getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
             getPlayersUseCase = getPlayersUseCase,
             saveMatchUseCase = finishMatchUseCase,
-            pauseMatchUseCase = pauseMatchUseCase,
+            pauseMatch = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
             getMatchSummaryUseCase = getMatchSummaryUseCase,
@@ -588,7 +589,7 @@ class MatchViewModelTest {
             timeTicker = fakeTicker,
             startMatchTimerUseCase = TODO(),
             startPlayerTimerUseCase = TODO(),
-            registerGoalUseCase = TODO(),
+            registerGoal = TODO(),
             getGoalsForMatchUseCase = TODO(),
         )
     }

@@ -30,7 +30,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         currentTimeMillis: Long,
     ) {
         // Get match to calculate elapsed time
-        val match = matchRepository.getMatch().first()
+        val match = matchRepository.getMatchById(matchId).first()
         requireNotNull(match) { "No active match found" }
 
         // Get all player times to check if playerOut is actually playing
