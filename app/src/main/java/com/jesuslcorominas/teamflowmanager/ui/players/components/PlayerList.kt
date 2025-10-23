@@ -19,6 +19,8 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 fun PlayerList(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(TFMSpacing.spacing04),
+    captainId: Long? = null,
+    showCaptainBadge: Boolean = false,
     players: List<Player>,
     showPositions: Boolean = true,
     selectedPlayerIds: Set<Long> = setOf(),
@@ -36,6 +38,12 @@ fun PlayerList(
             PlayerItem(
                 player = player,
                 isSelected = player.id in selectedPlayerIds,
+                showCaptainBadge =
+                    if (showCaptainBadge) {
+                        if (captainId != null) player.id == captainId else player.isCaptain
+                    } else {
+                        false
+                    },
                 showPositions = showPositions,
                 onEditClick = onEditClick?.let { { onEditClick(player) } },
                 onDeleteClick = onDeleteClick?.let { { onDeleteClick(player) } },
@@ -54,9 +62,9 @@ private fun PlayerListPreview() {
         PlayerList(
             players =
                 listOf(
-                    Player(1, "John", "Doe", 3, listOf(Position.Forward)),
-                    Player(2, "Jane", "Smith", 2, listOf(Position.Midfielder, Position.Defender)),
-                    Player(3, "Bob", "Johnson", 17, listOf(Position.Goalkeeper)),
+                    Player(1, "John", "Doe", 3, listOf(Position.Forward), isCaptain = true, teamId = 1),
+                    Player(2, "Jane", "Smith", 2, listOf(Position.Midfielder, Position.Defender), isCaptain = false, teamId = 1),
+                    Player(3, "Bob", "Johnson", 17, listOf(Position.Goalkeeper), isCaptain = false, teamId = 1),
                 ),
             onSingleSelectionChange = { }
         )

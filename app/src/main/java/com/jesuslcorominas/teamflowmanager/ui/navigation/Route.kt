@@ -13,9 +13,8 @@ sealed class Route(
         val all by lazy {
             listOf(
                 Splash,
-                CreateTeam,
                 Players,
-                TeamDetail,
+                Team,
                 Matches,
                 ArchivedMatches,
                 CreateMatch,
@@ -50,14 +49,13 @@ sealed class Route(
 
     data object Splash : Route(path = "splash", showTopBar = false)
 
-    data object CreateTeam : Route(path = "create_team", showTopBar = false)
-
-    data object TeamDetail : Route(
-        path = "team_detail",
+    data object Team : Route(
+        path = "team",
         showBottomBar = true
     ) {
-        private const val PATH = "team_detail"
+        private const val PATH = "team"
         const val ARG_MODE = "mode"
+        const val MODE_CREATE = "create"
         const val MODE_VIEW = "view"
         const val MODE_EDIT = "edit"
 
@@ -66,8 +64,8 @@ sealed class Route(
         override fun uiConfig(arguments: Map<String, Any?>?): UiConfig {
             val mode = arguments?.get(ARG_MODE) as? String ?: MODE_VIEW
             return UiConfig(
-                showTopBar = true,
-                showBottomBar = true,
+                showTopBar = mode == MODE_EDIT || mode == MODE_VIEW,
+                showBottomBar = mode == MODE_EDIT || mode == MODE_VIEW,
                 canGoBack = mode == MODE_EDIT,
                 showFab = mode == MODE_VIEW
             )

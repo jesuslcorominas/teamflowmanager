@@ -112,6 +112,8 @@ fun CaptainSelectionStepPreview() {
                         lastName = "Doe",
                         number = 10,
                         positions = listOf(Position.Forward, Position.Midfielder),
+                        teamId = 1,
+                        isCaptain = false
                     )
                 },
             selectedCaptainId = null,

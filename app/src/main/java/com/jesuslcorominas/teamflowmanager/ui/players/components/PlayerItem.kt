@@ -218,6 +218,8 @@ private fun PlayerItemPreview() {
                     lastName = "Doe",
                     number = 10,
                     positions = listOf(Position.Forward, Position.Midfielder),
+                    teamId = 1,
+                    isCaptain = false
                 ),
             isSelected = false,
             onEditClick = {},
@@ -237,6 +239,8 @@ private fun PlayerCheckboxItemPreview() {
                 lastName = "Doe",
                 number = 10,
                 positions = listOf(Position.Forward, Position.Midfielder),
+                teamId = 1,
+                isCaptain = false
             ), isSelected = false,
             showPositions = false,
             onMultiSelectionChange = { }
@@ -255,6 +259,8 @@ private fun PlayerRadioButtonItemPreview() {
                 lastName = "Doe",
                 number = 10,
                 positions = listOf(Position.Forward, Position.Midfielder),
+                teamId = 1,
+                isCaptain = false
             ), isSelected = false,
             showPositions = false,
             onSingleSelectionChange = { }
@@ -273,6 +279,8 @@ private fun PlayerOnMatchItemPreview() {
                 lastName = "Doe",
                 number = 10,
                 positions = listOf(Position.Forward, Position.Midfielder),
+                teamId = 1,
+                isCaptain = false
             ),
             timeMillis = 125000,
             isSelected = false,

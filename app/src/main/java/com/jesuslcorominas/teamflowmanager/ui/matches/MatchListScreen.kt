@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
@@ -40,7 +39,6 @@ import com.jesuslcorominas.teamflowmanager.ui.util.scrollToItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDeleteConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
-import kotlinx.coroutines.coroutineScope
 import org.koin.androidx.compose.koinViewModel
 
 private const val PENDING_MATCHES_HEADER = "pending_matches_header"
@@ -93,10 +91,10 @@ private fun MatchesList(
     onNavigateToMatch: (Match) -> Unit,
     viewModel: MatchListViewModel
 ) {
-    val pendingMatches = state.matches.filter { it.status == MatchStatus.SCHEDULED }
+    val pendingMatches = state.matches.filter { it.status == MatchStatus.SCHEDULED }.sortedBy { it.dateTime }
     val activeMatch = state.matches.find { it.status == MatchStatus.IN_PROGRESS }
     val pausedMatch = state.matches.find { it.status == MatchStatus.PAUSED }
-    val playedMatches = state.matches.filter { it.status == MatchStatus.FINISHED }
+    val playedMatches = state.matches.filter { it.status == MatchStatus.FINISHED }.sortedByDescending { it.dateTime }
 
     val hasActiveMatch = activeMatch != null
     val hasPausedMatch = pausedMatch != null

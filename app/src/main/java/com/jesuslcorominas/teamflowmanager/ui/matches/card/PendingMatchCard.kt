@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches.card
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,7 +36,10 @@ fun PendingMatchCard(
     onDelete: () -> Unit,
     onStart: () -> Unit,
 ) {
-    AppCard {
+    AppCard(
+        modifier = Modifier
+            .then(if (!hasMatchStarted) Modifier.clickable(onClick = onStart) else Modifier)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -56,7 +60,7 @@ fun PendingMatchCard(
                     )
                     Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
                     Text(
-                        text = match.location ?: stringResource(R.string.location),
+                        text = match.location,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

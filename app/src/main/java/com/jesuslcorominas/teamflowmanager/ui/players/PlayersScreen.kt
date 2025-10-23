@@ -10,7 +10,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -162,6 +161,8 @@ private fun PlayersListSuccessPreview() {
                         lastName = "Doe",
                         number = 10,
                         positions = emptyList(),
+                        teamId = 1,
+                        isCaptain = false
                     ),
                     Player(
                         id = 2,
@@ -169,6 +170,8 @@ private fun PlayersListSuccessPreview() {
                         lastName = "Smith",
                         number = 8,
                         positions = emptyList(),
+                        teamId = 1,
+                        isCaptain = false
                     ),
                 ),
             onEditClick = {},

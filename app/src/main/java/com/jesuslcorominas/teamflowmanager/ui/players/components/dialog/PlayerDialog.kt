@@ -265,6 +265,7 @@ private fun PlayerFormState.toPlayer(): Player = Player(
     number = number.toInt(),
     positions = selectedPositions,
     isCaptain = isCaptain,
+    teamId = 1 // TODO WARNING!! Check this. We are using a dummy teamId=1 here
 )
 
 private data class FormErrors(
@@ -285,7 +286,9 @@ private fun EditPlayerDialogPreview() {
                 firstName = "John",
                 lastName = "Doe",
                 number = 10,
-                positions = listOf(Position.Forward)
+                positions = listOf(Position.Forward),
+                teamId = 1,
+                isCaptain = false
             ),
             onDismiss = {},
             onSave = {}

@@ -35,10 +35,11 @@ val viewModelModule =
         }
         viewModel {
             TeamViewModel(
-                getTeamUseCase = get(),
-                createTeamUseCase = get(),
-                updateTeamUseCase = get(),
-                getCaptainPlayerUseCase = get(),
+                getTeam = get(),
+                getPlayers = get(),
+                createTeam = get(),
+                updateTeam = get(),
+                getCaptainPlayer = get(),
                 playerRepository = get(),
                 savedStateHandle = get()
             )

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -63,9 +62,6 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 private const val SUBSTITUTIONS_HEADER = "substitutions_header"
@@ -694,6 +690,8 @@ private fun OngoingMatchViewPreview() {
                             lastName = "Doe",
                             number = 10,
                             positions = listOf(Position.Forward),
+                            teamId = 1,
+                            isCaptain = false
                         ),
                         timeMillis = it * 5 * 60 * 1000L,
                         isCaptain = it == 1,

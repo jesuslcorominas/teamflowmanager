@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.navigation
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
@@ -19,7 +20,6 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizard
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
-import com.jesuslcorominas.teamflowmanager.ui.teamdetail.TeamDetailScreen
 
 @Composable
 fun Navigation(
@@ -35,7 +35,7 @@ fun Navigation(
         composable(Route.Splash.createRoute()) {
             SplashScreen(
                 onNavigateToCreateTeam = {
-                    navController.navigate(Route.CreateTeam.createRoute()) {
+                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
@@ -47,27 +47,24 @@ fun Navigation(
             )
         }
 
-        composable(Route.CreateTeam.createRoute()) {
-            TeamScreen(
-                onNavigateToMatches = { _ ->
-                    navController.navigate(Route.Matches.createRoute()) {
-                        popUpTo(Route.CreateTeam.createRoute()) { inclusive = true }
-                    }
-                },
-            )
-        }
-
         composable(
-            route = Route.TeamDetail.FULL_ROUTE,
+            route = Route.Team.FULL_ROUTE,
             arguments = listOf(
-                navArgument(Route.TeamDetail.ARG_MODE) {
+                navArgument(Route.Team.ARG_MODE) {
                     type = NavType.StringType
                 }
             )
-        ) {
-            TeamDetailScreen(
+        ) { backStackEntry ->
+            val mode = backStackEntry.arguments?.getString(Route.Team.ARG_MODE) ?: ""
+
+            TeamScreen(
+                onNavigateToMatches = { _ ->
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
+                    }
+                },
                 onNavigateBackRequest = { navController.popBackStack() },
-                currentBackHandler = currentBackHandler,
+                currentBackHandler = if (mode == Route.Team.MODE_EDIT) currentBackHandler else null,
             )
         }
 
@@ -138,21 +135,34 @@ fun Navigation(
     }
 
     val activity = LocalContext.current as? Activity
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
+    val backStackEntry by navController.currentBackStackEntryAsState()
+
+    val route = Route.fromValue(backStackEntry?.destination?.route)
 
     BackHandler {
-        currentBackHandler.onBackRequested?.invoke() ?: run {
-            when (currentRoute) {
-                Route.CreateTeam.createRoute() -> activity?.finish()
-                Route.TeamDetail.createRoute() -> navController.navigate(Route.Matches.createRoute()) {
-                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
-                    launchSingleTop = true
-                    restoreState = true
-                }
+        when (route) {
+            Route.Matches -> activity?.finish()
 
-                Route.Matches.createRoute() -> activity?.finish()
-                else -> navController.popBackStack()
+            Route.Team -> {
+                val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)
+
+                when (mode) {
+                    Route.Team.MODE_CREATE -> activity?.finish()
+                    Route.Team.MODE_VIEW -> navController.navigateToMatches()
+                }
             }
+            Route.Players -> navController.navigateToMatches()
+
+            else -> navController.popBackStack()
         }
+    }
+}
+
+private fun NavHostController.navigateToMatches() {
+    navigate(Route.Matches.createRoute()) {
+        popUpTo(graph.startDestinationId) { inclusive = false }
+        launchSingleTop = true
+        restoreState = true
     }
 }

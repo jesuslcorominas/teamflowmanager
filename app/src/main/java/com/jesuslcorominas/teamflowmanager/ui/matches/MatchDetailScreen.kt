@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -29,8 +31,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -130,6 +136,8 @@ fun MatchForm(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val focusManager = LocalFocusManager.current
+
     var opponent by remember { mutableStateOf(match?.opponent ?: "") }
     var location by remember { mutableStateOf(match?.location ?: "") }
     var selectedStartingLineup by remember {
@@ -149,20 +157,28 @@ fun MatchForm(
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
     ) {
         AppTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = opponent,
             onValueChange = {
                 opponent = it
                 opponentError = null
             },
             label = { Text(stringResource(R.string.opponent)) },
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Words
+            ),
+            keyboardActions = KeyboardActions(onNext = {
+                focusManager.moveFocus(FocusDirection.Down)
+            }),
             isError = opponentError != null,
             supportingText = if (opponentError != null) {
                 { Text(opponentError!!) }
             } else null,
-            modifier = Modifier.fillMaxWidth(),
         )
 
         AppTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = location,
             onValueChange = {
                 location = it
@@ -173,7 +189,11 @@ fun MatchForm(
             supportingText = if (locationError != null) {
                 { Text(locationError!!) }
             } else null,
-            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done,
+                capitalization = KeyboardCapitalization.Words
+            ),
+            keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
         )
 
         Text(
@@ -332,11 +352,11 @@ private fun DefaultPreview() {
                 ),
             availablePlayers =
                 listOf(
-                    Player(id = 1L, firstName = "John", lastName = "Doe", number = 9, listOf(Position.Goalkeeper)),
-                    Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 10, listOf(Position.Defender)),
-                    Player(id = 3L, firstName = "Mike", lastName = "Johnson", number = 11, listOf(Position.Midfielder)),
-                    Player(id = 4L, firstName = "Emily", lastName = "Davis", number = 7, listOf(Position.Forward)),
-                    Player(id = 5L, firstName = "David", lastName = "Wilson", number = 8, listOf(Position.Midfielder)),
+                    Player(id = 1L, firstName = "John", lastName = "Doe", number = 9, listOf(Position.Goalkeeper), teamId = 1, isCaptain = false),
+                    Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 10, listOf(Position.Defender), teamId = 1, isCaptain = false),
+                    Player(id = 3L, firstName = "Mike", lastName = "Johnson", number = 11, listOf(Position.Midfielder), teamId = 1, isCaptain = false),
+                    Player(id = 4L, firstName = "Emily", lastName = "Davis", number = 7, listOf(Position.Forward), teamId = 1, isCaptain = false),
+                    Player(id = 5L, firstName = "David", lastName = "Wilson", number = 8, listOf(Position.Midfielder), teamId = 1, isCaptain = false),
                 ),
             onSave = {},
             onCancel = {},

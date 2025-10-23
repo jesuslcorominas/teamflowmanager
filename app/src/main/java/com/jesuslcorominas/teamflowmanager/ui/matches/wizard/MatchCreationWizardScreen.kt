@@ -19,7 +19,6 @@ import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.WizardStep
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel

@@ -13,6 +13,9 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesLocal
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.BuildConfig
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
+import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionExecutor
+import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionRunner
+import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.TransactionExecutor
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.GoalLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.MatchLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalDataSourceImpl
@@ -21,6 +24,7 @@ import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeHisto
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PreferencesLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.TeamLocalDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -56,16 +60,19 @@ internal val databaseModule =
         single { get<TeamFlowManagerDatabase>().playerTimeHistoryDao() }
         single { get<TeamFlowManagerDatabase>().playerSubstitutionDao() }
         single { get<TeamFlowManagerDatabase>().goalDao() }
+
+        singleOf(::RoomTransactionRunner) bind TransactionRunner::class
+        singleOf(::RoomTransactionExecutor) bind TransactionExecutor::class
     }
 
 private fun initDatabase(db: SupportSQLiteDatabase) {
     db.execSQL("INSERT INTO team (id, name, coachName, delegateName) VALUES (1, 'Loyola D', 'Rubén', 'Oliver');\n")
     db.execSQL(
         "INSERT INTO players (id, firstName, lastName, number, positions, teamId, isCaptain) VALUES\n" +
-            "(1, 'Adrián', 'López Díaz', 2, 'defender,center_back', 1, 1),\n" +
+            "(1, 'Adrián', 'López Díaz', 2, 'defender,center_back', 1, 0),\n" +
             "(2, 'Daniel', 'Menéndez Iglesias', 6, 'right_back', 1, 0),\n" +
             "(3, 'Valeria', 'García García', 26, 'forward', 1, 0),\n" +
-            "(4, 'Álvaro', 'Rodríguez', 7, 'forward', 1, 0),\n" +
+            "(4, 'Álvaro', 'Rodríguez', 7, 'forward', 1, 1),\n" +
             "(5, 'Alejandra', '-', 1, 'goalkeeper', 1, 0),\n" +
             "(6, 'Paz', '-', 15, 'midfielder', 1, 0),\n" +
             "(7, 'Martín', '-', 52, 'attacking_midfielder,defender', 1, 0),\n" +
@@ -73,10 +80,13 @@ private fun initDatabase(db: SupportSQLiteDatabase) {
             "(9, 'Anuel', ',', 22, 'left_back,forward', 1, 0),\n" +
             "(10, 'Briana', ',', 12, 'left_back', 1, 0)"
     )
-    db.execSQL("INSERT INTO \"match\" VALUES(1,1,'Loyola D','EFRO','Colegio Loyola',1760781600000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,2,7)\n")
+
+    db.execSQL("INSERT INTO \"match\" VALUES(1,1,'Loyola D','EFRO','Colegio Loyola',1760781600000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,2,7)")
     db.execSQL("INSERT INTO \"match\" VALUES(3,1,'Loyola D','Loyola C','Colegio Loyola',1761382800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,1,15)")
-    db.execSQL("INSERT INTO \"match\" VALUES(4,1,'Loyola D','Fozaneldi B','Las Campas',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,5,8)")
-    db.execSQL("INSERT INTO \"match\" VALUES(5,1,'Loyola D','Juvencia A','Colegio Loyola',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,3,14)")
+    db.execSQL("INSERT INTO \"match\" VALUES(4,1,'Loyola D','Fozaneldi B','Las Campas',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',1,2,1,5,8)")
+    db.execSQL("INSERT INTO \"match\" VALUES(5,1,'Loyola D','Juvencia A','Colegio Loyola',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',1,2,1,3,14)")
+    db.execSQL("INSERT INTO \"match\" VALUES(8,1,'Loyola D','Escuela de Fútbol Real Oviedo','Colegio Loyola',1761390000000,2,'5,1,2,4,10,6,9,3,8,7',4,'5,1,2,4,3',0,NULL,'SCHEDULED',0,1,0,0,0)")
+    db.execSQL("INSERT INTO \"match\" VALUES(9,1,'Loyola D','Colegio Amor de Dios','Colegio Amor de Dios',1761458400000,2,'5,1,2,4,10,6,9,3,8,7',4,'4,2,5,1,3',0,NULL,'SCHEDULED',0,1,0,0,0)")
 
     db.execSQL(
         "INSERT INTO player_time_history VALUES(1,1,1,1369195,1760778126922),\n" +

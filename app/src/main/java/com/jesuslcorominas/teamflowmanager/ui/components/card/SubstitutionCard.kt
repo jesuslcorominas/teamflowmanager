@@ -125,6 +125,7 @@ private fun SubstitutionCardPreview() {
             number = 10,
             positions = listOf(Position.Forward),
             teamId = 1,
+            isCaptain = false
         ),
         playerIn = Player(
             id = 2,
@@ -133,6 +134,7 @@ private fun SubstitutionCardPreview() {
             number = 5,
             positions = listOf(Position.Defender),
             teamId = 1,
+            isCaptain = true
         ),
     )
 

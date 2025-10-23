@@ -58,9 +58,9 @@ class TeamViewModelTest {
         // When
         viewModel = TeamViewModel(
             getTeamUseCase = getTeamUseCase,
-            createTeamUseCase = createTeamUseCase,
-            updateTeamUseCase = updateTeamUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            createTeam = createTeamUseCase,
+            updateTeam = updateTeamUseCase,
+            getCaptainPlayer = getCaptainPlayerUseCase,
             playerRepository = playerRepository
         )
 
@@ -77,9 +77,9 @@ class TeamViewModelTest {
             // When
             viewModel = TeamViewModel(
                 getTeamUseCase = getTeamUseCase,
-                createTeamUseCase = createTeamUseCase,
-                updateTeamUseCase = updateTeamUseCase,
-                getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+                createTeam = createTeamUseCase,
+                updateTeam = updateTeamUseCase,
+                getCaptainPlayer = getCaptainPlayerUseCase,
                 playerRepository = playerRepository
             )
             advanceUntilIdle()
@@ -98,9 +98,9 @@ class TeamViewModelTest {
             // When
             viewModel = TeamViewModel(
                 getTeamUseCase = getTeamUseCase,
-                createTeamUseCase = createTeamUseCase,
-                updateTeamUseCase = updateTeamUseCase,
-                getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+                createTeam = createTeamUseCase,
+                updateTeam = updateTeamUseCase,
+                getCaptainPlayer = getCaptainPlayerUseCase,
                 playerRepository = playerRepository
             )
             advanceUntilIdle()
@@ -119,9 +119,9 @@ class TeamViewModelTest {
             coEvery { createTeamUseCase.invoke(any()) } just runs
             viewModel = TeamViewModel(
                 getTeamUseCase = getTeamUseCase,
-                createTeamUseCase = createTeamUseCase,
-                updateTeamUseCase = updateTeamUseCase,
-                getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+                createTeam = createTeamUseCase,
+                updateTeam = updateTeamUseCase,
+                getCaptainPlayer = getCaptainPlayerUseCase,
                 playerRepository = playerRepository
             )
 
@@ -142,9 +142,9 @@ class TeamViewModelTest {
             coEvery { updateTeamUseCase.invoke(any()) } just runs
             viewModel = TeamViewModel(
                 getTeamUseCase = getTeamUseCase,
-                createTeamUseCase = createTeamUseCase,
-                updateTeamUseCase = updateTeamUseCase,
-                getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+                createTeam = createTeamUseCase,
+                updateTeam = updateTeamUseCase,
+                getCaptainPlayer = getCaptainPlayerUseCase,
                 playerRepository = playerRepository
             )
 

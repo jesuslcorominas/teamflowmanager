@@ -43,6 +43,8 @@ private fun DeleteConfirmationDialogPreview() {
                     lastName = "Doe",
                     number = 10,
                     positions = listOf(Position.Forward),
+                    teamId = 1,
+                    isCaptain = false
                 ),
             onConfirm = {},
             onDismiss = {},

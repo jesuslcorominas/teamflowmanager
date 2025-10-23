@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -57,7 +58,9 @@ fun MainScreen() {
                     title = {
                         Text(
                             text = title ?: "",
+                            maxLines = 1,
                             style = MaterialTheme.typography.titleLarge,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     },
                     navigationIcon = {
@@ -112,19 +115,19 @@ private fun RouteFloatingActionButton(route: Route, navController: NavHostContro
 }
 
 private fun Route.toFABIcon() = when (this) {
-    Route.TeamDetail -> Icons.Default.Edit
+    Route.Team -> Icons.Default.Edit
     else -> Icons.Default.Add
 }
 
 private fun Route.toFABContentDescriptionRes(): Int? = when (this) {
     Route.Players -> R.string.add_player_title
-    Route.TeamDetail -> R.string.edit_team_title
+    Route.Team -> R.string.edit_team_title
     Route.Matches -> R.string.add_match_title
     else -> null
 }
 
 private fun Route.toDestination() = when (this) {
-    Route.TeamDetail -> Route.TeamDetail.createRoute(Route.TeamDetail.MODE_EDIT)
+    Route.Team -> Route.Team.createRoute(Route.Team.MODE_EDIT)
     Route.Matches -> Route.CreateMatch.createRoute()
     else -> null
 }
@@ -132,7 +135,7 @@ private fun Route.toDestination() = when (this) {
 @Composable
 private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (this) {
     Route.Players -> stringResource(R.string.players_title)
-    Route.TeamDetail -> stringResource((this as Route.TeamDetail).toTitleRes(backStackEntry))
+    Route.Team -> stringResource((this as Route.Team).toTitleRes(backStackEntry))
     Route.Matches -> stringResource(R.string.matches_title)
     Route.ArchivedMatches -> stringResource(R.string.archived_matches)
     Route.Match ->
@@ -144,10 +147,10 @@ private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (t
 }
 
 @StringRes
-private fun Route.TeamDetail.toTitleRes(backStackEntry: NavBackStackEntry?): Int {
-    val mode = backStackEntry?.arguments?.getString(Route.TeamDetail.ARG_MODE)
+private fun Route.Team.toTitleRes(backStackEntry: NavBackStackEntry?): Int {
+    val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)
 
-    return if (mode == Route.TeamDetail.MODE_EDIT) {
+    return if (mode == Route.Team.MODE_EDIT) {
         R.string.edit_team_title
     } else {
         R.string.team_title

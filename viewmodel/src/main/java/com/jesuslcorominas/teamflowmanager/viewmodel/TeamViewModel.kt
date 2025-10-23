@@ -7,21 +7,25 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class TeamViewModel(
-    private val getTeamUseCase: GetTeamUseCase,
-    private val createTeamUseCase: CreateTeamUseCase,
-    private val updateTeamUseCase: UpdateTeamUseCase,
-    private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
+    private val getTeam: GetTeamUseCase,
+    private val getPlayers: GetPlayersUseCase,
+    private val createTeam: CreateTeamUseCase,
+    private val updateTeam: UpdateTeamUseCase,
+    private val getCaptainPlayer: GetCaptainPlayerUseCase,
     private val playerRepository: PlayerRepository,
-    private val savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TeamUiState>(TeamUiState.Loading)
     val uiState: StateFlow<TeamUiState> = _uiState.asStateFlow()
@@ -29,49 +33,49 @@ class TeamViewModel(
     private val _showExitDialog = MutableStateFlow(false)
     val showExitDialog: StateFlow<Boolean> = _showExitDialog
 
+    // TODO extract Route to a Navigation module that can be accessible from viewmodel module
     val isEditMode: Boolean = (savedStateHandle["mode"] as? String) == "edit"
 
     init {
-        loadTeam(isEditMode)
+        loadTeam()
     }
 
-    private fun loadTeam(isEditMode: Boolean) {
+    private fun loadTeam() {
         viewModelScope.launch {
-            getTeamUseCase.invoke().collect { team ->
-                if (team == null) {
-                    _uiState.value = TeamUiState.NoTeam
-                } else {
-                    val captain = getCaptainPlayerUseCase.invoke()
-                    _uiState.value =
-                        if (isEditMode) TeamUiState.EditTeam(team, captain) else TeamUiState.TeamExists(team, captain)
-                }
+            combine(
+                getTeam(), getPlayers()
+            ) { team, players ->
+                team to players
+            }.collect { (team, players) ->
+                _uiState.update { if (team == null) TeamUiState.NoTeam else TeamUiState.Success(team, players) }
             }
         }
     }
 
     fun createTeam(team: Team) {
         viewModelScope.launch {
-            createTeamUseCase.invoke(team)
+            createTeam.invoke(team)
         }
     }
 
-    fun updateTeam(team: Team) {
+    fun updateTeam(team: Team, captainId: Long?) {
         viewModelScope.launch {
-            updateTeamUseCase.invoke(team)
-        }
-    }
-
-    fun removeCaptain() {
-        viewModelScope.launch {
-            val captain = getCaptainPlayerUseCase.invoke()
-            if (captain != null) {
-                playerRepository.removePlayerAsCaptain(captain.id)
+            val captain = getCaptainPlayer.invoke()
+            if (captain != null && captainId == null) {
+                // Remove current captain
+                playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase
+            } else if (captainId != null && (captain == null || captain.id != captainId)) {
+                // Set new captain
+                playerRepository.setPlayerAsCaptain(captainId) // TODO extract to usecase
             }
+
+            updateTeam.invoke(team)
         }
     }
 
-    fun requestBack(onNavigateBack: () -> Unit, hasUnsavedChanges: Boolean) {
-        if (isEditMode && hasUnsavedChanges) {
+    fun requestBack(onNavigateBack: () -> Unit) {
+        if (isEditMode) {
+            // TODO check if there are unsaved changes
             _showExitDialog.value = true
         } else {
             onNavigateBack()
@@ -93,7 +97,5 @@ sealed interface TeamUiState {
 
     data object NoTeam : TeamUiState
 
-    data class TeamExists(val team: Team, val captain: Player? = null) : TeamUiState
-
-    data class EditTeam(val team: Team, val captain: Player? = null) : TeamUiState
+    data class Success(val team: Team, val players: List<Player>) : TeamUiState
 }

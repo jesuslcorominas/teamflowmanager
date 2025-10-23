@@ -9,6 +9,7 @@
     <string name="expand">Expand</string>
     <string name="collapse">Collapse</string>
     <string name="discard">Discard</string>
+    <string name="clear">Clear</string>
 
     <string name="players_title">Team Roster</string>
     <string name="no_players_message">No players registered yet</string>

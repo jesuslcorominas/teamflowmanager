@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.DateRange
@@ -23,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -37,8 +40,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
@@ -60,6 +67,8 @@ fun GeneralDataStep(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val focusManager = LocalFocusManager.current
+
     var opponent by remember { mutableStateOf(initialOpponent) }
     var location by remember { mutableStateOf(initialLocation) }
     var selectedDateMillis by remember { mutableLongStateOf(initialDate ?: 0L) }
@@ -100,6 +109,7 @@ fun GeneralDataStep(
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
         AppTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = opponent,
             onValueChange = {
                 opponent = it
@@ -110,10 +120,17 @@ fun GeneralDataStep(
             supportingText = if (opponentError != null) {
                 { Text(opponentError!!) }
             } else null,
-            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Words
+            ),
+            keyboardActions = KeyboardActions(onNext = {
+                focusManager.moveFocus(FocusDirection.Down)
+            }),
         )
 
         AppTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = location,
             onValueChange = {
                 location = it
@@ -124,7 +141,11 @@ fun GeneralDataStep(
             supportingText = if (locationError != null) {
                 { Text(locationError!!) }
             } else null,
-            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done,
+                capitalization = KeyboardCapitalization.Words
+            ),
+            keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
         )
 
         // Date Picker
@@ -203,7 +224,7 @@ fun GeneralDataStep(
                         .weight(1f)
                         .clickable { numberOfPeriods = 2 }
                 ) {
-                    androidx.compose.material3.RadioButton(
+                    RadioButton(
                         selected = numberOfPeriods == 2,
                         onClick = {
                             numberOfPeriods = 2
@@ -222,7 +243,7 @@ fun GeneralDataStep(
                         .weight(1f)
                         .clickable { numberOfPeriods = 4 }
                 ) {
-                    androidx.compose.material3.RadioButton(
+                    RadioButton(
                         selected = numberOfPeriods == 4,
                         onClick = { numberOfPeriods = 4 }
                     )
@@ -273,7 +294,13 @@ fun GeneralDataStep(
                     }
 
                     if (!hasError) {
-                        onDataChanged(opponent, location, selectedDateMillis, selectedTimeMillis, numberOfPeriods)
+                        onDataChanged(
+                            opponent.trimEnd(),
+                            location.trimEnd(),
+                            selectedDateMillis,
+                            selectedTimeMillis,
+                            numberOfPeriods
+                        )
                         onNext()
                     }
                 },

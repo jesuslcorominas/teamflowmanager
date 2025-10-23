@@ -79,12 +79,13 @@ fun StartingLineupStep(
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
-        // TODO use captainId to show C
         PlayerList(
             modifier = Modifier.weight(1F),
             players = players,
             selectedPlayerIds = currentSelection,
             showPositions = false,
+            captainId = captainId,
+            showCaptainBadge = true,
             paddingValues = PaddingValues(TFMSpacing.spacing02),
             onMultiSelectionChange = { player, isSelected ->
                 if (isSelected) {

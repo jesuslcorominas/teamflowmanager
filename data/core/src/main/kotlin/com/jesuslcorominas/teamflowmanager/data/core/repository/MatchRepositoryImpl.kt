@@ -36,12 +36,12 @@ internal class MatchRepositoryImpl(
 
     override suspend fun startTimer(matchId: Long, currentTimeMillis: Long) {
         localDataSource.getMatchById(matchId).first()?.let { currentMatch ->
-            currentMatch.copy(
+            val updatedMatch = currentMatch.copy(
                 status = MatchStatus.IN_PROGRESS,
                 lastStartTimeMillis = currentTimeMillis,
             )
 
-            localDataSource.upsertMatch(currentMatch)
+            localDataSource.upsertMatch(updatedMatch)
         }
     }
 

@@ -30,7 +30,7 @@ fun BottomNavigationBar(
     val items = listOf(
         Route.Matches,
         Route.Players,
-        Route.TeamDetail,
+        Route.Team,
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -49,7 +49,7 @@ fun BottomNavigationBar(
 
                 val selected = when {
                     route is Route.Players && Route.fromValue(currentRoute) is Route.Players -> true
-                    route is Route.TeamDetail && Route.fromValue(currentRoute) is Route.TeamDetail -> true
+                    route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
                     route is Route.Matches && (Route.fromValue(currentRoute) is Route.Matches ||
                         Route.fromValue(currentRoute) is Route.ArchivedMatches) -> true
 
@@ -84,7 +84,7 @@ fun BottomNavigationBar(
                     onClick = {
                         if (!selected) {
                             val destination = when (route) {
-                                is Route.TeamDetail -> route.createRoute(Route.TeamDetail.MODE_VIEW)
+                                is Route.Team -> route.createRoute(Route.Team.MODE_VIEW)
                                 else -> route.createRoute()
                             }
 
@@ -119,14 +119,14 @@ fun BottomNavigationBar(
 private fun Route.toIcon(): ImageVector? =
     when (this) {
         Route.Players -> Icons.Default.Group
-        Route.TeamDetail -> Icons.Default.Groups
+        Route.Team -> Icons.Default.Groups
         Route.Matches, Route.ArchivedMatches -> Icons.Default.SportsSoccer
         else -> null
     }
 
 private fun Route.toStringRes(): Int? = when (this) {
     Route.Players -> R.string.nav_players
-    Route.TeamDetail -> R.string.nav_team
+    Route.Team -> R.string.nav_team
     Route.Matches, Route.ArchivedMatches -> R.string.nav_matches
     else -> null
 }

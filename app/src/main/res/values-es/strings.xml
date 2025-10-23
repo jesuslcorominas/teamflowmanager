@@ -8,7 +8,8 @@
     <string name="add">Añadir</string>
     <string name="expand">Abrir</string>
     <string name="collapse">Cerrar</string>
-    <string name="discard">Descargar</string>
+    <string name="discard">Descartar</string>
+    <string name="clear">Eliminar selección</string>
 
     <string name="players_title">Plantilla</string>
     <string name="no_players_message">Aún no hay jugadores registrados</string>
