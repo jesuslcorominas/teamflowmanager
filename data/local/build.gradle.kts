@@ -49,5 +49,10 @@ dependencies {
 
     implementation(libs.koin.android)
 
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+    implementation(libs.moshi.kotlin.codegen)
+    kapt(libs.moshi.kotlin.codegen)
+
     testImplementation(libs.junit)
 }

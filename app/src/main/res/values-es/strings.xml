@@ -125,8 +125,8 @@
 
     <!-- Match Status -->
     <string name="pending_matches">Partidos Pendientes</string>
-    <string name="paused_match_half_time">Partido en curso: Descanso</string>
-    <string name="paused_match_quarter_break">Partido en curso: Entrecuarto</string>
+    <string name="paused_match_half_time">Descanso</string>
+    <string name="paused_match_quarter_break">Entrecuarto</string>
     <string name="played_matches">Partidos Jugados</string>
     <string name="archived_matches">Archivados</string>
     <string name="start_match">Empezar</string>

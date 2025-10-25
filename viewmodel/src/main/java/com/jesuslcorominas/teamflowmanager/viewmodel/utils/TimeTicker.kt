@@ -11,7 +11,12 @@ interface TimeTicker {
 internal class RealTimeTicker : TimeTicker {
     override val timeFlow: Flow<Long> = flow {
         while (true) {
-            emit(System.currentTimeMillis())
+            val now = System.currentTimeMillis()
+
+            val rounded = (now / 1000) * 1000
+
+            emit(rounded)
+
             delay(1000)
         }
     }

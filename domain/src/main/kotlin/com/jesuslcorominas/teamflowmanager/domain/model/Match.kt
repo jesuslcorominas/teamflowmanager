@@ -1,5 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.domain.model
 
+import kotlin.collections.filter
+
 data class Match(
     val id: Long = 0L,
     val teamId: Long = 1L,
@@ -7,58 +9,64 @@ data class Match(
     val opponent: String,
     val location: String,
     val dateTime: Long? = null,
-    val numberOfPeriods: Int,
+    val periodType: PeriodType,
     val squadCallUpIds: List<Long> = emptyList(),
-    val captainId: Long? = null,
+    val captainId: Long,
     val startingLineupIds: List<Long> = emptyList(),
-    val elapsedTimeMillis: Long = 0L,
-    val lastStartTimeMillis: Long? = null,
     val status: MatchStatus = MatchStatus.SCHEDULED,
     val archived: Boolean = false,
-    val currentPeriod: Int = 1,
     val pauseCount: Int = 0,
     val goals: Int = 0,
     val opponentGoals: Int = 0,
+    val periods: List<MatchPeriod> = (1..periodType.numberOfPeriods).map {
+        MatchPeriod(
+            periodNumber = it,
+            periodDuration = PeriodType.fromNumberOfPeriods(periodType.numberOfPeriods).duration
+        )
+    },
 ) {
-    /**
-     * Get the duration of each period in milliseconds
-     * 2 periods = 25 minutes each = 1,500,000 ms
-     * 4 periods = 12.5 minutes each = 750,000 ms
-     */
-    fun getPeriodDurationMillis(): Long {
-        return if (numberOfPeriods == 2) {
-            25 * 60 * 1000L // 25 minutes
-        } else {
-            (12 * 60 + 30) * 1000L // 12 minutes 30 seconds
-        }
-    }
-
-    /**
-     * Get maximum number of pauses allowed based on number of periods
-     * 2 periods = 1 pause (half-time)
-     * 4 periods = 3 pauses (between quarters)
-     */
-    fun getMaxPauses(): Int {
-        return numberOfPeriods - 1
-    }
-
-    /**
-     * Check if match can be paused
-     */
     fun canPause(): Boolean {
-        return pauseCount < getMaxPauses()
+        return pauseCount < periodType.numberOfPeriods - 1
     }
 
-    /**
-     * Check if match is in last period
-     */
     fun isLastPeriod(): Boolean {
-        return currentPeriod >= numberOfPeriods
+        return periods.last().let { it.startTimeMillis != 0L && it.endTimeMillis == 0L }
     }
+
+    // TODO check this. We are not considering additional time
+    fun getTotalElapsed(currentTime: Long) = periods
+        .filter { it.startTimeMillis > 0 }
+        .sumOf { period ->
+            val end = if (period.endTimeMillis > 0) period.endTimeMillis else currentTime
+            (end - period.startTimeMillis).coerceAtMost(period.periodDuration)
+        }
 
     val isInProgress: Boolean
         get() = status == MatchStatus.IN_PROGRESS
 
     val isStarted: Boolean
         get() = status == MatchStatus.IN_PROGRESS || status == MatchStatus.PAUSED
+}
+
+data class MatchPeriod(
+    val periodNumber: Int,
+    val periodDuration: Long = 0L,
+    val startTimeMillis: Long = 0L,
+    val endTimeMillis: Long = 0L,
+){
+    companion object {
+        const val PERIOD_DURATION_TWO_HALF = 25 * 60 * 1000L // 25 minutes in milliseconds
+        const val PERIOD_DURATION_FOUR_QUARTERS = ((12 * 60) + 30) * 1000L // 12 minutes 30 seconds in milliseconds
+    }
+}
+
+enum class PeriodType(val numberOfPeriods: Int, val duration: Long) {
+    HALF_TIME(2, MatchPeriod.PERIOD_DURATION_TWO_HALF),
+    QUARTER_TIME(4, MatchPeriod.PERIOD_DURATION_FOUR_QUARTERS);
+
+    companion object {
+        fun fromNumberOfPeriods(numberOfPeriods: Int): PeriodType {
+            return PeriodType.entries.find { it.numberOfPeriods == numberOfPeriods } ?: HALF_TIME
+        }
+    }
 }

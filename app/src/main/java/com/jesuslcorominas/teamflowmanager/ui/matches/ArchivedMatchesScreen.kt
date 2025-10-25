@@ -15,7 +15,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.ArchivedMatchCard
@@ -91,15 +93,26 @@ private fun ArchivedMatchesPreview() {
                 dateTime = System.currentTimeMillis(),
                 teamId = 1,
                 teamName = "Loyola D",
-                numberOfPeriods = 2,
+                periodType = PeriodType.HALF_TIME,
+                periods = listOf(
+                    MatchPeriod(
+                        periodNumber = 1,
+                        periodDuration = PeriodType.HALF_TIME.duration,
+                        startTimeMillis = System.currentTimeMillis() - 3000000,
+                        endTimeMillis = System.currentTimeMillis() - 1500000,
+                    ),
+                    MatchPeriod(
+                        periodNumber = 2,
+                        periodDuration = PeriodType.HALF_TIME.duration,
+                        startTimeMillis = System.currentTimeMillis() - 1500000,
+                        endTimeMillis = System.currentTimeMillis(),
+                    ),
+                ),
                 squadCallUpIds = listOf(1, 2, 3, 4, 5),
                 captainId = 1,
                 startingLineupIds = listOf(1, 2, 3, 4, 5),
-                elapsedTimeMillis = System.currentTimeMillis(),
-                lastStartTimeMillis = System.currentTimeMillis(),
                 status = MatchStatus.FINISHED,
                 archived = true,
-                currentPeriod = 2,
                 pauseCount = 1,
             )
         }.let { matches ->

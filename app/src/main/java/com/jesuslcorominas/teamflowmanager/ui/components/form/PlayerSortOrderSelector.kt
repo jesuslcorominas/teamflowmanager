@@ -23,7 +23,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerSortOrderBy
+
+enum class PlayerSortOrderBy {
+    BY_NUMBER,
+    BY_TIME_DESC,
+    BY_TIME_ASC,
+    BY_ACTIVE_FIRST,
+}
 
 @Composable
 fun PlayerSortOrderSelector(

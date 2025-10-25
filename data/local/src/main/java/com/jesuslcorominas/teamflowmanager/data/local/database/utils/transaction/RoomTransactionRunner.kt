@@ -7,9 +7,9 @@ import kotlinx.coroutines.withContext
 internal class RoomTransactionRunner(private val executor: TransactionExecutor) :
     TransactionRunner {
 
-    override suspend fun run(block: suspend () -> Unit) {
+    override suspend fun <T> run(block: suspend () -> T): T {
         try {
-            withContext(Dispatchers.IO) {
+            return withContext(Dispatchers.IO) {
                 executor.runInTransaction(block)
             }
         } catch (e: Exception) {

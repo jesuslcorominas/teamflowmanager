@@ -40,6 +40,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
@@ -294,12 +295,11 @@ fun MatchForm(
                                 opponent = opponent,
                                 location = location,
                                 dateTime = match?.dateTime,
-                                numberOfPeriods = match?.numberOfPeriods ?: 2,
                                 squadCallUpIds = match?.squadCallUpIds ?: emptyList(),
-                                captainId = match?.captainId,
+                                captainId = match?.captainId ?: 0L,
                                 startingLineupIds = selectedStartingLineup.toList(),
-                                elapsedTimeMillis = match?.elapsedTimeMillis ?: 0L,
-                                lastStartTimeMillis = match?.lastStartTimeMillis,
+                                periodType = PeriodType.HALF_TIME,
+                                periods = listOf()
                             )
                         onSave(newMatch)
                     }
@@ -345,7 +345,7 @@ private fun DefaultPreview() {
                     opponent = "Rival Team",
                     location = "Home Stadium",
                     dateTime = System.currentTimeMillis(),
-                    numberOfPeriods = 2,
+                    periodType = PeriodType.HALF_TIME,
                     squadCallUpIds = listOf(1L, 2L, 3L, 4L, 5L),
                     captainId = 1L,
                     startingLineupIds = listOf(1L, 2L, 3L),

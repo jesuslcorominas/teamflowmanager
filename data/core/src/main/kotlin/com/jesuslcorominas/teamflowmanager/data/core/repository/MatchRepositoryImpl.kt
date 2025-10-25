@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.first
 internal class MatchRepositoryImpl(
     private val localDataSource: MatchLocalDataSource,
 ) : MatchRepository {
-    override fun getMatch(): Flow<Match?> = localDataSource.getRunningMatch()
-
     override fun getMatchById(matchId: Long): Flow<Match?> = localDataSource.getMatchById(matchId)
 
     override fun getAllMatches(): Flow<List<Match>> = localDataSource.getAllMatches()
@@ -36,28 +34,41 @@ internal class MatchRepositoryImpl(
 
     override suspend fun startTimer(matchId: Long, currentTimeMillis: Long) {
         localDataSource.getMatchById(matchId).first()?.let { currentMatch ->
+            val firstNotStartedPeriod = currentMatch.periods.first { it.startTimeMillis == 0L }
+
             val updatedMatch = currentMatch.copy(
                 status = MatchStatus.IN_PROGRESS,
-                lastStartTimeMillis = currentTimeMillis,
+                periods = currentMatch.periods.map { period ->
+                    if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
+                        period.copy(startTimeMillis = currentTimeMillis)
+                    } else {
+                        period
+                    }
+                },
             )
 
             localDataSource.upsertMatch(updatedMatch)
         }
     }
 
-    override suspend fun pauseTimer(currentTimeMillis: Long) {
-        val currentMatch = localDataSource.getRunningMatch().first()
+    override suspend fun pauseTimer(matchId: Long, currentTimeMillis: Long) {
+        val currentMatch = localDataSource.getMatchById(matchId).first()
         if (currentMatch != null && currentMatch.status == MatchStatus.IN_PROGRESS) {
-            val lastStartTime = currentMatch.lastStartTimeMillis ?: currentTimeMillis
-            val additionalTime = currentTimeMillis - lastStartTime
+            val firstNotFinishedPeriod = currentMatch.periods.first { it.endTimeMillis == 0L }
+
             val updatedMatch =
                 currentMatch.copy(
-                    elapsedTimeMillis = currentMatch.elapsedTimeMillis + additionalTime,
+                    periods = currentMatch.periods.map { period ->
+                        if (period.periodNumber == firstNotFinishedPeriod.periodNumber) {
+                            period.copy(endTimeMillis = currentTimeMillis)
+                        } else {
+                            period
+                        }
+                    },
                     status = MatchStatus.PAUSED,
-                    lastStartTimeMillis = null,
                     pauseCount = currentMatch.pauseCount + 1,
-                    currentPeriod = minOf(currentMatch.currentPeriod + 1, currentMatch.numberOfPeriods),
                 )
+
             localDataSource.upsertMatch(updatedMatch)
         }
     }

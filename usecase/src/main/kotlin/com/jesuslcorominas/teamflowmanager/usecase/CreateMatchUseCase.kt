@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
@@ -29,7 +30,7 @@ private fun SkeletonMatch.toMatch(team: Team): Match {
         opponent = opponent,
         location = location,
         dateTime = dateTime,
-        numberOfPeriods = this.numberOfPeriods,
+        periodType = PeriodType.fromNumberOfPeriods(numberOfPeriods),
         squadCallUpIds = this.squadCallUpIds,
         captainId = this.captainId,
         startingLineupIds = this.startingLineupIds,

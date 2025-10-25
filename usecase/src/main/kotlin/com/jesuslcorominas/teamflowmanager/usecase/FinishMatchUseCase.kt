@@ -2,69 +2,78 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import kotlinx.coroutines.flow.first
 
 interface FinishMatchUseCase {
-    suspend operator fun invoke()
+    suspend operator fun invoke(matchId: Long, currentTime: Long)
 }
 
 internal class FinishMatchUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val playerTimeRepository: PlayerTimeRepository,
     private val playerTimeHistoryRepository: PlayerTimeHistoryRepository,
+    private val transactionRunner: TransactionRunner,
 ) : FinishMatchUseCase {
-    override suspend fun invoke() {
-        val currentTime = System.currentTimeMillis()
-
+    override suspend fun invoke(matchId: Long, currentTime: Long) {
         // Get the current match
-        val match = matchRepository.getMatch().first()
+        val match = matchRepository.getMatchById(matchId).first()
         if (match == null) {
             return
         }
 
-        // Calculate final elapsed time for the match
-        val matchFinalElapsedTime = if (match.status == MatchStatus.IN_PROGRESS && match.lastStartTimeMillis != null) {
-            match.elapsedTimeMillis + (currentTime - (match.lastStartTimeMillis ?: 0L))
-        } else {
-            match.elapsedTimeMillis
+        if (match.status != MatchStatus.IN_PROGRESS && match.status != MatchStatus.PAUSED) {
+            return
+        }
+
+        val periods = match.periods.toMutableList()
+        // If the match is in progress, we need to close the current period
+        if (match.status == MatchStatus.IN_PROGRESS) {
+            val lastPeriodIndex = periods.indexOfLast { it.startTimeMillis > 0L }
+            if (lastPeriodIndex != -1) {
+                val lastPeriod = periods[lastPeriodIndex]
+                val updatedLastPeriod = lastPeriod.copy(
+                    endTimeMillis = currentTime
+                )
+                periods[lastPeriodIndex] = updatedLastPeriod
+            }
         }
 
         // Update match to mark it as finished
         val finishedMatch = match.copy(
-            elapsedTimeMillis = matchFinalElapsedTime,
-            lastStartTimeMillis = null,
+            periods = periods,
             status = MatchStatus.FINISHED,
         )
-        matchRepository.updateMatch(finishedMatch)
 
-        // Get all player times
         val playerTimes = playerTimeRepository.getAllPlayerTimes().first()
 
-        // Save each player time to history
-        playerTimes.forEach { playerTime ->
-            // Calculate final elapsed time if running
-            val finalElapsedTime = if (playerTime.isRunning && playerTime.lastStartTimeMillis != null) {
-                playerTime.elapsedTimeMillis + (currentTime - (playerTime.lastStartTimeMillis ?: 0L))
-            } else {
-                playerTime.elapsedTimeMillis
+        transactionRunner.run {
+            matchRepository.updateMatch(finishedMatch)
+
+            playerTimes.forEach { playerTime ->
+                // Calculate final elapsed time if running
+                val finalElapsedTime = if (playerTime.isRunning && playerTime.lastStartTimeMillis != null) {
+                    playerTime.elapsedTimeMillis + (currentTime - (playerTime.lastStartTimeMillis ?: 0L))
+                } else {
+                    playerTime.elapsedTimeMillis
+                }
+
+                // Only save if there's time recorded
+                if (finalElapsedTime > 0) {
+                    val history = PlayerTimeHistory(
+                        playerId = playerTime.playerId,
+                        matchId = match.id,
+                        elapsedTimeMillis = finalElapsedTime,
+                        savedAtMillis = currentTime,
+                    )
+                    playerTimeHistoryRepository.insertPlayerTimeHistory(history)
+                }
             }
 
-            // Only save if there's time recorded
-            if (finalElapsedTime > 0) {
-                val history = PlayerTimeHistory(
-                    playerId = playerTime.playerId,
-                    matchId = match.id,
-                    elapsedTimeMillis = finalElapsedTime,
-                    savedAtMillis = currentTime,
-                )
-                playerTimeHistoryRepository.insertPlayerTimeHistory(history)
-            }
+            playerTimeRepository.resetAllPlayerTimes()
         }
-
-        // Reset all player times
-        playerTimeRepository.resetAllPlayerTimes()
     }
 }

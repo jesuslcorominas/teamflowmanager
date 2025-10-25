@@ -10,17 +10,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MatchDao {
-    @Query("""
-        SELECT * FROM match
-        WHERE status = 'IN_PROGRESS'
-           OR status = 'PAUSED'
-           OR (elapsedTimeMillis > 0 AND EXISTS (SELECT 1 FROM player_time LIMIT 1))
-        ORDER BY CASE WHEN status = 'IN_PROGRESS' THEN 0
-                      WHEN status = 'PAUSED' THEN 1
-                      ELSE 2 END, dateTime DESC
-        LIMIT 1
-    """)
-    fun getRunningMatch(): Flow<MatchEntity?>
 
     @Query("SELECT * FROM match WHERE id = :matchId LIMIT 1")
     fun getMatchById(matchId: Long): Flow<MatchEntity?>

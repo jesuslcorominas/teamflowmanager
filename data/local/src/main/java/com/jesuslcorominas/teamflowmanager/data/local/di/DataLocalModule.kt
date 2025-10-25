@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesLocal
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.BuildConfig
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
+import com.jesuslcorominas.teamflowmanager.data.local.database.utils.converters.Converters
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionExecutor
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionRunner
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.TransactionExecutor
@@ -25,6 +26,8 @@ import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeLocal
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PreferencesLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.TeamLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -32,13 +35,26 @@ import org.koin.dsl.module
 
 internal val databaseModule =
     module {
+        single<KotlinJsonAdapterFactory> { KotlinJsonAdapterFactory() }
         single {
+            Moshi.Builder()
+                .add(get<KotlinJsonAdapterFactory>())
+                .build()
+        }
+        single<Converters> {
+            Converters(get())
+        }
+
+        single {
+            val converters: Converters = get()
+
             Room
                 .databaseBuilder(
                     androidContext(),
                     TeamFlowManagerDatabase::class.java,
                     "teamflowmanager_database",
                 )
+                .addTypeConverter(converters)
                 .addCallback(
                     object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
@@ -81,12 +97,12 @@ private fun initDatabase(db: SupportSQLiteDatabase) {
             "(10, 'Briana', ',', 12, 'left_back', 1, 0)"
     )
 
-    db.execSQL("INSERT INTO \"match\" VALUES(1,1,'Loyola D','EFRO','Colegio Loyola',1760781600000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,2,7)")
-    db.execSQL("INSERT INTO \"match\" VALUES(3,1,'Loyola D','Loyola C','Colegio Loyola',1761382800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,1,15)")
-    db.execSQL("INSERT INTO \"match\" VALUES(4,1,'Loyola D','Fozaneldi B','Las Campas',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',1,2,1,5,8)")
-    db.execSQL("INSERT INTO \"match\" VALUES(5,1,'Loyola D','Juvencia A','Colegio Loyola',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',1,2,1,3,14)")
-    db.execSQL("INSERT INTO \"match\" VALUES(8,1,'Loyola D','Escuela de Fútbol Real Oviedo','Colegio Loyola',1761390000000,2,'5,1,2,4,10,6,9,3,8,7',4,'5,1,2,4,3',0,NULL,'SCHEDULED',0,1,0,0,0)")
-    db.execSQL("INSERT INTO \"match\" VALUES(9,1,'Loyola D','Colegio Amor de Dios','Colegio Amor de Dios',1761458400000,2,'5,1,2,4,10,6,9,3,8,7',4,'4,2,5,1,3',0,NULL,'SCHEDULED',0,1,0,0,0)")
+    db.execSQL("INSERT INTO \"match\" VALUES(1,1,'Loyola D','EFRO','Colegio Loyola',1760781600000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,2,7,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
+    db.execSQL("INSERT INTO \"match\" VALUES(3,1,'Loyola D','Loyola C','Colegio Loyola',1761382800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,1,15,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
+    db.execSQL("INSERT INTO \"match\" VALUES(4,1,'Loyola D','Fozaneldi B','Las Campas',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',1,2,1,5,8,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
+    db.execSQL("INSERT INTO \"match\" VALUES(5,1,'Loyola D','Juvencia A','Colegio Loyola',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',1,2,1,3,14,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
+    db.execSQL("INSERT INTO \"match\" VALUES(8,1,'Loyola D','Escuela de Fútbol Real Oviedo','Colegio Loyola',1761390000000,2,'5,1,2,4,10,6,9,3,8,7',4,'5,1,2,4,3',0,NULL,'SCHEDULED',0,1,0,0,0,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
+    db.execSQL("INSERT INTO \"match\" VALUES(9,1,'Loyola D','Colegio Amor de Dios','Colegio Amor de Dios',1761458400000,2,'5,1,2,4,10,6,9,3,8,7',4,'4,2,5,1,3',0,NULL,'SCHEDULED',0,1,0,0,0,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
 
     db.execSQL(
         "INSERT INTO player_time_history VALUES(1,1,1,1369195,1760778126922),\n" +
