@@ -39,7 +39,7 @@ class MatchCreationWizardViewModel(
     private var time: Long? = null
     private var numberOfPeriods: Int = 2
     private var squadCallUpIds: Set<Long> = emptySet()
-    private var captainId: Long? = null
+    private var captainId: Long = 0L
     private var startingLineupIds: Set<Long> = emptySet()
 
     private var allPlayers: List<Player> = emptyList()
@@ -67,7 +67,7 @@ class MatchCreationWizardViewModel(
         this.squadCallUpIds = playerIds
     }
 
-    fun setCaptain(playerId: Long?) {
+    fun setCaptain(playerId: Long) {
         this.captainId = playerId
     }
 

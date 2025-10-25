@@ -23,11 +23,13 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,12 +48,14 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
+import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
@@ -59,7 +63,6 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.scrollToItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 import org.koin.androidx.compose.koinViewModel
@@ -227,7 +230,7 @@ private fun MatchDetailContent(
     onBeginMatch: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        MatchTimeCard(match = state.match, matchTimeMillis = state.matchTimeMillis)
+        MatchTimeCard(match = state.match, currentTime = state.currentTime)
 
         PlayerSortOrder(
             currentSortOrder = currentSortOrder,
@@ -268,12 +271,13 @@ private fun MatchDetailContent(
     }
 }
 
-private fun List<PlayerTimeItem>.sortedBy(sortOrder: PlayerSortOrderBy): List<PlayerTimeItem> = when (sortOrder) {
-    PlayerSortOrderBy.BY_NUMBER -> sortedBy { it.player.number }
-    PlayerSortOrderBy.BY_TIME_DESC -> sortedByDescending { it.timeMillis }
-    PlayerSortOrderBy.BY_TIME_ASC -> sortedBy { it.timeMillis }
-    PlayerSortOrderBy.BY_ACTIVE_FIRST -> sortedWith(compareByDescending<PlayerTimeItem> { it.isRunning }.thenByDescending { it.timeMillis })
-}
+private fun List<PlayerTimeItem>.sortedBy(sortOrder: PlayerSortOrderBy): List<PlayerTimeItem> =
+    when (sortOrder) {
+        PlayerSortOrderBy.BY_NUMBER -> sortedBy { it.player.number }
+        PlayerSortOrderBy.BY_TIME_DESC -> sortedByDescending { it.timeMillis }
+        PlayerSortOrderBy.BY_TIME_ASC -> sortedBy { it.timeMillis }
+        PlayerSortOrderBy.BY_ACTIVE_FIRST -> sortedWith(compareByDescending<PlayerTimeItem> { it.isRunning }.thenByDescending { it.timeMillis })
+    }
 
 
 @Composable
@@ -422,7 +426,7 @@ private fun FinishedMatchState(
         contentPadding = PaddingValues(bottom = TFMSpacing.spacing04),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
-        item { MatchTimeCard(state.match) }
+        item { MatchTimeCard(state.match, state.currentTime) }
 
         item {
             PlayerSortOrder(
@@ -507,7 +511,7 @@ private fun InvalidSubstitutionAlertDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = TFMSpacing.spacing02)
                 ) {
-                    androidx.compose.material3.Checkbox(
+                    Checkbox(
                         checked = dontShowAgain,
                         onCheckedChange = { dontShowAgain = it }
                     )
@@ -520,7 +524,7 @@ private fun InvalidSubstitutionAlertDialog(
             }
         },
         confirmButton = {
-            androidx.compose.material3.TextButton(
+            TextButton(
                 onClick = { onDismiss(dontShowAgain) }
             ) {
                 Text(stringResource(R.string.close))
@@ -550,14 +554,14 @@ private fun StopMatchEarlyConfirmationDialog(
             )
         },
         confirmButton = {
-            androidx.compose.material3.TextButton(
+            TextButton(
                 onClick = onConfirm
             ) {
                 Text(stringResource(R.string.yes))
             }
         },
         dismissButton = {
-            androidx.compose.material3.TextButton(
+            TextButton(
                 onClick = onDismiss
             ) {
                 Text(stringResource(R.string.no))
@@ -613,7 +617,7 @@ private fun GoalScorerSelectionDialog(
         },
         confirmButton = {},
         dismissButton = {
-            androidx.compose.material3.TextButton(
+            TextButton(
                 onClick = onDismiss
             ) {
                 Text(stringResource(R.string.cancel))
@@ -643,14 +647,14 @@ private fun OpponentGoalConfirmationDialog(
             )
         },
         confirmButton = {
-            androidx.compose.material3.TextButton(
+            TextButton(
                 onClick = onConfirm
             ) {
                 Text(stringResource(R.string.add))
             }
         },
         dismissButton = {
-            androidx.compose.material3.TextButton(
+            TextButton(
                 onClick = onDismiss
             ) {
                 Text(stringResource(R.string.cancel))
@@ -674,14 +678,13 @@ private fun OngoingMatchViewPreview() {
                     opponent = "EFRO",
                     location = "FUNDOMA",
                     status = MatchStatus.IN_PROGRESS,
-                    elapsedTimeMillis = 15 * 60 * 1000L,
-                    numberOfPeriods = 2,
-                    currentPeriod = 1,
                     pauseCount = 0,
                     goals = 1,
+                    captainId = 2L,
                     opponentGoals = 0,
+                    periodType = PeriodType.HALF_TIME,
+                    periods = listOf()
                 ),
-                matchTimeMillis = 20 * 60 * 1000L,
                 playerTimes = (1..3).map {
                     PlayerTimeItem(
                         player = Player(
@@ -699,6 +702,7 @@ private fun OngoingMatchViewPreview() {
                         substitutionCount = 2
                     )
                 },
+                currentTime = System.currentTimeMillis(),
             ),
             selectedPlayerOut = 1L,
             currentSortOrder = PlayerSortOrderBy.BY_NUMBER,

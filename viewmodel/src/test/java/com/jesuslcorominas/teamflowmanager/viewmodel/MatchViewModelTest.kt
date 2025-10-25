@@ -580,7 +580,7 @@ class MatchViewModelTest {
             getMatchById = getMatchUseCase,
             getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
             getPlayersUseCase = getPlayersUseCase,
-            saveMatchUseCase = finishMatchUseCase,
+            finishMatch = finishMatchUseCase,
             pauseMatch = pauseMatchUseCase,
             resumeMatchUseCase = resumeMatchUseCase,
             registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,

@@ -13,7 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -31,12 +31,12 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 fun CaptainSelectionStep(
     players: List<Player>,
     selectedCaptainId: Long?,
-    onCaptainChanged: (Long?) -> Unit,
+    onCaptainChanged: (Long) -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var currentCaptainId by remember(selectedCaptainId) { mutableStateOf(selectedCaptainId) }
+    var currentCaptainId by remember(selectedCaptainId) { mutableLongStateOf(selectedCaptainId ?: 0L) }
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -61,7 +61,7 @@ fun CaptainSelectionStep(
             modifier = Modifier.weight(1F),
             showPositions = false,
             paddingValues = PaddingValues(TFMSpacing.spacing02),
-            selectedPlayerIds = setOf(currentCaptainId).mapNotNull { it }.toSet(),
+            selectedPlayerIds = setOf(currentCaptainId).map { it }.toSet(),
             onSingleSelectionChange = { player ->
                 currentCaptainId = player.id
             }
@@ -85,7 +85,7 @@ fun CaptainSelectionStep(
                     onCaptainChanged(currentCaptainId)
                     onNext()
                 },
-                enabled = currentCaptainId != null,
+                enabled = currentCaptainId != 0L,
                 modifier = Modifier.weight(1f),
             ) {
                 Text(stringResource(R.string.next))

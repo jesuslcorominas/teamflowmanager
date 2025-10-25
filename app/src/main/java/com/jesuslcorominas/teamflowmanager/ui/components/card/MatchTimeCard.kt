@@ -1,10 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.ui.components.card
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
@@ -22,78 +23,47 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
+import com.airbnb.lottie.RenderMode
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieAnimatable
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
+import com.jesuslcorominas.teamflowmanager.ui.components.form.AnimatedText
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTitle
 import com.jesuslcorominas.teamflowmanager.ui.components.form.TitleSize
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
+import kotlinx.coroutines.launch
 
 @Composable
 fun MatchTimeCard(
     match: Match,
-    matchTimeMillis: Long? = null
+    currentTime: Long
 ) {
-    val timeMillis = matchTimeMillis ?: match.elapsedTimeMillis
-    val matchStatus = match.status
-    val numberOfPeriods = match.numberOfPeriods
-    val currentPeriod = match.currentPeriod
-    val numberOfPauses = match.pauseCount
+    val periodName = getCurrentPeriodName(match)
 
-    // Calculate period duration
-    val periodDurationMillis = if (numberOfPeriods == 2) {
-        25 * 60 * 1000L // 25 minutes
-    } else {
-        (12 * 60 + 30) * 1000L // 12 minutes 30 seconds
-    }
-
-    // Calculate elapsed time in current period
-    // Assume each previous period ran for its full duration
-    // (This is an approximation since we don't track actual period durations)
-    val elapsedInPreviousPeriods = (currentPeriod - 1) * periodDurationMillis
-    val elapsedInCurrentPeriod = maxOf(0L, timeMillis - elapsedInPreviousPeriods)
-
-    // Calculate remaining time (can be negative for stoppage time)
-    val remainingTime = periodDurationMillis - elapsedInCurrentPeriod
-    val isStoppageTime = remainingTime < 0
-    val displayTime = if (isStoppageTime) -remainingTime else remainingTime
-
-    // Determine period name
-    val periodName = when {
-        matchStatus == MatchStatus.SCHEDULED -> stringResource(R.string.match_next)
-        matchStatus == MatchStatus.FINISHED -> stringResource(R.string.match_finished)
-        matchStatus == MatchStatus.PAUSED && (numberOfPeriods == 2 || numberOfPauses == 2) -> stringResource(R.string.paused_match_half_time)
-        matchStatus == MatchStatus.PAUSED && numberOfPeriods == 4 && (numberOfPauses == 1 || numberOfPauses == 3) -> stringResource(
-            R.string.paused_match_quarter_break
-        )
-
-        numberOfPeriods == 2 && currentPeriod == 1 -> stringResource(R.string.first_half)
-        numberOfPeriods == 2 && currentPeriod == 2 -> stringResource(R.string.second_half)
-        numberOfPeriods == 4 && currentPeriod == 1 -> stringResource(R.string.first_quarter)
-        numberOfPeriods == 4 && currentPeriod == 2 -> stringResource(R.string.second_quarter)
-        numberOfPeriods == 4 && currentPeriod == 3 -> stringResource(R.string.third_quarter)
-        numberOfPeriods == 4 && currentPeriod == 4 -> stringResource(R.string.fourth_quarter)
-        else -> stringResource(R.string.period_label, currentPeriod, numberOfPeriods)
-    }
-
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(true) }
 
     val rotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
@@ -101,80 +71,205 @@ fun MatchTimeCard(
         label = "chevronRotation"
     )
 
-    AppCard(
-        modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
-    ) {
-        Column {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = TFMSpacing.spacing04, start = TFMSpacing.spacing04, end = TFMSpacing.spacing04),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                AnimatedVisibility(visible = expanded) {
-                    AppTitle(title = periodName, size = TitleSize.LARGE)
-                }
+    // region Lottie animation
+    var lastGoals by remember { mutableIntStateOf(match.goals) }
+    var showGoalAnimation by remember { mutableStateOf(false) }
 
-                AnimatedVisibility(visible = expanded) {
-                    AppTitle(
-                        modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
-                        title = match.location,
-                        size = TitleSize.MEDIUM,
-                        startIcon = Icons.Default.LocationOn
+    LaunchedEffect(match.goals) {
+        if (match.goals > lastGoals) {
+            showGoalAnimation = true
+        }
+        lastGoals = match.goals
+    }
+
+    val confettiComposition by rememberLottieComposition(
+        LottieCompositionSpec.Asset("animations/confetti.json")
+    )
+
+    val confettiAnimatable = rememberLottieAnimatable()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(expanded && showGoalAnimation) {
+        confettiComposition?.let {
+            scope
+                .launch { launch { confettiAnimatable.animate(it, iterations = 1) } }
+                .invokeOnCompletion { showGoalAnimation = false }
+        }
+    }
+    // endregion
+
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        AppCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded },
+        ) {
+            Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = TFMSpacing.spacing04,
+                            start = TFMSpacing.spacing04,
+                            end = TFMSpacing.spacing04
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    AnimatedVisibility(visible = expanded) {
+                        AppTitle(title = periodName, size = TitleSize.LARGE)
+                    }
+
+                    AnimatedVisibility(visible = expanded) {
+                        AppTitle(
+                            modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
+                            title = match.location,
+                            size = TitleSize.MEDIUM,
+                            startIcon = Icons.Default.LocationOn
+                        )
+                    }
+
+                    // Scoreboard
+                    ScoreBoard(
+                        teamName = match.teamName,
+                        opponent = match.opponent,
+                        goals = match.goals,
+                        opponentGoals = match.opponentGoals,
+                        expanded = expanded
+                    )
+
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
+
+                    TimeBoard(
+                        expanded = expanded,
+                        currentTime = currentTime,
+                        match = match
                     )
                 }
 
-                // Scoreboard
-                ScoreBoard(
-                    teamName = match.teamName,
-                    opponent = match.opponent,
-                    goals = match.goals,
-                    opponentGoals = match.opponentGoals,
-                    expanded = expanded
-                )
-
-                Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+                        .padding(vertical = TFMSpacing.spacing02),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    if (isStoppageTime) {
-                        AnimatedText(
-                            text = formatTime(periodDurationMillis),
-                            expanded = expanded
-                        )
-                        AnimatedText(
-                            text = " + ",
-                            color = MaterialTheme.colorScheme.error,
-                            expanded = expanded
-                        )
-                        AnimatedText(
-                            text = formatTime(displayTime),
-                            color = MaterialTheme.colorScheme.error,
-                            expanded = expanded
-                        )
-                    } else {
-                        AnimatedText(
-                            text = formatTime(displayTime),
-                            expanded = expanded
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.ExpandMore,
+                        contentDescription = stringResource(if (expanded) R.string.collapse else R.string.expand),
+                        modifier = Modifier.rotate(rotation)
+                    )
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showGoalAnimation,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            LottieAnimation(
+                composition = confettiComposition,
+                progress = { confettiAnimatable.progress },
+                modifier = Modifier.size(200.dp),
+                renderMode = RenderMode.AUTOMATIC
+            )
+        }
+    }
+}
+
+@Composable
+private fun TimeBoard(match: Match, currentTime: Long, expanded: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        val periodName = getCurrentPeriodName(match)
+
+        val currentPeriod =
+            match.periods.firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+                ?: match.periods.last()
+
+        when (match.status) {
+            MatchStatus.SCHEDULED, MatchStatus.PAUSED -> AnimatedText(
+                text = periodName,
+                expanded = expanded
+            )
+
+            MatchStatus.IN_PROGRESS -> {
+                val elapsedTime = currentTime - (currentPeriod.startTimeMillis)
+                val displayTime = currentPeriod.periodDuration - elapsedTime
+                val additionalTime = if (displayTime < 0L) -displayTime else 0L
+
+                if (additionalTime <= 0) {
+                    AnimatedText(
+                        text = formatTime(displayTime),
+                        expanded = expanded
+                    )
+                } else {
+                    AnimatedText(
+                        text = " + ",
+                        color = MaterialTheme.colorScheme.error,
+                        expanded = expanded
+                    )
+                    AnimatedText(
+                        text = formatTime(additionalTime),
+                        color = MaterialTheme.colorScheme.error,
+                        expanded = expanded
+                    )
                 }
             }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                    .padding(vertical = TFMSpacing.spacing02),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ExpandMore,
-                    contentDescription = stringResource(if (expanded) R.string.collapse else R.string.expand),
-                    modifier = Modifier.rotate(rotation)
-                )
+            MatchStatus.FINISHED -> {
+                if (expanded) {
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = TFMSpacing.spacing04),
+                        verticalArrangement = Arrangement.spacedBy(space = TFMSpacing.spacing02)
+                    ) {
+                        match
+                            .periods
+                            .filter { it.startTimeMillis != 0L && it.endTimeMillis != 0L }
+                            .forEach { period ->
+                                val elapsedTime = period.endTimeMillis - period.startTimeMillis
+                                val displayTime =
+                                    if (elapsedTime < period.periodDuration) elapsedTime else period.periodDuration
+                                val additionalTime =
+                                    if (elapsedTime > period.periodDuration) elapsedTime - period.periodDuration else 0L
+
+                                Row(horizontalArrangement = Arrangement.Start) {
+                                    AnimatedText(
+                                        text = formatTime(displayTime),
+                                        end = MaterialTheme.typography.displaySmall,
+                                        expanded = true
+                                    )
+
+                                    if (additionalTime > 0) {
+                                        AnimatedText(
+                                            text = " +",
+                                            color = MaterialTheme.colorScheme.error,
+                                            end = MaterialTheme.typography.displaySmall,
+                                            expanded = true
+                                        )
+                                        AnimatedText(
+                                            text = formatTime(additionalTime),
+                                            color = MaterialTheme.colorScheme.error,
+                                            end = MaterialTheme.typography.displaySmall,
+                                            expanded = true
+                                        )
+
+                                    }
+                                }
+                            }
+                    }
+                } else {
+                    AnimatedText(
+                        text = periodName,
+                        expanded = false
+                    )
+                }
             }
         }
     }
@@ -259,37 +354,49 @@ private fun TeamScore(
 }
 
 @Composable
-fun AnimatedText(
-    text: String,
-    start: TextStyle = MaterialTheme.typography.bodyLarge,
-    end: TextStyle = MaterialTheme.typography.displayMedium,
-    fontWeight: FontWeight = FontWeight.Bold,
-    color: Color = MaterialTheme.colorScheme.onSurface,
-    expanded: Boolean
-) {
-    val transition = updateTransition(targetState = expanded, label = "textStyleTransition")
-    val fraction by transition.animateFloat(label = "fraction") { if (it) 1f else 0f }
+private fun getCurrentPeriodName(match: Match): String {
+    val matchStatus = match.status
+    val numberOfPeriods = match.periodType.numberOfPeriods
+    val numberOfPauses = match.pauseCount
 
-    val animatedStyle = lerpTextStyle(start, end, fraction)
+    val currentPeriod = match
+        .periods
+        .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+        ?: match.periods.last()
 
-    Text(
-        text = text,
-        style = animatedStyle,
-        fontWeight = fontWeight,
-        color = color
-    )
+    return when {
+        matchStatus == MatchStatus.SCHEDULED -> stringResource(R.string.match_next)
+        matchStatus == MatchStatus.FINISHED -> stringResource(R.string.match_finished)
+        matchStatus == MatchStatus.PAUSED
+            && (match.periodType == PeriodType.HALF_TIME || numberOfPauses == 2) ->
+            stringResource(R.string.paused_match_half_time)
 
-}
+        matchStatus == MatchStatus.PAUSED
+            && match.periodType == PeriodType.QUARTER_TIME
+            && (numberOfPauses == 1 || numberOfPauses == 3) ->
+            stringResource(R.string.paused_match_quarter_break)
 
-@Composable
-fun lerpTextStyle(start: TextStyle, end: TextStyle, fraction: Float): TextStyle {
-    return TextStyle(
-        fontSize = lerp(start.fontSize, end.fontSize, fraction),
-        lineHeight = lerp(start.lineHeight, end.lineHeight, fraction),
-        letterSpacing = lerp(start.letterSpacing, end.letterSpacing, fraction),
-        fontWeight = if (fraction < 0.5f) start.fontWeight else end.fontWeight,
-        fontFamily = start.fontFamily ?: end.fontFamily
-    )
+        match.periodType == PeriodType.HALF_TIME
+            && currentPeriod.periodNumber == 1 -> stringResource(R.string.first_half)
+
+        match.periodType == PeriodType.HALF_TIME && currentPeriod.periodNumber == 2 ->
+            stringResource(R.string.second_half)
+
+        match.periodType == PeriodType.QUARTER_TIME && currentPeriod.periodNumber == 1 ->
+            stringResource(R.string.first_quarter)
+
+        match.periodType == PeriodType.QUARTER_TIME && currentPeriod.periodNumber == 2 ->
+            stringResource(R.string.second_quarter)
+
+        match.periodType == PeriodType.QUARTER_TIME && currentPeriod.periodNumber == 3 ->
+            stringResource(R.string.third_quarter)
+
+        match.periodType == PeriodType.QUARTER_TIME && currentPeriod.periodNumber == 4 ->
+            stringResource(R.string.fourth_quarter)
+
+        else ->
+            stringResource(R.string.period_label, currentPeriod.periodNumber, numberOfPeriods)
+    }
 }
 
 @Preview(
@@ -306,20 +413,34 @@ fun MatchTimeCardPreview() {
                 .padding(TFMSpacing.spacing04)
                 .padding(top = 24.dp)
         ) {
+            val currentTime = System.currentTimeMillis()
+
             Match(
                 id = 1,
                 teamName = "Loyola D",
                 opponent = "EFRO",
                 location = "FUNDOMA",
                 status = MatchStatus.IN_PROGRESS,
-                elapsedTimeMillis = 15 * 60 * 1000L,
-                numberOfPeriods = 2,
-                currentPeriod = 1,
+                periodType = PeriodType.HALF_TIME,
+                periods = listOf(
+                    MatchPeriod(
+                        periodNumber = 1,
+                        periodDuration = 25 * 60 * 1000L,
+                        startTimeMillis = 0L,
+                        endTimeMillis = 0L,
+                    ), MatchPeriod(
+                        periodNumber = 2,
+                        periodDuration = 25 * 60 * 1000L,
+                        startTimeMillis = 0L,
+                        endTimeMillis = 0L,
+                    )
+                ),
                 pauseCount = 0,
                 goals = 1,
+                captainId = 2L,
                 opponentGoals = 0,
             ).let { match ->
-                MatchTimeCard(match = match)
+                MatchTimeCard(match = match, currentTime)
             }
         }
     }

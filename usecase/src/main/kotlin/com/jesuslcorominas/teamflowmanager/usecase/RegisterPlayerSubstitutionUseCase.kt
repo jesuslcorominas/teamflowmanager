@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
@@ -42,11 +41,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
             return
         }
 
-        val matchElapsedTime = if (match.status == MatchStatus.IN_PROGRESS && match.lastStartTimeMillis != null) {
-            match.elapsedTimeMillis + (currentTimeMillis - (match.lastStartTimeMillis ?: 0L))
-        } else {
-            match.elapsedTimeMillis
-        }
+        val matchElapsedTime = match.getTotalElapsed(currentTimeMillis)
 
         // Stop timer for player going out
         playerTimeRepository.pauseTimer(playerOutId, currentTimeMillis)

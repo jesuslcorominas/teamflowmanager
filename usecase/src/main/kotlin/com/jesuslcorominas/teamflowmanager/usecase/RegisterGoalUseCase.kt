@@ -1,7 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
-import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
@@ -31,11 +30,7 @@ internal class RegisterGoalUseCaseImpl(
         val match = matchRepository.getMatchById(matchId).first()
         requireNotNull(match) { "No active match found" }
 
-        val matchElapsedTime = if (match.status == MatchStatus.IN_PROGRESS && match.lastStartTimeMillis != null) {
-            match.elapsedTimeMillis + (currentTimeMillis - (match.lastStartTimeMillis ?: 0L))
-        } else {
-            match.elapsedTimeMillis
-        }
+        val matchElapsedTime = match.getTotalElapsed(currentTimeMillis)
 
         // Record the goal
         val goal = Goal(

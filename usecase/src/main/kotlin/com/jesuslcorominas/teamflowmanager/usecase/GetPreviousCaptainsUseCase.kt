@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import kotlinx.coroutines.flow.first
 
@@ -8,6 +7,7 @@ interface GetPreviousCaptainsUseCase {
     suspend operator fun invoke(count: Int = 2): List<Long?>
 }
 
+// TODO refactor to use GetShouldLastCaptainBeFixedOneUseCase
 internal class GetPreviousCaptainsUseCaseImpl(
     private val matchRepository: MatchRepository,
 ) : GetPreviousCaptainsUseCase {
@@ -16,7 +16,7 @@ internal class GetPreviousCaptainsUseCaseImpl(
 
         // Filter out matches that haven't been played yet (no elapsed time)
         val playedMatches = allMatches
-            .filter { it.elapsedTimeMillis > 0 || it.captainId != null }
+            .filter { match -> match.periods.sumOf { (it.endTimeMillis - it.startTimeMillis) } > 0L  }
             .sortedByDescending { it.dateTime ?: 0 }
 
         return playedMatches
