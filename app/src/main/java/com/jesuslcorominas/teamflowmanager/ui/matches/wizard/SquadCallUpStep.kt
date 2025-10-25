@@ -46,7 +46,7 @@ fun SquadCallUpStep(
     var pendingNext by remember { mutableStateOf(false) }
 
     val hasGoalkeeper = players.any { player ->
-        player.id in currentSelection && player.positions.any { it is Position.Goalkeeper }
+        player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
     }
 
     Column(

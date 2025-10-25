@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
@@ -33,8 +34,7 @@ class TeamViewModel(
     private val _showExitDialog = MutableStateFlow(false)
     val showExitDialog: StateFlow<Boolean> = _showExitDialog
 
-    // TODO extract Route to a Navigation module that can be accessible from viewmodel module
-    val isEditMode: Boolean = (savedStateHandle["mode"] as? String) == "edit"
+    val isEditMode: Boolean = (savedStateHandle[Route.Team.ARG_MODE] as? String) == Route.Team.MODE_EDIT
 
     init {
         loadTeam()

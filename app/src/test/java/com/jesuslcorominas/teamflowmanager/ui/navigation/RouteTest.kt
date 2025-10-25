@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
+import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import io.mockk.mockk
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals

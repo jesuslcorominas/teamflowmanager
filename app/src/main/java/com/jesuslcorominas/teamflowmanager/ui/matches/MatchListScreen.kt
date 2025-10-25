@@ -258,7 +258,7 @@ private fun LazyListScope.playedMatchesSection(
                 onNavigateToDetail = {
                     onNavigateToMatch(match)
                 },
-                onArchive = { onArchiveMatch(match.id) },
+                onAction = { onArchiveMatch(match.id) },
             )
         }
     }
