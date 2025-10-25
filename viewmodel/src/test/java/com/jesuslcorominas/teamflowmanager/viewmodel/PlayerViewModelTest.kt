@@ -64,9 +64,9 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = TODO(),
-            playerRepository = TODO(),
-            matchRepository = TODO()
+            updateScheduledMatchesCaptainUseCase = ,
+            playerRepository = ,
+            matchRepository =
         )
 
         // Then
@@ -89,9 +89,9 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = TODO(),
-            playerRepository = TODO(),
-            matchRepository = TODO()
+            updateScheduledMatchesCaptainUseCase = ,
+            playerRepository = ,
+            matchRepository =
         )
         advanceUntilIdle()
 
@@ -112,9 +112,9 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = TODO(),
-            playerRepository = TODO(),
-            matchRepository = TODO()
+            updateScheduledMatchesCaptainUseCase = ,
+            playerRepository = ,
+            matchRepository =
         )
         advanceUntilIdle()
 
@@ -139,9 +139,9 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = TODO(),
-            playerRepository = TODO(),
-            matchRepository = TODO()
+            updateScheduledMatchesCaptainUseCase = ,
+            playerRepository = ,
+            matchRepository =
         )
 
         // When
@@ -163,9 +163,9 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = TODO(),
-            playerRepository = TODO(),
-            matchRepository = TODO()
+            updateScheduledMatchesCaptainUseCase = ,
+            playerRepository = ,
+            matchRepository =
         )
 
         // When
@@ -186,9 +186,9 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = TODO(),
-            playerRepository = TODO(),
-            matchRepository = TODO()
+            updateScheduledMatchesCaptainUseCase = ,
+            playerRepository = ,
+            matchRepository =
         )
         viewModel.showDeleteConfirmation(player)
 
@@ -211,9 +211,9 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = TODO(),
-            playerRepository = TODO(),
-            matchRepository = TODO()
+            updateScheduledMatchesCaptainUseCase = ,
+            playerRepository = ,
+            matchRepository =
         )
 
         // When
@@ -244,9 +244,9 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = TODO(),
-            playerRepository = TODO(),
-            matchRepository = TODO()
+            updateScheduledMatchesCaptainUseCase = ,
+            playerRepository = ,
+            matchRepository =
         )
         advanceUntilIdle()
 

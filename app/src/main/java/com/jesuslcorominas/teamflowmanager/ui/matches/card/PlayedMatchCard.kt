@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -21,8 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
-import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTitle
 import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
+import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTitle
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.DateFormatter
 
@@ -31,7 +32,7 @@ fun PlayedMatchCard(
     modifier: Modifier = Modifier,
     match: Match,
     onNavigateToDetail: () -> Unit = {},
-    onArchive: () -> Unit = {},
+    onAction: () -> Unit = {},
 ) {
     AppCard(
         modifier = modifier
@@ -69,17 +70,16 @@ fun PlayedMatchCard(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // TODO: Show actual score when score tracking is implemented
                 Text(
-                    text = stringResource(R.string.match_score, 0, 0),
+                    text = stringResource(R.string.match_score, match.goals, match.opponentGoals),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
 
-                IconButton(onClick = onArchive) {
+                IconButton(onClick = onAction) {
                     Icon(
-                        imageVector = Icons.Default.Archive,
-                        contentDescription = stringResource(R.string.archive_match),
+                        imageVector = if (match.archived) Icons.Default.Unarchive else Icons.Default.Archive,
+                        contentDescription = stringResource(if (match.archived) R.string.unarchive_match else R.string.archive_match),
                     )
                 }
             }

@@ -128,20 +128,11 @@ class MatchCreationWizardViewModel(
     fun hasGoalkeepersInSquad(): Boolean {
         val squadPlayers = allPlayers.filter { it.id in squadCallUpIds }
         return squadPlayers.any { player ->
-            player.positions.any { it is Position.Goalkeeper }
-        }
-    }
-
-    fun hasGoalkeeperInStartingLineup(): Boolean {
-        val startingPlayers = allPlayers.filter { it.id in startingLineupIds }
-        return startingPlayers.any { player ->
-            player.positions.any { it is Position.Goalkeeper }
+            player.positions.any { it == Position.Goalkeeper }
         }
     }
 
     suspend fun checkIfShouldAskForDefaultCaptain(): Pair<Boolean, Player?> {
-        if (captainId == null) return Pair(false, null)
-
         // Get default captain
         val defaultCaptainId = getDefaultCaptainUseCase.invoke()
         if (defaultCaptainId != null) {

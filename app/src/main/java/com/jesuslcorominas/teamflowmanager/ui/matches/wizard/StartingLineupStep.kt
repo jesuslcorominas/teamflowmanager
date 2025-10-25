@@ -47,7 +47,7 @@ fun StartingLineupStep(
     var pendingCreate by remember { mutableStateOf(false) }
 
     val hasGoalkeeperSelected = players.any { player ->
-        player.id in currentSelection && player.positions.any { it is Position.Goalkeeper }
+        player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
     }
 
     Column(
@@ -168,45 +168,5 @@ fun StartingLineupStep(
                 pendingCreate = false
             }
         )
-    }
-}
-
-@Composable
-private fun PlayerCheckboxItem(
-    player: Player,
-    isSelected: Boolean,
-    isCaptain: Boolean,
-    onSelectionChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onSelectionChange(!isSelected) }
-            .padding(TFMSpacing.spacing02),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Checkbox(
-            checked = isSelected,
-            onCheckedChange = onSelectionChange,
-        )
-        Column(
-            modifier = Modifier.padding(start = TFMSpacing.spacing02),
-        ) {
-            val isGoalkeeper = player.positions.any { it is Position.Goalkeeper }
-            val displayName = buildString {
-                append("${player.number} - ${player.firstName} ${player.lastName}")
-                if (isGoalkeeper) {
-                    append(" (P)")
-                }
-                if (isCaptain) {
-                    append(" (C)")
-                }
-            }
-            Text(
-                text = displayName,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
     }
 }

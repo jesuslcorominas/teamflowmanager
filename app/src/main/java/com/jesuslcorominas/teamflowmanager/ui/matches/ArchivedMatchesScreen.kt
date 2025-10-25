@@ -20,7 +20,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
-import com.jesuslcorominas.teamflowmanager.ui.matches.card.ArchivedMatchCard
+import com.jesuslcorominas.teamflowmanager.ui.matches.card.PlayedMatchCard
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesUiState
@@ -66,10 +66,10 @@ private fun ArchivedMatches(
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
     ) {
         items(matches) { match ->
-            ArchivedMatchCard(
+            PlayedMatchCard(
                 match = match,
                 onNavigateToDetail = { onNavigateToMatchSummary(match) },
-                onUnarchive = { unarchiveMatch(match.id) },
+                onAction = { unarchiveMatch(match.id) },
             )
         }
     }

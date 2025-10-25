@@ -29,7 +29,7 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
-import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
+import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

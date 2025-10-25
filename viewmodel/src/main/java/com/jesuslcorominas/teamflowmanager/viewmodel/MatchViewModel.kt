@@ -7,6 +7,8 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
+import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
@@ -65,7 +67,7 @@ class MatchViewModel(
 
     init {
         val matchId: Long =
-            savedStateHandle["matchId"]
+            savedStateHandle[Route.Match.ARG_MATCH_ID]
                 ?: throw IllegalArgumentException("matchId is required")
 
         loadMatchData(matchId)

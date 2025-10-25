@@ -587,10 +587,10 @@ class MatchViewModelTest {
             getMatchSummaryUseCase = getMatchSummaryUseCase,
             preferencesRepository = preferencesRepository,
             timeTicker = fakeTicker,
-            startMatchTimerUseCase = TODO(),
-            startPlayerTimerUseCase = TODO(),
-            registerGoal = TODO(),
-            getGoalsForMatchUseCase = TODO(),
+            startMatchTimerUseCase = ,
+            startPlayerTimerUseCase = ,
+            registerGoal = ,
+            getGoalsForMatchUseCase = ,
         )
     }
 
