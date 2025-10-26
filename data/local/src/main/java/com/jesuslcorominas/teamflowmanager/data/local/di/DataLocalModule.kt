@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.local.di
 
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
@@ -55,6 +56,7 @@ internal val databaseModule =
                     "teamflowmanager_database",
                 )
                 .addTypeConverter(converters)
+                .addMigrations(MIGRATION_1_2)
                 .addCallback(
                     object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
@@ -80,6 +82,12 @@ internal val databaseModule =
         singleOf(::RoomTransactionRunner) bind TransactionRunner::class
         singleOf(::RoomTransactionExecutor) bind TransactionExecutor::class
     }
+
+private val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `match` ADD COLUMN timeoutStartTimeMillis INTEGER DEFAULT NULL")
+    }
+}
 
 private fun initDatabase(db: SupportSQLiteDatabase) {
     db.execSQL("INSERT INTO team (id, name, coachName, delegateName) VALUES (1, 'Loyola D', 'Rubén', 'Oliver');\n")

@@ -12,6 +12,10 @@ import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
@@ -60,6 +64,10 @@ import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutTimerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutTimerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
@@ -97,6 +105,10 @@ internal val useCaseInternalModule =
         singleOf(::PauseMatchTimerUseCaseImpl) bind PauseMatchTimerUseCase::class
         singleOf(::PauseMatchUseCaseImpl) bind PauseMatchUseCase::class
         singleOf(::ResumeMatchUseCaseImpl) bind ResumeMatchUseCase::class
+        singleOf(::StartTimeoutTimerUseCaseImpl) bind StartTimeoutTimerUseCase::class
+        singleOf(::EndTimeoutTimerUseCaseImpl) bind EndTimeoutTimerUseCase::class
+        singleOf(::StartTimeoutUseCaseImpl) bind StartTimeoutUseCase::class
+        singleOf(::EndTimeoutUseCaseImpl) bind EndTimeoutUseCase::class
         singleOf(::FinishMatchUseCaseImpl) bind FinishMatchUseCase::class
         singleOf(::GetMatchSummaryUseCaseImpl) bind GetMatchSummaryUseCase::class
 
