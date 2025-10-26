@@ -96,6 +96,8 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                 onSaveMatch = { viewModel.saveMatch() },
                 onPauseMatch = { viewModel.pauseMatch() },
                 onResumeMatch = { viewModel.resumeMatch(state.match.id) },
+                onStartTimeout = { viewModel.startTimeout() },
+                onEndTimeout = { viewModel.endTimeout() },
                 onPlayerClick = { playerId ->
                     when (selectedPlayerOut) {
                         null -> viewModel.selectPlayerOut(playerId)
@@ -184,6 +186,8 @@ private fun SuccessState(
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
+    onStartTimeout: () -> Unit,
+    onEndTimeout: () -> Unit,
     onPlayerClick: (Long) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
@@ -206,6 +210,8 @@ private fun SuccessState(
             onSaveMatch = onSaveMatch,
             onPauseMatch = onPauseMatch,
             onResumeMatch = onResumeMatch,
+            onStartTimeout = onStartTimeout,
+            onEndTimeout = onEndTimeout,
             onPlayerClick = onPlayerClick,
             onSortOrderChange = onSortOrderChange,
             onAddGoal = onAddGoal,
@@ -223,6 +229,8 @@ private fun MatchDetailContent(
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
+    onStartTimeout: () -> Unit,
+    onEndTimeout: () -> Unit,
     onPlayerClick: (Long) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
@@ -264,6 +272,8 @@ private fun MatchDetailContent(
             onSaveMatch = onSaveMatch,
             onPauseMatch = onPauseMatch,
             onResumeMatch = onResumeMatch,
+            onStartTimeout = onStartTimeout,
+            onEndTimeout = onEndTimeout,
             onAddGoal = onAddGoal,
             onAddOpponentGoal = onAddOpponentGoal,
             onBeginMatch = onBeginMatch
@@ -307,12 +317,36 @@ private fun BottomButtons(
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
+    onStartTimeout: () -> Unit,
+    onEndTimeout: () -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
     onBeginMatch: () -> Unit
 ) {
     if (state.match.isStarted) {
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02)
+        ) {
+            // Timeout button row
+            if (state.match.status == MatchStatus.TIMEOUT) {
+                Button(
+                    onClick = onEndTimeout,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(text = stringResource(R.string.end_timeout_button))
+                }
+            } else if (state.match.isInProgress) {
+                Button(
+                    onClick = onStartTimeout,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(text = stringResource(R.string.timeout_button))
+                }
+            }
+
+            // Main control buttons row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
@@ -709,6 +743,8 @@ private fun OngoingMatchViewPreview() {
             onSaveMatch = {},
             onPauseMatch = {},
             onResumeMatch = {},
+            onStartTimeout = {},
+            onEndTimeout = {},
             onPlayerClick = {},
             onSortOrderChange = {},
             onAddGoal = {},

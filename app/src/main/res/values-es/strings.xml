@@ -217,4 +217,8 @@
 
     <string name="unsaved_changes_title">Cambios Sin Guardar</string>
     <string name="discard_message">Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?</string>
+
+    <string name="timeout_button">Tiempo Muerto</string>
+    <string name="end_timeout_button">Fin Tiempo Muerto</string>
+    <string name="match_timeout">Tiempo Muerto</string>
 </resources>
