@@ -249,7 +249,7 @@ private fun MatchDetailContent(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
-            items(state.playerTimes.sortedBy(currentSortOrder)) { playerTimeItem ->
+            items(state.playerTimes.sortedBy(currentSortOrder, state.match)) { playerTimeItem ->
                 PlayerItem(
                     player = playerTimeItem.player,
                     showPositions = false,
@@ -281,12 +281,36 @@ private fun MatchDetailContent(
     }
 }
 
-private fun List<PlayerTimeItem>.sortedBy(sortOrder: PlayerSortOrderBy): List<PlayerTimeItem> =
+private fun List<PlayerTimeItem>.sortedBy(sortOrder: PlayerSortOrderBy, match: Match): List<PlayerTimeItem> =
     when (sortOrder) {
         PlayerSortOrderBy.BY_NUMBER -> sortedBy { it.player.number }
         PlayerSortOrderBy.BY_TIME_DESC -> sortedByDescending { it.timeMillis }
         PlayerSortOrderBy.BY_TIME_ASC -> sortedBy { it.timeMillis }
-        PlayerSortOrderBy.BY_ACTIVE_FIRST -> sortedWith(compareByDescending<PlayerTimeItem> { it.isRunning }.thenByDescending { it.timeMillis })
+        PlayerSortOrderBy.BY_ACTIVE_FIRST -> {
+            when {
+                // For scheduled (non-started) matches: prioritize starting lineup players
+                match.status == MatchStatus.SCHEDULED -> {
+                    sortedWith(
+                        compareByDescending<PlayerTimeItem> { match.startingLineupIds.contains(it.player.id) }
+                            .thenBy { it.player.number }
+                    )
+                }
+                // For paused matches or timeouts: prioritize players who were playing (timeMillis > 0)
+                match.status == MatchStatus.PAUSED || match.status == MatchStatus.TIMEOUT -> {
+                    sortedWith(
+                        compareByDescending<PlayerTimeItem> { it.timeMillis > 0 }
+                            .thenByDescending { it.timeMillis }
+                    )
+                }
+                // For in-progress matches: keep original behavior (isRunning first, then by time)
+                else -> {
+                    sortedWith(
+                        compareByDescending<PlayerTimeItem> { it.isRunning }
+                            .thenByDescending { it.timeMillis }
+                    )
+                }
+            }
+        }
     }
 
 
@@ -465,7 +489,7 @@ private fun FinishedMatchState(
             )
         }
 
-        items(state.playerTimes.sortedBy(currentSortOrder)) { playerTimeItem ->
+        items(state.playerTimes.sortedBy(currentSortOrder, state.match)) { playerTimeItem ->
             PlayerItem(
                 player = playerTimeItem.player,
                 showPositions = false,
