@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,7 +24,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,8 +38,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,6 +50,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.ui.components.AppIconButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard
@@ -96,6 +96,8 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                 onSaveMatch = { viewModel.saveMatch() },
                 onPauseMatch = { viewModel.pauseMatch() },
                 onResumeMatch = { viewModel.resumeMatch(state.match.id) },
+                onStartTimeout = { viewModel.startTimeout() },
+                onEndTimeout = { viewModel.endTimeout() },
                 onPlayerClick = { playerId ->
                     when (selectedPlayerOut) {
                         null -> viewModel.selectPlayerOut(playerId)
@@ -184,6 +186,8 @@ private fun SuccessState(
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
+    onStartTimeout: () -> Unit,
+    onEndTimeout: () -> Unit,
     onPlayerClick: (Long) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
@@ -206,6 +210,8 @@ private fun SuccessState(
             onSaveMatch = onSaveMatch,
             onPauseMatch = onPauseMatch,
             onResumeMatch = onResumeMatch,
+            onStartTimeout = onStartTimeout,
+            onEndTimeout = onEndTimeout,
             onPlayerClick = onPlayerClick,
             onSortOrderChange = onSortOrderChange,
             onAddGoal = onAddGoal,
@@ -223,6 +229,8 @@ private fun MatchDetailContent(
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
+    onStartTimeout: () -> Unit,
+    onEndTimeout: () -> Unit,
     onPlayerClick: (Long) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
@@ -264,6 +272,8 @@ private fun MatchDetailContent(
             onSaveMatch = onSaveMatch,
             onPauseMatch = onPauseMatch,
             onResumeMatch = onResumeMatch,
+            onStartTimeout = onStartTimeout,
+            onEndTimeout = onEndTimeout,
             onAddGoal = onAddGoal,
             onAddOpponentGoal = onAddOpponentGoal,
             onBeginMatch = onBeginMatch
@@ -307,12 +317,18 @@ private fun BottomButtons(
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
+    onStartTimeout: () -> Unit,
+    onEndTimeout: () -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
     onBeginMatch: () -> Unit
 ) {
     if (state.match.isStarted) {
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
@@ -323,26 +339,23 @@ private fun BottomButtons(
                     onAddGoal = onAddGoal
                 )
 
-                IconButton(
-                    onClick = if (state.match.isInProgress) onPauseMatch else onResumeMatch,
-                    modifier = Modifier.size(64.dp),
+                TimeoutButton(
+                    enabled = state.match.isInProgress || state.match.status == MatchStatus.TIMEOUT,
+                    isTimeout = state.match.status == MatchStatus.TIMEOUT,
+                    onClick = if (state.match.status == MatchStatus.TIMEOUT) onEndTimeout else onStartTimeout
+                )
+
+                AppIconButton(
+                    imageVector = if (state.match.isInProgress) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    contentDescription = if (state.match.isInProgress) R.string.pause_match_button else R.string.resume_match_button,
+                    tint = if (state.match.canPause() || !state.match.isInProgress) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    },
                     enabled = if (state.match.isInProgress) state.match.canPause() else true,
-                ) {
-                    Icon(
-                        imageVector = if (state.match.isInProgress) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = if (state.match.isInProgress) {
-                            stringResource(R.string.pause_match_button)
-                        } else {
-                            stringResource(R.string.resume_match_button)
-                        },
-                        modifier = Modifier.size(48.dp),
-                        tint = if (state.match.canPause() || !state.match.isInProgress) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                        },
-                    )
-                }
+                    onClick = if (state.match.isInProgress) onPauseMatch else onResumeMatch
+                )
 
                 IconButton(
                     onClick = onSaveMatch,
@@ -380,31 +393,47 @@ private fun BottomButtons(
 }
 
 @Composable
+private fun TimeoutButton(
+    enabled: Boolean,
+    isTimeout: Boolean = false,
+    onClick: () -> Unit
+) {
+    AppIconButton(
+        internalModifier = Modifier.size(32.dp),
+        icon = if (isTimeout) R.drawable.ic_whistle else R.drawable.ic_timeout,
+        contentDescription = if (isTimeout) R.string.end_timeout_button else R.string.timeout_button,
+        enabled = enabled,
+        tint = when {
+            !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            isTimeout -> MaterialTheme.colorScheme.error
+            else -> MaterialTheme.colorScheme.primary
+        },
+        onClick = onClick
+    )
+}
+
+@Composable
 private fun GoalButton(
     modifier: Modifier = Modifier,
     enabled: Boolean,
     isOpponent: Boolean = false,
     onAddGoal: () -> Unit
 ) {
-    IconButton(
-        modifier = modifier
-            .height(64.dp),
+    AppIconButton(
+        modifier = modifier.size(64.dp),
+        internalModifier = Modifier
+            .size(48.dp)
+            .then(if (isOpponent) Modifier.graphicsLayer(scaleX = -1f) else Modifier),
+        imageVector = ImageVector.vectorResource(R.drawable.ic_goal),
+        contentDescription = stringResource(R.string.add_goal_button),
         enabled = enabled,
-        onClick = onAddGoal,
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_goal),
-            contentDescription = stringResource(R.string.add_goal_button),
-            modifier = Modifier
-                .size(48.dp)
-                .then(if (isOpponent) Modifier.graphicsLayer(scaleX = -1f) else Modifier),
-            tint = when {
-                !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                isOpponent -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.primary
-            }
-        )
-    }
+        tint = when {
+            !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            isOpponent -> MaterialTheme.colorScheme.error
+            else -> MaterialTheme.colorScheme.primary
+        },
+        onClick = onAddGoal
+    )
 }
 
 @Composable
@@ -709,6 +738,8 @@ private fun OngoingMatchViewPreview() {
             onSaveMatch = {},
             onPauseMatch = {},
             onResumeMatch = {},
+            onStartTimeout = {},
+            onEndTimeout = {},
             onPlayerClick = {},
             onSortOrderChange = {},
             onAddGoal = {},

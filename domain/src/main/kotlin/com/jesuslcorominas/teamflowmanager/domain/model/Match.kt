@@ -18,6 +18,7 @@ data class Match(
     val pauseCount: Int = 0,
     val goals: Int = 0,
     val opponentGoals: Int = 0,
+    val timeoutStartTimeMillis: Long = 0L,
     val periods: List<MatchPeriod> = (1..periodType.numberOfPeriods).map {
         MatchPeriod(
             periodNumber = it,
@@ -45,7 +46,7 @@ data class Match(
         get() = status == MatchStatus.IN_PROGRESS
 
     val isStarted: Boolean
-        get() = status == MatchStatus.IN_PROGRESS || status == MatchStatus.PAUSED
+        get() = status == MatchStatus.IN_PROGRESS || status == MatchStatus.PAUSED || status == MatchStatus.TIMEOUT
 }
 
 data class MatchPeriod(

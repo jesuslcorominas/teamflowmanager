@@ -73,6 +73,49 @@ internal class MatchRepositoryImpl(
         }
     }
 
+    override suspend fun startTimeout(matchId: Long, currentTimeMillis: Long) {
+        val currentMatch = localDataSource.getMatchById(matchId).first()
+        if (currentMatch != null && currentMatch.status == MatchStatus.IN_PROGRESS) {
+            val updatedMatch = currentMatch.copy(
+                status = MatchStatus.TIMEOUT,
+                timeoutStartTimeMillis = currentTimeMillis
+            )
+            localDataSource.upsertMatch(updatedMatch)
+        }
+    }
+
+    override suspend fun endTimeout(matchId: Long, currentTimeMillis: Long) {
+        val currentMatch = localDataSource.getMatchById(matchId).first()
+        if (currentMatch != null && currentMatch.status == MatchStatus.TIMEOUT) {
+            val timeoutStartTime = currentMatch.timeoutStartTimeMillis
+            val timeoutDuration = currentTimeMillis - timeoutStartTime
+
+            // Adjust the current period's start time to account for the timeout
+            val currentPeriod = currentMatch.periods.firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+
+            val updatedMatch = if (currentPeriod != null) {
+                currentMatch.copy(
+                    status = MatchStatus.IN_PROGRESS,
+                    timeoutStartTimeMillis = 0L,
+                    periods = currentMatch.periods.map { period ->
+                        if (period.periodNumber == currentPeriod.periodNumber) {
+                            period.copy(startTimeMillis = period.startTimeMillis + timeoutDuration)
+                        } else {
+                            period
+                        }
+                    }
+                )
+            } else {
+                currentMatch.copy(
+                    status = MatchStatus.IN_PROGRESS,
+                    timeoutStartTimeMillis = 0L
+                )
+            }
+
+            localDataSource.upsertMatch(updatedMatch)
+        }
+    }
+
     override suspend fun archiveMatch(matchId: Long) {
         val match = localDataSource.getMatchById(matchId).first()
         if (match != null) {

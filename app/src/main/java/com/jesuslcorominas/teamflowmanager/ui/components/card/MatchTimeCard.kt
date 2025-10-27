@@ -193,7 +193,7 @@ private fun TimeBoard(match: Match, currentTime: Long, expanded: Boolean) {
                 ?: match.periods.last()
 
         when (match.status) {
-            MatchStatus.SCHEDULED, MatchStatus.PAUSED -> AnimatedText(
+            MatchStatus.SCHEDULED, MatchStatus.PAUSED, MatchStatus.TIMEOUT -> AnimatedText(
                 text = periodName,
                 expanded = expanded
             )
@@ -367,6 +367,7 @@ private fun getCurrentPeriodName(match: Match): String {
     return when {
         matchStatus == MatchStatus.SCHEDULED -> stringResource(R.string.match_next)
         matchStatus == MatchStatus.FINISHED -> stringResource(R.string.match_finished)
+        matchStatus == MatchStatus.TIMEOUT -> stringResource(R.string.match_timeout)
         matchStatus == MatchStatus.PAUSED
             && (match.periodType == PeriodType.HALF_TIME || numberOfPauses == 2) ->
             stringResource(R.string.paused_match_half_time)

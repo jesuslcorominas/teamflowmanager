@@ -29,6 +29,7 @@ data class MatchEntity(
     val pauseCount: Int = 0,
     val goals: Int = 0,
     val opponentGoals: Int = 0,
+    val timeoutStartTimeMillis: Long = 0L,
     val periods: List<MatchPeriodEntity>,
     val periodType: Int,
 )
@@ -61,6 +62,7 @@ fun MatchEntity.toDomain(): Match =
         pauseCount = pauseCount,
         goals = goals,
         opponentGoals = opponentGoals,
+        timeoutStartTimeMillis = timeoutStartTimeMillis,
         periods = periods.map { it.toDomain() },
         periodType = PeriodType.fromNumberOfPeriods(numberOfPeriods)
     )
@@ -81,6 +83,7 @@ fun Match.toEntity(): MatchEntity =
         pauseCount = pauseCount,
         goals = goals,
         opponentGoals = opponentGoals,
+        timeoutStartTimeMillis = timeoutStartTimeMillis,
         periods = periods.map { it.toEntity() },
         periodType = periodType.numberOfPeriods
     )

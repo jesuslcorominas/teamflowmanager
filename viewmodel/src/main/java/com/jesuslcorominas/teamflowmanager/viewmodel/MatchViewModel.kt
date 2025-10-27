@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
+import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
@@ -19,6 +20,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUse
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +42,8 @@ class MatchViewModel(
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
     private val getMatchSummaryUseCase: GetMatchSummaryUseCase,
     private val registerGoal: RegisterGoalUseCase,
+    private val startTimeoutUseCase: StartTimeoutUseCase,
+    private val endTimeoutUseCase: EndTimeoutUseCase,
     private val preferencesRepository: PreferencesRepository,
     private val timeTicker: TimeTicker,
     savedStateHandle: SavedStateHandle,
@@ -128,6 +132,26 @@ class MatchViewModel(
         viewModelScope.launch {
             getMatchById(matchId).first()?.let {
                 resumeMatchUseCase(it.id, _currentTime.value)
+            }
+        }
+    }
+
+    fun startTimeout() {
+        viewModelScope.launch {
+            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                if (currentState.match.isInProgress) {
+                    startTimeoutUseCase(currentState.match.id, _currentTime.value)
+                }
+            }
+        }
+    }
+
+    fun endTimeout() {
+        viewModelScope.launch {
+            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                if (currentState.match.status == MatchStatus.TIMEOUT) {
+                    endTimeoutUseCase(currentState.match.id, _currentTime.value)
+                }
             }
         }
     }

@@ -24,6 +24,10 @@ interface MatchRepository {
 
     suspend fun pauseTimer(matchId: Long, currentTimeMillis: Long)
 
+    suspend fun startTimeout(matchId: Long, currentTimeMillis: Long)
+
+    suspend fun endTimeout(matchId: Long, currentTimeMillis: Long)
+
     suspend fun archiveMatch(matchId: Long)
 
     suspend fun unarchiveMatch(matchId: Long)

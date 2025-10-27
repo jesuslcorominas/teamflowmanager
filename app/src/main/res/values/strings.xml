@@ -217,4 +217,8 @@
 
     <string name="unsaved_changes_title">Unsaved changes</string>
     <string name="discard_message">You have unsaved changes. Are you sure you want to exit?</string>
+
+    <string name="timeout_button">Timeout</string>
+    <string name="end_timeout_button">End Timeout</string>
+    <string name="match_timeout">Timeout</string>
 </resources>
