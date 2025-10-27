@@ -29,7 +29,7 @@ data class MatchEntity(
     val pauseCount: Int = 0,
     val goals: Int = 0,
     val opponentGoals: Int = 0,
-    val timeoutStartTimeMillis: Long? = null,
+    val timeoutStartTimeMillis: Long = 0L,
     val periods: List<MatchPeriodEntity>,
     val periodType: Int,
 )

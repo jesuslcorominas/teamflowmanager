@@ -87,16 +87,16 @@ internal class MatchRepositoryImpl(
     override suspend fun endTimeout(matchId: Long, currentTimeMillis: Long) {
         val currentMatch = localDataSource.getMatchById(matchId).first()
         if (currentMatch != null && currentMatch.status == MatchStatus.TIMEOUT) {
-            val timeoutStartTime = currentMatch.timeoutStartTimeMillis ?: currentTimeMillis
+            val timeoutStartTime = currentMatch.timeoutStartTimeMillis
             val timeoutDuration = currentTimeMillis - timeoutStartTime
 
             // Adjust the current period's start time to account for the timeout
             val currentPeriod = currentMatch.periods.firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
-            
+
             val updatedMatch = if (currentPeriod != null) {
                 currentMatch.copy(
                     status = MatchStatus.IN_PROGRESS,
-                    timeoutStartTimeMillis = null,
+                    timeoutStartTimeMillis = 0L,
                     periods = currentMatch.periods.map { period ->
                         if (period.periodNumber == currentPeriod.periodNumber) {
                             period.copy(startTimeMillis = period.startTimeMillis + timeoutDuration)
@@ -108,7 +108,7 @@ internal class MatchRepositoryImpl(
             } else {
                 currentMatch.copy(
                     status = MatchStatus.IN_PROGRESS,
-                    timeoutStartTimeMillis = null
+                    timeoutStartTimeMillis = 0L
                 )
             }
 
