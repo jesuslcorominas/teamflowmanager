@@ -10,6 +10,7 @@
     <string name="collapse">Cerrar</string>
     <string name="discard">Descartar</string>
     <string name="clear">Eliminar selección</string>
+    <string name="close_search">Cerrar búsqueda</string>
 
     <string name="players_title">Plantilla</string>
     <string name="no_players_message">Aún no hay jugadores registrados</string>
@@ -221,4 +222,6 @@
     <string name="timeout_button">Tiempo Muerto</string>
     <string name="end_timeout_button">Fin Tiempo Muerto</string>
     <string name="match_timeout">Tiempo Muerto</string>
+
+    <string name="search_match_placeholder">Busca por oponente o ubicación</string>
 </resources>

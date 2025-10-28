@@ -10,6 +10,7 @@
     <string name="collapse">Collapse</string>
     <string name="discard">Discard</string>
     <string name="clear">Clear</string>
+    <string name="close_search">Close search</string>
 
     <string name="players_title">Team Roster</string>
     <string name="no_players_message">No players registered yet</string>
@@ -221,4 +222,6 @@
     <string name="timeout_button">Timeout</string>
     <string name="end_timeout_button">End Timeout</string>
     <string name="match_timeout">Timeout</string>
+
+    <string name="search_match_placeholder">Search matches by opponent or place</string>
 </resources>

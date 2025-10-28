@@ -5,7 +5,8 @@ sealed class Route(
     val showTopBar: Boolean = true,
     val showBottomBar: Boolean = false,
     val canGoBack: Boolean = false,
-    val showFab: Boolean = false
+    val showFab: Boolean = false,
+    val hasSearchBar: Boolean = false
 ) {
 
     companion object {
@@ -36,6 +37,7 @@ sealed class Route(
         val showBottomBar: Boolean,
         val canGoBack: Boolean,
         val showFab: Boolean,
+        val hasSearchBar: Boolean,
     )
 
     open fun uiConfig(arguments: Map<String, Any?>?): UiConfig =
@@ -44,6 +46,7 @@ sealed class Route(
             showBottomBar = showBottomBar,
             canGoBack = canGoBack,
             showFab = showFab,
+            hasSearchBar = hasSearchBar,
         )
 
     data object Splash : Route(path = "splash", showTopBar = false)
@@ -66,7 +69,8 @@ sealed class Route(
                 showTopBar = mode == MODE_EDIT || mode == MODE_VIEW,
                 showBottomBar = mode == MODE_EDIT || mode == MODE_VIEW,
                 canGoBack = mode == MODE_EDIT,
-                showFab = mode == MODE_VIEW
+                showFab = mode == MODE_VIEW,
+                hasSearchBar = false,
             )
         }
     }
@@ -77,6 +81,7 @@ sealed class Route(
         path = "matches",
         showBottomBar = true,
         showFab = true,
+        hasSearchBar = true
     )
 
     data object ArchivedMatches : Route(

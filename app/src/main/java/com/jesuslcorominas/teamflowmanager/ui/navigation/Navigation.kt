@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
+import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
@@ -141,9 +142,11 @@ fun Navigation(
 
     val route = Route.fromValue(backStackEntry?.destination?.route)
 
+    val searchState = LocalSearchState.current
+
     BackHandler {
         when (route) {
-            Route.Matches -> activity?.finish()
+            Route.Matches -> if (searchState.isActive) searchState.isActive = false else activity?.finish()
 
             Route.Team -> {
                 val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)
