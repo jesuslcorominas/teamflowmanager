@@ -28,8 +28,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetGoalsForMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetGoalsForMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCase
@@ -128,7 +126,6 @@ internal val useCaseInternalModule =
         singleOf(::UpdateScheduledMatchesCaptainUseCaseImpl) bind UpdateScheduledMatchesCaptainUseCase::class
 
         singleOf(::RegisterGoalUseCaseImpl) bind RegisterGoalUseCase::class
-        singleOf(::GetGoalsForMatchUseCaseImpl) bind GetGoalsForMatchUseCase::class
     }
 
 val useCaseModule =

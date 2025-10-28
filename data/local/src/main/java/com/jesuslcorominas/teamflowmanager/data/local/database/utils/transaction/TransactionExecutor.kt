@@ -9,5 +9,5 @@ internal interface TransactionExecutor {
 
 internal class RoomTransactionExecutor (private val database: TeamFlowManagerDatabase) : TransactionExecutor {
     override suspend fun <T> runInTransaction(block: suspend () -> T): T =
-        database.withTransaction(block)
+        if (database.inTransaction()) block() else database.withTransaction(block)
 }
