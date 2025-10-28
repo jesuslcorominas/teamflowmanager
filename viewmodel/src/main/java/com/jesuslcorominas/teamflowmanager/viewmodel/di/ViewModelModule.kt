@@ -4,7 +4,6 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.MatchSummaryViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
@@ -83,11 +82,6 @@ val viewModelModule =
             MatchDetailViewModel(
                 getMatchByIdUseCase = get(),
                 getPlayersUseCase = get(),
-            )
-        }
-        viewModel {
-            MatchSummaryViewModel(
-                getMatchSummaryUseCase = get(),
             )
         }
         viewModel {

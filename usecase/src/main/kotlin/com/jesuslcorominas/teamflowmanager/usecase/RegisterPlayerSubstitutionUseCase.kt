@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
@@ -21,6 +22,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
     private val playerSubstitutionRepository: PlayerSubstitutionRepository,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
+    private val transactionRunner: TransactionRunner
 ) : RegisterPlayerSubstitutionUseCase {
     override suspend fun invoke(
         matchId: Long,
@@ -43,21 +45,23 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
 
         val matchElapsedTime = match.getTotalElapsed(currentTimeMillis)
 
-        // Stop timer for player going out
-        playerTimeRepository.pauseTimer(playerOutId, currentTimeMillis)
+        transactionRunner.run {
+            // Stop timer for player going out
+            playerTimeRepository.pauseTimer(playerOutId, currentTimeMillis)
 
-        // Start timer for player coming in
-        playerTimeRepository.startTimer(playerInId, currentTimeMillis)
+            // Start timer for player coming in
+            playerTimeRepository.startTimer(playerInId, currentTimeMillis)
 
-        // Record the substitution
-        val substitution = PlayerSubstitution(
-            matchId = matchId,
-            playerOutId = playerOutId,
-            playerInId = playerInId,
-            substitutionTimeMillis = currentTimeMillis,
-            matchElapsedTimeMillis = matchElapsedTime,
-        )
+            // Record the substitution
+            val substitution = PlayerSubstitution(
+                matchId = matchId,
+                playerOutId = playerOutId,
+                playerInId = playerInId,
+                substitutionTimeMillis = currentTimeMillis,
+                matchElapsedTimeMillis = matchElapsedTime,
+            )
 
-        playerSubstitutionRepository.insertSubstitution(substitution)
+            playerSubstitutionRepository.insertSubstitution(substitution)
+        }
     }
 }

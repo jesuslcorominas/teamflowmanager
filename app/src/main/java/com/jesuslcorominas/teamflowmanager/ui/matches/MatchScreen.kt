@@ -1,5 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -249,8 +252,16 @@ private fun MatchDetailContent(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
-            items(state.playerTimes.sortedBy(currentSortOrder)) { playerTimeItem ->
+            items(
+                items = state.playerTimes.sortedBy(currentSortOrder, state.match),
+                key = { it.player.id }
+            ) { playerTimeItem ->
                 PlayerItem(
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                        placementSpec = spring(),
+                        fadeOutSpec = tween(durationMillis = 300)
+                    ),
                     player = playerTimeItem.player,
                     showPositions = false,
                     isPlaying = if (state.match.isInProgress) playerTimeItem.isRunning else false,
@@ -281,12 +292,37 @@ private fun MatchDetailContent(
     }
 }
 
-private fun List<PlayerTimeItem>.sortedBy(sortOrder: PlayerSortOrderBy): List<PlayerTimeItem> =
+private fun List<PlayerTimeItem>.sortedBy(sortOrder: PlayerSortOrderBy, match: Match): List<PlayerTimeItem> =
     when (sortOrder) {
         PlayerSortOrderBy.BY_NUMBER -> sortedBy { it.player.number }
-        PlayerSortOrderBy.BY_TIME_DESC -> sortedByDescending { it.timeMillis }
-        PlayerSortOrderBy.BY_TIME_ASC -> sortedBy { it.timeMillis }
-        PlayerSortOrderBy.BY_ACTIVE_FIRST -> sortedWith(compareByDescending<PlayerTimeItem> { it.isRunning }.thenByDescending { it.timeMillis })
+        PlayerSortOrderBy.BY_TIME_DESC -> sortedWith(
+            compareByDescending<PlayerTimeItem> { it.timeMillis }
+                .thenBy { it.player.number }
+        )
+
+        PlayerSortOrderBy.BY_TIME_ASC -> sortedWith(
+            compareBy<PlayerTimeItem> { it.timeMillis }
+                .thenBy { it.player.number }
+        )
+
+        PlayerSortOrderBy.BY_ACTIVE_FIRST -> {
+            when (match.status) {
+                MatchStatus.SCHEDULED -> sortedWith(
+                    compareByDescending<PlayerTimeItem> { match.startingLineupIds.contains(it.player.id) }
+                        .thenBy { it.player.number }
+                )
+
+                MatchStatus.PAUSED, MatchStatus.TIMEOUT -> sortedWith(
+                    compareByDescending<PlayerTimeItem> { it.isPaused }
+                        .thenBy { it.player.number }
+                )
+
+                else -> sortedWith(
+                    compareByDescending<PlayerTimeItem> { it.isRunning }
+                        .thenBy { it.player.number }
+                )
+            }
+        }
     }
 
 
@@ -346,28 +382,23 @@ private fun BottomButtons(
                 )
 
                 AppIconButton(
-                    imageVector = if (state.match.isInProgress) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    imageVector = if (state.match.isInProgress || state.match.status == MatchStatus.TIMEOUT) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                     contentDescription = if (state.match.isInProgress) R.string.pause_match_button else R.string.resume_match_button,
-                    tint = if (state.match.canPause() || !state.match.isInProgress) {
+                    tint = if ((state.match.canPause() && state.match.isInProgress) || state.match.status == MatchStatus.PAUSED) {
                         MaterialTheme.colorScheme.primary
                     } else {
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     },
-                    enabled = if (state.match.isInProgress) state.match.canPause() else true,
+                    enabled = if (state.match.status == MatchStatus.TIMEOUT) false else if (state.match.isInProgress) state.match.canPause() else true,
                     onClick = if (state.match.isInProgress) onPauseMatch else onResumeMatch
                 )
 
-                IconButton(
+                AppIconButton(
+                    imageVector = Icons.Filled.Stop,
+                    contentDescription = stringResource(R.string.finish_match_button),
+                    tint = MaterialTheme.colorScheme.error,
                     onClick = onSaveMatch,
-                    modifier = Modifier.size(64.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Stop,
-                        contentDescription = stringResource(R.string.finish_match_button),
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.error,
-                    )
-                }
+                )
 
                 GoalButton(
                     modifier = Modifier.weight(1F),
@@ -465,8 +496,16 @@ private fun FinishedMatchState(
             )
         }
 
-        items(state.playerTimes.sortedBy(currentSortOrder)) { playerTimeItem ->
+        items(
+            items = state.playerTimes.sortedBy(currentSortOrder, state.match),
+            key = { it.player.id }
+        ) { playerTimeItem ->
             PlayerItem(
+                modifier = Modifier.animateItem(
+                    fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                    placementSpec = spring(),
+                    fadeOutSpec = tween(durationMillis = 300)
+                ),
                 player = playerTimeItem.player,
                 showPositions = false,
                 isPlaying = false,
@@ -728,6 +767,7 @@ private fun OngoingMatchViewPreview() {
                         timeMillis = it * 5 * 60 * 1000L,
                         isCaptain = it == 1,
                         isRunning = it % 2 == 0,
+                        isPaused = false,
                         substitutionCount = 2
                     )
                 },

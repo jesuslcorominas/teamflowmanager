@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
@@ -286,6 +287,7 @@ class MatchViewModel(
                                                 player = playerTimeSummary.player,
                                                 timeMillis = playerTimeSummary.elapsedTimeMillis,
                                                 isRunning = false,
+                                                isPaused = false,
                                                 isCaptain = playerTimeSummary.player.id == summary.match.captainId,
                                             )
                                         },
@@ -327,6 +329,7 @@ class MatchViewModel(
                 player = player,
                 timeMillis = displayTime,
                 isRunning = playerTime?.isRunning ?: false,
+                isPaused = playerTime?.status == PlayerTimeStatus.PAUSED,
                 isCaptain = player.id == captainId,
             )
         }
@@ -357,6 +360,7 @@ data class PlayerTimeItem(
     val player: Player,
     val timeMillis: Long,
     val isRunning: Boolean,
+    val isPaused: Boolean,
     val substitutionCount: Int = 0,
     val isCaptain: Boolean = false,
 )

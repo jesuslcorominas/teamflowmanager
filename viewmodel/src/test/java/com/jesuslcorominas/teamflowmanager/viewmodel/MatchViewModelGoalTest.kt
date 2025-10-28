@@ -7,7 +7,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetGoalsForMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
@@ -54,7 +53,6 @@ class MatchViewModelGoalTest {
     private lateinit var registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase
     private lateinit var getMatchSummaryUseCase: GetMatchSummaryUseCase
     private lateinit var registerGoalUseCase: RegisterGoalUseCase
-    private lateinit var getGoalsForMatchUseCase: GetGoalsForMatchUseCase
     private lateinit var preferencesRepository: PreferencesRepository
     private lateinit var timeTicker: TimeTicker
     private lateinit var viewModel: MatchViewModel

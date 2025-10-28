@@ -44,6 +44,7 @@ import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 
 @Composable
 fun PlayerItem(
+    modifier: Modifier = Modifier,
     player: Player,
     timeMillis: Long? = null,
     showCaptainBadge: Boolean = false,
@@ -63,24 +64,24 @@ fun PlayerItem(
         onMultiSelectionChange != null && onSingleSelectionChange != null ->
             throw IllegalArgumentException("Only one of onMultiSelectionChange or onSingleSelectionChange can be provided.")
 
-        onMultiSelectionChange != null -> Modifier.toggleable(
+        onMultiSelectionChange != null -> modifier.toggleable(
             value = isSelected,
             onValueChange = onMultiSelectionChange,
             role = Role.Checkbox
         )
 
-        onSingleSelectionChange != null -> Modifier.toggleable(
+        onSingleSelectionChange != null -> modifier.toggleable(
             value = isSelected,
             onValueChange = { onSingleSelectionChange() },
             role = Role.RadioButton
         )
 
-        else -> Modifier
+        else -> modifier
 
     }
 
     val colors = onClick?.let {
-         CardDefaults.cardColors(
+        CardDefaults.cardColors(
             containerColor = when {
                 isSelected -> MaterialTheme.colorScheme.primaryContainer
                 isPlaying -> MaterialTheme.colorScheme.secondaryContainer
@@ -94,7 +95,7 @@ fun PlayerItem(
             .fillMaxWidth()
             .then(onClick?.let { Modifier.clickable(onClick = onClick) } ?: Modifier),
         colors = colors,
-    ){
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

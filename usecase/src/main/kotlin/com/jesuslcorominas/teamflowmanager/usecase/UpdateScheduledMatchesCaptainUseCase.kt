@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 
 interface UpdateScheduledMatchesCaptainUseCase {
@@ -8,11 +9,14 @@ interface UpdateScheduledMatchesCaptainUseCase {
 
 internal class UpdateScheduledMatchesCaptainUseCaseImpl(
     private val matchRepository: MatchRepository,
+    private val transactionRunner: TransactionRunner
 ) : UpdateScheduledMatchesCaptainUseCase {
     override suspend fun invoke(captainId: Long?) {
         val scheduledMatches = matchRepository.getScheduledMatches()
-        scheduledMatches.forEach { match ->
-            matchRepository.updateMatchCaptain(match.id, captainId)
+        transactionRunner.run {
+            scheduledMatches.forEach { match ->
+                matchRepository.updateMatchCaptain(match.id, captainId)
+            }
         }
     }
 }

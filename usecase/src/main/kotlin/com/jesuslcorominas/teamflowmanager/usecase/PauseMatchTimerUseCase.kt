@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 
 interface PauseMatchTimerUseCase {
@@ -8,8 +9,11 @@ interface PauseMatchTimerUseCase {
 
 internal class PauseMatchTimerUseCaseImpl(
     private val matchRepository: MatchRepository,
+    private val transactionRunner: TransactionRunner
 ) : PauseMatchTimerUseCase {
     override suspend fun invoke(matchId: Long, currentTimeMillis: Long) {
-        matchRepository.pauseTimer(matchId, currentTimeMillis)
+        transactionRunner.run {
+            matchRepository.pauseTimer(matchId, currentTimeMillis)
+        }
     }
 }
