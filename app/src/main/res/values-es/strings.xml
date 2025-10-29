@@ -10,7 +10,10 @@
     <string name="collapse">Cerrar</string>
     <string name="discard">Descartar</string>
     <string name="clear">Eliminar selección</string>
+
     <string name="close_search">Cerrar búsqueda</string>
+    <string name="search">Buscar</string>
+    <string name="no_results">No se han encontrado resultados para tu búsqueda</string>
 
     <string name="players_title">Plantilla</string>
     <string name="no_players_message">Aún no hay jugadores registrados</string>

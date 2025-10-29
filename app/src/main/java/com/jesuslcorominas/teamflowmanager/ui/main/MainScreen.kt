@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -98,6 +97,8 @@ private fun RouteFloatingActionButton(route: Route, navController: NavHostContro
     }
 }
 
+// region Route extensions
+
 private fun Route.toFABIcon() = when (this) {
     Route.Team -> Icons.Default.Edit
     else -> Icons.Default.Add
@@ -119,7 +120,10 @@ private fun Route.toDestination() = when (this) {
 @Composable
 private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (this) {
     Route.Players -> stringResource(R.string.players_title)
-    Route.Team -> stringResource((this as Route.Team).toTitleRes(backStackEntry))
+    Route.Team -> backStackEntry?.arguments?.getString(Route.Team.ARG_MODE).let { mode ->
+        stringResource(if (mode == Route.Team.MODE_EDIT) R.string.edit_team_title else R.string.team_title)
+    }
+
     Route.Matches -> stringResource(R.string.matches_title)
     Route.ArchivedMatches -> stringResource(R.string.archived_matches)
     Route.Match ->
@@ -129,16 +133,4 @@ private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (t
 
     else -> null
 }
-
-@StringRes
-private fun Route.Team.toTitleRes(backStackEntry: NavBackStackEntry?): Int {
-    val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)
-
-    return if (mode == Route.Team.MODE_EDIT) {
-        R.string.edit_team_title
-    } else {
-        R.string.team_title
-    }
-}
-
-
+// endregion

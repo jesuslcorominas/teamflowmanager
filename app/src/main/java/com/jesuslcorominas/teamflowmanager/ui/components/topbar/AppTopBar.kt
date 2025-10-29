@@ -85,7 +85,12 @@ fun SearchTopBar(
                 placeholder = { Text(placeholder) },
                 singleLine = true,
                 leadingIcon = {
-                    IconButton(onClick = { searchState.isActive = false }) {
+                    IconButton(
+                        onClick = {
+                            searchState.clear()
+                            searchState.isActive = false
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.close_search),
@@ -164,7 +169,7 @@ fun DefaultTopBar(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Buscar"
+                        contentDescription = stringResource(R.string.search)
                     )
                 }
             }

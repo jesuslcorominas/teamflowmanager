@@ -146,7 +146,12 @@ fun Navigation(
 
     BackHandler {
         when (route) {
-            Route.Matches -> if (searchState.isActive) searchState.isActive = false else activity?.finish()
+            Route.Matches -> if (searchState.isActive) {
+                searchState.clear()
+                searchState.isActive = false
+            } else {
+                activity?.finish()
+            }
 
             Route.Team -> {
                 val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)

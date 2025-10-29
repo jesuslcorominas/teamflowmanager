@@ -124,6 +124,14 @@ private fun MatchesList(
         }
     }
 
+    if (state.matches.isEmpty()) {
+        EmptyMatches(
+            message = stringResource(R.string.no_results),
+            onNavigateToArchivedMatches = onNavigateToArchivedMatches
+        )
+        return
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -285,7 +293,10 @@ private fun LazyListScope.playedMatchesSection(
 
 // region Empty
 @Composable
-private fun EmptyMatches(onNavigateToArchivedMatches: () -> Unit) {
+private fun EmptyMatches(
+    message: String = stringResource(R.string.no_matches_message),
+    onNavigateToArchivedMatches: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -293,7 +304,7 @@ private fun EmptyMatches(onNavigateToArchivedMatches: () -> Unit) {
     ) {
         ArchivedMatchesNavigationCard(onClick = onNavigateToArchivedMatches)
 
-        EmptyContent(stringResource(R.string.no_matches_message))
+        EmptyContent(message)
     }
 }
 

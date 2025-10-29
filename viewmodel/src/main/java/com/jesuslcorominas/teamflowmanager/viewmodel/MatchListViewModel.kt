@@ -49,7 +49,7 @@ class MatchListViewModel(
                     else -> MatchListUiState.Success(matches = filtered)
                 }
             }.collect { newState ->
-                _uiState.update { currentState -> newState }
+                _uiState.update { newState }
             }
         }
     }

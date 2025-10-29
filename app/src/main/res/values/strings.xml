@@ -10,7 +10,10 @@
     <string name="collapse">Collapse</string>
     <string name="discard">Discard</string>
     <string name="clear">Clear</string>
+
     <string name="close_search">Close search</string>
+    <string name="search">Search</string>
+    <string name="no_results">No results found for your search</string>
 
     <string name="players_title">Team Roster</string>
     <string name="no_players_message">No players registered yet</string>
