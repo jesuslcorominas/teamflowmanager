@@ -53,7 +53,7 @@ fun AppTopBar(
             targetState = searchState.isActive,
             animationSpec = tween(durationMillis = 300)
         ) { isSearchActive ->
-            if (isSearchActive) {
+            if (uiConfig.hasSearchBar && isSearchActive) {
                 SearchTopBar(modifier = modifier, searchPlaceholder)
             } else {
                 DefaultTopBar(
