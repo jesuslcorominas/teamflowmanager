@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +31,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
+import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.ArchivedMatchesNavigationCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.PausedMatchCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.PendingMatchCard
@@ -91,6 +94,8 @@ private fun MatchesList(
     onNavigateToMatch: (Match) -> Unit,
     viewModel: MatchListViewModel
 ) {
+    val searchState = LocalSearchState.current
+
     val pendingMatches = state.matches.filter { it.status == MatchStatus.SCHEDULED }.sortedBy { it.dateTime }
     val activeMatch = state.matches.find { it.status == MatchStatus.IN_PROGRESS }
     val pausedMatch = state.matches.find { it.status == MatchStatus.PAUSED }
@@ -100,10 +105,32 @@ private fun MatchesList(
     val hasPausedMatch = pausedMatch != null
 
     var expandedPendingMatches: Boolean by remember { mutableStateOf(true) }
-    var expandedPlayedMatches: Boolean by remember { mutableStateOf(false) }
+    var expandedPlayedMatches: Boolean by remember { mutableStateOf(true) }
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(searchState.query) {
+        viewModel.onQueryChange(searchState.query)
+
+        if (pendingMatches.isNotEmpty()) expandedPendingMatches = true
+        if (playedMatches.isNotEmpty()) expandedPlayedMatches = true
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            searchState.isActive = false
+            searchState.clear()
+        }
+    }
+
+    if (state.matches.isEmpty()) {
+        EmptyMatches(
+            message = stringResource(R.string.no_results),
+            onNavigateToArchivedMatches = onNavigateToArchivedMatches
+        )
+        return
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -266,7 +293,10 @@ private fun LazyListScope.playedMatchesSection(
 
 // region Empty
 @Composable
-private fun EmptyMatches(onNavigateToArchivedMatches: () -> Unit) {
+private fun EmptyMatches(
+    message: String = stringResource(R.string.no_matches_message),
+    onNavigateToArchivedMatches: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -274,7 +304,7 @@ private fun EmptyMatches(onNavigateToArchivedMatches: () -> Unit) {
     ) {
         ArchivedMatchesNavigationCard(onClick = onNavigateToArchivedMatches)
 
-        EmptyContent(stringResource(R.string.no_matches_message))
+        EmptyContent(message)
     }
 }
 
