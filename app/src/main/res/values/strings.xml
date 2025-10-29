@@ -126,6 +126,7 @@
     <string name="nav_players">Team Roster</string>
     <string name="nav_team">Team</string>
     <string name="nav_matches">Matches</string>
+    <string name="nav_analysis">Analysis</string>
 
     <!-- Match Status -->
     <string name="pending_matches">Pending Matches</string>
@@ -227,4 +228,12 @@
     <string name="match_timeout">Timeout</string>
 
     <string name="search_match_placeholder">Search matches by opponent or place</string>
+
+    <!-- Analysis -->
+    <string name="analysis_title">Analysis</string>
+    <string name="analysis_times_tab">TIMES</string>
+    <string name="analysis_no_data">No playing time data available</string>
+    <string name="analysis_player_time_chart_title">Playing Time Distribution</string>
+    <string name="analysis_minutes_label">min</string>
+    <string name="analysis_matches_played">%d matches</string>
 </resources>

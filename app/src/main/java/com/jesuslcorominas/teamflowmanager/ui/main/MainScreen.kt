@@ -126,6 +126,7 @@ private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (t
 
     Route.Matches -> stringResource(R.string.matches_title)
     Route.ArchivedMatches -> stringResource(R.string.archived_matches)
+    Route.Analysis -> stringResource(R.string.analysis_title)
     Route.Match ->
         "${backStackEntry?.arguments?.getString(Route.Match.ARG_TEAM)} - ${
             backStackEntry?.arguments?.getString(Route.Match.ARG_OPPONENT)

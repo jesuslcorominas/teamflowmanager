@@ -20,6 +20,7 @@ sealed class Route(
                 CreateMatch,
                 Match,
                 MatchDetail,
+                Analysis,
             )
         }
 
@@ -105,4 +106,6 @@ sealed class Route(
     data object MatchDetail : Route(path = "match_detail", canGoBack = true) {
         const val ARG_MATCH_ID = "matchId"
     }
+
+    data object Analysis : Route(path = "analysis", showBottomBar = true)
 }

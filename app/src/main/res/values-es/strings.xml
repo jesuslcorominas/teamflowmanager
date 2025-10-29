@@ -126,6 +126,7 @@
     <string name="nav_players">Plantilla</string>
     <string name="nav_team">Equipo</string>
     <string name="nav_matches">Partidos</string>
+    <string name="nav_analysis">Análisis</string>
 
     <!-- Match Status -->
     <string name="pending_matches">Partidos Pendientes</string>
@@ -227,4 +228,12 @@
     <string name="match_timeout">Tiempo Muerto</string>
 
     <string name="search_match_placeholder">Busca por oponente o ubicación</string>
+
+    <!-- Analysis -->
+    <string name="analysis_title">Análisis</string>
+    <string name="analysis_times_tab">TIEMPOS</string>
+    <string name="analysis_no_data">No hay datos de tiempo de juego disponibles</string>
+    <string name="analysis_player_time_chart_title">Distribución del Tiempo de Juego</string>
+    <string name="analysis_minutes_label">min</string>
+    <string name="analysis_matches_played">%d partidos</string>
 </resources>
