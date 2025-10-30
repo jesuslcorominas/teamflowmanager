@@ -16,6 +16,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCase
@@ -133,6 +135,8 @@ internal val useCaseInternalModule =
         singleOf(::UpdateScheduledMatchesCaptainUseCaseImpl) bind UpdateScheduledMatchesCaptainUseCase::class
 
         singleOf(::RegisterGoalUseCaseImpl) bind RegisterGoalUseCase::class
+
+        singleOf(::ExportToPdfUseCaseImpl) bind ExportToPdfUseCase::class
     }
 
 val useCaseModule =
