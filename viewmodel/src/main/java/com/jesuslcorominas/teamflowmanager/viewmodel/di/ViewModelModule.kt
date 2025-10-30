@@ -99,6 +99,9 @@ val viewModelModule =
             AnalysisViewModel(
                 getPlayerTimeStats = get(),
                 getPlayerGoalStats = get(),
+                getExportData = get(),
+                getTeam = get(),
+                exportToPdf = get(),
             )
         }
 
