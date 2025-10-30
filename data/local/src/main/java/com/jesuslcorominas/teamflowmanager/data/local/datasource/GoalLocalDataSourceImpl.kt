@@ -16,6 +16,11 @@ internal class GoalLocalDataSourceImpl(
             entities.map { it.toDomain() }
         }
 
+    override fun getAllTeamGoals(): Flow<List<Goal>> =
+        goalDao.getAllTeamGoals().map { entities ->
+            entities.map { it.toDomain() }
+        }
+
     override suspend fun insertGoal(goal: Goal): Long =
         goalDao.insert(goal.toEntity())
 }
