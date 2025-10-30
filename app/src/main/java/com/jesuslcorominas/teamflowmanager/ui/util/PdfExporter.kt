@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.ui.util
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
@@ -23,6 +24,21 @@ class PdfExporter(private val context: Context) {
         private const val TITLE_SIZE = 18f
         private const val SECTION_SIZE = 14f
         private const val BODY_SIZE = 10f
+        private const val TABLE_ROW_HEIGHT = 24f
+        private const val HEADER_ROW_HEIGHT = 30f
+    }
+    
+    private fun formatTime(totalMinutes: Double): String {
+        val totalSeconds = (totalMinutes * 60).toInt()
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+        
+        return when {
+            hours > 0 -> String.format("%dh %02dm %02ds", hours, minutes, seconds)
+            minutes > 0 -> String.format("%dm %02ds", minutes, seconds)
+            else -> String.format("%ds", seconds)
+        }
     }
     
     fun exportToPdf(exportData: ExportData, teamName: String): Uri? {
@@ -46,7 +62,7 @@ class PdfExporter(private val context: Context) {
         
         // Player Statistics Section
         yPosition = drawSectionTitle(canvas, "Estadísticas de Jugadores", yPosition)
-        yPosition += LINE_HEIGHT
+        yPosition += LINE_HEIGHT * 1.5f
         
         if (exportData.playerStats.isEmpty()) {
             yPosition = drawText(canvas, "No hay datos de jugadores disponibles", yPosition, BODY_SIZE)
@@ -54,9 +70,9 @@ class PdfExporter(private val context: Context) {
         } else {
             // Headers
             yPosition = drawPlayerStatsHeader(canvas, yPosition)
-            yPosition += LINE_HEIGHT / 2
+            yPosition += HEADER_ROW_HEIGHT
             
-            exportData.playerStats.forEach { stat ->
+            exportData.playerStats.forEachIndexed { index, stat ->
                 if (yPosition > PAGE_HEIGHT - MARGIN * 2) {
                     document.finishPage(page)
                     currentPage++
@@ -65,11 +81,11 @@ class PdfExporter(private val context: Context) {
                     canvas = page.canvas
                     yPosition = MARGIN
                     yPosition = drawPlayerStatsHeader(canvas, yPosition)
-                    yPosition += LINE_HEIGHT / 2
+                    yPosition += HEADER_ROW_HEIGHT
                 }
                 
-                yPosition = drawPlayerStats(canvas, stat, yPosition)
-                yPosition += LINE_HEIGHT
+                yPosition = drawPlayerStats(canvas, stat, yPosition, index)
+                yPosition += TABLE_ROW_HEIGHT
             }
         }
         
@@ -196,33 +212,139 @@ class PdfExporter(private val context: Context) {
     }
     
     private fun drawPlayerStatsHeader(canvas: Canvas, yPosition: Float): Float {
-        val paint = Paint().apply {
+        val tableLeft = MARGIN
+        val tableRight = PAGE_WIDTH - MARGIN
+        val tableWidth = tableRight - tableLeft
+        
+        // Column widths (percentages of table width)
+        val col1Width = tableWidth * 0.35f  // Jugador
+        val col2Width = tableWidth * 0.10f  // Conv
+        val col3Width = tableWidth * 0.10f  // Jug
+        val col4Width = tableWidth * 0.20f  // T.Tot
+        val col5Width = tableWidth * 0.15f  // T.Med
+        val col6Width = tableWidth * 0.10f  // Goles
+        
+        // Draw header background (light gray)
+        val backgroundPaint = Paint().apply {
+            color = Color.rgb(220, 220, 220)
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(tableLeft, yPosition - HEADER_ROW_HEIGHT + 5, tableRight, yPosition + 5, backgroundPaint)
+        
+        // Draw header border
+        val borderPaint = Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+        canvas.drawRect(tableLeft, yPosition - HEADER_ROW_HEIGHT + 5, tableRight, yPosition + 5, borderPaint)
+        
+        // Draw vertical lines for columns
+        var xPos = tableLeft + col1Width
+        canvas.drawLine(xPos, yPosition - HEADER_ROW_HEIGHT + 5, xPos, yPosition + 5, borderPaint)
+        xPos += col2Width
+        canvas.drawLine(xPos, yPosition - HEADER_ROW_HEIGHT + 5, xPos, yPosition + 5, borderPaint)
+        xPos += col3Width
+        canvas.drawLine(xPos, yPosition - HEADER_ROW_HEIGHT + 5, xPos, yPosition + 5, borderPaint)
+        xPos += col4Width
+        canvas.drawLine(xPos, yPosition - HEADER_ROW_HEIGHT + 5, xPos, yPosition + 5, borderPaint)
+        xPos += col5Width
+        canvas.drawLine(xPos, yPosition - HEADER_ROW_HEIGHT + 5, xPos, yPosition + 5, borderPaint)
+        
+        // Draw header text (uppercase and bold)
+        val textPaint = Paint().apply {
             textSize = BODY_SIZE
             isFakeBoldText = true
+            textAlign = Paint.Align.LEFT
         }
         
-        canvas.drawText("Jugador", MARGIN, yPosition, paint)
-        canvas.drawText("Conv", PAGE_WIDTH * 0.4f, yPosition, paint)
-        canvas.drawText("Jug", PAGE_WIDTH * 0.5f, yPosition, paint)
-        canvas.drawText("T.Tot", PAGE_WIDTH * 0.6f, yPosition, paint)
-        canvas.drawText("T.Med", PAGE_WIDTH * 0.72f, yPosition, paint)
-        canvas.drawText("Goles", PAGE_WIDTH * 0.85f, yPosition, paint)
+        val textY = yPosition - (HEADER_ROW_HEIGHT / 2) + (BODY_SIZE / 2)
+        
+        canvas.drawText("JUGADOR", tableLeft + 5, textY, textPaint)
+        
+        xPos = tableLeft + col1Width
+        canvas.drawText("CONV", xPos + 5, textY, textPaint)
+        
+        xPos += col2Width
+        canvas.drawText("JUG", xPos + 5, textY, textPaint)
+        
+        xPos += col3Width
+        canvas.drawText("T.TOTAL", xPos + 5, textY, textPaint)
+        
+        xPos += col4Width
+        canvas.drawText("T.MEDIO", xPos + 5, textY, textPaint)
+        
+        xPos += col5Width
+        canvas.drawText("GOLES", xPos + 5, textY, textPaint)
         
         return yPosition
     }
     
-    private fun drawPlayerStats(canvas: Canvas, stat: com.jesuslcorominas.teamflowmanager.domain.model.PlayerExportStats, yPosition: Float): Float {
-        val paint = Paint().apply {
+    private fun drawPlayerStats(canvas: Canvas, stat: com.jesuslcorominas.teamflowmanager.domain.model.PlayerExportStats, yPosition: Float, index: Int): Float {
+        val tableLeft = MARGIN
+        val tableRight = PAGE_WIDTH - MARGIN
+        val tableWidth = tableRight - tableLeft
+        
+        // Column widths (same as header)
+        val col1Width = tableWidth * 0.35f
+        val col2Width = tableWidth * 0.10f
+        val col3Width = tableWidth * 0.10f
+        val col4Width = tableWidth * 0.20f
+        val col5Width = tableWidth * 0.15f
+        val col6Width = tableWidth * 0.10f
+        
+        // Draw alternating row background
+        val backgroundPaint = Paint().apply {
+            color = if (index % 2 == 0) Color.WHITE else Color.rgb(245, 245, 245)
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(tableLeft, yPosition, tableRight, yPosition + TABLE_ROW_HEIGHT, backgroundPaint)
+        
+        // Draw row borders
+        val borderPaint = Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+        canvas.drawRect(tableLeft, yPosition, tableRight, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        
+        // Draw vertical lines for columns
+        var xPos = tableLeft + col1Width
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        xPos += col2Width
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        xPos += col3Width
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        xPos += col4Width
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        xPos += col5Width
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        
+        // Draw cell text
+        val textPaint = Paint().apply {
             textSize = BODY_SIZE
+            textAlign = Paint.Align.LEFT
         }
         
+        val textY = yPosition + (TABLE_ROW_HEIGHT / 2) + (BODY_SIZE / 2)
+        
         val playerName = "${stat.player.firstName} ${stat.player.lastName}"
-        canvas.drawText(playerName, MARGIN, yPosition, paint)
-        canvas.drawText("${stat.matchesCalledUp}", PAGE_WIDTH * 0.4f, yPosition, paint)
-        canvas.drawText("${stat.matchesPlayed}", PAGE_WIDTH * 0.5f, yPosition, paint)
-        canvas.drawText("${String.format("%.1f", stat.totalTimeMinutes)}m", PAGE_WIDTH * 0.6f, yPosition, paint)
-        canvas.drawText("${String.format("%.1f", stat.averageTimePerMatch)}m", PAGE_WIDTH * 0.72f, yPosition, paint)
-        canvas.drawText("${stat.goalsScored}", PAGE_WIDTH * 0.85f, yPosition, paint)
+        canvas.drawText(playerName, tableLeft + 5, textY, textPaint)
+        
+        xPos = tableLeft + col1Width
+        canvas.drawText("${stat.matchesCalledUp}", xPos + 5, textY, textPaint)
+        
+        xPos += col2Width
+        canvas.drawText("${stat.matchesPlayed}", xPos + 5, textY, textPaint)
+        
+        xPos += col3Width
+        canvas.drawText(formatTime(stat.totalTimeMinutes), xPos + 5, textY, textPaint)
+        
+        xPos += col4Width
+        canvas.drawText(formatTime(stat.averageTimePerMatch), xPos + 5, textY, textPaint)
+        
+        xPos += col5Width
+        canvas.drawText("${stat.goalsScored}", xPos + 5, textY, textPaint)
         
         return yPosition
     }
