@@ -1,8 +1,10 @@
 [versions]
-accompanistNavigationAnimation = "0.36.0"
+kotlin = "2.1.0"
+jetbrainsKotlinJvmVersion = "2.1.0"
+ksp = "2.1.0-1.0.28"
 agp = "8.6.1"
 animation = "1.9.4"
-kotlin = "2.0.21"
+composeCharts = "0.2.0"
 ktlint = "12.1.1"
 core-ktx = "1.13.1"
 junit = "4.13.2"
@@ -24,19 +26,16 @@ turbine = "1.2.0"
 koin = "4.0.0"
 koin-compose = "4.0.0"
 navigationCompose = "2.9.5"
-room = "2.6.1"
+room = "2.8.3"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 gson = "2.11.0"
 compose-bom = "2025.01.00"
-jetbrainsKotlinJvmVersion = "2.0.21"
-ksp = "2.0.21-1.0.25"
 materialVersion = "1.7.3"
 composeGoogleFonts="1.7.3"
 material3 = "1.4.0"
 
 [libraries]
-accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanistNavigationAnimation" }
 androidx-compose-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -44,6 +43,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
 ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "ktlintVersion" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

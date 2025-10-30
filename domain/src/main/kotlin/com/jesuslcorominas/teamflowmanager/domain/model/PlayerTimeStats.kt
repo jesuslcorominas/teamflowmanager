@@ -2,6 +2,6 @@ package com.jesuslcorominas.teamflowmanager.domain.model
 
 data class PlayerTimeStats(
     val player: Player,
-    val totalTimeMillis: Long,
+    val totalTimeMinutes: Double,
     val matchesPlayed: Int,
 )

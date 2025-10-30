@@ -76,6 +76,7 @@
     <string name="no_match_message">No active match</string>
     <string name="match_time_label">Match Time</string>
     <string name="player_times_title">Player Times</string>
+    <string name="player_time_title">Active time</string>
     <string name="running_indicator">ACTIVE</string>
     <string name="player_number_format">#%d</string>
     <string name="pause_match_button">Half Time</string>

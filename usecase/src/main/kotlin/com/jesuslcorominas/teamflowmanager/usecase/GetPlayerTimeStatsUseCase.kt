@@ -17,15 +17,15 @@ class GetPlayerTimeStatsUseCase(
         ) { players, timeHistory ->
             players.map { player ->
                 val playerHistory = timeHistory.filter { it.playerId == player.id }
-                val totalTime = playerHistory.sumOf { it.elapsedTimeMillis }
+                val totalTime = (playerHistory.sumOf { it.elapsedTimeMillis }.toDouble()) / (60 * 1000)
                 val matchesPlayed = playerHistory.distinctBy { it.matchId }.size
-                
+
                 PlayerTimeStats(
                     player = player,
-                    totalTimeMillis = totalTime,
+                    totalTimeMinutes = totalTime,
                     matchesPlayed = matchesPlayed
                 )
-            }.sortedByDescending { it.totalTimeMillis }
+            }.sortedByDescending { it.totalTimeMinutes }
         }
     }
 }
