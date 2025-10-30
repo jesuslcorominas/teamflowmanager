@@ -11,6 +11,9 @@ interface GoalDao {
     @Query("SELECT * FROM goal WHERE matchId = :matchId ORDER BY goalTimeMillis ASC")
     fun getMatchGoals(matchId: Long): Flow<List<GoalEntity>>
 
+    @Query("SELECT * FROM goal WHERE isOpponentGoal = 0 ORDER BY goalTimeMillis ASC")
+    fun getAllTeamGoals(): Flow<List<GoalEntity>>
+
     @Insert
     suspend fun insert(goal: GoalEntity): Long
 }

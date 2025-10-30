@@ -233,8 +233,13 @@
     <!-- Analysis -->
     <string name="analysis_title">Analysis</string>
     <string name="analysis_times_tab">TIMES</string>
+    <string name="analysis_goals_tab">SCORERS</string>
     <string name="analysis_no_data">No playing time data available</string>
+    <string name="analysis_no_goals_data">No goals data available</string>
     <string name="analysis_player_time_chart_title">Playing Time Distribution</string>
+    <string name="analysis_player_goals_chart_title">Top Scorers</string>
     <string name="analysis_minutes_label">min</string>
     <string name="analysis_matches_played">%d matches</string>
+    <string name="analysis_goals_label">Goals</string>
+    <string name="analysis_matches_with_goals">%d matches with goals</string>
 </resources>

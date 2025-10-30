@@ -98,6 +98,7 @@ val viewModelModule =
         viewModel {
             AnalysisViewModel(
                 getPlayerTimeStats = get(),
+                getPlayerGoalStats = get(),
             )
         }
 

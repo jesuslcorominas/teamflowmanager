@@ -11,6 +11,9 @@ internal class GoalRepositoryImpl(
     override fun getMatchGoals(matchId: Long): Flow<List<Goal>> =
         goalLocalDataSource.getMatchGoals(matchId)
 
+    override fun getAllTeamGoals(): Flow<List<Goal>> =
+        goalLocalDataSource.getAllTeamGoals()
+
     override suspend fun insertGoal(goal: Goal): Long =
         goalLocalDataSource.insertGoal(goal)
 }
