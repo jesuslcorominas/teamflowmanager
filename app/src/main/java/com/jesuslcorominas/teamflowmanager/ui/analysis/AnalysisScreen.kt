@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -47,9 +47,9 @@ fun AnalysisScreen(
     val selectedTab by viewModel.selectedTab.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(
+        SecondaryTabRow(
+            modifier = Modifier.fillMaxWidth(),
             selectedTabIndex = selectedTab.ordinal,
-            modifier = Modifier.fillMaxWidth()
         ) {
             Tab(
                 selected = selectedTab == AnalysisTab.TIMES,
@@ -82,6 +82,7 @@ fun AnalysisScreen(
                         AnalysisTab.GOALS -> stringResource(R.string.analysis_no_goals_data)
                     }
                 )
+
                 is AnalysisUiState.Success -> {
                     when (selectedTab) {
                         AnalysisTab.TIMES -> {
@@ -91,6 +92,7 @@ fun AnalysisScreen(
                                 PlayerTimeChart(playerStats = state.playerTimeStats)
                             }
                         }
+
                         AnalysisTab.GOALS -> {
                             if (state.playerGoalStats.isEmpty()) {
                                 EmptyContent(stringResource(R.string.analysis_no_goals_data))
@@ -111,8 +113,8 @@ private fun PlayerTimeChart(playerStats: List<PlayerTimeStats>) {
 
     RowChart(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = TFMSpacing.spacing05),
+            .fillMaxWidth()
+            .padding(start = TFMSpacing.spacing04, end = TFMSpacing.spacing04, top = TFMSpacing.spacing04),
         gridProperties = GridProperties(enabled = false),
         indicatorProperties = VerticalIndicatorProperties(
             indicators = listOf(
@@ -139,7 +141,7 @@ private fun PlayerTimeChart(playerStats: List<PlayerTimeStats>) {
             }
         },
         barProperties = BarProperties(
-            thickness = 24.dp,
+            thickness = TFMSpacing.spacing06,
             spacing = 0.dp,
             cornerRadius = Rectangle(topRight = TFMSpacing.spacing04, bottomRight = TFMSpacing.spacing04),
         ),
@@ -156,16 +158,16 @@ private fun PlayerGoalChart(playerStats: List<PlayerGoalStats>) {
 
     RowChart(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = TFMSpacing.spacing05),
+            .fillMaxWidth()
+            .padding(start = TFMSpacing.spacing04, end = TFMSpacing.spacing04, top = TFMSpacing.spacing04),
         gridProperties = GridProperties(enabled = false),
         indicatorProperties = VerticalIndicatorProperties(
             indicators = listOf(
                 playerStats.maxBy { it.totalGoals }.totalGoals.toDouble(),
-                playerStats.maxBy { it.totalGoals }.totalGoals.toDouble() / 2,
+                (playerStats.maxBy { it.totalGoals }.totalGoals.toDouble() / 2).let { if (it % 2 == 0.toDouble()) it else null },
                 0.0,
-            ),
-            count = IndicatorCount.CountBased(count = 3),
+            ).mapNotNull { it },
+            count = IndicatorCount.CountBased((playerStats.maxBy { it.totalGoals }.totalGoals.toDouble() / 2).let { if (it % 2 == 0.toDouble()) 3 else 2 }),
         ),
         data = remember {
             playerStats.map {
@@ -184,7 +186,7 @@ private fun PlayerGoalChart(playerStats: List<PlayerGoalStats>) {
             }
         },
         barProperties = BarProperties(
-            thickness = 24.dp,
+            thickness = TFMSpacing.spacing06,
             spacing = 0.dp,
             cornerRadius = Rectangle(topRight = TFMSpacing.spacing04, bottomRight = TFMSpacing.spacing04),
         ),

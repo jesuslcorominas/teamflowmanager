@@ -97,7 +97,7 @@ private fun initDatabase(db: SupportSQLiteDatabase) {
             "(10, 'Briana', ',', 12, 'left_back', 1, 0)"
     )
 
-    db.execSQL("INSERT INTO \"match\" VALUES(1,1,'Loyola D','EFRO','Colegio Loyola',1760781600000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,2,7,0,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
+    db.execSQL("INSERT INTO \"match\" VALUES(1,1,'Loyola D','EFRO','Colegio Loyola',1760781600000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,6,7,0,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
     db.execSQL("INSERT INTO \"match\" VALUES(3,1,'Loyola D','Loyola C','Colegio Loyola',1761382800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,1,15,0,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
     db.execSQL("INSERT INTO \"match\" VALUES(4,1,'Loyola D','Fozaneldi B','Las Campas',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',1,2,1,5,8,0,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
     db.execSQL("INSERT INTO \"match\" VALUES(5,1,'Loyola D','Juvencia A','Colegio Loyola',1761994800000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',1,2,1,3,14,0,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")
@@ -116,7 +116,14 @@ private fun initDatabase(db: SupportSQLiteDatabase) {
             "(9,9,1,2167796,1760778126922),\n" +
             "(10,10,1,452361,1760778126922)\n"
     )
-    db.execSQL("INSERT INTO goal VALUES(1,1,9,1760776838452,1852185,0), (2,1,4,1760776959713,1973446,0);")
+    db.execSQL(
+        "INSERT INTO goal VALUES(1,1,9,1760776838452,1852185,0), " +
+            "(2,1,4,1760776959713,1973446,0)," +
+            "(3,1,4,1760776359713,1973446,0)," +
+            "(4,1,1,1760776459713,1973446,0)," +
+            "(5,1,9,1760776559713,1973446,0)," +
+            "(6,1,9,1760776659713,1973446,0);"
+    )
     db.execSQL(
         "INSERT INTO player_substitution VALUES(8,1,7,1,1760776921774,1935507),\n" +
             "(9,1,3,2,1760776928546,1942279),\n" +

@@ -240,6 +240,6 @@
     <string name="analysis_player_goals_chart_title">Máximos Goleadores</string>
     <string name="analysis_minutes_label">min</string>
     <string name="analysis_matches_played">%d partidos</string>
-    <string name="analysis_goals_label">goles</string>
+    <string name="analysis_goals_label">Goles</string>
     <string name="analysis_matches_with_goals">%d partidos con goles</string>
 </resources>

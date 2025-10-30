@@ -15,20 +15,16 @@ class GetPlayerGoalStatsUseCase(
             playerRepository.getAllPlayers(),
             goalRepository.getAllTeamGoals()
         ) { players, goals ->
-            players.mapNotNull { player ->
+            players.map        { player ->
                 val playerGoals = goals.filter { it.scorerId == player.id }
                 val totalGoals = playerGoals.size
-                
-                if (totalGoals > 0) {
-                    val matchesWithGoals = playerGoals.distinctBy { it.matchId }.size
-                    PlayerGoalStats(
-                        player = player,
-                        totalGoals = totalGoals,
-                        matchesWithGoals = matchesWithGoals
-                    )
-                } else {
-                    null
-                }
+
+                val matchesWithGoals = playerGoals.distinctBy { it.matchId }.size
+                PlayerGoalStats(
+                    player = player,
+                    totalGoals = totalGoals,
+                    matchesWithGoals = matchesWithGoals
+                )
             }.sortedByDescending { it.totalGoals }
         }
     }
