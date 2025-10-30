@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.ui.navigation
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.SportsSoccer
@@ -31,6 +32,7 @@ fun BottomNavigationBar(
     val items = listOf(
         Route.Matches,
         Route.Players,
+        Route.Analysis,
         Route.Team,
     )
 
@@ -51,6 +53,7 @@ fun BottomNavigationBar(
                 val selected = when {
                     route is Route.Players && Route.fromValue(currentRoute) is Route.Players -> true
                     route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
+                    route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
                     route is Route.Matches && (Route.fromValue(currentRoute) is Route.Matches ||
                         Route.fromValue(currentRoute) is Route.ArchivedMatches) -> true
 
@@ -122,6 +125,7 @@ private fun Route.toIcon(): ImageVector? =
         Route.Players -> Icons.Default.Group
         Route.Team -> Icons.Default.Groups
         Route.Matches, Route.ArchivedMatches -> Icons.Default.SportsSoccer
+        Route.Analysis -> Icons.Default.BarChart
         else -> null
     }
 
@@ -129,5 +133,6 @@ private fun Route.toStringRes(): Int? = when (this) {
     Route.Players -> R.string.nav_players
     Route.Team -> R.string.nav_team
     Route.Matches, Route.ArchivedMatches -> R.string.nav_matches
+    Route.Analysis -> R.string.nav_analysis
     else -> null
 }

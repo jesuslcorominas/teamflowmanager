@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
+import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
@@ -92,6 +93,11 @@ val viewModelModule =
                 saveDefaultCaptainUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 createMatch = get()
+            )
+        }
+        viewModel {
+            AnalysisViewModel(
+                getPlayerTimeStats = get(),
             )
         }
 

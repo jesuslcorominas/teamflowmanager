@@ -22,6 +22,7 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizard
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
+import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 
 @Composable
 fun Navigation(
@@ -72,6 +73,10 @@ fun Navigation(
 
         composable(Route.Players.createRoute()) {
             PlayersScreen()
+        }
+
+        composable(Route.Analysis.createRoute()) {
+            AnalysisScreen()
         }
 
         composable(Route.Matches.createRoute()) {
@@ -162,6 +167,7 @@ fun Navigation(
                 }
             }
             Route.Players -> navController.navigateToMatches()
+            Route.Analysis -> navController.navigateToMatches()
 
             else -> navController.popBackStack()
         }
