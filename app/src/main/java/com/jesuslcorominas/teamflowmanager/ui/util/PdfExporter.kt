@@ -52,20 +52,21 @@ class PdfExporter(private val context: Context) {
         var canvas = page.canvas
         
         // Title
-        yPosition = drawTitle(canvas, "Estadísticas del Equipo", yPosition)
+        yPosition = drawTitle(canvas, context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_team_stats_title), yPosition)
         yPosition = drawText(canvas, teamName, yPosition, SECTION_SIZE, Paint.Align.CENTER)
         yPosition += LINE_HEIGHT
         
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        yPosition = drawText(canvas, "Fecha: ${dateFormat.format(Date())}", yPosition, BODY_SIZE, Paint.Align.CENTER)
+        val dateString = context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_date_label, dateFormat.format(Date()))
+        yPosition = drawText(canvas, dateString, yPosition, BODY_SIZE, Paint.Align.CENTER)
         yPosition += LINE_HEIGHT * 2
         
         // Player Statistics Section
-        yPosition = drawSectionTitle(canvas, "Estadísticas de Jugadores", yPosition)
+        yPosition = drawSectionTitle(canvas, context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_player_stats_section), yPosition)
         yPosition += LINE_HEIGHT * 1.5f
         
         if (exportData.playerStats.isEmpty()) {
-            yPosition = drawText(canvas, "No hay datos de jugadores disponibles", yPosition, BODY_SIZE)
+            yPosition = drawText(canvas, context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_no_player_data), yPosition, BODY_SIZE)
             yPosition += LINE_HEIGHT
         } else {
             // Headers
@@ -99,16 +100,16 @@ class PdfExporter(private val context: Context) {
         yPosition = MARGIN
         
         // Top Scorers Section
-        yPosition = drawSectionTitle(canvas, "Goleadores", yPosition)
+        yPosition = drawSectionTitle(canvas, context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_scorers_section), yPosition)
         yPosition += LINE_HEIGHT
         
         if (exportData.topScorers.isEmpty()) {
-            yPosition = drawText(canvas, "No hay goles registrados", yPosition, BODY_SIZE)
+            yPosition = drawText(canvas, context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_no_goals), yPosition, BODY_SIZE)
             yPosition += LINE_HEIGHT * 2
         } else {
             exportData.topScorers.take(10).forEachIndexed { index, scorer ->
                 val playerName = "${scorer.player.firstName} ${scorer.player.lastName}"
-                val text = "${index + 1}. $playerName - ${scorer.totalGoals} gol(es)"
+                val text = context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_scorer_format, index + 1, playerName, scorer.totalGoals)
                 yPosition = drawText(canvas, text, yPosition, BODY_SIZE)
                 yPosition += LINE_HEIGHT
             }
@@ -125,11 +126,11 @@ class PdfExporter(private val context: Context) {
             yPosition = MARGIN
         }
         
-        yPosition = drawSectionTitle(canvas, "Resultados de Partidos", yPosition)
+        yPosition = drawSectionTitle(canvas, context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_match_results_section), yPosition)
         yPosition += LINE_HEIGHT
         
         if (exportData.matchResults.isEmpty()) {
-            yPosition = drawText(canvas, "No hay partidos finalizados", yPosition, BODY_SIZE)
+            yPosition = drawText(canvas, context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_no_matches), yPosition, BODY_SIZE)
         } else {
             exportData.matchResults.forEach { result ->
                 if (yPosition > PAGE_HEIGHT - MARGIN * 2) {
@@ -260,22 +261,22 @@ class PdfExporter(private val context: Context) {
         
         val textY = yPosition - (HEADER_ROW_HEIGHT / 2) + (BODY_SIZE / 2)
         
-        canvas.drawText("JUGADOR", tableLeft + 5, textY, textPaint)
+        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_player), tableLeft + 5, textY, textPaint)
         
         xPos = tableLeft + col1Width
-        canvas.drawText("CONV", xPos + 5, textY, textPaint)
+        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_called_up), xPos + 5, textY, textPaint)
         
         xPos += col2Width
-        canvas.drawText("JUG", xPos + 5, textY, textPaint)
+        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_played), xPos + 5, textY, textPaint)
         
         xPos += col3Width
-        canvas.drawText("T.TOTAL", xPos + 5, textY, textPaint)
+        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_total_time), xPos + 5, textY, textPaint)
         
         xPos += col4Width
-        canvas.drawText("T.MEDIO", xPos + 5, textY, textPaint)
+        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_avg_time), xPos + 5, textY, textPaint)
         
         xPos += col5Width
-        canvas.drawText("GOLES", xPos + 5, textY, textPaint)
+        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_goals), xPos + 5, textY, textPaint)
         
         return yPosition
     }

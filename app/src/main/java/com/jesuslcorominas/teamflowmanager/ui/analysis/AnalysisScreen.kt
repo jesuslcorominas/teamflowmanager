@@ -35,7 +35,6 @@ import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
 import com.jesuslcorominas.teamflowmanager.ui.theme.PrimaryLight
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import com.jesuslcorominas.teamflowmanager.ui.util.PdfExporter
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisTab
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
@@ -61,17 +60,14 @@ fun AnalysisScreen(
     LaunchedEffect(exportState) {
         if (exportState is ExportState.Ready) {
             val state = exportState as ExportState.Ready
-            val pdfExporter = PdfExporter(context)
-            val uri = pdfExporter.exportToPdf(state.data, state.teamName)
+            val uri = android.net.Uri.parse(state.uri)
             
-            if (uri != null) {
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "application/pdf"
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.export_share_title)))
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
+            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.export_share_title)))
             
             viewModel.exportCompleted()
         }
@@ -139,7 +135,7 @@ fun AnalysisScreen(
         }
 
         FloatingActionButton(
-            onClick = { viewModel.requestExportData() },
+            onClick = { viewModel.requestExport() },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(TFMSpacing.spacing04)

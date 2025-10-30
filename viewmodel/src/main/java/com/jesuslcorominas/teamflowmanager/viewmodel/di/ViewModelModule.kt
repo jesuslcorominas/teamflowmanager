@@ -101,6 +101,7 @@ val viewModelModule =
                 getPlayerGoalStats = get(),
                 getExportData = get(),
                 getTeam = get(),
+                exportToPdf = get(),
             )
         }
 

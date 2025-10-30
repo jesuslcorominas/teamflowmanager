@@ -2,9 +2,9 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jesuslcorominas.teamflowmanager.domain.model.ExportData
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerGoalStats
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStats
+import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeStatsUseCase
@@ -20,6 +20,7 @@ class AnalysisViewModel(
     private val getPlayerGoalStats: GetPlayerGoalStatsUseCase,
     private val getExportData: GetExportDataUseCase,
     private val getTeam: GetTeamUseCase,
+    private val exportToPdf: ExportToPdfUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Loading)
     val uiState: StateFlow<AnalysisUiState> = _uiState.asStateFlow()
@@ -39,13 +40,22 @@ class AnalysisViewModel(
         _selectedTab.value = tab
     }
     
-    fun requestExportData() {
+    fun requestExport() {
         viewModelScope.launch {
             _exportState.value = ExportState.Loading
             val team = getTeam().firstOrNull()
             val teamName = team?.name ?: "Mi Equipo"
-            getExportData().collect { data ->
-                _exportState.value = ExportState.Ready(data, teamName)
+            val exportData = getExportData().firstOrNull()
+            
+            if (exportData != null) {
+                val uri = exportToPdf(exportData, teamName)
+                _exportState.value = if (uri != null) {
+                    ExportState.Ready(uri)
+                } else {
+                    ExportState.Error
+                }
+            } else {
+                _exportState.value = ExportState.Error
             }
         }
     }
@@ -97,5 +107,6 @@ sealed interface AnalysisUiState {
 sealed interface ExportState {
     data object Idle : ExportState
     data object Loading : ExportState
-    data class Ready(val data: ExportData, val teamName: String) : ExportState
+    data class Ready(val uri: String) : ExportState
+    data object Error : ExportState
 }

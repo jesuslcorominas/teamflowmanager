@@ -244,4 +244,21 @@
     <string name="analysis_matches_with_goals">%d partidos con goles</string>
     <string name="export_button_description">Exportar estadísticas</string>
     <string name="export_share_title">Compartir estadísticas</string>
+    
+    <!-- PDF Export Strings -->
+    <string name="pdf_team_stats_title">Estadísticas del Equipo</string>
+    <string name="pdf_date_label">Fecha: %s</string>
+    <string name="pdf_player_stats_section">Estadísticas de Jugadores</string>
+    <string name="pdf_no_player_data">No hay datos de jugadores disponibles</string>
+    <string name="pdf_header_player">JUGADOR</string>
+    <string name="pdf_header_called_up">CONV</string>
+    <string name="pdf_header_played">JUG</string>
+    <string name="pdf_header_total_time">T.TOTAL</string>
+    <string name="pdf_header_avg_time">T.MEDIO</string>
+    <string name="pdf_header_goals">GOLES</string>
+    <string name="pdf_scorers_section">Goleadores</string>
+    <string name="pdf_no_goals">No hay goles registrados</string>
+    <string name="pdf_scorer_format">%1$d. %2$s - %3$d gol(es)</string>
+    <string name="pdf_match_results_section">Resultados de Partidos</string>
+    <string name="pdf_no_matches">No hay partidos finalizados</string>
 </resources>
