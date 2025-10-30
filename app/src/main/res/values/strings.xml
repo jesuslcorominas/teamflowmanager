@@ -242,4 +242,6 @@
     <string name="analysis_matches_played">%d matches</string>
     <string name="analysis_goals_label">Goals</string>
     <string name="analysis_matches_with_goals">%d matches with goals</string>
+    <string name="export_button_description">Export statistics</string>
+    <string name="export_share_title">Share statistics</string>
 </resources>

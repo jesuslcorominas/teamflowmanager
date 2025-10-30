@@ -242,4 +242,6 @@
     <string name="analysis_matches_played">%d partidos</string>
     <string name="analysis_goals_label">Goles</string>
     <string name="analysis_matches_with_goals">%d partidos con goles</string>
+    <string name="export_button_description">Exportar estadísticas</string>
+    <string name="export_share_title">Compartir estadísticas</string>
 </resources>

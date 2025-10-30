@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.analysis
 
+import android.content.Intent
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
@@ -7,16 +8,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
@@ -27,9 +35,11 @@ import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
 import com.jesuslcorominas.teamflowmanager.ui.theme.PrimaryLight
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.util.PdfExporter
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisTab
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ExportState
 import ir.ehsannarmani.compose_charts.RowChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
@@ -45,64 +55,99 @@ fun AnalysisScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
+    val exportState by viewModel.exportState.collectAsState()
+    val context = LocalContext.current
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        SecondaryTabRow(
-            modifier = Modifier.fillMaxWidth(),
-            selectedTabIndex = selectedTab.ordinal,
-        ) {
-            Tab(
-                selected = selectedTab == AnalysisTab.TIMES,
-                onClick = { viewModel.selectTab(AnalysisTab.TIMES) },
-                text = {
-                    Text(
-                        text = stringResource(R.string.analysis_times_tab),
-                        style = MaterialTheme.typography.titleMedium
-                    )
+    LaunchedEffect(exportState) {
+        if (exportState is ExportState.Ready) {
+            val state = exportState as ExportState.Ready
+            val pdfExporter = PdfExporter(context)
+            val uri = pdfExporter.exportToPdf(state.data, state.teamName)
+            
+            if (uri != null) {
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-            )
-            Tab(
-                selected = selectedTab == AnalysisTab.GOALS,
-                onClick = { viewModel.selectTab(AnalysisTab.GOALS) },
-                text = {
-                    Text(
-                        text = stringResource(R.string.analysis_goals_tab),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            )
+                context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.export_share_title)))
+            }
+            
+            viewModel.exportCompleted()
         }
+    }
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            when (val state = uiState) {
-                is AnalysisUiState.Loading -> Loading()
-                is AnalysisUiState.Empty -> EmptyContent(
-                    when (selectedTab) {
-                        AnalysisTab.TIMES -> stringResource(R.string.analysis_no_data)
-                        AnalysisTab.GOALS -> stringResource(R.string.analysis_no_goals_data)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            SecondaryTabRow(
+                modifier = Modifier.fillMaxWidth(),
+                selectedTabIndex = selectedTab.ordinal,
+            ) {
+                Tab(
+                    selected = selectedTab == AnalysisTab.TIMES,
+                    onClick = { viewModel.selectTab(AnalysisTab.TIMES) },
+                    text = {
+                        Text(
+                            text = stringResource(R.string.analysis_times_tab),
+                            style = MaterialTheme.typography.titleMedium
+                        )
                     }
                 )
+                Tab(
+                    selected = selectedTab == AnalysisTab.GOALS,
+                    onClick = { viewModel.selectTab(AnalysisTab.GOALS) },
+                    text = {
+                        Text(
+                            text = stringResource(R.string.analysis_goals_tab),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                )
+            }
 
-                is AnalysisUiState.Success -> {
-                    when (selectedTab) {
-                        AnalysisTab.TIMES -> {
-                            if (state.playerTimeStats.isEmpty()) {
-                                EmptyContent(stringResource(R.string.analysis_no_data))
-                            } else {
-                                PlayerTimeChart(playerStats = state.playerTimeStats)
-                            }
+            Box(modifier = Modifier.fillMaxSize()) {
+                when (val state = uiState) {
+                    is AnalysisUiState.Loading -> Loading()
+                    is AnalysisUiState.Empty -> EmptyContent(
+                        when (selectedTab) {
+                            AnalysisTab.TIMES -> stringResource(R.string.analysis_no_data)
+                            AnalysisTab.GOALS -> stringResource(R.string.analysis_no_goals_data)
                         }
+                    )
 
-                        AnalysisTab.GOALS -> {
-                            if (state.playerGoalStats.isEmpty()) {
-                                EmptyContent(stringResource(R.string.analysis_no_goals_data))
-                            } else {
-                                PlayerGoalChart(playerStats = state.playerGoalStats)
+                    is AnalysisUiState.Success -> {
+                        when (selectedTab) {
+                            AnalysisTab.TIMES -> {
+                                if (state.playerTimeStats.isEmpty()) {
+                                    EmptyContent(stringResource(R.string.analysis_no_data))
+                                } else {
+                                    PlayerTimeChart(playerStats = state.playerTimeStats)
+                                }
+                            }
+
+                            AnalysisTab.GOALS -> {
+                                if (state.playerGoalStats.isEmpty()) {
+                                    EmptyContent(stringResource(R.string.analysis_no_goals_data))
+                                } else {
+                                    PlayerGoalChart(playerStats = state.playerGoalStats)
+                                }
                             }
                         }
                     }
                 }
             }
+        }
+
+        FloatingActionButton(
+            onClick = { viewModel.requestExportData() },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(TFMSpacing.spacing04)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = stringResource(R.string.export_button_description)
+            )
         }
     }
 }

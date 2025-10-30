@@ -18,6 +18,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
@@ -116,6 +118,7 @@ internal val useCaseInternalModule =
         singleOf(::GetAllPlayerTimesUseCaseImpl) bind GetAllPlayerTimesUseCase::class
         singleOf(::GetPlayerTimeStatsUseCase)
         singleOf(::GetPlayerGoalStatsUseCase)
+        singleOf(::GetExportDataUseCaseImpl) bind GetExportDataUseCase::class
         singleOf(::StartPlayerTimerUseCaseImpl) bind StartPlayerTimerUseCase::class
         singleOf(::PausePlayerTimerUseCaseImpl) bind PausePlayerTimerUseCase::class
         singleOf(::PausePlayerTimerForMatchPauseUseCaseImpl) bind PausePlayerTimerForMatchPauseUseCase::class
