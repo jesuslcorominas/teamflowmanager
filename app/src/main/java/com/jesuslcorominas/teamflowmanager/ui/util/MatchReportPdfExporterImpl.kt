@@ -8,7 +8,6 @@ import android.graphics.pdf.PdfDocument
 import androidx.core.content.FileProvider
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
-import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionType
 import com.jesuslcorominas.teamflowmanager.domain.utils.MatchReportPdfExporter
 import java.io.File
 import java.io.FileOutputStream
@@ -29,8 +28,6 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         private const val SMALL_SIZE = 8f
         private const val MIN_TABLE_ROW_HEIGHT = 20f
         private const val HEADER_ROW_HEIGHT = 24f
-        private const val ARROW_UP = "▲"  // Larger up arrow for substitution in
-        private const val ARROW_DOWN = "▼"  // Larger down arrow for substitution out
     }
 
     private fun formatTime(millis: Long): String {
@@ -162,15 +159,14 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         val tableRight = PAGE_WIDTH - MARGIN
         val tableWidth = tableRight - tableLeft
 
-        // Column widths
-        val colNumber = tableWidth * 0.08f // Dorsal
-        val colName = tableWidth * 0.25f // Nombre
-        val colGK = tableWidth * 0.08f // Portero
-        val colCaptain = tableWidth * 0.08f // Capitán
-        val colStarter = tableWidth * 0.08f // Titular
-        val colTime = tableWidth * 0.12f // Tiempo
-        val colGoals = tableWidth * 0.15f // Goles
-        val colSubs = tableWidth * 0.16f // Sustituciones
+        // Column widths - removed substitutions column
+        val colNumber = tableWidth * 0.10f // Dorsal
+        val colName = tableWidth * 0.30f // Nombre
+        val colGK = tableWidth * 0.10f // Portero
+        val colCaptain = tableWidth * 0.10f // Capitán
+        val colStarter = tableWidth * 0.10f // Titular
+        val colTime = tableWidth * 0.15f // Tiempo
+        val colGoals = tableWidth * 0.15f // Goles (total only)
 
         // Draw header background
         val backgroundPaint = Paint().apply {
@@ -238,8 +234,6 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         canvas.drawText(context.getString(R.string.time_short), xPos + colTime / 2, textY, textPaint)
         xPos += colTime
         canvas.drawText(context.getString(R.string.goals_short), xPos + colGoals / 2, textY, textPaint)
-        xPos += colGoals
-        canvas.drawText(context.getString(R.string.substitutions_short), xPos + colSubs / 2, textY, textPaint)
 
         return yPosition
     }
@@ -254,21 +248,17 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         val tableRight = PAGE_WIDTH - MARGIN
         val tableWidth = tableRight - tableLeft
 
-        // Column widths (same as header)
-        val colNumber = tableWidth * 0.08f
-        val colName = tableWidth * 0.25f
-        val colGK = tableWidth * 0.08f
-        val colCaptain = tableWidth * 0.08f
-        val colStarter = tableWidth * 0.08f
-        val colTime = tableWidth * 0.12f
+        // Column widths (same as header) - removed substitutions column
+        val colNumber = tableWidth * 0.10f
+        val colName = tableWidth * 0.30f
+        val colGK = tableWidth * 0.10f
+        val colCaptain = tableWidth * 0.10f
+        val colStarter = tableWidth * 0.10f
+        val colTime = tableWidth * 0.15f
         val colGoals = tableWidth * 0.15f
-        val colSubs = tableWidth * 0.16f
 
-        // Calculate row height based on goals and substitutions
-        val goalsCount = playerReport.goals.size
-        val subsCount = playerReport.substitutions.size
-        val maxLines = maxOf(1, goalsCount, subsCount)
-        val rowHeight = MIN_TABLE_ROW_HEIGHT * maxLines
+        // Use fixed row height since we're not showing multi-line goals anymore
+        val rowHeight = MIN_TABLE_ROW_HEIGHT
 
         // Draw alternating row background
         val backgroundPaint = Paint().apply {
@@ -307,7 +297,6 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
             textAlign = Paint.Align.CENTER
         }
 
-        // For single-line content, center vertically
         val singleLineTextY = yPosition + (rowHeight / 2) + (SMALL_SIZE / 2)
 
         xPos = tableLeft
@@ -329,28 +318,9 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         canvas.drawText(formatTime(playerReport.totalPlayTimeMillis), xPos + colTime / 2, singleLineTextY, textPaint)
         xPos += colTime
 
-        // Goals column - each goal on a new line
-        textPaint.textAlign = Paint.Align.LEFT
-        if (playerReport.goals.isEmpty()) {
-            canvas.drawText("-", xPos + 2, singleLineTextY, textPaint)
-        } else {
-            playerReport.goals.forEachIndexed { goalIndex, goal ->
-                val goalTextY = yPosition + (MIN_TABLE_ROW_HEIGHT / 2) + (SMALL_SIZE / 2) + (goalIndex * MIN_TABLE_ROW_HEIGHT)
-                canvas.drawText(formatTime(goal.matchElapsedTimeMillis), xPos + 2, goalTextY, textPaint)
-            }
-        }
-        xPos += colGoals
-
-        // Substitutions column - each substitution on a new line with larger arrows
-        if (playerReport.substitutions.isEmpty()) {
-            canvas.drawText("-", xPos + 2, singleLineTextY, textPaint)
-        } else {
-            playerReport.substitutions.forEachIndexed { subIndex, sub ->
-                val subTextY = yPosition + (MIN_TABLE_ROW_HEIGHT / 2) + (SMALL_SIZE / 2) + (subIndex * MIN_TABLE_ROW_HEIGHT)
-                val arrow = if (sub.type == SubstitutionType.IN) ARROW_UP else ARROW_DOWN
-                canvas.drawText("$arrow ${formatTime(sub.matchElapsedTimeMillis)}", xPos + 2, subTextY, textPaint)
-            }
-        }
+        // Goals column - show only total count
+        val goalsCount = playerReport.goals.size
+        canvas.drawText(if (goalsCount > 0) "$goalsCount" else "-", xPos + colGoals / 2, singleLineTextY, textPaint)
 
         return yPosition + rowHeight
     }

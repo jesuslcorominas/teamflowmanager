@@ -65,30 +65,28 @@ The player table includes all squad members with comprehensive statistics:
 
 ```
 Players
-════════════════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════════════
 
-┌────┬──────────────┬────┬───┬────┬────────┬───────────────┬──────────────────┐
-│No. │ Player       │ GK │ C │ ST │ Time   │ Goals         │ Substitutions    │
-├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
-│ 9  │ John Doe     │ -  │ X │ X  │ 25:00  │ 10:30         │ -                │
-│    │              │    │   │    │        │ 18:45         │                  │
-├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
-│ 10 │ Jane Smith   │ X  │ -  │ X  │ 25:00  │ -             │ -                │
-├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
-│ 11 │ Mike Johnson │ -  │ -  │ X  │ 15:30  │ 22:15         │ ▼ 15:30          │
-├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
-│ 7  │ Emily Davis  │ -  │ -  │ -  │ 9:30   │ -             │ ▲ 15:30          │
-├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
-│ 8  │ David Wilson │ -  │ -  │ X  │ 25:00  │ -             │ -                │
-└────┴──────────────┴────┴───┴────┴────────┴───────────────┴──────────────────┘
+┌────┬──────────────┬────┬───┬────┬────────┬───────┐
+│No. │ Player       │ GK │ C │ ST │ Time   │ Goals │
+├────┼──────────────┼────┼───┼────┼────────┼───────┤
+│ 9  │ John Doe     │ -  │ X │ X  │ 25:00  │ 2     │
+├────┼──────────────┼────┼───┼────┼────────┼───────┤
+│ 10 │ Jane Smith   │ X  │ -  │ X  │ 25:00  │ -     │
+├────┼──────────────┼────┼───┼────┼────────┼───────┤
+│ 11 │ Mike Johnson │ -  │ -  │ X  │ 15:30  │ 1     │
+├────┼──────────────┼────┼───┼────┼────────┼───────┤
+│ 7  │ Emily Davis  │ -  │ -  │ -  │ 9:30   │ -     │
+├────┼──────────────┼────┼───┼────┼────────┼───────┤
+│ 8  │ David Wilson │ -  │ -  │ X  │ 25:00  │ -     │
+└────┴──────────────┴────┴───┴────┴────────┴───────┘
 
 Legend:
 - GK = Goalkeeper (marked with X if player is a goalkeeper)
 - C = Captain (marked with X if player is the team captain)
 - ST = Starter (marked with X if player was in starting lineup)
 - Time = Total playing time in minutes:seconds format
-- Goals = Each goal on a separate line with timestamp (MM:SS)
-- Substitutions = ▲ = entered, ▼ = exited, each on separate line with timestamp
+- Goals = Total number of goals scored
 ```
 
 ### Table Features
@@ -98,21 +96,19 @@ Legend:
 3. **Professional Headers**: Bold, centered column headers with gray background
 4. **Compact Format**: Fits on A4 paper width
 5. **Sorted by Number**: Players listed in ascending order by dorsal number
-6. **Multi-line Support**: Rows expand dynamically to show all goals and substitutions
-7. **Larger Arrows**: Uses ▲ (up) and ▼ (down) for better visibility
+6. **Simplified Layout**: Fixed row height with clean, easy-to-read format
 
 ### Column Details
 
 | Column | Width | Description |
 |--------|-------|-------------|
-| No. | 8% | Player's dorsal/jersey number |
-| Player | 25% | Full name (First + Last) |
-| GK | 8% | "X" if goalkeeper, "-" otherwise |
-| C | 8% | "X" if captain, "-" otherwise |
-| ST | 8% | "X" if starter, "-" otherwise |
-| Time | 12% | Playing time in MM:SS format |
-| Goals | 15% | Each goal on separate line with timestamp (MM:SS) |
-| Substitutions | 16% | Each substitution on separate line: ▲ in, ▼ out with timestamp |
+| No. | 10% | Player's dorsal/jersey number |
+| Player | 30% | Full name (First + Last) |
+| GK | 10% | "X" if goalkeeper, "-" otherwise |
+| C | 10% | "X" if captain, "-" otherwise |
+| ST | 10% | "X" if starter, "-" otherwise |
+| Time | 15% | Playing time in MM:SS format |
+| Goals | 15% | Total number of goals scored |
 
 ## Export Flow
 
@@ -174,12 +170,11 @@ For a match with the following data:
 - **Result**: 3 - 1
 
 The PDF would show:
-- Match header with all details
+- Match header with all details (internationalized in Spanish/English)
 - 11-15 players in a table
 - Each player with their statistics
-- Goals shown on separate lines: "12:30" / "18:45" (each on new line)
-- Substitutions shown on separate lines: "▲ 12:30" / "▼ 25:00" (each on new line)
-- Rows expand automatically based on number of goals/substitutions
+- Goals shown as total count: "2" or "-"
+- Clean, single-line rows for easy reading
 
 ## File Naming Convention
 

@@ -275,7 +275,6 @@
     <string name="starter_short">ST</string>
     <string name="time_short">Time</string>
     <string name="goals_short">Goals</string>
-    <string name="substitutions_short">Substitutions</string>
     <string name="export_match_report">Export</string>
     <string name="export_match_report_description">Export match report</string>
 </resources>
