@@ -16,12 +16,16 @@ import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
@@ -137,6 +141,8 @@ internal val useCaseInternalModule =
         singleOf(::RegisterGoalUseCaseImpl) bind RegisterGoalUseCase::class
 
         singleOf(::ExportToPdfUseCaseImpl) bind ExportToPdfUseCase::class
+        singleOf(::GetMatchReportDataUseCaseImpl) bind GetMatchReportDataUseCase::class
+        singleOf(::ExportMatchReportToPdfUseCaseImpl) bind ExportMatchReportToPdfUseCase::class
     }
 
 val useCaseModule =

@@ -10,9 +10,11 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class MatchViewModel(
@@ -45,6 +48,8 @@ class MatchViewModel(
     private val registerGoal: RegisterGoalUseCase,
     private val startTimeoutUseCase: StartTimeoutUseCase,
     private val endTimeoutUseCase: EndTimeoutUseCase,
+    private val getMatchReportData: GetMatchReportDataUseCase,
+    private val exportMatchReportToPdf: ExportMatchReportToPdfUseCase,
     private val preferencesRepository: PreferencesRepository,
     private val timeTicker: TimeTicker,
     savedStateHandle: SavedStateHandle,
@@ -69,8 +74,13 @@ class MatchViewModel(
     private val _showOpponentGoalDialog = MutableStateFlow(false)
     val showOpponentGoalDialog: StateFlow<Boolean> = _showOpponentGoalDialog.asStateFlow()
 
+    private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
+    val exportState: StateFlow<ExportState> = _exportState.asStateFlow()
+
+    private val matchId: Long
+
     init {
-        val matchId: Long =
+        matchId =
             savedStateHandle[Route.Match.ARG_MATCH_ID]
                 ?: throw IllegalArgumentException("matchId is required")
 
@@ -353,6 +363,28 @@ class MatchViewModel(
         } else {
             elapsedTimeMillis
         }
+    }
+
+    fun requestExport() {
+        viewModelScope.launch {
+            _exportState.value = ExportState.Loading
+            val matchReportData = getMatchReportData(matchId).firstOrNull()
+            
+            if (matchReportData != null) {
+                val uri = exportMatchReportToPdf(matchReportData)
+                _exportState.value = if (uri != null) {
+                    ExportState.Ready(uri)
+                } else {
+                    ExportState.Error
+                }
+            } else {
+                _exportState.value = ExportState.Error
+            }
+        }
+    }
+    
+    fun exportCompleted() {
+        _exportState.value = ExportState.Idle
     }
 }
 
