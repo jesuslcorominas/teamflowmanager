@@ -27,8 +27,10 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         private const val SECTION_SIZE = 14f
         private const val BODY_SIZE = 10f
         private const val SMALL_SIZE = 8f
-        private const val TABLE_ROW_HEIGHT = 20f
+        private const val MIN_TABLE_ROW_HEIGHT = 20f
         private const val HEADER_ROW_HEIGHT = 24f
+        private const val ARROW_UP = "▲"  // Larger up arrow for substitution in
+        private const val ARROW_DOWN = "▼"  // Larger down arrow for substitution out
     }
 
     private fun formatTime(millis: Long): String {
@@ -262,12 +264,18 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         val colGoals = tableWidth * 0.15f
         val colSubs = tableWidth * 0.16f
 
+        // Calculate row height based on goals and substitutions
+        val goalsCount = playerReport.goals.size
+        val subsCount = playerReport.substitutions.size
+        val maxLines = maxOf(1, goalsCount, subsCount)
+        val rowHeight = MIN_TABLE_ROW_HEIGHT * maxLines
+
         // Draw alternating row background
         val backgroundPaint = Paint().apply {
             color = if (index % 2 == 0) Color.WHITE else Color.rgb(245, 245, 245)
             style = Paint.Style.FILL
         }
-        canvas.drawRect(tableLeft, yPosition, tableRight, yPosition + TABLE_ROW_HEIGHT, backgroundPaint)
+        canvas.drawRect(tableLeft, yPosition, tableRight, yPosition + rowHeight, backgroundPaint)
 
         // Draw row borders
         val borderPaint = Paint().apply {
@@ -275,23 +283,23 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
             style = Paint.Style.STROKE
             strokeWidth = 1f
         }
-        canvas.drawRect(tableLeft, yPosition, tableRight, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        canvas.drawRect(tableLeft, yPosition, tableRight, yPosition + rowHeight, borderPaint)
 
         // Draw vertical lines for columns
         var xPos = tableLeft + colNumber
-        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + rowHeight, borderPaint)
         xPos += colName
-        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + rowHeight, borderPaint)
         xPos += colGK
-        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + rowHeight, borderPaint)
         xPos += colCaptain
-        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + rowHeight, borderPaint)
         xPos += colStarter
-        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + rowHeight, borderPaint)
         xPos += colTime
-        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + rowHeight, borderPaint)
         xPos += colGoals
-        canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
+        canvas.drawLine(xPos, yPosition, xPos, yPosition + rowHeight, borderPaint)
 
         // Draw cell text
         val textPaint = Paint().apply {
@@ -299,49 +307,52 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
             textAlign = Paint.Align.CENTER
         }
 
-        val textY = yPosition + (TABLE_ROW_HEIGHT / 2) + (SMALL_SIZE / 2)
+        // For single-line content, center vertically
+        val singleLineTextY = yPosition + (rowHeight / 2) + (SMALL_SIZE / 2)
 
         xPos = tableLeft
-        canvas.drawText("${playerReport.number}", xPos + colNumber / 2, textY, textPaint)
+        canvas.drawText("${playerReport.number}", xPos + colNumber / 2, singleLineTextY, textPaint)
         xPos += colNumber
 
         textPaint.textAlign = Paint.Align.LEFT
         val playerName = "${playerReport.player.firstName} ${playerReport.player.lastName}"
-        canvas.drawText(playerName, xPos + 5, textY, textPaint)
+        canvas.drawText(playerName, xPos + 5, singleLineTextY, textPaint)
         xPos += colName
 
         textPaint.textAlign = Paint.Align.CENTER
-        canvas.drawText(if (playerReport.isGoalkeeper) "X" else "-", xPos + colGK / 2, textY, textPaint)
+        canvas.drawText(if (playerReport.isGoalkeeper) "X" else "-", xPos + colGK / 2, singleLineTextY, textPaint)
         xPos += colGK
-        canvas.drawText(if (playerReport.isCaptain) "X" else "-", xPos + colCaptain / 2, textY, textPaint)
+        canvas.drawText(if (playerReport.isCaptain) "X" else "-", xPos + colCaptain / 2, singleLineTextY, textPaint)
         xPos += colCaptain
-        canvas.drawText(if (playerReport.isStarter) "X" else "-", xPos + colStarter / 2, textY, textPaint)
+        canvas.drawText(if (playerReport.isStarter) "X" else "-", xPos + colStarter / 2, singleLineTextY, textPaint)
         xPos += colStarter
-        canvas.drawText(formatTime(playerReport.totalPlayTimeMillis), xPos + colTime / 2, textY, textPaint)
+        canvas.drawText(formatTime(playerReport.totalPlayTimeMillis), xPos + colTime / 2, singleLineTextY, textPaint)
         xPos += colTime
 
-        // Goals column - show count and times
-        val goalsText = if (playerReport.goals.isEmpty()) {
-            "-"
-        } else {
-            val goalTimes = playerReport.goals.joinToString(", ") { formatTime(it.matchElapsedTimeMillis) }
-            "${playerReport.goals.size} ($goalTimes)"
-        }
+        // Goals column - each goal on a new line
         textPaint.textAlign = Paint.Align.LEFT
-        canvas.drawText(goalsText, xPos + 2, textY, textPaint)
-        xPos += colGoals
-
-        // Substitutions column - show in/out times
-        val subsText = if (playerReport.substitutions.isEmpty()) {
-            "-"
+        if (playerReport.goals.isEmpty()) {
+            canvas.drawText("-", xPos + 2, singleLineTextY, textPaint)
         } else {
-            playerReport.substitutions.joinToString(", ") {
-                val prefix = if (it.type == SubstitutionType.IN) "↑" else "↓"
-                "$prefix${formatTime(it.matchElapsedTimeMillis)}"
+            playerReport.goals.forEachIndexed { goalIndex, goal ->
+                val goalTextY = yPosition + (MIN_TABLE_ROW_HEIGHT / 2) + (SMALL_SIZE / 2) + (goalIndex * MIN_TABLE_ROW_HEIGHT)
+                canvas.drawText(formatTime(goal.matchElapsedTimeMillis), xPos + 2, goalTextY, textPaint)
             }
         }
-        canvas.drawText(subsText, xPos + 2, textY, textPaint)
+        xPos += colGoals
 
-        return yPosition + TABLE_ROW_HEIGHT
+        // Substitutions column - each substitution on a new line with larger arrows
+        if (playerReport.substitutions.isEmpty()) {
+            canvas.drawText("-", xPos + 2, singleLineTextY, textPaint)
+        } else {
+            playerReport.substitutions.forEachIndexed { subIndex, sub ->
+                val subTextY = yPosition + (MIN_TABLE_ROW_HEIGHT / 2) + (SMALL_SIZE / 2) + (subIndex * MIN_TABLE_ROW_HEIGHT)
+                val arrow = if (sub.type == SubstitutionType.IN) ARROW_UP else ARROW_DOWN
+                canvas.drawText("$arrow ${formatTime(sub.matchElapsedTimeMillis)}", xPos + 2, subTextY, textPaint)
+            }
+        }
+
+        return yPosition + rowHeight
+    }
     }
 }

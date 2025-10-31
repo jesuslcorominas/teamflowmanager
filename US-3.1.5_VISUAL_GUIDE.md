@@ -70,14 +70,14 @@ Players
 ┌────┬──────────────┬────┬───┬────┬────────┬───────────────┬──────────────────┐
 │No. │ Player       │ GK │ C │ ST │ Time   │ Goals         │ Substitutions    │
 ├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
-│ 9  │ John Doe     │ -  │ X │ X  │ 25:00  │ 2 (10:30,     │ -                │
-│    │              │    │   │    │        │    18:45)     │                  │
+│ 9  │ John Doe     │ -  │ X │ X  │ 25:00  │ 10:30         │ -                │
+│    │              │    │   │    │        │ 18:45         │                  │
 ├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
 │ 10 │ Jane Smith   │ X  │ -  │ X  │ 25:00  │ -             │ -                │
 ├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
-│ 11 │ Mike Johnson │ -  │ -  │ X  │ 15:30  │ 1 (22:15)     │ ↓15:30           │
+│ 11 │ Mike Johnson │ -  │ -  │ X  │ 15:30  │ 22:15         │ ▼ 15:30          │
 ├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
-│ 7  │ Emily Davis  │ -  │ -  │ -  │ 9:30   │ -             │ ↑15:30           │
+│ 7  │ Emily Davis  │ -  │ -  │ -  │ 9:30   │ -             │ ▲ 15:30          │
 ├────┼──────────────┼────┼───┼────┼────────┼───────────────┼──────────────────┤
 │ 8  │ David Wilson │ -  │ -  │ X  │ 25:00  │ -             │ -                │
 └────┴──────────────┴────┴───┴────┴────────┴───────────────┴──────────────────┘
@@ -87,8 +87,8 @@ Legend:
 - C = Captain (marked with X if player is the team captain)
 - ST = Starter (marked with X if player was in starting lineup)
 - Time = Total playing time in minutes:seconds format
-- Goals = Number of goals and timestamps when scored
-- Substitutions = ↑ = entered, ↓ = exited with timestamps
+- Goals = Each goal on a separate line with timestamp (MM:SS)
+- Substitutions = ▲ = entered, ▼ = exited, each on separate line with timestamp
 ```
 
 ### Table Features
@@ -98,6 +98,8 @@ Legend:
 3. **Professional Headers**: Bold, centered column headers with gray background
 4. **Compact Format**: Fits on A4 paper width
 5. **Sorted by Number**: Players listed in ascending order by dorsal number
+6. **Multi-line Support**: Rows expand dynamically to show all goals and substitutions
+7. **Larger Arrows**: Uses ▲ (up) and ▼ (down) for better visibility
 
 ### Column Details
 
@@ -109,8 +111,8 @@ Legend:
 | C | 8% | "X" if captain, "-" otherwise |
 | ST | 8% | "X" if starter, "-" otherwise |
 | Time | 12% | Playing time in MM:SS format |
-| Goals | 15% | Count and timestamps (MM:SS) |
-| Substitutions | 16% | In/out arrows with timestamps |
+| Goals | 15% | Each goal on separate line with timestamp (MM:SS) |
+| Substitutions | 16% | Each substitution on separate line: ▲ in, ▼ out with timestamp |
 
 ## Export Flow
 
@@ -175,8 +177,9 @@ The PDF would show:
 - Match header with all details
 - 11-15 players in a table
 - Each player with their statistics
-- Goals shown as "2 (12:30, 18:45)" format
-- Substitutions shown as "↑12:30, ↓25:00" format
+- Goals shown on separate lines: "12:30" / "18:45" (each on new line)
+- Substitutions shown on separate lines: "▲ 12:30" / "▼ 25:00" (each on new line)
+- Rows expand automatically based on number of goals/substitutions
 
 ## File Naming Convention
 
