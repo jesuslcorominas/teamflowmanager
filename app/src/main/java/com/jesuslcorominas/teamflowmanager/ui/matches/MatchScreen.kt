@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -32,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +66,7 @@ import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.scrollToItem
+import com.jesuslcorominas.teamflowmanager.viewmodel.ExportState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
@@ -75,6 +78,7 @@ private const val SUBSTITUTIONS_HEADER = "substitutions_header"
 @Composable
 fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+    val exportState by viewModel.exportState.collectAsState()
 
     // TODO try to extract this from viewmodel
     val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
@@ -83,7 +87,26 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val showGoalScorerDialog by viewModel.showGoalScorerDialog.collectAsState()
     val showOpponentGoalDialog by viewModel.showOpponentGoalDialog.collectAsState()
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     var currentSortOrder: PlayerSortOrderBy by remember { mutableStateOf(PlayerSortOrderBy.BY_ACTIVE_FIRST) }
+
+    // Handle export state
+    LaunchedEffect(exportState) {
+        if (exportState is ExportState.Ready) {
+            val state = exportState as ExportState.Ready
+            val uri = android.net.Uri.parse(state.uri)
+            
+            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(android.content.Intent.createChooser(shareIntent, context.getString(R.string.export_share_title)))
+            
+            viewModel.exportCompleted()
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -122,7 +145,8 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                 FinishedMatchState(
                     state = state,
                     currentSortOrder = currentSortOrder,
-                    onSortOrderChange = { currentSortOrder = it }
+                    onSortOrderChange = { currentSortOrder = it },
+                    onExport = { viewModel.requestExport() }
                 )
             }
         }
@@ -472,61 +496,76 @@ private fun FinishedMatchState(
     state: MatchUiState.Finished,
     currentSortOrder: PlayerSortOrderBy,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
+    onExport: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(TFMSpacing.spacing04),
-        state = listState,
-        contentPadding = PaddingValues(bottom = TFMSpacing.spacing04),
-        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
-    ) {
-        item { MatchTimeCard(state.match, state.currentTime) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(TFMSpacing.spacing04),
+            state = listState,
+            contentPadding = PaddingValues(bottom = TFMSpacing.spacing04),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+        ) {
+            item { MatchTimeCard(state.match, state.currentTime) }
 
-        item {
-            PlayerSortOrder(
-                availableSorts = PlayerSortOrderBy.entries.minus(PlayerSortOrderBy.BY_ACTIVE_FIRST),
-                currentSortOrder = currentSortOrder,
-                onSortOrderChange = onSortOrderChange,
-            )
-        }
+            item {
+                PlayerSortOrder(
+                    availableSorts = PlayerSortOrderBy.entries.minus(PlayerSortOrderBy.BY_ACTIVE_FIRST),
+                    currentSortOrder = currentSortOrder,
+                    onSortOrderChange = onSortOrderChange,
+                )
+            }
 
-        items(
-            items = state.playerTimes.sortedBy(currentSortOrder, state.match),
-            key = { it.player.id }
-        ) { playerTimeItem ->
-            PlayerItem(
-                modifier = Modifier.animateItem(
-                    fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                    placementSpec = spring(),
-                    fadeOutSpec = tween(durationMillis = 300)
-                ),
-                player = playerTimeItem.player,
-                showPositions = false,
-                isPlaying = false,
-                timeMillis = playerTimeItem.timeMillis,
-                showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
-                showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
-                isSelected = false,
-            )
-        }
+            items(
+                items = state.playerTimes.sortedBy(currentSortOrder, state.match),
+                key = { it.player.id }
+            ) { playerTimeItem ->
+                PlayerItem(
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                        placementSpec = spring(),
+                        fadeOutSpec = tween(durationMillis = 300)
+                    ),
+                    player = playerTimeItem.player,
+                    showPositions = false,
+                    isPlaying = false,
+                    timeMillis = playerTimeItem.timeMillis,
+                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                    isSelected = false,
+                )
+            }
 
-        if (state.substitutions.isNotEmpty()) {
-            substitutionsSection(
-                substitutions = state.substitutions,
-                expanded = expanded,
-                onExpandToggle = {
-                    expanded = !expanded
+            if (state.substitutions.isNotEmpty()) {
+                substitutionsSection(
+                    substitutions = state.substitutions,
+                    expanded = expanded,
+                    onExpandToggle = {
+                        expanded = !expanded
 
-                    if (expanded) {
-                        scrollToItem(SUBSTITUTIONS_HEADER, listState, coroutineScope)
+                        if (expanded) {
+                            scrollToItem(SUBSTITUTIONS_HEADER, listState, coroutineScope)
+                        }
                     }
-                }
+                )
+            }
+        }
+
+        androidx.compose.material3.FloatingActionButton(
+            onClick = onExport,
+            modifier = Modifier
+                .align(androidx.compose.ui.Alignment.BottomEnd)
+                .padding(TFMSpacing.spacing04)
+        ) {
+            androidx.compose.material3.Icon(
+                imageVector = androidx.compose.material.icons.Icons.Default.Share,
+                contentDescription = stringResource(R.string.export_match_report_description)
             )
         }
     }

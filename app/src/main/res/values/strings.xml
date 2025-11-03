@@ -261,4 +261,20 @@
     <string name="pdf_scorer_format">%1$d. %2$s - %3$d goal(s)</string>
     <string name="pdf_match_results_section">Match Results</string>
     <string name="pdf_no_matches">No finished matches</string>
+    
+    <!-- Match Report PDF Export Strings -->
+    <string name="match_report_title">Match Report</string>
+    <string name="match_info_section">Match Information</string>
+    <string name="date_label">Date</string>
+    <string name="result_label">Result</string>
+    <string name="players_section">Players</string>
+    <string name="number_short">No.</string>
+    <string name="player_name">Player</string>
+    <string name="goalkeeper_short">GK</string>
+    <string name="captain_short">C</string>
+    <string name="starter_short">ST</string>
+    <string name="time_short">Time</string>
+    <string name="goals_short">Goals</string>
+    <string name="export_match_report">Export</string>
+    <string name="export_match_report_description">Export match report</string>
 </resources>
