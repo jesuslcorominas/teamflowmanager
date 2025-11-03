@@ -324,5 +324,4 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
 
         return yPosition + rowHeight
     }
-    }
 }
