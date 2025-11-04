@@ -1,16 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.data.local.entity
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.squareup.moshi.JsonClass
 
-@Entity(tableName = "match")
 data class MatchEntity(
-    @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
     val teamId: Long = 1L,
     val teamName: String = "",
