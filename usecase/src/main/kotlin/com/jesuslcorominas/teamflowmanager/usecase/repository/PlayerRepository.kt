@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 interface PlayerRepository {
     fun getAllPlayers(): Flow<List<Player>>
 
+    suspend fun getPlayerById(playerId: Long): Player?
+
     suspend fun getCaptainPlayer(): Player?
 
     suspend fun addPlayer(player: Player)

@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewMode
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
@@ -26,6 +27,17 @@ val viewModelModule =
                 addPlayerUseCase = get(),
                 updatePlayerUseCase = get(),
                 deletePlayerUseCase = get(),
+                getCaptainPlayerUseCase = get(),
+                updateScheduledMatchesCaptainUseCase = get(),
+                playerRepository = get(),
+                matchRepository = get(),
+            )
+        }
+        viewModel {
+            PlayerWizardViewModel(
+                getPlayerByIdUseCase = get(),
+                addPlayerUseCase = get(),
+                updatePlayerUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 updateScheduledMatchesCaptainUseCase = get(),
                 playerRepository = get(),

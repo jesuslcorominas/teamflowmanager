@@ -42,6 +42,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeStatsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeUseCase
@@ -93,6 +95,7 @@ import org.koin.dsl.module
 internal val useCaseInternalModule =
     module {
         singleOf(::GetPlayersUseCaseImpl) bind GetPlayersUseCase::class
+        singleOf(::GetPlayerByIdUseCaseImpl) bind GetPlayerByIdUseCase::class
         singleOf(::AddPlayerUseCaseImpl) bind AddPlayerUseCase::class
         singleOf(::DeletePlayerUseCaseImpl) bind DeletePlayerUseCase::class
         singleOf(::UpdatePlayerUseCaseImpl) bind UpdatePlayerUseCase::class
