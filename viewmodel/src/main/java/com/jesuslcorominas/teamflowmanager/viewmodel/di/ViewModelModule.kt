@@ -3,7 +3,6 @@ package com.jesuslcorominas.teamflowmanager.viewmodel.di
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.MatchDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
@@ -82,19 +81,15 @@ val viewModelModule =
             )
         }
         viewModel {
-            MatchDetailViewModel(
-                getMatchByIdUseCase = get(),
-                getPlayersUseCase = get(),
-            )
-        }
-        viewModel {
             MatchCreationWizardViewModel(
                 getPlayersUseCase = get(),
                 getPreviousCaptainsUseCase = get(),
                 getDefaultCaptainUseCase = get(),
                 saveDefaultCaptainUseCase = get(),
                 getCaptainPlayerUseCase = get(),
-                createMatch = get()
+                createMatch = get(),
+                getMatchByIdUseCase = get(),
+                updateMatchUseCase = get()
             )
         }
         viewModel {

@@ -19,7 +19,6 @@ sealed class Route(
                 ArchivedMatches,
                 CreateMatch,
                 Match,
-                MatchDetail,
                 Analysis,
             )
         }
@@ -100,11 +99,6 @@ sealed class Route(
         private const val PATH = "match"
 
         const val FULL_ROUTE = "$PATH/{$ARG_MATCH_ID}/{$ARG_TEAM}/{$ARG_OPPONENT}"
-    }
-
-    // TODO remove this screen
-    data object MatchDetail : Route(path = "match_detail", canGoBack = true) {
-        const val ARG_MATCH_ID = "matchId"
     }
 
     data object Analysis : Route(path = "analysis", showBottomBar = true)

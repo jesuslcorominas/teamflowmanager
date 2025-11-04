@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,15 +26,24 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MatchCreationWizardScreen(
+    matchId: Long? = null,
     onNavigateBack: () -> Unit,
     wizardViewModel: MatchCreationWizardViewModel = koinViewModel()
 ) {
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
+    val showExitDialog by wizardViewModel.showExitDialog.collectAsState()
     val scope = rememberCoroutineScope()
 
     var showDefaultCaptainDialog by remember { mutableStateOf(false) }
     var captainForDialog by remember { mutableStateOf<Player?>(null) }
+
+    // Load match for editing if matchId is provided
+    LaunchedEffect(matchId) {
+        if (matchId != null) {
+            wizardViewModel.loadMatchForEdit(matchId)
+        }
+    }
 
     when (val state = uiState) {
         is MatchCreationWizardUiState.Loading -> Loading()
@@ -55,7 +65,9 @@ fun MatchCreationWizardScreen(
                                 onNext = {
                                     wizardViewModel.goToNextStep()
                                 },
-                                onCancel = onNavigateBack,
+                                onCancel = {
+                                    wizardViewModel.requestBack(onNavigateBack)
+                                },
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(TFMSpacing.spacing04)
@@ -121,8 +133,12 @@ fun MatchCreationWizardScreen(
                                     wizardViewModel.setStartingLineup(playerIds)
                                 },
                                 onCreate = {
-                                    val match = wizardViewModel.buildMatch()
-                                    wizardViewModel.createMatch(match)
+                                    if (wizardViewModel.isEditMode()) {
+                                        wizardViewModel.updateMatch()
+                                    } else {
+                                        val match = wizardViewModel.buildMatch()
+                                        wizardViewModel.createMatch(match)
+                                    }
                                     onNavigateBack()
                                 },
                                 onPrevious = {
@@ -156,6 +172,22 @@ fun MatchCreationWizardScreen(
             onDismiss = {
                 showDefaultCaptainDialog = false
                 wizardViewModel.goToNextStep()
+            }
+        )
+    }
+
+    // Unsaved changes dialog
+    if (showExitDialog) {
+        AppAlertDialog(
+            title = stringResource(R.string.unsaved_changes_title),
+            message = stringResource(R.string.discard_message),
+            confirmText = stringResource(R.string.discard),
+            dismissText = stringResource(R.string.cancel),
+            onConfirm = {
+                wizardViewModel.discardChanges(onNavigateBack)
+            },
+            onDismiss = {
+                wizardViewModel.dismissExitDialog()
             }
         )
     }
