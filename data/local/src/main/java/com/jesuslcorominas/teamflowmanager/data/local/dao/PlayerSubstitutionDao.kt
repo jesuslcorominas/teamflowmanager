@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.data.local.sqldelight
+package com.jesuslcorominas.teamflowmanager.data.local.dao
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-internal class PlayerSubstitutionDaoWrapper(
+internal class PlayerSubstitutionDao(
     private val database: TeamFlowManagerDatabase
 ) {
     fun getMatchSubstitutions(matchId: Long): Flow<List<PlayerSubstitutionEntity>> =

@@ -1,15 +1,14 @@
-package com.jesuslcorominas.teamflowmanager.data.local.sqldelight
+package com.jesuslcorominas.teamflowmanager.data.local.dao
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.entity.PlayerEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-internal class PlayerDaoWrapper(
+internal class PlayerDao(
     private val database: TeamFlowManagerDatabase
 ) {
     fun getAllPlayers(): Flow<List<PlayerEntity>> =

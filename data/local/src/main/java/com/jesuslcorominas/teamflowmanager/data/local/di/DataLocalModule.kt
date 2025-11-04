@@ -23,13 +23,13 @@ import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeHisto
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PreferencesLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.TeamLocalDataSourceImpl
-import com.jesuslcorominas.teamflowmanager.data.local.sqldelight.GoalDaoWrapper
-import com.jesuslcorominas.teamflowmanager.data.local.sqldelight.MatchDaoWrapper
-import com.jesuslcorominas.teamflowmanager.data.local.sqldelight.PlayerDaoWrapper
-import com.jesuslcorominas.teamflowmanager.data.local.sqldelight.PlayerSubstitutionDaoWrapper
-import com.jesuslcorominas.teamflowmanager.data.local.sqldelight.PlayerTimeDaoWrapper
-import com.jesuslcorominas.teamflowmanager.data.local.sqldelight.PlayerTimeHistoryDaoWrapper
-import com.jesuslcorominas.teamflowmanager.data.local.sqldelight.TeamDaoWrapper
+import com.jesuslcorominas.teamflowmanager.data.local.dao.GoalDao
+import com.jesuslcorominas.teamflowmanager.data.local.dao.MatchDao
+import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerDao
+import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerSubstitutionDao
+import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerTimeDao
+import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerTimeHistoryDao
+import com.jesuslcorominas.teamflowmanager.data.local.dao.TeamDao
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -59,13 +59,13 @@ internal val databaseModule =
             DatabaseFactory.createDatabase(driver, moshi)
         }
 
-        single { PlayerDaoWrapper(get<TeamFlowManagerDatabase>()) }
-        single { TeamDaoWrapper(get<TeamFlowManagerDatabase>()) }
-        single { MatchDaoWrapper(get<TeamFlowManagerDatabase>()) }
-        single { PlayerTimeDaoWrapper(get<TeamFlowManagerDatabase>()) }
-        single { PlayerTimeHistoryDaoWrapper(get<TeamFlowManagerDatabase>()) }
-        single { PlayerSubstitutionDaoWrapper(get<TeamFlowManagerDatabase>()) }
-        single { GoalDaoWrapper(get<TeamFlowManagerDatabase>()) }
+        single { PlayerDao(get<TeamFlowManagerDatabase>()) }
+        single { TeamDao(get<TeamFlowManagerDatabase>()) }
+        single { MatchDao(get<TeamFlowManagerDatabase>()) }
+        single { PlayerTimeDao(get<TeamFlowManagerDatabase>()) }
+        single { PlayerTimeHistoryDao(get<TeamFlowManagerDatabase>()) }
+        single { PlayerSubstitutionDao(get<TeamFlowManagerDatabase>()) }
+        single { GoalDao(get<TeamFlowManagerDatabase>()) }
 
         singleOf(::SqlDelightTransactionRunner) bind TransactionRunner::class
         singleOf(::SqlDelightTransactionExecutor) bind TransactionExecutor::class

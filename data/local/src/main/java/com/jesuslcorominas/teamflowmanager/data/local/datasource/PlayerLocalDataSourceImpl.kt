@@ -1,15 +1,15 @@
 package com.jesuslcorominas.teamflowmanager.data.local.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerDao
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toDomain
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toEntity
-import com.jesuslcorominas.teamflowmanager.data.local.sqldelight.PlayerDaoWrapper
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 internal class PlayerLocalDataSourceImpl(
-    private val playerDao: PlayerDaoWrapper,
+    private val playerDao: PlayerDao,
 ) : PlayerLocalDataSource {
     override fun getAllPlayers(): Flow<List<Player>> =
         playerDao.getAllPlayers().map { entities ->
