@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.compose.animation)
 
     implementation (libs.compose.charts)
+    implementation (libs.coil.compose)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

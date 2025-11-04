@@ -276,4 +276,14 @@
     <string name="goals_short">Goles</string>
     <string name="export_match_report">Exportar</string>
     <string name="export_match_report_description">Exportar informe del partido</string>
+    
+    <!-- Player Wizard Strings -->
+    <string name="player_data_step_title">Datos del Jugador</string>
+    <string name="player_positions_step_title">Posiciones del Jugador</string>
+    <string name="player_positions_step_subtitle">Selecciona las posiciones en las que puede jugar este jugador</string>
+    <string name="player_image">Imagen del jugador</string>
+    <string name="tap_to_add_photo">Toca para añadir foto</string>
+    <string name="select_image_source">Selecciona origen de imagen</string>
+    <string name="camera">Cámara</string>
+    <string name="gallery">Galería</string>
 </resources>

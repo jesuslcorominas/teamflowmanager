@@ -13,9 +13,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,11 +22,8 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
-import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.CaptainConfirmationDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.DeleteConfirmationDialog
-import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.PlayerDialog
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import com.jesuslcorominas.teamflowmanager.viewmodel.CaptainConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.DeleteConfirmationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
@@ -39,12 +33,11 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun PlayersScreen(
     viewModel: PlayerViewModel = koinViewModel(),
+    onNavigateToCreatePlayer: () -> Unit = {},
+    onNavigateToEditPlayer: (Long) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
-    val captainConfirmationState by viewModel.captainConfirmationState.collectAsState()
-    var showAddPlayerDialog by remember { mutableStateOf(false) }
-    var playerToEdit by remember { mutableStateOf<Player?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Surface(
@@ -57,30 +50,19 @@ fun PlayersScreen(
                 is PlayerUiState.Success ->
                     PlayersListSuccess(
                         players = (uiState as PlayerUiState.Success).players,
-                        onEditClick = { player -> playerToEdit = player },
+                        onEditClick = { player -> onNavigateToEditPlayer(player.id) },
                         onDeleteClick = { player -> viewModel.showDeleteConfirmation(player) },
                     )
             }
         }
 
         FloatingActionButton(
-            onClick = { showAddPlayerDialog = true },
+            onClick = onNavigateToCreatePlayer,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(TFMSpacing.spacing04),
         ) {
             Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.add_player_title))
-        }
-
-        playerToEdit?.let { player ->
-            PlayerDialog(
-                player = player,
-                onDismiss = { playerToEdit = null },
-                onSave = { updatedPlayer ->
-                    viewModel.updatePlayer(updatedPlayer)
-                    playerToEdit = null
-                }
-            )
         }
 
         when (val state = deleteConfirmationState) {
@@ -93,44 +75,6 @@ fun PlayersScreen(
 
             DeleteConfirmationState.None -> {}
         }
-
-        when (val state = captainConfirmationState) {
-            is CaptainConfirmationState.ConfirmReplace -> {
-                CaptainConfirmationDialog(
-                    state = state,
-                    onConfirm = { viewModel.confirmCaptainChange() },
-                    onDismiss = { viewModel.cancelCaptainChange() },
-                )
-            }
-
-            is CaptainConfirmationState.ConfirmRemove -> {
-                CaptainConfirmationDialog(
-                    state = state,
-                    onConfirm = { viewModel.confirmCaptainChange() },
-                    onDismiss = { viewModel.cancelCaptainChange() },
-                )
-            }
-
-            is CaptainConfirmationState.ConfirmRemoveWithMatches -> {
-                CaptainConfirmationDialog(
-                    state = state,
-                    onConfirm = { keepInMatches -> viewModel.confirmCaptainChange(keepInMatches) },
-                    onDismiss = { viewModel.cancelCaptainChange() },
-                )
-            }
-
-            CaptainConfirmationState.None -> {}
-        }
-    }
-
-    if (showAddPlayerDialog) {
-        PlayerDialog(
-            onDismiss = { showAddPlayerDialog = false },
-            onSave = { player ->
-                viewModel.addPlayer(player)
-                showAddPlayerDialog = false
-            },
-        )
     }
 }
 

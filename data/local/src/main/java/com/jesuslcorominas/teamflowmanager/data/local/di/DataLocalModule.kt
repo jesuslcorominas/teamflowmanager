@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.local.di
 
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
@@ -47,6 +48,12 @@ internal val databaseModule =
 
         single {
             val converters: Converters = get()
+            
+            val MIGRATION_2_3 = object : Migration(2, 3) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE players ADD COLUMN imageUri TEXT DEFAULT NULL")
+                }
+            }
 
             Room
                 .databaseBuilder(
@@ -55,6 +62,7 @@ internal val databaseModule =
                     "teamflowmanager_database",
                 )
                 .addTypeConverter(converters)
+                .addMigrations(MIGRATION_2_3)
                 .addCallback(
                     object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
