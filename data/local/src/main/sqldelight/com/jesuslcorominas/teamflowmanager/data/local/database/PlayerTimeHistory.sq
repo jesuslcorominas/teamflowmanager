@@ -1,0 +1,34 @@
+CREATE TABLE player_time_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    playerId INTEGER NOT NULL,
+    matchId INTEGER NOT NULL,
+    elapsedTimeMillis INTEGER NOT NULL,
+    savedAtMillis INTEGER NOT NULL,
+    FOREIGN KEY (playerId) REFERENCES players(id) ON DELETE CASCADE,
+    FOREIGN KEY (matchId) REFERENCES match(id) ON DELETE CASCADE
+);
+
+CREATE INDEX player_time_history_playerId ON player_time_history(playerId);
+CREATE INDEX player_time_history_matchId ON player_time_history(matchId);
+
+getAllPlayerTimeHistories:
+SELECT * FROM player_time_history;
+
+getPlayerTimeHistoryByMatchId:
+SELECT * FROM player_time_history WHERE matchId = ?;
+
+getPlayerTimeHistoryByPlayerId:
+SELECT * FROM player_time_history WHERE playerId = ?;
+
+insertPlayerTimeHistory:
+INSERT INTO player_time_history (playerId, matchId, elapsedTimeMillis, savedAtMillis)
+VALUES (?, ?, ?, ?);
+
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+deletePlayerTimeHistory:
+DELETE FROM player_time_history WHERE id = ?;
+
+deletePlayerTimeHistoriesByMatchId:
+DELETE FROM player_time_history WHERE matchId = ?;

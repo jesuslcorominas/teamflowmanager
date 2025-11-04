@@ -1,0 +1,34 @@
+CREATE TABLE player_time (
+    playerId INTEGER PRIMARY KEY NOT NULL,
+    elapsedTimeMillis INTEGER NOT NULL DEFAULT 0,
+    isRunning INTEGER AS Boolean NOT NULL DEFAULT 0,
+    lastStartTimeMillis INTEGER,
+    status TEXT NOT NULL DEFAULT 'ON_BENCH',
+    FOREIGN KEY (playerId) REFERENCES players(id) ON DELETE CASCADE
+);
+
+CREATE INDEX player_time_playerId ON player_time(playerId);
+
+getAllPlayerTimes:
+SELECT * FROM player_time;
+
+getPlayerTimeByPlayerId:
+SELECT * FROM player_time WHERE playerId = ?;
+
+insertPlayerTime:
+INSERT INTO player_time (playerId, elapsedTimeMillis, isRunning, lastStartTimeMillis, status)
+VALUES (?, ?, ?, ?, ?);
+
+updatePlayerTime:
+UPDATE player_time SET elapsedTimeMillis = ?, isRunning = ?, lastStartTimeMillis = ?, status = ?
+WHERE playerId = ?;
+
+upsertPlayerTime:
+INSERT OR REPLACE INTO player_time (playerId, elapsedTimeMillis, isRunning, lastStartTimeMillis, status)
+VALUES (?, ?, ?, ?, ?);
+
+deletePlayerTime:
+DELETE FROM player_time WHERE playerId = ?;
+
+deleteAllPlayerTimes:
+DELETE FROM player_time;

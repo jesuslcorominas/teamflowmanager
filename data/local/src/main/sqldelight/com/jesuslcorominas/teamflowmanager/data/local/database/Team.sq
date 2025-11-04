@@ -1,0 +1,27 @@
+CREATE TABLE team (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT NOT NULL,
+    coachName TEXT NOT NULL,
+    delegateName TEXT NOT NULL,
+    captainId INTEGER
+);
+
+getAllTeams:
+SELECT * FROM team;
+
+getTeam:
+SELECT * FROM team LIMIT 1;
+
+getTeamById:
+SELECT * FROM team WHERE id = ?;
+
+insertTeam:
+INSERT INTO team (name, coachName, delegateName, captainId)
+VALUES (?, ?, ?, ?);
+
+updateTeam:
+UPDATE team SET name = ?, coachName = ?, delegateName = ?, captainId = ?
+WHERE id = ?;
+
+deleteTeam:
+DELETE FROM team WHERE id = ?;

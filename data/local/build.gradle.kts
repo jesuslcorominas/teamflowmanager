@@ -1,7 +1,7 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.sqldelight)
 }
 
 android {
@@ -35,6 +35,14 @@ android {
     }
 }
 
+sqldelight {
+    databases {
+        create("TeamFlowManagerDatabase") {
+            packageName.set("com.jesuslcorominas.teamflowmanager.data.local.database")
+        }
+    }
+}
+
 dependencies {
     implementation(project(":data:core"))
     implementation(project(":domain"))
@@ -43,16 +51,14 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
+    implementation(libs.sqldelight.android.driver)
+    implementation(libs.sqldelight.coroutines.extensions)
+    implementation(libs.sqldelight.primitive.adapters)
 
     implementation(libs.koin.android)
 
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
-    implementation(libs.moshi.kotlin.codegen)
-    ksp(libs.moshi.kotlin.codegen)
 
     testImplementation(libs.junit)
 }

@@ -1,0 +1,36 @@
+CREATE TABLE goal (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    matchId INTEGER NOT NULL,
+    scorerId INTEGER,
+    goalTimeMillis INTEGER NOT NULL,
+    matchElapsedTimeMillis INTEGER NOT NULL,
+    isOpponentGoal INTEGER AS Boolean NOT NULL DEFAULT 0,
+    FOREIGN KEY (matchId) REFERENCES match(id) ON DELETE CASCADE
+);
+
+CREATE INDEX goal_matchId ON goal(matchId);
+
+getAllGoals:
+SELECT * FROM goal;
+
+getGoalsByMatchId:
+SELECT * FROM goal WHERE matchId = ?;
+
+getMatchGoals:
+SELECT * FROM goal WHERE matchId = ? ORDER BY goalTimeMillis ASC;
+
+getAllTeamGoals:
+SELECT * FROM goal WHERE isOpponentGoal = 0 ORDER BY goalTimeMillis ASC;
+
+insertGoal:
+INSERT INTO goal (matchId, scorerId, goalTimeMillis, matchElapsedTimeMillis, isOpponentGoal)
+VALUES (?, ?, ?, ?, ?);
+
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+deleteGoal:
+DELETE FROM goal WHERE id = ?;
+
+deleteGoalsByMatchId:
+DELETE FROM goal WHERE matchId = ?;

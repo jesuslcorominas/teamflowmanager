@@ -1,0 +1,34 @@
+CREATE TABLE player_substitution (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    matchId INTEGER NOT NULL,
+    playerOutId INTEGER NOT NULL,
+    playerInId INTEGER NOT NULL,
+    substitutionTimeMillis INTEGER NOT NULL,
+    matchElapsedTimeMillis INTEGER NOT NULL,
+    FOREIGN KEY (matchId) REFERENCES match(id) ON DELETE CASCADE,
+    FOREIGN KEY (playerOutId) REFERENCES players(id) ON DELETE CASCADE,
+    FOREIGN KEY (playerInId) REFERENCES players(id) ON DELETE CASCADE
+);
+
+CREATE INDEX player_substitution_matchId ON player_substitution(matchId);
+CREATE INDEX player_substitution_playerOutId ON player_substitution(playerOutId);
+CREATE INDEX player_substitution_playerInId ON player_substitution(playerInId);
+
+getAllPlayerSubstitutions:
+SELECT * FROM player_substitution;
+
+getPlayerSubstitutionsByMatchId:
+SELECT * FROM player_substitution WHERE matchId = ? ORDER BY substitutionTimeMillis ASC;
+
+insertPlayerSubstitution:
+INSERT INTO player_substitution (matchId, playerOutId, playerInId, substitutionTimeMillis, matchElapsedTimeMillis)
+VALUES (?, ?, ?, ?, ?);
+
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+deletePlayerSubstitution:
+DELETE FROM player_substitution WHERE id = ?;
+
+deletePlayerSubstitutionsByMatchId:
+DELETE FROM player_substitution WHERE matchId = ?;

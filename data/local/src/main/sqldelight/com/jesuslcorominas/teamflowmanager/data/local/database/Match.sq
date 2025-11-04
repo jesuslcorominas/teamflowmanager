@@ -1,0 +1,64 @@
+CREATE TABLE match (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    teamId INTEGER NOT NULL DEFAULT 1,
+    teamName TEXT NOT NULL DEFAULT '',
+    opponent TEXT NOT NULL DEFAULT '',
+    location TEXT NOT NULL DEFAULT '',
+    dateTime INTEGER,
+    numberOfPeriods INTEGER AS Int NOT NULL DEFAULT 2,
+    squadCallUpIds TEXT NOT NULL DEFAULT '',
+    captainId INTEGER NOT NULL,
+    startingLineupIds TEXT NOT NULL DEFAULT '',
+    elapsedTimeMillis INTEGER NOT NULL DEFAULT 0,
+    lastStartTimeMillis INTEGER,
+    status TEXT NOT NULL DEFAULT 'SCHEDULED',
+    archived INTEGER AS Boolean NOT NULL DEFAULT 0,
+    currentPeriod INTEGER AS Int NOT NULL DEFAULT 1,
+    pauseCount INTEGER AS Int NOT NULL DEFAULT 0,
+    goals INTEGER AS Int NOT NULL DEFAULT 0,
+    opponentGoals INTEGER AS Int NOT NULL DEFAULT 0,
+    timeoutStartTimeMillis INTEGER NOT NULL DEFAULT 0,
+    periods TEXT NOT NULL,
+    periodType INTEGER AS Int NOT NULL,
+    FOREIGN KEY (teamId) REFERENCES team(id) ON DELETE CASCADE
+);
+
+CREATE INDEX match_teamId ON match(teamId);
+
+getAllMatches:
+SELECT * FROM match WHERE archived = 0 ORDER BY dateTime DESC;
+
+getMatchById:
+SELECT * FROM match WHERE id = ?;
+
+getScheduledMatches:
+SELECT * FROM match WHERE status = 'SCHEDULED' AND archived = 0 ORDER BY dateTime ASC;
+
+getActiveMatches:
+SELECT * FROM match WHERE status IN ('IN_PROGRESS', 'PAUSED') ORDER BY dateTime DESC;
+
+getFinishedMatches:
+SELECT * FROM match WHERE status = 'FINISHED' AND archived = 0 ORDER BY dateTime DESC;
+
+getArchivedMatches:
+SELECT * FROM match WHERE archived = 1 ORDER BY dateTime DESC;
+
+insertMatch:
+INSERT INTO match (teamId, teamName, opponent, location, dateTime, numberOfPeriods, squadCallUpIds, captainId, startingLineupIds, elapsedTimeMillis, lastStartTimeMillis, status, archived, currentPeriod, pauseCount, goals, opponentGoals, timeoutStartTimeMillis, periods, periodType)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateMatch:
+UPDATE match SET teamId = ?, teamName = ?, opponent = ?, location = ?, dateTime = ?, numberOfPeriods = ?, squadCallUpIds = ?, captainId = ?, startingLineupIds = ?, elapsedTimeMillis = ?, lastStartTimeMillis = ?, status = ?, archived = ?, currentPeriod = ?, pauseCount = ?, goals = ?, opponentGoals = ?, timeoutStartTimeMillis = ?, periods = ?, periodType = ?
+WHERE id = ?;
+
+deleteMatch:
+DELETE FROM match WHERE id = ?;
+
+archiveMatch:
+UPDATE match SET archived = 1 WHERE id = ?;
+
+updateMatchCaptain:
+UPDATE match SET captainId = ? WHERE id = ?;
+
+lastInsertRowId:
+SELECT last_insert_rowid();
