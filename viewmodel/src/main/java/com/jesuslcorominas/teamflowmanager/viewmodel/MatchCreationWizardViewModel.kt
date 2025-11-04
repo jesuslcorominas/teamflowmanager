@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class MatchCreationWizardViewModel(
@@ -73,7 +74,7 @@ class MatchCreationWizardViewModel(
         viewModelScope.launch {
             this@MatchCreationWizardViewModel.matchId = matchId
             isEditMode = true
-            val match = getMatchByIdUseCase.invoke(matchId).first()
+            val match = getMatchByIdUseCase.invoke(matchId).firstOrNull()
             if (match != null) {
                 initializeFromMatch(match)
             }
@@ -83,8 +84,8 @@ class MatchCreationWizardViewModel(
     private fun initializeFromMatch(match: Match) {
         opponent = match.opponent
         location = match.location
-        date = match.dateTime?.let { it - (it % (24 * 60 * 60 * 1000)) }
-        time = match.dateTime?.let { it % (24 * 60 * 60 * 1000) }
+        date = match.dateTime?.let { it - (it % MILLIS_PER_DAY) }
+        time = match.dateTime?.let { it % MILLIS_PER_DAY }
         numberOfPeriods = match.periodType.numberOfPeriods
         squadCallUpIds = match.squadCallUpIds.toSet()
         captainId = match.captainId
@@ -235,7 +236,7 @@ class MatchCreationWizardViewModel(
     fun updateMatch() {
         viewModelScope.launch {
             matchId?.let { id ->
-                val existingMatch = getMatchByIdUseCase.invoke(id).first()
+                val existingMatch = getMatchByIdUseCase.invoke(id).firstOrNull()
                 existingMatch?.let { match ->
                     val updatedMatch = match.copy(
                         opponent = opponent,
@@ -283,6 +284,9 @@ class MatchCreationWizardViewModel(
 
     fun isEditMode() = isEditMode
 
+    companion object {
+        private const val MILLIS_PER_DAY = 24 * 60 * 60 * 1000L
+    }
 }
 
 sealed class MatchCreationWizardUiState {
