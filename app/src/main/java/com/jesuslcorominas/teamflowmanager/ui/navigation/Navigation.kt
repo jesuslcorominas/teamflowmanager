@@ -19,6 +19,7 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
+import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
@@ -71,7 +72,27 @@ fun Navigation(
         }
 
         composable(Route.Players.createRoute()) {
-            PlayersScreen()
+            PlayersScreen(
+                onNavigateToCreatePlayer = {
+                    navController.navigate(Route.PlayerWizard.createRoute(0L))
+                },
+                onNavigateToEditPlayer = { playerId ->
+                    navController.navigate(Route.PlayerWizard.createRoute(playerId))
+                }
+            )
+        }
+
+        composable(
+            route = Route.PlayerWizard.FULL_ROUTE,
+            arguments = listOf(
+                navArgument(Route.PlayerWizard.ARG_PLAYER_ID) {
+                    type = NavType.LongType
+                }
+            )
+        ) {
+            PlayerWizardScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(Route.Analysis.createRoute()) {

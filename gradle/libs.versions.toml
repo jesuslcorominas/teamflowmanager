@@ -4,6 +4,7 @@ jetbrainsKotlinJvmVersion = "2.1.0"
 ksp = "2.1.0-1.0.28"
 agp = "8.6.1"
 animation = "1.9.4"
+coil = "2.5.0"
 composeCharts = "0.2.0"
 ktlint = "12.1.1"
 core-ktx = "1.13.1"
@@ -43,6 +44,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
 ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "ktlintVersion" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }

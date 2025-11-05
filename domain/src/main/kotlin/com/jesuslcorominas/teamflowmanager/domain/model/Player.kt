@@ -8,4 +8,5 @@ data class Player(
     val positions: List<Position>,
     val teamId: Long,
     val isCaptain: Boolean,
+    val imageUri: String? = null,
 )

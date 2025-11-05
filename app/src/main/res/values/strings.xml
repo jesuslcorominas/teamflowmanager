@@ -46,6 +46,9 @@
     <string name="is_captain">Team Captain</string>
     <string name="captain_confirm_title">Change Team Captain?</string>
     <string name="captain_confirm_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. Continue?</string>
+    <string name="captain_replace_with_matches_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. There are %5$d scheduled matches. Do you want to update them with the new captain?</string>
+    <string name="update_captain_in_matches">Update captain in matches</string>
+    <string name="keep_current_captain_in_matches">Keep current captain in matches</string>
     <string name="captain_remove_title">Remove Team Captain?</string>
     <string name="captain_remove_message">By unchecking this, %1$s %2$s will no longer be the team captain. The captain will be selected for each match. Continue?</string>
     <string name="captain_remove_with_matches_message">By unchecking this, %1$s %2$s will no longer be the team captain. There are %3$d scheduled matches. What do you want to do?</string>
@@ -276,4 +279,14 @@
     <string name="goals_short">Goals</string>
     <string name="export_match_report">Export</string>
     <string name="export_match_report_description">Export match report</string>
+    
+    <!-- Player Wizard Strings -->
+    <string name="player_data_step_title">Player Data</string>
+    <string name="player_positions_step_title">Player Positions</string>
+    <string name="player_positions_step_subtitle">Select the positions this player can play</string>
+    <string name="player_image">Player image</string>
+    <string name="tap_to_add_photo">Tap to add photo</string>
+    <string name="select_image_source">Select image source</string>
+    <string name="camera">Camera</string>
+    <string name="gallery">Gallery</string>
 </resources>

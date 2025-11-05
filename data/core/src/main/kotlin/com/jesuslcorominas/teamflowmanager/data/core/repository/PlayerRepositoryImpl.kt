@@ -10,6 +10,8 @@ internal class PlayerRepositoryImpl(
 ) : PlayerRepository {
     override fun getAllPlayers(): Flow<List<Player>> = localDataSource.getAllPlayers()
 
+    override suspend fun getPlayerById(playerId: Long): Player? = localDataSource.getPlayerById(playerId)
+
     override suspend fun getCaptainPlayer(): Player? = localDataSource.getCaptainPlayer()
 
     override suspend fun addPlayer(player: Player) {

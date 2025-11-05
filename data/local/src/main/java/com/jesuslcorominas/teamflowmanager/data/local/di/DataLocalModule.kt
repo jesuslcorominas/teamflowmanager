@@ -84,17 +84,17 @@ internal val databaseModule =
 private fun initDatabase(db: SupportSQLiteDatabase) {
     db.execSQL("INSERT INTO team (id, name, coachName, delegateName) VALUES (1, 'Loyola D', 'Rubén', 'Oliver');\n")
     db.execSQL(
-        "INSERT INTO players (id, firstName, lastName, number, positions, teamId, isCaptain) VALUES\n" +
-            "(1, 'Adrián', 'López Díaz', 2, 'defender,center_back', 1, 0),\n" +
-            "(2, 'Daniel', 'Menéndez Iglesias', 6, 'right_back', 1, 0),\n" +
-            "(3, 'Valeria', 'García García', 26, 'forward', 1, 0),\n" +
-            "(4, 'Álvaro', 'Rodríguez', 7, 'forward', 1, 1),\n" +
-            "(5, 'Alejandra', '-', 1, 'goalkeeper', 1, 0),\n" +
-            "(6, 'Paz', '-', 15, 'midfielder', 1, 0),\n" +
-            "(7, 'Martín', '-', 52, 'attacking_midfielder,defender', 1, 0),\n" +
-            "(8, 'Sira', '-', 32, 'striker', 1, 0),\n" +
-            "(9, 'Anuel', ',', 22, 'left_back,forward', 1, 0),\n" +
-            "(10, 'Briana', ',', 12, 'left_back', 1, 0)"
+        "INSERT INTO players (id, firstName, lastName, number, positions, teamId, isCaptain, imageUri) VALUES\n" +
+            "(1, 'Adrián', 'López Díaz', 2, 'defender,center_back', 1, 0, NULL),\n" +
+            "(2, 'Daniel', 'Menéndez Iglesias', 6, 'right_back', 1, 0, NULL),\n" +
+            "(3, 'Valeria', 'García García', 26, 'forward', 1, 0, NULL),\n" +
+            "(4, 'Álvaro', 'Rodríguez', 7, 'forward', 1, 1, NULL),\n" +
+            "(5, 'Alejandra', '-', 1, 'goalkeeper', 1, 0, NULL),\n" +
+            "(6, 'Paz', '-', 15, 'midfielder', 1, 0, NULL),\n" +
+            "(7, 'Martín', '-', 52, 'attacking_midfielder,defender', 1, 0, NULL),\n" +
+            "(8, 'Sira', '-', 32, 'striker', 1, 0, NULL),\n" +
+            "(9, 'Anuel', ',', 22, 'left_back,forward', 1, 0, NULL),\n" +
+            "(10, 'Briana', ',', 12, 'left_back', 1, 0, NULL)"
     )
 
     db.execSQL("INSERT INTO \"match\" VALUES(1,1,'Loyola D','EFRO','Colegio Loyola',1760781600000,2,'5,1,6,2,4,10,9,3,8,7',1,'5,1,2,4,8',3140655,NULL,'FINISHED',0,2,1,6,7,0,'[{\"periodNumber\":1,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0},{\"periodNumber\":2,\"periodDuration\":1500000,\"startTimeMillis\":0,\"endTimeMillis\":0}]',2)")

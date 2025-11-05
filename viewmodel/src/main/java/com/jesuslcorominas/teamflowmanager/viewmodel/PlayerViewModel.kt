@@ -182,6 +182,12 @@ sealed class CaptainConfirmationState {
         val newCaptain: Player,
     ) : CaptainConfirmationState()
 
+    data class ConfirmReplaceWithMatches(
+        val currentCaptain: Player,
+        val newCaptain: Player,
+        val matchCount: Int,
+    ) : CaptainConfirmationState()
+
     data class ConfirmRemove(
         val player: Player,
     ) : CaptainConfirmationState()
