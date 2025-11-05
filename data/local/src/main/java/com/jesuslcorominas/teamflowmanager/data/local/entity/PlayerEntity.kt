@@ -11,6 +11,7 @@ data class PlayerEntity(
     val positions: String,
     val teamId: Long = 1,
     val isCaptain: Boolean = false,
+    val imageUri: String? = null,
 )
 
 fun PlayerEntity.toDomain(): Player =
@@ -25,6 +26,7 @@ fun PlayerEntity.toDomain(): Player =
                 .mapNotNull { Position.fromId(it.trim()) },
         teamId = teamId,
         isCaptain = isCaptain,
+        imageUri = imageUri,
     )
 
 fun Player.toEntity(): PlayerEntity =
@@ -36,4 +38,5 @@ fun Player.toEntity(): PlayerEntity =
         positions = positions.joinToString(",") { it.id },
         teamId = teamId,
         isCaptain = isCaptain,
+        imageUri = imageUri,
     )

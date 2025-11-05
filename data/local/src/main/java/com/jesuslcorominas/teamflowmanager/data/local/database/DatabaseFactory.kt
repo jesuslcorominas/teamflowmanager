@@ -36,17 +36,17 @@ object DatabaseFactory {
 
         driver.execute(
             null,
-            "INSERT OR IGNORE INTO players (id, firstName, lastName, number, positions, teamId, isCaptain) VALUES\n" +
-                "(1, 'Adrián', 'López Díaz', 2, 'defender,center_back', 1, 0),\n" +
-                "(2, 'Daniel', 'Menéndez Iglesias', 6, 'right_back', 1, 0),\n" +
-                "(3, 'Valeria', 'García García', 26, 'forward', 1, 0),\n" +
-                "(4, 'Álvaro', 'Rodríguez', 7, 'forward', 1, 1),\n" +
-                "(5, 'Alejandra', '-', 1, 'goalkeeper', 1, 0),\n" +
-                "(6, 'Paz', '-', 15, 'midfielder', 1, 0),\n" +
-                "(7, 'Martín', '-', 52, 'attacking_midfielder,defender', 1, 0),\n" +
-                "(8, 'Sira', '-', 32, 'striker', 1, 0),\n" +
-                "(9, 'Anuel', ',', 22, 'left_back,forward', 1, 0),\n" +
-                "(10, 'Briana', ',', 12, 'left_back', 1, 0)",
+            "INSERT OR IGNORE INTO players (id, firstName, lastName, number, positions, teamId, isCaptain, imageUri) VALUES\n" +
+                "(1, 'Adrián', 'López Díaz', 2, 'defender,center_back', 1, 0, NULL),\n" +
+                "(2, 'Daniel', 'Menéndez Iglesias', 6, 'right_back', 1, 0, NULL),\n" +
+                "(3, 'Valeria', 'García García', 26, 'forward', 1, 0, NULL),\n" +
+                "(4, 'Álvaro', 'Rodríguez', 7, 'forward', 1, 1, NULL),\n" +
+                "(5, 'Alejandra', '-', 1, 'goalkeeper', 1, 0, NULL),\n" +
+                "(6, 'Paz', '-', 15, 'midfielder', 1, 0, NULL),\n" +
+                "(7, 'Martín', '-', 52, 'attacking_midfielder,defender', 1, 0, NULL),\n" +
+                "(8, 'Sira', '-', 32, 'striker', 1, 0, NULL),\n" +
+                "(9, 'Anuel', ',', 22, 'left_back,forward', 1, 0, NULL),\n" +
+                "(10, 'Briana', ',', 12, 'left_back', 1, 0, NULL)",
             0
         )
 

@@ -6,6 +6,7 @@ CREATE TABLE players (
     positions TEXT NOT NULL,
     teamId INTEGER NOT NULL DEFAULT 1,
     isCaptain INTEGER AS Boolean NOT NULL DEFAULT 0,
+    imageUri TEXT,
     FOREIGN KEY (teamId) REFERENCES team(id) ON DELETE CASCADE
 );
 
@@ -21,11 +22,11 @@ getPlayerById:
 SELECT * FROM players WHERE id = ?;
 
 insertPlayer:
-INSERT INTO players (firstName, lastName, number, positions, teamId, isCaptain)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO players (firstName, lastName, number, positions, teamId, isCaptain, imageUri)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 updatePlayer:
-UPDATE players SET firstName = ?, lastName = ?, number = ?, positions = ?, teamId = ?, isCaptain = ?
+UPDATE players SET firstName = ?, lastName = ?, number = ?, positions = ?, teamId = ?, isCaptain = ?, imageUri = ?
 WHERE id = ?;
 
 deletePlayer:
