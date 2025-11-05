@@ -2,7 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.di
 
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -38,7 +38,7 @@ val dataRemoteModule =
 
         // Configure Ktor HttpClient
         single {
-            HttpClient(Android) {
+            HttpClient(OkHttp) {
                 // Content negotiation for JSON serialization
                 install(ContentNegotiation) {
                     json(get())
