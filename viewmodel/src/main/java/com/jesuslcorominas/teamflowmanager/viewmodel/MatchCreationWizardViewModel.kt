@@ -263,15 +263,26 @@ class MatchCreationWizardViewModel(
     }
 
     fun hasUnsavedChanges(): Boolean {
-        if (!isEditMode) return false
-        return opponent != originalOpponent ||
-            location != originalLocation ||
-            date != originalDate ||
-            time != originalTime ||
-            numberOfPeriods != originalNumberOfPeriods ||
-            squadCallUpIds != originalSquadCallUpIds ||
-            captainId != originalCaptainId ||
-            startingLineupIds != originalStartingLineupIds
+        // In edit mode, check if any field has been modified from original
+        if (isEditMode) {
+            return opponent != originalOpponent ||
+                location != originalLocation ||
+                date != originalDate ||
+                time != originalTime ||
+                numberOfPeriods != originalNumberOfPeriods ||
+                squadCallUpIds != originalSquadCallUpIds ||
+                captainId != originalCaptainId ||
+                startingLineupIds != originalStartingLineupIds
+        }
+        
+        // In create mode, check if user has entered any data
+        return opponent.isNotEmpty() ||
+            location.isNotEmpty() ||
+            date != null ||
+            time != null ||
+            squadCallUpIds.isNotEmpty() ||
+            captainId != 0L ||
+            startingLineupIds.isNotEmpty()
     }
 
     fun requestBack(onNavigateBack: () -> Unit) {
