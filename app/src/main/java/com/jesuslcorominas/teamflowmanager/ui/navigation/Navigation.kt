@@ -15,7 +15,6 @@ import androidx.navigation.navArgument
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
-import com.jesuslcorominas.teamflowmanager.ui.matches.MatchDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
@@ -82,7 +81,7 @@ fun Navigation(
         composable(Route.Matches.createRoute()) {
             MatchListScreen(
                 onNavigateToEditMatch = { matchId ->
-                    navController.navigate(Route.MatchDetail.createRoute(matchId))
+                    navController.navigate(Route.CreateMatch.createRoute(matchId))
                 },
                 onNavigateToMatch = { match ->
                     navController.navigate(Route.Match.createRoute(match.id, match.teamName, match.opponent))
@@ -101,8 +100,19 @@ fun Navigation(
             )
         }
 
-        composable(Route.CreateMatch.createRoute()) {
-            MatchCreationWizardScreen(onNavigateBack = { navController.popBackStack() })
+        composable(
+            route = Route.CreateMatch.FULL_ROUTE,
+            arguments = listOf(
+                navArgument(Route.CreateMatch.ARG_MATCH_ID) {
+                    type = NavType.LongType
+                    defaultValue = 0L
+                }
+            )
+        ) {
+            MatchCreationWizardScreen(
+                onNavigateBack = { navController.popBackStack() },
+                currentBackHandler = currentBackHandler
+            )
         }
 
         composable(
@@ -120,24 +130,6 @@ fun Navigation(
             )
         ) {
             MatchScreen()
-        }
-
-        // TODO remove this screen
-        composable(
-            route = "${Route.MatchDetail.createRoute()}/{matchId}",
-            arguments = listOf(
-                navArgument(Route.MatchDetail.ARG_MATCH_ID) {
-                    type = NavType.LongType
-                },
-            ),
-        ) { backStackEntry ->
-            val matchId = backStackEntry.arguments?.getLong(Route.MatchDetail.ARG_MATCH_ID)
-            MatchDetailScreen(
-                matchId = matchId,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-            )
         }
     }
 

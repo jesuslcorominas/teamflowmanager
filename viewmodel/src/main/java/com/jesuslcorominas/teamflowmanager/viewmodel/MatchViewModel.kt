@@ -270,7 +270,9 @@ class MatchViewModel(
                     }
 
                     else -> {
-                        val playerTimeItems = players.toPlayerItems(playerTimes, currentTime, match.captainId)
+                        // Only include players that are in the squad call-up
+                        val squadPlayers = players.filter { it.id in match.squadCallUpIds }
+                        val playerTimeItems = squadPlayers.toPlayerItems(playerTimes, currentTime, match.captainId)
 
                         MatchUiState.Success(
                             match = match,

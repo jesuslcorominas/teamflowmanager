@@ -113,7 +113,7 @@ private fun Route.toFABContentDescriptionRes(): Int? = when (this) {
 
 private fun Route.toDestination() = when (this) {
     Route.Team -> Route.Team.createRoute(Route.Team.MODE_EDIT)
-    Route.Matches -> Route.CreateMatch.createRoute()
+    Route.Matches -> Route.CreateMatch.createRoute(Route.CreateMatch.DEFAULT_MATCH_ID)
     else -> null
 }
 
