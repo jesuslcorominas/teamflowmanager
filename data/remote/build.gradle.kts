@@ -1,5 +1,7 @@
 plugins {
     id("org.jetbrains.kotlin.jvm")
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 apply(from = "$rootDir/jacoco-nonandroid.gradle.kts")
@@ -18,11 +20,20 @@ dependencies {
     implementation(project(":domain"))
 
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
-    implementation(libs.gson)
+    
+    // KtorFit
+    implementation(libs.ktorfit.lib)
+    ksp(libs.ktorfit.ksp)
+    
+    // Ktor Client
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
+    
+    // Kotlinx Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
 }
