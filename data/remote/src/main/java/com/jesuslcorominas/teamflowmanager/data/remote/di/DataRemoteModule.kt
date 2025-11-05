@@ -61,7 +61,7 @@ val dataRemoteModule =
         single {
             Ktorfit
                 .Builder()
-                .httpClient(get()) // Use the configured HttpClient
+                .httpClient(get<HttpClient>()) // Use the configured HttpClient
                 .baseUrl("https://api.example.com/") // Replace with your actual base URL
                 .build()
         }
