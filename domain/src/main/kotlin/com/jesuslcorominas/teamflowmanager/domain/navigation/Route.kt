@@ -81,7 +81,7 @@ sealed class Route(
     data object PlayerWizard : Route(path = "player_wizard", showTopBar = false) {
         const val ARG_PLAYER_ID = "playerId"
         private const val PATH = "player_wizard"
-        const val FULL_ROUTE = "$PATH?$ARG_PLAYER_ID={$ARG_PLAYER_ID}"
+        const val FULL_ROUTE = "$PATH/{$ARG_PLAYER_ID}"
     }
 
     data object Matches : Route(

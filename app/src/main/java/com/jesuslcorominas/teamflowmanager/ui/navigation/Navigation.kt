@@ -74,10 +74,10 @@ fun Navigation(
         composable(Route.Players.createRoute()) {
             PlayersScreen(
                 onNavigateToCreatePlayer = {
-                    navController.navigate(Route.PlayerWizard.createRoute())
+                    navController.navigate(Route.PlayerWizard.createRoute(0L))
                 },
                 onNavigateToEditPlayer = { playerId ->
-                    navController.navigate("${Route.PlayerWizard.createRoute()}?playerId=$playerId")
+                    navController.navigate(Route.PlayerWizard.createRoute(playerId))
                 }
             )
         }
@@ -87,13 +87,10 @@ fun Navigation(
             arguments = listOf(
                 navArgument(Route.PlayerWizard.ARG_PLAYER_ID) {
                     type = NavType.LongType
-                    defaultValue = 0L
                 }
             )
-        ) { backStackEntry ->
-            val playerId = backStackEntry.arguments?.getLong(Route.PlayerWizard.ARG_PLAYER_ID)
+        ) {
             PlayerWizardScreen(
-                playerId = if (playerId == 0L) null else playerId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

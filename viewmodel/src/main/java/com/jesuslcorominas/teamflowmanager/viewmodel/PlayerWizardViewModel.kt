@@ -1,9 +1,11 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCase
@@ -24,6 +26,7 @@ class PlayerWizardViewModel(
     private val updateScheduledMatchesCaptainUseCase: UpdateScheduledMatchesCaptainUseCase,
     private val playerRepository: PlayerRepository,
     private val matchRepository: MatchRepository,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PlayerWizardUiState>(PlayerWizardUiState.Loading)
@@ -44,7 +47,17 @@ class PlayerWizardViewModel(
     private var imageUri: String? = null
     private var selectedPositions: List<Position> = emptyList()
 
-    fun initializeForEdit(playerId: Long) {
+    init {
+        val playerIdFromArgs: Long = savedStateHandle[Route.PlayerWizard.ARG_PLAYER_ID] ?: 0L
+        
+        if (playerIdFromArgs > 0L) {
+            initializeForEdit(playerIdFromArgs)
+        } else {
+            initializeForCreate()
+        }
+    }
+
+    private fun initializeForEdit(playerId: Long) {
         viewModelScope.launch {
             val player = getPlayerByIdUseCase.invoke(playerId)
             if (player != null) {
@@ -62,7 +75,7 @@ class PlayerWizardViewModel(
         }
     }
 
-    fun initializeForCreate() {
+    private fun initializeForCreate() {
         playerId = 0L
         firstName = ""
         lastName = ""

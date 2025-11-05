@@ -42,6 +42,7 @@ val viewModelModule =
                 updateScheduledMatchesCaptainUseCase = get(),
                 playerRepository = get(),
                 matchRepository = get(),
+                savedStateHandle = get(),
             )
         }
         viewModel {

@@ -21,21 +21,12 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PlayerWizardScreen(
-    playerId: Long?,
     onNavigateBack: () -> Unit,
     wizardViewModel: PlayerWizardViewModel = koinViewModel()
 ) {
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
     val captainConfirmationState by wizardViewModel.captainConfirmationState.collectAsState()
-
-    LaunchedEffect(playerId) {
-        if (playerId != null && playerId > 0) {
-            wizardViewModel.initializeForEdit(playerId)
-        } else {
-            wizardViewModel.initializeForCreate()
-        }
-    }
 
     when (uiState) {
         is PlayerWizardUiState.Loading -> Loading()
