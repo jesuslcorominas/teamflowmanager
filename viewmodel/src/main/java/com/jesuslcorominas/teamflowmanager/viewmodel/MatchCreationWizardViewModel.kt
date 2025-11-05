@@ -128,6 +128,14 @@ class MatchCreationWizardViewModel(
 
     fun setSquadCallUp(playerIds: Set<Long>) {
         this.squadCallUpIds = playerIds
+        
+        // If captain is not in the squad anymore, clear captain selection
+        if (captainId != 0L && captainId !in playerIds) {
+            captainId = 0L
+        }
+        
+        // Remove players from starting lineup if they're not in the squad anymore
+        startingLineupIds = startingLineupIds.filter { it in playerIds }.toSet()
     }
 
     fun setCaptain(playerId: Long) {
