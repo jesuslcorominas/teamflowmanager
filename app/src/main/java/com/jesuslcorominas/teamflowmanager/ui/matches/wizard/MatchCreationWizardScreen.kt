@@ -1,14 +1,17 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -16,6 +19,7 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
@@ -26,6 +30,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun MatchCreationWizardScreen(
     onNavigateBack: () -> Unit,
+    currentBackHandler: BackHandlerController? = null,
     wizardViewModel: MatchCreationWizardViewModel = koinViewModel()
 ) {
     val uiState by wizardViewModel.uiState.collectAsState()
@@ -35,6 +40,28 @@ fun MatchCreationWizardScreen(
 
     var showDefaultCaptainDialog by remember { mutableStateOf(false) }
     var captainForDialog by remember { mutableStateOf<Player?>(null) }
+
+    // Handle back button
+    val latestAction = rememberUpdatedState {
+        wizardViewModel.requestBack(onNavigateBack)
+    }
+
+    currentBackHandler?.let {
+        DisposableEffect(currentBackHandler) {
+            val newCallback: () -> Unit = { latestAction.value.invoke() }
+            currentBackHandler.onBackRequested = newCallback
+
+            onDispose {
+                if (currentBackHandler.onBackRequested === newCallback) {
+                    currentBackHandler.onBackRequested = null
+                }
+            }
+        }
+
+        BackHandler(enabled = !showExitDialog) {
+            wizardViewModel.requestBack(onNavigateBack)
+        }
+    }
 
     when (val state = uiState) {
         is MatchCreationWizardUiState.Loading -> Loading()

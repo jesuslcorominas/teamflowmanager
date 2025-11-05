@@ -81,7 +81,7 @@ fun Navigation(
         composable(Route.Matches.createRoute()) {
             MatchListScreen(
                 onNavigateToEditMatch = { matchId ->
-                    navController.navigate("${Route.CreateMatch.createRoute()}?${Route.CreateMatch.ARG_MATCH_ID}=$matchId")
+                    navController.navigate(Route.CreateMatch.createRoute(matchId))
                 },
                 onNavigateToMatch = { match ->
                     navController.navigate(Route.Match.createRoute(match.id, match.teamName, match.opponent))
@@ -109,7 +109,10 @@ fun Navigation(
                 }
             )
         ) {
-            MatchCreationWizardScreen(onNavigateBack = { navController.popBackStack() })
+            MatchCreationWizardScreen(
+                onNavigateBack = { navController.popBackStack() },
+                currentBackHandler = currentBackHandler
+            )
         }
 
         composable(

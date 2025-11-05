@@ -94,7 +94,7 @@ sealed class Route(
         const val ARG_MATCH_ID = "matchId"
         private const val PATH = "create_match"
 
-        const val FULL_ROUTE = "$PATH?$ARG_MATCH_ID={$ARG_MATCH_ID}"
+        const val FULL_ROUTE = "$PATH/{$ARG_MATCH_ID}"
     }
 
     data object Match : Route(path = "match", canGoBack = true) {
