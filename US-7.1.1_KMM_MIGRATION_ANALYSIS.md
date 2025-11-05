@@ -1,5 +1,11 @@
 # US-7.1.1: Análisis de Migración a Kotlin Multiplatform Mobile (KMM)
 
+> **📝 Actualización:** Este documento ha sido actualizado para reflejar el estado actual del proyecto en la rama `develop`:
+> - ✅ El proyecto ya usa **Ktorfit + Ktor Client** (compatible con KMM)
+> - ✅ **Room 2.7.0+** ahora soporta Kotlin Multiplatform (no requiere migración a SQLDelight)
+> - ✅ Ya usa **kotlinx.serialization** (compatible con KMM)
+> - ⏱️ **Tiempo de migración reducido** de 10 semanas a 8 semanas para Opción 1
+
 ## Índice
 1. [Resumen Ejecutivo](#resumen-ejecutivo)
 2. [Estado Actual del Proyecto](#estado-actual-del-proyecto)
@@ -20,8 +26,10 @@ Este documento analiza los cambios necesarios para migrar **TeamFlow Manager** d
 ### Hallazgos Clave:
 - El proyecto está **bien estructurado** siguiendo Clean Architecture, lo que facilita la migración
 - Los módulos **domain**, **usecase** y **data:core** ya son compatibles con KMM con cambios mínimos
+- **El proyecto ya usa Ktorfit** (compatible con KMM), simplificando la migración de red
+- **Room ahora soporta KMM** (desde v2.7.0-alpha), ofreciendo dos opciones para base de datos
 - Se identifican **dos opciones principales** de UI: Compose Multiplatform vs SwiftUI nativo
-- Estimación de esfuerzo: **4-8 semanas** dependiendo de la opción elegida
+- Estimación de esfuerzo: **3-6 semanas** dependiendo de la opción elegida
 - **Recomendación**: Opción 1 (Compose Multiplatform) para maximizar código compartido
 
 ---
@@ -38,7 +46,7 @@ TeamFlowManager (Android App)
 ├── :domain (Kotlin JVM Library) - Modelos de dominio
 ├── :data:core (Kotlin JVM Library) - Repositorios
 ├── :data:local (Android Library) - Room Database
-├── :data:remote (Kotlin JVM Library) - Retrofit
+├── :data:remote (Kotlin JVM Library) - Ktorfit + Ktor Client
 └── :di (Android Library) - Koin DI
 ```
 
@@ -50,8 +58,8 @@ TeamFlowManager (Android App)
 | Presentación | Android ViewModel, LiveData | ⚠️ Requiere alternativa multiplataforma |
 | Lógica de Negocio | Kotlin Coroutines | ✅ Compatible |
 | Dominio | Kotlin puro | ✅ Compatible |
-| BD Local | Room | ⚠️ Requiere migración a SQLDelight o alternativa |
-| API Remote | Retrofit, OkHttp, Gson | ⚠️ Requiere migración a Ktor |
+| BD Local | Room | ✅ **Ahora compatible con KMM** (Room 2.7.0+) |
+| API Remote | Ktorfit, Ktor Client, kotlinx.serialization | ✅ **Ya compatible con KMM** |
 | DI | Koin Android | ⚠️ Requiere Koin Multiplatform |
 
 ### Estadísticas del Proyecto
@@ -84,11 +92,9 @@ TeamFlowManager (KMM Project)
 │   │   ├── viewmodel/       ✅ Código compartido (con StateFlow)
 │   │   └── ui/              ✅ Compose Multiplatform compartido
 │   ├── androidMain/
-│   │   ├── Platform-specific (si necesario)
-│   │   └── Room DB implementation
+│   │   └── Platform-specific (si necesario)
 │   └── iosMain/
-│       ├── Platform-specific (si necesario)
-│       └── SQLDelight implementation
+│       └── Platform-specific (si necesario)
 ├── androidApp/              📱 Android Application Module
 └── iosApp/                  🍎 iOS Xcode Project
     └── ContentView.swift (wrapper para Compose)
@@ -129,8 +135,10 @@ kotlin = "2.1.0"
 agp = "8.6.1"
 compose = "1.7.1"
 compose-multiplatform = "1.7.1"
-sqldelight = "2.0.2"
+room = "2.7.0-alpha01"  # Room con soporte KMM
+ksp = "2.1.0-1.0.28"
 ktor = "3.0.1"
+ktorfit = "2.6.0"
 koin = "4.0.0"
 kotlinx-coroutines = "1.9.0"
 kotlinx-serialization = "1.7.3"
@@ -143,17 +151,19 @@ compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", v
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
 
-# SQLDelight
-sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
-sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
-sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
-sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
+# Room Multiplatform
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
-# Ktor
+# Ktorfit (ya en uso en el proyecto)
+ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }
+ktorfit-ksp = { module = "de.jensklingenberg.ktorfit:ktorfit-ksp", version.ref = "ktorfit" }
+
+# Ktor Client (ya en uso en el proyecto)
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 
@@ -171,7 +181,8 @@ koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "room" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 ```
@@ -183,7 +194,8 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.sqldelight)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 kotlin {
@@ -219,15 +231,17 @@ kotlin {
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
             
-            // Ktor
+            // Ktorfit (ya en uso en el proyecto)
+            implementation(libs.ktorfit.lib)
+            
+            // Ktor Client (ya en uso en el proyecto)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.logging)
             
-            // SQLDelight
-            implementation(libs.sqldelight.runtime)
-            implementation(libs.sqldelight.coroutines)
+            // Room Multiplatform
+            implementation(libs.room.runtime)
             
             // Kotlinx
             implementation(libs.kotlinx.serialization.json)
@@ -239,14 +253,12 @@ kotlin {
         }
         
         androidMain.dependencies {
-            implementation(libs.ktor.client.android)
-            implementation(libs.sqldelight.android.driver)
+            implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
         }
         
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-            implementation(libs.sqldelight.native.driver)
         }
         
         commonTest.dependencies {
@@ -269,12 +281,23 @@ android {
     }
 }
 
-sqldelight {
-    databases {
-        create("TeamFlowDatabase") {
-            packageName.set("com.jesuslcorominas.teamflowmanager.db")
-        }
-    }
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+dependencies {
+    // KSP para Ktorfit y Room
+    add("kspCommonMainMetadata", libs.ktorfit.ksp)
+    add("kspAndroid", libs.ktorfit.ksp)
+    add("kspIosX64", libs.ktorfit.ksp)
+    add("kspIosArm64", libs.ktorfit.ksp)
+    add("kspIosSimulatorArm64", libs.ktorfit.ksp)
+    
+    add("kspCommonMainMetadata", libs.room.compiler)
+    add("kspAndroid", libs.room.compiler)
+    add("kspIosX64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
 }
 ```
 
@@ -283,144 +306,121 @@ sqldelight {
 **2.1. Módulo Domain (✅ Sin cambios o mínimos)**
 - Ya es Kotlin puro, solo necesita moverse a `shared/commonMain/kotlin/domain`
 - Mantener las clases de datos como están
-- Considerar usar `@Serializable` en lugar de anotaciones de Gson/Moshi
+- Ya usa `@Serializable` de kotlinx.serialization
 
 **2.2. Módulo UseCase (✅ Cambios menores)**
 - Mover a `shared/commonMain/kotlin/usecase`
 - Ya usa Coroutines, que es compatible con KMM
 - Sin cambios necesarios en la lógica
 
-**2.3. Módulo Data (⚠️ Cambios moderados)**
+**2.3. Módulo Data (✅ Cambios mínimos)**
 
 **Data:Core**
 - Mover interfaces de repositorio a `shared/commonMain/kotlin/data/core`
-- Cambiar de Gson/Moshi a `kotlinx.serialization`
+- Ya usa `kotlinx.serialization` en develop
 - Mantener la estructura actual de repositorios
 
-**Data:Local (🔄 Migración significativa)**
-- Migrar de **Room** a **SQLDelight**
-- Crear archivos `.sq` con las definiciones de tablas
-- Implementar drivers específicos de plataforma
+**Data:Local (✅ **ROOM MULTIPLATFORM - Sin migración necesaria**)**
 
-Ejemplo de migración:
+**Buenas noticias:** Room ahora soporta Kotlin Multiplatform desde la versión 2.7.0-alpha01. **No es necesario migrar a SQLDelight**.
 
-**Antes (Room):**
+- Room funcionará tanto en Android como en iOS con el mismo código
+- Mantener las entidades `@Entity` actuales
+- Mantener los DAOs `@Dao` actuales
+- Solo necesita ajustar la configuración de KSP para multiplatform
+
+Ejemplo de configuración Room KMM:
+
 ```kotlin
-@Entity(tableName = "teams")
-data class TeamEntity(
-    @PrimaryKey val id: String,
-    @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name = "created_at") val createdAt: Long
-)
-
+// shared/src/commonMain/kotlin/data/local/TeamDao.kt
 @Dao
 interface TeamDao {
     @Query("SELECT * FROM teams")
     suspend fun getAllTeams(): List<TeamEntity>
-}
-```
-
-**Después (SQLDelight):**
-```sql
--- shared/src/commonMain/sqldelight/com/jesuslcorominas/teamflowmanager/db/Team.sq
-
-CREATE TABLE TeamEntity (
-    id TEXT PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
-    createdAt INTEGER NOT NULL
-);
-
-getAllTeams:
-SELECT * FROM TeamEntity;
-
-insertTeam:
-INSERT OR REPLACE INTO TeamEntity(id, name, createdAt)
-VALUES (?, ?, ?);
-
-deleteTeam:
-DELETE FROM TeamEntity WHERE id = ?;
-```
-
-```kotlin
-// shared/src/commonMain/kotlin/data/local/TeamLocalDataSource.kt
-class TeamLocalDataSource(
-    private val database: TeamFlowDatabase
-) {
-    suspend fun getAllTeams(): List<TeamEntity> = withContext(Dispatchers.IO) {
-        database.teamQueries.getAllTeams().executeAsList()
-    }
     
-    suspend fun insertTeam(team: TeamEntity) = withContext(Dispatchers.IO) {
-        database.teamQueries.insertTeam(
-            id = team.id,
-            name = team.name,
-            createdAt = team.createdAt
-        )
-    }
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTeam(team: TeamEntity)
+    
+    @Delete
+    suspend fun deleteTeam(team: TeamEntity)
+}
+
+// shared/src/commonMain/kotlin/data/local/AppDatabase.kt
+@Database(entities = [TeamEntity::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun teamDao(): TeamDao
+}
+
+// shared/src/commonMain/kotlin/data/local/DatabaseBuilder.kt
+expect object DatabaseBuilder {
+    fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase>
+}
+
+fun getDatabase(): AppDatabase {
+    return DatabaseBuilder.getDatabaseBuilder()
+        .fallbackToDestructiveMigrationOnDowngrade(true)
+        .build()
 }
 ```
 
-**Platform-specific Database Drivers:**
+**Platform-specific Database Builders:**
 
 ```kotlin
-// shared/src/androidMain/kotlin/Platform.android.kt
-actual class DatabaseDriverFactory(private val context: Context) {
-    actual fun createDriver(): SqlDriver {
-        return AndroidSqliteDriver(
-            schema = TeamFlowDatabase.Schema,
-            context = context,
-            name = "teamflow.db"
+// shared/src/androidMain/kotlin/data/local/DatabaseBuilder.android.kt
+actual object DatabaseBuilder {
+    actual fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
+        val appContext = TODO("Get context from DI")
+        val dbFile = appContext.getDatabasePath("teamflow.db")
+        return Room.databaseBuilder<AppDatabase>(
+            context = appContext,
+            name = dbFile.absolutePath
         )
     }
 }
 
-// shared/src/iosMain/kotlin/Platform.ios.kt
-actual class DatabaseDriverFactory {
-    actual fun createDriver(): SqlDriver {
-        return NativeSqliteDriver(
-            schema = TeamFlowDatabase.Schema,
-            name = "teamflow.db"
+// shared/src/iosMain/kotlin/data/local/DatabaseBuilder.ios.kt
+actual object DatabaseBuilder {
+    actual fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
+        val dbFilePath = NSHomeDirectory() + "/teamflow.db"
+        return Room.databaseBuilder<AppDatabase>(
+            name = dbFilePath
         )
     }
 }
 ```
 
-**Data:Remote (🔄 Migración significativa)**
-- Migrar de **Retrofit** a **Ktor Client**
-- Cambiar de Gson a `kotlinx.serialization`
+**Ventajas de usar Room KMM:**
+- ✅ No hay migración de datos necesaria
+- ✅ Mantener todo el código existente de Room
+- ✅ API familiar para el equipo de desarrollo
+- ✅ Mejor soporte y documentación que SQLDelight
+- ✅ Mantenido oficialmente por Google/JetBrains
 
-Ejemplo de migración:
+**Data:Remote (✅ **YA USA KTORFIT - Sin migración necesaria**)**
+
+**El proyecto ya migró de Retrofit a Ktorfit** en la rama develop, que es totalmente compatible con KMM.
+
+- Ktorfit ya está configurado con KSP
+- Ya usa Ktor Client (compatible con KMM)
+- Ya usa `kotlinx.serialization`
+
+Ejemplo del estado actual (ya en develop):
 
 **Antes (Retrofit):**
 ```kotlin
-interface TeamApiService {
-    @GET("teams")
-    suspend fun getTeams(): Response<List<TeamDto>>
+```kotlin
+// shared/src/commonMain/kotlin/data/remote/api/SampleApi.kt
+interface SampleApi {
+    @GET("resource/{id}")
+    suspend fun getResource(@Path("id") id: String): ResourceDto
     
     @POST("teams")
-    suspend fun createTeam(@Body team: TeamDto): Response<TeamDto>
-}
-```
-
-**Después (Ktor):**
-```kotlin
-// shared/src/commonMain/kotlin/data/remote/TeamApiService.kt
-class TeamApiService(private val client: HttpClient) {
-    suspend fun getTeams(): List<TeamDto> {
-        return client.get("teams").body()
-    }
-    
-    suspend fun createTeam(team: TeamDto): TeamDto {
-        return client.post("teams") {
-            contentType(ContentType.Application.Json)
-            setBody(team)
-        }.body()
-    }
+    suspend fun createTeam(@Body team: TeamDto): TeamDto
 }
 
-// Configuración del cliente Ktor
-fun createHttpClient(): HttpClient {
-    return HttpClient {
+// Configuración del cliente Ktorfit
+fun createKtorfit(): Ktorfit {
+    val client = HttpClient {
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true
@@ -431,8 +431,20 @@ fun createHttpClient(): HttpClient {
             level = LogLevel.INFO
         }
     }
+    
+    return Ktorfit.Builder()
+        .httpClient(client)
+        .baseUrl("https://api.example.com/")
+        .build()
 }
 ```
+
+**Ventajas de tener Ktorfit ya implementado:**
+- ✅ No hay migración de APIs necesaria
+- ✅ Sintaxis similar a Retrofit, familiar para el equipo
+- ✅ Totalmente compatible con KMM
+- ✅ Genera código multiplataforma automáticamente
+- ✅ Soporta todas las plataformas (Android, iOS, JVM, JS)
 
 **2.4. Módulo ViewModel (🔄 Cambios significativos)**
 
@@ -785,12 +797,12 @@ Text(stringResource(Res.string.teams))
 | Domain | 100% | Modelos y entidades |
 | UseCase | 100% | Lógica de negocio |
 | Data (Core) | 100% | Interfaces de repositorio |
-| Data (Local) | 85% | Solo drivers DB son específicos |
-| Data (Remote) | 95% | Solo configuración HTTP específica |
+| Data (Local) | 95% | Room KMM - solo builders específicos |
+| Data (Remote) | 100% | Ktorfit ya es multiplataforma |
 | ViewModel | 100% | Con StateFlow |
 | UI | 90-95% | Con Compose Multiplatform |
 | DI | 90% | Configuración base compartida |
-| **TOTAL** | **90-95%** | |
+| **TOTAL** | **92-97%** | |
 
 ---
 
@@ -1162,12 +1174,12 @@ fun TeamScreen(
 | Domain | 100% | Modelos y entidades |
 | UseCase | 100% | Lógica de negocio |
 | Data (Core) | 100% | Interfaces de repositorio |
-| Data (Local) | 85% | Solo drivers DB específicos |
-| Data (Remote) | 95% | Solo configuración HTTP específica |
+| Data (Local) | 95% | Room KMM - solo builders específicos |
+| Data (Remote) | 100% | Ktorfit ya es multiplataforma |
 | ViewModel | 70% | Lógica compartida, wrappers por plataforma |
 | UI | 0% | Completamente separado |
 | DI | 80% | Base compartida, configuración UI por plataforma |
-| **TOTAL** | **60-70%** | |
+| **TOTAL** | **65-75%** | |
 
 ---
 
@@ -1177,7 +1189,7 @@ fun TeamScreen(
 
 | Aspecto | Compose Multiplatform | UI Nativa (SwiftUI) |
 |---------|----------------------|---------------------|
-| **Código compartido** | 90-95% | 60-70% |
+| **Código compartido** | 92-97% | 65-75% |
 | **Rendimiento iOS** | Bueno | Excelente |
 | **Experiencia UX iOS** | Muy buena | Perfecta |
 | **Velocidad desarrollo** | Rápida | Moderada |
@@ -1189,20 +1201,22 @@ fun TeamScreen(
 | **Madurez tecnológica** | Beta en iOS | Madura |
 | **Consistencia UI** | Perfecta | Requiere esfuerzo |
 | **Debugging iOS** | Más complejo | Más simple |
+| **Migración de datos** | Sin migración (Room KMM) | Sin migración (Room KMM) |
+| **Migración de red** | Sin migración (Ktorfit) | Sin migración (Ktorfit) |
 
 ### Comparación de Esfuerzo
 
 | Tarea | Compose Multiplatform | UI Nativa |
 |-------|----------------------|-----------|
-| Configuración inicial | 3-5 días | 3-4 días |
-| Migración datos (Room→SQLDelight) | 5-7 días | 5-7 días |
-| Migración red (Retrofit→Ktor) | 3-4 días | 3-4 días |
+| Configuración inicial | 2-3 días | 2-3 días |
+| Adaptación Room a KMM | 2-3 días | 2-3 días |
+| Adaptación Ktorfit (ya compatible) | 0-1 días | 0-1 días |
 | Migración ViewModels | 3-4 días | 4-6 días |
 | Migración/Adaptación UI | 7-10 días | 15-20 días |
 | Configuración iOS | 2-3 días | 3-4 días |
-| Testing e integración | 5-7 días | 8-12 días |
-| Pulido y optimización | 3-5 días | 5-8 días |
-| **TOTAL** | **4-6 semanas** | **7-10 semanas** |
+| Testing e integración | 4-6 días | 8-12 días |
+| Pulido y optimización | 2-4 días | 4-7 días |
+| **TOTAL** | **3-5 semanas** | **6-9 semanas** |
 
 ### Comparación de Costos
 
@@ -1274,41 +1288,41 @@ fun TeamScreen(
 - Tests pasando en commonTest
 - Sin regresiones en lógica de negocio
 
-### Fase 3: Migración de Capa de Datos (Semana 3-5)
+### Fase 3: Adaptación de Capa de Datos a KMM (Semana 3)
 
 **Objetivos:**
-- Migrar persistencia local (Room → SQLDelight)
-- Migrar cliente HTTP (Retrofit → Ktor)
+- Adaptar Room a Room Multiplatform
+- Validar Ktorfit en configuración KMM
 - Implementar repositorios compartidos
 
 **Tareas:**
 
-**3.1. Migración de BD Local:**
-1. ✅ Crear esquemas SQLDelight (.sq files)
-2. ✅ Implementar DatabaseDriverFactory (expect/actual)
-3. ✅ Migrar DAOs a queries de SQLDelight
-4. ✅ Crear LocalDataSource compartido
-5. ✅ Implementar drivers Android e iOS
-6. ✅ Testing de persistencia
+**3.1. Adaptación de Room a KMM:**
+1. ✅ Actualizar plugin de Room a versión KMM (2.7.0+)
+2. ✅ Crear DatabaseBuilder expect/actual
+3. ✅ Implementar builders Android e iOS
+4. ✅ Mover DAOs y Entities a commonMain
+5. ✅ Testing de persistencia en ambas plataformas
 
-**3.2. Migración de API Remote:**
-1. ✅ Crear HttpClient de Ktor compartido
-2. ✅ Migrar DTOs a `@Serializable`
-3. ✅ Convertir interfaces Retrofit a funciones Ktor
-4. ✅ Implementar RemoteDataSource compartido
-5. ✅ Testing de API calls
+**3.2. Validación Ktorfit:**
+1. ✅ Verificar Ktorfit en shared module
+2. ✅ Configurar KSP para todas las plataformas
+3. ✅ Mover APIs a commonMain
+4. ✅ Testing de API calls en ambas plataformas
 
 **3.3. Repositorios:**
-1. ✅ Implementar repositorios en commonMain
+1. ✅ Mover repositorios a commonMain
 2. ✅ Integrar LocalDataSource y RemoteDataSource
 3. ✅ Testing de repositorios
 
 **Entregables:**
-- SQLDelight database funcional en Android e iOS
-- Ktor client funcional en ambas plataformas
+- Room database funcional en Android e iOS
+- Ktorfit API funcional en ambas plataformas
 - Repositorios compartidos con tests
 
-### Fase 4: Migración de ViewModels (Semana 5-6)
+**Nota:** Esta fase es mucho más simple que la originalmente prevista porque Room y Ktorfit ya son compatibles con KMM, eliminando migraciones complejas.
+
+### Fase 4: Migración de ViewModels (Semana 4)
 
 **Objetivos:**
 - Convertir Android ViewModels a ViewModels multiplataforma
@@ -1328,7 +1342,7 @@ fun TeamScreen(
 - DI configurado correctamente
 - Tests de ViewModels pasando
 
-### Fase 5: Migración de UI (Semana 6-8)
+### Fase 5: Migración de UI (Semana 5-6)
 
 **Objetivos:**
 - Migrar UI de Jetpack Compose a Compose Multiplatform
@@ -1365,7 +1379,7 @@ fun TeamScreen(
 - UI funcional en iOS
 - Navegación working en ambas plataformas
 
-### Fase 6: Aplicaciones Nativas (Semana 8-9)
+### Fase 6: Aplicaciones Nativas (Semana 7)
 
 **Objetivos:**
 - Configurar aplicación Android
@@ -1392,7 +1406,7 @@ fun TeamScreen(
 - IPA iOS funcional
 - Apps testeadas en dispositivos reales
 
-### Fase 7: Testing, Optimización y Pulido (Semana 9-10)
+### Fase 7: Testing, Optimización y Pulido (Semana 8)
 
 **Objetivos:**
 - Testing exhaustivo en ambas plataformas
@@ -1423,29 +1437,34 @@ fun TeamScreen(
 ### Opción 1: Compose Multiplatform
 
 ```
-Semana 1-2:  ████████████████ Preparación y configuración
-Semana 2-3:  ████████████████ Migración dominio y lógica
-Semana 3-5:  ████████████████████████████████ Migración datos
-Semana 5-6:  ████████████████ Migración ViewModels
-Semana 6-8:  ████████████████████████████████ Migración UI
-Semana 8-9:  ████████████████ Apps nativas
-Semana 9-10: ████████████████ Testing y pulido
+Semana 1:    ████████████████ Preparación y configuración
+Semana 2:    ████████████████ Migración dominio y lógica
+Semana 3:    ████████████████ Adaptación Room y Ktorfit a KMM
+Semana 4:    ████████████████ Migración ViewModels
+Semana 5-6:  ████████████████████████████████ Migración UI
+Semana 7:    ████████████████ Apps nativas y configuración
+Semana 8:    ████████████████ Testing y pulido
 ---------------------------------------------------------
-TOTAL: 10 semanas (2.5 meses)
+TOTAL: 8 semanas (2 meses)
 ```
+
+**Nota:** El tiempo se redujo significativamente porque:
+- ✅ Room ya es compatible con KMM (no necesita migración a SQLDelight)
+- ✅ Ktorfit ya está implementado (no necesita migración desde Retrofit)
+- ✅ kotlinx.serialization ya en uso (no necesita migración desde Gson)
 
 ### Opción 2: UI Nativa
 
 ```
-Semana 1-2:  ████████████████ Preparación y configuración
-Semana 2-3:  ████████████████ Migración dominio y lógica
-Semana 3-5:  ████████████████████████████████ Migración datos
-Semana 5-6:  ████████████████████ Migración ViewModels
-Semana 6-8:  ████████████████ Mantener UI Android
-Semana 8-12: ████████████████████████████████████████████ Desarrollar UI iOS
-Semana 12-14:████████████████████████ Testing y pulido
+Semana 1:    ████████████████ Preparación y configuración
+Semana 2:    ████████████████ Migración dominio y lógica
+Semana 3:    ████████████████ Adaptación Room y Ktorfit a KMM
+Semana 4-5:  ████████████████████████████████ Migración ViewModels
+Semana 6-7:  ████████████████████████████████ Mantener UI Android
+Semana 8-11: ████████████████████████████████████████████████████████████████ Desarrollar UI iOS
+Semana 12:   ████████████████████████ Testing y pulido
 ---------------------------------------------------------
-TOTAL: 14 semanas (3.5 meses)
+TOTAL: 12 semanas (3 meses)
 ```
 
 ---
