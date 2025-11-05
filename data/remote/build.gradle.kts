@@ -21,6 +21,9 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     
+    // Koin
+    implementation(libs.koin.core)
+    
     // KtorFit
     implementation(libs.ktorfit.lib)
     ksp(libs.ktorfit.ksp)
