@@ -3,8 +3,9 @@
 > **📝 Actualización:** Este documento ha sido actualizado para reflejar el estado actual del proyecto en la rama `develop`:
 > - ✅ El proyecto ya usa **Ktorfit + Ktor Client** (compatible con KMM)
 > - ✅ **Room 2.7.0+** ahora soporta Kotlin Multiplatform (no requiere migración a SQLDelight)
+> - ✅ **androidx.lifecycle.ViewModel** ahora soporta KMM desde versión 2.8.0 (no requiere reimplementación)
 > - ✅ Ya usa **kotlinx.serialization** (compatible con KMM)
-> - ⏱️ **Tiempo de migración reducido** de 10 semanas a 8 semanas para Opción 1
+> - ⏱️ **Tiempo de migración reducido** de 10 semanas a 6-7 semanas para Opción 1
 
 ## Índice
 1. [Resumen Ejecutivo](#resumen-ejecutivo)
@@ -27,9 +28,10 @@ Este documento analiza los cambios necesarios para migrar **TeamFlow Manager** d
 - El proyecto está **bien estructurado** siguiendo Clean Architecture, lo que facilita la migración
 - Los módulos **domain**, **usecase** y **data:core** ya son compatibles con KMM con cambios mínimos
 - **El proyecto ya usa Ktorfit** (compatible con KMM), simplificando la migración de red
-- **Room ahora soporta KMM** (desde v2.7.0-alpha), ofreciendo dos opciones para base de datos
+- **Room ahora soporta KMM** (desde v2.7.0-alpha), sin necesidad de migración
+- **androidx.lifecycle.ViewModel soporta KMM** (desde v2.8.0), manteniendo la API familiar
 - Se identifican **dos opciones principales** de UI: Compose Multiplatform vs SwiftUI nativo
-- Estimación de esfuerzo: **3-6 semanas** dependiendo de la opción elegida
+- Estimación de esfuerzo: **2-5 semanas** dependiendo de la opción elegida
 - **Recomendación**: Opción 1 (Compose Multiplatform) para maximizar código compartido
 
 ---
@@ -55,10 +57,10 @@ TeamFlowManager (Android App)
 | Capa | Tecnología | Compatibilidad KMM |
 |------|-----------|-------------------|
 | UI | Jetpack Compose | ⚠️ Requiere migración a Compose Multiplatform o UI nativa |
-| Presentación | Android ViewModel, LiveData | ⚠️ Requiere alternativa multiplataforma |
+| Presentación | androidx.lifecycle.ViewModel | ✅ **Compatible con KMM** (lifecycle 2.8.0+) |
 | Lógica de Negocio | Kotlin Coroutines | ✅ Compatible |
 | Dominio | Kotlin puro | ✅ Compatible |
-| BD Local | Room | ✅ **Ahora compatible con KMM** (Room 2.7.0+) |
+| BD Local | Room | ✅ **Compatible con KMM** (Room 2.7.0+) |
 | API Remote | Ktorfit, Ktor Client, kotlinx.serialization | ✅ **Ya compatible con KMM** |
 | DI | Koin Android | ⚠️ Requiere Koin Multiplatform |
 
@@ -135,6 +137,7 @@ kotlin = "2.1.0"
 agp = "8.6.1"
 compose = "1.7.1"
 compose-multiplatform = "1.7.1"
+lifecycle = "2.8.0"  # Lifecycle con soporte KMM (ViewModel)
 room = "2.7.0-alpha01"  # Room con soporte KMM
 ksp = "2.1.0-1.0.28"
 ktor = "3.0.1"
@@ -150,6 +153,11 @@ compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.re
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+
+# Lifecycle (ViewModel multiplatform)
+lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 
 # Room Multiplatform
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -227,6 +235,11 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            
+            // Lifecycle (ViewModel multiplatform)
+            implementation(libs.lifecycle.viewmodel)
+            implementation(libs.lifecycle.viewmodel.compose)
+            implementation(libs.lifecycle.runtime.compose)
             
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
@@ -446,11 +459,18 @@ fun createKtorfit(): Ktorfit {
 - ✅ Genera código multiplataforma automáticamente
 - ✅ Soporta todas las plataformas (Android, iOS, JVM, JS)
 
-**2.4. Módulo ViewModel (🔄 Cambios significativos)**
+**2.4. Módulo ViewModel (✅ **SIN CAMBIOS NECESARIOS - ViewModel ya es compatible con KMM**)**
 
-Migrar de **Android ViewModel + LiveData** a **StateFlow + ViewModel multiplataforma**
+**Buenas noticias:** `androidx.lifecycle.ViewModel` ahora soporta Kotlin Multiplatform desde la versión 2.8.0. **No es necesario reimplementar ViewModels**.
 
-**Antes (Android ViewModel):**
+- ViewModel funcionará tanto en Android como en iOS con el mismo código
+- Mantener la herencia de `ViewModel()`
+- `viewModelScope` está disponible en KMM
+- Solo se recomienda reemplazar `LiveData` con `StateFlow` para mejor compatibilidad
+
+**Migración mínima recomendada (LiveData → StateFlow):**
+
+**Antes (Android ViewModel con LiveData):**
 ```kotlin
 class TeamViewModel(
     private val getTeamsUseCase: GetTeamsUseCase
@@ -467,13 +487,12 @@ class TeamViewModel(
 }
 ```
 
-**Después (Multiplatform ViewModel):**
+**Después (ViewModel Multiplatform con StateFlow):**
 ```kotlin
 // shared/src/commonMain/kotlin/viewmodel/TeamViewModel.kt
 class TeamViewModel(
     private val getTeamsUseCase: GetTeamsUseCase
-) {
-    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+) : ViewModel() {  // ✅ Mantener herencia de ViewModel
     
     private val _teams = MutableStateFlow<List<Team>>(emptyList())
     val teams: StateFlow<List<Team>> = _teams.asStateFlow()
@@ -482,7 +501,7 @@ class TeamViewModel(
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     
     fun loadTeams() {
-        coroutineScope.launch {
+        viewModelScope.launch {  // ✅ viewModelScope funciona en KMM
             _isLoading.value = true
             try {
                 _teams.value = getTeamsUseCase()
@@ -494,11 +513,17 @@ class TeamViewModel(
         }
     }
     
-    fun onCleared() {
-        coroutineScope.cancel()
-    }
+    // ✅ onCleared() ya existe en ViewModel base
 }
 ```
+
+**Ventajas de usar androidx.lifecycle.ViewModel en KMM:**
+- ✅ API familiar para el equipo de desarrollo
+- ✅ `viewModelScope` funciona automáticamente
+- ✅ Manejo de ciclo de vida integrado
+- ✅ No requiere implementación manual de cancelación
+- ✅ Compatible con Compose Multiplatform
+- ✅ Mantenido oficialmente por Google/JetBrains
 
 **2.5. Módulo UI (✅ Código compartido con Compose Multiplatform)**
 
@@ -508,7 +533,7 @@ El código de UI con Jetpack Compose puede ser **reutilizado casi al 100%** en C
 // shared/src/commonMain/kotlin/ui/team/TeamScreen.kt
 @Composable
 fun TeamScreen(
-    viewModel: TeamViewModel = koinInject()
+    viewModel: TeamViewModel = viewModel { TeamViewModel(get()) }  // ✅ Usar viewModel() de lifecycle
 ) {
     val teams by viewModel.teams.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -544,9 +569,10 @@ fun TeamScreen(
 }
 ```
 
-**Cambios necesarios en UI:**
-- Reemplazar `koinViewModel()` por `koinInject()` o crear un helper multiplataforma
-- Algunos componentes de Material Design pueden necesitar ajustes
+**Cambios en UI:**
+- Usar `viewModel()` de `lifecycle-viewmodel-compose` en lugar de `koinInject()` o `koinViewModel()`
+- StateFlow con `collectAsState()` funciona perfectamente en Compose Multiplatform
+- Algunos componentes de Material Design pueden necesitar ajustes menores
 - La navegación requiere una biblioteca multiplataforma como Voyager o Decompose
 - Las fuentes de Google pueden necesitar manejarse de forma específica por plataforma
 
@@ -799,10 +825,10 @@ Text(stringResource(Res.string.teams))
 | Data (Core) | 100% | Interfaces de repositorio |
 | Data (Local) | 95% | Room KMM - solo builders específicos |
 | Data (Remote) | 100% | Ktorfit ya es multiplataforma |
-| ViewModel | 100% | Con StateFlow |
+| ViewModel | 100% | androidx.lifecycle.ViewModel KMM compatible |
 | UI | 90-95% | Con Compose Multiplatform |
 | DI | 90% | Configuración base compartida |
-| **TOTAL** | **92-97%** | |
+| **TOTAL** | **95-98%** | |
 
 ---
 
@@ -1176,10 +1202,10 @@ fun TeamScreen(
 | Data (Core) | 100% | Interfaces de repositorio |
 | Data (Local) | 95% | Room KMM - solo builders específicos |
 | Data (Remote) | 100% | Ktorfit ya es multiplataforma |
-| ViewModel | 70% | Lógica compartida, wrappers por plataforma |
+| ViewModel | 100% | androidx.lifecycle.ViewModel KMM compatible |
 | UI | 0% | Completamente separado |
 | DI | 80% | Base compartida, configuración UI por plataforma |
-| **TOTAL** | **65-75%** | |
+| **TOTAL** | **75-80%** | |
 
 ---
 
@@ -1189,7 +1215,7 @@ fun TeamScreen(
 
 | Aspecto | Compose Multiplatform | UI Nativa (SwiftUI) |
 |---------|----------------------|---------------------|
-| **Código compartido** | 92-97% | 65-75% |
+| **Código compartido** | 95-98% | 75-80% |
 | **Rendimiento iOS** | Bueno | Excelente |
 | **Experiencia UX iOS** | Muy buena | Perfecta |
 | **Velocidad desarrollo** | Rápida | Moderada |
@@ -1203,6 +1229,7 @@ fun TeamScreen(
 | **Debugging iOS** | Más complejo | Más simple |
 | **Migración de datos** | Sin migración (Room KMM) | Sin migración (Room KMM) |
 | **Migración de red** | Sin migración (Ktorfit) | Sin migración (Ktorfit) |
+| **Migración de ViewModel** | Sin migración (ViewModel KMM) | Sin migración (ViewModel KMM) |
 
 ### Comparación de Esfuerzo
 
@@ -1211,12 +1238,12 @@ fun TeamScreen(
 | Configuración inicial | 2-3 días | 2-3 días |
 | Adaptación Room a KMM | 2-3 días | 2-3 días |
 | Adaptación Ktorfit (ya compatible) | 0-1 días | 0-1 días |
-| Migración ViewModels | 3-4 días | 4-6 días |
+| Adaptación ViewModels (LiveData → StateFlow) | 1-2 días | 2-3 días |
 | Migración/Adaptación UI | 7-10 días | 15-20 días |
 | Configuración iOS | 2-3 días | 3-4 días |
-| Testing e integración | 4-6 días | 8-12 días |
-| Pulido y optimización | 2-4 días | 4-7 días |
-| **TOTAL** | **3-5 semanas** | **6-9 semanas** |
+| Testing e integración | 3-5 días | 7-11 días |
+| Pulido y optimización | 2-3 días | 4-6 días |
+| **TOTAL** | **2.5-4 semanas** | **5.5-8 semanas** |
 
 ### Comparación de Costos
 
@@ -1322,25 +1349,27 @@ fun TeamScreen(
 
 **Nota:** Esta fase es mucho más simple que la originalmente prevista porque Room y Ktorfit ya son compatibles con KMM, eliminando migraciones complejas.
 
-### Fase 4: Migración de ViewModels (Semana 4)
+### Fase 4: Adaptación de ViewModels (Semana 4)
 
 **Objetivos:**
-- Convertir Android ViewModels a ViewModels multiplataforma
-- Implementar estado con StateFlow
+- Adaptar ViewModels para KMM (ya compatibles desde lifecycle 2.8.0)
+- Reemplazar LiveData con StateFlow
 - Configurar DI con Koin Multiplatform
 
 **Tareas:**
-1. ✅ Crear ViewModels base en commonMain
+1. ✅ Mover ViewModels a commonMain (mantener herencia de ViewModel)
 2. ✅ Reemplazar LiveData con StateFlow
-3. ✅ Implementar manejo de ciclo de vida multiplataforma
+3. ✅ Agregar lifecycle-viewmodel-compose a dependencias
 4. ✅ Configurar Koin Multiplatform
 5. ✅ Crear módulos DI compartidos y específicos
 6. ✅ Testing de ViewModels
 
 **Entregables:**
-- ViewModels funcionando en ambas plataformas
+- ViewModels funcionando en ambas plataformas con la API familiar
 - DI configurado correctamente
 - Tests de ViewModels pasando
+
+**Nota:** Esta fase es mucho más simple que la originalmente prevista porque androidx.lifecycle.ViewModel ya es compatible con KMM, eliminando la necesidad de reimplementar ViewModels desde cero.
 
 ### Fase 5: Migración de UI (Semana 5-6)
 
@@ -1440,17 +1469,17 @@ fun TeamScreen(
 Semana 1:    ████████████████ Preparación y configuración
 Semana 2:    ████████████████ Migración dominio y lógica
 Semana 3:    ████████████████ Adaptación Room y Ktorfit a KMM
-Semana 4:    ████████████████ Migración ViewModels
+Semana 4:    ████████████████ Adaptación ViewModels (LiveData → StateFlow)
 Semana 5-6:  ████████████████████████████████ Migración UI
-Semana 7:    ████████████████ Apps nativas y configuración
-Semana 8:    ████████████████ Testing y pulido
+Semana 7:    ████████████████ Apps nativas, testing y pulido
 ---------------------------------------------------------
-TOTAL: 8 semanas (2 meses)
+TOTAL: 6-7 semanas (1.5 meses)
 ```
 
 **Nota:** El tiempo se redujo significativamente porque:
 - ✅ Room ya es compatible con KMM (no necesita migración a SQLDelight)
 - ✅ Ktorfit ya está implementado (no necesita migración desde Retrofit)
+- ✅ ViewModel ya es compatible con KMM (solo LiveData → StateFlow)
 - ✅ kotlinx.serialization ya en uso (no necesita migración desde Gson)
 
 ### Opción 2: UI Nativa
@@ -1459,12 +1488,12 @@ TOTAL: 8 semanas (2 meses)
 Semana 1:    ████████████████ Preparación y configuración
 Semana 2:    ████████████████ Migración dominio y lógica
 Semana 3:    ████████████████ Adaptación Room y Ktorfit a KMM
-Semana 4-5:  ████████████████████████████████ Migración ViewModels
-Semana 6-7:  ████████████████████████████████ Mantener UI Android
-Semana 8-11: ████████████████████████████████████████████████████████████████ Desarrollar UI iOS
-Semana 12:   ████████████████████████ Testing y pulido
+Semana 4:    ████████████████ Adaptación ViewModels (LiveData → StateFlow)
+Semana 5-6:  ████████████████████████████████ Mantener UI Android
+Semana 7-10: ████████████████████████████████████████████████████████████████ Desarrollar UI iOS
+Semana 11:   ████████████████████████ Testing y pulido
 ---------------------------------------------------------
-TOTAL: 12 semanas (3 meses)
+TOTAL: 10-11 semanas (2.5 meses)
 ```
 
 ---
