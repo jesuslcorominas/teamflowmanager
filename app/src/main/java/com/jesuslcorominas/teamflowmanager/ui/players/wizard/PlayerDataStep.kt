@@ -90,18 +90,6 @@ fun PlayerDataStep(
     // Temporary URI for camera capture
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Permission launcher for camera
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            // Permission granted, launch camera
-            tempCameraUri?.let { uri ->
-                cameraLauncher.launch(uri)
-            }
-        }
-    }
-
     // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
@@ -112,6 +100,18 @@ fun PlayerDataStep(
             }
         }
         showImageOptions = false
+    }
+
+    // Permission launcher for camera
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission granted, launch camera
+            tempCameraUri?.let { uri ->
+                cameraLauncher.launch(uri)
+            }
+        }
     }
 
     // Gallery launcher
@@ -315,10 +315,8 @@ fun PlayerDataStep(
                 }
             },
             onDismiss = {
+                // Dismiss to select from gallery
                 galleryLauncher.launch("image/*")
-            },
-            onDismissRequest = {
-                showImageOptions = false
             }
         )
     }
