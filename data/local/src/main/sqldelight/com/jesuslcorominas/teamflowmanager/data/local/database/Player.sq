@@ -5,7 +5,7 @@ CREATE TABLE players (
     number INTEGER AS Int NOT NULL,
     positions TEXT NOT NULL,
     teamId INTEGER NOT NULL DEFAULT 1,
-    isCaptain INTEGER AS Boolean NOT NULL DEFAULT 0,
+    isCaptain INTEGER NOT NULL DEFAULT 0,
     imageUri TEXT,
     FOREIGN KEY (teamId) REFERENCES team(id) ON DELETE CASCADE
 );

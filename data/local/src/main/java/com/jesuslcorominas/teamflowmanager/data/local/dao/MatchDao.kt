@@ -157,7 +157,7 @@ internal class MatchDao(
             elapsedTimeMillis = match.elapsedTimeMillis,
             lastStartTimeMillis = match.lastStartTimeMillis,
             status = match.status,
-            archived = match.archived,
+            archived = match.archived != 0L,
             currentPeriod = match.currentPeriod.toInt(),
             pauseCount = match.pauseCount.toInt(),
             goals = match.goals.toInt(),

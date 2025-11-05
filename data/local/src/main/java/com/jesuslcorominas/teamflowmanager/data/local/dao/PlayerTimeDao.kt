@@ -22,7 +22,7 @@ internal class PlayerTimeDao(
                     PlayerTimeEntity(
                         playerId = it.playerId,
                         elapsedTimeMillis = it.elapsedTimeMillis,
-                        isRunning = it.isRunning,
+                        isRunning = it.isRunning != 0L,
                         lastStartTimeMillis = it.lastStartTimeMillis,
                         status = it.status
                     )
@@ -39,7 +39,7 @@ internal class PlayerTimeDao(
                     PlayerTimeEntity(
                         playerId = it.playerId,
                         elapsedTimeMillis = it.elapsedTimeMillis,
-                        isRunning = it.isRunning,
+                        isRunning = it.isRunning != 0L,
                         lastStartTimeMillis = it.lastStartTimeMillis,
                         status = it.status
                     )

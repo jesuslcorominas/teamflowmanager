@@ -24,7 +24,7 @@ internal class GoalDao(
                         scorerId = it.scorerId,
                         goalTimeMillis = it.goalTimeMillis,
                         matchElapsedTimeMillis = it.matchElapsedTimeMillis,
-                        isOpponentGoal = it.isOpponentGoal
+                        isOpponentGoal = it.isOpponentGoal != 0L
                     )
                 }
             }
@@ -42,7 +42,7 @@ internal class GoalDao(
                         scorerId = it.scorerId,
                         goalTimeMillis = it.goalTimeMillis,
                         matchElapsedTimeMillis = it.matchElapsedTimeMillis,
-                        isOpponentGoal = it.isOpponentGoal
+                        isOpponentGoal = it.isOpponentGoal != 0L
                     )
                 }
             }

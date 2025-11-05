@@ -25,7 +25,7 @@ internal class PlayerDao(
                         number = player.number.toInt(),
                         positions = player.positions,
                         teamId = player.teamId,
-                        isCaptain = player.isCaptain,
+                        isCaptain = player.isCaptain != 0L,
                         imageUri = player.imageUri
                     )
                 }
@@ -41,7 +41,7 @@ internal class PlayerDao(
                 number = it.number.toInt(),
                 positions = it.positions,
                 teamId = it.teamId,
-                isCaptain = it.isCaptain,
+                isCaptain = it.isCaptain != 0L,
                 imageUri = it.imageUri
             )
         }
@@ -61,7 +61,7 @@ internal class PlayerDao(
                 number = it.number.toInt(),
                 positions = it.positions,
                 teamId = it.teamId,
-                isCaptain = it.isCaptain,
+                isCaptain = it.isCaptain != 0L,
                 imageUri = it.imageUri
             )
         }

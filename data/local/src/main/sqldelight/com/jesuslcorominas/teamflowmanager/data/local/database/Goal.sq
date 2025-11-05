@@ -4,7 +4,7 @@ CREATE TABLE goal (
     scorerId INTEGER,
     goalTimeMillis INTEGER NOT NULL,
     matchElapsedTimeMillis INTEGER NOT NULL,
-    isOpponentGoal INTEGER AS Boolean NOT NULL DEFAULT 0,
+    isOpponentGoal INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (matchId) REFERENCES match(id) ON DELETE CASCADE
 );
 

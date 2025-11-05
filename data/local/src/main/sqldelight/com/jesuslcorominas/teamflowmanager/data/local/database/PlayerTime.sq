@@ -1,7 +1,7 @@
 CREATE TABLE player_time (
     playerId INTEGER PRIMARY KEY NOT NULL,
     elapsedTimeMillis INTEGER NOT NULL DEFAULT 0,
-    isRunning INTEGER AS Boolean NOT NULL DEFAULT 0,
+    isRunning INTEGER NOT NULL DEFAULT 0,
     lastStartTimeMillis INTEGER,
     status TEXT NOT NULL DEFAULT 'ON_BENCH',
     FOREIGN KEY (playerId) REFERENCES players(id) ON DELETE CASCADE
