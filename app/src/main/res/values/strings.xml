@@ -172,7 +172,6 @@
 
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-    <string name="create">Create</string>
 
     <string name="squad_callup_title">Select Squad Call-Up</string>
     <string name="squad_callup_subtitle">Select players for this match (minimum 5)</string>
@@ -244,7 +243,7 @@
     <string name="analysis_matches_with_goals">%d matches with goals</string>
     <string name="export_button_description">Export statistics</string>
     <string name="export_share_title">Share statistics</string>
-    
+
     <!-- PDF Export Strings -->
     <string name="pdf_team_stats_title">Team Statistics</string>
     <string name="pdf_date_label">Date: %s</string>
@@ -261,7 +260,7 @@
     <string name="pdf_scorer_format">%1$d. %2$s - %3$d goal(s)</string>
     <string name="pdf_match_results_section">Match Results</string>
     <string name="pdf_no_matches">No finished matches</string>
-    
+
     <!-- Match Report PDF Export Strings -->
     <string name="match_report_title">Match Report</string>
     <string name="match_info_section">Match Information</string>

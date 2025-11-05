@@ -91,6 +91,7 @@ sealed class Route(
     )
 
     data object CreateMatch : Route(path = "create_match", showTopBar = false) {
+        const val DEFAULT_MATCH_ID = 0L
         const val ARG_MATCH_ID = "matchId"
         private const val PATH = "create_match"
 
