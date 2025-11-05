@@ -81,7 +81,7 @@ fun Navigation(
         composable(Route.Matches.createRoute()) {
             MatchListScreen(
                 onNavigateToEditMatch = { matchId ->
-                    navController.navigate(Route.CreateMatch.createRoute() + "/$matchId")
+                    navController.navigate("${Route.CreateMatch.createRoute()}?${Route.CreateMatch.ARG_MATCH_ID}=$matchId")
                 },
                 onNavigateToMatch = { match ->
                     navController.navigate(Route.Match.createRoute(match.id, match.teamName, match.opponent))
@@ -101,22 +101,14 @@ fun Navigation(
         }
 
         composable(
-            route = "${Route.CreateMatch.createRoute()}/{matchId}",
+            route = Route.CreateMatch.FULL_ROUTE,
             arguments = listOf(
-                navArgument("matchId") {
+                navArgument(Route.CreateMatch.ARG_MATCH_ID) {
                     type = NavType.LongType
                     defaultValue = 0L
                 }
             )
-        ) { backStackEntry ->
-            val matchId = backStackEntry.arguments?.getLong("matchId")?.takeIf { it != 0L }
-            MatchCreationWizardScreen(
-                matchId = matchId,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(Route.CreateMatch.createRoute()) {
+        ) {
             MatchCreationWizardScreen(onNavigateBack = { navController.popBackStack() })
         }
 

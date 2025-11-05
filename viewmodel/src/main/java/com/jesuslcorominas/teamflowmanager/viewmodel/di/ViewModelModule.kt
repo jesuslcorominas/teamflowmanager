@@ -89,7 +89,8 @@ val viewModelModule =
                 getCaptainPlayerUseCase = get(),
                 createMatch = get(),
                 getMatchByIdUseCase = get(),
-                updateMatchUseCase = get()
+                updateMatchUseCase = get(),
+                savedStateHandle = get()
             )
         }
         viewModel {

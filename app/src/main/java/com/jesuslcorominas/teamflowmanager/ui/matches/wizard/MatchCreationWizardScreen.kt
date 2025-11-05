@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +25,6 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MatchCreationWizardScreen(
-    matchId: Long? = null,
     onNavigateBack: () -> Unit,
     wizardViewModel: MatchCreationWizardViewModel = koinViewModel()
 ) {
@@ -37,13 +35,6 @@ fun MatchCreationWizardScreen(
 
     var showDefaultCaptainDialog by remember { mutableStateOf(false) }
     var captainForDialog by remember { mutableStateOf<Player?>(null) }
-
-    // Load match for editing if matchId is provided
-    LaunchedEffect(matchId) {
-        if (matchId != null) {
-            wizardViewModel.loadMatchForEdit(matchId)
-        }
-    }
 
     when (val state = uiState) {
         is MatchCreationWizardUiState.Loading -> Loading()

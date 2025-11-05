@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -7,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
+import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
@@ -30,7 +32,8 @@ class MatchCreationWizardViewModel(
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
     private val createMatch: CreateMatchUseCase,
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
-    private val updateMatchUseCase: UpdateMatchUseCase
+    private val updateMatchUseCase: UpdateMatchUseCase,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MatchCreationWizardUiState>(MatchCreationWizardUiState.Loading)
@@ -68,9 +71,15 @@ class MatchCreationWizardViewModel(
 
     init {
         loadPlayers()
+        
+        // Check if we have a matchId in savedStateHandle for edit mode
+        val matchIdFromState = savedStateHandle.get<Long>(Route.CreateMatch.ARG_MATCH_ID)
+        if (matchIdFromState != null && matchIdFromState != 0L) {
+            loadMatchForEdit(matchIdFromState)
+        }
     }
 
-    fun loadMatchForEdit(matchId: Long) {
+    private fun loadMatchForEdit(matchId: Long) {
         viewModelScope.launch {
             this@MatchCreationWizardViewModel.matchId = matchId
             isEditMode = true
