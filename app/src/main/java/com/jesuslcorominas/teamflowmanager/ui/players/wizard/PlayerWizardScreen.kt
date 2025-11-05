@@ -1,8 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.ui.players.wizard
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +31,11 @@ fun PlayerWizardScreen(
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
     val captainConfirmationState by wizardViewModel.captainConfirmationState.collectAsState()
+    val showExitDialog by wizardViewModel.showExitDialog.collectAsState()
+
+    BackHandler {
+        wizardViewModel.requestBack(onNavigateBack)
+    }
 
     when (uiState) {
         is PlayerWizardUiState.Loading -> Loading()
@@ -54,7 +63,9 @@ fun PlayerWizardScreen(
                             onNext = {
                                 wizardViewModel.goToNextStep()
                             },
-                            onCancel = onNavigateBack,
+                            onCancel = {
+                                wizardViewModel.requestBack(onNavigateBack)
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(TFMSpacing.spacing04)
@@ -94,6 +105,18 @@ fun PlayerWizardScreen(
                     )
                 }
 
+                is CaptainConfirmationState.ConfirmReplaceWithMatches -> {
+                    CaptainConfirmationDialog(
+                        state = state,
+                        onConfirm = { keepInMatches ->
+                            wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack)
+                        },
+                        onDismiss = {
+                            wizardViewModel.cancelCaptainChange()
+                        },
+                    )
+                }
+
                 is CaptainConfirmationState.ConfirmRemove -> {
                     CaptainConfirmationDialog(
                         state = state,
@@ -121,5 +144,24 @@ fun PlayerWizardScreen(
                 CaptainConfirmationState.None -> {}
             }
         }
+    }
+
+    // Unsaved changes dialog
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { wizardViewModel.dismissExitDialog() },
+            title = { Text(stringResource(R.string.unsaved_changes_title)) },
+            text = { Text(stringResource(R.string.discard_message)) },
+            confirmButton = {
+                TextButton(onClick = { wizardViewModel.discardChanges(onNavigateBack) }) {
+                    Text(stringResource(R.string.discard))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { wizardViewModel.dismissExitDialog() }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 }

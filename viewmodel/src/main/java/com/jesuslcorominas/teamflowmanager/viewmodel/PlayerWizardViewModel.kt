@@ -38,6 +38,9 @@ class PlayerWizardViewModel(
     private val _captainConfirmationState = MutableStateFlow<CaptainConfirmationState>(CaptainConfirmationState.None)
     val captainConfirmationState: StateFlow<CaptainConfirmationState> = _captainConfirmationState.asStateFlow()
 
+    private val _showExitDialog = MutableStateFlow(false)
+    val showExitDialog: StateFlow<Boolean> = _showExitDialog.asStateFlow()
+
     // Player data being built/edited
     private var playerId: Long = 0L
     private var firstName: String = ""
@@ -46,6 +49,14 @@ class PlayerWizardViewModel(
     private var isCaptain: Boolean = false
     private var imageUri: String? = null
     private var selectedPositions: List<Position> = emptyList()
+
+    // Original data for change detection
+    private var originalFirstName: String = ""
+    private var originalLastName: String = ""
+    private var originalNumber: String = ""
+    private var originalIsCaptain: Boolean = false
+    private var originalImageUri: String? = null
+    private var originalPositions: List<Position> = emptyList()
 
     init {
         val playerIdFromArgs: Long = savedStateHandle[Route.PlayerWizard.ARG_PLAYER_ID] ?: 0L
@@ -68,6 +79,15 @@ class PlayerWizardViewModel(
                 isCaptain = player.isCaptain
                 imageUri = player.imageUri
                 selectedPositions = player.positions
+                
+                // Store original values
+                originalFirstName = player.firstName
+                originalLastName = player.lastName
+                originalNumber = player.number.toString()
+                originalIsCaptain = player.isCaptain
+                originalImageUri = player.imageUri
+                originalPositions = player.positions
+                
                 _uiState.value = PlayerWizardUiState.Ready
             } else {
                 _uiState.value = PlayerWizardUiState.Error("Player not found")
@@ -83,6 +103,15 @@ class PlayerWizardViewModel(
         isCaptain = false
         imageUri = null
         selectedPositions = emptyList()
+        
+        // Store original values (empty for create)
+        originalFirstName = ""
+        originalLastName = ""
+        originalNumber = ""
+        originalIsCaptain = false
+        originalImageUri = null
+        originalPositions = emptyList()
+        
         _uiState.value = PlayerWizardUiState.Ready
     }
 
@@ -111,6 +140,32 @@ class PlayerWizardViewModel(
     fun getImageUri() = imageUri
     fun getSelectedPositions() = selectedPositions
     fun isEditMode() = playerId != 0L
+
+    fun hasUnsavedChanges(): Boolean {
+        return firstName != originalFirstName ||
+                lastName != originalLastName ||
+                number != originalNumber ||
+                isCaptain != originalIsCaptain ||
+                imageUri != originalImageUri ||
+                selectedPositions != originalPositions
+    }
+
+    fun requestBack(onNavigateBack: () -> Unit) {
+        if (hasUnsavedChanges()) {
+            _showExitDialog.value = true
+        } else {
+            onNavigateBack()
+        }
+    }
+
+    fun dismissExitDialog() {
+        _showExitDialog.value = false
+    }
+
+    fun discardChanges(onNavigateBack: () -> Unit) {
+        _showExitDialog.value = false
+        onNavigateBack()
+    }
 
     fun goToNextStep() {
         _currentStep.value = when (_currentStep.value) {
@@ -143,10 +198,20 @@ class PlayerWizardViewModel(
 
             if (player.isCaptain && currentCaptain != null && currentCaptain.id != player.id) {
                 // Show confirmation to replace captain
-                _captainConfirmationState.value = CaptainConfirmationState.ConfirmReplace(
-                    currentCaptain = currentCaptain,
-                    newCaptain = player
-                )
+                // Check if there are scheduled matches
+                val scheduledMatches = matchRepository.getScheduledMatches()
+                if (scheduledMatches.isNotEmpty()) {
+                    _captainConfirmationState.value = CaptainConfirmationState.ConfirmReplaceWithMatches(
+                        currentCaptain = currentCaptain,
+                        newCaptain = player,
+                        matchCount = scheduledMatches.size
+                    )
+                } else {
+                    _captainConfirmationState.value = CaptainConfirmationState.ConfirmReplace(
+                        currentCaptain = currentCaptain,
+                        newCaptain = player
+                    )
+                }
             } else if (!player.isCaptain && currentCaptain != null && currentCaptain.id == player.id) {
                 // Player is being updated to no longer be captain
                 val scheduledMatches = matchRepository.getScheduledMatches()
@@ -170,8 +235,10 @@ class PlayerWizardViewModel(
             when (val state = _captainConfirmationState.value) {
                 is CaptainConfirmationState.ConfirmReplace -> {
                     savePlayerDirectly(state.newCaptain, onSuccess)
-                    val scheduledMatches = matchRepository.getScheduledMatches()
-                    if (scheduledMatches.isNotEmpty()) {
+                }
+                is CaptainConfirmationState.ConfirmReplaceWithMatches -> {
+                    savePlayerDirectly(state.newCaptain, onSuccess)
+                    if (keepInMatches) {
                         updateScheduledMatchesCaptainUseCase.invoke(state.newCaptain.id)
                     }
                 }

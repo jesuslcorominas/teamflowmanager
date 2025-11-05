@@ -43,6 +43,40 @@ fun CaptainConfirmationDialog(
 
 @Composable
 fun CaptainConfirmationDialog(
+    state: CaptainConfirmationState.ConfirmReplaceWithMatches,
+    onConfirm: (Boolean) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.captain_confirm_title)) },
+        text = {
+            Text(
+                stringResource(
+                    R.string.captain_replace_with_matches_message,
+                    state.currentCaptain.firstName,
+                    state.currentCaptain.lastName,
+                    state.newCaptain.firstName,
+                    state.newCaptain.lastName,
+                    state.matchCount
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(true) }) {
+                Text(stringResource(R.string.update_captain_in_matches))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onConfirm(false) }) {
+                Text(stringResource(R.string.keep_current_captain_in_matches))
+            }
+        }
+    )
+}
+
+@Composable
+fun CaptainConfirmationDialog(
     state: CaptainConfirmationState.ConfirmRemove,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit

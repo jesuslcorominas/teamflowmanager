@@ -99,7 +99,6 @@ fun PlayerDataStep(
                 imageUri = it.toString()
             }
         }
-        showImageOptions = false
     }
 
     // Permission launcher for camera
@@ -292,6 +291,7 @@ fun PlayerDataStep(
             confirmText = stringResource(R.string.camera),
             dismissText = stringResource(R.string.gallery),
             onConfirm = {
+                showImageOptions = false
                 // Check camera permission
                 val permission = Manifest.permission.CAMERA
                 if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
@@ -315,6 +315,7 @@ fun PlayerDataStep(
                 }
             },
             onDismiss = {
+                showImageOptions = false
                 // Dismiss to select from gallery
                 galleryLauncher.launch("image/*")
             }
