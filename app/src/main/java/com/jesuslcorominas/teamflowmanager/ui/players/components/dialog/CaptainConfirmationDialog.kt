@@ -6,6 +6,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.viewmodel.CaptainConfirmationState
 
 @Composable
@@ -14,30 +15,19 @@ fun CaptainConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.captain_confirm_title)) },
-        text = {
-            Text(
-                stringResource(
-                    R.string.captain_confirm_message,
-                    state.currentCaptain.firstName,
-                    state.currentCaptain.lastName,
-                    state.newCaptain.firstName,
-                    state.newCaptain.lastName
-                )
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.yes))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        }
+    AppAlertDialog(
+        title = stringResource(R.string.captain_confirm_title),
+        message = stringResource(
+            R.string.captain_confirm_message,
+            state.currentCaptain.firstName,
+            state.currentCaptain.lastName,
+            state.newCaptain.firstName,
+            state.newCaptain.lastName
+        ),
+        confirmText = stringResource(R.string.yes),
+        dismissText = stringResource(R.string.cancel),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss
     )
 }
 
@@ -81,28 +71,17 @@ fun CaptainConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.captain_remove_title)) },
-        text = {
-            Text(
-                stringResource(
-                    R.string.captain_remove_message,
-                    state.player.firstName,
-                    state.player.lastName
-                )
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.yes))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        }
+    AppAlertDialog(
+        title = stringResource(R.string.captain_remove_title),
+        message = stringResource(
+            R.string.captain_remove_message,
+            state.player.firstName,
+            state.player.lastName
+        ),
+        confirmText = stringResource(R.string.yes),
+        dismissText = stringResource(R.string.cancel),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss
     )
 }
 

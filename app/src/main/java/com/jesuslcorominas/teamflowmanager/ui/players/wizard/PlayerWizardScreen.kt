@@ -4,9 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.CaptainConfirmationDialog
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.CaptainConfirmationState
@@ -148,20 +146,13 @@ fun PlayerWizardScreen(
 
     // Unsaved changes dialog
     if (showExitDialog) {
-        AlertDialog(
-            onDismissRequest = { wizardViewModel.dismissExitDialog() },
-            title = { Text(stringResource(R.string.unsaved_changes_title)) },
-            text = { Text(stringResource(R.string.discard_message)) },
-            confirmButton = {
-                TextButton(onClick = { wizardViewModel.discardChanges(onNavigateBack) }) {
-                    Text(stringResource(R.string.discard))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { wizardViewModel.dismissExitDialog() }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
+        AppAlertDialog(
+            title = stringResource(R.string.unsaved_changes_title),
+            message = stringResource(R.string.discard_message),
+            confirmText = stringResource(R.string.discard),
+            dismissText = stringResource(R.string.cancel),
+            onConfirm = { wizardViewModel.discardChanges(onNavigateBack) },
+            onDismiss = { wizardViewModel.dismissExitDialog() }
         )
     }
 }
