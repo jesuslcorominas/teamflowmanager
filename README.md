@@ -58,7 +58,7 @@ This project follows a modular architecture with clean separation of concerns:
 ## Build Configuration
 
 The project uses:
-- **Gradle Version**: 8.11.1
+- **Gradle Version**: 9.2.0
 - **Kotlin Version**: 2.1.0
 - **Android Gradle Plugin**: 8.6.1
 - **Compose Multiplatform**: 1.7.3 (configured, ready for multiplatform UI)
