@@ -4,6 +4,7 @@
 > - ✅ El proyecto ya usa **Ktorfit + Ktor Client** (compatible con KMM)
 > - ✅ **Room 2.7.0+** ahora soporta Kotlin Multiplatform (no requiere migración a SQLDelight)
 > - ✅ **androidx.lifecycle.ViewModel** ahora soporta KMM desde versión 2.8.0 (no requiere reimplementación)
+> - ✅ **Navigation Compose** soporta KMM desde v2.8.0+ (mantener código de navegación actual)
 > - ✅ **Koin 4.0.0** ya es totalmente compatible con KMM (sin migración necesaria)
 > - ✅ Ya usa **kotlinx.serialization** (compatible con KMM)
 > - ⏱️ **Tiempo de migración reducido** de 10 semanas a 5-6 semanas para Opción 1
@@ -575,7 +576,7 @@ fun TeamScreen(
 - Usar `viewModel()` de `lifecycle-viewmodel-compose` en lugar de `koinInject()` o `koinViewModel()`
 - StateFlow con `collectAsState()` funciona perfectamente en Compose Multiplatform
 - Algunos componentes de Material Design pueden necesitar ajustes menores
-- La navegación requiere una biblioteca multiplataforma como Voyager o Decompose
+- **Navigation Compose ya soporta KMM** (desde v2.8.0+) - mantener el código de navegación actual
 - Las fuentes de Google pueden necesitar manejarse de forma específica por plataforma
 
 **2.6. Módulo DI (✅ **SIN CAMBIOS - Koin 4.0.0 ya es compatible con KMM**)**
@@ -744,13 +745,12 @@ fun MainViewController() = ComposeUIViewController {
 
 #### 5. Navegación Multiplataforma
 
-Reemplazar Android Navigation Compose con una solución multiplataforma como **Voyager**:
+**Mantener Navigation Compose** - ya es compatible con KMM desde v2.8.0+:
 
 ```kotlin
 // shared/build.gradle.kts
 dependencies {
-    implementation("cafe.adriel.voyager:voyager-navigator:1.1.0")
-    implementation("cafe.adriel.voyager:voyager-transitions:1.1.0")
+    implementation("androidx.navigation:navigation-compose:2.8.0")
 }
 ```
 
@@ -758,23 +758,33 @@ dependencies {
 // shared/src/commonMain/kotlin/ui/navigation/Navigation.kt
 @Composable
 fun App() {
-    Navigator(TeamListScreen()) { navigator ->
-        SlideTransition(navigator)
-    }
-}
-
-class TeamListScreen : Screen {
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        TeamScreen(
-            onTeamClick = { team ->
-                navigator.push(TeamDetailScreen(team.id))
-            }
-        )
+    val navController = rememberNavController()
+    
+    NavHost(
+        navController = navController,
+        startDestination = "teamList"
+    ) {
+        composable("teamList") {
+            TeamScreen(
+                onTeamClick = { team ->
+                    navController.navigate("teamDetail/${team.id}")
+                }
+            )
+        }
+        composable("teamDetail/{teamId}") { backStackEntry ->
+            val teamId = backStackEntry.arguments?.getString("teamId")
+            TeamDetailScreen(teamId = teamId)
+        }
     }
 }
 ```
+
+**Ventajas de mantener Navigation Compose:**
+- ✅ No requiere migración - el código actual funciona en KMM
+- ✅ API familiar para el equipo
+- ✅ Soporte oficial de Google/JetBrains
+- ✅ Integración perfecta con Compose Multiplatform
+- ✅ Type-safe navigation disponible
 
 #### 6. Manejo de Recursos
 
@@ -1398,9 +1408,9 @@ fun TeamScreen(
 4. ✅ Configurar recursos compartidos
 
 **5.2. Navegación:**
-1. ✅ Implementar Voyager (o similar)
-2. ✅ Migrar rutas de navegación
-3. ✅ Crear Screens multiplataforma
+1. ✅ Mover código de navegación a commonMain (Navigation Compose ya es KMM)
+2. ✅ Actualizar NavHost a commonMain
+3. ✅ Migrar rutas de navegación
 4. ✅ Testing de navegación
 
 **5.3. Pantallas y Componentes:**
@@ -1513,10 +1523,9 @@ TOTAL: 9-10 semanas (2.5 meses)
 | **Compose iOS es Beta** | Alta | Alto | Validar con prototipos; plan B con UI nativa |
 | **Rendimiento en iOS** | Media | Medio | Optimización temprana y profiling |
 | **Problemas de interop Kotlin-Swift** | Media | Medio | Diseñar API clara; documentar patrones |
-| **Incompatibilidades de bibliotecas** | Media | Alto | Evaluar alternativas KMM-ready antes |
-| **Curva de aprendizaje del equipo** | Alta | Medio | Training y documentación extensa |
-| **Bugs en SQLDelight** | Baja | Medio | Tests exhaustivos; community support |
-| **Diferencias en navegación** | Media | Medio | Usar bibliotecas KMM probadas (Voyager) |
+| **Incompatibilidades de bibliotecas** | Baja | Medio | Bibliotecas principales ya KMM-ready |
+| **Curva de aprendizaje del equipo** | Media | Medio | Training y documentación extensa |
+| **Navegación multiplataforma** | Baja | Bajo | Navigation Compose ya soporta KMM |
 | **Problemas con recursos** | Media | Bajo | Usar Compose Resources oficial |
 
 ### Riesgos de Proyecto
