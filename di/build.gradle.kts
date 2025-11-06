@@ -48,7 +48,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
 
     implementation(libs.koin.android)
-    implementation(libs.koin.core)
 
     testImplementation(libs.junit)
 }
