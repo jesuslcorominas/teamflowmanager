@@ -24,6 +24,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -40,6 +41,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.main.search.rememberSearchState
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
+import com.jesuslcorominas.teamflowmanager.ui.navigation.VoyagerBackHandler
 import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
 import com.jesuslcorominas.teamflowmanager.ui.theme.ContentContrast
 import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
@@ -276,7 +278,7 @@ object MatchesTab : Tab {
         get() = TabOptions(
             index = 0u,
             title = stringResource(R.string.nav_matches),
-            icon = Icons.Default.SportsSoccer
+            icon = rememberVectorPainter(Icons.Default.SportsSoccer)
         )
 }
 
@@ -299,7 +301,7 @@ object PlayersTab : Tab {
         get() = TabOptions(
             index = 1u,
             title = stringResource(R.string.nav_players),
-            icon = Icons.Default.Group
+            icon = rememberVectorPainter(Icons.Default.Group)
         )
 }
 
@@ -314,7 +316,7 @@ object AnalysisTab : Tab {
         get() = TabOptions(
             index = 2u,
             title = stringResource(R.string.nav_analysis),
-            icon = Icons.Default.BarChart
+            icon = rememberVectorPainter(Icons.Default.BarChart)
         )
 }
 
@@ -345,6 +347,6 @@ data class TeamTab(val mode: String = Route.Team.MODE_VIEW) : Tab {
         get() = TabOptions(
             index = 3u,
             title = stringResource(R.string.nav_team),
-            icon = Icons.Default.Groups
+            icon = rememberVectorPainter(Icons.Default.Groups)
         )
 }
