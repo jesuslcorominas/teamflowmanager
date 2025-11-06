@@ -9,6 +9,9 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.graphics.toArgb
+import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.transitions.SlideTransition
+import com.jesuslcorominas.teamflowmanager.ui.screens.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 
@@ -38,7 +41,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TFMAppTheme {
-                MainScreen()
+                Navigator(SplashScreen()) { navigator ->
+                    SlideTransition(navigator)
+                }
             }
         }
     }
