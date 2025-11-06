@@ -131,7 +131,13 @@ private fun MainScaffold() {
             }
         }
     ) { paddingValues ->
-        CurrentTab()
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            CurrentTab()
+        }
     }
 }
 

@@ -47,7 +47,7 @@ fun VoyagerAppTopBar(
             label = "topbar_crossfade"
         ) { isSearchActive ->
             if (uiConfig.hasSearchBar && isSearchActive) {
-                SearchTopBar(modifier = modifier, searchPlaceholder)
+                VoyagerSearchTopBar(modifier = modifier, searchPlaceholder)
             } else {
                 VoyagerDefaultTopBar(
                     modifier = modifier,
@@ -58,6 +58,64 @@ fun VoyagerAppTopBar(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun VoyagerSearchTopBar(
+    modifier: Modifier = Modifier,
+    placeholder: String,
+) {
+    val searchState = LocalSearchState.current
+
+    TopAppBar(
+        modifier = modifier,
+        title = {
+            TextField(
+                value = searchState.query,
+                onValueChange = { searchState.query = it },
+                placeholder = { Text(placeholder) },
+                singleLine = true,
+                leadingIcon = {
+                    IconButton(
+                        onClick = {
+                            searchState.clear()
+                            searchState.isActive = false
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.close_search),
+                        )
+                    }
+                },
+                trailingIcon = {
+                    if (searchState.query.isNotEmpty()) {
+                        IconButton(onClick = { searchState.clear() }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.clear)
+                            )
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(48.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 16.dp)
+                    .background(Color.LightGray.copy(alpha = 0.3F), RoundedCornerShape(48.dp)),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                )
+            )
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
