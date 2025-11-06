@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -45,6 +44,7 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
 import com.jesuslcorominas.teamflowmanager.ui.theme.ContentContrast
 import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
 import com.jesuslcorominas.teamflowmanager.ui.theme.PrimaryLight
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
 class MainTabScreen : Screen {
     @Composable
@@ -96,7 +96,7 @@ private fun MainScaffold() {
     Scaffold(
         topBar = {
             VoyagerAppTopBarWrapper(
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(top = TFMSpacing.spacing04),
                 uiConfig = uiConfig,
                 title = title,
                 backHandlerController = backHandlerController,
@@ -188,9 +188,9 @@ private fun BottomBar() {
     val tabNavigator = LocalTabNavigator.current
 
     Surface(
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        tonalElevation = 4.dp,
-        shadowElevation = 8.dp,
+        shape = RoundedCornerShape(topStart = TFMSpacing.spacing06, topEnd = TFMSpacing.spacing06),
+        tonalElevation = TFMSpacing.spacing01,
+        shadowElevation = TFMSpacing.spacing02,
         color = BackgroundContrast
     ) {
         NavigationBar(containerColor = Color.Transparent) {
