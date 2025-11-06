@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
@@ -259,6 +260,21 @@ private fun RowScope.TabNavigationItem(tab: Tab) {
 object MatchesTab : Tab {
     @Composable
     override fun Content() {
+        Navigator(MatchListScreenWrapper())
+    }
+
+    override val options: TabOptions
+        @Composable
+        get() = TabOptions(
+            index = 0u,
+            title = stringResource(R.string.nav_matches),
+            icon = rememberVectorPainter(Icons.Default.SportsSoccer)
+        )
+}
+
+private class MatchListScreenWrapper : Screen {
+    @Composable
+    override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen(
             onNavigateToEditMatch = { matchId ->
@@ -272,17 +288,24 @@ object MatchesTab : Tab {
             }
         )
     }
+}
+
+object PlayersTab : Tab {
+    @Composable
+    override fun Content() {
+        Navigator(PlayersScreenWrapper())
+    }
 
     override val options: TabOptions
         @Composable
         get() = TabOptions(
-            index = 0u,
-            title = stringResource(R.string.nav_matches),
-            icon = rememberVectorPainter(Icons.Default.SportsSoccer)
+            index = 1u,
+            title = stringResource(R.string.nav_players),
+            icon = rememberVectorPainter(Icons.Default.Group)
         )
 }
 
-object PlayersTab : Tab {
+private class PlayersScreenWrapper : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -295,20 +318,12 @@ object PlayersTab : Tab {
             }
         )
     }
-
-    override val options: TabOptions
-        @Composable
-        get() = TabOptions(
-            index = 1u,
-            title = stringResource(R.string.nav_players),
-            icon = rememberVectorPainter(Icons.Default.Group)
-        )
 }
 
 object AnalysisTab : Tab {
     @Composable
     override fun Content() {
-        com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen()
+        Navigator(AnalysisScreenWrapper())
     }
 
     override val options: TabOptions
@@ -320,10 +335,31 @@ object AnalysisTab : Tab {
         )
 }
 
+private class AnalysisScreenWrapper : Screen {
+    @Composable
+    override fun Content() {
+        com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen()
+    }
+}
+
 data class TeamTab(val mode: String = Route.Team.MODE_VIEW) : Tab {
     @Composable
     override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
+        Navigator(TeamScreenWrapper(mode))
+    }
+
+    override val options: TabOptions
+        @Composable
+        get() = TabOptions(
+            index = 3u,
+            title = stringResource(R.string.nav_team),
+            icon = rememberVectorPainter(Icons.Default.Groups)
+        )
+}
+
+private data class TeamScreenWrapper(val mode: String) : Screen {
+    @Composable
+    override fun Content() {
         val tabNavigator = LocalTabNavigator.current
         val backHandlerController = androidx.compose.runtime.remember { BackHandlerController() }
 
@@ -341,12 +377,4 @@ data class TeamTab(val mode: String = Route.Team.MODE_VIEW) : Tab {
             currentBackHandler = if (mode == Route.Team.MODE_EDIT) backHandlerController else null
         )
     }
-
-    override val options: TabOptions
-        @Composable
-        get() = TabOptions(
-            index = 3u,
-            title = stringResource(R.string.nav_team),
-            icon = rememberVectorPainter(Icons.Default.Groups)
-        )
 }
