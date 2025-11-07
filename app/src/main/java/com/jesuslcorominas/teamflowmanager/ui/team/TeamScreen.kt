@@ -17,6 +17,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.team.components.TeamDetailContent
@@ -30,8 +31,10 @@ fun TeamScreen(
     onNavigateToMatches: (String) -> Unit,
     onNavigateBackRequest: () -> Unit,
     currentBackHandler: BackHandlerController?,
-    viewModel: TeamViewModel = koinViewModel()
+    viewModel: TeamViewModel = koinViewModel(),
 ) {
+    TrackScreenView(screenName = "Team", screenClass = "TeamScreen")
+    
     val uiState by viewModel.uiState.collectAsState()
     val showExitDialog by viewModel.showExitDialog.collectAsState()
 
