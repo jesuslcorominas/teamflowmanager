@@ -16,11 +16,12 @@ dependencyResolutionManagement {
 
 rootProject.name = "TeamFlowManager"
 
-include(":app")
-include(":viewmodel")
+// Temporarily excluding Android modules due to network restrictions
+// include(":app")
+// include(":viewmodel")
 include(":usecase")
 include(":data:core")
-include(":data:local")
-include(":data:remote")
-include(":di")
+// include(":data:local")
+// include(":data:remote")
+// include(":di")
 include(":domain")
