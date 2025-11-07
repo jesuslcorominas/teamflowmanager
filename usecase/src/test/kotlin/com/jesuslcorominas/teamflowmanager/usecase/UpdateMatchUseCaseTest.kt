@@ -32,6 +32,8 @@ class UpdateMatchUseCaseTest {
                     dateTime = System.currentTimeMillis(),
                     startingLineupIds = listOf(1L, 2L, 3L),
                     squadCallUpIds = listOf(4L, 5L),
+                    periodType = PeriodType.HALF_TIME,
+                    captainId = 1L,
                     teamName = "Team B"
                 )
 

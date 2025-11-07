@@ -1,34 +1,63 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.coEvery
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.coVerify
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.mockk
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.slot
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import kotlinx.coroutines.flow.flowOf
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import kotlinx.coroutines.test.runTest
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import org.junit.Assert.assertEquals
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import org.junit.Before
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import org.junit.Test
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 
 class RegisterGoalUseCaseTest {
     private lateinit var matchRepository: MatchRepository
+    private lateinit var transactionRunner: TransactionRunner
     private lateinit var goalRepository: GoalRepository
+    private lateinit var transactionRunner: TransactionRunner
     private lateinit var registerGoalUseCase: RegisterGoalUseCase
 
     @Before
     fun setup() {
         matchRepository = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         goalRepository = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         registerGoalUseCase =
             RegisterGoalUseCaseImpl(
                 matchRepository,
                 goalRepository,
-            )
+                transactionRunner
+            , transactionRunner)
     }
 
     @Test
@@ -46,7 +75,7 @@ class RegisterGoalUseCaseTest {
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis - 60000L,
                     teamName = "Team B"
-                )
+                , location = "Test Location", opponent = "Test Opponent", periodType = PeriodType.HALF_TIME, captainId = 1L)
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
@@ -81,7 +110,7 @@ class RegisterGoalUseCaseTest {
                     isRunning = false,
                     lastStartTimeMillis = null,
                     teamName = "Team B"
-                )
+                , location = "Test Location", opponent = "Test Opponent", periodType = PeriodType.HALF_TIME, captainId = 1L)
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
@@ -111,7 +140,7 @@ class RegisterGoalUseCaseTest {
                     isRunning = true,
                     lastStartTimeMillis = lastStartTimeMillis,
                     teamName = "Team B"
-                )
+                , location = "Test Location", opponent = "Test Opponent", periodType = PeriodType.HALF_TIME, captainId = 1L)
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
@@ -155,7 +184,7 @@ class RegisterGoalUseCaseTest {
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis - 30000L,
                     teamName = "Team B"
-                )
+                , location = "Test Location", opponent = "Test Opponent", periodType = PeriodType.HALF_TIME, captainId = 1L)
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
             val goalSlot = slot<Goal>()

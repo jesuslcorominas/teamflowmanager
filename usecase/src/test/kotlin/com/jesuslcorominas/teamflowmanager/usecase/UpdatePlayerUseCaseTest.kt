@@ -31,7 +31,9 @@ class UpdatePlayerUseCaseTest {
             firstName = "John",
             lastName = "Doe",
             number = 10,
-            positions = listOf(Position.Forward)
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false
         )
         coEvery { playerRepository.updatePlayer(player) } just runs
 
@@ -50,7 +52,9 @@ class UpdatePlayerUseCaseTest {
             firstName = "Jane",
             lastName = "Smith",
             number = 8,
-            positions = listOf(Position.Midfielder, Position.Defender)
+            positions = listOf(Position.Midfielder, Position.Defender),
+            teamId = 1L,
+            isCaptain = false
         )
         coEvery { playerRepository.updatePlayer(player) } just runs
 

@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -14,6 +15,7 @@ class ResumeMatchUseCaseTest {
     private lateinit var startMatchTimerUseCase: StartMatchTimerUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var startPlayerTimerUseCase: StartPlayerTimerUseCase
+    private lateinit var transactionRunner: TransactionRunner
     private lateinit var resumeMatchUseCase: ResumeMatchUseCase
 
     @Before
@@ -21,11 +23,20 @@ class ResumeMatchUseCaseTest {
         startMatchTimerUseCase = mockk(relaxed = true)
         getAllPlayerTimesUseCase = mockk(relaxed = true)
         startPlayerTimerUseCase = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
+        
         resumeMatchUseCase =
             ResumeMatchUseCaseImpl(
                 startMatchTimerUseCase,
                 getAllPlayerTimesUseCase,
                 startPlayerTimerUseCase,
+                transactionRunner
             )
     }
 

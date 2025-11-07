@@ -71,9 +71,9 @@ class GetMatchSummaryUseCaseTest {
                 status = MatchStatus.FINISHED,
                 elapsedTimeMillis = 3000000L,
                 teamName = "Team B"
-            )
-            val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L)
-            val player2 = Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = 1L)
+            , periodType = PeriodType.HALF_TIME, captainId = 1L)
+            val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward, teamId = 1L, isCaptain = false), teamId = 1L)
+            val player2 = Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender, teamId = 1L, isCaptain = false), teamId = 1L)
             val playerTimes = listOf(
                 PlayerTimeHistory(id = 1L, playerId = 1L, matchId = matchId, elapsedTimeMillis = 1500000L, savedAtMillis = 0L),
                 PlayerTimeHistory(id = 2L, playerId = 2L, matchId = matchId, elapsedTimeMillis = 2000000L, savedAtMillis = 0L),
@@ -109,10 +109,10 @@ class GetMatchSummaryUseCaseTest {
                 status = MatchStatus.FINISHED,
                 elapsedTimeMillis = 3000000L,
                 teamName = "Team B"
-            )
-            val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L)
-            val player2 = Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = 1L)
-            val player3 = Player(id = 3L, firstName = "Bob", lastName = "Johnson", number = 7, positions = listOf(Position.Midfielder), teamId = 1L)
+            , periodType = PeriodType.HALF_TIME, captainId = 1L)
+            val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward, teamId = 1L, isCaptain = false), teamId = 1L)
+            val player2 = Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender, teamId = 1L, isCaptain = false), teamId = 1L)
+            val player3 = Player(id = 3L, firstName = "Bob", lastName = "Johnson", number = 7, positions = listOf(Position.Midfielder, teamId = 1L, isCaptain = false), teamId = 1L)
             val substitutions = listOf(
                 PlayerSubstitution(id = 1L, matchId = matchId, playerOutId = 1L, playerInId = 2L, substitutionTimeMillis = 0L, matchElapsedTimeMillis = 1500000L),
                 PlayerSubstitution(id = 2L, matchId = matchId, playerOutId = 2L, playerInId = 3L, substitutionTimeMillis = 0L, matchElapsedTimeMillis = 900000L),
@@ -150,7 +150,7 @@ class GetMatchSummaryUseCaseTest {
                 status = MatchStatus.FINISHED,
                 elapsedTimeMillis = 3000000L,
                 teamName = "Team B"
-            )
+            , periodType = PeriodType.HALF_TIME, captainId = 1L)
 
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
             every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())

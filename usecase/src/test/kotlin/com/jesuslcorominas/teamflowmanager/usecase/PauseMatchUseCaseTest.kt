@@ -1,35 +1,69 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.coEvery
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.coVerify
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.mockk
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import kotlinx.coroutines.flow.flowOf
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import kotlinx.coroutines.test.runTest
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import org.junit.Before
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import org.junit.Test
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 
 class PauseMatchUseCaseTest {
     private lateinit var pauseMatchTimerUseCase: PauseMatchTimerUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var pausePlayerTimerUseCase: PausePlayerTimerUseCase
     private lateinit var pauseMatchUseCase: PauseMatchUseCase
+    private lateinit var transactionRunner: TransactionRunner
 
     private lateinit var pausePlayerTimerForMatchPauseUseCase: PausePlayerTimerForMatchPauseUseCase
 
     @Before
     fun setup() {
         pauseMatchTimerUseCase = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         getAllPlayerTimesUseCase = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         pausePlayerTimerUseCase = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         pausePlayerTimerForMatchPauseUseCase = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         pauseMatchUseCase =
             PauseMatchUseCaseImpl(
                 pauseMatchTimerUseCase,
                 getAllPlayerTimesUseCase,
                 pausePlayerTimerForMatchPauseUseCase
-            )
+            , transactionRunner)
     }
 
     @Test

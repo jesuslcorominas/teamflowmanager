@@ -29,7 +29,7 @@ class GetCaptainPlayerUseCaseTest {
             firstName = "John",
             lastName = "Doe",
             number = 10,
-            positions = listOf(Position.Forward),
+            positions = listOf(Position.Forward, teamId = 1L, isCaptain = false),
             isCaptain = true
         )
         coEvery { playerRepository.getCaptainPlayer() } returns captain

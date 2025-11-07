@@ -9,24 +9,44 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 
 class StartTimeoutUseCaseTest {
     private lateinit var startTimeoutTimerUseCase: StartTimeoutTimerUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var pausePlayerTimerForMatchPauseUseCase: PausePlayerTimerForMatchPauseUseCase
     private lateinit var startTimeoutUseCase: StartTimeoutUseCase
+    private lateinit var transactionRunner: TransactionRunner
 
     @Before
     fun setup() {
         startTimeoutTimerUseCase = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         getAllPlayerTimesUseCase = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         pausePlayerTimerForMatchPauseUseCase = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         startTimeoutUseCase =
             StartTimeoutUseCaseImpl(
                 startTimeoutTimerUseCase,
                 getAllPlayerTimesUseCase,
                 pausePlayerTimerForMatchPauseUseCase
-            )
+            , transactionRunner)
     }
 
     @Test

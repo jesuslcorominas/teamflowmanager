@@ -35,14 +35,14 @@ class GetArchivedMatchesUseCaseTest {
                         status = MatchStatus.FINISHED,
                         archived = true,
                         teamName = "Team A"
-                    ),
+                    , location = "Test Location", periodType = PeriodType.HALF_TIME, captainId = 1L),
                     Match(
                         id = 2L,
                         opponent = "Team B",
                         status = MatchStatus.FINISHED,
                         archived = true,
                         teamName = "Team A"
-                    ),
+                    , location = "Test Location", periodType = PeriodType.HALF_TIME, captainId = 1L),
                 )
             every { matchRepository.getArchivedMatches() } returns flowOf(archivedMatches)
 

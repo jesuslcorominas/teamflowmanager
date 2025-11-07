@@ -10,15 +10,18 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 
 class UpdateScheduledMatchesCaptainUseCaseTest {
     private lateinit var matchRepository: MatchRepository
     private lateinit var useCase: UpdateScheduledMatchesCaptainUseCase
+    private lateinit var transactionRunner: TransactionRunner
 
     @Before
     fun setup() {
         matchRepository = mockk(relaxed = true)
-        useCase = UpdateScheduledMatchesCaptainUseCaseImpl(matchRepository)
+        transactionRunner = mockk(relaxed = true)
+        useCase = UpdateScheduledMatchesCaptainUseCaseImpl(matchRepository, transactionRunner)
     }
 
     @Test
@@ -29,6 +32,8 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
             Match(
                 id = 1L,
                 opponent = "Team A",
+                location = "Stadium A",
+                periodType = PeriodType.HALF_TIME,
                 squadCallUpIds = listOf(1L, 2L, 3L),
                 captainId = 1L,
                 status = MatchStatus.SCHEDULED,
@@ -37,6 +42,8 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
             Match(
                 id = 2L,
                 opponent = "Team B",
+                location = "Stadium B",
+                periodType = PeriodType.HALF_TIME,
                 squadCallUpIds = listOf(1L, 2L, 3L),
                 captainId = 1L,
                 status = MatchStatus.SCHEDULED,
@@ -60,6 +67,8 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
             Match(
                 id = 1L,
                 opponent = "Team A",
+                location = "Stadium A",
+                periodType = PeriodType.HALF_TIME,
                 squadCallUpIds = listOf(1L, 2L, 3L),
                 captainId = 42L,
                 status = MatchStatus.SCHEDULED,

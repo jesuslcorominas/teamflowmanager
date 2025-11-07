@@ -1,43 +1,88 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.coEvery
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.coVerify
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.mockk
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.slot
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import kotlinx.coroutines.flow.flowOf
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import kotlinx.coroutines.test.runTest
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import org.junit.Assert.assertEquals
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import org.junit.Before
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import org.junit.Test
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 
 class RegisterPlayerSubstitutionUseCaseTest {
     private lateinit var matchRepository: MatchRepository
+    private lateinit var transactionRunner: TransactionRunner
     private lateinit var playerTimeRepository: PlayerTimeRepository
+    private lateinit var transactionRunner: TransactionRunner
     private lateinit var playerSubstitutionRepository: PlayerSubstitutionRepository
+    private lateinit var transactionRunner: TransactionRunner
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase
 
     @Before
     fun setup() {
         matchRepository = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         playerTimeRepository = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         playerSubstitutionRepository = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         getAllPlayerTimesUseCase = mockk(relaxed = true)
+        transactionRunner = mockk(relaxed = true)
+        // Make transactionRunner execute blocks immediately
+        coEvery { transactionRunner.run<Unit>(any()) } answers {
+            val block = firstArg<suspend () -> Unit>()
+            block.invoke()
+        }
         registerPlayerSubstitutionUseCase =
             RegisterPlayerSubstitutionUseCaseImpl(
                 matchRepository,
                 playerTimeRepository,
                 playerSubstitutionRepository,
                 getAllPlayerTimesUseCase,
-            )
+                transactionRunner
+            , transactionRunner)
     }
 
     @Test
@@ -56,7 +101,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis - 60000L,
                     teamName = "Team B"
-                )
+                , location = "Test Location", opponent = "Test Opponent", periodType = PeriodType.HALF_TIME, captainId = 1L)
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
             // Mock player times - playerOut is running
@@ -102,7 +147,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     isRunning = true,
                     lastStartTimeMillis = lastStartTimeMillis,
                     teamName = "Team B"
-                )
+                , location = "Test Location", opponent = "Test Opponent", periodType = PeriodType.HALF_TIME, captainId = 1L)
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
             // Mock player times - playerOut is running
@@ -138,7 +183,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     isRunning = false,
                     lastStartTimeMillis = null,
                     teamName = "Team B"
-                )
+                , location = "Test Location", opponent = "Test Opponent", periodType = PeriodType.HALF_TIME, captainId = 1L)
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
             // Mock player times - playerOut is running
@@ -174,7 +219,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis - 60000L,
                     teamName = "Team B"
-                )
+                , location = "Test Location", opponent = "Test Opponent", periodType = PeriodType.HALF_TIME, captainId = 1L)
             coEvery { matchRepository.getMatch() } returns flowOf(match)
 
             // Mock player times - playerOut is NOT running (on bench)
