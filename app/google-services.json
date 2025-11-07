@@ -1,0 +1,38 @@
+{
+  "_comment": "THIS IS A PLACEHOLDER FILE - Replace with actual google-services.json from Firebase Console",
+  "_instructions": [
+    "1. Go to https://console.firebase.google.com/",
+    "2. Create or select your Firebase project",
+    "3. Add Android app with package name: com.jesuslcorominas.teamflowmanager",
+    "4. Download the google-services.json file",
+    "5. Replace this file with the downloaded google-services.json",
+    "6. Do NOT commit the real google-services.json to version control if it contains sensitive data"
+  ],
+  "project_info": {
+    "project_number": "123456789000",
+    "project_id": "teamflowmanager-placeholder",
+    "storage_bucket": "teamflowmanager-placeholder.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123456789000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "com.jesuslcorominas.teamflowmanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "PLACEHOLDER_API_KEY_REPLACE_ME"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
