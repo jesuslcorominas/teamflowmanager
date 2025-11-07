@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,9 +31,11 @@ class CreateMatchUseCaseTest {
                     teamId = 1L,
                     opponent = "Rival FC",
                     location = "Stadium",
-                    date = System.currentTimeMillis(),
+                    dateTime = System.currentTimeMillis(),
                     startingLineupIds = listOf(1L, 2L, 3L),
-                    substituteIds = listOf(4L, 5L),
+                    squadCallUpIds = listOf(1L, 2L, 3L, 4L, 5L),
+                    periodType = PeriodType.HALF_TIME,
+                    captainId = 1L,
                     teamName = "Team A"
                 )
             val expectedId = 123L

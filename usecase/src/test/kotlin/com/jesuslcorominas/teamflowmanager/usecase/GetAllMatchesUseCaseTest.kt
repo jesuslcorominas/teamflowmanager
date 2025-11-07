@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -33,7 +34,9 @@ class GetAllMatchesUseCaseTest {
                         teamId = 1L,
                         opponent = "Rival FC",
                         location = "Stadium 1",
-                        date = System.currentTimeMillis(),
+                        dateTime = System.currentTimeMillis(),
+                        periodType = PeriodType.HALF_TIME,
+                        captainId = 1L,
                         teamName = "Team A"
                     ),
                     Match(
@@ -41,7 +44,9 @@ class GetAllMatchesUseCaseTest {
                         teamId = 1L,
                         opponent = "Team B",
                         location = "Stadium 2",
-                        date = System.currentTimeMillis(),
+                        dateTime = System.currentTimeMillis(),
+                        periodType = PeriodType.HALF_TIME,
+                        captainId = 1L,
                         teamName = "Team A"
                     ),
                 )

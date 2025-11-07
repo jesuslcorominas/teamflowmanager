@@ -32,8 +32,8 @@ class PlayerRepositoryImplTest {
     fun `getAllPlayers should return players from local data source`() = runTest {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", 10, listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder))
+            Player(1, "John", "Doe", 10, listOf(Position.Forward), teamId = 1L, isCaptain = false),
+            Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder), teamId = 1L, isCaptain = false)
         )
         every { localDataSource.getAllPlayers() } returns flowOf(players)
 
@@ -66,7 +66,9 @@ class PlayerRepositoryImplTest {
             firstName = "John",
             lastName = "Doe",
             number = 10,
-            positions = listOf(Position.Forward)
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false
         )
 
         // When
@@ -97,7 +99,9 @@ class PlayerRepositoryImplTest {
             firstName = "John",
             lastName = "Doe",
             number = 10,
-            positions = listOf(Position.Forward)
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false
         )
         coEvery { localDataSource.updatePlayer(player) } just runs
 

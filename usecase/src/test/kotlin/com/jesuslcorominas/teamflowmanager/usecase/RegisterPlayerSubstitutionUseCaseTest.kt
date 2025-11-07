@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus

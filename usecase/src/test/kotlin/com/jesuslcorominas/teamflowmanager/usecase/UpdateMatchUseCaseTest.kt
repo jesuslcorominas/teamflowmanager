@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -28,9 +29,9 @@ class UpdateMatchUseCaseTest {
                     teamId = 1L,
                     opponent = "Updated Rival FC",
                     location = "New Stadium",
-                    date = System.currentTimeMillis(),
+                    dateTime = System.currentTimeMillis(),
                     startingLineupIds = listOf(1L, 2L, 3L),
-                    substituteIds = listOf(4L, 5L),
+                    squadCallUpIds = listOf(4L, 5L),
                     teamName = "Team B"
                 )
 

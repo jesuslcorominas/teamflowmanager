@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.coEvery
