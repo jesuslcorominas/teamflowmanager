@@ -6,6 +6,7 @@
 > - ✅ **androidx.lifecycle.ViewModel** ahora soporta KMM desde versión 2.8.0 (no requiere reimplementación)
 > - ✅ **Navigation Compose** soporta KMM desde v2.8.0+ (mantener código de navegación actual)
 > - ✅ **Koin 4.0.0** ya es totalmente compatible con KMM (sin migración necesaria)
+> - ✅ **Compose Multiplatform plugin (1.7.3)** ya está configurado en el proyecto
 > - ✅ Ya usa **kotlinx.serialization** (compatible con KMM)
 > - ⏱️ **Tiempo de migración reducido** de 10 semanas a 5-6 semanas para Opción 1
 
@@ -33,6 +34,7 @@ Este documento analiza los cambios necesarios para migrar **TeamFlow Manager** d
 - **Room ahora soporta KMM** (desde v2.7.0-alpha), sin necesidad de migración
 - **androidx.lifecycle.ViewModel soporta KMM** (desde v2.8.0), manteniendo la API familiar
 - **Koin 4.0.0 es totalmente compatible con KMM**, sin migración necesaria
+- **Compose Multiplatform plugin ya está configurado** en el proyecto (v1.7.3)
 - Se identifican **dos opciones principales** de UI: Compose Multiplatform vs SwiftUI nativo
 - Estimación de esfuerzo: **2-4 semanas** dependiendo de la opción elegida
 - **Recomendación**: Opción 1 (Compose Multiplatform) para maximizar código compartido
@@ -106,6 +108,8 @@ TeamFlowManager (KMM Project)
 ```
 
 ### Cambios Necesarios
+
+> **🎯 Estado Actual:** El proyecto en `develop` ya tiene el **plugin de Compose Multiplatform (1.7.3)** configurado en `gradle/libs.versions.toml` y declarado en el `build.gradle.kts` raíz, lo que indica preparación previa para la migración KMM.
 
 #### 1. Configuración del Proyecto
 
