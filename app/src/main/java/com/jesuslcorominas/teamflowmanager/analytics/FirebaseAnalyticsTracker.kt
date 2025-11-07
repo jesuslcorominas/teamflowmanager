@@ -28,13 +28,11 @@ class FirebaseAnalyticsTracker(
     }
 
     override fun logScreenView(screenName: String, screenClass: String?) {
-        val params = mutableMapOf<String, Any>(
-            FirebaseAnalytics.Param.SCREEN_NAME to screenName,
-        )
-        screenClass?.let {
-            params[FirebaseAnalytics.Param.SCREEN_CLASS] = it
+        val bundle = Bundle().apply {
+            putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
+            screenClass?.let { putString(FirebaseAnalytics.Param.SCREEN_CLASS, it) }
         }
-        logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, params)
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
     }
 
     override fun setUserId(userId: String?) {

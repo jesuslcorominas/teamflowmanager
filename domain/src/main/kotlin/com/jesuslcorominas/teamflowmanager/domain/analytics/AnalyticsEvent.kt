@@ -76,3 +76,19 @@ object AnalyticsParam {
     const val CHART_TYPE = "chart_type"
     const val TIME_RANGE = "time_range"
 }
+
+/**
+ * Screen names used for analytics tracking.
+ * Centralized constant definitions to avoid typos and ensure consistency.
+ */
+object ScreenName {
+    const val TEAM = "Team"
+    const val PLAYERS = "Players"
+    const val MATCHES = "Matches"
+    const val MATCH_DETAIL = "Match Detail"
+    const val ARCHIVED_MATCHES = "Archived Matches"
+    const val ANALYSIS = "Analysis"
+    const val PLAYER_WIZARD = "Player Wizard"
+    const val MATCH_WIZARD = "Match Wizard"
+    const val SPLASH = "Splash"
+}

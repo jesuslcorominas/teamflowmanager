@@ -29,8 +29,8 @@ class TeamViewModel(
     private val updateTeam: UpdateTeamUseCase,
     private val getCaptainPlayer: GetCaptainPlayerUseCase,
     private val playerRepository: PlayerRepository,
-    private val analyticsTracker: AnalyticsTracker,
     savedStateHandle: SavedStateHandle,
+    private val analyticsTracker: AnalyticsTracker,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TeamUiState>(TeamUiState.Loading)
     val uiState: StateFlow<TeamUiState> = _uiState.asStateFlow()
