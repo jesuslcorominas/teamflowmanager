@@ -3,6 +3,7 @@ kotlin = "2.1.0"
 jetbrainsKotlinJvmVersion = "2.1.0"
 ksp = "2.1.0-1.0.28"
 agp = "8.6.1"
+composeMultiplatform = "1.7.3"
 animation = "1.9.4"
 coil = "2.5.0"
 composeCharts = "0.2.0"
@@ -111,6 +112,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 gradle-ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint"}
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvmVersion" }
 android-library = { id = "com.android.library", version.ref = "agp" }
