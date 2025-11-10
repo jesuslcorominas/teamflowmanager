@@ -51,7 +51,6 @@ object AnalyticsParam {
     // Common Parameters
     const val TEAM_ID = "team_id"
     const val TEAM_NAME = "team_name"
-    const val TEAM_CATEGORY = "team_category"
     const val PLAYER_ID = "player_id"
     const val PLAYER_POSITION = "player_position"
     const val MATCH_ID = "match_id"

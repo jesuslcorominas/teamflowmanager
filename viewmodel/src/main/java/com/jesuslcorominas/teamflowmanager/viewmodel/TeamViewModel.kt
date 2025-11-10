@@ -29,8 +29,8 @@ class TeamViewModel(
     private val updateTeam: UpdateTeamUseCase,
     private val getCaptainPlayer: GetCaptainPlayerUseCase,
     private val playerRepository: PlayerRepository,
-    savedStateHandle: SavedStateHandle,
     private val analyticsTracker: AnalyticsTracker,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TeamUiState>(TeamUiState.Loading)
     val uiState: StateFlow<TeamUiState> = _uiState.asStateFlow()
@@ -59,13 +59,12 @@ class TeamViewModel(
     fun createTeam(team: Team) {
         viewModelScope.launch {
             createTeam.invoke(team)
-            
+
             // Track team creation event
             analyticsTracker.logEvent(
                 AnalyticsEvent.TEAM_CREATED,
                 mapOf(
                     AnalyticsParam.TEAM_NAME to team.name,
-                    AnalyticsParam.TEAM_CATEGORY to team.category,
                 ),
             )
         }
@@ -83,7 +82,7 @@ class TeamViewModel(
             }
 
             updateTeam.invoke(team)
-            
+
             // Track team update event
             analyticsTracker.logEvent(
                 AnalyticsEvent.TEAM_UPDATED,

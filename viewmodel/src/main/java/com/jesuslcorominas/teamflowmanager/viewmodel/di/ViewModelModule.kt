@@ -53,6 +53,7 @@ val viewModelModule =
                 updateTeam = get(),
                 getCaptainPlayer = get(),
                 playerRepository = get(),
+                analyticsTracker = get(),
                 savedStateHandle = get()
             )
         }
