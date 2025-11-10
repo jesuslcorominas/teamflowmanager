@@ -3,6 +3,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
@@ -33,7 +37,9 @@ class MatchCreationWizardViewModel(
     private val createMatch: CreateMatchUseCase,
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
     private val updateMatchUseCase: UpdateMatchUseCase,
-    savedStateHandle: SavedStateHandle
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MatchCreationWizardUiState>(MatchCreationWizardUiState.Loading)
@@ -246,26 +252,64 @@ class MatchCreationWizardViewModel(
 
     fun createMatch(skeletonMatch: SkeletonMatch) {
         viewModelScope.launch {
-            createMatch.invoke(skeletonMatch)
+            try {
+                crashReporter.log("Creating match via wizard: ${skeletonMatch.opponent}")
+                createMatch.invoke(skeletonMatch)
+                
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.MATCH_CREATED,
+                    mapOf(
+                        AnalyticsParam.WIZARD_TYPE to "match_wizard",
+                        AnalyticsParam.MATCH_TYPE to "scheduled",
+                    ),
+                )
+                
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.WIZARD_STEP_COMPLETED,
+                    mapOf(
+                        AnalyticsParam.WIZARD_TYPE to "match_wizard",
+                        AnalyticsParam.STEP_NUMBER to "final",
+                    ),
+                )
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error creating match in wizard: ${e.message}")
+                throw e
+            }
         }
     }
 
     fun updateMatch() {
         viewModelScope.launch {
-            matchId?.let { id ->
-                val existingMatch = getMatchByIdUseCase.invoke(id).firstOrNull()
-                existingMatch?.let { match ->
-                    val updatedMatch = match.copy(
-                        opponent = opponent,
-                        location = location,
-                        dateTime = date?.plus(time ?: 0L),
-                        periodType = PeriodType.fromNumberOfPeriods(numberOfPeriods),
-                        squadCallUpIds = squadCallUpIds.toList(),
-                        captainId = captainId,
-                        startingLineupIds = startingLineupIds.toList(),
-                    )
-                    updateMatchUseCase.invoke(updatedMatch)
+            try {
+                matchId?.let { id ->
+                    crashReporter.log("Updating match via wizard: $id")
+                    val existingMatch = getMatchByIdUseCase.invoke(id).firstOrNull()
+                    existingMatch?.let { match ->
+                        val updatedMatch = match.copy(
+                            opponent = opponent,
+                            location = location,
+                            dateTime = date?.plus(time ?: 0L),
+                            periodType = PeriodType.fromNumberOfPeriods(numberOfPeriods),
+                            squadCallUpIds = squadCallUpIds.toList(),
+                            captainId = captainId,
+                            startingLineupIds = startingLineupIds.toList(),
+                        )
+                        updateMatchUseCase.invoke(updatedMatch)
+                        
+                        analyticsTracker.logEvent(
+                            AnalyticsEvent.MATCH_UPDATED,
+                            mapOf(
+                                AnalyticsParam.MATCH_ID to id.toString(),
+                                AnalyticsParam.WIZARD_TYPE to "match_wizard",
+                            ),
+                        )
+                    }
                 }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error updating match in wizard: ${e.message}")
+                throw e
             }
         }
     }
