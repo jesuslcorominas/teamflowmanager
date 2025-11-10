@@ -2,6 +2,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerGoalStats
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStats
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCase
@@ -21,6 +25,8 @@ class AnalysisViewModel(
     private val getExportData: GetExportDataUseCase,
     private val getTeam: GetTeamUseCase,
     private val exportToPdf: ExportToPdfUseCase,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Loading)
     val uiState: StateFlow<AnalysisUiState> = _uiState.asStateFlow()
@@ -38,23 +44,45 @@ class AnalysisViewModel(
 
     fun selectTab(tab: AnalysisTab) {
         _selectedTab.value = tab
+        
+        analyticsTracker.logEvent(
+            AnalyticsEvent.TAB_CHANGED,
+            mapOf(
+                AnalyticsParam.TAB_NAME to tab.name.lowercase(),
+                AnalyticsParam.SCREEN_NAME to "analysis",
+            ),
+        )
     }
     
     fun requestExport() {
         viewModelScope.launch {
-            _exportState.value = ExportState.Loading
-            val team = getTeam().firstOrNull()
-            val teamName = team?.name ?: "Mi Equipo"
-            val exportData = getExportData().firstOrNull()
-            
-            if (exportData != null) {
-                val uri = exportToPdf(exportData, teamName)
-                _exportState.value = if (uri != null) {
-                    ExportState.Ready(uri)
+            try {
+                crashReporter.log("Requesting player stats export")
+                _exportState.value = ExportState.Loading
+                val team = getTeam().firstOrNull()
+                val teamName = team?.name ?: "Mi Equipo"
+                val exportData = getExportData().firstOrNull()
+                
+                if (exportData != null) {
+                    val uri = exportToPdf(exportData, teamName)
+                    _exportState.value = if (uri != null) {
+                        analyticsTracker.logEvent(
+                            AnalyticsEvent.PLAYER_STATS_EXPORTED,
+                            mapOf(
+                                AnalyticsParam.EXPORT_TYPE to "pdf",
+                                AnalyticsParam.STATS_TYPE to "player_stats",
+                            ),
+                        )
+                        ExportState.Ready(uri)
+                    } else {
+                        ExportState.Error
+                    }
                 } else {
-                    ExportState.Error
+                    _exportState.value = ExportState.Error
                 }
-            } else {
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error exporting player stats: ${e.message}")
                 _exportState.value = ExportState.Error
             }
         }
