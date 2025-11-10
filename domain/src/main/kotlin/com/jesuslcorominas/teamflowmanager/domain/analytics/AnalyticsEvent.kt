@@ -19,28 +19,46 @@ object AnalyticsEvent {
 
     // Match Management Events
     const val MATCH_CREATED = "match_created"
+    const val MATCH_UPDATED = "match_updated"
     const val MATCH_STARTED = "match_started"
     const val MATCH_PAUSED = "match_paused"
     const val MATCH_RESUMED = "match_resumed"
     const val MATCH_FINISHED = "match_finished"
     const val MATCH_ARCHIVED = "match_archived"
+    const val MATCH_UNARCHIVED = "match_unarchived"
+    const val MATCH_DELETED = "match_deleted"
     const val MATCH_VIEWED = "match_viewed"
 
     // Match Actions Events
     const val SUBSTITUTION_MADE = "substitution_made"
     const val GOAL_SCORED = "goal_scored"
+    const val OPPONENT_GOAL_SCORED = "opponent_goal_scored"
     const val CARD_ISSUED = "card_issued"
     const val STARTING_LINEUP_SET = "starting_lineup_set"
     const val CAPTAIN_SELECTED = "captain_selected"
+    const val CAPTAIN_REMOVED = "captain_removed"
+
+    // Export Events
+    const val PDF_EXPORTED = "pdf_exported"
+    const val MATCH_REPORT_EXPORTED = "match_report_exported"
+    const val PLAYER_STATS_EXPORTED = "player_stats_exported"
 
     // Navigation Events
     const val SCREEN_VIEW = "screen_view"
     const val WIZARD_STEP_COMPLETED = "wizard_step_completed"
     const val WIZARD_CANCELLED = "wizard_cancelled"
+    const val BUTTON_CLICKED = "button_clicked"
+    const val FAB_CLICKED = "fab_clicked"
+
+    // Dialog Events
+    const val DIALOG_SHOWN = "dialog_shown"
+    const val DIALOG_CONFIRMED = "dialog_confirmed"
+    const val DIALOG_CANCELLED = "dialog_cancelled"
 
     // Statistics Events
     const val STATS_VIEWED = "stats_viewed"
     const val CHART_VIEWED = "chart_viewed"
+    const val TAB_CHANGED = "tab_changed"
 }
 
 /**
@@ -51,7 +69,10 @@ object AnalyticsParam {
     // Common Parameters
     const val TEAM_ID = "team_id"
     const val TEAM_NAME = "team_name"
+    const val TEAM_CATEGORY = "team_category"
     const val PLAYER_ID = "player_id"
+    const val PLAYER_NAME = "player_name"
+    const val PLAYER_NUMBER = "player_number"
     const val PLAYER_POSITION = "player_position"
     const val MATCH_ID = "match_id"
     const val MATCH_TYPE = "match_type"
@@ -63,17 +84,28 @@ object AnalyticsParam {
     const val CARD_TYPE = "card_type"
     const val FORMATION = "formation"
     const val DURATION_MINUTES = "duration_minutes"
+    const val GOAL_MINUTE = "goal_minute"
+    const val SUBSTITUTION_MINUTE = "substitution_minute"
 
     // Navigation Parameters
     const val SCREEN_NAME = "screen_name"
     const val SCREEN_CLASS = "screen_class"
     const val WIZARD_TYPE = "wizard_type"
     const val STEP_NUMBER = "step_number"
+    const val BUTTON_NAME = "button_name"
+    const val DIALOG_TYPE = "dialog_type"
 
     // Statistics Parameters
     const val STATS_TYPE = "stats_type"
     const val CHART_TYPE = "chart_type"
     const val TIME_RANGE = "time_range"
+    const val TAB_NAME = "tab_name"
+    const val EXPORT_TYPE = "export_type"
+
+    // Error Parameters
+    const val ERROR_MESSAGE = "error_message"
+    const val ERROR_TYPE = "error_type"
+    const val ERROR_LOCATION = "error_location"
 }
 
 /**

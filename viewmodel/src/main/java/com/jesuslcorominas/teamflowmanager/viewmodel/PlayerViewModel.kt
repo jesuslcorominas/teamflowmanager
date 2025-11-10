@@ -2,6 +2,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
@@ -25,6 +29,8 @@ class PlayerViewModel(
     private val updateScheduledMatchesCaptainUseCase: UpdateScheduledMatchesCaptainUseCase,
     private val playerRepository: PlayerRepository,
     private val matchRepository: MatchRepository,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PlayerUiState>(PlayerUiState.Loading)
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
@@ -41,13 +47,20 @@ class PlayerViewModel(
 
     private fun loadPlayers() {
         viewModelScope.launch {
-            getPlayersUseCase.invoke().collect { players ->
-                _uiState.value =
-                    if (players.isEmpty()) {
-                        PlayerUiState.Empty
-                    } else {
-                        PlayerUiState.Success(players)
-                    }
+            try {
+                crashReporter.log("Loading players")
+                getPlayersUseCase.invoke().collect { players ->
+                    _uiState.value =
+                        if (players.isEmpty()) {
+                            PlayerUiState.Empty
+                        } else {
+                            PlayerUiState.Success(players)
+                        }
+                }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error loading players: ${e.message}")
+                throw e
             }
         }
     }
@@ -114,20 +127,61 @@ class PlayerViewModel(
 
     private fun savePlayerDirectly(player: Player) {
         viewModelScope.launch {
-            if (player.id == 0L) {
-                addPlayerUseCase.invoke(player)
-            } else {
-                updatePlayerUseCase.invoke(player)
-            }
-            
-            // Update captain status in repository
-            if (player.isCaptain) {
-                playerRepository.setPlayerAsCaptain(player.id)
-            } else {
-                val currentCaptain = getCaptainPlayerUseCase.invoke()
-                if (currentCaptain?.id == player.id) {
-                    playerRepository.removePlayerAsCaptain(player.id)
+            try {
+                val isNewPlayer = player.id == 0L
+                
+                if (isNewPlayer) {
+                    crashReporter.log("Creating new player: ${player.firstName} ${player.lastName}")
+                    addPlayerUseCase.invoke(player)
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.PLAYER_CREATED,
+                        mapOf(
+                            AnalyticsParam.PLAYER_NAME to "${player.firstName} ${player.lastName}",
+                            AnalyticsParam.PLAYER_NUMBER to player.number.toString(),
+                            AnalyticsParam.PLAYER_POSITION to player.positions.joinToString(),
+                        ),
+                    )
+                } else {
+                    crashReporter.log("Updating player: ${player.id}")
+                    updatePlayerUseCase.invoke(player)
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.PLAYER_UPDATED,
+                        mapOf(
+                            AnalyticsParam.PLAYER_ID to player.id.toString(),
+                            AnalyticsParam.PLAYER_NUMBER to player.number.toString(),
+                        ),
+                    )
                 }
+                
+                // Update captain status in repository
+                if (player.isCaptain) {
+                    playerRepository.setPlayerAsCaptain(player.id)
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.CAPTAIN_SELECTED,
+                        mapOf(
+                            AnalyticsParam.PLAYER_ID to player.id.toString(),
+                        ),
+                    )
+                } else {
+                    val currentCaptain = getCaptainPlayerUseCase.invoke()
+                    if (currentCaptain?.id == player.id) {
+                        playerRepository.removePlayerAsCaptain(player.id)
+                        
+                        analyticsTracker.logEvent(
+                            AnalyticsEvent.CAPTAIN_REMOVED,
+                            mapOf(
+                                AnalyticsParam.PLAYER_ID to player.id.toString(),
+                            ),
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error saving player: ${e.message}")
+                throw e
             }
         }
     }
@@ -150,8 +204,23 @@ class PlayerViewModel(
 
     fun deletePlayer(playerId: Long) {
         viewModelScope.launch {
-            deletePlayerUseCase.invoke(playerId)
-            _deleteConfirmationState.value = DeleteConfirmationState.None
+            try {
+                crashReporter.log("Deleting player: $playerId")
+                deletePlayerUseCase.invoke(playerId)
+                
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.PLAYER_DELETED,
+                    mapOf(
+                        AnalyticsParam.PLAYER_ID to playerId.toString(),
+                    ),
+                )
+                
+                _deleteConfirmationState.value = DeleteConfirmationState.None
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error deleting player: ${e.message}")
+                throw e
+            }
         }
     }
 }
