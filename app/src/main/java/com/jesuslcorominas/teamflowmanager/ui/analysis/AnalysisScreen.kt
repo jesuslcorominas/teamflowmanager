@@ -28,8 +28,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerGoalStats
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStats
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
@@ -52,6 +54,8 @@ import org.koin.androidx.compose.koinViewModel
 fun AnalysisScreen(
     viewModel: AnalysisViewModel = koinViewModel(),
 ) {
+    TrackScreenView(screenName = ScreenName.ANALYSIS, screenClass = "AnalysisScreen")
+    
     val uiState by viewModel.uiState.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
     val exportState by viewModel.exportState.collectAsState()
