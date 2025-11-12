@@ -11,7 +11,7 @@ class TeamFlowManagerApplication : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@TeamFlowManagerApplication)
-            modules(teamFlowManagerModule, appModule)
+            modules( appModule, teamFlowManagerModule)
         }
     }
 }

@@ -31,6 +31,8 @@ val viewModelModule =
                 updateScheduledMatchesCaptainUseCase = get(),
                 playerRepository = get(),
                 matchRepository = get(),
+                analyticsTracker = get(),
+                crashReporter = get()
             )
         }
         viewModel {
@@ -42,6 +44,8 @@ val viewModelModule =
                 updateScheduledMatchesCaptainUseCase = get(),
                 playerRepository = get(),
                 matchRepository = get(),
+                analyticsTracker = get(),
+                crashReporter = get(),
                 savedStateHandle = get(),
             )
         }
@@ -76,6 +80,8 @@ val viewModelModule =
                 exportMatchReportToPdf = get(),
                 preferencesRepository = get(),
                 timeTicker = get(),
+                analyticsTracker = get(),
+                crashReporter = get(),
                 savedStateHandle = get()
             )
         }
@@ -86,12 +92,16 @@ val viewModelModule =
                 updateMatchUseCase = get(),
                 resumeMatchUseCase = get(),
                 archiveMatchUseCase = get(),
+                analyticsTracker = get(),
+                crashReporter = get()
             )
         }
         viewModel {
             ArchivedMatchesViewModel(
                 getArchivedMatchesUseCase = get(),
                 unarchiveMatchUseCase = get(),
+                analyticsTracker = get(),
+                crashReporter = get()
             )
         }
         viewModel {
@@ -104,6 +114,8 @@ val viewModelModule =
                 createMatch = get(),
                 getMatchByIdUseCase = get(),
                 updateMatchUseCase = get(),
+                analyticsTracker = get(),
+                crashReporter = get(),
                 savedStateHandle = get()
             )
         }
@@ -114,6 +126,8 @@ val viewModelModule =
                 getExportData = get(),
                 getTeam = get(),
                 exportToPdf = get(),
+                analyticsTracker = get(),
+                crashReporter = get()
             )
         }
 

@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.analytics.FirebaseAnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.analytics.FirebaseCrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -17,7 +18,7 @@ import org.koin.dsl.module
 val analyticsModule =
     module {
         // Firebase instances
-        single { FirebaseAnalytics.getInstance(get()) }
+        single { FirebaseAnalytics.getInstance(androidContext()) }
         single { FirebaseCrashlytics.getInstance() }
 
         // Analytics tracker
