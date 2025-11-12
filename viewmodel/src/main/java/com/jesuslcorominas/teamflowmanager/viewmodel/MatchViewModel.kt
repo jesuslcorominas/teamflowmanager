@@ -3,6 +3,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
@@ -52,6 +56,8 @@ class MatchViewModel(
     private val exportMatchReportToPdf: ExportMatchReportToPdfUseCase,
     private val preferencesRepository: PreferencesRepository,
     private val timeTicker: TimeTicker,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
@@ -117,11 +123,26 @@ class MatchViewModel(
 
     fun confirmStopMatch() {
         viewModelScope.launch {
-            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                finishMatch(currentState.match.id, _currentTime.value)
-            }
+            try {
+                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                    crashReporter.log("Finishing match: ${currentState.match.id}")
+                    finishMatch(currentState.match.id, _currentTime.value)
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.MATCH_FINISHED,
+                        mapOf(
+                            AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                            AnalyticsParam.DURATION_MINUTES to (_currentTime.value / 60000).toString(),
+                        ),
+                    )
+                }
 
-            _showStopConfirmation.value = false
+                _showStopConfirmation.value = false
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error finishing match: ${e.message}")
+                throw e
+            }
         }
     }
 
@@ -131,38 +152,97 @@ class MatchViewModel(
 
     fun pauseMatch() {
         viewModelScope.launch {
-            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                if (currentState.match.canPause()) {
-                    pauseMatch(currentState.match.id, _currentTime.value)
+            try {
+                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                    if (currentState.match.canPause()) {
+                        crashReporter.log("Pausing match: ${currentState.match.id}")
+                        pauseMatch(currentState.match.id, _currentTime.value)
+                        
+                        analyticsTracker.logEvent(
+                            AnalyticsEvent.MATCH_PAUSED,
+                            mapOf(
+                                AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                                AnalyticsParam.DURATION_MINUTES to (_currentTime.value / 60000).toString(),
+                            ),
+                        )
+                    }
                 }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error pausing match: ${e.message}")
+                throw e
             }
         }
     }
 
     fun resumeMatch(matchId: Long) {
         viewModelScope.launch {
-            getMatchById(matchId).first()?.let {
-                resumeMatchUseCase(it.id, _currentTime.value)
+            try {
+                crashReporter.log("Resuming match: $matchId")
+                getMatchById(matchId).first()?.let {
+                    resumeMatchUseCase(it.id, _currentTime.value)
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.MATCH_RESUMED,
+                        mapOf(
+                            AnalyticsParam.MATCH_ID to matchId.toString(),
+                        ),
+                    )
+                }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error resuming match: ${e.message}")
+                throw e
             }
         }
     }
 
     fun startTimeout() {
         viewModelScope.launch {
-            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                if (currentState.match.isInProgress) {
-                    startTimeoutUseCase(currentState.match.id, _currentTime.value)
+            try {
+                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                    if (currentState.match.isInProgress) {
+                        crashReporter.log("Starting timeout for match: ${currentState.match.id}")
+                        startTimeoutUseCase(currentState.match.id, _currentTime.value)
+                        
+                        analyticsTracker.logEvent(
+                            AnalyticsEvent.BUTTON_CLICKED,
+                            mapOf(
+                                AnalyticsParam.BUTTON_NAME to "start_timeout",
+                                AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                            ),
+                        )
+                    }
                 }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error starting timeout: ${e.message}")
+                throw e
             }
         }
     }
 
     fun endTimeout() {
         viewModelScope.launch {
-            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                if (currentState.match.status == MatchStatus.TIMEOUT) {
-                    endTimeoutUseCase(currentState.match.id, _currentTime.value)
+            try {
+                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                    if (currentState.match.status == MatchStatus.TIMEOUT) {
+                        crashReporter.log("Ending timeout for match: ${currentState.match.id}")
+                        endTimeoutUseCase(currentState.match.id, _currentTime.value)
+                        
+                        analyticsTracker.logEvent(
+                            AnalyticsEvent.BUTTON_CLICKED,
+                            mapOf(
+                                AnalyticsParam.BUTTON_NAME to "end_timeout",
+                                AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                            ),
+                        )
+                    }
                 }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error ending timeout: ${e.message}")
+                throw e
             }
         }
     }
@@ -195,16 +275,34 @@ class MatchViewModel(
 
     fun substitutePlayer(playerInId: Long) {
         viewModelScope.launch {
-            val playerOutId = _selectedPlayerOut.value
-            val currentState = _uiState.value
-            if (playerOutId != null && currentState is MatchUiState.Success) {
-                registerPlayerSubstitutionUseCase(
-                    matchId = currentState.match.id,
-                    playerOutId = playerOutId,
-                    playerInId = playerInId,
-                    currentTimeMillis = _currentTime.value,
-                )
-                _selectedPlayerOut.value = null
+            try {
+                val playerOutId = _selectedPlayerOut.value
+                val currentState = _uiState.value
+                if (playerOutId != null && currentState is MatchUiState.Success) {
+                    crashReporter.log("Substituting players: $playerOutId -> $playerInId")
+                    registerPlayerSubstitutionUseCase(
+                        matchId = currentState.match.id,
+                        playerOutId = playerOutId,
+                        playerInId = playerInId,
+                        currentTimeMillis = _currentTime.value,
+                    )
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.SUBSTITUTION_MADE,
+                        mapOf(
+                            AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                            AnalyticsParam.PLAYER_OUT to playerOutId.toString(),
+                            AnalyticsParam.PLAYER_IN to playerInId.toString(),
+                            AnalyticsParam.SUBSTITUTION_MINUTE to (_currentTime.value / 60000).toString(),
+                        ),
+                    )
+                    
+                    _selectedPlayerOut.value = null
+                }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error substituting player: ${e.message}")
+                throw e
             }
         }
     }
@@ -219,14 +317,32 @@ class MatchViewModel(
 
     fun registerGoal(scorerId: Long) {
         viewModelScope.launch {
-            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                registerGoal(
-                    matchId = currentState.match.id,
-                    scorerId = scorerId,
-                    currentTimeMillis = _currentTime.value,
-                    isOpponentGoal = false,
-                )
-                _showGoalScorerDialog.value = false
+            try {
+                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                    crashReporter.log("Registering goal for player: $scorerId")
+                    registerGoal(
+                        matchId = currentState.match.id,
+                        scorerId = scorerId,
+                        currentTimeMillis = _currentTime.value,
+                        isOpponentGoal = false,
+                    )
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.GOAL_SCORED,
+                        mapOf(
+                            AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                            AnalyticsParam.PLAYER_ID to scorerId.toString(),
+                            AnalyticsParam.GOAL_MINUTE to (_currentTime.value / 60000).toString(),
+                            AnalyticsParam.TEAM_TYPE to "own",
+                        ),
+                    )
+                    
+                    _showGoalScorerDialog.value = false
+                }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error registering goal: ${e.message}")
+                throw e
             }
         }
     }
@@ -241,15 +357,32 @@ class MatchViewModel(
 
     fun registerOpponentGoal() {
         viewModelScope.launch {
-            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                // For opponent goals, scorerId is null since opponent players are not tracked
-                registerGoal(
-                    matchId = currentState.match.id,
-                    scorerId = null,
-                    currentTimeMillis = _currentTime.value,
-                    isOpponentGoal = true,
-                )
-                _showOpponentGoalDialog.value = false
+            try {
+                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                    crashReporter.log("Registering opponent goal")
+                    // For opponent goals, scorerId is null since opponent players are not tracked
+                    registerGoal(
+                        matchId = currentState.match.id,
+                        scorerId = null,
+                        currentTimeMillis = _currentTime.value,
+                        isOpponentGoal = true,
+                    )
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.OPPONENT_GOAL_SCORED,
+                        mapOf(
+                            AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                            AnalyticsParam.GOAL_MINUTE to (_currentTime.value / 60000).toString(),
+                            AnalyticsParam.TEAM_TYPE to "opponent",
+                        ),
+                    )
+                    
+                    _showOpponentGoalDialog.value = false
+                }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error registering opponent goal: ${e.message}")
+                throw e
             }
         }
     }
@@ -369,17 +502,31 @@ class MatchViewModel(
 
     fun requestExport() {
         viewModelScope.launch {
-            _exportState.value = ExportState.Loading
-            val matchReportData = getMatchReportData(matchId).firstOrNull()
-            
-            if (matchReportData != null) {
-                val uri = exportMatchReportToPdf(matchReportData)
-                _exportState.value = if (uri != null) {
-                    ExportState.Ready(uri)
+            try {
+                crashReporter.log("Requesting match report export for match: $matchId")
+                _exportState.value = ExportState.Loading
+                val matchReportData = getMatchReportData(matchId).firstOrNull()
+                
+                if (matchReportData != null) {
+                    val uri = exportMatchReportToPdf(matchReportData)
+                    _exportState.value = if (uri != null) {
+                        analyticsTracker.logEvent(
+                            AnalyticsEvent.MATCH_REPORT_EXPORTED,
+                            mapOf(
+                                AnalyticsParam.MATCH_ID to matchId.toString(),
+                                AnalyticsParam.EXPORT_TYPE to "pdf",
+                            ),
+                        )
+                        ExportState.Ready(uri)
+                    } else {
+                        ExportState.Error
+                    }
                 } else {
-                    ExportState.Error
+                    _exportState.value = ExportState.Error
                 }
-            } else {
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error exporting match report: ${e.message}")
                 _exportState.value = ExportState.Error
             }
         }

@@ -9,8 +9,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.koin.dsl.module
 
-val teamFlowManagerModule =
-    module {
+val teamFlowManagerModule = module {
         includes(
             listOf(
                 dataLocalModule,
@@ -18,7 +17,7 @@ val teamFlowManagerModule =
                 // dataRemoteModule, // Uncomment when remote data sources are needed
                 useCaseModule,
                 viewModelModule,
-            ),
+            )
         )
 
         single<CoroutineDispatcher> { Dispatchers.IO }

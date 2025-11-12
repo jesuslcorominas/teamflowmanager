@@ -2,6 +2,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
@@ -13,6 +17,8 @@ import kotlinx.coroutines.launch
 class ArchivedMatchesViewModel(
     private val getArchivedMatchesUseCase: GetArchivedMatchesUseCase,
     private val unarchiveMatchUseCase: UnarchiveMatchUseCase,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ArchivedMatchesUiState>(ArchivedMatchesUiState.Loading)
     val uiState: StateFlow<ArchivedMatchesUiState> = _uiState.asStateFlow()
@@ -37,7 +43,21 @@ class ArchivedMatchesViewModel(
 
     fun unarchiveMatch(matchId: Long) {
         viewModelScope.launch {
-            unarchiveMatchUseCase.invoke(matchId)
+            try {
+                crashReporter.log("Unarchiving match: $matchId")
+                unarchiveMatchUseCase.invoke(matchId)
+                
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.MATCH_UNARCHIVED,
+                    mapOf(
+                        AnalyticsParam.MATCH_ID to matchId.toString(),
+                    ),
+                )
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error unarchiving match: ${e.message}")
+                throw e
+            }
         }
     }
 }

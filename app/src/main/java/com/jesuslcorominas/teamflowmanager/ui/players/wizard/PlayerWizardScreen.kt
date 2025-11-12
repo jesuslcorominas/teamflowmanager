@@ -11,6 +11,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.CaptainConfirmationDialog
@@ -26,6 +28,8 @@ fun PlayerWizardScreen(
     onNavigateBack: () -> Unit,
     wizardViewModel: PlayerWizardViewModel = koinViewModel()
 ) {
+    TrackScreenView(screenName = ScreenName.PLAYER_WIZARD, screenClass = "PlayerWizardScreen")
+    
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
     val captainConfirmationState by wizardViewModel.captainConfirmationState.collectAsState()

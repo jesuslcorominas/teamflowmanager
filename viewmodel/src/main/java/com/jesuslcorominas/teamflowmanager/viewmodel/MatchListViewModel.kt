@@ -2,6 +2,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
@@ -21,6 +25,8 @@ class MatchListViewModel(
     private val updateMatchUseCase: UpdateMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val archiveMatchUseCase: ArchiveMatchUseCase,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
@@ -62,7 +68,21 @@ class MatchListViewModel(
 
     fun resumeMatch(matchId: Long) {
         viewModelScope.launch {
-            resumeMatchUseCase(matchId, System.currentTimeMillis())
+            try {
+                crashReporter.log("Resuming match: $matchId")
+                resumeMatchUseCase(matchId, System.currentTimeMillis())
+                
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.MATCH_RESUMED,
+                    mapOf(
+                        AnalyticsParam.MATCH_ID to matchId.toString(),
+                    ),
+                )
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error resuming match: ${e.message}")
+                throw e
+            }
         }
     }
 
@@ -74,8 +94,23 @@ class MatchListViewModel(
         val state = _deleteConfirmationState.value
         if (state is MatchDeleteConfirmationState.Requested) {
             viewModelScope.launch {
-                deleteMatchUseCase(state.match.id)
-                _deleteConfirmationState.value = MatchDeleteConfirmationState.None
+                try {
+                    crashReporter.log("Deleting match: ${state.match.id}")
+                    deleteMatchUseCase(state.match.id)
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.MATCH_DELETED,
+                        mapOf(
+                            AnalyticsParam.MATCH_ID to state.match.id.toString(),
+                        ),
+                    )
+                    
+                    _deleteConfirmationState.value = MatchDeleteConfirmationState.None
+                } catch (e: Exception) {
+                    crashReporter.recordException(e)
+                    crashReporter.log("Error deleting match: ${e.message}")
+                    throw e
+                }
             }
         }
     }
@@ -86,7 +121,21 @@ class MatchListViewModel(
 
     fun archiveMatch(matchId: Long) {
         viewModelScope.launch {
-            archiveMatchUseCase(matchId)
+            try {
+                crashReporter.log("Archiving match: $matchId")
+                archiveMatchUseCase(matchId)
+                
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.MATCH_ARCHIVED,
+                    mapOf(
+                        AnalyticsParam.MATCH_ID to matchId.toString(),
+                    ),
+                )
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error archiving match: ${e.message}")
+                throw e
+            }
         }
     }
 

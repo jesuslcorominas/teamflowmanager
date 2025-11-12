@@ -3,6 +3,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
@@ -26,6 +30,8 @@ class PlayerWizardViewModel(
     private val updateScheduledMatchesCaptainUseCase: UpdateScheduledMatchesCaptainUseCase,
     private val playerRepository: PlayerRepository,
     private val matchRepository: MatchRepository,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -263,23 +269,58 @@ class PlayerWizardViewModel(
 
     private fun savePlayerDirectly(player: Player, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            if (player.id == 0L) {
-                addPlayerUseCase.invoke(player)
-            } else {
-                updatePlayerUseCase.invoke(player)
-            }
-
-            // Update captain status in repository
-            if (player.isCaptain) {
-                playerRepository.setPlayerAsCaptain(player.id)
-            } else {
-                val currentCaptain = getCaptainPlayerUseCase.invoke()
-                if (currentCaptain?.id == player.id) {
-                    playerRepository.removePlayerAsCaptain(player.id)
+            try {
+                val isNewPlayer = player.id == 0L
+                
+                crashReporter.log("Saving player via wizard: ${player.firstName} ${player.lastName}, isNew: $isNewPlayer")
+                
+                if (isNewPlayer) {
+                    addPlayerUseCase.invoke(player)
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.PLAYER_CREATED,
+                        mapOf(
+                            AnalyticsParam.PLAYER_NAME to "${player.firstName} ${player.lastName}",
+                            AnalyticsParam.PLAYER_NUMBER to player.number.toString(),
+                            AnalyticsParam.WIZARD_TYPE to "player_wizard",
+                        ),
+                    )
+                } else {
+                    updatePlayerUseCase.invoke(player)
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.PLAYER_UPDATED,
+                        mapOf(
+                            AnalyticsParam.PLAYER_ID to player.id.toString(),
+                            AnalyticsParam.WIZARD_TYPE to "player_wizard",
+                        ),
+                    )
                 }
-            }
 
-            onSuccess()
+                // Update captain status in repository
+                if (player.isCaptain) {
+                    playerRepository.setPlayerAsCaptain(player.id)
+                } else {
+                    val currentCaptain = getCaptainPlayerUseCase.invoke()
+                    if (currentCaptain?.id == player.id) {
+                        playerRepository.removePlayerAsCaptain(player.id)
+                    }
+                }
+
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.WIZARD_STEP_COMPLETED,
+                    mapOf(
+                        AnalyticsParam.WIZARD_TYPE to "player_wizard",
+                        AnalyticsParam.STEP_NUMBER to "final",
+                    ),
+                )
+
+                onSuccess()
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error saving player in wizard: ${e.message}")
+                throw e
+            }
         }
     }
 }

@@ -3,6 +3,9 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
@@ -26,7 +29,8 @@ class TeamViewModel(
     private val updateTeam: UpdateTeamUseCase,
     private val getCaptainPlayer: GetCaptainPlayerUseCase,
     private val playerRepository: PlayerRepository,
-    savedStateHandle: SavedStateHandle
+    private val analyticsTracker: AnalyticsTracker,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TeamUiState>(TeamUiState.Loading)
     val uiState: StateFlow<TeamUiState> = _uiState.asStateFlow()
@@ -55,6 +59,14 @@ class TeamViewModel(
     fun createTeam(team: Team) {
         viewModelScope.launch {
             createTeam.invoke(team)
+
+            // Track team creation event
+            analyticsTracker.logEvent(
+                AnalyticsEvent.TEAM_CREATED,
+                mapOf(
+                    AnalyticsParam.TEAM_NAME to team.name,
+                ),
+            )
         }
     }
 
@@ -70,6 +82,14 @@ class TeamViewModel(
             }
 
             updateTeam.invoke(team)
+
+            // Track team update event
+            analyticsTracker.logEvent(
+                AnalyticsEvent.TEAM_UPDATED,
+                mapOf(
+                    AnalyticsParam.TEAM_ID to team.id.toString(),
+                ),
+            )
         }
     }
 

@@ -16,7 +16,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
@@ -33,6 +35,8 @@ fun MatchCreationWizardScreen(
     currentBackHandler: BackHandlerController? = null,
     wizardViewModel: MatchCreationWizardViewModel = koinViewModel()
 ) {
+    TrackScreenView(screenName = ScreenName.MATCH_WIZARD, screenClass = "MatchCreationWizardScreen")
+    
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
     val showExitDialog by wizardViewModel.showExitDialog.collectAsState()
