@@ -19,6 +19,7 @@ rootProject.name = "TeamFlowManager"
 include(":app")
 include(":viewmodel")
 include(":usecase")
+include(":service")
 include(":data:core")
 include(":data:local")
 include(":data:remote")

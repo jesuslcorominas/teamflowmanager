@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.notification
+package com.jesuslcorominas.teamflowmanager.service
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Implementation of MatchNotificationController that delegates to use cases.
- * This bridges the app layer with the use case layer through the domain interface.
+ * This bridges the service layer with the use case layer through the domain interface.
  */
 class MatchNotificationControllerImpl(
     private val getActiveMatchUseCase: GetActiveMatchUseCase,
