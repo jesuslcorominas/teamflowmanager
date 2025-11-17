@@ -11,7 +11,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -66,8 +65,7 @@ class MatchCountdownService : Service() {
         updateJob?.cancel()
         updateJob =
             serviceScope.launch {
-                while (true) {
-                    val match = getActiveMatchUseCase().firstOrNull()
+                getActiveMatchUseCase().collect { match ->
                     if (match != null) {
                         val notification =
                             notificationManager.buildNotification(
@@ -78,9 +76,7 @@ class MatchCountdownService : Service() {
                     } else {
                         // No active match, stop the service
                         stopForegroundService()
-                        break
                     }
-                    delay(UPDATE_INTERVAL_MS)
                 }
             }
     }
@@ -153,6 +149,5 @@ class MatchCountdownService : Service() {
     companion object {
         const val ACTION_START_SERVICE = "com.jesuslcorominas.teamflowmanager.ACTION_START_SERVICE"
         const val ACTION_STOP_SERVICE = "com.jesuslcorominas.teamflowmanager.ACTION_STOP_SERVICE"
-        private const val UPDATE_INTERVAL_MS = 1000L // Update every second
     }
 }
