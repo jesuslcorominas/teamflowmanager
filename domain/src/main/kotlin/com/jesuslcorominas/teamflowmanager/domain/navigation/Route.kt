@@ -21,6 +21,7 @@ sealed class Route(
                 PlayerWizard,
                 Match,
                 Analysis,
+                Settings,
             )
         }
 
@@ -115,4 +116,6 @@ sealed class Route(
     }
 
     data object Analysis : Route(path = "analysis", showBottomBar = true)
+
+    data object Settings : Route(path = "settings", canGoBack = true)
 }

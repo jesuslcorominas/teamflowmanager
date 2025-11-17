@@ -14,6 +14,9 @@ interface PlayerTimeDao {
     @Query("SELECT * FROM player_time")
     fun getAllPlayerTimes(): Flow<List<PlayerTimeEntity>>
 
+    @Query("SELECT * FROM player_time")
+    suspend fun getAllPlayerTimesDirect(): List<PlayerTimeEntity>
+
     @Upsert
     suspend fun upsert(playerTime: PlayerTimeEntity)
 

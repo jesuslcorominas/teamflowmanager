@@ -20,6 +20,7 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
+import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
@@ -151,6 +152,10 @@ fun Navigation(
             )
         ) {
             MatchScreen()
+        }
+
+        composable(Route.Settings.createRoute()) {
+            SettingsScreen()
         }
     }
 

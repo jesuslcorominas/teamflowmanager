@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -170,6 +171,16 @@ fun DefaultTopBar(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = stringResource(R.string.search)
+                    )
+                }
+            }
+            if (uiConfig.showBottomBar) {
+                IconButton(
+                    onClick = { navController.navigate(Route.Settings.createRoute()) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = stringResource(R.string.settings)
                     )
                 }
             }
