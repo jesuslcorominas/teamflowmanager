@@ -20,9 +20,6 @@ interface MatchDao {
     @Query("SELECT * FROM match WHERE archived = 1 ORDER BY dateTime DESC")
     fun getArchivedMatches(): Flow<List<MatchEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertMatch(match: MatchEntity)
-
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertMatch(match: MatchEntity): Long
 

@@ -47,7 +47,7 @@ internal class MatchRepositoryImpl(
                 },
             )
 
-            localDataSource.upsertMatch(updatedMatch)
+            localDataSource.updateMatch(updatedMatch)
         }
     }
 
@@ -69,7 +69,7 @@ internal class MatchRepositoryImpl(
                     pauseCount = currentMatch.pauseCount + 1,
                 )
 
-            localDataSource.upsertMatch(updatedMatch)
+            localDataSource.updateMatch(updatedMatch)
         }
     }
 
@@ -80,7 +80,7 @@ internal class MatchRepositoryImpl(
                 status = MatchStatus.TIMEOUT,
                 timeoutStartTimeMillis = currentTimeMillis
             )
-            localDataSource.upsertMatch(updatedMatch)
+            localDataSource.updateMatch(updatedMatch)
         }
     }
 
@@ -112,7 +112,7 @@ internal class MatchRepositoryImpl(
                 )
             }
 
-            localDataSource.upsertMatch(updatedMatch)
+            localDataSource.updateMatch(updatedMatch)
         }
     }
 

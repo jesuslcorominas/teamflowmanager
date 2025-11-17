@@ -27,10 +27,6 @@ internal class MatchLocalDataSourceImpl(
         matchDao.updateMatchCaptain(matchId, captainId)
     }
 
-    override suspend fun upsertMatch(match: Match) {
-        matchDao.upsertMatch(match.toEntity())
-    }
-
     override suspend fun insertMatch(match: Match): Long = matchDao.insertMatch(match.toEntity())
 
     override suspend fun updateMatch(match: Match) {

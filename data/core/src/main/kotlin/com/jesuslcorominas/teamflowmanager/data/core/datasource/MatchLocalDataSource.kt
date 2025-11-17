@@ -14,8 +14,6 @@ interface MatchLocalDataSource {
 
     suspend fun updateMatchCaptain(matchId: Long, captainId: Long?)
 
-    suspend fun upsertMatch(match: Match)
-
     suspend fun insertMatch(match: Match): Long
 
     suspend fun updateMatch(match: Match)
