@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.local.di
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.DatabaseLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
@@ -17,6 +18,7 @@ import com.jesuslcorominas.teamflowmanager.data.local.database.utils.converters.
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionExecutor
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionRunner
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.TransactionExecutor
+import com.jesuslcorominas.teamflowmanager.data.local.datasource.DatabaseLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.GoalLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.MatchLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalDataSourceImpl
@@ -147,6 +149,7 @@ internal val dataSourceLocalModule =
         singleOf(::PlayerSubstitutionLocalDataSourceImpl) bind PlayerSubstitutionLocalDataSource::class
         singleOf(::PreferencesLocalDataSourceImpl) bind PreferencesLocalDataSource::class
         singleOf(::GoalLocalDataSourceImpl) bind GoalLocalDataSource::class
+        singleOf(::DatabaseLocalDataSourceImpl) bind DatabaseLocalDataSource::class
     }
 
 val dataLocalModule =
