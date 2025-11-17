@@ -3,8 +3,8 @@ package com.jesuslcorominas.teamflowmanager
 import android.app.Application
 import com.jesuslcorominas.teamflowmanager.di.appModule
 import com.jesuslcorominas.teamflowmanager.di.teamFlowManagerModule
+import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
 import com.jesuslcorominas.teamflowmanager.service.MatchNotificationServiceManager
-import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,11 +24,11 @@ class TeamFlowManagerApplication : Application() {
         }
 
         // Start observing active matches for notification after Koin is initialized
-        val getActiveMatchUseCase: GetActiveMatchUseCase by inject()
+        val matchNotificationController: MatchNotificationController by inject()
         notificationServiceManager =
             MatchNotificationServiceManager(
                 context = this,
-                getActiveMatchUseCase = getActiveMatchUseCase,
+                matchNotificationController = matchNotificationController,
                 scope = applicationScope,
             )
         notificationServiceManager.start()

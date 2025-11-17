@@ -3,11 +3,7 @@ package com.jesuslcorominas.teamflowmanager.service
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -17,11 +13,7 @@ import org.koin.android.ext.android.inject
 
 class MatchCountdownService : Service() {
 
-    private val getActiveMatchUseCase: GetActiveMatchUseCase by inject()
-    private val pauseMatchUseCase: PauseMatchUseCase by inject()
-    private val resumeMatchUseCase: ResumeMatchUseCase by inject()
-    private val startTimeoutUseCase: StartTimeoutUseCase by inject()
-    private val endTimeoutUseCase: EndTimeoutUseCase by inject()
+    private val matchNotificationController: MatchNotificationController by inject()
 
     private lateinit var notificationManager: MatchNotificationManager
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
@@ -65,7 +57,7 @@ class MatchCountdownService : Service() {
         updateJob?.cancel()
         updateJob =
             serviceScope.launch {
-                getActiveMatchUseCase().collect { match ->
+                matchNotificationController.getActiveMatch().collect { match ->
                     if (match != null) {
                         val notification =
                             notificationManager.buildNotification(
@@ -85,7 +77,7 @@ class MatchCountdownService : Service() {
         val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L)
         if (matchId != -1L) {
             serviceScope.launch {
-                pauseMatchUseCase(matchId, System.currentTimeMillis())
+                matchNotificationController.pauseMatch(matchId, System.currentTimeMillis())
                 updateNotification()
             }
         }
@@ -95,7 +87,7 @@ class MatchCountdownService : Service() {
         val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L)
         if (matchId != -1L) {
             serviceScope.launch {
-                resumeMatchUseCase(matchId, System.currentTimeMillis())
+                matchNotificationController.resumeMatch(matchId, System.currentTimeMillis())
                 updateNotification()
             }
         }
@@ -105,7 +97,7 @@ class MatchCountdownService : Service() {
         val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L)
         if (matchId != -1L) {
             serviceScope.launch {
-                startTimeoutUseCase(matchId, System.currentTimeMillis())
+                matchNotificationController.startTimeout(matchId, System.currentTimeMillis())
                 updateNotification()
             }
         }
@@ -115,14 +107,14 @@ class MatchCountdownService : Service() {
         val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L)
         if (matchId != -1L) {
             serviceScope.launch {
-                endTimeoutUseCase(matchId, System.currentTimeMillis())
+                matchNotificationController.endTimeout(matchId, System.currentTimeMillis())
                 updateNotification()
             }
         }
     }
 
     private suspend fun updateNotification() {
-        val match = getActiveMatchUseCase().firstOrNull()
+        val match = matchNotificationController.getActiveMatch().firstOrNull()
         if (match != null) {
             val notification =
                 notificationManager.buildNotification(

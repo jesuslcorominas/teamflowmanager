@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Build
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
-import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class MatchNotificationServiceManager(
     private val context: Context,
-    private val getActiveMatchUseCase: GetActiveMatchUseCase,
+    private val matchNotificationController: MatchNotificationController,
     private val scope: CoroutineScope,
 ) {
     private var observerJob: Job? = null
@@ -23,7 +23,7 @@ class MatchNotificationServiceManager(
         observerJob?.cancel()
         observerJob =
             scope.launch {
-                getActiveMatchUseCase()
+                matchNotificationController.getActiveMatch()
                     .map { it?.isActiveForNotification() ?: false }
                     .distinctUntilChanged()
                     .collect { hasActiveMatch ->
