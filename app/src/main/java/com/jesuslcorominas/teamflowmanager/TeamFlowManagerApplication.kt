@@ -13,7 +13,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
 class TeamFlowManagerApplication : Application() {
-    private val getActiveMatchUseCase: GetActiveMatchUseCase by inject()
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private lateinit var notificationServiceManager: MatchNotificationServiceManager
 
@@ -24,7 +23,8 @@ class TeamFlowManagerApplication : Application() {
             modules(appModule, teamFlowManagerModule)
         }
 
-        // Start observing active matches for notification
+        // Start observing active matches for notification after Koin is initialized
+        val getActiveMatchUseCase: GetActiveMatchUseCase by inject()
         notificationServiceManager =
             MatchNotificationServiceManager(
                 context = this,

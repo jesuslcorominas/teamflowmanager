@@ -280,6 +280,19 @@
     <string name="export_match_report">Exportar</string>
     <string name="export_match_report_description">Exportar informe del partido</string>
     
+    <!-- Match Notification -->
+    <string name="match_notification_channel_name">Cuenta Atrás del Partido</string>
+    <string name="match_notification_channel_description">Muestra el tiempo restante durante los partidos activos</string>
+    <string name="match_notification_title">Partido vs %1$s</string>
+    <string name="match_notification_in_progress">Partido en curso</string>
+    <string name="match_notification_paused">Descanso</string>
+    <string name="match_notification_timeout">Tiempo muerto</string>
+    <string name="match_notification_scheduled">Partido programado</string>
+    <string name="match_notification_action_pause">Pausar</string>
+    <string name="match_notification_action_resume">Reanudar</string>
+    <string name="match_notification_action_timeout">Tiempo muerto</string>
+    <string name="match_notification_action_end_timeout">Reanudar</string>
+    
     <!-- Player Wizard Strings -->
     <string name="player_data_step_title">Datos del Jugador</string>
     <string name="player_positions_step_title">Posiciones del Jugador</string>
