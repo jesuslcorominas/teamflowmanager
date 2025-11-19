@@ -15,7 +15,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
@@ -32,7 +31,7 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 import kotlinx.coroutines.flow.firstOrNull
-import org.koin.androidx.compose.getKoin
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,12 +56,7 @@ fun MainScreen(
 
     val uiConfig = route?.uiConfig(arguments)
 
-    val context = LocalContext.current
-    val matchNotificationController: MatchNotificationController = remember {
-        (context.applicationContext as? android.app.Application)?.let {
-            org.koin.androidx.compose.getKoin().get()
-        } ?: error("Unable to get MatchNotificationController")
-    }
+    val matchNotificationController: MatchNotificationController = koinInject()
 
     // Handle pending match navigation from notification
     LaunchedEffect(pendingMatchNavigation) {
