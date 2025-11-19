@@ -30,7 +30,7 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,7 +62,7 @@ fun MainScreen(
         pendingMatchNavigation?.let { navigation ->
             // Get match details to build proper route
             // Use first() instead of firstOrNull() to wait for the match data
-            viewModel.getMatchById(navigation.matchId).first().let { match ->
+            viewModel.getMatchById(navigation.matchId).first()?.let { match ->
                 val matchRoute = Route.Match.createRoute(
                     navigation.matchId,
                     match.teamName,
@@ -71,7 +71,7 @@ fun MainScreen(
                 // Navigate to match detail with Matches as back stack
                 navController.navigate(matchRoute) {
                     // Pop back to Matches (don't include it) so back button works correctly
-                    popUpTo(Route.Matches.path) {
+                    popUpTo(Route.Matches.createRoute()) {
                         inclusive = false
                     }
                     launchSingleTop = true
