@@ -40,11 +40,11 @@ class DatabaseExporterImpl(
                     val matches = database.matchDao().getAllMatchesDirect()
                     matches.forEach { match ->
                         writer.write(
-                            "INSERT INTO match (id, teamId, teamName, opponent, location, dateTime, numberOfPeriods, squadCallUpIds, captainId, startingLineupIds, elapsedTimeMillis, lastStartTimeMillis, status, archived, currentPeriod, pauseCount, goals, opponentGoals, timeoutStartTimeMillis, periods, periodType) VALUES " +
+                            "INSERT INTO match (id, teamId, teamName, opponent, location, dateTime, numberOfPeriods, squadCallUpIds, captainId, startingLineupIds, lastStartTimeMillis, status, archived, currentPeriod, pauseCount, goals, opponentGoals, timeoutStartTimeMillis, periods, periodType) VALUES " +
                                     "(${match.id}, ${match.teamId}, '${escapeSql(match.teamName)}', '${escapeSql(match.opponent)}', " +
                                     "'${escapeSql(match.location)}', ${match.dateTime}, ${match.numberOfPeriods}, " +
                                     "'${escapeSql(match.squadCallUpIds)}', ${match.captainId}, '${escapeSql(match.startingLineupIds)}', " +
-                                    "${match.elapsedTimeMillis}, ${match.lastStartTimeMillis}, '${escapeSql(match.status)}', " +
+                                    "${match.lastStartTimeMillis}, '${escapeSql(match.status)}', " +
                                     "${if (match.archived) 1 else 0}, ${match.currentPeriod}, ${match.pauseCount}, " +
                                     "${match.goals}, ${match.opponentGoals}, ${match.timeoutStartTimeMillis}, " +
                                     "'${escapeSql(serializePeriods(match.periods))}', ${match.periodType});\n"

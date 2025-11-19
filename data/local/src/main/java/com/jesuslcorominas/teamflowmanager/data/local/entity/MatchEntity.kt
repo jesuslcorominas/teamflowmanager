@@ -21,7 +21,6 @@ data class MatchEntity(
     val squadCallUpIds: String = "",
     val captainId: Long,
     val startingLineupIds: String = "",
-    val elapsedTimeMillis: Long = 0L,
     val lastStartTimeMillis: Long? = null,
     val status: String = MatchStatus.SCHEDULED.name,
     val archived: Boolean = false,
