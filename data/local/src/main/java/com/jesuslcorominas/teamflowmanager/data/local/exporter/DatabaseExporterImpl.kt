@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.ui.util
+package com.jesuslcorominas.teamflowmanager.data.local.exporter
 
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.entity.MatchPeriodEntity

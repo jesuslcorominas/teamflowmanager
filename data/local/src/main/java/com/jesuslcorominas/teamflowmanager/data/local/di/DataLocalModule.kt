@@ -25,6 +25,10 @@ import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeHisto
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PreferencesLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.TeamLocalDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.local.exporter.DatabaseExporterImpl
+import com.jesuslcorominas.teamflowmanager.data.local.exporter.DatabaseImporterImpl
+import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseExporter
+import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseImporter
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -149,7 +153,13 @@ internal val dataSourceLocalModule =
         singleOf(::GoalLocalDataSourceImpl) bind GoalLocalDataSource::class
     }
 
+internal val databaseExporterModule =
+    module {
+        singleOf(::DatabaseExporterImpl) bind DatabaseExporter::class
+        singleOf(::DatabaseImporterImpl) bind DatabaseImporter::class
+    }
+
 val dataLocalModule =
     module {
-        includes(databaseModule, dataSourceLocalModule)
+        includes(databaseModule, dataSourceLocalModule, databaseExporterModule)
     }

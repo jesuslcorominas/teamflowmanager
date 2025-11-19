@@ -5,5 +5,5 @@ import org.koin.dsl.module
 val appModule = module {
     includes(analyticsModule)
     includes(pdfExporterModule)
-    includes(databaseExporterModule)
+    includes(fileHandlerModule)
 }
