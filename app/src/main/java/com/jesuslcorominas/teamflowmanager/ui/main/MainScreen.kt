@@ -23,21 +23,22 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
-import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.main.search.rememberSearchState
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
+import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.firstOrNull
-import org.koin.compose.koinInject
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     pendingMatchNavigation: MatchNavigation? = null,
-    onNavigationHandled: () -> Unit = {}
+    onNavigationHandled: () -> Unit = {},
+    viewModel: MainViewModel = koinViewModel()
 ) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -56,13 +57,11 @@ fun MainScreen(
 
     val uiConfig = route?.uiConfig(arguments)
 
-    val matchNotificationController: MatchNotificationController = koinInject()
-
     // Handle pending match navigation from notification
     LaunchedEffect(pendingMatchNavigation) {
         pendingMatchNavigation?.let { navigation ->
             // Get match details to build proper route
-            matchNotificationController.getMatchById(navigation.matchId).firstOrNull()?.let { match ->
+            viewModel.getMatchById(navigation.matchId).firstOrNull()?.let { match ->
                 val matchRoute = Route.Match.createRoute(
                     navigation.matchId,
                     match.team,
