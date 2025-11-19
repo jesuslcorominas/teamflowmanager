@@ -293,13 +293,4 @@
     <!-- Match Notification -->
     <string name="match_notification_channel_name">Match Countdown</string>
     <string name="match_notification_channel_description">Shows remaining time during active matches</string>
-    <string name="match_notification_title">Match vs %1$s</string>
-    <string name="match_notification_in_progress">Match in progress</string>
-    <string name="match_notification_paused">Half time</string>
-    <string name="match_notification_timeout">Timeout</string>
-    <string name="match_notification_scheduled">Match scheduled</string>
-    <string name="match_notification_action_pause">Pause</string>
-    <string name="match_notification_action_resume">Resume</string>
-    <string name="match_notification_action_timeout">Timeout</string>
-    <string name="match_notification_action_end_timeout">Resume</string>
 </resources>

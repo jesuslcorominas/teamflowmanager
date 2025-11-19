@@ -10,6 +10,7 @@ import androidx.core.app.NotificationCompat
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.ui.main.MainActivity
 
 class MatchNotificationManager(private val context: Context) {
@@ -40,11 +41,18 @@ class MatchNotificationManager(private val context: Context) {
         match: Match,
         currentTimeMillis: Long,
     ): android.app.Notification {
-        val contentIntent = createContentIntent()
+        val contentIntent = createContentIntent(match.id)
+
+        // Show score in title
+        val title = context.getString(
+            R.string.match_score,
+            match.goals,
+            match.opponentGoals
+        ) + " - " + match.opponent
 
         val notificationBuilder =
             NotificationCompat.Builder(context, CHANNEL_ID)
-                .setContentTitle(context.getString(R.string.match_notification_title, match.opponent))
+                .setContentTitle(title)
                 .setSmallIcon(R.drawable.ic_timer)
                 .setOngoing(true)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -52,7 +60,7 @@ class MatchNotificationManager(private val context: Context) {
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
 
-        // Calculate remaining time
+        // Calculate remaining time and set content text
         when (match.status) {
             MatchStatus.IN_PROGRESS -> {
                 val currentPeriod =
@@ -67,19 +75,19 @@ class MatchNotificationManager(private val context: Context) {
                     .setUsesChronometer(true)
                     .setChronometerCountDown(true)
                     .setWhen(whenTime)
-                    .setContentText(context.getString(R.string.match_notification_in_progress))
+                    .setContentText(getPeriodName(match))
             }
             MatchStatus.PAUSED -> {
                 notificationBuilder
-                    .setContentText(context.getString(R.string.match_notification_paused))
+                    .setContentText(getPeriodName(match))
             }
             MatchStatus.TIMEOUT -> {
                 notificationBuilder
-                    .setContentText(context.getString(R.string.match_notification_timeout))
+                    .setContentText(context.getString(R.string.match_timeout))
             }
             else -> {
                 notificationBuilder
-                    .setContentText(context.getString(R.string.match_notification_scheduled))
+                    .setContentText(context.getString(R.string.match_next))
             }
         }
 
@@ -87,6 +95,49 @@ class MatchNotificationManager(private val context: Context) {
         addNotificationActions(notificationBuilder, match)
 
         return notificationBuilder.build()
+    }
+
+    private fun getPeriodName(match: Match): String {
+        val matchStatus = match.status
+        val numberOfPauses = match.pauseCount
+
+        val currentPeriod = match
+            .periods
+            .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+            ?: match.periods.last()
+
+        return when {
+            matchStatus == MatchStatus.TIMEOUT -> context.getString(R.string.match_timeout)
+            matchStatus == MatchStatus.PAUSED
+                && (match.periodType == PeriodType.HALF_TIME || numberOfPauses == 2) ->
+                context.getString(R.string.paused_match_half_time)
+
+            matchStatus == MatchStatus.PAUSED
+                && match.periodType == PeriodType.QUARTER_TIME
+                && (numberOfPauses == 1 || numberOfPauses == 3) ->
+                context.getString(R.string.paused_match_quarter_break)
+
+            match.periodType == PeriodType.HALF_TIME
+                && currentPeriod.periodNumber == 1 -> context.getString(R.string.first_half)
+
+            match.periodType == PeriodType.HALF_TIME && currentPeriod.periodNumber == 2 ->
+                context.getString(R.string.second_half)
+
+            match.periodType == PeriodType.QUARTER_TIME && currentPeriod.periodNumber == 1 ->
+                context.getString(R.string.first_quarter)
+
+            match.periodType == PeriodType.QUARTER_TIME && currentPeriod.periodNumber == 2 ->
+                context.getString(R.string.second_quarter)
+
+            match.periodType == PeriodType.QUARTER_TIME && currentPeriod.periodNumber == 3 ->
+                context.getString(R.string.third_quarter)
+
+            match.periodType == PeriodType.QUARTER_TIME && currentPeriod.periodNumber == 4 ->
+                context.getString(R.string.fourth_quarter)
+
+            else ->
+                context.getString(R.string.period_label, currentPeriod.periodNumber, match.periodType.numberOfPeriods)
+        }
     }
 
     private fun addNotificationActions(
@@ -104,7 +155,7 @@ class MatchNotificationManager(private val context: Context) {
                         )
                     builder.addAction(
                         R.drawable.ic_pause,
-                        context.getString(R.string.match_notification_action_pause),
+                        context.getString(R.string.pause_match_button),
                         pauseIntent,
                     )
                 }
@@ -117,8 +168,16 @@ class MatchNotificationManager(private val context: Context) {
                     )
                 builder.addAction(
                     R.drawable.ic_timeout,
-                    context.getString(R.string.match_notification_action_timeout),
+                    context.getString(R.string.timeout_button),
                     timeoutIntent,
+                )
+
+                // Add finish match action
+                val finishIntent = createContentIntent(match.id)
+                builder.addAction(
+                    R.drawable.ic_whistle,
+                    context.getString(R.string.finish_match_button),
+                    finishIntent,
                 )
             }
             MatchStatus.PAUSED -> {
@@ -130,8 +189,16 @@ class MatchNotificationManager(private val context: Context) {
                     )
                 builder.addAction(
                     R.drawable.ic_play,
-                    context.getString(R.string.match_notification_action_resume),
+                    context.getString(R.string.resume_match_button),
                     resumeIntent,
+                )
+
+                // Add finish match action
+                val finishIntent = createContentIntent(match.id)
+                builder.addAction(
+                    R.drawable.ic_whistle,
+                    context.getString(R.string.finish_match_button),
+                    finishIntent,
                 )
             }
             MatchStatus.TIMEOUT -> {
@@ -143,8 +210,16 @@ class MatchNotificationManager(private val context: Context) {
                     )
                 builder.addAction(
                     R.drawable.ic_play,
-                    context.getString(R.string.match_notification_action_end_timeout),
+                    context.getString(R.string.end_timeout_button),
                     endTimeoutIntent,
+                )
+
+                // Add finish match action
+                val finishIntent = createContentIntent(match.id)
+                builder.addAction(
+                    R.drawable.ic_whistle,
+                    context.getString(R.string.finish_match_button),
+                    finishIntent,
                 )
             }
             else -> {
@@ -153,14 +228,16 @@ class MatchNotificationManager(private val context: Context) {
         }
     }
 
-    private fun createContentIntent(): PendingIntent {
+    private fun createContentIntent(matchId: Long): PendingIntent {
         val intent =
             Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(EXTRA_MATCH_ID, matchId)
+                action = ACTION_OPEN_MATCH
             }
         return PendingIntent.getActivity(
             context,
-            0,
+            matchId.toInt(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -191,6 +268,7 @@ class MatchNotificationManager(private val context: Context) {
         const val ACTION_RESUME_MATCH = "com.jesuslcorominas.teamflowmanager.ACTION_RESUME_MATCH"
         const val ACTION_START_TIMEOUT = "com.jesuslcorominas.teamflowmanager.ACTION_START_TIMEOUT"
         const val ACTION_END_TIMEOUT = "com.jesuslcorominas.teamflowmanager.ACTION_END_TIMEOUT"
+        const val ACTION_OPEN_MATCH = "com.jesuslcorominas.teamflowmanager.ACTION_OPEN_MATCH"
         const val EXTRA_MATCH_ID = "extra_match_id"
     }
 }
