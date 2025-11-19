@@ -117,5 +117,17 @@ sealed class Route(
 
     data object Analysis : Route(path = "analysis", showBottomBar = true)
 
-    data object Settings : Route(path = "settings", canGoBack = true)
+    data object Settings : Route(path = "settings", canGoBack = true) {
+        const val ARG_FILE_URI = "fileUri"
+        private const val PATH = "settings"
+        const val FULL_ROUTE = "$PATH?$ARG_FILE_URI={$ARG_FILE_URI}"
+        
+        fun createRoute(fileUri: String? = null): String {
+            return if (fileUri != null) {
+                "$PATH?$ARG_FILE_URI=$fileUri"
+            } else {
+                PATH
+            }
+        }
+    }
 }

@@ -24,6 +24,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,9 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
+    incomingFileUri: String? = null,
+    onNavigateToMatches: () -> Unit = {},
+    onNavigateBack: () -> Unit = {},
 ) {
     TrackScreenView(screenName = ScreenName.SETTINGS, screenClass = "SettingsScreen")
 
@@ -53,6 +57,14 @@ fun SettingsScreen(
     val importResult by viewModel.importResult.collectAsState()
     var showImportDialog by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<String?>(null) }
+
+    // Handle incoming file URI from deep link
+    LaunchedEffect(incomingFileUri) {
+        if (incomingFileUri != null) {
+            pendingImportUri = incomingFileUri
+            showImportDialog = true
+        }
+    }
 
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -88,13 +100,16 @@ fun SettingsScreen(
     }
 
     importResult?.let { result ->
-        val message = if (result.isSuccess) {
-            stringResource(R.string.import_success)
+        if (result.isSuccess) {
+            Toast.makeText(context, stringResource(R.string.import_success), Toast.LENGTH_LONG).show()
+            viewModel.clearImportResult()
+            // Navigate to main screen after successful import
+            onNavigateToMatches()
         } else {
-            stringResource(R.string.import_error, result.exceptionOrNull()?.message ?: "Unknown error")
+            val message = stringResource(R.string.import_error, result.exceptionOrNull()?.message ?: "Unknown error")
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            viewModel.clearImportResult()
         }
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        viewModel.clearImportResult()
     }
 
     // Import confirmation dialog

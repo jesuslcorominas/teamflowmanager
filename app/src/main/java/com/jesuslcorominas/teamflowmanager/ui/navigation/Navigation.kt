@@ -154,8 +154,26 @@ fun Navigation(
             MatchScreen()
         }
 
-        composable(Route.Settings.createRoute()) {
-            SettingsScreen()
+        composable(
+            route = Route.Settings.FULL_ROUTE,
+            arguments = listOf(
+                navArgument(Route.Settings.ARG_FILE_URI) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val fileUri = backStackEntry.arguments?.getString(Route.Settings.ARG_FILE_URI)
+            SettingsScreen(
+                incomingFileUri = fileUri,
+                onNavigateToMatches = {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Settings.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 
@@ -186,6 +204,14 @@ fun Navigation(
             }
             Route.Players -> navController.navigateToMatches()
             Route.Analysis -> navController.navigateToMatches()
+            Route.Settings -> {
+                // If settings was opened from deep link (back stack is shallow), go to matches instead of back
+                if (navController.previousBackStackEntry == null) {
+                    navController.navigateToMatches()
+                } else {
+                    navController.popBackStack()
+                }
+            }
 
             else -> navController.popBackStack()
         }

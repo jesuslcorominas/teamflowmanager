@@ -2,6 +2,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -38,8 +39,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TFMAppTheme {
-                MainScreen()
+                MainScreen(intent = intent)
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
     }
 }
