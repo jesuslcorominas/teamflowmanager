@@ -4,26 +4,31 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.CloudUpload
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,12 +51,15 @@ fun SettingsScreen(
     val context = LocalContext.current
     val exportResult by viewModel.exportResult.collectAsState()
     val importResult by viewModel.importResult.collectAsState()
+    var showImportDialog by remember { mutableStateOf(false) }
+    var pendingImportUri by remember { mutableStateOf<String?>(null) }
 
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
-            viewModel.importData(it.toString())
+            pendingImportUri = it.toString()
+            showImportDialog = true
         }
     }
 
@@ -89,6 +97,50 @@ fun SettingsScreen(
         viewModel.clearImportResult()
     }
 
+    // Import confirmation dialog
+    if (showImportDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showImportDialog = false
+                pendingImportUri = null
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.CloudUpload,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = {
+                Text(text = stringResource(R.string.import_confirmation_title))
+            },
+            text = {
+                Text(text = stringResource(R.string.import_confirmation_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingImportUri?.let { viewModel.importData(it) }
+                        showImportDialog = false
+                        pendingImportUri = null
+                    }
+                ) {
+                    Text(stringResource(R.string.import_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showImportDialog = false
+                        pendingImportUri = null
+                    }
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
@@ -96,65 +148,69 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(TFMSpacing.spacing04),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(TFMSpacing.spacing04)
         ) {
-            // Export button
-            Button(
-                onClick = { viewModel.exportData() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FileDownload,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.padding(start = 8.dp))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.export_data),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.export_data_description),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            }
+            Text(
+                text = stringResource(R.string.settings_data_section),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = TFMSpacing.spacing02)
+            )
 
-            Spacer(modifier = Modifier.height(TFMSpacing.spacing03))
+            Spacer(modifier = Modifier.padding(vertical = TFMSpacing.spacing01))
 
-            // Import button
-            OutlinedButton(
-                onClick = { importLauncher.launch("*/*") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FileUpload,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.padding(start = 8.dp))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.import_data),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.import_data_description),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            }
+            // Export data item
+            SettingsItem(
+                icon = Icons.Outlined.CloudDownload,
+                title = stringResource(R.string.export_data),
+                subtitle = stringResource(R.string.export_data_description),
+                onClick = { viewModel.exportData() }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+
+            // Import data item
+            SettingsItem(
+                icon = Icons.Outlined.CloudUpload,
+                title = stringResource(R.string.import_data),
+                subtitle = stringResource(R.string.import_data_description),
+                onClick = { importLauncher.launch("*/*") }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(TFMSpacing.spacing02),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.width(TFMSpacing.spacing04))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
