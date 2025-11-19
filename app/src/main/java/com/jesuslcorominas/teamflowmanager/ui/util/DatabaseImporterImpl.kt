@@ -1,21 +1,19 @@
 package com.jesuslcorominas.teamflowmanager.ui.util
 
-import android.content.Context
-import android.net.Uri
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseImporter
+import com.jesuslcorominas.teamflowmanager.domain.utils.FileHandler
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 class DatabaseImporterImpl(
-    private val context: Context,
+    private val fileHandler: FileHandler,
     private val database: TeamFlowManagerDatabase
 ) : DatabaseImporter {
 
     override suspend fun importDatabase(fileUri: String): Boolean {
         return try {
-            val uri = Uri.parse(fileUri)
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            fileHandler.openImportInputStream(fileUri)?.use { inputStream ->
                 BufferedReader(InputStreamReader(inputStream)).use { reader ->
                     // Clear existing data (in reverse order to respect foreign keys)
                     database.clearAllTables()

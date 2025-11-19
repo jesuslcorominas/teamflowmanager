@@ -1,26 +1,19 @@
 package com.jesuslcorominas.teamflowmanager.ui.util
 
-import android.content.Context
-import android.net.Uri
-import androidx.core.content.FileProvider
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.entity.MatchPeriodEntity
 import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseExporter
-import java.io.File
-import java.io.FileOutputStream
+import com.jesuslcorominas.teamflowmanager.domain.utils.FileHandler
 import java.io.OutputStreamWriter
 
 class DatabaseExporterImpl(
-    private val context: Context,
+    private val fileHandler: FileHandler,
     private val database: TeamFlowManagerDatabase
 ) : DatabaseExporter {
 
     override suspend fun exportDatabase(): String? {
         return try {
-            val fileName = "teamflowmanager_backup_${System.currentTimeMillis()}.tfm"
-            val file = File(context.cacheDir, fileName)
-            
-            FileOutputStream(file).use { outputStream ->
+            fileHandler.createExportOutputStream()?.use { outputStream ->
                 OutputStreamWriter(outputStream).use { writer ->
                     // Export Team table
                     val teams = database.teamDao().getTeamDirect()
@@ -101,13 +94,7 @@ class DatabaseExporterImpl(
                 }
             }
 
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                file
-            )
-
-            uri.toString()
+            fileHandler.finalizeExport()
         } catch (e: Exception) {
             e.printStackTrace()
             null
