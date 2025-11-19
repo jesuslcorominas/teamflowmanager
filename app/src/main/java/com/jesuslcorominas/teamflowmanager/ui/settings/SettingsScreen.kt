@@ -84,7 +84,7 @@ fun SettingsScreen(
                 val shareIntent = Intent().apply {
                     action = Intent.ACTION_SEND
                     putExtra(Intent.EXTRA_STREAM, fileUri.toUri())
-                    type = "text/plain"
+                    type = "application/octet-stream"
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.export_share_title)))
