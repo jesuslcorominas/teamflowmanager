@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -31,7 +32,10 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    pendingMatchNavigation: MatchNavigation? = null,
+    onNavigationHandled: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val searchState = rememberSearchState()
@@ -48,6 +52,27 @@ fun MainScreen() {
         ?.associateWith { key -> backStackEntry?.arguments?.get(key) }
 
     val uiConfig = route?.uiConfig(arguments)
+
+    // Handle pending match navigation from notification
+    LaunchedEffect(pendingMatchNavigation) {
+        pendingMatchNavigation?.let { navigation ->
+            // Navigate to match screen
+            // We need to get match details first to build the route with team and opponent
+            // For now, navigate with placeholder values - the match screen will load the actual data
+            val matchRoute = Route.Match.createRoute(
+                navigation.matchId,
+                "team", // placeholder
+                "opponent" // placeholder
+            )
+            navController.navigate(matchRoute) {
+                // Clear back stack to Matches screen to ensure proper back navigation
+                popUpTo(Route.Matches.createRoute()) {
+                    inclusive = false
+                }
+            }
+            onNavigationHandled()
+        }
+    }
 
     val title = route?.toTitle(backStackEntry)
 

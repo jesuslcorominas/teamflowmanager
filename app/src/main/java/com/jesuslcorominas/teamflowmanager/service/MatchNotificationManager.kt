@@ -172,7 +172,15 @@ class MatchNotificationManager(private val context: Context) {
                     timeoutIntent,
                 )
 
-                // Add finish match action
+                // Add goal buttons
+                val homeGoalIntent = createGoalIntent(match.id, isHomeGoal = true)
+                builder.addAction(
+                    R.drawable.ic_goal,
+                    context.getString(R.string.register_goal_button),
+                    homeGoalIntent,
+                )
+
+                // Add finish match action - only during IN_PROGRESS
                 val finishIntent = createContentIntent(match.id)
                 builder.addAction(
                     R.drawable.ic_whistle,
@@ -192,14 +200,6 @@ class MatchNotificationManager(private val context: Context) {
                     context.getString(R.string.resume_match_button),
                     resumeIntent,
                 )
-
-                // Add finish match action
-                val finishIntent = createContentIntent(match.id)
-                builder.addAction(
-                    R.drawable.ic_whistle,
-                    context.getString(R.string.finish_match_button),
-                    finishIntent,
-                )
             }
             MatchStatus.TIMEOUT -> {
                 // Add end timeout action
@@ -212,14 +212,6 @@ class MatchNotificationManager(private val context: Context) {
                     R.drawable.ic_play,
                     context.getString(R.string.end_timeout_button),
                     endTimeoutIntent,
-                )
-
-                // Add finish match action
-                val finishIntent = createContentIntent(match.id)
-                builder.addAction(
-                    R.drawable.ic_whistle,
-                    context.getString(R.string.finish_match_button),
-                    finishIntent,
                 )
             }
             else -> {
@@ -238,6 +230,21 @@ class MatchNotificationManager(private val context: Context) {
         return PendingIntent.getActivity(
             context,
             matchId.toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun createGoalIntent(matchId: Long, isHomeGoal: Boolean): PendingIntent {
+        val intent =
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(EXTRA_MATCH_ID, matchId)
+                action = if (isHomeGoal) ACTION_ADD_HOME_GOAL else ACTION_ADD_VISITOR_GOAL
+            }
+        return PendingIntent.getActivity(
+            context,
+            if (isHomeGoal) matchId.toInt() + 10000 else matchId.toInt() + 20000,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -269,6 +276,8 @@ class MatchNotificationManager(private val context: Context) {
         const val ACTION_START_TIMEOUT = "com.jesuslcorominas.teamflowmanager.ACTION_START_TIMEOUT"
         const val ACTION_END_TIMEOUT = "com.jesuslcorominas.teamflowmanager.ACTION_END_TIMEOUT"
         const val ACTION_OPEN_MATCH = "com.jesuslcorominas.teamflowmanager.ACTION_OPEN_MATCH"
+        const val ACTION_ADD_HOME_GOAL = "com.jesuslcorominas.teamflowmanager.ACTION_ADD_HOME_GOAL"
+        const val ACTION_ADD_VISITOR_GOAL = "com.jesuslcorominas.teamflowmanager.ACTION_ADD_VISITOR_GOAL"
         const val EXTRA_MATCH_ID = "extra_match_id"
     }
 }
