@@ -31,6 +31,18 @@ class DatabaseImporterImpl(
                                 }
                             }
                         }
+                        
+                        // Manually invalidate all tables to trigger Room's Flow observers
+                        // This ensures UI updates after raw SQL inserts
+                        database.invalidationTracker.notifyObserversByTableNames(
+                            "team",
+                            "players", 
+                            "match",
+                            "player_time",
+                            "player_time_history",
+                            "player_substitution",
+                            "goal"
+                        )
                     }
                 }
                 true
