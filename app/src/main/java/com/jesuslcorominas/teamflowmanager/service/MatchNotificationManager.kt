@@ -73,19 +73,14 @@ class MatchNotificationManager(private val context: Context) {
                 val remainingTime = currentPeriod.periodDuration - elapsedTime
                 val whenTime = System.currentTimeMillis() + remainingTime
 
-                // Format remaining time for display
-                val minutes = (remainingTime / 60000).toInt()
-                val seconds = ((remainingTime % 60000) / 1000).toInt()
-                val timeText = String.format("%02d:%02d", minutes, seconds)
-
                 notificationBuilder
                     .setUsesChronometer(true)
                     .setChronometerCountDown(true)
                     .setWhen(whenTime)
-                    .setContentText("$periodName • $timeText")
+                    .setContentText(periodName)
                     .setStyle(
                         NotificationCompat.BigTextStyle()
-                            .bigText("$periodName\n\n$timeText")
+                            .bigText(periodName)
                             .setBigContentTitle(title)
                     )
             }
