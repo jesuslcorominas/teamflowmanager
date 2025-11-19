@@ -161,7 +161,7 @@ fun SettingsScreen(
 
             // Export data item
             SettingsItem(
-                icon = Icons.Outlined.CloudDownload,
+                icon = Icons.Outlined.CloudUpload,
                 title = stringResource(R.string.export_data),
                 subtitle = stringResource(R.string.export_data_description),
                 onClick = { viewModel.exportData() }
@@ -171,7 +171,7 @@ fun SettingsScreen(
 
             // Import data item
             SettingsItem(
-                icon = Icons.Outlined.CloudUpload,
+                icon = Icons.Outlined.CloudDownload,
                 title = stringResource(R.string.import_data),
                 subtitle = stringResource(R.string.import_data_description),
                 onClick = { importLauncher.launch("*/*") }

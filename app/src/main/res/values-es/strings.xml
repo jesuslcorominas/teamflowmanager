@@ -305,7 +305,6 @@
     <string name="import_confirmation_title">¿Importar Datos?</string>
     <string name="import_confirmation_message">Esta acción eliminará permanentemente todos los datos actuales y los reemplazará con los datos de la copia de seguridad. Esta acción no se puede deshacer.\n\nRecomendamos exportar tus datos actuales primero como precaución.</string>
     <string name="import_confirm">Importar</string>
-    <string name="cancel">Cancelar</string>
     <string name="select_file">Selecciona archivo a importar</string>
     <string name="no_file_selected">No se ha seleccionado ningún archivo</string>
 </resources>

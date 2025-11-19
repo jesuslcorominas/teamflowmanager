@@ -305,7 +305,6 @@
     <string name="import_confirmation_title">Import Data?</string>
     <string name="import_confirmation_message">This will permanently delete all current data and replace it with data from the backup file. This action cannot be undone.\n\nWe recommend exporting your current data first as a precaution.</string>
     <string name="import_confirm">Import</string>
-    <string name="cancel">Cancel</string>
     <string name="select_file">Select file to import</string>
     <string name="no_file_selected">No file selected</string>
 </resources>
