@@ -1,7 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
@@ -16,28 +14,36 @@ class SettingsViewModel(
     private val importDatabaseUseCase: ImportDatabaseUseCase
 ) : ViewModel() {
 
-    private val _exportResult = MutableStateFlow<Result<Unit>?>(null)
-    val exportResult: StateFlow<Result<Unit>?> = _exportResult.asStateFlow()
+    private val _exportResult = MutableStateFlow<Result<String?>?>(null)
+    val exportResult: StateFlow<Result<String?>?> = _exportResult.asStateFlow()
 
-    private val _importResult = MutableStateFlow<Result<Unit>?>(null)
-    val importResult: StateFlow<Result<Unit>?> = _importResult.asStateFlow()
+    private val _importResult = MutableStateFlow<Result<Boolean>?>(null)
+    val importResult: StateFlow<Result<Boolean>?> = _importResult.asStateFlow()
 
-    fun exportData(context: Context, uri: Uri) {
+    fun exportData() {
         viewModelScope.launch {
             try {
-                exportDatabaseUseCase(context, uri)
-                _exportResult.value = Result.success(Unit)
+                val fileUri = exportDatabaseUseCase()
+                if (fileUri != null) {
+                    _exportResult.value = Result.success(fileUri)
+                } else {
+                    _exportResult.value = Result.failure(Exception("Failed to export database"))
+                }
             } catch (e: Exception) {
                 _exportResult.value = Result.failure(e)
             }
         }
     }
 
-    fun importData(context: Context, uri: Uri) {
+    fun importData(fileUri: String) {
         viewModelScope.launch {
             try {
-                importDatabaseUseCase(context, uri)
-                _importResult.value = Result.success(Unit)
+                val success = importDatabaseUseCase(fileUri)
+                if (success) {
+                    _importResult.value = Result.success(true)
+                } else {
+                    _importResult.value = Result.failure(Exception("Failed to import database"))
+                }
             } catch (e: Exception) {
                 _importResult.value = Result.failure(e)
             }

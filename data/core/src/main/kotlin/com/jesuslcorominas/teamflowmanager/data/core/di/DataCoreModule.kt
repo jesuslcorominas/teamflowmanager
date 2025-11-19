@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.data.core.di
 
-import com.jesuslcorominas.teamflowmanager.data.core.repository.DatabaseRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.GoalRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerRepositoryImpl
@@ -9,7 +8,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeHistor
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PreferencesRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.TeamRepositoryImpl
-import com.jesuslcorominas.teamflowmanager.usecase.repository.DatabaseRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
@@ -32,7 +30,6 @@ internal val repositoryModule =
         singleOf(::PlayerSubstitutionRepositoryImpl) bind PlayerSubstitutionRepository::class
         singleOf(::PreferencesRepositoryImpl) bind PreferencesRepository::class
         singleOf(::GoalRepositoryImpl) bind GoalRepository::class
-        singleOf(::DatabaseRepositoryImpl) bind DatabaseRepository::class
     }
 
 val dataCoreModule =

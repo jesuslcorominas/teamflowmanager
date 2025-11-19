@@ -1,38 +1,49 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import android.content.Context
-import android.net.Uri
-import com.jesuslcorominas.teamflowmanager.usecase.repository.DatabaseRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseExporter
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
 class ExportDatabaseUseCaseTest {
-    private lateinit var databaseRepository: DatabaseRepository
+    private lateinit var databaseExporter: DatabaseExporter
     private lateinit var useCase: ExportDatabaseUseCase
 
     @Before
     fun setup() {
-        databaseRepository = mockk()
-        useCase = ExportDatabaseUseCaseImpl(databaseRepository)
+        databaseExporter = mockk()
+        useCase = ExportDatabaseUseCaseImpl(databaseExporter)
     }
 
     @Test
-    fun `invoke should call repository exportDatabase`() = runTest {
+    fun `invoke should call exporter exportDatabase and return file uri`() = runTest {
         // Given
-        val context = mockk<Context>()
-        val uri = mockk<Uri>()
-        coEvery { databaseRepository.exportDatabase(context, uri) } just runs
+        val expectedUri = "content://com.example.provider/file.tfm"
+        coEvery { databaseExporter.exportDatabase() } returns expectedUri
 
         // When
-        useCase(context, uri)
+        val result = useCase()
 
         // Then
-        coVerify { databaseRepository.exportDatabase(context, uri) }
+        coVerify { databaseExporter.exportDatabase() }
+        assertEquals(expectedUri, result)
+    }
+
+    @Test
+    fun `invoke should return null when export fails`() = runTest {
+        // Given
+        coEvery { databaseExporter.exportDatabase() } returns null
+
+        // When
+        val result = useCase()
+
+        // Then
+        coVerify { databaseExporter.exportDatabase() }
+        assertNull(result)
     }
 }

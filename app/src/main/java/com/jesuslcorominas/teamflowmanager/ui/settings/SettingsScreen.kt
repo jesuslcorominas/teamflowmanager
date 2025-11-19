@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.settings
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
@@ -45,30 +47,35 @@ fun SettingsScreen(
     val exportResult by viewModel.exportResult.collectAsState()
     val importResult by viewModel.importResult.collectAsState()
 
-    val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/plain")
-    ) { uri ->
-        uri?.let {
-            viewModel.exportData(context, it)
-        }
-    }
-
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
-            viewModel.importData(context, it)
+            viewModel.importData(it.toString())
         }
     }
 
     // Show toast messages for results
     exportResult?.let { result ->
-        val message = if (result.isSuccess) {
-            stringResource(R.string.export_success)
+        if (result.isSuccess) {
+            val fileUri = result.getOrNull()
+            if (fileUri != null) {
+                // Share the file
+                val shareIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, fileUri.toUri())
+                    type = "text/plain"
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.export_share_title)))
+                Toast.makeText(context, context.getString(R.string.export_success), Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(context, context.getString(R.string.export_error, "Unknown error"), Toast.LENGTH_LONG).show()
+            }
         } else {
-            stringResource(R.string.export_error, result.exceptionOrNull()?.message ?: "Unknown error")
+            val message = stringResource(R.string.export_error, result.exceptionOrNull()?.message ?: "Unknown error")
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         viewModel.clearExportResult()
     }
 
@@ -95,7 +102,7 @@ fun SettingsScreen(
         ) {
             // Export button
             Button(
-                onClick = { exportLauncher.launch("teamflowmanager_backup.tfm") },
+                onClick = { viewModel.exportData() },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(

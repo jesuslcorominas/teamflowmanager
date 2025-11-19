@@ -1,38 +1,50 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import android.content.Context
-import android.net.Uri
-import com.jesuslcorominas.teamflowmanager.usecase.repository.DatabaseRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseImporter
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 class ImportDatabaseUseCaseTest {
-    private lateinit var databaseRepository: DatabaseRepository
+    private lateinit var databaseImporter: DatabaseImporter
     private lateinit var useCase: ImportDatabaseUseCase
 
     @Before
     fun setup() {
-        databaseRepository = mockk()
-        useCase = ImportDatabaseUseCaseImpl(databaseRepository)
+        databaseImporter = mockk()
+        useCase = ImportDatabaseUseCaseImpl(databaseImporter)
     }
 
     @Test
-    fun `invoke should call repository importDatabase`() = runTest {
+    fun `invoke should call importer importDatabase and return success`() = runTest {
         // Given
-        val context = mockk<Context>()
-        val uri = mockk<Uri>()
-        coEvery { databaseRepository.importDatabase(context, uri) } just runs
+        val fileUri = "content://com.example.provider/file.tfm"
+        coEvery { databaseImporter.importDatabase(fileUri) } returns true
 
         // When
-        useCase(context, uri)
+        val result = useCase(fileUri)
 
         // Then
-        coVerify { databaseRepository.importDatabase(context, uri) }
+        coVerify { databaseImporter.importDatabase(fileUri) }
+        assertTrue(result)
+    }
+
+    @Test
+    fun `invoke should return false when import fails`() = runTest {
+        // Given
+        val fileUri = "content://com.example.provider/file.tfm"
+        coEvery { databaseImporter.importDatabase(fileUri) } returns false
+
+        // When
+        val result = useCase(fileUri)
+
+        // Then
+        coVerify { databaseImporter.importDatabase(fileUri) }
+        assertFalse(result)
     }
 }

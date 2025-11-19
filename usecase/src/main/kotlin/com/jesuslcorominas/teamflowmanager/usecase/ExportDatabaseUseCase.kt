@@ -1,17 +1,15 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import android.content.Context
-import android.net.Uri
-import com.jesuslcorominas.teamflowmanager.usecase.repository.DatabaseRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseExporter
 
 interface ExportDatabaseUseCase {
-    suspend operator fun invoke(context: Context, uri: Uri)
+    suspend operator fun invoke(): String?
 }
 
 internal class ExportDatabaseUseCaseImpl(
-    private val databaseRepository: DatabaseRepository,
+    private val databaseExporter: DatabaseExporter,
 ) : ExportDatabaseUseCase {
-    override suspend fun invoke(context: Context, uri: Uri) {
-        databaseRepository.exportDatabase(context, uri)
+    override suspend fun invoke(): String? {
+        return databaseExporter.exportDatabase()
     }
 }

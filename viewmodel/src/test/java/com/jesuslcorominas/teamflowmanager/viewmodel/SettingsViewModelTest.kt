@@ -1,14 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import android.content.Context
-import android.net.Uri
 import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -59,34 +55,47 @@ class SettingsViewModelTest {
     @Test
     fun `exportData should call use case and update result on success`() = runTest {
         // Given
-        val context = mockk<Context>()
-        val uri = mockk<Uri>()
-        coEvery { exportDatabaseUseCase(context, uri) } just runs
+        val fileUri = "content://com.example.provider/file.tfm"
+        coEvery { exportDatabaseUseCase() } returns fileUri
 
         // When
-        viewModel.exportData(context, uri)
+        viewModel.exportData()
         advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 1) { exportDatabaseUseCase(context, uri) }
+        coVerify(exactly = 1) { exportDatabaseUseCase() }
         assertNotNull(viewModel.exportResult.value)
         assertTrue(viewModel.exportResult.value!!.isSuccess)
+        assertEquals(fileUri, viewModel.exportResult.value!!.getOrNull())
     }
 
     @Test
-    fun `exportData should update result on failure`() = runTest {
+    fun `exportData should update result on failure when use case returns null`() = runTest {
         // Given
-        val context = mockk<Context>()
-        val uri = mockk<Uri>()
-        val exception = Exception("Export failed")
-        coEvery { exportDatabaseUseCase(context, uri) } throws exception
+        coEvery { exportDatabaseUseCase() } returns null
 
         // When
-        viewModel.exportData(context, uri)
+        viewModel.exportData()
         advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 1) { exportDatabaseUseCase(context, uri) }
+        coVerify(exactly = 1) { exportDatabaseUseCase() }
+        assertNotNull(viewModel.exportResult.value)
+        assertTrue(viewModel.exportResult.value!!.isFailure)
+    }
+
+    @Test
+    fun `exportData should update result on exception`() = runTest {
+        // Given
+        val exception = Exception("Export failed")
+        coEvery { exportDatabaseUseCase() } throws exception
+
+        // When
+        viewModel.exportData()
+        advanceUntilIdle()
+
+        // Then
+        coVerify(exactly = 1) { exportDatabaseUseCase() }
         assertNotNull(viewModel.exportResult.value)
         assertTrue(viewModel.exportResult.value!!.isFailure)
         assertEquals(exception, viewModel.exportResult.value!!.exceptionOrNull())
@@ -95,34 +104,49 @@ class SettingsViewModelTest {
     @Test
     fun `importData should call use case and update result on success`() = runTest {
         // Given
-        val context = mockk<Context>()
-        val uri = mockk<Uri>()
-        coEvery { importDatabaseUseCase(context, uri) } just runs
+        val fileUri = "content://com.example.provider/file.tfm"
+        coEvery { importDatabaseUseCase(fileUri) } returns true
 
         // When
-        viewModel.importData(context, uri)
+        viewModel.importData(fileUri)
         advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 1) { importDatabaseUseCase(context, uri) }
+        coVerify(exactly = 1) { importDatabaseUseCase(fileUri) }
         assertNotNull(viewModel.importResult.value)
         assertTrue(viewModel.importResult.value!!.isSuccess)
+        assertTrue(viewModel.importResult.value!!.getOrNull() == true)
     }
 
     @Test
-    fun `importData should update result on failure`() = runTest {
+    fun `importData should update result on failure when use case returns false`() = runTest {
         // Given
-        val context = mockk<Context>()
-        val uri = mockk<Uri>()
-        val exception = Exception("Import failed")
-        coEvery { importDatabaseUseCase(context, uri) } throws exception
+        val fileUri = "content://com.example.provider/file.tfm"
+        coEvery { importDatabaseUseCase(fileUri) } returns false
 
         // When
-        viewModel.importData(context, uri)
+        viewModel.importData(fileUri)
         advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 1) { importDatabaseUseCase(context, uri) }
+        coVerify(exactly = 1) { importDatabaseUseCase(fileUri) }
+        assertNotNull(viewModel.importResult.value)
+        assertTrue(viewModel.importResult.value!!.isFailure)
+    }
+
+    @Test
+    fun `importData should update result on exception`() = runTest {
+        // Given
+        val fileUri = "content://com.example.provider/file.tfm"
+        val exception = Exception("Import failed")
+        coEvery { importDatabaseUseCase(fileUri) } throws exception
+
+        // When
+        viewModel.importData(fileUri)
+        advanceUntilIdle()
+
+        // Then
+        coVerify(exactly = 1) { importDatabaseUseCase(fileUri) }
         assertNotNull(viewModel.importResult.value)
         assertTrue(viewModel.importResult.value!!.isFailure)
         assertEquals(exception, viewModel.importResult.value!!.exceptionOrNull())
@@ -131,10 +155,9 @@ class SettingsViewModelTest {
     @Test
     fun `clearExportResult should set export result to null`() = runTest {
         // Given
-        val context = mockk<Context>()
-        val uri = mockk<Uri>()
-        coEvery { exportDatabaseUseCase(context, uri) } just runs
-        viewModel.exportData(context, uri)
+        val fileUri = "content://com.example.provider/file.tfm"
+        coEvery { exportDatabaseUseCase() } returns fileUri
+        viewModel.exportData()
         advanceUntilIdle()
 
         // When
@@ -147,10 +170,9 @@ class SettingsViewModelTest {
     @Test
     fun `clearImportResult should set import result to null`() = runTest {
         // Given
-        val context = mockk<Context>()
-        val uri = mockk<Uri>()
-        coEvery { importDatabaseUseCase(context, uri) } just runs
-        viewModel.importData(context, uri)
+        val fileUri = "content://com.example.provider/file.tfm"
+        coEvery { importDatabaseUseCase(fileUri) } returns true
+        viewModel.importData(fileUri)
         advanceUntilIdle()
 
         // When

@@ -1,17 +1,15 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import android.content.Context
-import android.net.Uri
-import com.jesuslcorominas.teamflowmanager.usecase.repository.DatabaseRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseImporter
 
 interface ImportDatabaseUseCase {
-    suspend operator fun invoke(context: Context, uri: Uri)
+    suspend operator fun invoke(fileUri: String): Boolean
 }
 
 internal class ImportDatabaseUseCaseImpl(
-    private val databaseRepository: DatabaseRepository,
+    private val databaseImporter: DatabaseImporter,
 ) : ImportDatabaseUseCase {
-    override suspend fun invoke(context: Context, uri: Uri) {
-        databaseRepository.importDatabase(context, uri)
+    override suspend fun invoke(fileUri: String): Boolean {
+        return databaseImporter.importDatabase(fileUri)
     }
 }
