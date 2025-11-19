@@ -3,7 +3,9 @@ package com.jesuslcorominas.teamflowmanager.service
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
@@ -15,14 +17,20 @@ import kotlinx.coroutines.flow.Flow
  */
 class MatchNotificationControllerImpl(
     private val getActiveMatchUseCase: GetActiveMatchUseCase,
+    private val getMatchByIdUseCase: GetMatchByIdUseCase,
     private val pauseMatchUseCase: PauseMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val startTimeoutUseCase: StartTimeoutUseCase,
     private val endTimeoutUseCase: EndTimeoutUseCase,
+    private val finishMatchUseCase: FinishMatchUseCase,
 ) : MatchNotificationController {
     
     override fun getActiveMatch(): Flow<Match?> {
         return getActiveMatchUseCase()
+    }
+
+    override fun getMatchById(matchId: Long): Flow<Match?> {
+        return getMatchByIdUseCase(matchId)
     }
 
     override suspend fun pauseMatch(matchId: Long, currentTimeMillis: Long) {
@@ -39,5 +47,9 @@ class MatchNotificationControllerImpl(
 
     override suspend fun endTimeout(matchId: Long, currentTimeMillis: Long) {
         endTimeoutUseCase(matchId, currentTimeMillis)
+    }
+
+    override suspend fun finishMatch(matchId: Long, currentTimeMillis: Long) {
+        finishMatchUseCase(matchId, currentTimeMillis)
     }
 }

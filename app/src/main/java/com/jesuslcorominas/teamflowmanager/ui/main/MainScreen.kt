@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
@@ -23,12 +24,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
+import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.main.search.rememberSearchState
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
+import kotlinx.coroutines.flow.firstOrNull
+import org.koin.androidx.compose.getKoin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,21 +57,28 @@ fun MainScreen(
 
     val uiConfig = route?.uiConfig(arguments)
 
+    val context = LocalContext.current
+    val matchNotificationController: MatchNotificationController = remember {
+        (context.applicationContext as? android.app.Application)?.let {
+            org.koin.androidx.compose.getKoin().get()
+        } ?: error("Unable to get MatchNotificationController")
+    }
+
     // Handle pending match navigation from notification
     LaunchedEffect(pendingMatchNavigation) {
         pendingMatchNavigation?.let { navigation ->
-            // Navigate to match screen
-            // We need to get match details first to build the route with team and opponent
-            // For now, navigate with placeholder values - the match screen will load the actual data
-            val matchRoute = Route.Match.createRoute(
-                navigation.matchId,
-                "team", // placeholder
-                "opponent" // placeholder
-            )
-            navController.navigate(matchRoute) {
-                // Clear back stack to Matches screen to ensure proper back navigation
-                popUpTo(Route.Matches.createRoute()) {
-                    inclusive = false
+            // Get match details to build proper route
+            matchNotificationController.getMatchById(navigation.matchId).firstOrNull()?.let { match ->
+                val matchRoute = Route.Match.createRoute(
+                    navigation.matchId,
+                    match.team,
+                    match.opponent
+                )
+                navController.navigate(matchRoute) {
+                    // Clear back stack to Matches screen to ensure proper back navigation
+                    popUpTo(Route.Matches.createRoute()) {
+                        inclusive = false
+                    }
                 }
             }
             onNavigationHandled()

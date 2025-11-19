@@ -228,6 +228,7 @@
 
     <string name="timeout_button">Timeout</string>
     <string name="end_timeout_button">End Timeout</string>
+    <string name="finish_timeout_button">Finish Timeout</string>
     <string name="match_timeout">Timeout</string>
 
     <string name="search_match_placeholder">Search matches by opponent or place</string>

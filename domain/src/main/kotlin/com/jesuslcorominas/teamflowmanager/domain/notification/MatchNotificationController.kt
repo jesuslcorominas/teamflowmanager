@@ -16,6 +16,14 @@ interface MatchNotificationController {
     fun getActiveMatch(): Flow<Match?>
 
     /**
+     * Get a match by its ID.
+     *
+     * @param matchId ID of the match to retrieve
+     * @return Flow that emits the match or null if not found
+     */
+    fun getMatchById(matchId: Long): Flow<Match?>
+
+    /**
      * Pause the specified match.
      *
      * @param matchId ID of the match to pause
@@ -46,4 +54,12 @@ interface MatchNotificationController {
      * @param currentTimeMillis Current time in milliseconds
      */
     suspend fun endTimeout(matchId: Long, currentTimeMillis: Long)
+
+    /**
+     * Finish the specified match.
+     *
+     * @param matchId ID of the match to finish
+     * @param currentTimeMillis Current time in milliseconds
+     */
+    suspend fun finishMatch(matchId: Long, currentTimeMillis: Long)
 }

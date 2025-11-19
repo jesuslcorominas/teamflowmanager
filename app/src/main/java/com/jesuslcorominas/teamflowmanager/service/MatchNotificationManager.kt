@@ -50,10 +50,12 @@ class MatchNotificationManager(private val context: Context) {
             match.opponentGoals
         ) + " - " + match.opponent
 
+        val periodName = getPeriodName(match)
+
         val notificationBuilder =
             NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle(title)
-                .setSmallIcon(R.drawable.ic_timer)
+                .setSmallIcon(R.mipmap.ic_launcher) // Use app icon
                 .setOngoing(true)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(contentIntent)
@@ -75,15 +77,30 @@ class MatchNotificationManager(private val context: Context) {
                     .setUsesChronometer(true)
                     .setChronometerCountDown(true)
                     .setWhen(whenTime)
-                    .setContentText(getPeriodName(match))
+                    .setContentText(periodName)
+                    .setStyle(
+                        NotificationCompat.BigTextStyle()
+                            .bigText(periodName)
+                            .setBigContentTitle(title)
+                    )
             }
             MatchStatus.PAUSED -> {
                 notificationBuilder
-                    .setContentText(getPeriodName(match))
+                    .setContentText(periodName)
+                    .setStyle(
+                        NotificationCompat.BigTextStyle()
+                            .bigText(periodName)
+                            .setBigContentTitle(title)
+                    )
             }
             MatchStatus.TIMEOUT -> {
                 notificationBuilder
                     .setContentText(context.getString(R.string.match_timeout))
+                    .setStyle(
+                        NotificationCompat.BigTextStyle()
+                            .bigText(context.getString(R.string.match_timeout))
+                            .setBigContentTitle(title)
+                    )
             }
             else -> {
                 notificationBuilder
@@ -146,7 +163,22 @@ class MatchNotificationManager(private val context: Context) {
     ) {
         when (match.status) {
             MatchStatus.IN_PROGRESS -> {
-                // Add pause action
+                // Order: Gol - Tiempo Muerto - Pausa - Fin partido - Gol rival
+                // Android typically allows max 3 actions, so prioritize: Tiempo Muerto - Pausa - Fin partido
+                
+                // Add timeout action
+                val timeoutIntent =
+                    createActionIntent(
+                        ACTION_START_TIMEOUT,
+                        match.id,
+                    )
+                builder.addAction(
+                    R.drawable.ic_timeout,
+                    context.getString(R.string.timeout_button),
+                    timeoutIntent,
+                )
+
+                // Add pause action if allowed
                 if (match.canPause()) {
                     val pauseIntent =
                         createActionIntent(
@@ -160,28 +192,8 @@ class MatchNotificationManager(private val context: Context) {
                     )
                 }
 
-                // Add timeout action
-                val timeoutIntent =
-                    createActionIntent(
-                        ACTION_START_TIMEOUT,
-                        match.id,
-                    )
-                builder.addAction(
-                    R.drawable.ic_timeout,
-                    context.getString(R.string.timeout_button),
-                    timeoutIntent,
-                )
-
-                // Add goal buttons
-                val homeGoalIntent = createGoalIntent(match.id, isHomeGoal = true)
-                builder.addAction(
-                    R.drawable.ic_goal,
-                    context.getString(R.string.register_goal_button),
-                    homeGoalIntent,
-                )
-
                 // Add finish match action - only during IN_PROGRESS
-                val finishIntent = createContentIntent(match.id)
+                val finishIntent = createFinishMatchIntent(match.id)
                 builder.addAction(
                     R.drawable.ic_whistle,
                     context.getString(R.string.finish_match_button),
@@ -210,7 +222,7 @@ class MatchNotificationManager(private val context: Context) {
                     )
                 builder.addAction(
                     R.drawable.ic_play,
-                    context.getString(R.string.end_timeout_button),
+                    context.getString(R.string.finish_timeout_button),
                     endTimeoutIntent,
                 )
             }
@@ -230,6 +242,21 @@ class MatchNotificationManager(private val context: Context) {
         return PendingIntent.getActivity(
             context,
             matchId.toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun createFinishMatchIntent(matchId: Long): PendingIntent {
+        val intent =
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(EXTRA_MATCH_ID, matchId)
+                action = ACTION_FINISH_MATCH
+            }
+        return PendingIntent.getActivity(
+            context,
+            matchId.toInt() + 30000,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -276,6 +303,7 @@ class MatchNotificationManager(private val context: Context) {
         const val ACTION_START_TIMEOUT = "com.jesuslcorominas.teamflowmanager.ACTION_START_TIMEOUT"
         const val ACTION_END_TIMEOUT = "com.jesuslcorominas.teamflowmanager.ACTION_END_TIMEOUT"
         const val ACTION_OPEN_MATCH = "com.jesuslcorominas.teamflowmanager.ACTION_OPEN_MATCH"
+        const val ACTION_FINISH_MATCH = "com.jesuslcorominas.teamflowmanager.ACTION_FINISH_MATCH"
         const val ACTION_ADD_HOME_GOAL = "com.jesuslcorominas.teamflowmanager.ACTION_ADD_HOME_GOAL"
         const val ACTION_ADD_VISITOR_GOAL = "com.jesuslcorominas.teamflowmanager.ACTION_ADD_VISITOR_GOAL"
         const val EXTRA_MATCH_ID = "extra_match_id"
