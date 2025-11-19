@@ -1,7 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.local.exporter
 
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
-import com.jesuslcorominas.teamflowmanager.data.local.entity.MatchPeriodEntity
 import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseExporter
 import com.jesuslcorominas.teamflowmanager.domain.utils.FileHandler
 import java.io.OutputStreamWriter
@@ -15,81 +15,12 @@ class DatabaseExporterImpl(
         return try {
             fileHandler.createExportOutputStream()?.use { outputStream ->
                 OutputStreamWriter(outputStream).use { writer ->
-                    // Export Team table
-                    val teams = database.teamDao().getTeamDirect()
-                    teams?.let { team ->
-                        writer.write(
-                            "INSERT INTO team (id, name, coachName, delegateName, captainId) VALUES " +
-                                    "(${team.id}, '${escapeSql(team.name)}', '${escapeSql(team.coachName)}', " +
-                                    "'${escapeSql(team.delegateName)}', ${team.captainId});\n"
-                        )
-                    }
-
-                    // Export Players table
-                    val players = database.playerDao().getAllPlayersDirect()
-                    players.forEach { player ->
-                        writer.write(
-                            "INSERT INTO players (id, firstName, lastName, number, positions, teamId, isCaptain, imageUri) VALUES " +
-                                    "(${player.id}, '${escapeSql(player.firstName)}', '${escapeSql(player.lastName)}', " +
-                                    "${player.number}, '${escapeSql(player.positions)}', ${player.teamId}, " +
-                                    "${if (player.isCaptain) 1 else 0}, ${if (player.imageUri != null) "'${escapeSql(player.imageUri)}'" else "NULL"});\n"
-                        )
-                    }
-
-                    // Export Match table
-                    val matches = database.matchDao().getAllMatchesDirect()
-                    matches.forEach { match ->
-                        writer.write(
-                            "INSERT INTO match (id, teamId, teamName, opponent, location, dateTime, numberOfPeriods, squadCallUpIds, captainId, startingLineupIds, lastStartTimeMillis, status, archived, currentPeriod, pauseCount, goals, opponentGoals, timeoutStartTimeMillis, periods, periodType) VALUES " +
-                                    "(${match.id}, ${match.teamId}, '${escapeSql(match.teamName)}', '${escapeSql(match.opponent)}', " +
-                                    "'${escapeSql(match.location)}', ${match.dateTime}, ${match.numberOfPeriods}, " +
-                                    "'${escapeSql(match.squadCallUpIds)}', ${match.captainId}, '${escapeSql(match.startingLineupIds)}', " +
-                                    "${match.lastStartTimeMillis}, '${escapeSql(match.status)}', " +
-                                    "${if (match.archived) 1 else 0}, ${match.currentPeriod}, ${match.pauseCount}, " +
-                                    "${match.goals}, ${match.opponentGoals}, ${match.timeoutStartTimeMillis}, " +
-                                    "'${escapeSql(serializePeriods(match.periods))}', ${match.periodType});\n"
-                        )
-                    }
-
-                    // Export PlayerTime table
-                    val playerTimes = database.playerTimeDao().getAllPlayerTimesDirect()
-                    playerTimes.forEach { playerTime ->
-                        writer.write(
-                            "INSERT INTO player_time (playerId, elapsedTimeMillis, isRunning, lastStartTimeMillis, status) VALUES " +
-                                    "(${playerTime.playerId}, ${playerTime.elapsedTimeMillis}, " +
-                                    "${if (playerTime.isRunning) 1 else 0}, ${playerTime.lastStartTimeMillis}, " +
-                                    "'${escapeSql(playerTime.status)}');\n"
-                        )
-                    }
-
-                    // Export PlayerTimeHistory table
-                    val playerTimeHistory = database.playerTimeHistoryDao().getAllPlayerTimeHistoryDirect()
-                    playerTimeHistory.forEach { history ->
-                        writer.write(
-                            "INSERT INTO player_time_history (id, playerId, matchId, elapsedTimeMillis, savedAtMillis) VALUES " +
-                                    "(${history.id}, ${history.playerId}, ${history.matchId}, " +
-                                    "${history.elapsedTimeMillis}, ${history.savedAtMillis});\n"
-                        )
-                    }
-
-                    // Export PlayerSubstitution table
-                    val playerSubstitutions = database.playerSubstitutionDao().getAllPlayerSubstitutionsDirect()
-                    playerSubstitutions.forEach { substitution ->
-                        writer.write(
-                            "INSERT INTO player_substitution (id, matchId, playerOutId, playerInId, substitutionTimeMillis, matchElapsedTimeMillis) VALUES " +
-                                    "(${substitution.id}, ${substitution.matchId}, ${substitution.playerOutId}, " +
-                                    "${substitution.playerInId}, ${substitution.substitutionTimeMillis}, ${substitution.matchElapsedTimeMillis});\n"
-                        )
-                    }
-
-                    // Export Goal table
-                    val goals = database.goalDao().getAllGoalsDirect()
-                    goals.forEach { goal ->
-                        writer.write(
-                            "INSERT INTO goal (id, matchId, scorerId, goalTimeMillis, matchElapsedTimeMillis, isOpponentGoal) VALUES " +
-                                    "(${goal.id}, ${goal.matchId}, ${goal.scorerId}, ${goal.goalTimeMillis}, " +
-                                    "${goal.matchElapsedTimeMillis}, ${if (goal.isOpponentGoal) 1 else 0});\n"
-                        )
+                    // Get all table names from the database dynamically
+                    val tableNames = getTableNames()
+                    
+                    // Export each table
+                    tableNames.forEach { tableName ->
+                        exportTable(tableName, writer)
                     }
                 }
             }
@@ -101,15 +32,63 @@ class DatabaseExporterImpl(
         }
     }
 
-    private fun escapeSql(value: String): String {
-        return value.replace("'", "''")
+    /**
+     * Get all table names from the database except system tables
+     */
+    private fun getTableNames(): List<String> {
+        val tableNames = mutableListOf<String>()
+        database.openHelper.readableDatabase.query(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'android_%' AND name NOT LIKE 'room_%' ORDER BY name"
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                tableNames.add(cursor.getString(0))
+            }
+        }
+        return tableNames
     }
 
-    private fun serializePeriods(periods: List<MatchPeriodEntity>): String {
-        // Serialize to JSON array matching Room's type converter format
-        return "[" + periods.joinToString(",") { period ->
-            "{\"periodNumber\":${period.periodNumber},\"periodDuration\":${period.periodDuration}," +
-                    "\"startTimeMillis\":${period.startTimeMillis},\"endTimeMillis\":${period.endTimeMillis}}"
-        } + "]"
+    /**
+     * Export a single table by dynamically generating INSERT statements
+     */
+    private fun exportTable(tableName: String, writer: OutputStreamWriter) {
+        // Query all rows from the table
+        database.openHelper.readableDatabase.query(
+            SimpleSQLiteQuery("SELECT * FROM `$tableName`")
+        ).use { cursor ->
+            if (cursor.moveToFirst()) {
+                val columnNames = cursor.columnNames
+                
+                do {
+                    // Build INSERT statement for each row
+                    val values = mutableListOf<String>()
+                    
+                    for (i in columnNames.indices) {
+                        val value = when (cursor.getType(i)) {
+                            android.database.Cursor.FIELD_TYPE_NULL -> "NULL"
+                            android.database.Cursor.FIELD_TYPE_INTEGER -> cursor.getLong(i).toString()
+                            android.database.Cursor.FIELD_TYPE_FLOAT -> cursor.getDouble(i).toString()
+                            android.database.Cursor.FIELD_TYPE_STRING -> "'${escapeSql(cursor.getString(i))}'"
+                            android.database.Cursor.FIELD_TYPE_BLOB -> {
+                                // Handle BLOB as hex string
+                                val blob = cursor.getBlob(i)
+                                "X'${blob.joinToString("") { "%02X".format(it) }}'"
+                            }
+                            else -> "NULL"
+                        }
+                        values.add(value)
+                    }
+                    
+                    // Write INSERT statement
+                    writer.write(
+                        "INSERT INTO `$tableName` (${columnNames.joinToString(", ") { "`$it`" }}) " +
+                                "VALUES (${values.joinToString(", ")});\n"
+                    )
+                } while (cursor.moveToNext())
+            }
+        }
+    }
+
+    private fun escapeSql(value: String): String {
+        return value.replace("'", "''")
     }
 }
