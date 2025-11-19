@@ -67,14 +67,14 @@ fun MainScreen(
                     match.team,
                     match.opponent
                 )
+                // Navigate to match detail
                 navController.navigate(matchRoute) {
-                    // Clear back stack to Matches screen to ensure proper back navigation
-                    popUpTo(Route.Matches.createRoute()) {
-                        inclusive = false
-                    }
+                    // Keep Matches in back stack for proper back navigation
+                    launchSingleTop = true
                 }
+                // Clear pending navigation after successful navigation
+                onNavigationHandled()
             }
-            onNavigationHandled()
         }
     }
 
