@@ -46,7 +46,7 @@ fun MainScreen(intent: Intent? = null) {
                 if (uri?.toString()?.endsWith(".tfm") == true) {
                     // Navigate to settings with the file URI
                     navController.navigate(
-                        Route.Settings.createRoute() + "?fileUri=${uri}"
+                        Route.Settings.createRoute(fileUri = uri.toString())
                     )
                 }
             }
