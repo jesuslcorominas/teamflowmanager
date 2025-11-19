@@ -61,22 +61,23 @@ fun MainScreen(
     LaunchedEffect(pendingMatchNavigation) {
         pendingMatchNavigation?.let { navigation ->
             // Get match details to build proper route
-            viewModel.getMatchById(navigation.matchId).firstOrNull()?.let { match ->
+            // Use first() instead of firstOrNull() to wait for the match data
+            viewModel.getMatchById(navigation.matchId).first().let { match ->
                 val matchRoute = Route.Match.createRoute(
                     navigation.matchId,
                     match.teamName,
                     match.opponent
                 )
-                // Clear pending navigation BEFORE navigating to prevent issues
-                onNavigationHandled()
-                // Navigate to match detail
+                // Navigate to match detail with Matches as back stack
                 navController.navigate(matchRoute) {
-                    // Ensure we navigate to the match screen, not the list
+                    // Pop back to Matches (don't include it) so back button works correctly
                     popUpTo(Route.Matches.path) {
                         inclusive = false
                     }
                     launchSingleTop = true
                 }
+                // Clear pending navigation AFTER navigation completes
+                onNavigationHandled()
             }
         }
     }
