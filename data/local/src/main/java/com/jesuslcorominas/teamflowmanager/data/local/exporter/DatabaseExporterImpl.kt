@@ -106,10 +106,10 @@ class DatabaseExporterImpl(
     }
 
     private fun serializePeriods(periods: List<MatchPeriodEntity>): String {
-        // Simple JSON-like serialization matching Room's type converter
-        return periods.joinToString(",") { period ->
+        // Serialize to JSON array matching Room's type converter format
+        return "[" + periods.joinToString(",") { period ->
             "{\"periodNumber\":${period.periodNumber},\"periodDuration\":${period.periodDuration}," +
                     "\"startTimeMillis\":${period.startTimeMillis},\"endTimeMillis\":${period.endTimeMillis}}"
-        }
+        } + "]"
     }
 }
