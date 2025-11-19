@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -23,18 +22,16 @@ class MatchNotificationManager(private val context: Context) {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel =
-                NotificationChannel(
-                    CHANNEL_ID,
-                    context.getString(R.string.match_notification_channel_name),
-                    NotificationManager.IMPORTANCE_LOW,
-                ).apply {
-                    description = context.getString(R.string.match_notification_channel_description)
-                    setShowBadge(false)
-                }
-            notificationManager.createNotificationChannel(channel)
-        }
+        val channel =
+            NotificationChannel(
+                CHANNEL_ID,
+                context.getString(R.string.match_notification_channel_name),
+                NotificationManager.IMPORTANCE_LOW,
+            ).apply {
+                description = context.getString(R.string.match_notification_channel_description)
+                setShowBadge(false)
+            }
+        notificationManager.createNotificationChannel(channel)
     }
 
     fun buildNotification(
@@ -55,7 +52,7 @@ class MatchNotificationManager(private val context: Context) {
         val notificationBuilder =
             NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle(title)
-                .setSmallIcon(R.mipmap.ic_launcher) // Use app icon
+                .setSmallIcon(R.drawable.ic_launcher_black_and_white)
                 .setOngoing(true)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(contentIntent)
@@ -165,7 +162,7 @@ class MatchNotificationManager(private val context: Context) {
             MatchStatus.IN_PROGRESS -> {
                 // Order: Gol - Tiempo Muerto - Pausa - Fin partido - Gol rival
                 // Android typically allows max 3 actions, so prioritize: Tiempo Muerto - Pausa - Fin partido
-                
+
                 // Add timeout action
                 val timeoutIntent =
                     createActionIntent(
@@ -257,21 +254,6 @@ class MatchNotificationManager(private val context: Context) {
         return PendingIntent.getActivity(
             context,
             matchId.toInt() + 30000,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-    }
-
-    private fun createGoalIntent(matchId: Long, isHomeGoal: Boolean): PendingIntent {
-        val intent =
-            Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra(EXTRA_MATCH_ID, matchId)
-                action = if (isHomeGoal) ACTION_ADD_HOME_GOAL else ACTION_ADD_VISITOR_GOAL
-            }
-        return PendingIntent.getActivity(
-            context,
-            if (isHomeGoal) matchId.toInt() + 10000 else matchId.toInt() + 20000,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

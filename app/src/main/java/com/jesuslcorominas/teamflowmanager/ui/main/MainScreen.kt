@@ -64,7 +64,7 @@ fun MainScreen(
             viewModel.getMatchById(navigation.matchId).firstOrNull()?.let { match ->
                 val matchRoute = Route.Match.createRoute(
                     navigation.matchId,
-                    match.team,
+                    match.teamName,
                     match.opponent
                 )
                 // Clear pending navigation BEFORE navigating to prevent issues
