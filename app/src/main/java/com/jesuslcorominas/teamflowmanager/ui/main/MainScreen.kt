@@ -72,7 +72,7 @@ fun MainScreen(
                 // Navigate to match detail
                 navController.navigate(matchRoute) {
                     // Ensure we navigate to the match screen, not the list
-                    popUpTo(Route.Matches.destination) {
+                    popUpTo(Route.Matches.path) {
                         inclusive = false
                     }
                     launchSingleTop = true
