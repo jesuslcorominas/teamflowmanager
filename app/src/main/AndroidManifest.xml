@@ -55,6 +55,17 @@
                 <data android:pathPattern=".*\\.tfm" />
             </intent-filter>
             <!-- endregion -->
+
+            <!-- region Deep link for match detail from notification -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="teamflowmanager"
+                    android:host="match" />
+            </intent-filter>
+            <!-- endregion -->
         </activity>
 
         <service

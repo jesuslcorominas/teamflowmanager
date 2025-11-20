@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.core.app.NotificationCompat
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -230,11 +231,10 @@ class MatchNotificationManager(private val context: Context) {
     }
 
     private fun createContentIntent(matchId: Long): PendingIntent {
+        val deepLinkUri = Uri.parse("teamflowmanager://match/$matchId")
         val intent =
-            Intent(context, MainActivity::class.java).apply {
+            Intent(Intent.ACTION_VIEW, deepLinkUri, context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra(EXTRA_MATCH_ID, matchId)
-                action = ACTION_OPEN_MATCH
             }
         return PendingIntent.getActivity(
             context,
