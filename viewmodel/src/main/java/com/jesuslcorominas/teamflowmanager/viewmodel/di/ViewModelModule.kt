@@ -134,7 +134,8 @@ val viewModelModule =
         viewModel {
             SettingsViewModel(
                 exportDatabaseUseCase = get(),
-                importDatabaseUseCase = get()
+                importDatabaseUseCase = get(),
+                analyticsTracker = get()
             )
         }
 

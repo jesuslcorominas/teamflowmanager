@@ -42,6 +42,9 @@ object AnalyticsEvent {
     const val PDF_EXPORTED = "pdf_exported"
     const val MATCH_REPORT_EXPORTED = "match_report_exported"
     const val PLAYER_STATS_EXPORTED = "player_stats_exported"
+    const val DATABASE_EXPORTED = "database_exported"
+    const val DATABASE_IMPORTED = "database_imported"
+    const val DATABASE_IMPORT_CANCELLED = "database_import_cancelled"
 
     // Navigation Events
     const val SCREEN_VIEW = "screen_view"
@@ -106,6 +109,11 @@ object AnalyticsParam {
     const val ERROR_MESSAGE = "error_message"
     const val ERROR_TYPE = "error_type"
     const val ERROR_LOCATION = "error_location"
+
+    // Import/Export Parameters
+    const val IMPORT_SOURCE = "import_source"
+    const val IMPORT_SUCCESS = "import_success"
+    const val EXPORT_SUCCESS = "export_success"
 }
 
 /**

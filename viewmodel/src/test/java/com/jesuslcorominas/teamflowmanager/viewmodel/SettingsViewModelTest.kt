@@ -1,10 +1,13 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -25,6 +28,7 @@ class SettingsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var exportDatabaseUseCase: ExportDatabaseUseCase
     private lateinit var importDatabaseUseCase: ImportDatabaseUseCase
+    private lateinit var analyticsTracker: AnalyticsTracker
     private lateinit var viewModel: SettingsViewModel
 
     @Before
@@ -32,7 +36,8 @@ class SettingsViewModelTest {
         Dispatchers.setMain(testDispatcher)
         exportDatabaseUseCase = mockk()
         importDatabaseUseCase = mockk()
-        viewModel = SettingsViewModel(exportDatabaseUseCase, importDatabaseUseCase)
+        analyticsTracker = mockk(relaxed = true)
+        viewModel = SettingsViewModel(exportDatabaseUseCase, importDatabaseUseCase, analyticsTracker)
     }
 
     @After
@@ -64,6 +69,7 @@ class SettingsViewModelTest {
 
         // Then
         coVerify(exactly = 1) { exportDatabaseUseCase() }
+        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
         assertNotNull(viewModel.exportResult.value)
         assertTrue(viewModel.exportResult.value!!.isSuccess)
         assertEquals(fileUri, viewModel.exportResult.value!!.getOrNull())
@@ -80,6 +86,7 @@ class SettingsViewModelTest {
 
         // Then
         coVerify(exactly = 1) { exportDatabaseUseCase() }
+        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
         assertNotNull(viewModel.exportResult.value)
         assertTrue(viewModel.exportResult.value!!.isFailure)
     }
@@ -96,6 +103,7 @@ class SettingsViewModelTest {
 
         // Then
         coVerify(exactly = 1) { exportDatabaseUseCase() }
+        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
         assertNotNull(viewModel.exportResult.value)
         assertTrue(viewModel.exportResult.value!!.isFailure)
         assertEquals(exception, viewModel.exportResult.value!!.exceptionOrNull())
@@ -105,14 +113,16 @@ class SettingsViewModelTest {
     fun `importData should call use case and update result on success`() = runTest {
         // Given
         val fileUri = "content://com.example.provider/file.tfm"
+        val source = "deep_link"
         coEvery { importDatabaseUseCase(fileUri) } returns true
 
         // When
-        viewModel.importData(fileUri)
+        viewModel.importData(fileUri, source)
         advanceUntilIdle()
 
         // Then
         coVerify(exactly = 1) { importDatabaseUseCase(fileUri) }
+        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
         assertNotNull(viewModel.importResult.value)
         assertTrue(viewModel.importResult.value!!.isSuccess)
         assertTrue(viewModel.importResult.value!!.getOrNull() == true)
@@ -122,14 +132,16 @@ class SettingsViewModelTest {
     fun `importData should update result on failure when use case returns false`() = runTest {
         // Given
         val fileUri = "content://com.example.provider/file.tfm"
+        val source = "settings_screen"
         coEvery { importDatabaseUseCase(fileUri) } returns false
 
         // When
-        viewModel.importData(fileUri)
+        viewModel.importData(fileUri, source)
         advanceUntilIdle()
 
         // Then
         coVerify(exactly = 1) { importDatabaseUseCase(fileUri) }
+        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
         assertNotNull(viewModel.importResult.value)
         assertTrue(viewModel.importResult.value!!.isFailure)
     }
@@ -138,18 +150,32 @@ class SettingsViewModelTest {
     fun `importData should update result on exception`() = runTest {
         // Given
         val fileUri = "content://com.example.provider/file.tfm"
+        val source = "deep_link"
         val exception = Exception("Import failed")
         coEvery { importDatabaseUseCase(fileUri) } throws exception
 
         // When
-        viewModel.importData(fileUri)
+        viewModel.importData(fileUri, source)
         advanceUntilIdle()
 
         // Then
         coVerify(exactly = 1) { importDatabaseUseCase(fileUri) }
+        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
         assertNotNull(viewModel.importResult.value)
         assertTrue(viewModel.importResult.value!!.isFailure)
         assertEquals(exception, viewModel.importResult.value!!.exceptionOrNull())
+    }
+
+    @Test
+    fun `trackImportCancelled should log analytics event`() {
+        // Given
+        val source = "settings_screen"
+
+        // When
+        viewModel.trackImportCancelled(source)
+
+        // Then
+        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
     }
 
     @Test
@@ -171,8 +197,9 @@ class SettingsViewModelTest {
     fun `clearImportResult should set import result to null`() = runTest {
         // Given
         val fileUri = "content://com.example.provider/file.tfm"
+        val source = "deep_link"
         coEvery { importDatabaseUseCase(fileUri) } returns true
-        viewModel.importData(fileUri)
+        viewModel.importData(fileUri, source)
         advanceUntilIdle()
 
         // When

@@ -74,6 +74,11 @@ fun SettingsScreen(
         }
     }
 
+    // Determine import source based on how we got here
+    val importSource = remember(incomingFileUri) {
+        if (incomingFileUri != null) "deep_link" else "settings_screen"
+    }
+
     // Show toast messages for results
     exportResult?.let { result ->
         if (result.isSuccess) {
@@ -115,6 +120,8 @@ fun SettingsScreen(
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = {
+                // Track import cancellation
+                viewModel.trackImportCancelled(importSource)
                 showImportDialog = false
                 pendingImportUri = null
             },
@@ -134,7 +141,7 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        pendingImportUri?.let { viewModel.importData(it) }
+                        pendingImportUri?.let { viewModel.importData(it, importSource) }
                         showImportDialog = false
                         pendingImportUri = null
                     }
@@ -145,6 +152,8 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
+                        // Track import cancellation
+                        viewModel.trackImportCancelled(importSource)
                         showImportDialog = false
                         pendingImportUri = null
                     }
