@@ -228,6 +228,7 @@
 
     <string name="timeout_button">Timeout</string>
     <string name="end_timeout_button">End Timeout</string>
+    <string name="finish_timeout_button">Finish Timeout</string>
     <string name="match_timeout">Timeout</string>
 
     <string name="search_match_placeholder">Search matches by opponent or place</string>
@@ -279,7 +280,7 @@
     <string name="goals_short">Goals</string>
     <string name="export_match_report">Export</string>
     <string name="export_match_report_description">Export match report</string>
-    
+
     <!-- Player Wizard Strings -->
     <string name="player_data_step_title">Player Data</string>
     <string name="player_positions_step_title">Player Positions</string>
@@ -289,7 +290,7 @@
     <string name="select_image_source">Select image source</string>
     <string name="camera">Camera</string>
     <string name="gallery">Gallery</string>
-    
+
     <!-- Settings Strings -->
     <string name="settings_title">Settings</string>
     <string name="settings">Settings</string>
@@ -307,4 +308,8 @@
     <string name="import_confirm">Import</string>
     <string name="select_file">Select file to import</string>
     <string name="no_file_selected">No file selected</string>
+
+    <!-- Match Notification -->
+    <string name="match_notification_channel_name">Match Countdown</string>
+    <string name="match_notification_channel_description">Shows remaining time during active matches</string>
 </resources>

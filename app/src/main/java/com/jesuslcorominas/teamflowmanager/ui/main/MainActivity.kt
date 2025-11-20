@@ -13,10 +13,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
+import androidx.lifecycle.lifecycleScope
+import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
+import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
+
+    private var pendingMatchNavigation by mutableStateOf<MatchNavigation?>(null)
+    private val matchNotificationController: MatchNotificationController by inject()
 
     private var pendingIntent by mutableStateOf<Intent?>(null)
 
@@ -42,14 +50,19 @@ class MainActivity : ComponentActivity() {
 
         requestedOrientation = SCREEN_ORIENTATION_USER_PORTRAIT
 
-        // Handle initial intent
         if (intent?.action == Intent.ACTION_VIEW && intent?.data != null) {
             pendingIntent = intent
+        } else {
+            handleNotificationIntent(intent = intent)
         }
 
         setContent {
             TFMAppTheme {
-                MainScreen(pendingIntent = pendingIntent)
+                MainScreen(
+                    pendingIntent = pendingIntent,
+                    pendingMatchNavigation = pendingMatchNavigation,
+                    onNavigationHandled = { pendingMatchNavigation = null }
+                )
             }
         }
     }
@@ -59,6 +72,39 @@ class MainActivity : ComponentActivity() {
         // Handle new intent when app is already running
         if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
             pendingIntent = intent
+        } else {
+            handleNotificationIntent(intent)
+        }
+    }
+
+    private fun handleNotificationIntent(intent: Intent?) {
+        val action = intent?.action
+        val matchId = intent?.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L) ?: -1L
+
+        if (matchId != -1L && action != null) {
+            when (action) {
+                MatchNotificationManager.ACTION_FINISH_MATCH -> {
+                    // Finish the match and then navigate
+                    lifecycleScope.launch {
+                        matchNotificationController.finishMatch(matchId, System.currentTimeMillis())
+                        pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = null)
+                    }
+                }
+                MatchNotificationManager.ACTION_OPEN_MATCH -> {
+                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = null)
+                }
+                MatchNotificationManager.ACTION_ADD_HOME_GOAL -> {
+                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = true)
+                }
+                MatchNotificationManager.ACTION_ADD_VISITOR_GOAL -> {
+                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = false)
+                }
+            }
         }
     }
 }
+
+data class MatchNavigation(
+    val matchId: Long,
+    val openGoalDialog: Boolean? = null
+)

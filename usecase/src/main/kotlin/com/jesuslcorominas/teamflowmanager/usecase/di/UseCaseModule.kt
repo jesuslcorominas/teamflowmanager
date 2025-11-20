@@ -28,6 +28,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
@@ -110,6 +112,7 @@ internal val useCaseInternalModule =
 
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class
+        singleOf(::GetActiveMatchUseCaseImpl) bind GetActiveMatchUseCase::class
         singleOf(::GetArchivedMatchesUseCaseImpl) bind GetArchivedMatchesUseCase::class
         singleOf(::CreateMatchUseCaseImpl) bind CreateMatchUseCase::class
         singleOf(::UpdateMatchUseCaseImpl) bind UpdateMatchUseCase::class

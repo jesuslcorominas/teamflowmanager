@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.jesuslcorominas.teamflowmanager.di"
+    namespace = "com.jesuslcorominas.teamflowmanager.service"
     compileSdk = 36
 
     defaultConfig {
@@ -35,20 +35,16 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewmodel"))
     implementation(project(":usecase"))
-    implementation(project(":service"))
-    implementation(project(":data:core"))
-    implementation(project(":data:local"))
-    implementation(project(":data:remote"))
+    implementation(project(":domain"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    implementation(libs.androidx.room.runtime)
-
     implementation(libs.koin.android)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

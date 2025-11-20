@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
@@ -18,6 +19,10 @@ import org.koin.dsl.module
 
 val viewModelModule =
     module {
+        viewModel {
+            MainViewModel(getMatchByIdUseCase = get())
+        }
+
         viewModel {
             SplashViewModel(getTeam = get())
         }

@@ -30,10 +30,18 @@ import com.jesuslcorominas.teamflowmanager.ui.main.search.rememberSearchState
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
+import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
+import kotlinx.coroutines.flow.first
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(pendingIntent: Intent? = null) {
+fun MainScreen(
+    pendingIntent: Intent? = null,
+    pendingMatchNavigation: MatchNavigation? = null,
+    onNavigationHandled: () -> Unit = {},
+    viewModel: MainViewModel = koinViewModel()
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val searchState = rememberSearchState()
@@ -50,6 +58,31 @@ fun MainScreen(pendingIntent: Intent? = null) {
         ?.associateWith { key -> backStackEntry?.arguments?.get(key) }
 
     val uiConfig = route?.uiConfig(arguments)
+
+    // Handle pending match navigation from notification
+    LaunchedEffect(pendingMatchNavigation) {
+        pendingMatchNavigation?.let { navigation ->
+            // Get match details to build proper route
+            // Use first() instead of firstOrNull() to wait for the match data
+            viewModel.getMatchById(navigation.matchId).first()?.let { match ->
+                val matchRoute = Route.Match.createRoute(
+                    navigation.matchId,
+                    match.teamName,
+                    match.opponent
+                )
+                // Navigate to match detail with Matches as back stack
+                navController.navigate(matchRoute) {
+                    // Pop back to Matches (don't include it) so back button works correctly
+                    popUpTo(Route.Matches.createRoute()) {
+                        inclusive = false
+                    }
+                    launchSingleTop = true
+                }
+                // Clear pending navigation AFTER navigation completes
+                onNavigationHandled()
+            }
+        }
+    }
 
     val title = route?.toTitle(backStackEntry)
 
