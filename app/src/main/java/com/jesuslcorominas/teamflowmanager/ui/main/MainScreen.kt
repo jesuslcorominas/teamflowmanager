@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
-import android.content.Intent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -12,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -33,25 +31,10 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(intent: Intent? = null) {
+fun MainScreen() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val searchState = rememberSearchState()
-
-    // Handle deep link for .tfm files
-    LaunchedEffect(intent) {
-        intent?.let {
-            if (it.action == Intent.ACTION_VIEW && it.data != null) {
-                val uri = it.data
-                if (uri?.toString()?.endsWith(".tfm") == true) {
-                    // Navigate to settings with the file URI
-                    navController.navigate(
-                        Route.Settings.createRoute(fileUri = uri.toString())
-                    )
-                }
-            }
-        }
-    }
 
     val currentRoute = backStackEntry?.destination?.route
 

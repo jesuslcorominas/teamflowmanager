@@ -48,7 +48,6 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     incomingFileUri: String? = null,
     onNavigateToMatches: () -> Unit = {},
-    onNavigateBack: () -> Unit = {},
 ) {
     TrackScreenView(screenName = ScreenName.SETTINGS, screenClass = "SettingsScreen")
 
