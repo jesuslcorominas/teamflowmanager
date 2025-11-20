@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesLocalDataSource
 import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
 import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
@@ -30,17 +31,15 @@ class MainActivity : ComponentActivity() {
 
     private var pendingMatchNavigation by mutableStateOf<MatchNavigation?>(null)
     private val matchNotificationController: MatchNotificationController by inject()
+    private val preferencesLocalDataSource: PreferencesLocalDataSource by inject()
 
     private var pendingIntent by mutableStateOf<Intent?>(null)
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        // Save that we've requested permission
-        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            .edit()
-            .putBoolean(PREF_NOTIFICATION_PERMISSION_REQUESTED, true)
-            .apply()
+        // Save that we've requested permission using PreferencesLocalDataSource
+        preferencesLocalDataSource.setNotificationPermissionRequested(true)
     }
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -93,6 +92,10 @@ class MainActivity : ComponentActivity() {
         val data = intent?.data
 
         when {
+            // Handle match deep link from notification
+            action == Intent.ACTION_VIEW && data != null && data.scheme == "teamflowmanager" && data.host == "match" -> {
+                pendingIntent = intent
+            }
             // Handle file deep links (.tfm files)
             action == Intent.ACTION_VIEW && data != null && (
                 data.toString().endsWith(".tfm") ||
@@ -100,14 +103,6 @@ class MainActivity : ComponentActivity() {
                 intent.type == "application/x-tfm"
             ) -> {
                 pendingIntent = intent
-            }
-            // Handle match deep link from notification
-            action == Intent.ACTION_VIEW && data != null && data.scheme == "teamflowmanager" && data.host == "match" -> {
-                // Extract matchId from deep link URI
-                val matchId = data.lastPathSegment?.toLongOrNull()
-                if (matchId != null) {
-                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = null)
-                }
             }
             // Handle legacy notification intents (for backwards compatibility)
             else -> {
@@ -145,8 +140,7 @@ class MainActivity : ComponentActivity() {
     private fun requestNotificationPermissionIfNeeded() {
         // Only request on Android 13+ (API 33+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            val hasRequestedBefore = prefs.getBoolean(PREF_NOTIFICATION_PERMISSION_REQUESTED, false)
+            val hasRequestedBefore = preferencesLocalDataSource.hasNotificationPermissionBeenRequested()
 
             // Check if permission is not granted and we haven't requested before
             if (ContextCompat.checkSelfPermission(
@@ -161,8 +155,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        private const val PREFS_NAME = "teamflowmanager_prefs"
-        private const val PREF_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
+        // Removed constants as we're now using PreferencesLocalDataSource
     }
 }
 

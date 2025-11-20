@@ -31,6 +31,8 @@ class MatchNotificationManager(private val context: Context) {
             ).apply {
                 description = context.getString(R.string.match_notification_channel_description)
                 setShowBadge(false)
+                // Make notification channel non-blockable for foreground service
+                setBlockable(false)
             }
         notificationManager.createNotificationChannel(channel)
     }

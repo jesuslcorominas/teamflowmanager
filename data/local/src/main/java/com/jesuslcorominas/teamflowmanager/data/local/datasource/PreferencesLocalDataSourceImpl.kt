@@ -32,9 +32,20 @@ internal class PreferencesLocalDataSourceImpl(
             .apply()
     }
     
+    override fun hasNotificationPermissionBeenRequested(): Boolean {
+        return sharedPreferences.getBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, false)
+    }
+    
+    override fun setNotificationPermissionRequested(requested: Boolean) {
+        sharedPreferences.edit()
+            .putBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, requested)
+            .apply()
+    }
+    
     companion object {
         private const val PREFS_NAME = "teamflowmanager_preferences"
         private const val KEY_SHOW_INVALID_SUBSTITUTION_ALERT = "show_invalid_substitution_alert"
         private const val KEY_DEFAULT_CAPTAIN_ID = "default_captain_id"
+        private const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
     }
 }

@@ -148,10 +148,17 @@ fun Navigation(
                 },
                 navArgument(Route.Match.ARG_TEAM) {
                     type = NavType.StringType
+                    defaultValue = ""
                 },
                 navArgument(Route.Match.ARG_OPPONENT) {
                     type = NavType.StringType
+                    defaultValue = ""
                 },
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "teamflowmanager://match/{${Route.Match.ARG_MATCH_ID}}"
+                }
             )
         ) {
             MatchScreen()
