@@ -2,7 +2,6 @@ package com.jesuslcorominas.teamflowmanager.service
 
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
@@ -46,11 +45,9 @@ class MatchNotificationServiceManager(
             Intent(context, MatchCountdownService::class.java).apply {
                 action = MatchCountdownService.ACTION_START_SERVICE
             }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent)
-        } else {
-            context.startService(intent)
-        }
+
+        context.startForegroundService(intent)
+
     }
 
     private fun stopService() {
