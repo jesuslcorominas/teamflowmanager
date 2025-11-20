@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import android.content.Intent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -11,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -31,7 +33,7 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(pendingIntent: Intent? = null) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val searchState = rememberSearchState()
@@ -50,6 +52,15 @@ fun MainScreen() {
     val uiConfig = route?.uiConfig(arguments)
 
     val title = route?.toTitle(backStackEntry)
+
+    // Handle deep link when intent is provided
+    LaunchedEffect(pendingIntent) {
+        pendingIntent?.let { intent ->
+            if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
+                navController.handleDeepLink(intent)
+            }
+        }
+    }
 
     CompositionLocalProvider(LocalSearchState provides searchState) {
         Scaffold(
@@ -127,6 +138,7 @@ private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (t
     Route.Matches -> stringResource(R.string.matches_title)
     Route.ArchivedMatches -> stringResource(R.string.archived_matches)
     Route.Analysis -> stringResource(R.string.analysis_title)
+    Route.Settings -> stringResource(R.string.settings_title)
     Route.Match ->
         "${backStackEntry?.arguments?.getString(Route.Match.ARG_TEAM)} - ${
             backStackEntry?.arguments?.getString(Route.Match.ARG_OPPONENT)

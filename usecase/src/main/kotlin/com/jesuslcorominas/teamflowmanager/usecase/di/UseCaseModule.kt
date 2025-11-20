@@ -16,6 +16,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCase
@@ -54,6 +56,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
@@ -146,6 +150,9 @@ internal val useCaseInternalModule =
         singleOf(::ExportToPdfUseCaseImpl) bind ExportToPdfUseCase::class
         singleOf(::GetMatchReportDataUseCaseImpl) bind GetMatchReportDataUseCase::class
         singleOf(::ExportMatchReportToPdfUseCaseImpl) bind ExportMatchReportToPdfUseCase::class
+
+        singleOf(::ExportDatabaseUseCaseImpl) bind ExportDatabaseUseCase::class
+        singleOf(::ImportDatabaseUseCaseImpl) bind ImportDatabaseUseCase::class
     }
 
 val useCaseModule =

@@ -11,6 +11,9 @@ interface PlayerSubstitutionDao {
     @Query("SELECT * FROM player_substitution WHERE matchId = :matchId ORDER BY substitutionTimeMillis ASC")
     fun getMatchSubstitutions(matchId: Long): Flow<List<PlayerSubstitutionEntity>>
 
+    @Query("SELECT * FROM player_substitution")
+    suspend fun getAllPlayerSubstitutionsDirect(): List<PlayerSubstitutionEntity>
+
     @Insert
     suspend fun insert(substitution: PlayerSubstitutionEntity): Long
 }

@@ -1,17 +1,20 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
 import android.app.Activity
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
@@ -20,6 +23,7 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
+import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
@@ -152,6 +156,55 @@ fun Navigation(
         ) {
             MatchScreen()
         }
+
+        composable(
+            route = Route.Settings.FULL_ROUTE,
+            arguments = listOf(
+                navArgument(Route.Settings.ARG_FILE_URI) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    action = Intent.ACTION_VIEW
+                    mimeType = "application/octet-stream"
+                },
+                navDeepLink {
+                    action = Intent.ACTION_VIEW
+                    mimeType = "application/x-tfm"
+                },
+                navDeepLink {
+                    action = Intent.ACTION_VIEW
+                    uriPattern = "content://.*\\.tfm"
+                },
+                navDeepLink {
+                    action = Intent.ACTION_VIEW
+                    uriPattern = "file://.*\\.tfm"
+                }
+            )
+        ) { backStackEntry ->
+
+            val intent = backStackEntry
+                .arguments
+                ?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
+
+            val dataUri = intent?.data?.toString()
+
+            val deepLinkUri = if (intent?.action == Intent.ACTION_VIEW) dataUri else null
+
+            val fileUri = deepLinkUri
+
+            SettingsScreen(
+                incomingFileUri = fileUri,
+                onNavigateToMatches = {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Settings.createRoute()) { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 
     val activity = LocalContext.current as? Activity
@@ -181,6 +234,14 @@ fun Navigation(
             }
             Route.Players -> navController.navigateToMatches()
             Route.Analysis -> navController.navigateToMatches()
+            Route.Settings -> {
+                // If settings was opened from deep link (back stack is shallow), go to matches instead of back
+                if (navController.previousBackStackEntry == null) {
+                    navController.navigateToMatches()
+                } else {
+                    navController.popBackStack()
+                }
+            }
 
             else -> navController.popBackStack()
         }

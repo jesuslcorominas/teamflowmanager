@@ -21,11 +21,15 @@ sealed class Route(
                 PlayerWizard,
                 Match,
                 Analysis,
+                Settings,
             )
         }
 
         fun fromValue(value: String?): Route? {
-            val base = value?.substringBefore("/")
+            if (value == null) return null
+
+            val base = value.substringBefore("?").substringBefore("/")
+
             return all.firstOrNull { it.path == base }
         }
     }
@@ -115,4 +119,18 @@ sealed class Route(
     }
 
     data object Analysis : Route(path = "analysis", showBottomBar = true)
+
+    data object Settings : Route(path = "settings", canGoBack = true) {
+        const val ARG_FILE_URI = "fileUri"
+        private const val PATH = "settings"
+        const val FULL_ROUTE = "$PATH?$ARG_FILE_URI={$ARG_FILE_URI}"
+
+        fun createRoute(fileUri: String? = null): String {
+            return if (fileUri != null) {
+                "$PATH?$ARG_FILE_URI=$fileUri"
+            } else {
+                PATH
+            }
+        }
+    }
 }

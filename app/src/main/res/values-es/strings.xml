@@ -289,4 +289,22 @@
     <string name="select_image_source">Selecciona origen de imagen</string>
     <string name="camera">Cámara</string>
     <string name="gallery">Galería</string>
+    
+    <!-- Settings Strings -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings">Ajustes</string>
+    <string name="settings_data_section">Gestión de Datos</string>
+    <string name="export_data">Exportar Datos</string>
+    <string name="import_data">Importar Datos</string>
+    <string name="export_data_description">Crear copia de seguridad de todos los datos</string>
+    <string name="import_data_description">Restaurar datos desde una copia de seguridad</string>
+    <string name="export_success">Datos exportados correctamente</string>
+    <string name="export_error">Error al exportar datos: %s</string>
+    <string name="import_success">Datos importados correctamente</string>
+    <string name="import_error">Error al importar datos: %s</string>
+    <string name="import_confirmation_title">¿Importar Datos?</string>
+    <string name="import_confirmation_message">Esta acción eliminará permanentemente todos los datos actuales y los reemplazará con los datos de la copia de seguridad. Esta acción no se puede deshacer.\n\nRecomendamos exportar tus datos actuales primero como precaución.</string>
+    <string name="import_confirm">Importar</string>
+    <string name="select_file">Selecciona archivo a importar</string>
+    <string name="no_file_selected">No se ha seleccionado ningún archivo</string>
 </resources>

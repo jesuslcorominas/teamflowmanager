@@ -17,6 +17,9 @@ interface MatchDao {
     @Query("SELECT * FROM match WHERE archived = 0 ORDER BY dateTime DESC")
     fun getAllMatches(): Flow<List<MatchEntity>>
 
+    @Query("SELECT * FROM match ORDER BY dateTime DESC")
+    suspend fun getAllMatchesDirect(): List<MatchEntity>
+
     @Query("SELECT * FROM match WHERE archived = 1 ORDER BY dateTime DESC")
     fun getArchivedMatches(): Flow<List<MatchEntity>>
 
