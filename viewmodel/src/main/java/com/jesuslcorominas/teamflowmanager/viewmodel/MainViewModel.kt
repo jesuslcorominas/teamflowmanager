@@ -2,14 +2,13 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
-import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
 import kotlinx.coroutines.flow.Flow
 
 class MainViewModel(
-    private val matchNotificationController: MatchNotificationController
+    private val getMatchByIdUseCase: GetMatchByIdUseCase
 ) : ViewModel() {
 
-    fun getMatchById(matchId: Long): Flow<Match?> {
-        return matchNotificationController.getMatchById(matchId)
-    }
+    fun getMatchById(matchId: Long): Flow<Match?> = getMatchByIdUseCase(matchId)
+
 }

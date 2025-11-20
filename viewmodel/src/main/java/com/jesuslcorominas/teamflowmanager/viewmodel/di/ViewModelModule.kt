@@ -20,7 +20,7 @@ import org.koin.dsl.module
 val viewModelModule =
     module {
         viewModel {
-            MainViewModel(matchNotificationController = get())
+            MainViewModel(getMatchByIdUseCase = get())
         }
 
         viewModel {

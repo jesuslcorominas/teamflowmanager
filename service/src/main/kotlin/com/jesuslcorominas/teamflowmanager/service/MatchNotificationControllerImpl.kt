@@ -5,7 +5,6 @@ import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotification
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
@@ -17,20 +16,15 @@ import kotlinx.coroutines.flow.Flow
  */
 class MatchNotificationControllerImpl(
     private val getActiveMatchUseCase: GetActiveMatchUseCase,
-    private val getMatchByIdUseCase: GetMatchByIdUseCase,
     private val pauseMatchUseCase: PauseMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val startTimeoutUseCase: StartTimeoutUseCase,
     private val endTimeoutUseCase: EndTimeoutUseCase,
     private val finishMatchUseCase: FinishMatchUseCase,
 ) : MatchNotificationController {
-    
+
     override fun getActiveMatch(): Flow<Match?> {
         return getActiveMatchUseCase()
-    }
-
-    override fun getMatchById(matchId: Long): Flow<Match?> {
-        return getMatchByIdUseCase(matchId)
     }
 
     override suspend fun pauseMatch(matchId: Long, currentTimeMillis: Long) {
