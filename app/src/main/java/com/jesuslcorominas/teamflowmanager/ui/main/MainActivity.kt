@@ -26,6 +26,8 @@ class MainActivity : ComponentActivity() {
     private var pendingMatchNavigation by mutableStateOf<MatchNavigation?>(null)
     private val matchNotificationController: MatchNotificationController by inject()
 
+    private var pendingIntent by mutableStateOf<Intent?>(null)
+
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         val lightStatusBarColor = LightColorScheme.primary.toArgb()
@@ -48,12 +50,16 @@ class MainActivity : ComponentActivity() {
 
         requestedOrientation = SCREEN_ORIENTATION_USER_PORTRAIT
 
-        // Handle intent from notification
-        handleNotificationIntent(intent)
+        if (intent?.action == Intent.ACTION_VIEW && intent?.data != null) {
+            pendingIntent = intent
+        } else {
+            handleNotificationIntent(intent = intent)
+        }
 
         setContent {
             TFMAppTheme {
                 MainScreen(
+                    pendingIntent = pendingIntent,
                     pendingMatchNavigation = pendingMatchNavigation,
                     onNavigationHandled = { pendingMatchNavigation = null }
                 )
@@ -63,8 +69,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent)
-        handleNotificationIntent(intent)
+        // Handle new intent when app is already running
+        if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
+            pendingIntent = intent
+        } else {
+            handleNotificationIntent(intent)
+        }
     }
 
     private fun handleNotificationIntent(intent: Intent?) {
@@ -96,5 +106,5 @@ class MainActivity : ComponentActivity() {
 
 data class MatchNavigation(
     val matchId: Long,
-    val openGoalDialog: Boolean? = null // true = home, false = visitor, null = no dialog
+    val openGoalDialog: Boolean? = null
 )

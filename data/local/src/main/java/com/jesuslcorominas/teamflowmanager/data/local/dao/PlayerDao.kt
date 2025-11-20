@@ -13,6 +13,9 @@ interface PlayerDao {
     @Query("SELECT * FROM players ORDER BY number ASC")
     fun getAllPlayers(): Flow<List<PlayerEntity>>
 
+    @Query("SELECT * FROM players ORDER BY number ASC")
+    suspend fun getAllPlayersDirect(): List<PlayerEntity>
+
     @Query("SELECT * FROM players WHERE isCaptain = 1 LIMIT 1")
     suspend fun getCaptainPlayer(): PlayerEntity?
 

@@ -17,6 +17,9 @@ interface PlayerTimeHistoryDao {
     @Query("SELECT * FROM player_time_history")
     fun getAllPlayerTimeHistory(): Flow<List<PlayerTimeHistoryEntity>>
 
+    @Query("SELECT * FROM player_time_history")
+    suspend fun getAllPlayerTimeHistoryDirect(): List<PlayerTimeHistoryEntity>
+
     @Insert
     suspend fun insert(playerTimeHistory: PlayerTimeHistoryEntity): Long
 }

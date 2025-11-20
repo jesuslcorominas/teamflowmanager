@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import android.content.Intent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -36,6 +37,7 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    pendingIntent: Intent? = null,
     pendingMatchNavigation: MatchNavigation? = null,
     onNavigationHandled: () -> Unit = {},
     viewModel: MainViewModel = koinViewModel()
@@ -83,6 +85,15 @@ fun MainScreen(
     }
 
     val title = route?.toTitle(backStackEntry)
+
+    // Handle deep link when intent is provided
+    LaunchedEffect(pendingIntent) {
+        pendingIntent?.let { intent ->
+            if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
+                navController.handleDeepLink(intent)
+            }
+        }
+    }
 
     CompositionLocalProvider(LocalSearchState provides searchState) {
         Scaffold(
@@ -160,6 +171,7 @@ private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (t
     Route.Matches -> stringResource(R.string.matches_title)
     Route.ArchivedMatches -> stringResource(R.string.archived_matches)
     Route.Analysis -> stringResource(R.string.analysis_title)
+    Route.Settings -> stringResource(R.string.settings_title)
     Route.Match ->
         "${backStackEntry?.arguments?.getString(Route.Match.ARG_TEAM)} - ${
             backStackEntry?.arguments?.getString(Route.Match.ARG_OPPONENT)

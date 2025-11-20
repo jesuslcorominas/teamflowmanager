@@ -280,7 +280,7 @@
     <string name="goals_short">Goals</string>
     <string name="export_match_report">Export</string>
     <string name="export_match_report_description">Export match report</string>
-    
+
     <!-- Player Wizard Strings -->
     <string name="player_data_step_title">Player Data</string>
     <string name="player_positions_step_title">Player Positions</string>
@@ -290,6 +290,24 @@
     <string name="select_image_source">Select image source</string>
     <string name="camera">Camera</string>
     <string name="gallery">Gallery</string>
+
+    <!-- Settings Strings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings">Settings</string>
+    <string name="settings_data_section">Data Management</string>
+    <string name="export_data">Export Data</string>
+    <string name="import_data">Import Data</string>
+    <string name="export_data_description">Backup all data to a shareable file</string>
+    <string name="import_data_description">Restore data from a backup file</string>
+    <string name="export_success">Data exported successfully</string>
+    <string name="export_error">Error exporting data: %s</string>
+    <string name="import_success">Data imported successfully</string>
+    <string name="import_error">Error importing data: %s</string>
+    <string name="import_confirmation_title">Import Data?</string>
+    <string name="import_confirmation_message">This will permanently delete all current data and replace it with data from the backup file. This action cannot be undone.\n\nWe recommend exporting your current data first as a precaution.</string>
+    <string name="import_confirm">Import</string>
+    <string name="select_file">Select file to import</string>
+    <string name="no_file_selected">No file selected</string>
 
     <!-- Match Notification -->
     <string name="match_notification_channel_name">Match Countdown</string>

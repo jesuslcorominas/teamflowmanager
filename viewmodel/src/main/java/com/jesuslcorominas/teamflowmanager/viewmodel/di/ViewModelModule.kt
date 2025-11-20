@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
@@ -133,6 +134,13 @@ val viewModelModule =
                 exportToPdf = get(),
                 analyticsTracker = get(),
                 crashReporter = get()
+            )
+        }
+        viewModel {
+            SettingsViewModel(
+                exportDatabaseUseCase = get(),
+                importDatabaseUseCase = get(),
+                analyticsTracker = get()
             )
         }
 
