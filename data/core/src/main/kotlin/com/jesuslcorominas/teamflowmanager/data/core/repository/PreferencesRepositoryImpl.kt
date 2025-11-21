@@ -22,4 +22,12 @@ internal class PreferencesRepositoryImpl(
     override fun setDefaultCaptainId(playerId: Long?) {
         preferencesLocalDataSource.setDefaultCaptainId(playerId)
     }
+    
+    override fun hasNotificationPermissionBeenRequested(): Boolean {
+        return preferencesLocalDataSource.hasNotificationPermissionBeenRequested()
+    }
+    
+    override fun setNotificationPermissionRequested(requested: Boolean) {
+        preferencesLocalDataSource.setNotificationPermissionRequested(requested)
+    }
 }

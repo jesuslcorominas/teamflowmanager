@@ -20,7 +20,11 @@ import org.koin.dsl.module
 val viewModelModule =
     module {
         viewModel {
-            MainViewModel(getMatchByIdUseCase = get())
+            MainViewModel(
+                getMatchByIdUseCase = get(),
+                hasNotificationPermissionBeenRequestedUseCase = get(),
+                setNotificationPermissionRequestedUseCase = get()
+            )
         }
 
         viewModel {

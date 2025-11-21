@@ -19,27 +19,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesLocalDataSource
 import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
 import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
+import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
 
     private var pendingMatchNavigation by mutableStateOf<MatchNavigation?>(null)
     private val matchNotificationController: MatchNotificationController by inject()
-    private val preferencesLocalDataSource: PreferencesLocalDataSource by inject()
+    private val mainViewModel: MainViewModel by viewModel()
 
     private var pendingIntent by mutableStateOf<Intent?>(null)
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        // Save that we've requested permission using PreferencesLocalDataSource
-        preferencesLocalDataSource.setNotificationPermissionRequested(true)
+        // Save that we've requested permission using ViewModel
+        mainViewModel.setNotificationPermissionRequested(true)
     }
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -140,7 +141,7 @@ class MainActivity : ComponentActivity() {
     private fun requestNotificationPermissionIfNeeded() {
         // Only request on Android 13+ (API 33+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val hasRequestedBefore = preferencesLocalDataSource.hasNotificationPermissionBeenRequested()
+            val hasRequestedBefore = mainViewModel.hasNotificationPermissionBeenRequested()
 
             // Check if permission is not granted and we haven't requested before
             if (ContextCompat.checkSelfPermission(
@@ -155,7 +156,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        // Removed constants as we're now using PreferencesLocalDataSource
+        // Removed constants as we're now using ViewModel with proper architecture
     }
 }
 
