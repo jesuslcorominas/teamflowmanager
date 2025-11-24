@@ -1,32 +1,41 @@
 
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
-import androidx.lifecycle.lifecycleScope
-import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
+import androidx.core.content.ContextCompat
 import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager
+import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager.Companion.ACTION_OPEN_MATCH
+import com.jesuslcorominas.teamflowmanager.ui.navigation.PendingNavigation
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
 
-    private var pendingMatchNavigation by mutableStateOf<MatchNavigation?>(null)
-    private val matchNotificationController: MatchNotificationController by inject()
+    private val mainViewModel: MainViewModel by viewModel()
 
-    private var pendingIntent by mutableStateOf<Intent?>(null)
+    private var pendingNavigation by mutableStateOf<PendingNavigation?>(null)
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            mainViewModel.setNotificationPermissionRequested(true)
+        }
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,18 +59,14 @@ class MainActivity : ComponentActivity() {
 
         requestedOrientation = SCREEN_ORIENTATION_USER_PORTRAIT
 
-        if (intent?.action == Intent.ACTION_VIEW && intent?.data != null) {
-            pendingIntent = intent
-        } else {
-            handleNotificationIntent(intent = intent)
-        }
+        requestNotificationPermissionIfNeeded()
+
+        handleIntent(intent)
 
         setContent {
             TFMAppTheme {
                 MainScreen(
-                    pendingIntent = pendingIntent,
-                    pendingMatchNavigation = pendingMatchNavigation,
-                    onNavigationHandled = { pendingMatchNavigation = null }
+                    pendingNavigation = pendingNavigation
                 )
             }
         }
@@ -69,42 +74,37 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        // Handle new intent when app is already running
-        if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
-            pendingIntent = intent
-        } else {
-            handleNotificationIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent == null) return
+
+        val action = intent.action
+
+        val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1)
+        if (matchId != -1L && action == ACTION_OPEN_MATCH) {
+            pendingNavigation = PendingNavigation.Match(matchId)
+            return
+        }
+
+        if (action == Intent.ACTION_VIEW && intent.data != null) {
+            pendingNavigation = PendingNavigation.DeepLink(intent)
         }
     }
 
-    private fun handleNotificationIntent(intent: Intent?) {
-        val action = intent?.action
-        val matchId = intent?.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L) ?: -1L
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasRequestedBefore = mainViewModel.hasNotificationPermissionBeenRequested()
 
-        if (matchId != -1L && action != null) {
-            when (action) {
-                MatchNotificationManager.ACTION_FINISH_MATCH -> {
-                    // Finish the match and then navigate
-                    lifecycleScope.launch {
-                        matchNotificationController.finishMatch(matchId, System.currentTimeMillis())
-                        pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = null)
-                    }
-                }
-                MatchNotificationManager.ACTION_OPEN_MATCH -> {
-                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = null)
-                }
-                MatchNotificationManager.ACTION_ADD_HOME_GOAL -> {
-                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = true)
-                }
-                MatchNotificationManager.ACTION_ADD_VISITOR_GOAL -> {
-                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = false)
-                }
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED && !hasRequestedBefore
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
 }
-
-data class MatchNavigation(
-    val matchId: Long,
-    val openGoalDialog: Boolean? = null
-)

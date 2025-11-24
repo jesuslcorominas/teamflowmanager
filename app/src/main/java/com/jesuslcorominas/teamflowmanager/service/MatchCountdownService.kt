@@ -7,7 +7,6 @@ import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotification
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -30,24 +29,8 @@ class MatchCountdownService : Service() {
         startId: Int,
     ): Int {
         when (intent?.action) {
-            ACTION_START_SERVICE -> {
-                startForegroundNotification()
-            }
-            ACTION_STOP_SERVICE -> {
-                stopForegroundService()
-            }
-            MatchNotificationManager.ACTION_PAUSE_MATCH -> {
-                handlePauseMatch(intent)
-            }
-            MatchNotificationManager.ACTION_RESUME_MATCH -> {
-                handleResumeMatch(intent)
-            }
-            MatchNotificationManager.ACTION_START_TIMEOUT -> {
-                handleStartTimeout(intent)
-            }
-            MatchNotificationManager.ACTION_END_TIMEOUT -> {
-                handleEndTimeout(intent)
-            }
+            ACTION_START_SERVICE -> startForegroundNotification()
+            ACTION_STOP_SERVICE -> stopForegroundService()
         }
 
         return START_STICKY
@@ -71,58 +54,6 @@ class MatchCountdownService : Service() {
                     }
                 }
             }
-    }
-
-    private fun handlePauseMatch(intent: Intent) {
-        val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L)
-        if (matchId != -1L) {
-            serviceScope.launch {
-                matchNotificationController.pauseMatch(matchId, System.currentTimeMillis())
-                updateNotification()
-            }
-        }
-    }
-
-    private fun handleResumeMatch(intent: Intent) {
-        val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L)
-        if (matchId != -1L) {
-            serviceScope.launch {
-                matchNotificationController.resumeMatch(matchId, System.currentTimeMillis())
-                updateNotification()
-            }
-        }
-    }
-
-    private fun handleStartTimeout(intent: Intent) {
-        val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L)
-        if (matchId != -1L) {
-            serviceScope.launch {
-                matchNotificationController.startTimeout(matchId, System.currentTimeMillis())
-                updateNotification()
-            }
-        }
-    }
-
-    private fun handleEndTimeout(intent: Intent) {
-        val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L)
-        if (matchId != -1L) {
-            serviceScope.launch {
-                matchNotificationController.endTimeout(matchId, System.currentTimeMillis())
-                updateNotification()
-            }
-        }
-    }
-
-    private suspend fun updateNotification() {
-        val match = matchNotificationController.getActiveMatch().firstOrNull()
-        if (match != null) {
-            val notification =
-                notificationManager.buildNotification(
-                    match,
-                    System.currentTimeMillis(),
-                )
-            startForeground(MatchNotificationManager.NOTIFICATION_ID, notification)
-        }
     }
 
     private fun stopForegroundService() {

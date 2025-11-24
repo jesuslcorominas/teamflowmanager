@@ -20,7 +20,10 @@ import org.koin.dsl.module
 val viewModelModule =
     module {
         viewModel {
-            MainViewModel(getMatchByIdUseCase = get())
+            MainViewModel(
+                hasNotificationPermissionBeenRequestedUseCase = get(),
+                setNotificationPermissionRequestedUseCase = get()
+            )
         }
 
         viewModel {
@@ -95,7 +98,6 @@ val viewModelModule =
             MatchListViewModel(
                 getAllMatchesUseCase = get(),
                 deleteMatchUseCase = get(),
-                updateMatchUseCase = get(),
                 resumeMatchUseCase = get(),
                 archiveMatchUseCase = get(),
                 analyticsTracker = get(),

@@ -60,6 +60,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCase
@@ -78,6 +80,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
@@ -150,6 +154,9 @@ internal val useCaseInternalModule =
         singleOf(::SaveDefaultCaptainUseCaseImpl) bind SaveDefaultCaptainUseCase::class
         singleOf(::GetCaptainPlayerUseCaseImpl) bind GetCaptainPlayerUseCase::class
         singleOf(::UpdateScheduledMatchesCaptainUseCaseImpl) bind UpdateScheduledMatchesCaptainUseCase::class
+
+        singleOf(::HasNotificationPermissionBeenRequestedUseCaseImpl) bind HasNotificationPermissionBeenRequestedUseCase::class
+        singleOf(::SetNotificationPermissionRequestedUseCaseImpl) bind SetNotificationPermissionRequestedUseCase::class
 
         singleOf(::RegisterGoalUseCaseImpl) bind RegisterGoalUseCase::class
 

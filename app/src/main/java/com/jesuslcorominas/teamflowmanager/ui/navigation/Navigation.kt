@@ -1,12 +1,11 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
-import android.app.Activity
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -32,6 +31,7 @@ import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
+    onTitleChange: (String?) -> Unit,
     currentBackHandler: BackHandlerController
 ) {
     NavHost(
@@ -109,7 +109,7 @@ fun Navigation(
                     navController.navigate(Route.CreateMatch.createRoute(matchId))
                 },
                 onNavigateToMatch = { match ->
-                    navController.navigate(Route.Match.createRoute(match.id, match.teamName, match.opponent))
+                    navController.navigate(Route.Match.createRoute(match.id))
                 },
                 onNavigateToArchivedMatches = {
                     navController.navigate(Route.ArchivedMatches.createRoute())
@@ -120,7 +120,7 @@ fun Navigation(
         composable(Route.ArchivedMatches.createRoute()) {
             ArchivedMatchesScreen(
                 onNavigateToMatchSummary = { match ->
-                    navController.navigate(Route.Match.createRoute(match.id, match.teamName, match.opponent))
+                    navController.navigate(Route.Match.createRoute(match.id))
                 },
             )
         }
@@ -143,18 +143,15 @@ fun Navigation(
         composable(
             route = Route.Match.FULL_ROUTE,
             arguments = listOf(
-                navArgument(Route.Match.ARG_MATCH_ID) {
-                    type = NavType.LongType
-                },
-                navArgument(Route.Match.ARG_TEAM) {
-                    type = NavType.StringType
-                },
-                navArgument(Route.Match.ARG_OPPONENT) {
-                    type = NavType.StringType
-                },
+                navArgument(Route.Match.ARG_MATCH_ID) { type = NavType.LongType },
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "teamflowmanager://match/{${Route.Match.ARG_MATCH_ID}}"
+                }
             )
         ) {
-            MatchScreen()
+            MatchScreen(onTitleChange = onTitleChange)
         }
 
         composable(
@@ -169,32 +166,13 @@ fun Navigation(
             deepLinks = listOf(
                 navDeepLink {
                     action = Intent.ACTION_VIEW
-                    mimeType = "application/octet-stream"
-                },
-                navDeepLink {
-                    action = Intent.ACTION_VIEW
-                    mimeType = "application/x-tfm"
-                },
-                navDeepLink {
-                    action = Intent.ACTION_VIEW
-                    uriPattern = "content://.*\\.tfm"
-                },
-                navDeepLink {
-                    action = Intent.ACTION_VIEW
-                    uriPattern = "file://.*\\.tfm"
+                    mimeType = "application/*"
                 }
             )
-        ) { backStackEntry ->
+        ) { entry ->
 
-            val intent = backStackEntry
-                .arguments
-                ?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
-
-            val dataUri = intent?.data?.toString()
-
-            val deepLinkUri = if (intent?.action == Intent.ACTION_VIEW) dataUri else null
-
-            val fileUri = deepLinkUri
+            val intent = entry.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
+            val fileUri = intent?.data?.toString()
 
             SettingsScreen(
                 incomingFileUri = fileUri,
@@ -207,7 +185,7 @@ fun Navigation(
         }
     }
 
-    val activity = LocalContext.current as? Activity
+    val activity = LocalActivity.current
 
     val backStackEntry by navController.currentBackStackEntryAsState()
 
