@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
-import android.content.Intent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -14,7 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -30,27 +31,45 @@ import com.jesuslcorominas.teamflowmanager.ui.main.search.rememberSearchState
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
-import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
-import kotlinx.coroutines.flow.first
-import org.koin.androidx.compose.koinViewModel
+import com.jesuslcorominas.teamflowmanager.ui.navigation.PendingNavigation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(
-    pendingIntent: Intent? = null,
-    pendingMatchNavigation: MatchNavigation? = null,
-    onNavigationHandled: () -> Unit = {},
-    viewModel: MainViewModel = koinViewModel()
-) {
+fun MainScreen(pendingNavigation: PendingNavigation? = null) {
     val navController = rememberNavController()
+
+    LaunchedEffect(pendingNavigation) {
+        when (val nav = pendingNavigation) {
+            is PendingNavigation.DeepLink -> {
+                navController.handleDeepLink(nav.intent)
+            }
+
+            is PendingNavigation.Match -> {
+                val route = Route.Match.createRoute(
+                    nav.matchId,
+                )
+                navController.navigate(route) {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                    launchSingleTop = true
+                }
+            }
+
+            else -> {
+                // No pending navigation
+            }
+        }
+    }
+
+    MainScaffold(navController = navController)
+}
+
+@Composable
+private fun MainScaffold(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
+    val backHandlerController = remember { BackHandlerController() }
     val searchState = rememberSearchState()
 
-    val currentRoute = backStackEntry?.destination?.route
-
-    val backHandlerController = remember { BackHandlerController() }
-
-    val route = Route.fromValue(currentRoute)
+    val route = Route.fromValue(backStackEntry?.destination?.route)
 
     val arguments = backStackEntry
         ?.arguments
@@ -59,41 +78,14 @@ fun MainScreen(
 
     val uiConfig = route?.uiConfig(arguments)
 
-    // Handle pending match navigation from notification
-    LaunchedEffect(pendingMatchNavigation) {
-        pendingMatchNavigation?.let { navigation ->
-            // Get match details to build proper route
-            // Use first() instead of firstOrNull() to wait for the match data
-            viewModel.getMatchById(navigation.matchId).first()?.let { match ->
-                val matchRoute = Route.Match.createRoute(
-                    navigation.matchId,
-                    match.teamName,
-                    match.opponent
-                )
-                // Navigate to match detail with Matches as back stack
-                navController.navigate(matchRoute) {
-                    // Pop back to Matches (don't include it) so back button works correctly
-                    popUpTo(Route.Matches.createRoute()) {
-                        inclusive = false
-                    }
-                    launchSingleTop = true
-                }
-                // Clear pending navigation AFTER navigation completes
-                onNavigationHandled()
-            }
-        }
+    var dynamicTitle by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(route) {
+        dynamicTitle = null
     }
 
-    val title = route?.toTitle(backStackEntry)
+    val routeTitle = route?.toTitleRes(backStackEntry)?.let { stringResource(it) }
 
-    // Handle deep link when intent is provided
-    LaunchedEffect(pendingIntent) {
-        pendingIntent?.let { intent ->
-            if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
-                navController.handleDeepLink(intent)
-            }
-        }
-    }
+    val title = dynamicTitle ?: routeTitle ?: ""
 
     CompositionLocalProvider(LocalSearchState provides searchState) {
         Scaffold(
@@ -113,7 +105,7 @@ fun MainScreen(
                 }
             },
             floatingActionButton = {
-                if (uiConfig?.showFab == true) {
+                if (route != null && uiConfig?.showFab == true) {
                     RouteFloatingActionButton(route, navController)
                 }
             },
@@ -124,6 +116,7 @@ fun MainScreen(
                     .padding(paddingValues),
                 navController = navController,
                 currentBackHandler = backHandlerController,
+                onTitleChange = { dynamicTitle = it }
             )
         }
     }
@@ -161,21 +154,24 @@ private fun Route.toDestination() = when (this) {
     else -> null
 }
 
-@Composable
-private fun Route.toTitle(backStackEntry: NavBackStackEntry?): String? = when (this) {
-    Route.Players -> stringResource(R.string.players_title)
-    Route.Team -> backStackEntry?.arguments?.getString(Route.Team.ARG_MODE).let { mode ->
-        stringResource(if (mode == Route.Team.MODE_EDIT) R.string.edit_team_title else R.string.team_title)
+fun Route.toTitleRes(backStackEntry: NavBackStackEntry?): Int? = when (this) {
+    Route.Players -> R.string.players_title
+
+    Route.Team -> {
+        val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)
+        if (mode == Route.Team.MODE_EDIT) {
+            R.string.edit_team_title
+        } else {
+            R.string.team_title
+        }
     }
 
-    Route.Matches -> stringResource(R.string.matches_title)
-    Route.ArchivedMatches -> stringResource(R.string.archived_matches)
-    Route.Analysis -> stringResource(R.string.analysis_title)
-    Route.Settings -> stringResource(R.string.settings_title)
-    Route.Match ->
-        "${backStackEntry?.arguments?.getString(Route.Match.ARG_TEAM)} - ${
-            backStackEntry?.arguments?.getString(Route.Match.ARG_OPPONENT)
-        }"
+    Route.Matches -> R.string.matches_title
+    Route.ArchivedMatches -> R.string.archived_matches
+    Route.Analysis -> R.string.analysis_title
+    Route.Settings -> R.string.settings_title
+
+    Route.Match -> null
 
     else -> null
 }

@@ -22,39 +22,34 @@
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"
-            android:launchMode="singleTask">
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- region File interceptor to open app from .tfm files -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="teamflowmanager"
+                    android:host="match" />
+            </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" />
-                <data android:scheme="content" />
                 <data android:mimeType="application/octet-stream" />
                 <data android:mimeType="application/x-tfm" />
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="file" />
-                <data android:pathPattern=".*\\.tfm" />
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="content" />
                 <data android:pathPattern=".*\\.tfm" />
             </intent-filter>
-            <!-- endregion -->
+
         </activity>
 
         <service

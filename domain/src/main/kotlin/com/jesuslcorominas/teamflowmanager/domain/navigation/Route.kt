@@ -54,6 +54,34 @@ sealed class Route(
             hasSearchBar = hasSearchBar,
         )
 
+    data object Matches : Route(
+        path = "matches",
+        showBottomBar = true,
+        showFab = true,
+        hasSearchBar = true
+    )
+
+    data object Match : Route(path = "match", canGoBack = true) {
+        const val ARG_MATCH_ID = "matchId"
+        private const val PATH = "match"
+
+        const val FULL_ROUTE = "$PATH/{$ARG_MATCH_ID}"
+    }
+
+    data object Settings : Route(path = "settings", canGoBack = true) {
+        const val ARG_FILE_URI = "fileUri"
+        private const val PATH = "settings"
+        const val FULL_ROUTE = "$PATH?$ARG_FILE_URI={$ARG_FILE_URI}"
+
+        fun createRoute(fileUri: String? = null): String {
+            return if (fileUri != null) {
+                "$PATH?$ARG_FILE_URI=$fileUri"
+            } else {
+                PATH
+            }
+        }
+    }
+
     data object Splash : Route(path = "splash", showTopBar = false)
 
     data object Team : Route(
@@ -88,13 +116,6 @@ sealed class Route(
         const val FULL_ROUTE = "$PATH/{$ARG_PLAYER_ID}"
     }
 
-    data object Matches : Route(
-        path = "matches",
-        showBottomBar = true,
-        showFab = true,
-        hasSearchBar = true
-    )
-
     data object ArchivedMatches : Route(
         path = "archived_matches",
         showBottomBar = true,
@@ -109,28 +130,5 @@ sealed class Route(
         const val FULL_ROUTE = "$PATH/{$ARG_MATCH_ID}"
     }
 
-    data object Match : Route(path = "match", canGoBack = true) {
-        const val ARG_MATCH_ID = "matchId"
-        const val ARG_TEAM = "team"
-        const val ARG_OPPONENT = "opponent"
-        private const val PATH = "match"
-
-        const val FULL_ROUTE = "$PATH/{$ARG_MATCH_ID}/{$ARG_TEAM}/{$ARG_OPPONENT}"
-    }
-
     data object Analysis : Route(path = "analysis", showBottomBar = true)
-
-    data object Settings : Route(path = "settings", canGoBack = true) {
-        const val ARG_FILE_URI = "fileUri"
-        private const val PATH = "settings"
-        const val FULL_ROUTE = "$PATH?$ARG_FILE_URI={$ARG_FILE_URI}"
-
-        fun createRoute(fileUri: String? = null): String {
-            return if (fileUri != null) {
-                "$PATH?$ARG_FILE_URI=$fileUri"
-            } else {
-                PATH
-            }
-        }
-    }
 }
