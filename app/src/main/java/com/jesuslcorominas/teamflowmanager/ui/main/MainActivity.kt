@@ -18,14 +18,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
 import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager
+import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager.Companion.ACTION_OPEN_MATCH
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
@@ -65,10 +62,8 @@ class MainActivity : ComponentActivity() {
 
         requestedOrientation = SCREEN_ORIENTATION_USER_PORTRAIT
 
-        // Request notification permission on Android 13+ if not already requested
         requestNotificationPermissionIfNeeded()
 
-        // Handle intents
         handleIntent(intent)
 
         setContent {
@@ -84,7 +79,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent) // Important: update the activity's intent
+        setIntent(intent)
         handleIntent(intent)
     }
 
@@ -139,24 +134,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestNotificationPermissionIfNeeded() {
-        // Only request on Android 13+ (API 33+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val hasRequestedBefore = mainViewModel.hasNotificationPermissionBeenRequested()
 
-            // Check if permission is not granted and we haven't requested before
             if (ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED && !hasRequestedBefore
             ) {
-                // Request permission
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
-    }
-
-    companion object {
-        // Removed constants as we're now using ViewModel with proper architecture
     }
 }
 

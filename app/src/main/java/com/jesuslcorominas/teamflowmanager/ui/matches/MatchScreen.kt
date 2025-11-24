@@ -80,7 +80,7 @@ private const val SUBSTITUTIONS_HEADER = "substitutions_header"
 @Composable
 fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     TrackScreenView(screenName = ScreenName.MATCH_DETAIL, screenClass = "MatchScreen")
-    
+
     val uiState by viewModel.uiState.collectAsState()
     val exportState by viewModel.exportState.collectAsState()
 
@@ -100,14 +100,14 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
         if (exportState is ExportState.Ready) {
             val state = exportState as ExportState.Ready
             val uri = android.net.Uri.parse(state.uri)
-            
+
             val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                 type = "application/pdf"
                 putExtra(android.content.Intent.EXTRA_STREAM, uri)
                 addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             context.startActivity(android.content.Intent.createChooser(shareIntent, context.getString(R.string.export_share_title)))
-            
+
             viewModel.exportCompleted()
         }
     }

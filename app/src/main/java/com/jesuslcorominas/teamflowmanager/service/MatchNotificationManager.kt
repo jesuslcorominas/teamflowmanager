@@ -31,8 +31,6 @@ class MatchNotificationManager(private val context: Context) {
             ).apply {
                 description = context.getString(R.string.match_notification_channel_description)
                 setShowBadge(false)
-                // Make notification channel non-blockable for foreground service
-                setBlockable(false)
             }
         notificationManager.createNotificationChannel(channel)
     }
@@ -107,9 +105,6 @@ class MatchNotificationManager(private val context: Context) {
                     .setContentText(context.getString(R.string.match_next))
             }
         }
-
-        // Add action buttons based on match status
-        addNotificationActions(notificationBuilder, match)
 
         return notificationBuilder.build()
     }

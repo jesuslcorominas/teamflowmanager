@@ -21,7 +21,6 @@ val viewModelModule =
     module {
         viewModel {
             MainViewModel(
-                getMatchByIdUseCase = get(),
                 hasNotificationPermissionBeenRequestedUseCase = get(),
                 setNotificationPermissionRequestedUseCase = get()
             )
