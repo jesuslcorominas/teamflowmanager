@@ -27,12 +27,14 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -74,11 +76,12 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 import org.koin.androidx.compose.koinViewModel
+import androidx.core.net.toUri
 
 private const val SUBSTITUTIONS_HEADER = "substitutions_header"
 
 @Composable
-fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
+fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (String?) -> Unit) {
     TrackScreenView(screenName = ScreenName.MATCH_DETAIL, screenClass = "MatchScreen")
 
     val uiState by viewModel.uiState.collectAsState()
@@ -99,14 +102,19 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     LaunchedEffect(exportState) {
         if (exportState is ExportState.Ready) {
             val state = exportState as ExportState.Ready
-            val uri = android.net.Uri.parse(state.uri)
+            val uri = state.uri.toUri()
 
             val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                 type = "application/pdf"
                 putExtra(android.content.Intent.EXTRA_STREAM, uri)
                 addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(android.content.Intent.createChooser(shareIntent, context.getString(R.string.export_share_title)))
+            context.startActivity(
+                android.content.Intent.createChooser(
+                    shareIntent,
+                    context.getString(R.string.export_share_title)
+                )
+            )
 
             viewModel.exportCompleted()
         }
@@ -138,7 +146,8 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                 onSortOrderChange = { currentSortOrder = it },
                 onAddGoal = { viewModel.showGoalScorerDialog() },
                 onAddOpponentGoal = { viewModel.showOpponentGoalDialog() },
-                onBeginMatch = { viewModel.beginMatch(state.match.id) }
+                onBeginMatch = { viewModel.beginMatch(state.match.id) },
+                onTitleChange = onTitleChange
             )
 
             is MatchUiState.Finished -> {
@@ -150,7 +159,8 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
                     state = state,
                     currentSortOrder = currentSortOrder,
                     onSortOrderChange = { currentSortOrder = it },
-                    onExport = { viewModel.requestExport() }
+                    onExport = { viewModel.requestExport() },
+                    onTitleChange = onTitleChange
                 )
             }
         }
@@ -223,8 +233,17 @@ private fun SuccessState(
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
-    onBeginMatch: () -> Unit
+    onBeginMatch: () -> Unit,
+    onTitleChange: (String?) -> Unit,
 ) {
+    LaunchedEffect(state.match.id, state.match.teamName, state.match.opponent) {
+        onTitleChange("${state.match.teamName} - ${state.match.opponent}")
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { onTitleChange(null) }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -501,7 +520,16 @@ private fun FinishedMatchState(
     currentSortOrder: PlayerSortOrderBy,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onExport: () -> Unit,
+    onTitleChange: (String?) -> Unit
 ) {
+    LaunchedEffect(state.match.id, state.match.teamName, state.match.opponent) {
+        onTitleChange("${state.match.teamName} - ${state.match.opponent}")
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { onTitleChange(null) }
+    }
+
     var expanded by remember { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
@@ -561,14 +589,14 @@ private fun FinishedMatchState(
             }
         }
 
-        androidx.compose.material3.FloatingActionButton(
+        FloatingActionButton(
             onClick = onExport,
             modifier = Modifier
-                .align(androidx.compose.ui.Alignment.BottomEnd)
+                .align(Alignment.BottomEnd)
                 .padding(TFMSpacing.spacing04)
         ) {
-            androidx.compose.material3.Icon(
-                imageVector = androidx.compose.material.icons.Icons.Default.Share,
+            Icon(
+                imageVector = Icons.Default.Share,
                 contentDescription = stringResource(R.string.export_match_report_description)
             )
         }

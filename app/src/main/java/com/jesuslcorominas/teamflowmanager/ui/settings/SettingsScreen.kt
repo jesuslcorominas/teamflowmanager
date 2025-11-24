@@ -39,6 +39,7 @@ import androidx.core.net.toUri
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
+import com.jesuslcorominas.teamflowmanager.ui.navigation.isAndroidNavigation
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -59,7 +60,7 @@ fun SettingsScreen(
 
     // Handle incoming file URI from deep link
     LaunchedEffect(incomingFileUri) {
-        if (incomingFileUri != null) {
+        if (!incomingFileUri.isNullOrBlank() && !incomingFileUri.isAndroidNavigation()) {
             pendingImportUri = incomingFileUri
             showImportDialog = true
         }

@@ -11,7 +11,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +21,6 @@ import kotlinx.coroutines.launch
 class MatchListViewModel(
     private val getAllMatchesUseCase: GetAllMatchesUseCase,
     private val deleteMatchUseCase: DeleteMatchUseCase,
-    private val updateMatchUseCase: UpdateMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val archiveMatchUseCase: ArchiveMatchUseCase,
     private val analyticsTracker: AnalyticsTracker,
@@ -60,18 +58,12 @@ class MatchListViewModel(
         }
     }
 
-    fun updateMatch(match: Match) {
-        viewModelScope.launch {
-            updateMatchUseCase(match)
-        }
-    }
-
     fun resumeMatch(matchId: Long) {
         viewModelScope.launch {
             try {
                 crashReporter.log("Resuming match: $matchId")
                 resumeMatchUseCase(matchId, System.currentTimeMillis())
-                
+
                 analyticsTracker.logEvent(
                     AnalyticsEvent.MATCH_RESUMED,
                     mapOf(
@@ -97,14 +89,14 @@ class MatchListViewModel(
                 try {
                     crashReporter.log("Deleting match: ${state.match.id}")
                     deleteMatchUseCase(state.match.id)
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.MATCH_DELETED,
                         mapOf(
                             AnalyticsParam.MATCH_ID to state.match.id.toString(),
                         ),
                     )
-                    
+
                     _deleteConfirmationState.value = MatchDeleteConfirmationState.None
                 } catch (e: Exception) {
                     crashReporter.recordException(e)
@@ -124,7 +116,7 @@ class MatchListViewModel(
             try {
                 crashReporter.log("Archiving match: $matchId")
                 archiveMatchUseCase(matchId)
-                
+
                 analyticsTracker.logEvent(
                     AnalyticsEvent.MATCH_ARCHIVED,
                     mapOf(

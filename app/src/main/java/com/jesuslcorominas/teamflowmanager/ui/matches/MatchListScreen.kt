@@ -57,7 +57,7 @@ fun MatchListScreen(
     viewModel: MatchListViewModel = koinViewModel(),
 ) {
     TrackScreenView(screenName = ScreenName.MATCHES, screenClass = "MatchListScreen")
-    
+
     val uiState by viewModel.uiState.collectAsState()
     val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
 
@@ -102,7 +102,7 @@ private fun MatchesList(
 
     val pendingMatches = state.matches.filter { it.status == MatchStatus.SCHEDULED }.sortedBy { it.dateTime }
     val activeMatch = state.matches.find { it.status == MatchStatus.IN_PROGRESS }
-    val pausedMatch = state.matches.find { it.status == MatchStatus.PAUSED }
+    val pausedMatch = state.matches.find { it.status == MatchStatus.PAUSED || it.status == MatchStatus.TIMEOUT }
     val playedMatches = state.matches.filter { it.status == MatchStatus.FINISHED }.sortedByDescending { it.dateTime }
 
     val hasActiveMatch = activeMatch != null

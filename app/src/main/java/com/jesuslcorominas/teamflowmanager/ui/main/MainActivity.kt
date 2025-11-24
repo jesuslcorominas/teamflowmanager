@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager
 import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager.Companion.ACTION_OPEN_MATCH
+import com.jesuslcorominas.teamflowmanager.ui.navigation.PendingNavigation
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
@@ -27,18 +28,14 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
 
-    private var pendingMatchNavigation by mutableStateOf<MatchNavigation?>(null)
-    private val matchNotificationController: MatchNotificationController by inject()
     private val mainViewModel: MainViewModel by viewModel()
 
-    private var pendingIntent by mutableStateOf<Intent?>(null)
+    private var pendingNavigation by mutableStateOf<PendingNavigation?>(null)
 
-    private val notificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        // Save that we've requested permission using ViewModel
-        mainViewModel.setNotificationPermissionRequested(true)
-    }
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            mainViewModel.setNotificationPermissionRequested(true)
+        }
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,9 +66,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             TFMAppTheme {
                 MainScreen(
-                    pendingIntent = pendingIntent,
-                    pendingMatchNavigation = pendingMatchNavigation,
-                    onNavigationHandled = { pendingMatchNavigation = null }
+                    pendingNavigation = pendingNavigation
                 )
             }
         }
@@ -84,52 +79,18 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val action = intent?.action
-        val data = intent?.data
+        if (intent == null) return
 
-        when {
-            // Handle match deep link from notification
-            action == Intent.ACTION_VIEW && data != null && data.scheme == "teamflowmanager" && data.host == "match" -> {
-                pendingIntent = intent
-            }
-            // Handle file deep links (.tfm files)
-            action == Intent.ACTION_VIEW && data != null && (
-                data.toString().endsWith(".tfm") ||
-                intent.type == "application/octet-stream" ||
-                intent.type == "application/x-tfm"
-            ) -> {
-                pendingIntent = intent
-            }
-            // Handle legacy notification intents (for backwards compatibility)
-            else -> {
-                handleNotificationIntent(intent)
-            }
+        val action = intent.action
+
+        val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1)
+        if (matchId != -1L && action == ACTION_OPEN_MATCH) {
+            pendingNavigation = PendingNavigation.Match(matchId)
+            return
         }
-    }
 
-    private fun handleNotificationIntent(intent: Intent?) {
-        val action = intent?.action
-        val matchId = intent?.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1L) ?: -1L
-
-        if (matchId != -1L && action != null) {
-            when (action) {
-                MatchNotificationManager.ACTION_FINISH_MATCH -> {
-                    // Finish the match and then navigate
-                    lifecycleScope.launch {
-                        matchNotificationController.finishMatch(matchId, System.currentTimeMillis())
-                        pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = null)
-                    }
-                }
-                MatchNotificationManager.ACTION_OPEN_MATCH -> {
-                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = null)
-                }
-                MatchNotificationManager.ACTION_ADD_HOME_GOAL -> {
-                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = true)
-                }
-                MatchNotificationManager.ACTION_ADD_VISITOR_GOAL -> {
-                    pendingMatchNavigation = MatchNavigation(matchId, openGoalDialog = false)
-                }
-            }
+        if (action == Intent.ACTION_VIEW && intent.data != null) {
+            pendingNavigation = PendingNavigation.DeepLink(intent)
         }
     }
 
@@ -147,8 +108,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-data class MatchNavigation(
-    val matchId: Long,
-    val openGoalDialog: Boolean? = null
-)

@@ -98,7 +98,6 @@ val viewModelModule =
             MatchListViewModel(
                 getAllMatchesUseCase = get(),
                 deleteMatchUseCase = get(),
-                updateMatchUseCase = get(),
                 resumeMatchUseCase = get(),
                 archiveMatchUseCase = get(),
                 analyticsTracker = get(),
