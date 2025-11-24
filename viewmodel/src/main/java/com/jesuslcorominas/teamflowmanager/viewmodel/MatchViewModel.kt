@@ -173,7 +173,7 @@ class MatchViewModel(
                             }
                         }
                         
-                        // Otherwise proceed with pausing immediately
+                        // If no active period or less than 1 minute remains, proceed with pausing immediately
                         confirmPauseMatch()
                     }
                 }
