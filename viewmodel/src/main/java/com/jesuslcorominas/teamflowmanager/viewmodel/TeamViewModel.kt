@@ -30,7 +30,7 @@ class TeamViewModel(
     private val updateTeam: UpdateTeamUseCase,
     private val getCaptainPlayer: GetCaptainPlayerUseCase,
     private val hasScheduledMatches: HasScheduledMatchesUseCase,
-    private val playerRepository: PlayerRepository,
+    private val playerRepository: PlayerRepository, // TODO extract to usecase
     private val analyticsTracker: AnalyticsTracker,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -39,10 +39,10 @@ class TeamViewModel(
 
     private val _showExitDialog = MutableStateFlow(false)
     val showExitDialog: StateFlow<Boolean> = _showExitDialog
-    
+
     private val _showTeamTypeChangeError = MutableStateFlow(false)
     val showTeamTypeChangeError: StateFlow<Boolean> = _showTeamTypeChangeError
-    
+
     private var originalTeam: Team? = null
 
     val isEditMode: Boolean = (savedStateHandle[Route.Team.ARG_MODE] as? String) == Route.Team.MODE_EDIT
@@ -65,11 +65,11 @@ class TeamViewModel(
             }
         }
     }
-    
+
     fun showTeamTypeChangeError() {
         _showTeamTypeChangeError.value = true
     }
-    
+
     fun dismissTeamTypeChangeError() {
         _showTeamTypeChangeError.value = false
     }
@@ -92,7 +92,7 @@ class TeamViewModel(
         viewModelScope.launch {
             val original = originalTeam
             val teamTypeChanged = original != null && original.teamType != team.teamType
-            
+
             // Only check for scheduled matches if team type changed
             if (teamTypeChanged) {
                 val hasScheduled = hasScheduledMatches.invoke()
@@ -101,12 +101,12 @@ class TeamViewModel(
                     return@launch
                 }
             }
-            
+
             // Handle captain changes
             val captain = getCaptainPlayer.invoke()
             val currentCaptainId = captain?.id
             val captainChanged = currentCaptainId != captainId
-            
+
             if (captainChanged) {
                 if (captain != null && captainId == null) {
                     // Remove current captain
