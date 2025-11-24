@@ -19,6 +19,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +35,7 @@ class MatchCreationWizardViewModel(
     private val getDefaultCaptainUseCase: GetDefaultCaptainUseCase,
     private val saveDefaultCaptainUseCase: SaveDefaultCaptainUseCase,
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
+    private val getTeamUseCase: GetTeamUseCase,
     private val createMatch: CreateMatchUseCase,
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
     private val updateMatchUseCase: UpdateMatchUseCase,
@@ -74,14 +76,23 @@ class MatchCreationWizardViewModel(
 
     private var allPlayers: List<Player> = emptyList()
     private var isEditMode = false
+    private var teamTypeValue: Int = 11 // Default to Football 11
 
     init {
         loadPlayers()
+        loadTeam()
         
         // Check if we have a matchId in savedStateHandle for edit mode
         val matchIdFromState = savedStateHandle.get<Long>(Route.CreateMatch.ARG_MATCH_ID)
         if (matchIdFromState != null && matchIdFromState != 0L) {
             loadMatchForEdit(matchIdFromState)
+        }
+    }
+    
+    private fun loadTeam() {
+        viewModelScope.launch {
+            val team = getTeamUseCase.invoke().first()
+            teamTypeValue = team?.teamType?.players ?: 11
         }
     }
 
@@ -160,6 +171,7 @@ class MatchCreationWizardViewModel(
     fun getSquadCallUpIds() = squadCallUpIds
     fun getCaptainId() = captainId
     fun getStartingLineupIds() = startingLineupIds
+    fun getTeamTypePlayerCount() = teamTypeValue
 
     fun goToNextStep() {
         viewModelScope.launch {

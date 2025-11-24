@@ -36,6 +36,7 @@ fun StartingLineupStep(
     onCreate: () -> Unit,
     onPrevious: () -> Unit,
     modifier: Modifier = Modifier,
+    requiredPlayers: Int = 5,
 ) {
     var currentSelection by remember(selectedPlayerIds) { mutableStateOf(selectedPlayerIds) }
     var showMaxError by remember { mutableStateOf(false) }
@@ -57,16 +58,16 @@ fun StartingLineupStep(
         )
 
         Text(
-            text = stringResource(R.string.starting_lineup_subtitle),
+            text = stringResource(R.string.starting_lineup_subtitle, requiredPlayers),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Text(
-            text = stringResource(R.string.starting_lineup_count, currentSelection.size),
+            text = stringResource(R.string.starting_lineup_count, currentSelection.size, requiredPlayers),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
-            color = if (currentSelection.size == 5) {
+            color = if (currentSelection.size == requiredPlayers) {
                 MaterialTheme.colorScheme.primary
             } else {
                 MaterialTheme.colorScheme.error
@@ -85,7 +86,7 @@ fun StartingLineupStep(
             paddingValues = PaddingValues(TFMSpacing.spacing02),
             onMultiSelectionChange = { player, isSelected ->
                 if (isSelected) {
-                    if (currentSelection.size >= 5) {
+                    if (currentSelection.size >= requiredPlayers) {
                         showMaxError = true
                     } else {
                         currentSelection = currentSelection + player.id
@@ -111,7 +112,7 @@ fun StartingLineupStep(
 
             Button(
                 onClick = {
-                    if (currentSelection.size != 5) {
+                    if (currentSelection.size != requiredPlayers) {
                         // Should not happen because button is disabled
                         return@Button
                     }
@@ -126,7 +127,7 @@ fun StartingLineupStep(
                         onCreate()
                     }
                 },
-                enabled = currentSelection.size == 5,
+                enabled = currentSelection.size == requiredPlayers,
                 modifier = Modifier.weight(1f),
             ) {
                 Text(stringResource(R.string.save))

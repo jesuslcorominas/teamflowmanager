@@ -99,6 +99,7 @@ fun MatchCreationWizardScreen(
                             SquadCallUpStep(
                                 players = state.players,
                                 selectedPlayerIds = wizardViewModel.getSquadCallUpIds(),
+                                minPlayers = wizardViewModel.getTeamTypePlayerCount(),
                                 onSelectionChanged = { playerIds ->
                                     wizardViewModel.setSquadCallUp(playerIds)
                                 },
@@ -151,6 +152,7 @@ fun MatchCreationWizardScreen(
                                 selectedPlayerIds = wizardViewModel.getStartingLineupIds(),
                                 captainId = wizardViewModel.getCaptainId(),
                                 hasGoalkeepersInSquad = wizardViewModel.hasGoalkeepersInSquad(),
+                                requiredPlayers = wizardViewModel.getTeamTypePlayerCount(),
                                 onSelectionChanged = { playerIds ->
                                     wizardViewModel.setStartingLineup(playerIds)
                                 },
