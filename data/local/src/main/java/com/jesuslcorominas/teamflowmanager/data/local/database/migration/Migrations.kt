@@ -62,3 +62,15 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("ALTER TABLE match_new RENAME TO match")
     }
 }
+
+/**
+ * Migration from version 3 to 4
+ * Adds teamType column to team table to support different football formats (5, 7, 8, 11 players).
+ * Default value is 11 for backward compatibility.
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Add teamType column with default value of 11 (FOOTBALL_11)
+        db.execSQL("ALTER TABLE team ADD COLUMN teamType INTEGER NOT NULL DEFAULT 11")
+    }
+}

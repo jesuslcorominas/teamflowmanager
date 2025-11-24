@@ -6,4 +6,5 @@ data class Team(
     val coachName: String,
     val delegateName: String,
     val captainId: Long? = null,
+    val teamType: TeamType = TeamType.FOOTBALL_11,
 )
