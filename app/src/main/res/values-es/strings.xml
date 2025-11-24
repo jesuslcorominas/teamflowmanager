@@ -70,11 +70,8 @@
     <string name="delegate_name_required">El nombre del delegado es obligatorio</string>
     <string name="team_type">Tipo de Equipo</string>
     <string name="team_type_required">El tipo de equipo es obligatorio</string>
-    <string name="team_type_football_5">Fútbol 5</string>
-    <string name="team_type_football_7">Fútbol 7</string>
-    <string name="team_type_football_8">Fútbol 8</string>
-    <string name="team_type_football_11">Fútbol 11</string>
-    <string name="team_type_change_not_allowed">No se Puede Cambiar el Tipo de Equipo</string>
+    <string name="team_type_football">Fútbol %d</string>
+    <string name="team_type_change_not_allowed">No se puede cambiar el tipo de equipo</string>
     <string name="team_type_change_blocked_message">El tipo de equipo no se puede cambiar porque hay partidos programados. Por favor, elimina o archiva todos los partidos programados primero.</string>
 
     <string name="team_info">Información del Equipo</string>

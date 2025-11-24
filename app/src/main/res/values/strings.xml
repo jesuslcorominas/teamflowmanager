@@ -70,11 +70,8 @@
     <string name="delegate_name_required">Delegate name is required</string>
     <string name="team_type">Team Type</string>
     <string name="team_type_required">Team type is required</string>
-    <string name="team_type_football_5">Football 5</string>
-    <string name="team_type_football_7">Football 7</string>
-    <string name="team_type_football_8">Football 8</string>
-    <string name="team_type_football_11">Football 11</string>
-    <string name="team_type_change_not_allowed">Cannot Change Team Type</string>
+    <string name="team_type_football">Football %d</string>
+    <string name="team_type_change_not_allowed">Cannot change team type</string>
     <string name="team_type_change_blocked_message">The team type cannot be changed because there are scheduled matches. Please delete or archive all scheduled matches first.</string>
 
     <string name="team_info">Team Info</string>

@@ -43,14 +43,12 @@ class TeamViewModel(
     private val _showTeamTypeChangeError = MutableStateFlow(false)
     val showTeamTypeChangeError: StateFlow<Boolean> = _showTeamTypeChangeError
     
-    private val _hasScheduledMatches = MutableStateFlow(false)
-    val hasScheduledMatchesState: StateFlow<Boolean> = _hasScheduledMatches
+    private var originalTeam: Team? = null
 
     val isEditMode: Boolean = (savedStateHandle[Route.Team.ARG_MODE] as? String) == Route.Team.MODE_EDIT
 
     init {
         loadTeam()
-        checkScheduledMatches()
     }
 
     private fun loadTeam() {
@@ -60,14 +58,11 @@ class TeamViewModel(
             ) { team, players ->
                 team to players
             }.collect { (team, players) ->
+                if (originalTeam == null) {
+                    originalTeam = team
+                }
                 _uiState.update { if (team == null) TeamUiState.NoTeam else TeamUiState.Success(team, players) }
             }
-        }
-    }
-    
-    private fun checkScheduledMatches() {
-        viewModelScope.launch {
-            _hasScheduledMatches.value = hasScheduledMatches.invoke()
         }
     }
     
@@ -95,13 +90,28 @@ class TeamViewModel(
 
     fun updateTeam(team: Team, captainId: Long?) {
         viewModelScope.launch {
-            val captain = getCaptainPlayer.invoke()
-            if (captain != null && captainId == null) {
-                // Remove current captain
-                playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase
-            } else if (captainId != null && (captain == null || captain.id != captainId)) {
-                // Set new captain
-                playerRepository.setPlayerAsCaptain(captainId) // TODO extract to usecase
+            val original = originalTeam
+            val teamTypeChanged = original != null && original.teamType != team.teamType
+            val captainChanged = captainId != null
+            
+            // Only check for scheduled matches if team type or captain changed
+            if (teamTypeChanged || captainChanged) {
+                val hasScheduled = hasScheduledMatches.invoke()
+                if (teamTypeChanged && hasScheduled) {
+                    showTeamTypeChangeError()
+                    return@launch
+                }
+            }
+            
+            if (captainChanged) {
+                val captain = getCaptainPlayer.invoke()
+                if (captain != null && captainId == null) {
+                    // Remove current captain
+                    playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase
+                } else if (captainId != null && (captain == null || captain.id != captainId)) {
+                    // Set new captain
+                    playerRepository.setPlayerAsCaptain(captainId) // TODO extract to usecase
+                }
             }
 
             updateTeam.invoke(team)

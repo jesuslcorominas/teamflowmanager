@@ -76,7 +76,7 @@ class MatchCreationWizardViewModel(
 
     private var allPlayers: List<Player> = emptyList()
     private var isEditMode = false
-    private var teamTypeValue: Int = 11 // Default to Football 11
+    private var teamTypeValue: Int = 5 // Default to Football 5
 
     init {
         loadPlayers()
@@ -92,7 +92,7 @@ class MatchCreationWizardViewModel(
     private fun loadTeam() {
         viewModelScope.launch {
             val team = getTeamUseCase.invoke().first()
-            teamTypeValue = team?.teamType?.players ?: 11
+            teamTypeValue = team?.teamType?.players ?: 5
         }
     }
 

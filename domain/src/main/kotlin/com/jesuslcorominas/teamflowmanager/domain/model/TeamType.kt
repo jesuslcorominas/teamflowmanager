@@ -8,7 +8,7 @@ enum class TeamType(val players: Int) {
 
     companion object {
         fun fromPlayers(players: Int): TeamType {
-            return entries.find { it.players == players } ?: FOOTBALL_11
+            return entries.find { it.players == players } ?: FOOTBALL_5
         }
     }
 }

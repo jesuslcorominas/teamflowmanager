@@ -39,7 +39,6 @@ fun TeamScreen(
     val uiState by viewModel.uiState.collectAsState()
     val showExitDialog by viewModel.showExitDialog.collectAsState()
     val showTeamTypeChangeError by viewModel.showTeamTypeChangeError.collectAsState()
-    val hasScheduledMatches by viewModel.hasScheduledMatchesState.collectAsState()
 
     val hasUnsavedChanges = remember { mutableStateOf(true) }
 
@@ -77,7 +76,6 @@ fun TeamScreen(
                 TeamForm(
                     team = state.team, 
                     players = state.players,
-                    hasScheduledMatches = hasScheduledMatches,
                     onShowTeamTypeChangeError = { viewModel.showTeamTypeChangeError() }
                 ) { team, captainId ->
                     viewModel.updateTeam(team, captainId)

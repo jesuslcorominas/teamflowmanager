@@ -45,7 +45,7 @@ fun TeamDetailContent(team: Team, captain: Player? = null) {
         
         InfoRow(
             label = stringResource(R.string.team_type),
-            value = stringResource(team.teamType.toStringRes()),
+            value = stringResource(team.teamType.toStringRes(), team.teamType.players),
         )
 
         if (captain != null) {
@@ -88,7 +88,7 @@ fun TeamDetailPreview() {
                 name = "The Invincibles",
                 coachName = "John Doe",
                 delegateName = "Jane Smith",
-                teamType = TeamType.FOOTBALL_11
+                teamType = TeamType.FOOTBALL_5
             ),
             captain = Player(
                 id = 4,
