@@ -61,6 +61,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.AppIconButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
@@ -696,35 +697,13 @@ private fun PauseMatchEarlyConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                stringResource(R.string.pause_match_early_title),
-                style = MaterialTheme.typography.titleLarge
-            )
-        },
-        text = {
-            Text(
-                stringResource(R.string.pause_match_early_message),
-                style = MaterialTheme.typography.bodyMedium
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm
-            ) {
-                Text(stringResource(R.string.yes))
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss
-            ) {
-                Text(stringResource(R.string.no))
-            }
-        },
-        shape = MaterialTheme.shapes.medium,
+    AppAlertDialog(
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+        confirmText = stringResource(R.string.yes),
+        dismissText = stringResource(R.string.no),
+        title = stringResource(R.string.pause_match_early_title),
+        message = stringResource(R.string.pause_match_early_message),
     )
 }
 
