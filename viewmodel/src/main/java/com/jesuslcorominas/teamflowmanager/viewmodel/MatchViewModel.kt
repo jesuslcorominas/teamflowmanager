@@ -163,10 +163,11 @@ class MatchViewModel(
                             .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
                         
                         if (currentPeriod != null) {
-                            val elapsedTime = _currentTime.value - currentPeriod.startTimeMillis
+                            val elapsedTime = (_currentTime.value - currentPeriod.startTimeMillis).coerceAtLeast(0L)
                             val remainingTime = currentPeriod.periodDuration - elapsedTime
                             
-                            // If more than 1 minute remains, show confirmation dialog
+                            // If more than 1 minute remains in normal time, show confirmation dialog
+                            // If in additional time (remainingTime <= 0), proceed without confirmation
                             if (remainingTime > 60000L) {
                                 _showPauseConfirmation.value = true
                                 return@launch
