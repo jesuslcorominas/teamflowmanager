@@ -217,6 +217,8 @@
     <string name="period_time_label">Period Time</string>
     <string name="stop_match_early_title">Stop Match Early?</string>
     <string name="stop_match_early_message">The match is not in the final period. Are you sure you want to stop it now?</string>
+    <string name="pause_match_early_title">Go to Break Early?</string>
+    <string name="pause_match_early_message">There is more than 1 minute remaining. Are you sure you want to go to the break now?</string>
     <string name="pause_limit_reached">Cannot pause. Maximum pauses reached.</string>
     <string name="begin_match">Begin Match</string>
 

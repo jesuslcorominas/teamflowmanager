@@ -88,6 +88,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
     val showInvalidSubstitutionAlert by viewModel.showInvalidSubstitutionAlert.collectAsState()
     val showStopConfirmation by viewModel.showStopConfirmation.collectAsState()
+    val showPauseConfirmation by viewModel.showPauseConfirmation.collectAsState()
     val showGoalScorerDialog by viewModel.showGoalScorerDialog.collectAsState()
     val showOpponentGoalDialog by viewModel.showOpponentGoalDialog.collectAsState()
 
@@ -169,6 +170,14 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
             StopMatchEarlyConfirmationDialog(
                 onConfirm = { viewModel.confirmStopMatch() },
                 onDismiss = { viewModel.dismissStopConfirmation() }
+            )
+        }
+
+        // Show confirmation dialog if pausing match early
+        if (showPauseConfirmation) {
+            PauseMatchEarlyConfirmationDialog(
+                onConfirm = { viewModel.confirmPauseMatch() },
+                onDismiss = { viewModel.dismissPauseConfirmation() }
             )
         }
 
@@ -661,6 +670,43 @@ private fun StopMatchEarlyConfirmationDialog(
         text = {
             Text(
                 stringResource(R.string.stop_match_early_message),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm
+            ) {
+                Text(stringResource(R.string.yes))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text(stringResource(R.string.no))
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
+
+@Composable
+private fun PauseMatchEarlyConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                stringResource(R.string.pause_match_early_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Text(
+                stringResource(R.string.pause_match_early_message),
                 style = MaterialTheme.typography.bodyMedium
             )
         },

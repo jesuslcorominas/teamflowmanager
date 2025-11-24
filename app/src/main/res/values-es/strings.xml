@@ -217,6 +217,8 @@
     <string name="period_time_label">Tiempo de Periodo</string>
     <string name="stop_match_early_title">¿Detener Partido Antes de Tiempo?</string>
     <string name="stop_match_early_message">El partido no está en el periodo final. ¿Estás seguro de que deseas detenerlo ahora?</string>
+    <string name="pause_match_early_title">¿Ir al Descanso Antes de Tiempo?</string>
+    <string name="pause_match_early_message">Quedan más de 1 minuto para finalizar el tiempo. ¿Estás seguro de que deseas ir al descanso ahora?</string>
     <string name="pause_limit_reached">No se puede pausar. Máximo de pausas alcanzado.</string>
     <string name="begin_match">Comenzar Partido</string>
 

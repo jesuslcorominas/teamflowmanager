@@ -74,6 +74,9 @@ class MatchViewModel(
     private val _showStopConfirmation = MutableStateFlow(false)
     val showStopConfirmation: StateFlow<Boolean> = _showStopConfirmation.asStateFlow()
 
+    private val _showPauseConfirmation = MutableStateFlow(false)
+    val showPauseConfirmation: StateFlow<Boolean> = _showPauseConfirmation.asStateFlow()
+
     private val _showGoalScorerDialog = MutableStateFlow(false)
     val showGoalScorerDialog: StateFlow<Boolean> = _showGoalScorerDialog.asStateFlow()
 
@@ -155,16 +158,23 @@ class MatchViewModel(
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                     if (currentState.match.canPause()) {
-                        crashReporter.log("Pausing match: ${currentState.match.id}")
-                        pauseMatch(currentState.match.id, _currentTime.value)
+                        // Calculate remaining time in current period
+                        val currentPeriod = currentState.match.periods
+                            .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
                         
-                        analyticsTracker.logEvent(
-                            AnalyticsEvent.MATCH_PAUSED,
-                            mapOf(
-                                AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
-                                AnalyticsParam.DURATION_MINUTES to (_currentTime.value / 60000).toString(),
-                            ),
-                        )
+                        if (currentPeriod != null) {
+                            val elapsedTime = _currentTime.value - currentPeriod.startTimeMillis
+                            val remainingTime = currentPeriod.periodDuration - elapsedTime
+                            
+                            // If more than 1 minute remains, show confirmation dialog
+                            if (remainingTime > 60000L) {
+                                _showPauseConfirmation.value = true
+                                return@launch
+                            }
+                        }
+                        
+                        // Otherwise proceed with pausing immediately
+                        confirmPauseMatch()
                     }
                 }
             } catch (e: Exception) {
@@ -173,6 +183,35 @@ class MatchViewModel(
                 throw e
             }
         }
+    }
+
+    fun confirmPauseMatch() {
+        viewModelScope.launch {
+            try {
+                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                    crashReporter.log("Pausing match: ${currentState.match.id}")
+                    pauseMatch(currentState.match.id, _currentTime.value)
+                    
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.MATCH_PAUSED,
+                        mapOf(
+                            AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                            AnalyticsParam.DURATION_MINUTES to (_currentTime.value / 60000).toString(),
+                        ),
+                    )
+                }
+                
+                _showPauseConfirmation.value = false
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error pausing match: ${e.message}")
+                throw e
+            }
+        }
+    }
+
+    fun dismissPauseConfirmation() {
+        _showPauseConfirmation.value = false
     }
 
     fun resumeMatch(matchId: Long) {
