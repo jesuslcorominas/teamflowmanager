@@ -61,6 +61,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.AppIconButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard
+import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
@@ -88,6 +89,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
     val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
     val showInvalidSubstitutionAlert by viewModel.showInvalidSubstitutionAlert.collectAsState()
     val showStopConfirmation by viewModel.showStopConfirmation.collectAsState()
+    val showPauseConfirmation by viewModel.showPauseConfirmation.collectAsState()
     val showGoalScorerDialog by viewModel.showGoalScorerDialog.collectAsState()
     val showOpponentGoalDialog by viewModel.showOpponentGoalDialog.collectAsState()
 
@@ -169,6 +171,14 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel()) {
             StopMatchEarlyConfirmationDialog(
                 onConfirm = { viewModel.confirmStopMatch() },
                 onDismiss = { viewModel.dismissStopConfirmation() }
+            )
+        }
+
+        // Show confirmation dialog if pausing match early
+        if (showPauseConfirmation) {
+            PauseMatchEarlyConfirmationDialog(
+                onConfirm = { viewModel.confirmPauseMatch() },
+                onDismiss = { viewModel.dismissPauseConfirmation() }
             )
         }
 
@@ -679,6 +689,21 @@ private fun StopMatchEarlyConfirmationDialog(
             }
         },
         shape = MaterialTheme.shapes.medium,
+    )
+}
+
+@Composable
+private fun PauseMatchEarlyConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AppAlertDialog(
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+        confirmText = stringResource(R.string.yes),
+        dismissText = stringResource(R.string.no),
+        title = stringResource(R.string.pause_match_early_title),
+        message = stringResource(R.string.pause_match_early_message),
     )
 }
 
