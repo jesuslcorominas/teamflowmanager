@@ -10,6 +10,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorHeader
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorList
@@ -40,11 +44,15 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
 @Composable
-fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onSave: (Team, Long?) -> Unit) {
+fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onSave: (Team, Long?) -> Unit, hasScheduledMatches: Boolean = false, onShowTeamTypeChangeError: () -> Unit = {}) {
     val focusManager = LocalFocusManager.current
     var formState by remember { mutableStateOf(team.toTeamFormState()) }
 
     var selectedOption by remember { mutableStateOf(players.firstOrNull { it.isCaptain }?.id) }
+    
+    var teamTypeExpanded by remember { mutableStateOf(false) }
+    val isEditMode = team != null
+    val teamTypeEnabled = !isEditMode || !hasScheduledMatches
 
     val validateAndSave = {
         formState = formState.copy(
@@ -152,7 +160,7 @@ fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onSave: (Team
                     AppTextField(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = TFMSpacing.spacing04),
+                            .padding(bottom = TFMSpacing.spacing03),
                         value = formState.delegateName,
                         onValueChange = {
                             formState = formState.copy(
@@ -173,6 +181,51 @@ fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onSave: (Team
                         ),
                         keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
                     )
+                }
+                
+                item {
+                    ExposedDropdownMenuBox(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = TFMSpacing.spacing04),
+                        expanded = teamTypeExpanded,
+                        onExpandedChange = { 
+                            if (teamTypeEnabled) {
+                                teamTypeExpanded = !teamTypeExpanded
+                            } else {
+                                onShowTeamTypeChangeError()
+                            }
+                        }
+                    ) {
+                        AppTextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            value = stringResource(formState.teamType.toStringRes()),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.team_type)) },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamTypeExpanded)
+                            },
+                            enabled = teamTypeEnabled,
+                        )
+                        
+                        ExposedDropdownMenu(
+                            expanded = teamTypeExpanded,
+                            onDismissRequest = { teamTypeExpanded = false }
+                        ) {
+                            TeamType.entries.forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(type.toStringRes())) },
+                                    onClick = {
+                                        formState = formState.copy(teamType = type)
+                                        teamTypeExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
 
                 if (team != null && players.isNotEmpty()) {
@@ -232,6 +285,7 @@ private data class TeamFormState(
     val name: String = "",
     val coachName: String = "",
     val delegateName: String = "",
+    val teamType: TeamType = TeamType.FOOTBALL_11,
     val errors: FormErrors = FormErrors()
 )
 
@@ -239,7 +293,8 @@ private fun TeamFormState.toTeam(): Team = Team(
     id = id,
     name = name.trimEnd(),
     coachName = coachName.trimEnd(),
-    delegateName = delegateName.trimEnd()
+    delegateName = delegateName.trimEnd(),
+    teamType = teamType
 )
 
 private fun Team?.toTeamFormState() = this?.let {
@@ -247,9 +302,17 @@ private fun Team?.toTeamFormState() = this?.let {
         id = it.id,
         name = it.name,
         coachName = it.coachName,
-        delegateName = it.delegateName
+        delegateName = it.delegateName,
+        teamType = it.teamType
     )
 } ?: TeamFormState()
+
+private fun TeamType.toStringRes() = when (this) {
+    TeamType.FOOTBALL_5 -> R.string.team_type_football_5
+    TeamType.FOOTBALL_7 -> R.string.team_type_football_7
+    TeamType.FOOTBALL_8 -> R.string.team_type_football_8
+    TeamType.FOOTBALL_11 -> R.string.team_type_football_11
+}
 
 @Preview
 @Composable
@@ -260,7 +323,8 @@ private fun TeamFormPreview() {
                 id = 1,
                 name = "Team A",
                 coachName = "Coach A",
-                delegateName = "Delegate A"
+                delegateName = "Delegate A",
+                teamType = TeamType.FOOTBALL_11
             ),
             players = listOf(
                 Player(1, "John", "Doe", 3, listOf(), isCaptain = true, teamId = 1),

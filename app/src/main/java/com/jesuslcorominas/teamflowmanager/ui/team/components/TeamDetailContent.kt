@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
@@ -39,6 +40,11 @@ fun TeamDetailContent(team: Team, captain: Player? = null) {
         InfoRow(
             label = stringResource(R.string.delegate_name),
             value = team.delegateName,
+        )
+        
+        InfoRow(
+            label = stringResource(R.string.team_type),
+            value = stringResource(team.teamType.toStringRes()),
         )
 
         if (captain != null) {
@@ -70,6 +76,13 @@ private fun InfoRow(label: String, value: String) {
     }
 }
 
+private fun TeamType.toStringRes() = when (this) {
+    TeamType.FOOTBALL_5 -> R.string.team_type_football_5
+    TeamType.FOOTBALL_7 -> R.string.team_type_football_7
+    TeamType.FOOTBALL_8 -> R.string.team_type_football_8
+    TeamType.FOOTBALL_11 -> R.string.team_type_football_11
+}
+
 
 @Preview(showBackground = true, widthDp = 512, heightDp = 1200, device = Devices.PIXEL_7_PRO)
 @Composable
@@ -80,7 +93,8 @@ fun TeamDetailPreview() {
                 id = 1,
                 name = "The Invincibles",
                 coachName = "John Doe",
-                delegateName = "Jane Smith"
+                delegateName = "Jane Smith",
+                teamType = TeamType.FOOTBALL_11
             ),
             captain = Player(
                 id = 4,

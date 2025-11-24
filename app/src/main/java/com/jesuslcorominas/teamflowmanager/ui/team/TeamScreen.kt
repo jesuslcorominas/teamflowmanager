@@ -38,6 +38,8 @@ fun TeamScreen(
     
     val uiState by viewModel.uiState.collectAsState()
     val showExitDialog by viewModel.showExitDialog.collectAsState()
+    val showTeamTypeChangeError by viewModel.showTeamTypeChangeError.collectAsState()
+    val hasScheduledMatches by viewModel.hasScheduledMatchesState.collectAsState()
 
     val hasUnsavedChanges = remember { mutableStateOf(true) }
 
@@ -72,7 +74,12 @@ fun TeamScreen(
         when (val state = uiState) {
             is TeamUiState.Loading -> Loading()
             is TeamUiState.Success -> if (viewModel.isEditMode) {
-                TeamForm(team = state.team, players = state.players) { team, captainId ->
+                TeamForm(
+                    team = state.team, 
+                    players = state.players,
+                    hasScheduledMatches = hasScheduledMatches,
+                    onShowTeamTypeChangeError = { viewModel.showTeamTypeChangeError() }
+                ) { team, captainId ->
                     viewModel.updateTeam(team, captainId)
                     onNavigateBackRequest()
                 }
@@ -109,6 +116,19 @@ fun TeamScreen(
                 }
             },
             text = { Text(stringResource(R.string.discard_message)) }
+        )
+    }
+    
+    if (showTeamTypeChangeError) {
+        AlertDialog(
+            title = { Text(stringResource(R.string.team_type_change_not_allowed)) },
+            text = { Text(stringResource(R.string.team_type_change_blocked_message)) },
+            onDismissRequest = { viewModel.dismissTeamTypeChangeError() },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissTeamTypeChangeError() }) {
+                    Text(stringResource(R.string.close))
+                }
+            }
         )
     }
 }

@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +29,7 @@ class TeamViewModel(
     private val createTeam: CreateTeamUseCase,
     private val updateTeam: UpdateTeamUseCase,
     private val getCaptainPlayer: GetCaptainPlayerUseCase,
+    private val hasScheduledMatches: HasScheduledMatchesUseCase,
     private val playerRepository: PlayerRepository,
     private val analyticsTracker: AnalyticsTracker,
     savedStateHandle: SavedStateHandle,
@@ -37,11 +39,18 @@ class TeamViewModel(
 
     private val _showExitDialog = MutableStateFlow(false)
     val showExitDialog: StateFlow<Boolean> = _showExitDialog
+    
+    private val _showTeamTypeChangeError = MutableStateFlow(false)
+    val showTeamTypeChangeError: StateFlow<Boolean> = _showTeamTypeChangeError
+    
+    private val _hasScheduledMatches = MutableStateFlow(false)
+    val hasScheduledMatchesState: StateFlow<Boolean> = _hasScheduledMatches
 
     val isEditMode: Boolean = (savedStateHandle[Route.Team.ARG_MODE] as? String) == Route.Team.MODE_EDIT
 
     init {
         loadTeam()
+        checkScheduledMatches()
     }
 
     private fun loadTeam() {
@@ -54,6 +63,20 @@ class TeamViewModel(
                 _uiState.update { if (team == null) TeamUiState.NoTeam else TeamUiState.Success(team, players) }
             }
         }
+    }
+    
+    private fun checkScheduledMatches() {
+        viewModelScope.launch {
+            _hasScheduledMatches.value = hasScheduledMatches()
+        }
+    }
+    
+    fun showTeamTypeChangeError() {
+        _showTeamTypeChangeError.value = true
+    }
+    
+    fun dismissTeamTypeChangeError() {
+        _showTeamTypeChangeError.value = false
     }
 
     fun createTeam(team: Team) {
