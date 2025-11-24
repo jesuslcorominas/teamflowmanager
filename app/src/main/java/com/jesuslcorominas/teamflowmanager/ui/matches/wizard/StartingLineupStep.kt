@@ -138,8 +138,8 @@ fun StartingLineupStep(
     // Max selection error dialog
     if (showMaxError) {
         AppAlertDialog(
-            title = stringResource(R.string.starting_lineup_max_error),
-            message = stringResource(R.string.starting_lineup_max_error),
+            title = stringResource(R.string.starting_lineup_max_error, requiredPlayers),
+            message = stringResource(R.string.starting_lineup_max_error, requiredPlayers),
             confirmText = stringResource(R.string.close),
             onConfirm = {
                 showMaxError = false

@@ -42,6 +42,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSele
 import com.jesuslcorominas.teamflowmanager.ui.components.form.SelectableItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.util.toStringRes
 
 @Composable
 fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onSave: (Team, Long?) -> Unit, hasScheduledMatches: Boolean = false, onShowTeamTypeChangeError: () -> Unit = {}) {
@@ -306,13 +307,6 @@ private fun Team?.toTeamFormState() = this?.let {
         teamType = it.teamType
     )
 } ?: TeamFormState()
-
-private fun TeamType.toStringRes() = when (this) {
-    TeamType.FOOTBALL_5 -> R.string.team_type_football_5
-    TeamType.FOOTBALL_7 -> R.string.team_type_football_7
-    TeamType.FOOTBALL_8 -> R.string.team_type_football_8
-    TeamType.FOOTBALL_11 -> R.string.team_type_football_11
-}
 
 @Preview
 @Composable

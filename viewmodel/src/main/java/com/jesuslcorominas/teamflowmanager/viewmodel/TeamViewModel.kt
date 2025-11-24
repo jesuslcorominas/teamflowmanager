@@ -67,7 +67,7 @@ class TeamViewModel(
     
     private fun checkScheduledMatches() {
         viewModelScope.launch {
-            _hasScheduledMatches.value = hasScheduledMatches()
+            _hasScheduledMatches.value = hasScheduledMatches.invoke()
         }
     }
     
