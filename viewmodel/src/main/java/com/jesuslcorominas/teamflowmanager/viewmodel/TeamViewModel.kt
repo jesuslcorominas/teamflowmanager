@@ -92,19 +92,22 @@ class TeamViewModel(
         viewModelScope.launch {
             val original = originalTeam
             val teamTypeChanged = original != null && original.teamType != team.teamType
-            val captainChanged = captainId != null
             
-            // Only check for scheduled matches if team type or captain changed
-            if (teamTypeChanged || captainChanged) {
+            // Only check for scheduled matches if team type changed
+            if (teamTypeChanged) {
                 val hasScheduled = hasScheduledMatches.invoke()
-                if (teamTypeChanged && hasScheduled) {
+                if (hasScheduled) {
                     showTeamTypeChangeError()
                     return@launch
                 }
             }
             
+            // Handle captain changes
+            val captain = getCaptainPlayer.invoke()
+            val currentCaptainId = captain?.id
+            val captainChanged = currentCaptainId != captainId
+            
             if (captainChanged) {
-                val captain = getCaptainPlayer.invoke()
                 if (captain != null && captainId == null) {
                     // Remove current captain
                     playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase

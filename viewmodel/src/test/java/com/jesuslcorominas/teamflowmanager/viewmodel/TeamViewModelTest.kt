@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
@@ -92,7 +93,7 @@ class TeamViewModelTest {
     fun `uiState should be TeamExists when team exists`() =
         runTest(testDispatcher) {
             // Given
-            val team = Team(1, "Test Team", "Coach Name", "Delegate Name")
+            val team = Team(1, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(team)
 
             // When
@@ -114,7 +115,7 @@ class TeamViewModelTest {
     fun `createTeam should call createTeamUseCase with correct parameters`() =
         runTest(testDispatcher) {
             // Given
-            val team = Team(0, "Test Team", "Coach Name", "Delegate Name")
+            val team = Team(0, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(null)
             coEvery { createTeamUseCase.invoke(any()) } just runs
             viewModel = TeamViewModel(
@@ -137,7 +138,7 @@ class TeamViewModelTest {
     fun `updateTeam should call updateTeamUseCase with correct team`() =
         runTest(testDispatcher) {
             // Given
-            val team = Team(1, "Updated Team", "Updated Coach", "Updated Delegate")
+            val team = Team(1, "Updated Team", "Updated Coach", "Updated Delegate", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(team)
             coEvery { updateTeamUseCase.invoke(any()) } just runs
             viewModel = TeamViewModel(

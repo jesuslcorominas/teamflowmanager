@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -22,7 +23,7 @@ class CreateTeamUseCaseTest {
     fun `invoke should create team in repository`() =
         runTest {
             // Given
-            val team = Team(0, "Test Team", "Coach Name", "Delegate Name")
+            val team = Team(0, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
 
             // When
             createTeamUseCase.invoke(team)

@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -22,7 +23,7 @@ class UpdateTeamUseCaseTest {
     fun `invoke should call repository updateTeam with correct team`() =
         runTest {
             // Given
-            val team = Team(1, "Updated Team", "Updated Coach", "Updated Delegate")
+            val team = Team(1, "Updated Team", "Updated Coach", "Updated Delegate", teamType = TeamType.FOOTBALL_5)
 
             // When
             updateTeamUseCase.invoke(team)
