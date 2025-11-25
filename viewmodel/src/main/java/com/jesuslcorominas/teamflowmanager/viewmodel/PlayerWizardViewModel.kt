@@ -28,8 +28,8 @@ class PlayerWizardViewModel(
     private val updatePlayerUseCase: UpdatePlayerUseCase,
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
     private val updateScheduledMatchesCaptainUseCase: UpdateScheduledMatchesCaptainUseCase,
-    private val playerRepository: PlayerRepository,
-    private val matchRepository: MatchRepository,
+    private val playerRepository: PlayerRepository, // TODO extract to usecase
+    private val matchRepository: MatchRepository,// TODO extract to usecase
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
     savedStateHandle: SavedStateHandle,
@@ -66,7 +66,7 @@ class PlayerWizardViewModel(
 
     init {
         val playerIdFromArgs: Long = savedStateHandle[Route.PlayerWizard.ARG_PLAYER_ID] ?: 0L
-        
+
         if (playerIdFromArgs > 0L) {
             initializeForEdit(playerIdFromArgs)
         } else {
@@ -85,7 +85,7 @@ class PlayerWizardViewModel(
                 isCaptain = player.isCaptain
                 imageUri = player.imageUri
                 selectedPositions = player.positions
-                
+
                 // Store original values
                 originalFirstName = player.firstName
                 originalLastName = player.lastName
@@ -93,7 +93,7 @@ class PlayerWizardViewModel(
                 originalIsCaptain = player.isCaptain
                 originalImageUri = player.imageUri
                 originalPositions = player.positions
-                
+
                 _uiState.value = PlayerWizardUiState.Ready
             } else {
                 _uiState.value = PlayerWizardUiState.Error("Player not found")
@@ -109,7 +109,7 @@ class PlayerWizardViewModel(
         isCaptain = false
         imageUri = null
         selectedPositions = emptyList()
-        
+
         // Store original values (empty for create)
         originalFirstName = ""
         originalLastName = ""
@@ -117,7 +117,7 @@ class PlayerWizardViewModel(
         originalIsCaptain = false
         originalImageUri = null
         originalPositions = emptyList()
-        
+
         _uiState.value = PlayerWizardUiState.Ready
     }
 
@@ -271,12 +271,12 @@ class PlayerWizardViewModel(
         viewModelScope.launch {
             try {
                 val isNewPlayer = player.id == 0L
-                
+
                 crashReporter.log("Saving player via wizard: ${player.firstName} ${player.lastName}, isNew: $isNewPlayer")
-                
+
                 if (isNewPlayer) {
                     addPlayerUseCase.invoke(player)
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.PLAYER_CREATED,
                         mapOf(
@@ -287,7 +287,7 @@ class PlayerWizardViewModel(
                     )
                 } else {
                     updatePlayerUseCase.invoke(player)
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.PLAYER_UPDATED,
                         mapOf(

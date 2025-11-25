@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,8 @@ class TeamViewModel(
     private val createTeam: CreateTeamUseCase,
     private val updateTeam: UpdateTeamUseCase,
     private val getCaptainPlayer: GetCaptainPlayerUseCase,
-    private val playerRepository: PlayerRepository,
+    private val hasScheduledMatches: HasScheduledMatchesUseCase,
+    private val playerRepository: PlayerRepository, // TODO extract to usecase
     private val analyticsTracker: AnalyticsTracker,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -37,6 +39,11 @@ class TeamViewModel(
 
     private val _showExitDialog = MutableStateFlow(false)
     val showExitDialog: StateFlow<Boolean> = _showExitDialog
+
+    private val _showTeamTypeChangeError = MutableStateFlow(false)
+    val showTeamTypeChangeError: StateFlow<Boolean> = _showTeamTypeChangeError
+
+    private var originalTeam: Team? = null
 
     val isEditMode: Boolean = (savedStateHandle[Route.Team.ARG_MODE] as? String) == Route.Team.MODE_EDIT
 
@@ -51,9 +58,20 @@ class TeamViewModel(
             ) { team, players ->
                 team to players
             }.collect { (team, players) ->
+                if (originalTeam == null) {
+                    originalTeam = team
+                }
                 _uiState.update { if (team == null) TeamUiState.NoTeam else TeamUiState.Success(team, players) }
             }
         }
+    }
+
+    fun showTeamTypeChangeError() {
+        _showTeamTypeChangeError.value = true
+    }
+
+    fun dismissTeamTypeChangeError() {
+        _showTeamTypeChangeError.value = false
     }
 
     fun createTeam(team: Team) {
@@ -70,15 +88,33 @@ class TeamViewModel(
         }
     }
 
-    fun updateTeam(team: Team, captainId: Long?) {
+    fun updateTeam(team: Team, captainId: Long?, onSuccess: () -> Unit) {
         viewModelScope.launch {
+            val original = originalTeam
+            val teamTypeChanged = original != null && original.teamType != team.teamType
+
+            // Only check for scheduled matches if team type changed
+            if (teamTypeChanged) {
+                val hasScheduled = hasScheduledMatches.invoke()
+                if (hasScheduled) {
+                    showTeamTypeChangeError()
+                    return@launch
+                }
+            }
+
+            // Handle captain changes
             val captain = getCaptainPlayer.invoke()
-            if (captain != null && captainId == null) {
-                // Remove current captain
-                playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase
-            } else if (captainId != null && (captain == null || captain.id != captainId)) {
-                // Set new captain
-                playerRepository.setPlayerAsCaptain(captainId) // TODO extract to usecase
+            val currentCaptainId = captain?.id
+            val captainChanged = currentCaptainId != captainId
+
+            if (captainChanged) {
+                if (captain != null && captainId == null) {
+                    // Remove current captain
+                    playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase
+                } else if (captainId != null && (captain == null || captain.id != captainId)) {
+                    // Set new captain
+                    playerRepository.setPlayerAsCaptain(captainId) // TODO extract to usecase
+                }
             }
 
             updateTeam.invoke(team)
@@ -90,6 +126,9 @@ class TeamViewModel(
                     AnalyticsParam.TEAM_ID to team.id.toString(),
                 ),
             )
+            
+            // Only navigate back on success
+            onSuccess()
         }
     }
 

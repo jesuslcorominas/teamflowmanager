@@ -40,6 +40,7 @@ fun SquadCallUpStep(
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     modifier: Modifier = Modifier,
+    minPlayers: Int = 5,
 ) {
     var currentSelection by remember(selectedPlayerIds) { mutableStateOf(selectedPlayerIds) }
     var showGoalkeeperWarning by remember { mutableStateOf(false) }
@@ -60,7 +61,7 @@ fun SquadCallUpStep(
         )
 
         Text(
-            text = stringResource(R.string.squad_callup_subtitle),
+            text = stringResource(R.string.squad_callup_subtitle, minPlayers),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -69,7 +70,7 @@ fun SquadCallUpStep(
             text = stringResource(R.string.squad_callup_count, currentSelection.size),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
-            color = if (currentSelection.size >= 5) {
+            color = if (currentSelection.size >= minPlayers) {
                 MaterialTheme.colorScheme.primary
             } else {
                 MaterialTheme.colorScheme.error
@@ -137,7 +138,7 @@ fun SquadCallUpStep(
 
             Button(
                 onClick = {
-                    if (currentSelection.size < 5) {
+                    if (currentSelection.size < minPlayers) {
                         // Show error, cannot proceed
                         return@Button
                     }
@@ -151,7 +152,7 @@ fun SquadCallUpStep(
                         onNext()
                     }
                 },
-                enabled = currentSelection.size >= 5,
+                enabled = currentSelection.size >= minPlayers,
                 modifier = Modifier.weight(1f),
             ) {
                 Text(stringResource(R.string.next))

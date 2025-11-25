@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 
 @Entity(tableName = "team")
 data class TeamEntity(
@@ -12,6 +13,7 @@ data class TeamEntity(
     val coachName: String,
     val delegateName: String,
     val captainId: Long? = null,
+    val teamType: Int,
 )
 
 fun TeamEntity.toDomain(): Team =
@@ -21,6 +23,7 @@ fun TeamEntity.toDomain(): Team =
         coachName = coachName,
         delegateName = delegateName,
         captainId = captainId,
+        teamType = TeamType.fromPlayers(teamType),
     )
 
 fun Team.toEntity(): TeamEntity =
@@ -30,4 +33,5 @@ fun Team.toEntity(): TeamEntity =
         coachName = coachName,
         delegateName = delegateName,
         captainId = captainId,
+        teamType = teamType.players,
     )

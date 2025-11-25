@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -27,7 +28,7 @@ class GetTeamUseCaseTest {
     fun `invoke should return team from repository`() =
         runTest {
             // Given
-            val team = Team(1, "Test Team", "Coach Name", "Delegate Name")
+            val team = Team(1, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             every { teamRepository.getTeam() } returns flowOf(team)
 
             // When

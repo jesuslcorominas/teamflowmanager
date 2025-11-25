@@ -14,6 +14,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSou
 import com.jesuslcorominas.teamflowmanager.data.local.BuildConfig
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_2_3
+import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_3_4
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.converters.Converters
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionExecutor
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionRunner
@@ -60,7 +61,7 @@ internal val databaseModule =
                     "teamflowmanager_database",
                 )
                 .addTypeConverter(converters)
-                .addMigrations(MIGRATION_2_3)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                 .addCallback(
                     object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {

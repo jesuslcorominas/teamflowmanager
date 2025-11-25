@@ -54,7 +54,7 @@ class MatchViewModel(
     private val endTimeoutUseCase: EndTimeoutUseCase,
     private val getMatchReportData: GetMatchReportDataUseCase,
     private val exportMatchReportToPdf: ExportMatchReportToPdfUseCase,
-    private val preferencesRepository: PreferencesRepository,
+    private val preferencesRepository: PreferencesRepository, // TODO extract to usecases
     private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
@@ -130,7 +130,7 @@ class MatchViewModel(
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                     crashReporter.log("Finishing match: ${currentState.match.id}")
                     finishMatch(currentState.match.id, _currentTime.value)
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.MATCH_FINISHED,
                         mapOf(
@@ -161,11 +161,11 @@ class MatchViewModel(
                         // Calculate remaining time in current period
                         val currentPeriod = currentState.match.periods
                             .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
-                        
+
                         if (currentPeriod != null) {
                             val elapsedTime = (_currentTime.value - currentPeriod.startTimeMillis).coerceAtLeast(0L)
                             val remainingTime = currentPeriod.periodDuration - elapsedTime
-                            
+
                             // If more than 1 minute remains in normal time, show confirmation dialog
                             // If in additional time (remainingTime <= 0), proceed without confirmation
                             if (remainingTime > 60000L) {
@@ -173,7 +173,7 @@ class MatchViewModel(
                                 return@launch
                             }
                         }
-                        
+
                         // If no active period or less than 1 minute remains, proceed with pausing immediately
                         confirmPauseMatch()
                     }
@@ -192,7 +192,7 @@ class MatchViewModel(
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                     crashReporter.log("Pausing match: ${currentState.match.id}")
                     pauseMatch(currentState.match.id, _currentTime.value)
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.MATCH_PAUSED,
                         mapOf(
@@ -201,7 +201,7 @@ class MatchViewModel(
                         ),
                     )
                 }
-                
+
                 _showPauseConfirmation.value = false
             } catch (e: Exception) {
                 crashReporter.recordException(e)
@@ -221,7 +221,7 @@ class MatchViewModel(
                 crashReporter.log("Resuming match: $matchId")
                 getMatchById(matchId).first()?.let {
                     resumeMatchUseCase(it.id, _currentTime.value)
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.MATCH_RESUMED,
                         mapOf(
@@ -244,7 +244,7 @@ class MatchViewModel(
                     if (currentState.match.isInProgress) {
                         crashReporter.log("Starting timeout for match: ${currentState.match.id}")
                         startTimeoutUseCase(currentState.match.id, _currentTime.value)
-                        
+
                         analyticsTracker.logEvent(
                             AnalyticsEvent.BUTTON_CLICKED,
                             mapOf(
@@ -269,7 +269,7 @@ class MatchViewModel(
                     if (currentState.match.status == MatchStatus.TIMEOUT) {
                         crashReporter.log("Ending timeout for match: ${currentState.match.id}")
                         endTimeoutUseCase(currentState.match.id, _currentTime.value)
-                        
+
                         analyticsTracker.logEvent(
                             AnalyticsEvent.BUTTON_CLICKED,
                             mapOf(
@@ -326,7 +326,7 @@ class MatchViewModel(
                         playerInId = playerInId,
                         currentTimeMillis = _currentTime.value,
                     )
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.SUBSTITUTION_MADE,
                         mapOf(
@@ -336,7 +336,7 @@ class MatchViewModel(
                             AnalyticsParam.SUBSTITUTION_MINUTE to (_currentTime.value / 60000).toString(),
                         ),
                     )
-                    
+
                     _selectedPlayerOut.value = null
                 }
             } catch (e: Exception) {
@@ -366,7 +366,7 @@ class MatchViewModel(
                         currentTimeMillis = _currentTime.value,
                         isOpponentGoal = false,
                     )
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.GOAL_SCORED,
                         mapOf(
@@ -376,7 +376,7 @@ class MatchViewModel(
                             AnalyticsParam.TEAM_TYPE to "own",
                         ),
                     )
-                    
+
                     _showGoalScorerDialog.value = false
                 }
             } catch (e: Exception) {
@@ -407,7 +407,7 @@ class MatchViewModel(
                         currentTimeMillis = _currentTime.value,
                         isOpponentGoal = true,
                     )
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.OPPONENT_GOAL_SCORED,
                         mapOf(
@@ -416,7 +416,7 @@ class MatchViewModel(
                             AnalyticsParam.TEAM_TYPE to "opponent",
                         ),
                     )
-                    
+
                     _showOpponentGoalDialog.value = false
                 }
             } catch (e: Exception) {
@@ -546,7 +546,7 @@ class MatchViewModel(
                 crashReporter.log("Requesting match report export for match: $matchId")
                 _exportState.value = ExportState.Loading
                 val matchReportData = getMatchReportData(matchId).firstOrNull()
-                
+
                 if (matchReportData != null) {
                     val uri = exportMatchReportToPdf(matchReportData)
                     _exportState.value = if (uri != null) {
@@ -571,7 +571,7 @@ class MatchViewModel(
             }
         }
     }
-    
+
     fun exportCompleted() {
         _exportState.value = ExportState.Idle
     }

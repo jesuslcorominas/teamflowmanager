@@ -27,8 +27,8 @@ class PlayerViewModel(
     private val deletePlayerUseCase: DeletePlayerUseCase,
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
     private val updateScheduledMatchesCaptainUseCase: UpdateScheduledMatchesCaptainUseCase,
-    private val playerRepository: PlayerRepository,
-    private val matchRepository: MatchRepository,
+    private val playerRepository: PlayerRepository, // TODO extract to usecase
+    private val matchRepository: MatchRepository, // TODO extract to usecase
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
 ) : ViewModel() {
@@ -68,7 +68,7 @@ class PlayerViewModel(
     fun savePlayer(player: Player) {
         viewModelScope.launch {
             val currentCaptain = getCaptainPlayerUseCase.invoke()
-            
+
             if (player.isCaptain && currentCaptain != null && currentCaptain.id != player.id) {
                 // Show confirmation to replace captain
                 _captainConfirmationState.value = CaptainConfirmationState.ConfirmReplace(
@@ -129,11 +129,11 @@ class PlayerViewModel(
         viewModelScope.launch {
             try {
                 val isNewPlayer = player.id == 0L
-                
+
                 if (isNewPlayer) {
                     crashReporter.log("Creating new player: ${player.firstName} ${player.lastName}")
                     addPlayerUseCase.invoke(player)
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.PLAYER_CREATED,
                         mapOf(
@@ -145,7 +145,7 @@ class PlayerViewModel(
                 } else {
                     crashReporter.log("Updating player: ${player.id}")
                     updatePlayerUseCase.invoke(player)
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.PLAYER_UPDATED,
                         mapOf(
@@ -154,11 +154,11 @@ class PlayerViewModel(
                         ),
                     )
                 }
-                
+
                 // Update captain status in repository
                 if (player.isCaptain) {
                     playerRepository.setPlayerAsCaptain(player.id)
-                    
+
                     analyticsTracker.logEvent(
                         AnalyticsEvent.CAPTAIN_SELECTED,
                         mapOf(
@@ -169,7 +169,7 @@ class PlayerViewModel(
                     val currentCaptain = getCaptainPlayerUseCase.invoke()
                     if (currentCaptain?.id == player.id) {
                         playerRepository.removePlayerAsCaptain(player.id)
-                        
+
                         analyticsTracker.logEvent(
                             AnalyticsEvent.CAPTAIN_REMOVED,
                             mapOf(
@@ -207,14 +207,14 @@ class PlayerViewModel(
             try {
                 crashReporter.log("Deleting player: $playerId")
                 deletePlayerUseCase.invoke(playerId)
-                
+
                 analyticsTracker.logEvent(
                     AnalyticsEvent.PLAYER_DELETED,
                     mapOf(
                         AnalyticsParam.PLAYER_ID to playerId.toString(),
                     ),
                 )
-                
+
                 _deleteConfirmationState.value = DeleteConfirmationState.None
             } catch (e: Exception) {
                 crashReporter.recordException(e)

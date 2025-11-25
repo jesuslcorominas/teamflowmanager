@@ -58,6 +58,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCase
@@ -118,6 +120,7 @@ internal val useCaseInternalModule =
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class
         singleOf(::GetActiveMatchUseCaseImpl) bind GetActiveMatchUseCase::class
         singleOf(::GetArchivedMatchesUseCaseImpl) bind GetArchivedMatchesUseCase::class
+        singleOf(::HasScheduledMatchesUseCaseImpl) bind HasScheduledMatchesUseCase::class
         singleOf(::CreateMatchUseCaseImpl) bind CreateMatchUseCase::class
         singleOf(::UpdateMatchUseCaseImpl) bind UpdateMatchUseCase::class
         singleOf(::DeleteMatchUseCaseImpl) bind DeleteMatchUseCase::class

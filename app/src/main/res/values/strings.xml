@@ -68,6 +68,11 @@
     <string name="coach_name_required">Coach name is required</string>
     <string name="delegate_name">Delegate Name</string>
     <string name="delegate_name_required">Delegate name is required</string>
+    <string name="team_type">Team Type</string>
+    <string name="team_type_required">Team type is required</string>
+    <string name="team_type_football">Football %d</string>
+    <string name="team_type_change_not_allowed">Cannot change team type</string>
+    <string name="team_type_change_blocked_message">The team type cannot be changed because there are scheduled matches. Please delete or archive all scheduled matches first.</string>
 
     <string name="team_info">Team Info</string>
     <string name="team_info_description">Show team information</string>
@@ -177,10 +182,10 @@
     <string name="previous">Previous</string>
 
     <string name="squad_callup_title">Select Squad Call-Up</string>
-    <string name="squad_callup_subtitle">Select players for this match (minimum 5)</string>
+    <string name="squad_callup_subtitle">Select players for this match (minimum %d)</string>
     <string name="squad_callup_count">Selected: %d players</string>
     <string name="squad_callup_select_all">Select All</string>
-    <string name="squad_callup_min_error">You must select at least 5 players</string>
+    <string name="squad_callup_min_error">You must select at least %d players</string>
     <string name="squad_callup_no_goalkeeper_warning">No goalkeeper selected</string>
     <string name="squad_callup_no_goalkeeper_message">You haven\'t selected any goalkeeper for the squad. Do you want to continue anyway?</string>
 
@@ -192,10 +197,10 @@
     <string name="no">No</string>
 
     <string name="starting_lineup_title">Select Initial Lineup</string>
-    <string name="starting_lineup_subtitle">Select exactly 5 players to start</string>
-    <string name="starting_lineup_count">Selected: %d/5 players</string>
-    <string name="starting_lineup_max_error">You can only select up to 5 players</string>
-    <string name="starting_lineup_min_error">You must select exactly 5 players</string>
+    <string name="starting_lineup_subtitle">Select exactly %d players to start</string>
+    <string name="starting_lineup_count">Selected: %d/%d players</string>
+    <string name="starting_lineup_max_error">You can only select up to %d players</string>
+    <string name="starting_lineup_min_error">You must select exactly %d players</string>
     <string name="starting_lineup_no_goalkeeper_warning">No goalkeeper in starting lineup</string>
     <string name="starting_lineup_no_goalkeeper_message">You haven\'t selected a goalkeeper in the starting lineup. Do you want to continue anyway?</string>
 

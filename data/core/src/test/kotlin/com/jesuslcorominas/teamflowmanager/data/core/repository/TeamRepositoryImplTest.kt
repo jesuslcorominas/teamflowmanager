@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.repository
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -31,7 +32,7 @@ class TeamRepositoryImplTest {
     fun `getTeam should return team from local data source`() =
         runTest {
             // Given
-            val team = Team(1, "Test Team", "Coach Name", "Delegate Name")
+            val team = Team(1, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             every { localDataSource.getTeam() } returns flowOf(team)
 
             // When
@@ -60,7 +61,7 @@ class TeamRepositoryImplTest {
     fun `createTeam should call insertTeam on local data source`() =
         runTest {
             // Given
-            val team = Team(0, "Test Team", "Coach Name", "Delegate Name")
+            val team = Team(0, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             coEvery { localDataSource.insertTeam(team) } just runs
 
             // When
@@ -74,7 +75,7 @@ class TeamRepositoryImplTest {
     fun `updateTeam should call updateTeam on local data source`() =
         runTest {
             // Given
-            val team = Team(1, "Updated Team", "New Coach", "New Delegate")
+            val team = Team(1, "Updated Team", "New Coach", "New Delegate", teamType = TeamType.FOOTBALL_5)
             coEvery { localDataSource.updateTeam(team) } just runs
 
             // When
