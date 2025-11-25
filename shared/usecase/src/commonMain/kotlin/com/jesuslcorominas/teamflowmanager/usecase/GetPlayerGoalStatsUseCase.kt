@@ -15,7 +15,7 @@ class GetPlayerGoalStatsUseCase(
             playerRepository.getAllPlayers(),
             goalRepository.getAllTeamGoals()
         ) { players, goals ->
-            players.map        { player ->
+            players.map { player ->
                 val playerGoals = goals.filter { it.scorerId == player.id }
                 val totalGoals = playerGoals.size
 

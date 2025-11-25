@@ -1,18 +1,19 @@
 package com.jesuslcorominas.teamflowmanager.domain.utils
 
-import java.io.InputStream
-import java.io.OutputStream
-
 /**
  * Platform-agnostic interface for file operations.
  * Implementations handle platform-specific file access (Android, iOS, etc.)
+ *
+ * Note: This interface uses ByteArray instead of InputStream/OutputStream
+ * to maintain multiplatform compatibility.
  */
 interface FileHandler {
     /**
-     * Creates an output stream for writing to a temporary export file.
-     * @return OutputStream to write to, or null if creation fails
+     * Creates an export file and returns its content as bytes.
+     * @param content The content to write to the export file
+     * @return True if export was successful, false otherwise
      */
-    fun createExportOutputStream(): OutputStream?
+    fun writeExportFile(content: ByteArray): Boolean
 
     /**
      * Finalizes the export file and returns a shareable URI/path.
@@ -21,9 +22,9 @@ interface FileHandler {
     fun finalizeExport(): String?
 
     /**
-     * Opens an input stream from a file URI/path.
+     * Reads content from a file URI/path.
      * @param fileUri Platform-specific file identifier
-     * @return InputStream to read from, or null if opening fails
+     * @return File content as ByteArray, or null if reading fails
      */
-    fun openImportInputStream(fileUri: String): InputStream?
+    fun readImportFile(fileUri: String): ByteArray?
 }
