@@ -40,6 +40,10 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.koin.android)
+            
+            // Moshi for Room type converters
+            implementation(libs.moshi)
+            implementation(libs.moshi.kotlin)
         }
         
         iosMain.dependencies {
@@ -87,4 +91,7 @@ dependencies {
     add("kspIosX64", libs.androidx.room.compiler)
     add("kspIosArm64", libs.androidx.room.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+    
+    // Moshi codegen for Android
+    add("kspAndroid", libs.moshi.kotlin.codegen)
 }
