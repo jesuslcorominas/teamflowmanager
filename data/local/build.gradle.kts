@@ -1,7 +1,54 @@
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+}
+
+kotlin {
+    androidTarget {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+    }
+
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach {
+        it.binaries.framework {
+            baseName = "dataLocal"
+            isStatic = true
+        }
+    }
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(project(":shared:data:core"))
+            implementation(project(":shared:domain"))
+
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.koin.core)
+            
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.kotlinx.serialization.json)
+        }
+        
+        androidMain.dependencies {
+            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.koin.android)
+        }
+        
+        iosMain.dependencies {
+        }
+        
+        commonTest.dependencies {
+            implementation(libs.junit)
+        }
+    }
 }
 
 android {
@@ -29,31 +76,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
-    // Shared KMM modules
-    implementation(project(":shared:data:core"))
-    implementation(project(":shared:domain"))
-
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.coroutines.android)
-
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
-
-    implementation(libs.koin.android)
-
-    implementation(libs.moshi)
-    implementation(libs.moshi.kotlin)
-    implementation(libs.moshi.kotlin.codegen)
-    ksp(libs.moshi.kotlin.codegen)
-
-    testImplementation(libs.junit)
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosX64", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
 }
