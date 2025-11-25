@@ -35,8 +35,9 @@ android {
 }
 
 dependencies {
-    implementation(project(":usecase"))
-    implementation(project(":domain"))
+    // Shared KMM modules
+    implementation(project(":shared:usecase"))
+    implementation(project(":shared:domain"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)

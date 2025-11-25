@@ -32,8 +32,25 @@ render.experimental.xml
 # Placeholder file is committed to document setup requirement
 # Real google-services.json should not be committed
 google-services.json
-!app/google-services.json
+!androidApp/google-services.json
 
 # Android Profiling
 *.hprof
-/app/google-services.json
+
+# iOS/Xcode
+iosApp/iosApp.xcodeproj/project.xcworkspace/
+iosApp/iosApp.xcodeproj/xcuserdata/
+iosApp/iosApp.xcworkspace/
+*.xcuserstate
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Kotlin/Native
+*.klib
+*.kotlin_module
+
+# CocoaPods
+iosApp/Pods/
+iosApp/Podfile.lock

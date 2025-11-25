@@ -35,12 +35,15 @@ android {
 }
 
 dependencies {
+    // Android-specific modules
     implementation(project(":viewmodel"))
-    implementation(project(":usecase"))
     implementation(project(":service"))
-    implementation(project(":data:core"))
     implementation(project(":data:local"))
-    implementation(project(":data:remote"))
+
+    // Shared KMM modules
+    implementation(project(":shared:usecase"))
+    implementation(project(":shared:data:core"))
+    implementation(project(":shared:data:remote"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)

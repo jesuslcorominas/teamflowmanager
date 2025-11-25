@@ -1,70 +1,94 @@
 # TeamFlow Manager
-⚽ TeamFlow Manager: App de gestión de equipos de fútbol infantil. Controla minutos, cambios, asistencias y estadísticas en tiempo real. Desarrollada con Kotlin Multiplatform (KMM) con migración a Firestore planificada. La herramienta esencial para el entrenador.
+⚽ TeamFlow Manager: App de gestión de equipos de fútbol infantil. Controla minutos, cambios, asistencias y estadísticas en tiempo real. Desarrollada con Kotlin Multiplatform (KMM) para Android e iOS. La herramienta esencial para el entrenador.
 
 ## Project Structure
 
-This project follows a modular architecture with clean separation of concerns:
+This project follows a **Kotlin Multiplatform Mobile (KMM)** architecture with clean separation of concerns and shared business logic between Android and iOS platforms.
 
 ### Modules
 
-#### :app
-- **Type**: Android Application module
-- **Purpose**: Contains the UI layer of the application
-- **Technologies**: Android SDK, Jetpack Compose/View Binding, Koin for DI
-- **Dependencies**: `:viewmodel`, `:di`
+#### Shared KMM Modules (Cross-Platform)
 
-#### :viewmodel
-- **Type**: Android Library
-- **Purpose**: Contains ViewModels and presentation logic
-- **Technologies**: Android ViewModel, LiveData, Coroutines
-- **Dependencies**: `:usecase`, `:domain`
+##### :shared
+- **Type**: Kotlin Multiplatform Library
+- **Purpose**: Main shared module that aggregates all shared code
+- **Targets**: Android, iOS (arm64, x64, simulator)
+- **Dependencies**: `:shared:domain`, `:shared:usecase`, `:shared:data:core`, `:shared:data:remote`
 
-#### :usecase
-- **Type**: Kotlin Library (Pure JVM)
-- **Purpose**: Contains business logic and use cases
-- **Technologies**: Kotlin, Coroutines
-- **Dependencies**: `:domain`
-
-#### :domain
-- **Type**: Kotlin Library (Pure JVM)
+##### :shared:domain
+- **Type**: Kotlin Multiplatform Library
 - **Purpose**: Contains domain models and interfaces (entities, repositories)
-- **Technologies**: Kotlin
+- **Technologies**: Kotlin, Coroutines
 - **Dependencies**: None (pure domain layer)
 
-#### :data:core
-- **Type**: Kotlin Library (Pure JVM)
-- **Purpose**: Core data layer abstractions and repository implementations
-- **Technologies**: Kotlin, Coroutines
-- **Dependencies**: `:domain`
+##### :shared:usecase
+- **Type**: Kotlin Multiplatform Library
+- **Purpose**: Contains business logic and use cases
+- **Technologies**: Kotlin, Coroutines, Koin
+- **Dependencies**: `:shared:domain`
 
-#### :data:local
+##### :shared:data:core
+- **Type**: Kotlin Multiplatform Library
+- **Purpose**: Core data layer abstractions and repository implementations
+- **Technologies**: Kotlin, Coroutines, Koin
+- **Dependencies**: `:shared:domain`, `:shared:usecase`
+
+##### :shared:data:remote
+- **Type**: Kotlin Multiplatform Library
+- **Purpose**: Remote data source implementation using Ktor
+- **Technologies**: Ktor Client (OkHttp on Android, Darwin on iOS), kotlinx.serialization
+- **Dependencies**: `:shared:domain`, `:shared:data:core`
+
+#### Platform-Specific Modules
+
+##### :androidApp
+- **Type**: Android Application module
+- **Purpose**: Contains the Android UI layer of the application
+- **Technologies**: Android SDK, Jetpack Compose, Koin for DI
+- **Dependencies**: `:shared`, `:viewmodel`, `:di`
+
+##### :viewmodel
+- **Type**: Android Library
+- **Purpose**: Contains ViewModels and presentation logic (Android-specific)
+- **Technologies**: Android ViewModel, LiveData, Coroutines
+- **Dependencies**: `:shared:usecase`, `:shared:domain`
+
+##### :service
+- **Type**: Android Library
+- **Purpose**: Contains Android services (notifications, background tasks)
+- **Technologies**: Android Services, Coroutines
+- **Dependencies**: `:shared:usecase`, `:shared:domain`
+
+##### :data:local
 - **Type**: Android Library
 - **Purpose**: Local data source implementation using Room
 - **Technologies**: Room Database, Coroutines
-- **Dependencies**: `:data:core`, `:domain`
+- **Dependencies**: `:shared:data:core`, `:shared:domain`
 
-#### :data:remote
-- **Type**: Kotlin Library (Pure JVM)
-- **Purpose**: Remote data source implementation using Retrofit
-- **Technologies**: Retrofit, OkHttp, Gson
-- **Dependencies**: `:data:core`, `:domain`
-
-#### :di
+##### :di
 - **Type**: Android Library
-- **Purpose**: Dependency injection configuration using Koin
+- **Purpose**: Dependency injection configuration using Koin for Android
 - **Technologies**: Koin
-- **Dependencies**: `:usecase`, `:data:core`, `:data:local`, `:data:remote`, `:domain`
+- **Dependencies**: `:viewmodel`, `:service`, `:data:local`, `:shared:usecase`, `:shared:data:core`, `:shared:data:remote`
+
+##### iosApp/
+- **Type**: iOS Application (Xcode Project)
+- **Purpose**: Contains the iOS UI layer of the application
+- **Technologies**: SwiftUI, UIKit
+- **Dependencies**: `:shared` (via framework)
 
 ## Build Configuration
 
 The project uses:
-- **Gradle Version**: 9.2.0
+- **Gradle Version**: 8.11
 - **Kotlin Version**: 2.1.0
 - **Android Gradle Plugin**: 8.6.1
-- **Compose Multiplatform**: 1.7.3 (configured, ready for multiplatform UI)
-- **Min SDK**: 29
-- **Target SDK**: 36
-- **Compile SDK**: 36
+- **Compose Multiplatform**: 1.7.3
+- **Ktor**: 3.0.1
+- **Koin**: 4.0.0
+- **Min SDK (Android)**: 29
+- **Target SDK (Android)**: 36
+- **iOS Deployment Target**: 14.1
 
 ### Gradle Version Catalog
 
@@ -72,8 +96,24 @@ Dependencies are managed through Gradle Version Catalog (`gradle/libs.versions.t
 
 ## Building the Project
 
+### Android
+
 ```bash
 ./gradlew build
+```
+
+### Building the Android APK
+
+```bash
+./gradlew assembleDebug
+```
+
+### Building iOS Shared Framework
+
+```bash
+./gradlew :shared:linkDebugFrameworkIosArm64
+# or for simulator
+./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
 ```
 
 ### Running Tests
@@ -96,11 +136,19 @@ Auto-format code:
 ./gradlew ktlintFormat
 ```
 
-### Building the APK
+## iOS Development
 
+1. Build the shared framework:
 ```bash
-./gradlew assembleDebug
+./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
 ```
+
+2. Open the iOS project in Xcode:
+```bash
+open iosApp/iosApp.xcodeproj
+```
+
+3. Build and run the iOS app from Xcode
 
 ## Continuous Integration
 
@@ -114,76 +162,68 @@ The CI workflow is defined in `.github/workflows/pr-checks.yml`.
 
 ## Architecture
 
-The project follows Clean Architecture principles with the following dependency flow:
+The project follows Clean Architecture principles with Kotlin Multiplatform support:
 
 ```
-┌─────────────────────────────────────┐
-│            :app (UI Layer)          │
-│         depends on: viewmodel, di   │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│      :viewmodel (Presentation)      │
-│      depends on: usecase, domain    │
-└─────────────────────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│    :usecase (Business Logic)        │
-│         depends on: domain          │
-└─────────────────────────────────────┘
-
-┌─────────────────────────────────────┐
-│     :data:core (Data Repository)    │
-│         depends on: domain          │
-└──────────────┬──────────────────────┘
-       ┌───────┴────────┐
-       │                │
-┌──────▼─────┐   ┌──────▼──────┐
-│ :data:local│   │ :data:remote│
-│depends on: │   │depends on:  │
-│data:core,  │   │data:core,   │
-│  domain    │   │   domain    │
-└────────────┘   └─────────────┘
-
-┌─────────────────────────────────────┐
-│        :di (Dependency Injection)   │
-│  depends on: viewmodel, usecase,    │
-│  data:core, data:local, data:remote │
-└─────────────────────────────────────┘
-
-┌─────────────────────────────────────┐
-│        :domain (Domain Models)      │
-│      Pure domain layer - no deps    │
-│   All modules (except :di) depend   │
-│          on :domain                 │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                      Platform Applications                       │
+├──────────────────────────────┬──────────────────────────────────┤
+│        :androidApp           │           iosApp/                 │
+│   (Jetpack Compose, Koin)    │     (SwiftUI, UIKit)             │
+└──────────────┬───────────────┴──────────────┬───────────────────┘
+               │                              │
+               │    ┌─────────────────────────┼─────────────────┐
+               │    │    Platform-Specific    │                 │
+               ├────┤       Modules           │                 │
+               │    │  :viewmodel, :service   │                 │
+               │    │      :data:local        │                 │
+               │    └─────────────────────────┘                 │
+               │                                                │
+               └────────────────┬───────────────────────────────┘
+                                │
+┌───────────────────────────────┴──────────────────────────────────┐
+│                      :shared (KMM)                               │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │                   commonMain                                 │ │
+│  ├─────────────────────────────────────────────────────────────┤ │
+│  │  :shared:domain     - Domain models, Repository interfaces  │ │
+│  │  :shared:usecase    - Business logic and use cases          │ │
+│  │  :shared:data:core  - Repository implementations            │ │
+│  │  :shared:data:remote- Remote API (Ktor)                     │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────┬──────────────────────────────────────┐ │
+│  │     androidMain      │              iosMain                  │ │
+│  │   (Ktor OkHttp)      │         (Ktor Darwin)                │ │
+│  └──────────────────────┴──────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-## Kotlin Multiplatform (KMM) Readiness
+## Kotlin Multiplatform (KMM) Features
 
-The project is being prepared for Kotlin Multiplatform with the following components already compatible:
-
-### ✅ Multiplatform-Ready Components
-- **Dependency Injection**: Koin 4.0.0 (fully multiplatform)
-- **Network Layer**: Ktor Client 3.0.1 + KtorFit 2.6.0 (KMP-compatible)
-- **Business Logic**: Pure Kotlin modules (`:usecase`, `:domain`, `:data:core`, `:data:remote`)
-- **UI Framework**: Compose Multiplatform 1.7.3 plugin configured (ready for shared UI)
+### ✅ Shared Components (Android & iOS)
+- **Domain Models**: All business entities (Player, Match, Team, etc.)
+- **Use Cases**: All business logic
+- **Repository Interfaces**: Data access abstractions
+- **Repository Implementations**: Data layer logic
+- **Remote API**: Ktor-based networking
+- **Dependency Injection**: Koin (multiplatform)
 
 ### 🔄 Platform-Specific Components
-- **UI Layer**: Currently Android-only with Jetpack Compose
-- **Local Storage**: Room (Android-specific, would need SQLDelight for KMP)
-- **ViewModel**: Android-specific implementation
+- **Android**:
+  - UI Layer: Jetpack Compose
+  - Local Storage: Room Database
+  - ViewModel: Android Architecture Components
+  - Services: Background services for notifications
+  
+- **iOS**:
+  - UI Layer: SwiftUI
+  - Local Storage: (Future: Core Data or SQLDelight)
+  - Framework integration via Kotlin/Native
 
-### 🎯 Future Multiplatform Migration Path
-When adding iOS/Desktop/Web support:
-1. Create KMP module structure (`commonMain`, `androidMain`, `iosMain`)
-2. Migrate shared UI components to Compose Multiplatform
-3. Replace Room with SQLDelight for cross-platform database
-4. Share business logic, data layer, and UI components across platforms
-
-For more details, see:
-- [US-7.1.5 Implementation Summary](US-7.1.5_IMPLEMENTATION_SUMMARY.md) - Koin Multiplatform migration
-- [US-7.1.6 Implementation Summary](US-7.1.6_IMPLEMENTATION_SUMMARY.md) - Compose Multiplatform analysis
+### 🎯 Code Sharing Approach
+- ~70% shared code in `commonMain`
+- Platform-specific implementations using `expect/actual` pattern
+- HTTP engine: OkHttp (Android) / Darwin (iOS)
 
 ## License
 

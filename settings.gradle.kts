@@ -16,12 +16,18 @@ dependencyResolutionManagement {
 
 rootProject.name = "TeamFlowManager"
 
-include(":app")
+// Android Application
+include(":androidApp")
+
+// Shared KMM Modules
+include(":shared")
+include(":shared:domain")
+include(":shared:usecase")
+include(":shared:data:core")
+include(":shared:data:remote")
+
+// Android-specific modules
 include(":viewmodel")
-include(":usecase")
 include(":service")
-include(":data:core")
 include(":data:local")
-include(":data:remote")
 include(":di")
-include(":domain")
