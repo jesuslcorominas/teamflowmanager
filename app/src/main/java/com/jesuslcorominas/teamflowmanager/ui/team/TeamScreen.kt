@@ -78,8 +78,7 @@ fun TeamScreen(
                     players = state.players,
                     onShowTeamTypeChangeError = { viewModel.showTeamTypeChangeError() }
                 ) { team, captainId ->
-                    viewModel.updateTeam(team, captainId)
-                    onNavigateBackRequest()
+                    viewModel.updateTeam(team, captainId, onNavigateBackRequest)
                 }
             } else {
                 TeamDetailContent(

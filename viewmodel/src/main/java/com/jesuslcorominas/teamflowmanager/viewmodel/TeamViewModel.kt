@@ -88,7 +88,7 @@ class TeamViewModel(
         }
     }
 
-    fun updateTeam(team: Team, captainId: Long?) {
+    fun updateTeam(team: Team, captainId: Long?, onSuccess: () -> Unit) {
         viewModelScope.launch {
             val original = originalTeam
             val teamTypeChanged = original != null && original.teamType != team.teamType
@@ -126,6 +126,9 @@ class TeamViewModel(
                     AnalyticsParam.TEAM_ID to team.id.toString(),
                 ),
             )
+            
+            // Only navigate back on success
+            onSuccess()
         }
     }
 
