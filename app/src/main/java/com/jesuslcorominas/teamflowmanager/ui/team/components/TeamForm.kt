@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
@@ -44,15 +45,15 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.toStringRes
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onSave: (Team, Long?) -> Unit, onShowTeamTypeChangeError: () -> Unit = {}) {
+fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onShowTeamTypeChangeError: () -> Unit = {}, onSave: (Team, Long?) -> Unit) {
     val focusManager = LocalFocusManager.current
     var formState by remember { mutableStateOf(team.toTeamFormState()) }
 
     var selectedOption by remember { mutableStateOf(players.firstOrNull { it.isCaptain }?.id) }
-    
+
     var teamTypeExpanded by remember { mutableStateOf(false) }
-    val isEditMode = team != null
 
     val validateAndSave = {
         formState = formState.copy(
@@ -182,7 +183,7 @@ fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onSave: (Team
                         keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
                     )
                 }
-                
+
                 item {
                     ExposedDropdownMenuBox(
                         modifier = Modifier
@@ -203,7 +204,7 @@ fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onSave: (Team
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamTypeExpanded)
                             },
                         )
-                        
+
                         ExposedDropdownMenu(
                             expanded = teamTypeExpanded,
                             onDismissRequest = { teamTypeExpanded = false }
