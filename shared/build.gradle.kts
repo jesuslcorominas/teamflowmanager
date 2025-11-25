@@ -37,6 +37,9 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
             
+            // Lifecycle ViewModel for KMM
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            
             // Compose Multiplatform
             implementation(compose.runtime)
             implementation(compose.foundation)
