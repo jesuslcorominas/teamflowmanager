@@ -3,7 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.util
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
-import com.jesuslcorominas.teamflowmanager.domain.utils.FileHandler
+import com.jesuslcorominas.teamflowmanager.data.local.utils.FileHandler
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream

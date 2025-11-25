@@ -1,8 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.data.local.exporter
 
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
+import com.jesuslcorominas.teamflowmanager.data.local.utils.FileHandler
 import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseImporter
-import com.jesuslcorominas.teamflowmanager.domain.utils.FileHandler
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import java.io.BufferedReader
 import java.io.InputStreamReader

@@ -54,6 +54,7 @@ dependencies {
     // Android-specific modules
     implementation(project(":viewmodel"))
     implementation(project(":di"))
+    implementation(project(":data:local"))
 
     implementation(platform(libs.androidx.compose.bom))
 

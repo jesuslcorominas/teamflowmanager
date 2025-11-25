@@ -2,8 +2,8 @@ package com.jesuslcorominas.teamflowmanager.data.local.exporter
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
+import com.jesuslcorominas.teamflowmanager.data.local.utils.FileHandler
 import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseExporter
-import com.jesuslcorominas.teamflowmanager.domain.utils.FileHandler
 import java.io.OutputStreamWriter
 
 class DatabaseExporterImpl(
