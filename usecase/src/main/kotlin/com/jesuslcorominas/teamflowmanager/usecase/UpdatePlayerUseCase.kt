@@ -1,0 +1,16 @@
+package com.jesuslcorominas.teamflowmanager.usecase
+
+import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
+
+interface UpdatePlayerUseCase {
+    suspend operator fun invoke(player: Player)
+}
+
+internal class UpdatePlayerUseCaseImpl(
+    private val playerRepository: PlayerRepository
+) : UpdatePlayerUseCase {
+    override suspend fun invoke(player: Player) {
+        playerRepository.updatePlayer(player)
+    }
+}

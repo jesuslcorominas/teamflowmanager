@@ -1,4 +1,322 @@
 <resources>
     <string name="app_name">TeamFlow Manager</string>
     <string name="welcome_message">¡Bienvenido a TeamFlow Manager!</string>
+
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Eliminar</string>
+    <string name="add">Añadir</string>
+    <string name="expand">Abrir</string>
+    <string name="collapse">Cerrar</string>
+    <string name="discard">Descartar</string>
+    <string name="clear">Eliminar selección</string>
+
+    <string name="close_search">Cerrar búsqueda</string>
+    <string name="search">Buscar</string>
+    <string name="no_results">No se han encontrado resultados para tu búsqueda</string>
+
+    <string name="players_title">Plantilla</string>
+    <string name="no_players_message">Aún no hay jugadores registrados</string>
+
+    <string name="position_goalkeeper">Portero</string>
+    <string name="position_defender">Defensa</string>
+    <string name="position_right_back">Lateral Derecho</string>
+    <string name="position_left_back">Lateral Izquierdo</string>
+    <string name="position_center_back">Defensa Central</string>
+    <string name="position_midfielder">Centrocampista</string>
+    <string name="position_defensive_midfielder">Pivote</string>
+    <string name="position_central_midfielder">Mediocentro</string>
+    <string name="position_attacking_midfielder">Media Punta</string>
+    <string name="position_forward">Delantero</string>
+    <string name="position_winger">Extremo</string>
+    <string name="position_striker">Delantero Centro</string>
+
+    <string name="add_player_title">Añadir Jugador</string>
+    <string name="edit_player_title">Editar Jugador</string>
+    <string name="delete_player_title">Eliminar Jugador</string>
+
+    <string name="first_name">Nombre</string>
+    <string name="first_name_required">El nombre es obligatorio</string>
+    <string name="last_name">Apellido</string>
+    <string name="last_name_required">El apellido es obligatorio</string>
+    <string name="number">Dorsal</string>
+    <string name="number_required">El dorsal es obligatorio</string>
+    <string name="positions">Posiciones</string>
+    <string name="no_positions">Sin posición asignada</string>
+    <string name="is_captain">Capitán del Equipo</string>
+    <string name="captain_confirm_title">¿Cambiar Capitán del Equipo?</string>
+    <string name="captain_confirm_message">%1$s %2$s es actualmente el capitán del equipo. Si eliges a %3$s %4$s, ocupará su lugar. ¿Deseas continuar?</string>
+    <string name="captain_replace_with_matches_message">%1$s %2$s es actualmente el capitán del equipo. Si eliges a %3$s %4$s, ocupará su lugar. Hay %5$d partidos programados. ¿Quieres actualizar el capitán en esos partidos?</string>
+    <string name="update_captain_in_matches">Actualizar capitán en partidos</string>
+    <string name="keep_current_captain_in_matches">Mantener capitán actual en partidos</string>
+    <string name="captain_remove_title">¿Quitar Capitán del Equipo?</string>
+    <string name="captain_remove_message">%1$s %2$s ya no será el capitán del equipo. Se seleccionará el capitán para cada partido. ¿Continuar?</string>
+    <string name="captain_remove_with_matches_message">%1$s %2$s ya no será el capitán del equipo. Hay %3$d partidos programados. ¿Qué quieres hacer?</string>
+    <string name="keep_captain_for_matches">Mantener como capitán en partidos programados</string>
+    <string name="remove_captain_from_matches">Eliminar de partidos programados</string>
+    <string name="update_matches_captain_title">Actualizar Partidos Programados</string>
+    <string name="update_matches_captain_message">Hay %1$d partidos programados. ¿Quieres actualizarlos con el nuevo capitán?</string>
+    <string name="team_captain">Capitán</string>
+
+    <string name="delete_player_message">¿Estás seguro de que quieres eliminar a %1$s %2$s de la plantilla?</string>
+
+    <string name="team_title">Equipo</string>
+    <string name="create_team_title">Crear Equipo</string>
+    <string name="team_name">Nombre del Equipo</string>
+    <string name="team_name_required">El nombre del equipo es obligatorio</string>
+    <string name="coach_name">Nombre del Entrenador</string>
+    <string name="coach_name_required">El nombre del entrenador es obligatorio</string>
+    <string name="delegate_name">Nombre del Delegado</string>
+    <string name="delegate_name_required">El nombre del delegado es obligatorio</string>
+    <string name="team_type">Tipo de Equipo</string>
+    <string name="team_type_required">El tipo de equipo es obligatorio</string>
+    <string name="team_type_football">Fútbol %d</string>
+    <string name="team_type_change_not_allowed">No se puede cambiar el tipo de equipo</string>
+    <string name="team_type_change_blocked_message">El tipo de equipo no se puede cambiar porque hay partidos programados. Por favor, elimina o archiva todos los partidos programados primero.</string>
+
+    <string name="team_info">Información del Equipo</string>
+    <string name="team_info_description">Mostrar información del equipo</string>
+    <string name="edit">Editar</string>
+    <string name="edit_team_title">Editar Equipo</string>
+    <string name="close">Cerrar</string>
+
+    <string name="current_match_title">Partido</string>
+    <string name="no_match_message">No hay partido activo</string>
+    <string name="match_time_label">Tiempo de Partido</string>
+    <string name="player_times_title">Tiempos de Jugadores</string>
+    <string name="player_time_title">Tiempo de juego</string>
+    <string name="running_indicator">ACTIVO</string>
+    <string name="player_number_format">#%d</string>
+    <string name="pause_match_button">Descanso</string>
+    <string name="resume_match_button">Reanudar</string>
+    <string name="finish_match_button">Finalizar partido</string>
+    <string name="add_goal_button">Gol</string>
+    <string name="add_opponent_goal_button">Gol Rival</string>
+    <string name="add_opponent_goal_title">Añadir Gol al Marcador Contrario</string>
+    <string name="add_opponent_goal_message">¿Quieres añadir un gol al equipo rival?</string>
+    <string name="scoreboard_label">Marcador</string>
+    <string name="my_team_label">Mi Equipo</string>
+    <string name="opponent_team_label">Rival</string>
+    <string name="select_goal_scorer_title">Seleccionar Goleador</string>
+
+    <!-- Match Management Strings -->
+    <string name="matches_title">Partidos</string>
+    <string name="no_matches_message">Aún no hay partidos registrados</string>
+    <string name="add_match_title">Registrar Partido</string>
+    <string name="edit_match_title">Editar Partido</string>
+    <string name="delete_match_title">Eliminar Partido</string>
+    <string name="delete_match_message">¿Estás seguro de que quieres eliminar este partido?</string>
+
+    <string name="opponent">Rival</string>
+    <string name="opponent_required">El nombre del rival es obligatorio</string>
+    <string name="location">Lugar</string>
+    <string name="location_required">El lugar es obligatorio</string>
+    <string name="match_date">Fecha del Partido</string>
+    <string name="match_date_required">La fecha del partido es obligatoria</string>
+    <string name="match_time">Hora del Partido</string>
+    <string name="match_time_required">La hora del partido es obligatoria</string>
+    <string name="number_of_periods">Nº de Tiempos</string>
+    <string name="period_duration">Duración de cada Tiempo (minutos)</string>
+    <string name="two_halves">2 Partes</string>
+    <string name="four_quarters">4 Cuartos</string>
+
+    <string name="starting_lineup">Alineación Inicial</string>
+    <string name="initial_lineup">Alineación Inicial</string>
+    <string name="substitutes">Suplentes</string>
+    <string name="select_players">Seleccionar Jugadores</string>
+    <string name="no_starting_lineup">No hay alineación inicial seleccionada</string>
+    <string name="no_substitutes">No hay suplentes seleccionados</string>
+    <string name="select_starting_lineup">Seleccionar Alineación Inicial</string>
+    <string name="select_substitutes">Seleccionar Suplentes</string>
+    <string name="player_selected">Seleccionado</string>
+    <string name="player_not_selected">No Seleccionado</string>
+
+    <!-- Navigation -->
+    <string name="nav_players">Plantilla</string>
+    <string name="nav_team">Equipo</string>
+    <string name="nav_matches">Partidos</string>
+    <string name="nav_analysis">Análisis</string>
+
+    <!-- Match Status -->
+    <string name="pending_matches">Partidos Pendientes</string>
+    <string name="paused_match_half_time">Descanso</string>
+    <string name="paused_match_quarter_break">Entrecuarto</string>
+    <string name="played_matches">Partidos Jugados</string>
+    <string name="archived_matches">Archivados</string>
+    <string name="start_match">Empezar</string>
+    <string name="view_match">Ver Detalle</string>
+    <string name="match_score">%1$d - %2$d</string>
+    <string name="match_active_warning">Ya hay un partido activo</string>
+    <string name="archive_match">Archivar</string>
+    <string name="unarchive_match">Desarchivar</string>
+    <string name="archive_match_title">Archivar Partido</string>
+    <string name="archive_match_message">¿Estás seguro de que deseas archivar este partido? Puedes desarchivarlo más tarde desde la sección de Archivados.</string>
+    <string name="no_archived_matches">Aún no hay partidos archivados</string>
+
+    <!-- Player Substitution -->
+    <string name="invalid_substitution_title">Cambio Inválido</string>
+    <string name="invalid_substitution_message">Debes seleccionar primero un jugador que esté actualmente en el campo para sustituir.</string>
+    <string name="dont_show_again">No mostrar más</string>
+
+    <!-- Match Summary -->
+    <string name="match_next">Próximamente</string>
+    <string name="match_finished">Partido Finalizado</string>
+    <string name="match_summary_title">Resumen del Partido</string>
+    <string name="match_not_found">Partido no encontrado</string>
+    <string name="total_time_label">Tiempo Total</string>
+    <string name="first_half_label">Primera Parte</string>
+    <string name="second_half_label">Segunda Parte</string>
+    <string name="stoppage_time_format">%1$s + %2$s</string>
+    <string name="substitutions_title">Cambios</string>
+    <string name="substitution_count">%d cambio(s)</string>
+    <string name="player_out">Jugador Sale</string>
+    <string name="player_in">Jugador Entra</string>
+
+    <!-- Match Creation Wizard -->
+    <string name="wizard_step_general_data">Datos Generales</string>
+    <string name="wizard_step_squad_callup">Convocatoria</string>
+    <string name="wizard_step_captain">Capitán</string>
+    <string name="wizard_step_lineup">Alineación</string>
+
+    <string name="next">Siguiente</string>
+    <string name="previous">Anterior</string>
+
+    <string name="squad_callup_title">Seleccionar Convocatoria</string>
+    <string name="squad_callup_subtitle">Selecciona los jugadores para este partido (mínimo %d)</string>
+    <string name="squad_callup_count">Seleccionados: %d jugadores</string>
+    <string name="squad_callup_select_all">Seleccionar Todos</string>
+    <string name="squad_callup_min_error">Debes seleccionar al menos %d jugadores</string>
+    <string name="squad_callup_no_goalkeeper_warning">No hay portero seleccionado</string>
+    <string name="squad_callup_no_goalkeeper_message">No has seleccionado ningún portero en la convocatoria. ¿Deseas continuar de todos modos?</string>
+
+    <string name="captain_selection_title">Seleccionar Capitán</string>
+    <string name="captain_selection_subtitle">Elige el capitán para este partido</string>
+    <string name="make_default_captain_title">¿Hacer Capitán por Defecto?</string>
+    <string name="make_default_captain_message">%s ha sido capitán en los últimos 2 partidos. ¿Te gustaría hacerlo capitán por defecto? Se seleccionará automáticamente en futuros partidos.</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+
+    <string name="starting_lineup_title">Seleccionar Alineación Inicial</string>
+    <string name="starting_lineup_subtitle">Selecciona exactamente %d jugadores para comenzar</string>
+    <string name="starting_lineup_count">Seleccionados: %d/%d jugadores</string>
+    <string name="starting_lineup_max_error">Solo puedes seleccionar hasta %d jugadores</string>
+    <string name="starting_lineup_min_error">Debes seleccionar exactamente %d jugadores</string>
+    <string name="starting_lineup_no_goalkeeper_warning">No hay portero en la alineación inicial</string>
+    <string name="starting_lineup_no_goalkeeper_message">No has seleccionado un portero en la alineación inicial. ¿Deseas continuar de todos modos?</string>
+
+    <!-- Match View Improvements -->
+    <string name="sort_players">Ordenar jugadores por</string>
+    <string name="sort_by_number">Dorsal</string>
+    <string name="sort_by_time_desc">Más Tiempo Primero</string>
+    <string name="sort_by_time_asc">Menos Tiempo Primero</string>
+    <string name="sort_by_active">Activos Primero</string>
+    <string name="goalkeeper_badge">P</string>
+    <string name="captain_badge">C</string>
+    <string name="period_label">Periodo %1$d/%2$d</string>
+    <string name="first_quarter">1º Cuarto</string>
+    <string name="second_quarter">2º Cuarto</string>
+    <string name="third_quarter">3º Cuarto</string>
+    <string name="fourth_quarter">4º Cuarto</string>
+    <string name="first_half">1ª Parte</string>
+    <string name="second_half">2ª Parte</string>
+    <string name="period_time_label">Tiempo de Periodo</string>
+    <string name="stop_match_early_title">¿Detener Partido Antes de Tiempo?</string>
+    <string name="stop_match_early_message">El partido no está en el periodo final. ¿Estás seguro de que deseas detenerlo ahora?</string>
+    <string name="pause_match_early_title">¿Ir al descanso antes de tiempo?</string>
+    <string name="pause_match_early_message">Quedan más de 1 minuto para finalizar el tiempo. ¿Estás seguro de que deseas ir al descanso ahora?</string>
+    <string name="pause_limit_reached">No se puede pausar. Máximo de pausas alcanzado.</string>
+    <string name="begin_match">Comenzar Partido</string>
+
+    <string name="list_single">%1$s</string>
+    <string name="list_multiple">%1$s y %2$d más</string>
+
+    <string name="unsaved_changes_title">Cambios Sin Guardar</string>
+    <string name="discard_message">Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?</string>
+
+    <string name="timeout_button">Tiempo Muerto</string>
+    <string name="end_timeout_button">Fin Tiempo Muerto</string>
+    <string name="finish_timeout_button">Finalizar tiempo muerto</string>
+    <string name="match_timeout">Tiempo Muerto</string>
+
+    <string name="search_match_placeholder">Busca por oponente o ubicación</string>
+
+    <!-- Analysis -->
+    <string name="analysis_title">Análisis</string>
+    <string name="analysis_times_tab">TIEMPOS</string>
+    <string name="analysis_goals_tab">GOLEADORES</string>
+    <string name="analysis_no_data">No hay datos de tiempo de juego disponibles</string>
+    <string name="analysis_no_goals_data">No hay datos de goles disponibles</string>
+    <string name="analysis_player_time_chart_title">Distribución del Tiempo de Juego</string>
+    <string name="analysis_player_goals_chart_title">Máximos Goleadores</string>
+    <string name="analysis_minutes_label">min</string>
+    <string name="analysis_matches_played">%d partidos</string>
+    <string name="analysis_goals_label">Goles</string>
+    <string name="analysis_matches_with_goals">%d partidos con goles</string>
+    <string name="export_button_description">Exportar estadísticas</string>
+    <string name="export_share_title">Compartir estadísticas</string>
+
+    <!-- PDF Export Strings -->
+    <string name="pdf_team_stats_title">Estadísticas del Equipo</string>
+    <string name="pdf_date_label">Fecha: %s</string>
+    <string name="pdf_player_stats_section">Estadísticas de Jugadores</string>
+    <string name="pdf_no_player_data">No hay datos de jugadores disponibles</string>
+    <string name="pdf_header_player">JUGADOR</string>
+    <string name="pdf_header_called_up">CONV</string>
+    <string name="pdf_header_played">JUG</string>
+    <string name="pdf_header_total_time">T.TOTAL</string>
+    <string name="pdf_header_avg_time">T.MEDIO</string>
+    <string name="pdf_header_goals">GOLES</string>
+    <string name="pdf_scorers_section">Goleadores</string>
+    <string name="pdf_no_goals">No hay goles registrados</string>
+    <string name="pdf_scorer_format">%1$d. %2$s - %3$d gol(es)</string>
+    <string name="pdf_match_results_section">Resultados de Partidos</string>
+    <string name="pdf_no_matches">No hay partidos finalizados</string>
+
+    <!-- Match Report PDF Export Strings -->
+    <string name="match_report_title">Informe del Partido</string>
+    <string name="match_info_section">Información del Partido</string>
+    <string name="date_label">Fecha</string>
+    <string name="result_label">Resultado</string>
+    <string name="players_section">Jugadores</string>
+    <string name="number_short">Nº</string>
+    <string name="player_name">Jugador</string>
+    <string name="goalkeeper_short">PT</string>
+    <string name="captain_short">C</string>
+    <string name="starter_short">TI</string>
+    <string name="time_short">Tiempo</string>
+    <string name="goals_short">Goles</string>
+    <string name="export_match_report">Exportar</string>
+    <string name="export_match_report_description">Exportar informe del partido</string>
+    
+    <!-- Match Notification -->
+    <string name="match_notification_channel_name">Cuenta Atrás del Partido</string>
+    <string name="match_notification_channel_description">Muestra el tiempo restante durante los partidos activos</string>
+    
+    <!-- Player Wizard Strings -->
+    <string name="player_data_step_title">Datos del Jugador</string>
+    <string name="player_positions_step_title">Posiciones del Jugador</string>
+    <string name="player_positions_step_subtitle">Selecciona las posiciones en las que puede jugar este jugador</string>
+    <string name="player_image">Imagen del jugador</string>
+    <string name="tap_to_add_photo">Toca para añadir foto</string>
+    <string name="select_image_source">Selecciona origen de imagen</string>
+    <string name="camera">Cámara</string>
+    <string name="gallery">Galería</string>
+    
+    <!-- Settings Strings -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings">Ajustes</string>
+    <string name="settings_data_section">Gestión de Datos</string>
+    <string name="export_data">Exportar Datos</string>
+    <string name="import_data">Importar Datos</string>
+    <string name="export_data_description">Crear copia de seguridad de todos los datos</string>
+    <string name="import_data_description">Restaurar datos desde una copia de seguridad</string>
+    <string name="export_success">Datos exportados correctamente</string>
+    <string name="export_error">Error al exportar datos: %s</string>
+    <string name="import_success">Datos importados correctamente</string>
+    <string name="import_error">Error al importar datos: %s</string>
+    <string name="import_confirmation_title">¿Importar Datos?</string>
+    <string name="import_confirmation_message">Esta acción eliminará permanentemente todos los datos actuales y los reemplazará con los datos de la copia de seguridad. Esta acción no se puede deshacer.\n\nRecomendamos exportar tus datos actuales primero como precaución.</string>
+    <string name="import_confirm">Importar</string>
+    <string name="select_file">Selecciona archivo a importar</string>
+    <string name="no_file_selected">No se ha seleccionado ningún archivo</string>
 </resources>

@@ -5,10 +5,10 @@ plugins {
 
 android {
     namespace = "com.jesuslcorominas.teamflowmanager.di"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 29
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -19,7 +19,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -37,6 +37,7 @@ android {
 dependencies {
     implementation(project(":viewmodel"))
     implementation(project(":usecase"))
+    implementation(project(":service"))
     implementation(project(":data:core"))
     implementation(project(":data:local"))
     implementation(project(":data:remote"))
@@ -44,9 +45,10 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-    
+
+    implementation(libs.androidx.room.runtime)
+
     implementation(libs.koin.android)
-    implementation(libs.koin.core)
 
     testImplementation(libs.junit)
 }

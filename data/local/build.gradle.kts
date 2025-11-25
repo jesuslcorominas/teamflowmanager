@@ -1,15 +1,15 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.kapt")
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.jesuslcorominas.teamflowmanager.data.local"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 29
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -20,7 +20,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -42,12 +42,17 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-    
+
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
-    
+    ksp(libs.androidx.room.compiler)
+
     implementation(libs.koin.android)
+
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+    implementation(libs.moshi.kotlin.codegen)
+    ksp(libs.moshi.kotlin.codegen)
 
     testImplementation(libs.junit)
 }

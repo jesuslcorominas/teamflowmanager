@@ -4,13 +4,6 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id.startsWith("com.android")) {
-                useModule("com.android.tools.build:gradle:${requested.version}")
-            }
-        }
-    }
 }
 
 dependencyResolutionManagement {
@@ -26,6 +19,7 @@ rootProject.name = "TeamFlowManager"
 include(":app")
 include(":viewmodel")
 include(":usecase")
+include(":service")
 include(":data:core")
 include(":data:local")
 include(":data:remote")
