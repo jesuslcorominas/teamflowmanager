@@ -2,20 +2,18 @@ import SwiftUI
 import shared
 
 struct ContentView: View {
-    let greeting = Greeting()
-    
     var body: some View {
-        VStack {
-            Image(systemName: "sportscourt")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text(greeting.greet())
-                .padding()
-            Text("TeamFlow Manager")
-                .font(.title)
-                .fontWeight(.bold)
-        }
-        .padding()
+        ComposeView()
+            .ignoresSafeArea(.all)
+    }
+}
+
+struct ComposeView: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        MainViewControllerKt.MainViewController()
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
     }
 }
 
