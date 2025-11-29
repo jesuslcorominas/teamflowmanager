@@ -74,8 +74,8 @@ class MatchViewModel(
     private val _showStopConfirmation = MutableStateFlow(false)
     val showStopConfirmation: StateFlow<Boolean> = _showStopConfirmation.asStateFlow()
 
-    private val _showPauseConfirmation = MutableStateFlow(false)
-    val showPauseConfirmation: StateFlow<Boolean> = _showPauseConfirmation.asStateFlow()
+    private val _showPauseConfirmation = MutableStateFlow<EndPeriodState?>(null)
+    val showPauseConfirmation: StateFlow<EndPeriodState?> = _showPauseConfirmation.asStateFlow()
 
     private val _showGoalScorerDialog = MutableStateFlow(false)
     val showGoalScorerDialog: StateFlow<Boolean> = _showGoalScorerDialog.asStateFlow()
@@ -118,6 +118,21 @@ class MatchViewModel(
                 if (!currentState.match.isLastPeriod()) {
                     _showStopConfirmation.value = true
                 } else {
+                    val currentPeriod = currentState.match.periods
+                        .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+
+                    if (currentPeriod != null) {
+                        val elapsedTime = (_currentTime.value - currentPeriod.startTimeMillis).coerceAtLeast(0L)
+                        val remainingTime = currentPeriod.periodDuration - elapsedTime
+
+                        // If more than 1 minute remains in normal time, show confirmation dialog
+                        // If in additional time (remainingTime <= 0), proceed without confirmation
+                        if (remainingTime > 60000L) {
+                            _showPauseConfirmation.value = EndPeriodState(false)
+                            return@launch
+                        }
+                    }
+
                     confirmStopMatch()
                 }
             }
@@ -140,6 +155,7 @@ class MatchViewModel(
                     )
                 }
 
+                _showPauseConfirmation.value = null
                 _showStopConfirmation.value = false
             } catch (e: Exception) {
                 crashReporter.recordException(e)
@@ -169,7 +185,7 @@ class MatchViewModel(
                             // If more than 1 minute remains in normal time, show confirmation dialog
                             // If in additional time (remainingTime <= 0), proceed without confirmation
                             if (remainingTime > 60000L) {
-                                _showPauseConfirmation.value = true
+                                _showPauseConfirmation.value = EndPeriodState(true)
                                 return@launch
                             }
                         }
@@ -202,7 +218,7 @@ class MatchViewModel(
                     )
                 }
 
-                _showPauseConfirmation.value = false
+                _showPauseConfirmation.value = null
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error pausing match: ${e.message}")
@@ -212,7 +228,7 @@ class MatchViewModel(
     }
 
     fun dismissPauseConfirmation() {
-        _showPauseConfirmation.value = false
+        _showPauseConfirmation.value = null
     }
 
     fun resumeMatch(matchId: Long) {
@@ -608,4 +624,8 @@ data class SubstitutionItem(
     val playerOut: Player,
     val playerIn: Player,
     val matchElapsedTimeMillis: Long,
+)
+
+data class EndPeriodState(
+    val isBreak: Boolean,
 )

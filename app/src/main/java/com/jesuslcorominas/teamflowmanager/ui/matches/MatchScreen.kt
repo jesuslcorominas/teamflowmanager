@@ -185,9 +185,10 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
         }
 
         // Show confirmation dialog if pausing match early
-        if (showPauseConfirmation) {
+        showPauseConfirmation?.let {
             PauseMatchEarlyConfirmationDialog(
-                onConfirm = { viewModel.confirmPauseMatch() },
+                isBreak = it.isBreak,
+                onConfirm = { if (it.isBreak) viewModel.confirmPauseMatch() else viewModel.confirmStopMatch() },
                 onDismiss = { viewModel.dismissPauseConfirmation() }
             )
         }
@@ -698,7 +699,7 @@ private fun StopMatchEarlyConfirmationDialog(
         },
         text = {
             Text(
-                stringResource(R.string.stop_match_early_message),
+                stringResource(R.string.stop_match_early_period_message),
                 style = MaterialTheme.typography.bodyMedium
             )
         },
@@ -722,6 +723,7 @@ private fun StopMatchEarlyConfirmationDialog(
 
 @Composable
 private fun PauseMatchEarlyConfirmationDialog(
+    isBreak: Boolean,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -730,8 +732,8 @@ private fun PauseMatchEarlyConfirmationDialog(
         onConfirm = onConfirm,
         confirmText = stringResource(R.string.yes),
         dismissText = stringResource(R.string.no),
-        title = stringResource(R.string.pause_match_early_title),
-        message = stringResource(R.string.pause_match_early_message),
+        title = stringResource(if (isBreak) R.string.pause_match_early_title else R.string.stop_match_early_title),
+        message = stringResource(if (isBreak) R.string.pause_match_early_message else R.string.stop_match_early_message),
     )
 }
 
