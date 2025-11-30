@@ -3,7 +3,6 @@ package com.jesuslcorominas.teamflowmanager.ui.components.dragdrop
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -74,31 +73,32 @@ fun DropTargetPlayerItem(
         }
     }
 
-    // Animations are always called but values are only used when needed
-    // This follows Compose rules for composables
+    // Pulsing animation for border
     val infiniteTransition = rememberInfiniteTransition(label = "dropTargetPulse")
-
-    // Pulsing animation for border - only animated when showing drop indication
-    val borderAlpha by infiniteTransition.animateFloat(
-        initialValue = if (showDropIndication) 0.5f else 1f,
+    val animatedBorderAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
         targetValue = 1f,
-        animationSpec = if (showDropIndication) {
-            infiniteRepeatable(
-                animation = tween(durationMillis = 500, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse
-            )
-        } else {
-            tween(durationMillis = 0)
-        },
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 500, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
         label = "borderAlpha"
     )
 
-    // Scale animation for hover - animated based on showDropIndication
-    val scale by animateFloatAsState(
-        targetValue = if (showDropIndication) 1.03f else 1f,
-        animationSpec = tween(durationMillis = if (showDropIndication) 150 else 100),
+    // Scale animation for hover
+    val animatedScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.03f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 300, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
         label = "hoverScale"
     )
+
+    // Only use animated values when showing drop indication
+    val borderAlpha = if (showDropIndication) animatedBorderAlpha else 1f
+    val scale = if (showDropIndication) animatedScale else 1f
 
     Box(
         modifier = Modifier
