@@ -25,6 +25,9 @@ import com.jesuslcorominas.teamflowmanager.ui.players.components.JerseyBadge
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 
+private val GHOST_WIDTH = 300.dp
+private val GHOST_HEIGHT = 80.dp
+
 /**
  * Overlay that shows the ghost view of the player being dragged.
  * This should be placed at the root level of the composable hierarchy
@@ -44,9 +47,9 @@ fun DragOverlay(
             player = player,
             modifier = modifier
                 .graphicsLayer {
-                    // Offset to position at drag location, centered horizontally
-                    translationX = dragDropState.dragPosition.x - 150.dp.toPx() // Half width
-                    translationY = dragDropState.dragPosition.y - 40.dp.toPx() // Half height
+                    // Offset to position at drag location, centered on the ghost
+                    translationX = dragDropState.dragPosition.x - (GHOST_WIDTH / 2).toPx()
+                    translationY = dragDropState.dragPosition.y - (GHOST_HEIGHT / 2).toPx()
                     alpha = 0.9f
                     scaleX = 1.05f
                     scaleY = 1.05f
@@ -69,7 +72,7 @@ private fun PlayerDragGhost(
 
     Row(
         modifier = modifier
-            .width(300.dp)
+            .width(GHOST_WIDTH)
             .shadow(
                 elevation = 16.dp,
                 shape = RoundedCornerShape(12.dp)

@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.components.dragdrop
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -47,6 +48,8 @@ fun DropTargetPlayerItem(
     // Only active players can be drop targets
     val canBeDropTarget = isPlaying
 
+    val showDropIndication = isHovered && dragDropState.isDragging && canBeDropTarget
+
     // Check if drag position is within bounds
     LaunchedEffect(dragDropState.isDragging, dragDropState.dragPosition, bounds) {
         if (dragDropState.isDragging && canBeDropTarget && bounds != null) {
@@ -71,30 +74,31 @@ fun DropTargetPlayerItem(
         }
     }
 
-    // Pulsing animation for border
+    // Animations are always called but values are only used when needed
+    // This follows Compose rules for composables
     val infiniteTransition = rememberInfiniteTransition(label = "dropTargetPulse")
+
+    // Pulsing animation for border - only animated when showing drop indication
     val borderAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
+        initialValue = if (showDropIndication) 0.5f else 1f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
+        animationSpec = if (showDropIndication) {
+            infiniteRepeatable(
+                animation = tween(durationMillis = 500, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            )
+        } else {
+            tween(durationMillis = 0)
+        },
         label = "borderAlpha"
     )
 
-    // Scale animation for hover
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.03f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 300, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
+    // Scale animation for hover - animated based on showDropIndication
+    val scale by animateFloatAsState(
+        targetValue = if (showDropIndication) 1.03f else 1f,
+        animationSpec = tween(durationMillis = if (showDropIndication) 150 else 100),
         label = "hoverScale"
     )
-
-    val showDropIndication = isHovered && dragDropState.isDragging && canBeDropTarget
 
     Box(
         modifier = Modifier
@@ -102,10 +106,8 @@ fun DropTargetPlayerItem(
                 bounds = coordinates.boundsInRoot()
             }
             .graphicsLayer {
-                if (showDropIndication) {
-                    scaleX = scale
-                    scaleY = scale
-                }
+                scaleX = scale
+                scaleY = scale
             }
             .then(
                 if (showDropIndication) {
