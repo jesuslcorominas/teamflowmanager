@@ -363,6 +363,48 @@ class MatchViewModel(
         }
     }
 
+    /**
+     * Performs a direct substitution without requiring the two-step selection process.
+     * Used for drag-and-drop substitutions.
+     *
+     * @param playerInId The ID of the player coming in (was inactive/not playing)
+     * @param playerOutId The ID of the player going out (was active/playing)
+     */
+    fun substitutePlayerDirect(playerInId: Long, playerOutId: Long) {
+        viewModelScope.launch {
+            try {
+                val currentState = _uiState.value
+                if (currentState is MatchUiState.Success) {
+                    crashReporter.log("Direct substitution: $playerOutId -> $playerInId (drag-drop)")
+                    registerPlayerSubstitutionUseCase(
+                        matchId = currentState.match.id,
+                        playerOutId = playerOutId,
+                        playerInId = playerInId,
+                        currentTimeMillis = _currentTime.value,
+                    )
+
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.SUBSTITUTION_MADE,
+                        mapOf(
+                            AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                            AnalyticsParam.PLAYER_OUT to playerOutId.toString(),
+                            AnalyticsParam.PLAYER_IN to playerInId.toString(),
+                            AnalyticsParam.SUBSTITUTION_MINUTE to (_currentTime.value / 60000).toString(),
+                            AnalyticsParam.SUBSTITUTION_METHOD to "drag_drop",
+                        ),
+                    )
+
+                    // Clear any existing selection
+                    _selectedPlayerOut.value = null
+                }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error in direct substitution: ${e.message}")
+                throw e
+            }
+        }
+    }
+
     fun showGoalScorerDialog() {
         _showGoalScorerDialog.value = true
     }

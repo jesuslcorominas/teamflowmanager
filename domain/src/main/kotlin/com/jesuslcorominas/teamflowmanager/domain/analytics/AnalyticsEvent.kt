@@ -89,6 +89,7 @@ object AnalyticsParam {
     const val DURATION_MINUTES = "duration_minutes"
     const val GOAL_MINUTE = "goal_minute"
     const val SUBSTITUTION_MINUTE = "substitution_minute"
+    const val SUBSTITUTION_METHOD = "substitution_method"
 
     // Navigation Parameters
     const val SCREEN_NAME = "screen_name"
