@@ -95,6 +95,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
     val showPauseConfirmation by viewModel.showPauseConfirmation.collectAsState()
     val showGoalScorerDialog by viewModel.showGoalScorerDialog.collectAsState()
     val showOpponentGoalDialog by viewModel.showOpponentGoalDialog.collectAsState()
+    val showOwnGoalScorerDialog by viewModel.showOwnGoalScorerDialog.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -211,8 +212,23 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
         if (showOpponentGoalDialog) {
             OpponentGoalConfirmationDialog(
                 onConfirm = { viewModel.registerOpponentGoal() },
+                onOwnGoal = { viewModel.showOwnGoalScorerDialog() },
                 onDismiss = { viewModel.dismissOpponentGoalDialog() }
             )
+        }
+
+        // Show own goal scorer selection dialog
+        if (showOwnGoalScorerDialog) {
+            val state = uiState
+            if (state is MatchUiState.Success) {
+                OwnGoalScorerSelectionDialog(
+                    players = state.playerTimes.map { it.player },
+                    onPlayerSelected = { playerId ->
+                        viewModel.registerOwnGoal(playerId)
+                    },
+                    onDismiss = { viewModel.dismissOwnGoalScorerDialog() }
+                )
+            }
         }
     }
 }
@@ -796,6 +812,7 @@ private fun GoalScorerSelectionDialog(
 @Composable
 private fun OpponentGoalConfirmationDialog(
     onConfirm: () -> Unit,
+    onOwnGoal: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
@@ -807,10 +824,12 @@ private fun OpponentGoalConfirmationDialog(
             )
         },
         text = {
-            Text(
-                stringResource(R.string.add_opponent_goal_message),
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Column {
+                Text(
+                    stringResource(R.string.add_opponent_goal_message),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         },
         confirmButton = {
             TextButton(
@@ -819,6 +838,69 @@ private fun OpponentGoalConfirmationDialog(
                 Text(stringResource(R.string.add))
             }
         },
+        dismissButton = {
+            Row {
+                TextButton(
+                    onClick = onOwnGoal
+                ) {
+                    Text(stringResource(R.string.own_goal_button))
+                }
+                TextButton(
+                    onClick = onDismiss
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
+
+@Composable
+private fun OwnGoalScorerSelectionDialog(
+    players: List<Player>,
+    onPlayerSelected: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                stringResource(R.string.select_own_goal_scorer_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            LazyColumn {
+                items(players) { player ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = TFMSpacing.spacing01),
+                        onClick = { onPlayerSelected(player.id) },
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(TFMSpacing.spacing03),
+                            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = player.number.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "${player.firstName} ${player.lastName}",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
         dismissButton = {
             TextButton(
                 onClick = onDismiss

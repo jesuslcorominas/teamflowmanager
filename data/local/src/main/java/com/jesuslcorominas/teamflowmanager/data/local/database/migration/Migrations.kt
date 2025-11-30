@@ -74,3 +74,16 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("ALTER TABLE team ADD COLUMN teamType INTEGER NOT NULL DEFAULT 5")
     }
 }
+
+/**
+ * Migration from version 4 to 5
+ * Adds isOwnGoal column to goal table to track own goals (autogoles).
+ * An own goal is when a player from our team accidentally scores in their own net,
+ * resulting in a goal for the opponent.
+ */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Add isOwnGoal column with default value of false
+        db.execSQL("ALTER TABLE goal ADD COLUMN isOwnGoal INTEGER NOT NULL DEFAULT 0")
+    }
+}

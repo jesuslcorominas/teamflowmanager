@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -17,16 +18,23 @@ import org.junit.Test
 class RegisterGoalUseCaseTest {
     private lateinit var matchRepository: MatchRepository
     private lateinit var goalRepository: GoalRepository
+    private lateinit var transactionRunner: TransactionRunner
     private lateinit var registerGoalUseCase: RegisterGoalUseCase
 
     @Before
     fun setup() {
         matchRepository = mockk(relaxed = true)
         goalRepository = mockk(relaxed = true)
+        transactionRunner = mockk()
+        coEvery { transactionRunner.run<Long>(any()) } coAnswers {
+            val block = firstArg<suspend () -> Long>()
+            block()
+        }
         registerGoalUseCase =
             RegisterGoalUseCaseImpl(
                 matchRepository,
                 goalRepository,
+                transactionRunner,
             )
     }
 
@@ -172,6 +180,49 @@ class RegisterGoalUseCaseTest {
             assertEquals(currentTimeMillis, goal.goalTimeMillis)
             assertEquals(530000L, goal.matchElapsedTimeMillis) // 500000 + 30000
             assertEquals(true, goal.isOpponentGoal)
+            assertEquals(1L, result)
+        }
+
+    @Test
+    fun `invoke should record own goal correctly with player attribution`() =
+        runTest {
+            // Given
+            val matchId = 1L
+            val scorerId = 3L // The player who scored the own goal
+            val currentTimeMillis = System.currentTimeMillis()
+            val match =
+                Match(
+                    id = matchId,
+                    teamId = 1L,
+                    elapsedTimeMillis = 700000L,
+                    isRunning = true,
+                    lastStartTimeMillis = currentTimeMillis - 45000L,
+                    teamName = "Team B"
+                )
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+
+            val goalSlot = slot<Goal>()
+            coEvery { goalRepository.insertGoal(capture(goalSlot)) } returns 1L
+
+            // When
+            val result = registerGoalUseCase(
+                matchId = matchId,
+                scorerId = scorerId,
+                currentTimeMillis = currentTimeMillis,
+                isOpponentGoal = true,
+                isOwnGoal = true
+            )
+
+            // Then
+            coVerify { goalRepository.insertGoal(any()) }
+
+            val goal = goalSlot.captured
+            assertEquals(matchId, goal.matchId)
+            assertEquals(scorerId, goal.scorerId)
+            assertEquals(currentTimeMillis, goal.goalTimeMillis)
+            assertEquals(745000L, goal.matchElapsedTimeMillis) // 700000 + 45000
+            assertEquals(true, goal.isOpponentGoal)
+            assertEquals(true, goal.isOwnGoal)
             assertEquals(1L, result)
         }
 }

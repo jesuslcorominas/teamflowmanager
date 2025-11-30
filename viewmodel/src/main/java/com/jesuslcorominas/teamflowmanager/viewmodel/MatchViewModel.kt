@@ -83,6 +83,9 @@ class MatchViewModel(
     private val _showOpponentGoalDialog = MutableStateFlow(false)
     val showOpponentGoalDialog: StateFlow<Boolean> = _showOpponentGoalDialog.asStateFlow()
 
+    private val _showOwnGoalScorerDialog = MutableStateFlow(false)
+    val showOwnGoalScorerDialog: StateFlow<Boolean> = _showOwnGoalScorerDialog.asStateFlow()
+
     private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
     val exportState: StateFlow<ExportState> = _exportState.asStateFlow()
 
@@ -438,6 +441,48 @@ class MatchViewModel(
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error registering opponent goal: ${e.message}")
+                throw e
+            }
+        }
+    }
+
+    fun showOwnGoalScorerDialog() {
+        _showOpponentGoalDialog.value = false
+        _showOwnGoalScorerDialog.value = true
+    }
+
+    fun dismissOwnGoalScorerDialog() {
+        _showOwnGoalScorerDialog.value = false
+    }
+
+    fun registerOwnGoal(scorerId: Long) {
+        viewModelScope.launch {
+            try {
+                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                    crashReporter.log("Registering own goal by player: $scorerId")
+                    registerGoal(
+                        matchId = currentState.match.id,
+                        scorerId = scorerId,
+                        currentTimeMillis = _currentTime.value,
+                        isOpponentGoal = true,
+                        isOwnGoal = true,
+                    )
+
+                    analyticsTracker.logEvent(
+                        AnalyticsEvent.OPPONENT_GOAL_SCORED,
+                        mapOf(
+                            AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
+                            AnalyticsParam.PLAYER_ID to scorerId.toString(),
+                            AnalyticsParam.GOAL_MINUTE to (_currentTime.value / 60000).toString(),
+                            AnalyticsParam.TEAM_TYPE to "own_goal",
+                        ),
+                    )
+
+                    _showOwnGoalScorerDialog.value = false
+                }
+            } catch (e: Exception) {
+                crashReporter.recordException(e)
+                crashReporter.log("Error registering own goal: ${e.message}")
                 throw e
             }
         }

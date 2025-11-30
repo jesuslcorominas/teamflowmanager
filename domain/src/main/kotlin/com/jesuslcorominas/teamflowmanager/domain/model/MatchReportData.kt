@@ -18,6 +18,7 @@ data class PlayerMatchReport(
 
 data class GoalReport(
     val matchElapsedTimeMillis: Long,
+    val isOwnGoal: Boolean = false,
 )
 
 data class SubstitutionReport(
