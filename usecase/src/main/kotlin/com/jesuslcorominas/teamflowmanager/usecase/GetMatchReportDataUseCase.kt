@@ -44,9 +44,9 @@ internal class GetMatchReportDataUseCaseImpl(
                     val playerTime = playerTimes.find { it.playerId == player.id }
                     val totalPlayTimeMillis = playerTime?.elapsedTimeMillis ?: 0L
                     
-                    // Get player goals (only team goals, not opponent goals, OR own goals by this player)
+                    // Get player goals: regular goals (not opponent goals) or own goals attributed to this player
                     val playerGoals = goals
-                        .filter { (it.scorerId == player.id && !it.isOpponentGoal) || (it.scorerId == player.id && it.isOwnGoal) }
+                        .filter { it.scorerId == player.id && (!it.isOpponentGoal || it.isOwnGoal) }
                         .map { GoalReport(it.matchElapsedTimeMillis, it.isOwnGoal) }
                         .sortedBy { it.matchElapsedTimeMillis }
                     

@@ -460,6 +460,8 @@ class MatchViewModel(
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                     crashReporter.log("Registering own goal by player: $scorerId")
+                    // An own goal counts for the opponent's score (isOpponentGoal=true)
+                    // but is attributed to our player (isOwnGoal=true, scorerId set)
                     registerGoal(
                         matchId = currentState.match.id,
                         scorerId = scorerId,
@@ -469,7 +471,7 @@ class MatchViewModel(
                     )
 
                     analyticsTracker.logEvent(
-                        AnalyticsEvent.OPPONENT_GOAL_SCORED,
+                        AnalyticsEvent.GOAL_SCORED,
                         mapOf(
                             AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
                             AnalyticsParam.PLAYER_ID to scorerId.toString(),
