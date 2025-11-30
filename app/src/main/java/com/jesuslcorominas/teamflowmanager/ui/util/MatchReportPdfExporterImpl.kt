@@ -318,16 +318,9 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         canvas.drawText(formatTime(playerReport.totalPlayTimeMillis), xPos + colTime / 2, singleLineTextY, textPaint)
         xPos += colTime
 
-        // Goals column - show total count with own goals indicator
-        val regularGoals = playerReport.goals.filter { !it.isOwnGoal }.size
-        val ownGoals = playerReport.goals.filter { it.isOwnGoal }.size
-        val goalsText = when {
-            regularGoals > 0 && ownGoals > 0 -> "$regularGoals (${ownGoals}OG)"
-            regularGoals > 0 -> "$regularGoals"
-            ownGoals > 0 -> "(${ownGoals}OG)"
-            else -> "-"
-        }
-        canvas.drawText(goalsText, xPos + colGoals / 2, singleLineTextY, textPaint)
+        // Goals column - show only total count
+        val goalsCount = playerReport.goals.size
+        canvas.drawText(if (goalsCount > 0) "$goalsCount" else "-", xPos + colGoals / 2, singleLineTextY, textPaint)
 
         return yPosition + rowHeight
     }

@@ -2,9 +2,9 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
-import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -54,7 +54,7 @@ class RegisterGoalUseCaseTest {
                     lastStartTimeMillis = currentTimeMillis - 60000L,
                     teamName = "Team B"
                 )
-            coEvery { matchRepository.getMatch() } returns flowOf(match)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
             coEvery { goalRepository.insertGoal(capture(goalSlot)) } returns 1L
@@ -89,7 +89,7 @@ class RegisterGoalUseCaseTest {
                     lastStartTimeMillis = null,
                     teamName = "Team B"
                 )
-            coEvery { matchRepository.getMatch() } returns flowOf(match)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
             coEvery { goalRepository.insertGoal(capture(goalSlot)) } returns 1L
@@ -119,7 +119,7 @@ class RegisterGoalUseCaseTest {
                     lastStartTimeMillis = lastStartTimeMillis,
                     teamName = "Team B"
                 )
-            coEvery { matchRepository.getMatch() } returns flowOf(match)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
             coEvery { goalRepository.insertGoal(capture(goalSlot)) } returns 1L
@@ -139,7 +139,7 @@ class RegisterGoalUseCaseTest {
             val matchId = 1L
             val scorerId = 2L
             val currentTimeMillis = System.currentTimeMillis()
-            coEvery { matchRepository.getMatch() } returns flowOf(null)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(null)
 
             // When
             registerGoalUseCase(matchId, scorerId, currentTimeMillis)
@@ -163,7 +163,7 @@ class RegisterGoalUseCaseTest {
                     lastStartTimeMillis = currentTimeMillis - 30000L,
                     teamName = "Team B"
                 )
-            coEvery { matchRepository.getMatch() } returns flowOf(match)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
             coEvery { goalRepository.insertGoal(capture(goalSlot)) } returns 1L
@@ -184,11 +184,11 @@ class RegisterGoalUseCaseTest {
         }
 
     @Test
-    fun `invoke should record own goal correctly with player attribution`() =
+    fun `invoke should record own goal correctly without scorer id`() =
         runTest {
             // Given
             val matchId = 1L
-            val scorerId = 3L // The player who scored the own goal
+            val scorerId = null // Null scorer ID for own goals (scored by rival in their own net)
             val currentTimeMillis = System.currentTimeMillis()
             val match =
                 Match(
@@ -209,7 +209,7 @@ class RegisterGoalUseCaseTest {
                 matchId = matchId,
                 scorerId = scorerId,
                 currentTimeMillis = currentTimeMillis,
-                isOpponentGoal = true,
+                isOpponentGoal = false,
                 isOwnGoal = true
             )
 
@@ -218,10 +218,10 @@ class RegisterGoalUseCaseTest {
 
             val goal = goalSlot.captured
             assertEquals(matchId, goal.matchId)
-            assertEquals(scorerId, goal.scorerId)
+            assertEquals(null, goal.scorerId) // No scorer - it's an own goal by rival
             assertEquals(currentTimeMillis, goal.goalTimeMillis)
             assertEquals(745000L, goal.matchElapsedTimeMillis) // 700000 + 45000
-            assertEquals(true, goal.isOpponentGoal)
+            assertEquals(false, goal.isOpponentGoal) // Counts for OUR team
             assertEquals(true, goal.isOwnGoal)
             assertEquals(1L, result)
         }

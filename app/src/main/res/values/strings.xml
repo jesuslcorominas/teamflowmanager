@@ -94,12 +94,11 @@
     <string name="add_opponent_goal_button">Opponent Goal</string>
     <string name="add_opponent_goal_title">Add Opponent Goal</string>
     <string name="add_opponent_goal_message">Do you want to add a goal for the opponent team?</string>
-    <string name="own_goal_button">Own Goal</string>
-    <string name="select_own_goal_scorer_title">Select Own Goal Player</string>
     <string name="scoreboard_label">Scoreboard</string>
     <string name="my_team_label">My Team</string>
     <string name="opponent_team_label">Opponent</string>
     <string name="select_goal_scorer_title">Select Goal Scorer</string>
+    <string name="own_goal_option">Own Goal (Autogol)</string>
 
     <!-- Match Management Strings -->
     <string name="matches_title">Matches</string>

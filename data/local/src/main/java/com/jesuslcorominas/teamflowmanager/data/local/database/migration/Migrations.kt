@@ -78,8 +78,7 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
 /**
  * Migration from version 4 to 5
  * Adds isOwnGoal column to goal table to track own goals (autogoles).
- * An own goal is when a player from our team accidentally scores in their own net,
- * resulting in a goal for the opponent.
+ * An own goal is when a rival player scores in their own net, giving us a goal.
  */
 val MIGRATION_4_5 = object : Migration(4, 5) {
     override fun migrate(db: SupportSQLiteDatabase) {

@@ -94,12 +94,11 @@
     <string name="add_opponent_goal_button">Gol Rival</string>
     <string name="add_opponent_goal_title">Añadir Gol al Marcador Contrario</string>
     <string name="add_opponent_goal_message">¿Quieres añadir un gol al equipo rival?</string>
-    <string name="own_goal_button">Gol en Propia</string>
-    <string name="select_own_goal_scorer_title">Seleccionar Jugador del Autogol</string>
     <string name="scoreboard_label">Marcador</string>
     <string name="my_team_label">Mi Equipo</string>
     <string name="opponent_team_label">Rival</string>
     <string name="select_goal_scorer_title">Seleccionar Goleador</string>
+    <string name="own_goal_option">Gol en Propia (Autogol)</string>
 
     <!-- Match Management Strings -->
     <string name="matches_title">Partidos</string>
