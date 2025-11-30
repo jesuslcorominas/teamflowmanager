@@ -46,6 +46,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCase
@@ -136,6 +138,7 @@ internal val useCaseInternalModule =
         singleOf(::EndTimeoutUseCaseImpl) bind EndTimeoutUseCase::class
         singleOf(::FinishMatchUseCaseImpl) bind FinishMatchUseCase::class
         singleOf(::GetMatchSummaryUseCaseImpl) bind GetMatchSummaryUseCase::class
+        singleOf(::GetMatchTimelineUseCaseImpl) bind GetMatchTimelineUseCase::class
 
         singleOf(::GetPlayerTimeUseCaseImpl) bind GetPlayerTimeUseCase::class
         singleOf(::GetAllPlayerTimesUseCaseImpl) bind GetAllPlayerTimesUseCase::class

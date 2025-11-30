@@ -30,7 +30,9 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,6 +40,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -58,6 +61,8 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
+import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppIconButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
@@ -67,6 +72,8 @@ import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
+import com.jesuslcorominas.teamflowmanager.ui.matches.components.ScoreEvolutionChart
+import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -80,6 +87,8 @@ import org.koin.androidx.compose.koinViewModel
 import androidx.core.net.toUri
 
 private const val SUBSTITUTIONS_HEADER = "substitutions_header"
+private const val TAB_SUMMARY = 0
+private const val TAB_TIMELINE = 1
 
 @Composable
 fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (String?) -> Unit) {
@@ -541,8 +550,72 @@ private fun FinishedMatchState(
         onDispose { onTitleChange(null) }
     }
 
-    var expanded by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableIntStateOf(TAB_SUMMARY) }
 
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Match Time Card at top (always visible)
+        Box(
+            modifier = Modifier.padding(
+                horizontal = TFMSpacing.spacing04,
+                vertical = TFMSpacing.spacing02
+            )
+        ) {
+            MatchTimeCard(state.match, state.currentTime)
+        }
+
+        // Tab Row
+        SecondaryTabRow(
+            modifier = Modifier.fillMaxWidth(),
+            selectedTabIndex = selectedTab,
+        ) {
+            Tab(
+                selected = selectedTab == TAB_SUMMARY,
+                onClick = { selectedTab = TAB_SUMMARY },
+                text = {
+                    Text(
+                        text = stringResource(R.string.summary_tab),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            )
+            Tab(
+                selected = selectedTab == TAB_TIMELINE,
+                onClick = { selectedTab = TAB_TIMELINE },
+                text = {
+                    Text(
+                        text = stringResource(R.string.timeline_tab),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            )
+        }
+
+        // Tab Content
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (selectedTab) {
+                TAB_SUMMARY -> SummaryTabContent(
+                    state = state,
+                    currentSortOrder = currentSortOrder,
+                    onSortOrderChange = onSortOrderChange,
+                    onExport = onExport,
+                )
+                TAB_TIMELINE -> TimelineTabContent(
+                    timelineEvents = state.timelineEvents,
+                    scoreEvolution = state.scoreEvolution,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryTabContent(
+    state: MatchUiState.Finished,
+    currentSortOrder: PlayerSortOrderBy,
+    onSortOrderChange: (PlayerSortOrderBy) -> Unit,
+    onExport: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -550,13 +623,14 @@ private fun FinishedMatchState(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(TFMSpacing.spacing04),
+                .padding(horizontal = TFMSpacing.spacing04),
             state = listState,
-            contentPadding = PaddingValues(bottom = TFMSpacing.spacing04),
+            contentPadding = PaddingValues(
+                top = TFMSpacing.spacing03,
+                bottom = TFMSpacing.spacing04
+            ),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
         ) {
-            item { MatchTimeCard(state.match, state.currentTime) }
-
             item {
                 PlayerSortOrder(
                     availableSorts = PlayerSortOrderBy.entries.minus(PlayerSortOrderBy.BY_ACTIVE_FIRST),
@@ -613,6 +687,32 @@ private fun FinishedMatchState(
         }
     }
 }
+
+@Composable
+private fun TimelineTabContent(
+    timelineEvents: List<TimelineEvent>,
+    scoreEvolution: List<ScorePoint>,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Score Evolution Chart
+        if (scoreEvolution.size > 1) {
+            ScoreEvolutionChart(
+                scoreEvolution = scoreEvolution,
+                modifier = Modifier.padding(
+                    horizontal = TFMSpacing.spacing04,
+                    vertical = TFMSpacing.spacing03
+                ),
+            )
+        }
+
+        // Timeline Events
+        TimelineContent(
+            events = timelineEvents,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
 
 private fun LazyListScope.substitutionsSection(
     substitutions: List<SubstitutionItem>,
