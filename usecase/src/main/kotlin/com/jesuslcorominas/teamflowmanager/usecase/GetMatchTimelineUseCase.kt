@@ -113,10 +113,16 @@ internal class GetMatchTimelineUseCaseImpl(
         match.periods.forEachIndexed { index, period ->
             // Add a break event at the end of each period except the last
             if (index < match.periods.size - 1 && period.endTimeMillis > 0) {
-                val elapsedTime = period.endTimeMillis - match.periods.first().startTimeMillis
+                // Calculate accumulated play time up to this period's end
+                // (sum of all period durations up to and including this one)
+                val accumulatedPlayTime = match.periods
+                    .take(index + 1)
+                    .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
+                    .sumOf { it.endTimeMillis - it.startTimeMillis }
+
                 events.add(
                     TimelineEvent.PeriodBreak(
-                        matchElapsedTimeMillis = elapsedTime,
+                        matchElapsedTimeMillis = accumulatedPlayTime,
                         periodNumber = period.periodNumber,
                         periodType = match.periodType,
                     )
@@ -155,7 +161,8 @@ internal class GetMatchTimelineUseCaseImpl(
             )
         }
 
-        // Add final point at match end (total elapsed time)
+        // Add final point at match end (total actual play time, excluding breaks)
+        // This matches how matchElapsedTimeMillis is calculated for events during the match
         val totalElapsedTime = match.periods
             .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
             .sumOf { it.endTimeMillis - it.startTimeMillis }

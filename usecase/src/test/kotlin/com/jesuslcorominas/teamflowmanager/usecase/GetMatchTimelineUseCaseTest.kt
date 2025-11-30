@@ -203,6 +203,8 @@ class GetMatchTimelineUseCaseTest {
         val breakEvent = periodBreakEvents?.first()
         assertEquals(1, breakEvent?.periodNumber)
         assertEquals(PeriodType.HALF_TIME, breakEvent?.periodType)
+        // The break occurs after 1500000ms of play time (end - start of first period)
+        assertEquals(1500000L, breakEvent?.matchElapsedTimeMillis)
     }
 
     @Test

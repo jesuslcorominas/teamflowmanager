@@ -93,46 +93,8 @@ fun ScoreEvolutionChart(
                     .padding(top = TFMSpacing.spacing03),
                 data = remember(teamScoreValues, opponentScoreValues) {
                     listOf(
-                        Line(
-                            label = "Team",
-                            values = teamScoreValues,
-                            color = androidx.compose.ui.graphics.SolidColor(ChartTeamColor),
-                            firstGradientFillColor = ChartTeamColor.copy(alpha = 0.3f),
-                            secondGradientFillColor = ChartTeamColor.copy(alpha = 0.0f),
-                            strokeAnimationSpec = androidx.compose.animation.core.tween(1000),
-                            gradientAnimationDelay = 500,
-                            drawStyle = DrawStyle.Stroke(
-                                width = 3.dp,
-                                strokeStyle = StrokeStyle.Normal,
-                            ),
-                            dotProperties = DotProperties(
-                                enabled = true,
-                                color = androidx.compose.ui.graphics.SolidColor(ChartTeamColor),
-                                radius = 4.dp,
-                                strokeWidth = 2.dp,
-                                strokeColor = androidx.compose.ui.graphics.SolidColor(ChartTeamColor),
-                            ),
-                        ),
-                        Line(
-                            label = "Opponent",
-                            values = opponentScoreValues,
-                            color = androidx.compose.ui.graphics.SolidColor(ChartOpponentColor),
-                            firstGradientFillColor = ChartOpponentColor.copy(alpha = 0.3f),
-                            secondGradientFillColor = ChartOpponentColor.copy(alpha = 0.0f),
-                            strokeAnimationSpec = androidx.compose.animation.core.tween(1000),
-                            gradientAnimationDelay = 500,
-                            drawStyle = DrawStyle.Stroke(
-                                width = 3.dp,
-                                strokeStyle = StrokeStyle.Normal,
-                            ),
-                            dotProperties = DotProperties(
-                                enabled = true,
-                                color = androidx.compose.ui.graphics.SolidColor(ChartOpponentColor),
-                                radius = 4.dp,
-                                strokeWidth = 2.dp,
-                                strokeColor = androidx.compose.ui.graphics.SolidColor(ChartOpponentColor),
-                            ),
-                        ),
+                        createScoreLine("Team", teamScoreValues, ChartTeamColor),
+                        createScoreLine("Opponent", opponentScoreValues, ChartOpponentColor),
                     )
                 },
                 animationMode = AnimationMode.Together(delayBuilder = { it * 200L }),
@@ -206,6 +168,36 @@ private fun LegendItem(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+}
+
+/**
+ * Creates a Line configuration for the score evolution chart.
+ */
+private fun createScoreLine(
+    label: String,
+    values: List<Double>,
+    color: androidx.compose.ui.graphics.Color,
+): Line {
+    return Line(
+        label = label,
+        values = values,
+        color = androidx.compose.ui.graphics.SolidColor(color),
+        firstGradientFillColor = color.copy(alpha = 0.3f),
+        secondGradientFillColor = color.copy(alpha = 0.0f),
+        strokeAnimationSpec = androidx.compose.animation.core.tween(1000),
+        gradientAnimationDelay = 500,
+        drawStyle = DrawStyle.Stroke(
+            width = 3.dp,
+            strokeStyle = StrokeStyle.Normal,
+        ),
+        dotProperties = DotProperties(
+            enabled = true,
+            color = androidx.compose.ui.graphics.SolidColor(color),
+            radius = 4.dp,
+            strokeWidth = 2.dp,
+            strokeColor = androidx.compose.ui.graphics.SolidColor(color),
+        ),
+    )
 }
 
 @Preview(showBackground = true)
