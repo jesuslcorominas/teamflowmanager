@@ -20,16 +20,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -548,20 +546,25 @@ private fun FinishedMatchState(
     var selectedTab by remember { mutableIntStateOf(TAB_SUMMARY) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Match Time Card at top (always visible)
+        // Match Time Card at top (always visible) with share button
         Box(
             modifier = Modifier.padding(
                 horizontal = TFMSpacing.spacing04,
                 vertical = TFMSpacing.spacing02
             )
         ) {
-            MatchTimeCard(state.match, state.currentTime)
+            MatchTimeCard(
+                match = state.match,
+                currentTime = state.currentTime,
+                onExport = onExport,
+            )
         }
 
-        // Tab Row with 4 tabs
-        SecondaryTabRow(
+        // Scrollable Tab Row with 4 tabs
+        ScrollableTabRow(
             modifier = Modifier.fillMaxWidth(),
             selectedTabIndex = selectedTab,
+            edgePadding = TFMSpacing.spacing04,
         ) {
             Tab(
                 selected = selectedTab == TAB_SUMMARY,
@@ -612,7 +615,6 @@ private fun FinishedMatchState(
                     state = state,
                     currentSortOrder = currentSortOrder,
                     onSortOrderChange = onSortOrderChange,
-                    onExport = onExport,
                 )
                 TAB_SUBSTITUTIONS -> SubstitutionsTabContent(
                     substitutions = state.substitutions,
@@ -635,60 +637,42 @@ private fun SummaryTabContent(
     state: MatchUiState.Finished,
     currentSortOrder: PlayerSortOrderBy,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
-    onExport: () -> Unit,
 ) {
-    val listState = rememberLazyListState()
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = TFMSpacing.spacing04),
-            state = listState,
-            contentPadding = PaddingValues(
-                top = TFMSpacing.spacing03,
-                bottom = TFMSpacing.spacing04
-            ),
-            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
-        ) {
-            item {
-                PlayerSortOrder(
-                    availableSorts = PlayerSortOrderBy.entries.minus(PlayerSortOrderBy.BY_ACTIVE_FIRST),
-                    currentSortOrder = currentSortOrder,
-                    onSortOrderChange = onSortOrderChange,
-                )
-            }
-
-            items(
-                items = state.playerTimes.sortedBy(currentSortOrder, state.match),
-                key = { it.player.id }
-            ) { playerTimeItem ->
-                PlayerItem(
-                    modifier = Modifier.animateItem(
-                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                        placementSpec = spring(),
-                        fadeOutSpec = tween(durationMillis = 300)
-                    ),
-                    player = playerTimeItem.player,
-                    showPositions = false,
-                    isPlaying = false,
-                    timeMillis = playerTimeItem.timeMillis,
-                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
-                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
-                    isSelected = false,
-                )
-            }
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = TFMSpacing.spacing04),
+        contentPadding = PaddingValues(
+            top = TFMSpacing.spacing03,
+            bottom = TFMSpacing.spacing04
+        ),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+    ) {
+        item {
+            PlayerSortOrder(
+                availableSorts = PlayerSortOrderBy.entries.minus(PlayerSortOrderBy.BY_ACTIVE_FIRST),
+                currentSortOrder = currentSortOrder,
+                onSortOrderChange = onSortOrderChange,
+            )
         }
 
-        FloatingActionButton(
-            onClick = onExport,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(TFMSpacing.spacing04)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Share,
-                contentDescription = stringResource(R.string.export_match_report_description)
+        items(
+            items = state.playerTimes.sortedBy(currentSortOrder, state.match),
+            key = { it.player.id }
+        ) { playerTimeItem ->
+            PlayerItem(
+                modifier = Modifier.animateItem(
+                    fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                    placementSpec = spring(),
+                    fadeOutSpec = tween(durationMillis = 300)
+                ),
+                player = playerTimeItem.player,
+                showPositions = false,
+                isPlaying = false,
+                timeMillis = playerTimeItem.timeMillis,
+                showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                isSelected = false,
             )
         }
     }

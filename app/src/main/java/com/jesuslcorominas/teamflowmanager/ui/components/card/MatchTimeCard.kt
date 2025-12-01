@@ -19,7 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,7 +61,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun MatchTimeCard(
     match: Match,
-    currentTime: Long
+    currentTime: Long,
+    onExport: (() -> Unit)? = null,
 ) {
     val periodName = getCurrentPeriodName(match)
 
@@ -147,6 +150,22 @@ fun MatchTimeCard(
                         currentTime = currentTime,
                         match = match
                     )
+
+                    // Share button - only visible when match is finished and expanded
+                    AnimatedVisibility(
+                        visible = expanded && match.status == MatchStatus.FINISHED && onExport != null
+                    ) {
+                        IconButton(
+                            onClick = { onExport?.invoke() },
+                            modifier = Modifier.padding(top = TFMSpacing.spacing02)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = stringResource(R.string.export_match_report_description),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
 
                 Box(
