@@ -215,20 +215,22 @@ fun PlayerActivityChart(
                     .fillMaxWidth()
                     .height(chartHeight)
             ) {
-                val chartPadding = 50.dp.toPx()
-                val chartWidth = size.width - chartPadding * 2
-                val scoreChartHeight = size.height * 0.5f - chartPadding / 2
-                val playerChartTop = size.height * 0.5f + chartPadding / 2
-                val playerChartHeight = size.height * 0.5f - chartPadding
+                val leftPadding = 60.dp.toPx() // Extra space for player numbers on the left
+                val rightPadding = 30.dp.toPx()
+                val verticalPadding = 40.dp.toPx()
+                val chartWidth = size.width - leftPadding - rightPadding
+                val scoreChartHeight = size.height * 0.5f - verticalPadding / 2
+                val playerChartTop = size.height * 0.5f + verticalPadding / 2
+                val playerChartHeight = size.height * 0.5f - verticalPadding
 
                 val labelColor = ContentHigh.toNativeColor()
 
                 // Draw score Y-axis labels (integers only) - top half
                 for (i in 0..maxScore) {
-                    val y = scoreChartHeight - (i.toFloat() / maxScore * scoreChartHeight) + chartPadding / 2
+                    val y = scoreChartHeight - (i.toFloat() / maxScore * scoreChartHeight) + verticalPadding / 2
                     drawContext.canvas.nativeCanvas.drawText(
                         i.toString(),
-                        chartPadding / 2 - 10,
+                        leftPadding / 2,
                         y + textSize / 3,
                         android.graphics.Paint().apply {
                             color = labelColor
@@ -239,8 +241,8 @@ fun PlayerActivityChart(
                     // Draw horizontal grid line
                     drawLine(
                         color = ContentHigh.copy(alpha = 0.2f),
-                        start = Offset(chartPadding, y),
-                        end = Offset(size.width - chartPadding / 2, y),
+                        start = Offset(leftPadding, y),
+                        end = Offset(size.width - rightPadding, y),
                         strokeWidth = 1f
                     )
                 }
@@ -251,9 +253,10 @@ fun PlayerActivityChart(
                         scoreEvolution = scoreEvolution,
                         maxTime = maxTime,
                         maxScore = maxScore,
-                        chartPadding = chartPadding,
+                        leftPadding = leftPadding,
                         chartWidth = chartWidth,
                         chartHeight = scoreChartHeight,
+                        verticalPadding = verticalPadding,
                         color = ChartTeamColor,
                         isTeamScore = true
                     )
@@ -265,9 +268,10 @@ fun PlayerActivityChart(
                         scoreEvolution = scoreEvolution,
                         maxTime = maxTime,
                         maxScore = maxScore,
-                        chartPadding = chartPadding,
+                        leftPadding = leftPadding,
                         chartWidth = chartWidth,
                         chartHeight = scoreChartHeight,
+                        verticalPadding = verticalPadding,
                         color = ChartOpponentColor,
                         isTeamScore = false
                     )
@@ -275,10 +279,10 @@ fun PlayerActivityChart(
 
                 // Draw dots at score change points
                 scoreEvolution.forEach { point ->
-                    val x = chartPadding + (point.timeMillis.toFloat() / maxTime * chartWidth)
+                    val x = leftPadding + (point.timeMillis.toFloat() / maxTime * chartWidth)
 
                     if (!point.isOpponentGoal && visibleLines["teamScore"] == true) {
-                        val teamY = scoreChartHeight - (point.teamScore.toFloat() / maxScore * scoreChartHeight) + chartPadding / 2
+                        val teamY = scoreChartHeight - (point.teamScore.toFloat() / maxScore * scoreChartHeight) + verticalPadding / 2
                         drawCircle(
                             color = ChartTeamColor,
                             radius = 4.dp.toPx(),
@@ -287,7 +291,7 @@ fun PlayerActivityChart(
                     }
 
                     if (point.isOpponentGoal && visibleLines["opponentScore"] == true) {
-                        val opponentY = scoreChartHeight - (point.opponentScore.toFloat() / maxScore * scoreChartHeight) + chartPadding / 2
+                        val opponentY = scoreChartHeight - (point.opponentScore.toFloat() / maxScore * scoreChartHeight) + verticalPadding / 2
                         drawCircle(
                             color = ChartOpponentColor,
                             radius = 4.dp.toPx(),
@@ -299,15 +303,15 @@ fun PlayerActivityChart(
                 // Draw separator line between charts
                 drawLine(
                     color = ContentHigh.copy(alpha = 0.5f),
-                    start = Offset(chartPadding, size.height * 0.5f),
-                    end = Offset(size.width - chartPadding / 2, size.height * 0.5f),
+                    start = Offset(leftPadding, size.height * 0.5f),
+                    end = Offset(size.width - rightPadding, size.height * 0.5f),
                     strokeWidth = 2f
                 )
 
                 // Draw "Players" label
                 drawContext.canvas.nativeCanvas.drawText(
                     "Players",
-                    chartPadding / 2,
+                    10f,
                     playerChartTop + 15,
                     android.graphics.Paint().apply {
                         color = labelColor
@@ -325,10 +329,10 @@ fun PlayerActivityChart(
                     val color = playerColors[index % playerColors.size]
                     val rowY = playerChartTop + index * rowHeight + rowHeight / 2
 
-                    // Draw player name label
+                    // Draw player name label (jersey number)
                     drawContext.canvas.nativeCanvas.drawText(
                         "${player.number}",
-                        chartPadding - 5,
+                        leftPadding - 10,
                         rowY + textSize / 3,
                         android.graphics.Paint().apply {
                             this.color = labelColor
@@ -341,8 +345,8 @@ fun PlayerActivityChart(
                     playerActivity
                         .filter { it.player.id == player.id }
                         .forEach { interval ->
-                            val startX = chartPadding + (interval.startTimeMillis.toFloat() / maxTime * chartWidth)
-                            val endX = chartPadding + (interval.endTimeMillis.toFloat() / maxTime * chartWidth)
+                            val startX = leftPadding + (interval.startTimeMillis.toFloat() / maxTime * chartWidth)
+                            val endX = leftPadding + (interval.endTimeMillis.toFloat() / maxTime * chartWidth)
 
                             // Draw horizontal bar
                             drawLine(
@@ -369,7 +373,7 @@ fun PlayerActivityChart(
                 // Draw X-axis time labels
                 val timeLabels = listOf(0L, maxTime / 2, maxTime)
                 timeLabels.forEach { time ->
-                    val x = chartPadding + (time.toFloat() / maxTime * chartWidth)
+                    val x = leftPadding + (time.toFloat() / maxTime * chartWidth)
                     val minutes = (time / 60000).toInt()
                     drawContext.canvas.nativeCanvas.drawText(
                         "${minutes}'",
@@ -385,8 +389,8 @@ fun PlayerActivityChart(
                     // Draw vertical grid line across both charts
                     drawLine(
                         color = ContentHigh.copy(alpha = 0.1f),
-                        start = Offset(x, chartPadding / 2),
-                        end = Offset(x, size.height - chartPadding / 2),
+                        start = Offset(x, verticalPadding / 2),
+                        end = Offset(x, size.height - verticalPadding / 2),
                         strokeWidth = 1f
                     )
                 }
@@ -402,9 +406,10 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawScoreLine(
     scoreEvolution: List<ScorePoint>,
     maxTime: Long,
     maxScore: Int,
-    chartPadding: Float,
+    leftPadding: Float,
     chartWidth: Float,
     chartHeight: Float,
+    verticalPadding: Float,
     color: Color,
     isTeamScore: Boolean
 ) {
@@ -416,8 +421,8 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawScoreLine(
     for (i in 0 until scoreEvolution.size) {
         val point = scoreEvolution[i]
         val score = if (isTeamScore) point.teamScore else point.opponentScore
-        val x = chartPadding + (point.timeMillis.toFloat() / maxTime * chartWidth)
-        val y = chartHeight - (score.toFloat() / maxScore * chartHeight) + chartPadding / 2
+        val x = leftPadding + (point.timeMillis.toFloat() / maxTime * chartWidth)
+        val y = chartHeight - (score.toFloat() / maxScore * chartHeight) + verticalPadding / 2
 
         if (isFirst) {
             path.moveTo(x, y)
@@ -425,7 +430,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawScoreLine(
         } else {
             val prevPoint = scoreEvolution[i - 1]
             val prevScore = if (isTeamScore) prevPoint.teamScore else prevPoint.opponentScore
-            val prevY = chartHeight - (prevScore.toFloat() / maxScore * chartHeight) + chartPadding / 2
+            val prevY = chartHeight - (prevScore.toFloat() / maxScore * chartHeight) + verticalPadding / 2
 
             // Draw horizontal line first (keep same Y as previous point)
             path.lineTo(x, prevY)
