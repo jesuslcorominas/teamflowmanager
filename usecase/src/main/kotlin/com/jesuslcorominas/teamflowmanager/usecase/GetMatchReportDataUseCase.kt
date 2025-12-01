@@ -47,7 +47,7 @@ internal class GetMatchReportDataUseCaseImpl(
                     // Get player goals (only team goals, not opponent goals)
                     val playerGoals = goals
                         .filter { it.scorerId == player.id && !it.isOpponentGoal }
-                        .map { GoalReport(it.matchElapsedTimeMillis) }
+                        .map { GoalReport(it.matchElapsedTimeMillis, it.isOwnGoal) }
                         .sortedBy { it.matchElapsedTimeMillis }
                     
                     // Get player substitutions

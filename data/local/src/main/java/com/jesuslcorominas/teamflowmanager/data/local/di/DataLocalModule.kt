@@ -58,7 +58,7 @@ internal val databaseModule =
                     "teamflowmanager_database",
                 )
                 .addTypeConverter(converters)
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4,)
                 .build()
         }
 
