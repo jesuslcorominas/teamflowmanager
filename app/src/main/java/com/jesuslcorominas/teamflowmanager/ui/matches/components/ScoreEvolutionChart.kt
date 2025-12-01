@@ -1,8 +1,11 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,31 +21,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
 import com.jesuslcorominas.teamflowmanager.ui.theme.ChartOpponentColor
 import com.jesuslcorominas.teamflowmanager.ui.theme.ChartTeamColor
+import com.jesuslcorominas.teamflowmanager.ui.theme.ContentHigh
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import ir.ehsannarmani.compose_charts.LineChart
-import ir.ehsannarmani.compose_charts.models.AnimationMode
-import ir.ehsannarmani.compose_charts.models.DotProperties
-import ir.ehsannarmani.compose_charts.models.DrawStyle
-import ir.ehsannarmani.compose_charts.models.GridProperties
-import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
-import ir.ehsannarmani.compose_charts.models.IndicatorCount
-import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
-import ir.ehsannarmani.compose_charts.models.Line
-import ir.ehsannarmani.compose_charts.models.StrokeStyle
 import kotlin.math.max
 
 @Composable
 fun ScoreEvolutionChart(
     scoreEvolution: List<ScorePoint>,
+    teamName: String,
+    opponentName: String,
     modifier: Modifier = Modifier,
 ) {
     if (scoreEvolution.isEmpty()) return
@@ -67,10 +71,15 @@ fun ScoreEvolutionChart(
                 modifier = Modifier.padding(bottom = TFMSpacing.spacing03),
             )
 
-            // Legend
-            ChartLegend()
+            // Legend with actual team names
+            ChartLegend(
+                teamName = teamName,
+                opponentName = opponentName,
+            )
 
-            // Chart
+            Spacer(modifier = Modifier.height(TFMSpacing.spacing03))
+
+            // Custom Step Chart with time-proportional X-axis
             val maxScore = remember(scoreEvolution) {
                 max(
                     scoreEvolution.maxOfOrNull { it.teamScore } ?: 0,
@@ -78,52 +87,161 @@ fun ScoreEvolutionChart(
                 ).coerceAtLeast(1)
             }
 
-            val teamScoreValues = remember(scoreEvolution) {
-                scoreEvolution.map { it.teamScore.toDouble() }
+            val maxTime = remember(scoreEvolution) {
+                scoreEvolution.maxOfOrNull { it.timeMillis } ?: 1L
             }
 
-            val opponentScoreValues = remember(scoreEvolution) {
-                scoreEvolution.map { it.opponentScore.toDouble() }
-            }
+            val density = LocalDensity.current
+            val textSize = with(density) { 10.sp.toPx() }
 
-            LineChart(
+            Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-                    .padding(top = TFMSpacing.spacing03),
-                data = remember(teamScoreValues, opponentScoreValues) {
-                    listOf(
-                        createScoreLine("Team", teamScoreValues, ChartTeamColor),
-                        createScoreLine("Opponent", opponentScoreValues, ChartOpponentColor),
+            ) {
+                val chartPadding = 40.dp.toPx()
+                val chartWidth = size.width - chartPadding * 2
+                val chartHeight = size.height - chartPadding
+
+                // Draw Y-axis labels (integers only)
+                for (i in 0..maxScore) {
+                    val y = chartHeight - (i.toFloat() / maxScore * chartHeight) + chartPadding / 2
+                    drawContext.canvas.nativeCanvas.drawText(
+                        i.toString(),
+                        chartPadding / 2 - 10,
+                        y + textSize / 3,
+                        android.graphics.Paint().apply {
+                            color = ContentHigh.hashCode()
+                            this.textSize = textSize
+                            textAlign = android.graphics.Paint.Align.CENTER
+                        }
                     )
-                },
-                animationMode = AnimationMode.Together(delayBuilder = { it * 200L }),
-                gridProperties = GridProperties(
-                    enabled = true,
-                    xAxisProperties = GridProperties.AxisProperties(
-                        enabled = false,
-                    ),
-                    yAxisProperties = GridProperties.AxisProperties(
-                        enabled = true,
-                        lineCount = maxScore + 1,
-                    ),
-                ),
-                indicatorProperties = HorizontalIndicatorProperties(
-                    enabled = true,
-                    count = IndicatorCount.CountBased(maxScore + 1),
-                ),
-                labelHelperProperties = LabelHelperProperties(
-                    enabled = false,
-                ),
-                minValue = 0.0,
-                maxValue = maxScore.toDouble(),
-            )
+                    // Draw horizontal grid line
+                    drawLine(
+                        color = ContentHigh.copy(alpha = 0.3f),
+                        start = Offset(chartPadding, y),
+                        end = Offset(size.width - chartPadding / 2, y),
+                        strokeWidth = 1f
+                    )
+                }
+
+                // Draw team score line (step-wise)
+                drawStepLine(
+                    scoreEvolution = scoreEvolution,
+                    maxTime = maxTime,
+                    maxScore = maxScore,
+                    chartPadding = chartPadding,
+                    chartWidth = chartWidth,
+                    chartHeight = chartHeight,
+                    color = ChartTeamColor,
+                    isTeamScore = true
+                )
+
+                // Draw opponent score line (step-wise)
+                drawStepLine(
+                    scoreEvolution = scoreEvolution,
+                    maxTime = maxTime,
+                    maxScore = maxScore,
+                    chartPadding = chartPadding,
+                    chartWidth = chartWidth,
+                    chartHeight = chartHeight,
+                    color = ChartOpponentColor,
+                    isTeamScore = false
+                )
+
+                // Draw dots at score change points
+                scoreEvolution.forEach { point ->
+                    val x = chartPadding + (point.timeMillis.toFloat() / maxTime * chartWidth)
+                    val teamY = chartHeight - (point.teamScore.toFloat() / maxScore * chartHeight) + chartPadding / 2
+                    val opponentY = chartHeight - (point.opponentScore.toFloat() / maxScore * chartHeight) + chartPadding / 2
+
+                    // Team dot
+                    drawCircle(
+                        color = ChartTeamColor,
+                        radius = 5.dp.toPx(),
+                        center = Offset(x, teamY)
+                    )
+                    // Opponent dot
+                    drawCircle(
+                        color = ChartOpponentColor,
+                        radius = 5.dp.toPx(),
+                        center = Offset(x, opponentY)
+                    )
+                }
+
+                // Draw X-axis time labels
+                val timeLabels = listOf(0L, maxTime / 2, maxTime)
+                timeLabels.forEach { time ->
+                    val x = chartPadding + (time.toFloat() / maxTime * chartWidth)
+                    val minutes = (time / 60000).toInt()
+                    drawContext.canvas.nativeCanvas.drawText(
+                        "${minutes}'",
+                        x,
+                        size.height - 5,
+                        android.graphics.Paint().apply {
+                            color = ContentHigh.hashCode()
+                            this.textSize = textSize
+                            textAlign = android.graphics.Paint.Align.CENTER
+                        }
+                    )
+                }
+            }
         }
     }
 }
 
+/**
+ * Draws a step-wise line for score evolution.
+ * The line goes horizontal until the time of score change, then vertical to the new score.
+ */
+private fun DrawScope.drawStepLine(
+    scoreEvolution: List<ScorePoint>,
+    maxTime: Long,
+    maxScore: Int,
+    chartPadding: Float,
+    chartWidth: Float,
+    chartHeight: Float,
+    color: Color,
+    isTeamScore: Boolean
+) {
+    if (scoreEvolution.size < 2) return
+
+    val path = Path()
+    var isFirst = true
+
+    for (i in 0 until scoreEvolution.size) {
+        val point = scoreEvolution[i]
+        val score = if (isTeamScore) point.teamScore else point.opponentScore
+        val x = chartPadding + (point.timeMillis.toFloat() / maxTime * chartWidth)
+        val y = chartHeight - (score.toFloat() / maxScore * chartHeight) + chartPadding / 2
+
+        if (isFirst) {
+            path.moveTo(x, y)
+            isFirst = false
+        } else {
+            val prevPoint = scoreEvolution[i - 1]
+            val prevScore = if (isTeamScore) prevPoint.teamScore else prevPoint.opponentScore
+            val prevY = chartHeight - (prevScore.toFloat() / maxScore * chartHeight) + chartPadding / 2
+
+            // Draw horizontal line first (keep same Y as previous point)
+            path.lineTo(x, prevY)
+            // Then draw vertical line to new score
+            path.lineTo(x, y)
+        }
+    }
+
+    drawPath(
+        path = path,
+        color = color,
+        style = Stroke(width = 3.dp.toPx())
+    )
+}
+
 @Composable
-private fun ChartLegend() {
+private fun ChartLegend(
+    teamName: String,
+    opponentName: String,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -132,23 +250,23 @@ private fun ChartLegend() {
         // Team legend
         LegendItem(
             color = ChartTeamColor,
-            label = stringResource(R.string.score_my_team),
+            label = teamName,
         )
 
         // Spacer between legends
-        androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(horizontal = TFMSpacing.spacing04))
+        Spacer(modifier = Modifier.padding(horizontal = TFMSpacing.spacing04))
 
         // Opponent legend
         LegendItem(
             color = ChartOpponentColor,
-            label = stringResource(R.string.score_opponent),
+            label = opponentName,
         )
     }
 }
 
 @Composable
 private fun LegendItem(
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     label: String,
 ) {
     Row(
@@ -170,49 +288,23 @@ private fun LegendItem(
     }
 }
 
-/**
- * Creates a Line configuration for the score evolution chart.
- */
-private fun createScoreLine(
-    label: String,
-    values: List<Double>,
-    color: androidx.compose.ui.graphics.Color,
-): Line {
-    return Line(
-        label = label,
-        values = values,
-        color = androidx.compose.ui.graphics.SolidColor(color),
-        firstGradientFillColor = color.copy(alpha = 0.3f),
-        secondGradientFillColor = color.copy(alpha = 0.0f),
-        strokeAnimationSpec = androidx.compose.animation.core.tween(1000),
-        gradientAnimationDelay = 500,
-        drawStyle = DrawStyle.Stroke(
-            width = 3.dp,
-            strokeStyle = StrokeStyle.Normal,
-        ),
-        dotProperties = DotProperties(
-            enabled = true,
-            color = androidx.compose.ui.graphics.SolidColor(color),
-            radius = 4.dp,
-            strokeWidth = 2.dp,
-            strokeColor = androidx.compose.ui.graphics.SolidColor(color),
-        ),
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun ScoreEvolutionChartPreview() {
     val scoreEvolution = listOf(
         ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0),
         ScorePoint(timeMillis = 300000L, teamScore = 1, opponentScore = 0),
-        ScorePoint(timeMillis = 600000L, teamScore = 2, opponentScore = 0),
+        ScorePoint(timeMillis = 420000L, teamScore = 2, opponentScore = 0),
         ScorePoint(timeMillis = 900000L, teamScore = 2, opponentScore = 1),
         ScorePoint(timeMillis = 2700000L, teamScore = 3, opponentScore = 1),
         ScorePoint(timeMillis = 3000000L, teamScore = 3, opponentScore = 1),
     )
 
     TFMAppTheme {
-        ScoreEvolutionChart(scoreEvolution = scoreEvolution)
+        ScoreEvolutionChart(
+            scoreEvolution = scoreEvolution,
+            teamName = "Loyola D",
+            opponentName = "EFRO",
+        )
     }
 }

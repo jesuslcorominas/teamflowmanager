@@ -175,6 +175,7 @@
     <!-- Timeline Tab -->
     <string name="timeline_tab">Timeline</string>
     <string name="summary_tab">Summary</string>
+    <string name="statistics_tab">Statistics</string>
     <string name="timeline_starting_lineup">Starting Lineup</string>
     <string name="timeline_goal">Goal</string>
     <string name="timeline_own_goal">Own Goal</string>
@@ -184,8 +185,6 @@
     <string name="timeline_halftime">Half Time</string>
     <string name="timeline_quarter_break">Quarter Break</string>
     <string name="score_evolution_title">Score Evolution</string>
-    <string name="score_my_team">My Team</string>
-    <string name="score_opponent">Opponent</string>
 
     <!-- Match Creation Wizard -->
     <string name="wizard_step_general_data">General Data</string>

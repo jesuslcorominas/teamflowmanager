@@ -89,6 +89,7 @@ import androidx.core.net.toUri
 private const val SUBSTITUTIONS_HEADER = "substitutions_header"
 private const val TAB_SUMMARY = 0
 private const val TAB_TIMELINE = 1
+private const val TAB_STATISTICS = 2
 
 @Composable
 fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (String?) -> Unit) {
@@ -563,7 +564,7 @@ private fun FinishedMatchState(
             MatchTimeCard(state.match, state.currentTime)
         }
 
-        // Tab Row
+        // Tab Row with 3 tabs
         SecondaryTabRow(
             modifier = Modifier.fillMaxWidth(),
             selectedTabIndex = selectedTab,
@@ -588,6 +589,16 @@ private fun FinishedMatchState(
                     )
                 }
             )
+            Tab(
+                selected = selectedTab == TAB_STATISTICS,
+                onClick = { selectedTab = TAB_STATISTICS },
+                text = {
+                    Text(
+                        text = stringResource(R.string.statistics_tab),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            )
         }
 
         // Tab Content
@@ -601,7 +612,11 @@ private fun FinishedMatchState(
                 )
                 TAB_TIMELINE -> TimelineTabContent(
                     timelineEvents = state.timelineEvents,
+                )
+                TAB_STATISTICS -> StatisticsTabContent(
                     scoreEvolution = state.scoreEvolution,
+                    teamName = state.match.teamName,
+                    opponentName = state.match.opponent,
                 )
             }
         }
@@ -691,25 +706,33 @@ private fun SummaryTabContent(
 @Composable
 private fun TimelineTabContent(
     timelineEvents: List<TimelineEvent>,
-    scoreEvolution: List<ScorePoint>,
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    // Timeline Events only (no chart)
+    TimelineContent(
+        events = timelineEvents,
+        modifier = Modifier.fillMaxSize(),
+    )
+}
+
+@Composable
+private fun StatisticsTabContent(
+    scoreEvolution: List<ScorePoint>,
+    teamName: String,
+    opponentName: String,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(TFMSpacing.spacing04),
+    ) {
         // Score Evolution Chart
         if (scoreEvolution.size > 1) {
             ScoreEvolutionChart(
                 scoreEvolution = scoreEvolution,
-                modifier = Modifier.padding(
-                    horizontal = TFMSpacing.spacing04,
-                    vertical = TFMSpacing.spacing03
-                ),
+                teamName = teamName,
+                opponentName = opponentName,
             )
         }
-
-        // Timeline Events
-        TimelineContent(
-            events = timelineEvents,
-            modifier = Modifier.weight(1f),
-        )
     }
 }
 
