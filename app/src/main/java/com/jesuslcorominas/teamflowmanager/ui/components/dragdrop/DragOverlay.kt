@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.components.dragdrop
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ListSummaryText
 import com.jesuslcorominas.teamflowmanager.ui.players.components.JerseyBadge
+import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.toLocalizedString
 
@@ -82,6 +84,11 @@ private fun PlayerDragGhost(
                 shape = RoundedCornerShape(12.dp)
             )
             .clip(RoundedCornerShape(12.dp))
+            .border(
+                width = 2.dp,
+                color = Primary,
+                shape = RoundedCornerShape(12.dp)
+            )
             .background(MaterialTheme.colorScheme.surface)
             .padding(TFMSpacing.spacing03),
         horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),

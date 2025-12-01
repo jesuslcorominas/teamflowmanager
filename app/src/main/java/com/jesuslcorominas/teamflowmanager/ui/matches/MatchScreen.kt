@@ -350,7 +350,7 @@ private fun MatchDetailContent(
                                             playerTimeItem.player.id
                                         )
                                     }
-                                    dragDropState.endDrag()
+                                    dragDropState.reset()
                                 }
                             ) {
                                 PlayerItem(
@@ -376,8 +376,11 @@ private fun MatchDetailContent(
                                 isPlaying = false,
                                 dragDropState = dragDropState,
                                 onDragEnd = {
+                                    // Signal drag ended - drop target will handle if valid, otherwise reset
+                                    dragDropState.endDrag()
+                                    // If no valid drop target, reset immediately
                                     if (!dragDropState.isValidDropTarget) {
-                                        dragDropState.endDrag()
+                                        dragDropState.reset()
                                     }
                                 }
                             ) {

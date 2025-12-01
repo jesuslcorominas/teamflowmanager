@@ -122,7 +122,7 @@ fun DraggablePlayerItem(
                             },
                             onDragCancel = {
                                 isDraggingThis = false
-                                dragDropState.endDrag()
+                                dragDropState.reset()
                             }
                         )
                     }

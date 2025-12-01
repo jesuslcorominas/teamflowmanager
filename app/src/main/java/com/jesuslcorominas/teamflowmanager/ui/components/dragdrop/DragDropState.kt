@@ -31,11 +31,16 @@ class DragDropState {
     var isValidDropTarget by mutableStateOf(false)
         private set
 
+    // Flag to indicate drag just ended (for drop detection)
+    var dragJustEnded by mutableStateOf(false)
+        private set
+
     fun startDrag(player: Player, initialPosition: Offset) {
         draggedPlayer = player
         dragPosition = initialPosition
         dragOffset = Offset.Zero
         isDragging = true
+        dragJustEnded = false
     }
 
     fun updateDragPosition(newPosition: Offset) {
@@ -47,13 +52,26 @@ class DragDropState {
         isValidDropTarget = isValid
     }
 
+    /**
+     * Signal that dragging has ended but keep player info for drop handling.
+     * Call [reset] after handling the drop.
+     */
     fun endDrag() {
+        isDragging = false
+        dragJustEnded = true
+    }
+
+    /**
+     * Fully reset the state after drop has been handled.
+     */
+    fun reset() {
         isDragging = false
         draggedPlayer = null
         dragPosition = Offset.Zero
         dragOffset = Offset.Zero
         currentDropTargetId = null
         isValidDropTarget = false
+        dragJustEnded = false
     }
 }
 

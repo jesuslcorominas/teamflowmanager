@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
-import com.jesuslcorominas.teamflowmanager.ui.theme.AccentAffirmative
+import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
 
 /**
  * Wrapper composable that makes a player item a valid drop target.
@@ -66,8 +66,8 @@ fun DropTargetPlayerItem(
     }
 
     // Handle drop when drag ends while hovering
-    LaunchedEffect(dragDropState.isDragging) {
-        if (!dragDropState.isDragging && isHovered) {
+    LaunchedEffect(dragDropState.dragJustEnded) {
+        if (dragDropState.dragJustEnded && isHovered && dragDropState.currentDropTargetId == playerId) {
             onDrop()
             isHovered = false
         }
@@ -113,7 +113,7 @@ fun DropTargetPlayerItem(
                 if (showDropIndication) {
                     Modifier.border(
                         width = 3.dp,
-                        color = AccentAffirmative.copy(alpha = borderAlpha),
+                        color = Primary.copy(alpha = borderAlpha),
                         shape = RoundedCornerShape(12.dp)
                     )
                 } else {
