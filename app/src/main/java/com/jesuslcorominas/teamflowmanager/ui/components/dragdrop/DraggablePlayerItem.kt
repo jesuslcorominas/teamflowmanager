@@ -3,7 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.components.dragdrop
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,8 +22,10 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
  * Wrapper composable that makes a player item draggable via long-press gesture.
  * Only inactive players (not currently playing) can be dragged.
  * 
- * The long-press initiates the drag. Drag position updates and release detection
- * are handled by the parent DragDropContainer's global pointer listener.
+ * Uses detectDragGesturesAfterLongPress to handle the complete drag lifecycle:
+ * - Long press initiates the drag
+ * - Drag movements update position
+ * - Release ends the drag
  *
  * @param player The player data
  * @param isPlaying Whether the player is currently active/playing
@@ -91,15 +93,28 @@ fun DraggablePlayerItem(
             .then(
                 if (canDrag) {
                     Modifier.pointerInput(player.id) {
-                        detectTapGestures(
-                            onLongPress = { offset ->
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = { offset ->
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                // Start drag - container's pointer listener will handle move and release
                                 dragDropState.startDrag(
                                     player = player,
                                     initialPosition = itemPosition + offset
                                 )
                                 onDragStart()
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                val newPosition = dragDropState.dragPosition + Offset(
+                                    dragAmount.x,
+                                    dragAmount.y
+                                )
+                                dragDropState.updateDragPosition(newPosition)
+                            },
+                            onDragEnd = {
+                                dragDropState.endDrag()
+                            },
+                            onDragCancel = {
+                                dragDropState.reset()
                             }
                         )
                     }
