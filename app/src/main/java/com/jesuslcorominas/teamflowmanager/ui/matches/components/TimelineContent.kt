@@ -113,12 +113,14 @@ private fun GoalScoredCard(event: TimelineEvent.GoalScored) {
         title = title,
     ) {
         Column {
-            if (!event.isOpponentGoal && event.scorer != null) {
-                Text(
-                    text = "${event.scorer.firstName} ${event.scorer.lastName}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                )
+            if (!event.isOpponentGoal) {
+                event.scorer?.let {
+                    Text(
+                        text = "${it.firstName} ${it.lastName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,

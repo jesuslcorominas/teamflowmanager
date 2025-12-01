@@ -92,7 +92,8 @@ val viewModelModule =
                 timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
-                savedStateHandle = get()
+                savedStateHandle = get(),
+                getMatchTimelineUseCase = get()
             )
         }
         viewModel {
