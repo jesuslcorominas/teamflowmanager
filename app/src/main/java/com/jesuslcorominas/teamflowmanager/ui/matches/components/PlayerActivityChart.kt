@@ -210,6 +210,8 @@ fun PlayerActivityChart(
             // Calculate chart height based on number of players
             val chartHeight = BASE_CHART_HEIGHT + (PLAYER_ROW_HEIGHT * uniquePlayers.size)
 
+            val playersLabel = stringResource(R.string.players_section)
+
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -310,9 +312,9 @@ fun PlayerActivityChart(
 
                 // Draw "Players" label
                 drawContext.canvas.nativeCanvas.drawText(
-                    "Players",
+                    playersLabel,
                     10f,
-                    playerChartTop + 15,
+                    playerChartTop,
                     android.graphics.Paint().apply {
                         color = labelColor
                         this.textSize = textSize
@@ -332,7 +334,7 @@ fun PlayerActivityChart(
                     // Draw player name label (jersey number)
                     drawContext.canvas.nativeCanvas.drawText(
                         "${player.number}",
-                        leftPadding - 10,
+                        leftPadding - 30.dp.toPx(),
                         rowY + textSize / 3,
                         android.graphics.Paint().apply {
                             this.color = labelColor
