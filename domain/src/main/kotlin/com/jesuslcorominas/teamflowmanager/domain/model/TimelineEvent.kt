@@ -58,6 +58,7 @@ data class ScorePoint(
     val timeMillis: Long,
     val teamScore: Int,
     val opponentScore: Int,
+    val isOpponentGoal: Boolean
 )
 
 /**

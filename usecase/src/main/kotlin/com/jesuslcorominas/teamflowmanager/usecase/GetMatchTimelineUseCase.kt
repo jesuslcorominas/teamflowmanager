@@ -145,7 +145,8 @@ internal class GetMatchTimelineUseCaseImpl(
         val points = mutableListOf<ScorePoint>()
 
         // Start at 0-0
-        points.add(ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0))
+        points.add(ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0, isOpponentGoal = false))
+        points.add(ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0, isOpponentGoal = true))
 
         // Add a point for each goal
         var teamScore = 0
@@ -161,11 +162,12 @@ internal class GetMatchTimelineUseCaseImpl(
                     timeMillis = goal.matchElapsedTimeMillis,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
+                    isOpponentGoal = goal.isOpponentGoal
                 )
             )
         }
 
-        // Add final point at match end (total actual play time, excluding breaks)
+        // Add final points at match end (total actual play time, excluding breaks)
         // This matches how matchElapsedTimeMillis is calculated for events during the match
         val totalElapsedTime = calculateTotalElapsedTime(match)
 
@@ -175,6 +177,16 @@ internal class GetMatchTimelineUseCaseImpl(
                     timeMillis = totalElapsedTime,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
+                    isOpponentGoal = false
+                )
+            )
+
+            points.add(
+                ScorePoint(
+                    timeMillis = totalElapsedTime,
+                    teamScore = teamScore,
+                    opponentScore = opponentScore,
+                    isOpponentGoal = true
                 )
             )
         }

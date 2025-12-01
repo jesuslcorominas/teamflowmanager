@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -27,7 +26,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -82,9 +81,9 @@ import org.koin.androidx.compose.koinViewModel
 import androidx.core.net.toUri
 
 private const val TAB_SUMMARY = 0
-private const val TAB_SUBSTITUTIONS = 1
-private const val TAB_TIMELINE = 2
-private const val TAB_STATISTICS = 3
+//private const val TAB_SUBSTITUTIONS = 1
+private const val TAB_TIMELINE = 1
+private const val TAB_STATISTICS = 2
 
 @Composable
 fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (String?) -> Unit) {
@@ -562,7 +561,7 @@ private fun FinishedMatchState(
         }
 
         // Scrollable Tab Row with 4 tabs
-        ScrollableTabRow(
+        SecondaryScrollableTabRow (
             modifier = Modifier.fillMaxWidth(),
             selectedTabIndex = selectedTab,
             edgePadding = TFMSpacing.spacing04,
@@ -577,16 +576,17 @@ private fun FinishedMatchState(
                     )
                 }
             )
-            Tab(
-                selected = selectedTab == TAB_SUBSTITUTIONS,
-                onClick = { selectedTab = TAB_SUBSTITUTIONS },
-                text = {
-                    Text(
-                        text = stringResource(R.string.substitutions_tab),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            )
+            // Removed substitutions tab for finished matches
+//            Tab(
+//                selected = selectedTab == TAB_SUBSTITUTIONS,
+//                onClick = { selectedTab = TAB_SUBSTITUTIONS },
+//                text = {
+//                    Text(
+//                        text = stringResource(R.string.substitutions_tab),
+//                        style = MaterialTheme.typography.titleMedium
+//                    )
+//                }
+//            )
             Tab(
                 selected = selectedTab == TAB_TIMELINE,
                 onClick = { selectedTab = TAB_TIMELINE },
@@ -617,9 +617,9 @@ private fun FinishedMatchState(
                     currentSortOrder = currentSortOrder,
                     onSortOrderChange = onSortOrderChange,
                 )
-                TAB_SUBSTITUTIONS -> SubstitutionsTabContent(
-                    substitutions = state.substitutions,
-                )
+//                TAB_SUBSTITUTIONS -> SubstitutionsTabContent(
+//                    substitutions = state.substitutions,
+//                )
                 TAB_TIMELINE -> TimelineTabContent(
                     timelineEvents = state.timelineEvents,
                 )

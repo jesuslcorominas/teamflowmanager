@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -298,12 +297,12 @@ private fun LegendItem(
 @Composable
 private fun ScoreEvolutionChartPreview() {
     val scoreEvolution = listOf(
-        ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0),
-        ScorePoint(timeMillis = 300000L, teamScore = 1, opponentScore = 0),
-        ScorePoint(timeMillis = 420000L, teamScore = 2, opponentScore = 0),
-        ScorePoint(timeMillis = 900000L, teamScore = 2, opponentScore = 1),
-        ScorePoint(timeMillis = 2700000L, teamScore = 3, opponentScore = 1),
-        ScorePoint(timeMillis = 3000000L, teamScore = 3, opponentScore = 1),
+        ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0, isOpponentGoal = false),
+        ScorePoint(timeMillis = 300000L, teamScore = 1, opponentScore = 0, isOpponentGoal = false),
+        ScorePoint(timeMillis = 420000L, teamScore = 2, opponentScore = 0, isOpponentGoal = false),
+        ScorePoint(timeMillis = 900000L, teamScore = 2, opponentScore = 1, isOpponentGoal = true),
+        ScorePoint(timeMillis = 2700000L, teamScore = 3, opponentScore = 1, isOpponentGoal = false),
+        ScorePoint(timeMillis = 3000000L, teamScore = 3, opponentScore = 1, isOpponentGoal = false),
     )
 
     TFMAppTheme {

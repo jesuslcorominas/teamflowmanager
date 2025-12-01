@@ -276,8 +276,8 @@ fun PlayerActivityChart(
                 // Draw dots at score change points
                 scoreEvolution.forEach { point ->
                     val x = chartPadding + (point.timeMillis.toFloat() / maxTime * chartWidth)
-                    
-                    if (visibleLines["teamScore"] == true) {
+
+                    if (!point.isOpponentGoal && visibleLines["teamScore"] == true) {
                         val teamY = scoreChartHeight - (point.teamScore.toFloat() / maxScore * scoreChartHeight) + chartPadding / 2
                         drawCircle(
                             color = ChartTeamColor,
@@ -285,8 +285,8 @@ fun PlayerActivityChart(
                             center = Offset(x, teamY)
                         )
                     }
-                    
-                    if (visibleLines["opponentScore"] == true) {
+
+                    if (point.isOpponentGoal && visibleLines["opponentScore"] == true) {
                         val opponentY = scoreChartHeight - (point.opponentScore.toFloat() / maxScore * scoreChartHeight) + chartPadding / 2
                         drawCircle(
                             color = ChartOpponentColor,
@@ -505,12 +505,12 @@ private fun PlayerActivityChartPreview() {
     )
 
     val scoreEvolution = listOf(
-        ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0),
-        ScorePoint(timeMillis = 300000L, teamScore = 1, opponentScore = 0),
-        ScorePoint(timeMillis = 420000L, teamScore = 2, opponentScore = 0),
-        ScorePoint(timeMillis = 900000L, teamScore = 2, opponentScore = 1),
-        ScorePoint(timeMillis = 2700000L, teamScore = 3, opponentScore = 1),
-        ScorePoint(timeMillis = 3000000L, teamScore = 3, opponentScore = 1),
+        ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0, isOpponentGoal = false),
+        ScorePoint(timeMillis = 300000L, teamScore = 1, opponentScore = 0, isOpponentGoal = false),
+        ScorePoint(timeMillis = 420000L, teamScore = 2, opponentScore = 0, isOpponentGoal = false),
+        ScorePoint(timeMillis = 900000L, teamScore = 2, opponentScore = 1, isOpponentGoal = true),
+        ScorePoint(timeMillis = 2700000L, teamScore = 3, opponentScore = 1, isOpponentGoal = false),
+        ScorePoint(timeMillis = 3000000L, teamScore = 3, opponentScore = 1, isOpponentGoal = false),
     )
 
     val playerActivity = listOf(
