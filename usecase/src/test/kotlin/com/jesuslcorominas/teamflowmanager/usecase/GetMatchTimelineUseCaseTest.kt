@@ -208,7 +208,7 @@ class GetMatchTimelineUseCaseTest {
     }
 
     @Test
-    fun `invoke should return timeline events sorted by time descending`() = runTest {
+    fun `invoke should return timeline events sorted by time ascending`() = runTest {
         // Given
         val matchId = 1L
         val player1 = createPlayer(1L, "John", "Doe", 10)
@@ -241,10 +241,10 @@ class GetMatchTimelineUseCaseTest {
 
         // Then
         assertEquals(3, result?.events?.size)
-        // Events should be sorted by time descending
-        assertTrue(result?.events?.get(0) is TimelineEvent.Substitution) // 900000L
+        // Events should be sorted by time ascending (first events at top)
+        assertTrue(result?.events?.get(0) is TimelineEvent.StartingLineup) // 0L
         assertTrue(result?.events?.get(1) is TimelineEvent.GoalScored) // 600000L
-        assertTrue(result?.events?.get(2) is TimelineEvent.StartingLineup) // 0L
+        assertTrue(result?.events?.get(2) is TimelineEvent.Substitution) // 900000L
     }
 
     @Test

@@ -88,14 +88,17 @@ private fun StartingLineupCard(event: TimelineEvent.StartingLineup) {
         iconBackgroundColor = Primary,
         title = stringResource(R.string.timeline_starting_lineup),
     ) {
-        val playerNames = event.players.joinToString(", ") { "${it.firstName} ${it.lastName}" }
-        Text(
-            text = playerNames,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
+        ) {
+            event.players.forEach { player ->
+                Text(
+                    text = "${player.number}. ${player.firstName} ${player.lastName}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
@@ -306,30 +309,18 @@ private fun TimelineContentPreview() {
         teamId = 1L,
         isCaptain = false,
     )
+    // Events in ascending order (first events at top)
     val events = listOf(
+        TimelineEvent.StartingLineup(
+            matchElapsedTimeMillis = 0L,
+            players = listOf(player1, player2),
+        ),
         TimelineEvent.GoalScored(
-            matchElapsedTimeMillis = 2700000L,
-            scorer = player1,
+            matchElapsedTimeMillis = 300000L,
+            scorer = player2,
             isOpponentGoal = false,
-            teamScore = 3,
-            opponentScore = 1,
-        ),
-        TimelineEvent.Substitution(
-            matchElapsedTimeMillis = 1800000L,
-            playerIn = player2,
-            playerOut = player1,
-        ),
-        TimelineEvent.PeriodBreak(
-            matchElapsedTimeMillis = 1500000L,
-            periodNumber = 1,
-            periodType = PeriodType.HALF_TIME,
-        ),
-        TimelineEvent.GoalScored(
-            matchElapsedTimeMillis = 900000L,
-            scorer = null,
-            isOpponentGoal = true,
-            teamScore = 2,
-            opponentScore = 1,
+            teamScore = 1,
+            opponentScore = 0,
         ),
         TimelineEvent.GoalScored(
             matchElapsedTimeMillis = 600000L,
@@ -339,15 +330,28 @@ private fun TimelineContentPreview() {
             opponentScore = 0,
         ),
         TimelineEvent.GoalScored(
-            matchElapsedTimeMillis = 300000L,
-            scorer = player2,
-            isOpponentGoal = false,
-            teamScore = 1,
-            opponentScore = 0,
+            matchElapsedTimeMillis = 900000L,
+            scorer = null,
+            isOpponentGoal = true,
+            teamScore = 2,
+            opponentScore = 1,
         ),
-        TimelineEvent.StartingLineup(
-            matchElapsedTimeMillis = 0L,
-            players = listOf(player1, player2),
+        TimelineEvent.PeriodBreak(
+            matchElapsedTimeMillis = 1500000L,
+            periodNumber = 1,
+            periodType = PeriodType.HALF_TIME,
+        ),
+        TimelineEvent.Substitution(
+            matchElapsedTimeMillis = 1800000L,
+            playerIn = player2,
+            playerOut = player1,
+        ),
+        TimelineEvent.GoalScored(
+            matchElapsedTimeMillis = 2700000L,
+            scorer = player1,
+            isOpponentGoal = false,
+            teamScore = 3,
+            opponentScore = 1,
         ),
     )
 

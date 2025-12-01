@@ -175,6 +175,7 @@
     <!-- Timeline Tab -->
     <string name="timeline_tab">Timeline</string>
     <string name="summary_tab">Resumen</string>
+    <string name="substitutions_tab">Cambios</string>
     <string name="statistics_tab">Estadísticas</string>
     <string name="timeline_starting_lineup">Alineación Inicial</string>
     <string name="timeline_goal">Gol</string>

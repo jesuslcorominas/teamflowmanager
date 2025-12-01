@@ -88,8 +88,9 @@ import androidx.core.net.toUri
 
 private const val SUBSTITUTIONS_HEADER = "substitutions_header"
 private const val TAB_SUMMARY = 0
-private const val TAB_TIMELINE = 1
-private const val TAB_STATISTICS = 2
+private const val TAB_SUBSTITUTIONS = 1
+private const val TAB_TIMELINE = 2
+private const val TAB_STATISTICS = 3
 
 @Composable
 fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (String?) -> Unit) {
@@ -564,7 +565,7 @@ private fun FinishedMatchState(
             MatchTimeCard(state.match, state.currentTime)
         }
 
-        // Tab Row with 3 tabs
+        // Tab Row with 4 tabs
         SecondaryTabRow(
             modifier = Modifier.fillMaxWidth(),
             selectedTabIndex = selectedTab,
@@ -575,6 +576,16 @@ private fun FinishedMatchState(
                 text = {
                     Text(
                         text = stringResource(R.string.summary_tab),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            )
+            Tab(
+                selected = selectedTab == TAB_SUBSTITUTIONS,
+                onClick = { selectedTab = TAB_SUBSTITUTIONS },
+                text = {
+                    Text(
+                        text = stringResource(R.string.substitutions_tab),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -610,6 +621,9 @@ private fun FinishedMatchState(
                     onSortOrderChange = onSortOrderChange,
                     onExport = onExport,
                 )
+                TAB_SUBSTITUTIONS -> SubstitutionsTabContent(
+                    substitutions = state.substitutions,
+                )
                 TAB_TIMELINE -> TimelineTabContent(
                     timelineEvents = state.timelineEvents,
                 )
@@ -630,9 +644,7 @@ private fun SummaryTabContent(
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onExport: () -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -673,20 +685,6 @@ private fun SummaryTabContent(
                     isSelected = false,
                 )
             }
-
-            if (state.substitutions.isNotEmpty()) {
-                substitutionsSection(
-                    substitutions = state.substitutions,
-                    expanded = expanded,
-                    onExpandToggle = {
-                        expanded = !expanded
-
-                        if (expanded) {
-                            scrollToItem(SUBSTITUTIONS_HEADER, listState, coroutineScope)
-                        }
-                    }
-                )
-            }
         }
 
         FloatingActionButton(
@@ -699,6 +697,29 @@ private fun SummaryTabContent(
                 imageVector = Icons.Default.Share,
                 contentDescription = stringResource(R.string.export_match_report_description)
             )
+        }
+    }
+}
+
+@Composable
+private fun SubstitutionsTabContent(
+    substitutions: List<SubstitutionItem>,
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = TFMSpacing.spacing04),
+        contentPadding = PaddingValues(
+            top = TFMSpacing.spacing03,
+            bottom = TFMSpacing.spacing04
+        ),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+    ) {
+        items(
+            items = substitutions,
+            key = { "${it.playerIn.id}_${it.playerOut.id}_${it.matchElapsedTimeMillis}" }
+        ) { substitution ->
+            SubstitutionCard(substitution = substitution)
         }
     }
 }

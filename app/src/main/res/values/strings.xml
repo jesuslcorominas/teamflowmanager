@@ -175,6 +175,7 @@
     <!-- Timeline Tab -->
     <string name="timeline_tab">Timeline</string>
     <string name="summary_tab">Summary</string>
+    <string name="substitutions_tab">Substitutions</string>
     <string name="statistics_tab">Statistics</string>
     <string name="timeline_starting_lineup">Starting Lineup</string>
     <string name="timeline_goal">Goal</string>

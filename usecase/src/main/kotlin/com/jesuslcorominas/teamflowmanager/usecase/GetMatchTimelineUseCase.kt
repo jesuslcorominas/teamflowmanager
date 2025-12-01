@@ -130,8 +130,8 @@ internal class GetMatchTimelineUseCaseImpl(
             }
         }
 
-        // Sort by time in descending order (most recent first for timeline display)
-        return events.sortedByDescending { it.matchElapsedTimeMillis }
+        // Sort by time in ascending order (first events at top, last events at bottom)
+        return events.sortedBy { it.matchElapsedTimeMillis }
     }
 
     private fun buildScoreEvolution(
