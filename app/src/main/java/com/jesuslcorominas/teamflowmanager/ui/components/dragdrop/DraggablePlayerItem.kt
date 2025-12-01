@@ -26,6 +26,10 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
  * - Long press initiates the drag
  * - Drag movements update position
  * - Release ends the drag
+ * 
+ * NOTE: When this item scrolls off-screen (disposed by LazyColumn), the gesture
+ * handler is cancelled but the drag continues to work because DragDropContainer
+ * has a backup pointer tracker that continues tracking the drag at the container level.
  *
  * @param player The player data
  * @param isPlaying Whether the player is currently active/playing
@@ -114,7 +118,10 @@ fun DraggablePlayerItem(
                                 dragDropState.endDrag()
                             },
                             onDragCancel = {
-                                dragDropState.reset()
+                                // Don't reset on cancel - this can happen when the item scrolls 
+                                // off-screen and is disposed. The container's pointer tracker
+                                // will continue handling the drag and call endDrag() when the
+                                // pointer is released.
                             }
                         )
                     }

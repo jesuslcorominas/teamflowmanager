@@ -12,6 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import kotlinx.coroutines.delay
@@ -24,6 +27,9 @@ private const val DROP_RESET_DELAY = 150L
 /**
  * Container that provides drag-drop functionality with auto-scroll support.
  * Wraps the content in a CompositionLocalProvider to share drag-drop state.
+ * 
+ * This container also handles drag continuation when the original draggable item
+ * scrolls off-screen, by tracking pointer events at the container level.
  *
  * @param dragDropState The shared drag-drop state
  * @param listState The LazyListState for auto-scroll functionality
@@ -39,6 +45,9 @@ fun DragDropContainer(
     var containerPosition by remember { mutableStateOf(Offset.Zero) }
     var containerTop by remember { mutableStateOf(0f) }
     var containerBottom by remember { mutableStateOf(0f) }
+    
+    // Track last known pointer position to calculate delta when taking over drag
+    var lastPointerPosition by remember { mutableStateOf(Offset.Zero) }
 
     // Auto-scroll when dragging near edges
     LaunchedEffect(dragDropState.isDragging) {
@@ -87,6 +96,43 @@ fun DragDropContainer(
                     containerPosition = position
                     containerTop = position.y
                     containerBottom = position.y + coordinates.size.height
+                }
+                // This pointer input handles drag continuation when the original 
+                // DraggablePlayerItem scrolls off-screen and is disposed.
+                // It uses Initial pass to see events before children, but only
+                // consumes them when dragging is active (after child initiated drag).
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            // Use Initial pass to see events before children
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            
+                            // Always track pointer position
+                            event.changes.firstOrNull()?.let { change ->
+                                val currentPosition = change.position
+                                
+                                if (dragDropState.isDragging) {
+                                    when (event.type) {
+                                        PointerEventType.Move -> {
+                                            // Calculate delta from last position
+                                            val delta = currentPosition - lastPointerPosition
+                                            if (delta != Offset.Zero) {
+                                                val newPosition = dragDropState.dragPosition + delta
+                                                dragDropState.updateDragPosition(newPosition)
+                                            }
+                                        }
+                                        PointerEventType.Release -> {
+                                            // Pointer released - end drag
+                                            dragDropState.endDrag()
+                                        }
+                                    }
+                                }
+                                
+                                // Always update last position for next frame
+                                lastPointerPosition = currentPosition
+                            }
+                        }
+                    }
                 }
         ) {
             content()
