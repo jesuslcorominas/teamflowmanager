@@ -102,6 +102,12 @@ fun ScoreEvolutionChart(
                 val chartPadding = 40.dp.toPx()
                 val chartWidth = size.width - chartPadding * 2
                 val chartHeight = size.height - chartPadding
+                val labelColor = android.graphics.Color.argb(
+                    (ContentHigh.alpha * 255).toInt(),
+                    (ContentHigh.red * 255).toInt(),
+                    (ContentHigh.green * 255).toInt(),
+                    (ContentHigh.blue * 255).toInt()
+                )
 
                 // Draw Y-axis labels (integers only)
                 for (i in 0..maxScore) {
@@ -111,7 +117,7 @@ fun ScoreEvolutionChart(
                         chartPadding / 2 - 10,
                         y + textSize / 3,
                         android.graphics.Paint().apply {
-                            color = ContentHigh.hashCode()
+                            color = labelColor
                             this.textSize = textSize
                             textAlign = android.graphics.Paint.Align.CENTER
                         }
@@ -179,7 +185,7 @@ fun ScoreEvolutionChart(
                         x,
                         size.height - 5,
                         android.graphics.Paint().apply {
-                            color = ContentHigh.hashCode()
+                            color = labelColor
                             this.textSize = textSize
                             textAlign = android.graphics.Paint.Align.CENTER
                         }
