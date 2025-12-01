@@ -376,12 +376,8 @@ private fun MatchDetailContent(
                                 isPlaying = false,
                                 dragDropState = dragDropState,
                                 onDragEnd = {
-                                    // Signal drag ended - drop target will handle if valid, otherwise reset
+                                    // Signal drag ended - drop target will handle reset after processing
                                     dragDropState.endDrag()
-                                    // If no valid drop target, reset immediately
-                                    if (!dragDropState.isValidDropTarget) {
-                                        dragDropState.reset()
-                                    }
                                 }
                             ) {
                                 PlayerItem(

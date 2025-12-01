@@ -85,7 +85,7 @@ private fun PlayerDragGhost(
             )
             .clip(RoundedCornerShape(12.dp))
             .border(
-                width = 2.dp,
+                width = 1.dp,
                 color = Primary,
                 shape = RoundedCornerShape(12.dp)
             )

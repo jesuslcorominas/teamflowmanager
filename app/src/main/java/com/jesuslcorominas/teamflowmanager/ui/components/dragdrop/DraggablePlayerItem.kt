@@ -7,11 +7,8 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -48,8 +45,8 @@ fun DraggablePlayerItem(
     val hapticFeedback = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
 
-    var itemPosition by remember { mutableStateOf(Offset.Zero) }
-    var isDraggingThis by remember { mutableStateOf(false) }
+    // Track item position for initial drag position calculation
+    var itemPosition = remember { Offset.Zero }
 
     // Animation for invalid drop (bounce back)
     val bounceOffsetX = remember { Animatable(0f) }
@@ -58,6 +55,9 @@ fun DraggablePlayerItem(
 
     // Only inactive players can be dragged
     val canDrag = !isPlaying
+
+    // Check if THIS player is being dragged (using state from DragDropState, not local state)
+    val isThisBeingDragged = dragDropState.isDragging && dragDropState.draggedPlayerId == player.id
 
     Box(
         modifier = Modifier
@@ -73,16 +73,15 @@ fun DraggablePlayerItem(
             .graphicsLayer {
                 scaleX = bounceScale.value
                 scaleY = bounceScale.value
-                // Hide the original item when dragging
-                alpha = if (isDraggingThis && dragDropState.isDragging) 0f else 1f
+                // Hide the original item when dragging - use state from DragDropState
+                alpha = if (isThisBeingDragged) 0f else 1f
             }
             .then(
                 if (canDrag) {
-                    Modifier.pointerInput(player) {
+                    Modifier.pointerInput(player.id) {
                         detectDragGesturesAfterLongPress(
                             onDragStart = { offset ->
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                isDraggingThis = true
                                 dragDropState.startDrag(
                                     player = player,
                                     initialPosition = itemPosition + offset
@@ -117,11 +116,9 @@ fun DraggablePlayerItem(
                                         )
                                     }
                                 }
-                                isDraggingThis = false
                                 onDragEnd()
                             },
                             onDragCancel = {
-                                isDraggingThis = false
                                 dragDropState.reset()
                             }
                         )

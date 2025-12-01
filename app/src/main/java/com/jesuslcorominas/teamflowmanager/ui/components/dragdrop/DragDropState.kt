@@ -19,6 +19,9 @@ class DragDropState {
     var draggedPlayer by mutableStateOf<Player?>(null)
         private set
 
+    var draggedPlayerId by mutableStateOf<Long?>(null)
+        private set
+
     var dragPosition by mutableStateOf(Offset.Zero)
         private set
 
@@ -37,6 +40,7 @@ class DragDropState {
 
     fun startDrag(player: Player, initialPosition: Offset) {
         draggedPlayer = player
+        draggedPlayerId = player.id
         dragPosition = initialPosition
         dragOffset = Offset.Zero
         isDragging = true
@@ -67,6 +71,7 @@ class DragDropState {
     fun reset() {
         isDragging = false
         draggedPlayer = null
+        draggedPlayerId = null
         dragPosition = Offset.Zero
         dragOffset = Offset.Zero
         currentDropTargetId = null

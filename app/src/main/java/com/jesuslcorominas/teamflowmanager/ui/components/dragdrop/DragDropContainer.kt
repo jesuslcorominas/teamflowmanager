@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 private const val AUTO_SCROLL_THRESHOLD = 100f
 private const val AUTO_SCROLL_SPEED = 15f
 private const val AUTO_SCROLL_DELAY = 16L
+private const val DROP_RESET_DELAY = 100L
 
 /**
  * Container that provides drag-drop functionality with auto-scroll support.
@@ -61,6 +62,18 @@ fun DragDropContainer(
                     }
                 }
                 delay(AUTO_SCROLL_DELAY)
+            }
+        }
+    }
+
+    // Reset state after drop ends if no valid target handled it
+    LaunchedEffect(dragDropState.dragJustEnded) {
+        if (dragDropState.dragJustEnded) {
+            // Give drop targets time to handle the drop
+            delay(DROP_RESET_DELAY)
+            // If still in dragJustEnded state, no drop target handled it - reset
+            if (dragDropState.dragJustEnded) {
+                dragDropState.reset()
             }
         }
     }
