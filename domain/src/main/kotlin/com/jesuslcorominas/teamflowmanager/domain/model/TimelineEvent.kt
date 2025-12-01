@@ -59,3 +59,12 @@ data class ScorePoint(
     val teamScore: Int,
     val opponentScore: Int,
 )
+
+/**
+ * Represents the time intervals when a player was active on the field.
+ */
+data class PlayerActivityInterval(
+    val player: Player,
+    val startTimeMillis: Long,
+    val endTimeMillis: Long,
+)

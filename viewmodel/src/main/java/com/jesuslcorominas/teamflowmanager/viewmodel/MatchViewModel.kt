@@ -10,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
@@ -509,6 +510,7 @@ class MatchViewModel(
                                         },
                                         timelineEvents = timeline?.events ?: emptyList(),
                                         scoreEvolution = timeline?.scoreEvolution ?: emptyList(),
+                                        playerActivity = timeline?.playerActivity ?: emptyList(),
                                     )
                                 } else {
                                     null
@@ -635,6 +637,7 @@ sealed class MatchUiState {
         val substitutions: List<SubstitutionItem>,
         val timelineEvents: List<TimelineEvent> = emptyList(),
         val scoreEvolution: List<ScorePoint> = emptyList(),
+        val playerActivity: List<PlayerActivityInterval> = emptyList(),
     ) : MatchUiState()
 }
 

@@ -57,6 +57,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
@@ -67,7 +68,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
-import com.jesuslcorominas.teamflowmanager.ui.matches.components.ScoreEvolutionChart
+import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
@@ -624,6 +625,7 @@ private fun FinishedMatchState(
                 )
                 TAB_STATISTICS -> StatisticsTabContent(
                     scoreEvolution = state.scoreEvolution,
+                    playerActivity = state.playerActivity,
                     teamName = state.match.teamName,
                     opponentName = state.match.opponent,
                 )
@@ -715,21 +717,30 @@ private fun TimelineTabContent(
 @Composable
 private fun StatisticsTabContent(
     scoreEvolution: List<ScorePoint>,
+    playerActivity: List<PlayerActivityInterval>,
     teamName: String,
     opponentName: String,
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(TFMSpacing.spacing04),
+            .padding(horizontal = TFMSpacing.spacing04),
+        contentPadding = PaddingValues(
+            top = TFMSpacing.spacing03,
+            bottom = TFMSpacing.spacing04
+        ),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
     ) {
-        // Score Evolution Chart
-        if (scoreEvolution.size > 1) {
-            ScoreEvolutionChart(
-                scoreEvolution = scoreEvolution,
-                teamName = teamName,
-                opponentName = opponentName,
-            )
+        // Player Activity Chart with toggleable lines
+        if (scoreEvolution.size > 1 || playerActivity.isNotEmpty()) {
+            item {
+                PlayerActivityChart(
+                    scoreEvolution = scoreEvolution,
+                    playerActivity = playerActivity,
+                    teamName = teamName,
+                    opponentName = opponentName,
+                )
+            }
         }
     }
 }

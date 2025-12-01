@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 data class MatchTimeline(
     val events: List<TimelineEvent>,
     val scoreEvolution: List<ScorePoint>,
+    val playerActivity: List<PlayerActivityInterval> = emptyList(),
 )
 
 /**
@@ -47,9 +49,11 @@ internal class GetMatchTimelineUseCaseImpl(
             } else {
                 val events = buildTimelineEvents(match, goals, substitutions, players)
                 val scoreEvolution = buildScoreEvolution(match, goals)
+                val playerActivity = buildPlayerActivity(match, substitutions, players)
                 MatchTimeline(
                     events = events,
                     scoreEvolution = scoreEvolution,
+                    playerActivity = playerActivity,
                 )
             }
         }
@@ -178,5 +182,69 @@ internal class GetMatchTimelineUseCaseImpl(
         }
 
         return points
+    }
+
+    /**
+     * Build player activity intervals showing when each player was on the field.
+     * Uses starting lineup and substitutions to compute time intervals.
+     */
+    private fun buildPlayerActivity(
+        match: Match,
+        substitutions: List<PlayerSubstitution>,
+        players: List<Player>,
+    ): List<PlayerActivityInterval> {
+        val intervals = mutableListOf<PlayerActivityInterval>()
+
+        // Calculate total match time
+        val totalElapsedTime = match.periods
+            .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
+            .sumOf { it.endTimeMillis - it.startTimeMillis }
+
+        // Track which players are currently active and their start time
+        val activePlayerStartTimes = mutableMapOf<Long, Long>()
+
+        // Starting lineup players are active from time 0
+        match.startingLineupIds.forEach { playerId ->
+            activePlayerStartTimes[playerId] = 0L
+        }
+
+        // Process substitutions in chronological order
+        substitutions.sortedBy { it.matchElapsedTimeMillis }.forEach { substitution ->
+            // Player out: end their interval
+            val playerOutId = substitution.playerOutId
+            val playerOutStartTime = activePlayerStartTimes.remove(playerOutId)
+            if (playerOutStartTime != null) {
+                val player = players.find { it.id == playerOutId }
+                if (player != null) {
+                    intervals.add(
+                        PlayerActivityInterval(
+                            player = player,
+                            startTimeMillis = playerOutStartTime,
+                            endTimeMillis = substitution.matchElapsedTimeMillis,
+                        )
+                    )
+                }
+            }
+
+            // Player in: start their interval
+            activePlayerStartTimes[substitution.playerInId] = substitution.matchElapsedTimeMillis
+        }
+
+        // End intervals for players still active at match end
+        activePlayerStartTimes.forEach { (playerId, startTime) ->
+            val player = players.find { it.id == playerId }
+            if (player != null) {
+                intervals.add(
+                    PlayerActivityInterval(
+                        player = player,
+                        startTimeMillis = startTime,
+                        endTimeMillis = totalElapsedTime,
+                    )
+                )
+            }
+        }
+
+        // Sort by player number for consistent display
+        return intervals.sortedBy { it.player.number }
     }
 }
