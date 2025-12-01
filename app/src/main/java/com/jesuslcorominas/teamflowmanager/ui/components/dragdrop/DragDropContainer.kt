@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.components.dragdrop
 
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
@@ -12,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import kotlinx.coroutines.delay
@@ -87,6 +89,33 @@ fun DragDropContainer(
                     containerPosition = position
                     containerTop = position.y
                     containerBottom = position.y + coordinates.size.height
+                }
+                // Global drag handler that takes over once dragging is active
+                // This ensures the drag continues even if the original item scrolls off-screen
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { /* Drag start is handled by DraggablePlayerItem */ },
+                        onDrag = { change, dragAmount ->
+                            if (dragDropState.isDragging) {
+                                change.consume()
+                                val newPosition = dragDropState.dragPosition + Offset(
+                                    dragAmount.x,
+                                    dragAmount.y
+                                )
+                                dragDropState.updateDragPosition(newPosition)
+                            }
+                        },
+                        onDragEnd = {
+                            if (dragDropState.isDragging) {
+                                dragDropState.endDrag()
+                            }
+                        },
+                        onDragCancel = {
+                            if (dragDropState.isDragging) {
+                                dragDropState.reset()
+                            }
+                        }
+                    )
                 }
         ) {
             content()

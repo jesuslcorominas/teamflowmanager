@@ -375,10 +375,7 @@ private fun MatchDetailContent(
                                 player = playerTimeItem.player,
                                 isPlaying = false,
                                 dragDropState = dragDropState,
-                                onDragEnd = {
-                                    // Signal drag ended - drop target will handle reset after processing
-                                    dragDropState.endDrag()
-                                }
+                                // onDragEnd is optional - container handles the actual drag end
                             ) {
                                 PlayerItem(
                                     modifier = Modifier.animateItem(

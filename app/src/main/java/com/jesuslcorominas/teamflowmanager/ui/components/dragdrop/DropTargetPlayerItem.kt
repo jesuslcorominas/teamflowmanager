@@ -42,34 +42,31 @@ fun DropTargetPlayerItem(
     content: @Composable () -> Unit,
 ) {
     var bounds by remember { mutableStateOf<Rect?>(null) }
-    var isHovered by remember { mutableStateOf(false) }
 
     // Only active players can be drop targets
     val canBeDropTarget = isPlaying
 
-    val showDropIndication = isHovered && dragDropState.isDragging && canBeDropTarget
+    // Check if currently hovered based on state (not local state that can be lost)
+    val isCurrentDropTarget = dragDropState.currentDropTargetId == playerId
+    val showDropIndication = isCurrentDropTarget && dragDropState.isDragging && canBeDropTarget
 
-    // Check if drag position is within bounds
+    // Check if drag position is within bounds and update drop target
     LaunchedEffect(dragDropState.isDragging, dragDropState.dragPosition, bounds) {
         if (dragDropState.isDragging && canBeDropTarget && bounds != null) {
             val dragPos = dragDropState.dragPosition
             val inBounds = bounds!!.contains(dragPos)
-            isHovered = inBounds
             if (inBounds) {
                 dragDropState.updateDropTarget(playerId, true)
             } else if (dragDropState.currentDropTargetId == playerId) {
                 dragDropState.updateDropTarget(null, false)
             }
-        } else {
-            isHovered = false
         }
     }
 
-    // Handle drop when drag ends while hovering
-    LaunchedEffect(dragDropState.dragJustEnded) {
-        if (dragDropState.dragJustEnded && isHovered && dragDropState.currentDropTargetId == playerId) {
+    // Handle drop when drag ends while this is the target
+    LaunchedEffect(dragDropState.dragJustEnded, isCurrentDropTarget) {
+        if (dragDropState.dragJustEnded && isCurrentDropTarget) {
             onDrop()
-            isHovered = false
         }
     }
 

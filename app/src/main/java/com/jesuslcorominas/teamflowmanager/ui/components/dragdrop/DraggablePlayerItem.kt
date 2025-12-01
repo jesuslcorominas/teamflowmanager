@@ -5,7 +5,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -17,20 +16,22 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.unit.IntOffset
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 /**
  * Wrapper composable that makes a player item draggable via long-press gesture.
  * Only inactive players (not currently playing) can be dragged.
+ * 
+ * The long-press initiates the drag, but drag updates and end are handled by
+ * the parent DragDropContainer's global gesture handler. This ensures dragging
+ * continues even if this item scrolls off-screen.
  *
  * @param player The player data
  * @param isPlaying Whether the player is currently active/playing
  * @param dragDropState The shared drag-drop state
  * @param onDragStart Called when drag starts
- * @param onDragEnd Called when drag ends
+ * @param onDragEnd Called when drag ends (from this item's perspective)
  * @param content The content to display (typically a PlayerItem)
  */
 @Composable
@@ -49,8 +50,6 @@ fun DraggablePlayerItem(
     var itemPosition = remember { Offset.Zero }
 
     // Animation for invalid drop (bounce back)
-    val bounceOffsetX = remember { Animatable(0f) }
-    val bounceOffsetY = remember { Animatable(0f) }
     val bounceScale = remember { Animatable(1f) }
 
     // Only inactive players can be dragged
@@ -63,12 +62,6 @@ fun DraggablePlayerItem(
         modifier = Modifier
             .onGloballyPositioned { coordinates ->
                 itemPosition = coordinates.positionInRoot()
-            }
-            .offset {
-                IntOffset(
-                    bounceOffsetX.value.roundToInt(),
-                    bounceOffsetY.value.roundToInt()
-                )
             }
             .graphicsLayer {
                 scaleX = bounceScale.value
@@ -89,15 +82,19 @@ fun DraggablePlayerItem(
                                 onDragStart()
                             },
                             onDrag = { change, dragAmount ->
-                                change.consume()
-                                val newPosition = dragDropState.dragPosition + Offset(
-                                    dragAmount.x,
-                                    dragAmount.y
-                                )
-                                dragDropState.updateDragPosition(newPosition)
+                                // Still update from here as backup, but container also handles this
+                                if (dragDropState.isDragging && dragDropState.draggedPlayerId == player.id) {
+                                    change.consume()
+                                    val newPosition = dragDropState.dragPosition + Offset(
+                                        dragAmount.x,
+                                        dragAmount.y
+                                    )
+                                    dragDropState.updateDragPosition(newPosition)
+                                }
                             },
                             onDragEnd = {
-                                if (!dragDropState.isValidDropTarget) {
+                                // Only handle visual feedback here, actual endDrag is handled by container
+                                if (!dragDropState.isValidDropTarget && dragDropState.draggedPlayerId == player.id) {
                                     // Animate bounce back for invalid drop
                                     scope.launch {
                                         bounceScale.animateTo(
@@ -119,7 +116,10 @@ fun DraggablePlayerItem(
                                 onDragEnd()
                             },
                             onDragCancel = {
-                                dragDropState.reset()
+                                // Only reset if this is the item being dragged
+                                if (dragDropState.draggedPlayerId == player.id) {
+                                    dragDropState.reset()
+                                }
                             }
                         )
                     }
