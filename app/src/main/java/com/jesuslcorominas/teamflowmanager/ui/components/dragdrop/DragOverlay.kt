@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -34,10 +35,12 @@ private val GHOST_HEIGHT = 80.dp
  * to ensure it renders above all other content.
  *
  * @param dragDropState The shared drag-drop state
+ * @param containerOffset The offset of the container in root coordinates
  */
 @Composable
 fun DragOverlay(
     dragDropState: DragDropState,
+    containerOffset: Offset = Offset.Zero,
     modifier: Modifier = Modifier,
 ) {
     if (dragDropState.isDragging && dragDropState.draggedPlayer != null) {
@@ -47,9 +50,10 @@ fun DragOverlay(
             player = player,
             modifier = modifier
                 .graphicsLayer {
-                    // Offset to position at drag location, centered on the ghost
-                    translationX = dragDropState.dragPosition.x - (GHOST_WIDTH / 2).toPx()
-                    translationY = dragDropState.dragPosition.y - (GHOST_HEIGHT / 2).toPx()
+                    // Position the ghost at the drag location, adjusted for container offset
+                    // The drag position is in root coordinates, so subtract the container offset
+                    translationX = dragDropState.dragPosition.x - containerOffset.x - (GHOST_WIDTH / 2).toPx()
+                    translationY = dragDropState.dragPosition.y - containerOffset.y - (GHOST_HEIGHT / 2).toPx()
                     alpha = 0.9f
                     scaleX = 1.05f
                     scaleY = 1.05f

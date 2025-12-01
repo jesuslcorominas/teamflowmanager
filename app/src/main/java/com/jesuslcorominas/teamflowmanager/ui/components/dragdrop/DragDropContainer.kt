@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import kotlinx.coroutines.delay
@@ -34,15 +35,16 @@ fun DragDropContainer(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    var containerPosition by remember { mutableStateOf(Offset.Zero) }
     var containerTop by remember { mutableStateOf(0f) }
     var containerBottom by remember { mutableStateOf(0f) }
 
     // Auto-scroll when dragging near edges
-    LaunchedEffect(dragDropState.isDragging, dragDropState.dragPosition) {
+    LaunchedEffect(dragDropState.isDragging) {
         if (dragDropState.isDragging && containerBottom > containerTop) {
-            val dragY = dragDropState.dragPosition.y
-
             while (dragDropState.isDragging) {
+                // Read the current drag position inside the loop so it updates
+                val dragY = dragDropState.dragPosition.y
                 val distanceFromTop = dragY - containerTop
                 val distanceFromBottom = containerBottom - dragY
 
@@ -69,6 +71,7 @@ fun DragDropContainer(
                 .fillMaxSize()
                 .onGloballyPositioned { coordinates ->
                     val position = coordinates.positionInRoot()
+                    containerPosition = position
                     containerTop = position.y
                     containerBottom = position.y + coordinates.size.height
                 }
@@ -76,7 +79,11 @@ fun DragDropContainer(
             content()
 
             // Overlay for drag ghost - rendered on top of everything
-            DragOverlay(dragDropState = dragDropState)
+            // Pass container position so the ghost can be positioned correctly
+            DragOverlay(
+                dragDropState = dragDropState,
+                containerOffset = containerPosition
+            )
         }
     }
 }
