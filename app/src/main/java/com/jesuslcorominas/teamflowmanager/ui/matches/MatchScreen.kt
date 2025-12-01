@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -43,7 +42,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,7 +67,6 @@ import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
-import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.ScoreEvolutionChart
@@ -749,27 +746,6 @@ private fun StatisticsTabContent(
                 teamName = teamName,
                 opponentName = opponentName,
             )
-        }
-    }
-}
-
-
-private fun LazyListScope.substitutionsSection(
-    substitutions: List<SubstitutionItem>,
-    expanded: Boolean,
-    onExpandToggle: () -> Unit,
-) {
-    item(key = SUBSTITUTIONS_HEADER) {
-        ExpandableTitle(
-            title = stringResource(R.string.substitutions_title),
-            expanded = expanded,
-            onClick = onExpandToggle
-        )
-    }
-
-    if (expanded) {
-        items(substitutions) { substitution ->
-            SubstitutionCard(substitution = substitution)
         }
     }
 }
