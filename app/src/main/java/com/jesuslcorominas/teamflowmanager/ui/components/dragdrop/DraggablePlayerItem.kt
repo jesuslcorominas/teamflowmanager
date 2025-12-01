@@ -118,10 +118,10 @@ fun DraggablePlayerItem(
                                 dragDropState.endDrag()
                             },
                             onDragCancel = {
-                                // Don't reset on cancel - this can happen when the item scrolls 
-                                // off-screen and is disposed. The container's pointer tracker
-                                // will continue handling the drag and call endDrag() when the
-                                // pointer is released.
+                                // Item scrolled off-screen and is being disposed.
+                                // Signal that child gesture is no longer active so the 
+                                // container can take over drag tracking.
+                                dragDropState.onChildGestureCancelled()
                             }
                         )
                     }

@@ -38,7 +38,13 @@ class DragDropState {
     var dragJustEnded by mutableStateOf(false)
         private set
 
+    // Flag to indicate if the child gesture handler is still active
+    // When false, the container takes over drag tracking
+    var childGestureActive by mutableStateOf(false)
+        private set
+
     fun startDrag(player: Player, initialPosition: Offset) {
+        childGestureActive = true
         draggedPlayer = player
         draggedPlayerId = player.id
         dragPosition = initialPosition
@@ -62,7 +68,16 @@ class DragDropState {
      */
     fun endDrag() {
         isDragging = false
+        childGestureActive = false
         dragJustEnded = true
+    }
+
+    /**
+     * Signal that the child gesture was cancelled (e.g., item scrolled off-screen).
+     * The container will take over drag tracking.
+     */
+    fun onChildGestureCancelled() {
+        childGestureActive = false
     }
 
     /**
@@ -70,6 +85,7 @@ class DragDropState {
      */
     fun reset() {
         isDragging = false
+        childGestureActive = false
         draggedPlayer = null
         draggedPlayerId = null
         dragPosition = Offset.Zero

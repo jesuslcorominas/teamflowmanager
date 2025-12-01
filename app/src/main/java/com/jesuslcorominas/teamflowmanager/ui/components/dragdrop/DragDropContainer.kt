@@ -100,7 +100,7 @@ fun DragDropContainer(
                 // This pointer input handles drag continuation when the original 
                 // DraggablePlayerItem scrolls off-screen and is disposed.
                 // It uses Initial pass to see events before children, but only
-                // consumes them when dragging is active (after child initiated drag).
+                // updates drag position when the child gesture is no longer active.
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {
@@ -111,7 +111,9 @@ fun DragDropContainer(
                             event.changes.firstOrNull()?.let { change ->
                                 val currentPosition = change.position
                                 
-                                if (dragDropState.isDragging) {
+                                // Only handle drag if dragging AND child gesture is no longer active
+                                // (child was disposed due to scrolling off-screen)
+                                if (dragDropState.isDragging && !dragDropState.childGestureActive) {
                                     when (event.type) {
                                         PointerEventType.Move -> {
                                             // Calculate delta from last position
