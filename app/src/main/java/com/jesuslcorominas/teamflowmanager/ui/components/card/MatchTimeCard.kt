@@ -150,21 +150,22 @@ fun MatchTimeCard(
                         currentTime = currentTime,
                         match = match
                     )
+                }
 
-                    // Share button - only visible when match is finished and expanded
-                    AnimatedVisibility(
-                        visible = expanded && match.status == MatchStatus.FINISHED && onExport != null
+                // Share button - only visible when match is finished and expanded
+                AnimatedVisibility(
+                    modifier = Modifier.align(Alignment.End).padding(end = TFMSpacing.spacing04),
+                    visible = expanded && match.status == MatchStatus.FINISHED && onExport != null
+                ) {
+                    IconButton(
+                        onClick = { onExport?.invoke() },
+                        modifier = Modifier.padding(top = TFMSpacing.spacing02)
                     ) {
-                        IconButton(
-                            onClick = { onExport?.invoke() },
-                            modifier = Modifier.padding(top = TFMSpacing.spacing02)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = stringResource(R.string.export_match_report_description),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = stringResource(R.string.export_match_report_description),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
 
@@ -440,7 +441,7 @@ fun MatchTimeCardPreview() {
                 teamName = "Loyola D",
                 opponent = "EFRO",
                 location = "FUNDOMA",
-                status = MatchStatus.IN_PROGRESS,
+                status = MatchStatus.FINISHED,
                 periodType = PeriodType.HALF_TIME,
                 periods = listOf(
                     MatchPeriod(
@@ -460,7 +461,7 @@ fun MatchTimeCardPreview() {
                 captainId = 2L,
                 opponentGoals = 0,
             ).let { match ->
-                MatchTimeCard(match = match, currentTime)
+                MatchTimeCard(match = match, currentTime, onExport = {})
             }
         }
     }
