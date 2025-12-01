@@ -371,26 +371,27 @@ class MatchViewModel(
         _showGoalScorerDialog.value = false
     }
 
-    fun registerGoal(scorerId: Long) {
+    fun registerGoal(scorerId: Long?) {
         viewModelScope.launch {
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                    crashReporter.log("Registering goal for player: $scorerId")
+                    crashReporter.log("Registering ${scorerId?.let { "goal for player: $it" } ?: "own goal (autogol by rival)"}")
                     registerGoal(
                         matchId = currentState.match.id,
                         scorerId = scorerId,
                         currentTimeMillis = _currentTime.value,
                         isOpponentGoal = false,
+                        isOwnGoal = scorerId == null
                     )
 
                     analyticsTracker.logEvent(
                         AnalyticsEvent.GOAL_SCORED,
                         mapOf(
                             AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
-                            AnalyticsParam.PLAYER_ID to scorerId.toString(),
+                            AnalyticsParam.PLAYER_ID to (scorerId?.toString() ?: ""),
                             AnalyticsParam.GOAL_MINUTE to (_currentTime.value / 60000).toString(),
-                            AnalyticsParam.TEAM_TYPE to "own",
-                        ),
+                            AnalyticsParam.TEAM_TYPE to (scorerId?.let { "own" } ?: "own_goal"),
+                        ).filter { it.value.isNotBlank() },
                     )
 
                     _showGoalScorerDialog.value = false
@@ -398,40 +399,6 @@ class MatchViewModel(
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error registering goal: ${e.message}")
-                throw e
-            }
-        }
-    }
-
-    fun registerOwnGoal() {
-        viewModelScope.launch {
-            try {
-                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                    crashReporter.log("Registering own goal (autogol by rival)")
-                    // Own goal: a goal for our team scored by a rival player in their own net
-                    // scorerId is null since it was scored by a rival, not our player
-                    registerGoal(
-                        matchId = currentState.match.id,
-                        scorerId = null,
-                        currentTimeMillis = _currentTime.value,
-                        isOpponentGoal = false,
-                        isOwnGoal = true,
-                    )
-
-                    analyticsTracker.logEvent(
-                        AnalyticsEvent.GOAL_SCORED,
-                        mapOf(
-                            AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
-                            AnalyticsParam.GOAL_MINUTE to (_currentTime.value / 60000).toString(),
-                            AnalyticsParam.TEAM_TYPE to "own_goal",
-                        ),
-                    )
-
-                    _showGoalScorerDialog.value = false
-                }
-            } catch (e: Exception) {
-                crashReporter.recordException(e)
-                crashReporter.log("Error registering own goal: ${e.message}")
                 throw e
             }
         }

@@ -199,10 +199,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
             if (state is MatchUiState.Success) {
                 GoalScorerSelectionDialog(
                     players = state.playerTimes.filter { it.isRunning }.map { it.player },
-                    onPlayerSelected = { playerId ->
-                        viewModel.registerGoal(playerId)
-                    },
-                    onOwnGoal = { viewModel.registerOwnGoal() },
+                    onGoal = { playerId -> viewModel.registerGoal(playerId) },
                     onDismiss = { viewModel.dismissGoalScorerDialog() }
                 )
             }
@@ -741,8 +738,7 @@ private fun PauseMatchEarlyConfirmationDialog(
 @Composable
 private fun GoalScorerSelectionDialog(
     players: List<Player>,
-    onPlayerSelected: (Long) -> Unit,
-    onOwnGoal: () -> Unit,
+    onGoal: (Long?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
@@ -759,7 +755,7 @@ private fun GoalScorerSelectionDialog(
                     ScorerItem(
                         number = player.number.toString(),
                         name = "${player.firstName} ${player.lastName}",
-                        onScorerSelected = { onPlayerSelected(player.id) }
+                        onScorerSelected = { onGoal(player.id) }
                     )
                 }
 
@@ -768,7 +764,7 @@ private fun GoalScorerSelectionDialog(
                     ScorerItem(
                         number = "-",
                         name = stringResource(R.string.own_goal_option),
-                        onScorerSelected = { onOwnGoal() }
+                        onScorerSelected = { onGoal(null) }
                     )
                 }
             }
