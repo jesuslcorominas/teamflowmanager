@@ -77,7 +77,6 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import com.jesuslcorominas.teamflowmanager.ui.util.scrollToItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.ExportState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
@@ -86,7 +85,6 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 import org.koin.androidx.compose.koinViewModel
 import androidx.core.net.toUri
 
-private const val SUBSTITUTIONS_HEADER = "substitutions_header"
 private const val TAB_SUMMARY = 0
 private const val TAB_SUBSTITUTIONS = 1
 private const val TAB_TIMELINE = 2
