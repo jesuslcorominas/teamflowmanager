@@ -198,7 +198,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
             val state = uiState
             if (state is MatchUiState.Success) {
                 GoalScorerSelectionDialog(
-                    players = state.playerTimes.map { it.player },
+                    players = state.playerTimes.filter { it.isRunning }.map { it.player },
                     onPlayerSelected = { playerId ->
                         viewModel.registerGoal(playerId)
                     },
@@ -755,63 +755,21 @@ private fun GoalScorerSelectionDialog(
         },
         text = {
             LazyColumn {
-                // Own Goal option at the top
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = TFMSpacing.spacing01),
-                        onClick = { onOwnGoal() },
-                        colors = androidx.compose.material3.CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(TFMSpacing.spacing03),
-                            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = "⚽",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = stringResource(R.string.own_goal_option),
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium,
-                            )
-                        }
-                    }
+                items(players) { player ->
+                    ScorerItem(
+                        number = player.number.toString(),
+                        name = "${player.firstName} ${player.lastName}",
+                        onScorerSelected = { onPlayerSelected(player.id) }
+                    )
                 }
 
-                items(players) { player ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = TFMSpacing.spacing01),
-                        onClick = { onPlayerSelected(player.id) },
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(TFMSpacing.spacing03),
-                            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = player.number.toString(),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = "${player.firstName} ${player.lastName}",
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        }
-                    }
+                // Own Goal option at the bottom
+                item {
+                    ScorerItem(
+                        number = "-",
+                        name = stringResource(R.string.own_goal_option),
+                        onScorerSelected = { onOwnGoal() }
+                    )
                 }
             }
         },
@@ -825,6 +783,34 @@ private fun GoalScorerSelectionDialog(
         },
         shape = MaterialTheme.shapes.medium,
     )
+}
+
+@Composable
+private fun ScorerItem(number: String, name: String, onScorerSelected: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = TFMSpacing.spacing01),
+        onClick =  onScorerSelected,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TFMSpacing.spacing03),
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = number,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+    }
 }
 
 @Composable
