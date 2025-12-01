@@ -98,6 +98,7 @@
     <string name="my_team_label">Mi Equipo</string>
     <string name="opponent_team_label">Rival</string>
     <string name="select_goal_scorer_title">Seleccionar Goleador</string>
+    <string name="own_goal_option">Gol en Propia (Autogol)</string>
 
     <!-- Match Management Strings -->
     <string name="matches_title">Partidos</string>

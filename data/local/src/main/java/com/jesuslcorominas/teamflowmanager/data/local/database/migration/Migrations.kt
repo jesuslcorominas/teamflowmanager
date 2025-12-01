@@ -12,7 +12,7 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
         // SQLite doesn't support dropping columns directly in older versions
         // We need to: create new table, copy data, drop old table, rename new table
-        
+
         // 1. Create new match table without elapsedTimeMillis
         db.execSQL("""
             CREATE TABLE IF NOT EXISTS match_new (
@@ -38,7 +38,7 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
                 periodType INTEGER NOT NULL
             )
         """.trimIndent())
-        
+
         // 2. Copy data from old table to new table (excluding elapsedTimeMillis)
         db.execSQL("""
             INSERT INTO match_new (
@@ -47,17 +47,17 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
                 status, archived, currentPeriod, pauseCount, goals, opponentGoals,
                 timeoutStartTimeMillis, periods, periodType
             )
-            SELECT 
+            SELECT
                 id, teamId, teamName, opponent, location, dateTime, numberOfPeriods,
                 squadCallUpIds, captainId, startingLineupIds, lastStartTimeMillis,
                 status, archived, currentPeriod, pauseCount, goals, opponentGoals,
                 timeoutStartTimeMillis, periods, periodType
             FROM match
         """.trimIndent())
-        
+
         // 3. Drop old table
         db.execSQL("DROP TABLE match")
-        
+
         // 4. Rename new table to match
         db.execSQL("ALTER TABLE match_new RENAME TO match")
     }
