@@ -147,12 +147,14 @@ fun PlayerActivityChart(
                 ToggleLegendItem(
                     color = ChartTeamColor,
                     label = teamName,
+                    isEnabled = false,
                     isChecked = visibleLines["teamScore"] ?: true,
                     onCheckedChange = { visibleLines["teamScore"] = it }
                 )
                 ToggleLegendItem(
                     color = ChartOpponentColor,
                     label = opponentName,
+                    isEnabled = false,
                     isChecked = visibleLines["opponentScore"] ?: true,
                     onCheckedChange = { visibleLines["opponentScore"] = it }
                 )
@@ -181,6 +183,7 @@ fun PlayerActivityChart(
                         ToggleLegendItem(
                             color = color,
                             label = "${player.number}. ${player.firstName}",
+                            isEnabled = true,
                             isChecked = visibleLines["player_${player.id}"] ?: true,
                             onCheckedChange = { visibleLines["player_${player.id}"] = it }
                         )
@@ -452,6 +455,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawScoreLine(
 private fun ToggleLegendItem(
     color: Color,
     label: String,
+    isEnabled: Boolean,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
@@ -460,11 +464,13 @@ private fun ToggleLegendItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
     ) {
-        Checkbox(
-            checked = isChecked,
-            onCheckedChange = onCheckedChange,
-            modifier = Modifier.size(20.dp),
-        )
+        if (isEnabled) {
+            Checkbox(
+                checked = isChecked,
+                onCheckedChange = onCheckedChange,
+                modifier = Modifier.size(20.dp),
+            )
+        }
         Surface(
             modifier = Modifier
                 .size(10.dp)
