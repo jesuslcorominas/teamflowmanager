@@ -64,8 +64,9 @@ fun DropTargetPlayerItem(
     }
 
     // Handle drop when drag ends while this is the target
-    LaunchedEffect(dragDropState.dragJustEnded, isCurrentDropTarget) {
-        if (dragDropState.dragJustEnded && isCurrentDropTarget) {
+    // Watch dragJustEnded directly - when it becomes true and we're the current target, execute drop
+    LaunchedEffect(dragDropState.dragJustEnded) {
+        if (dragDropState.dragJustEnded && dragDropState.currentDropTargetId == playerId) {
             onDrop()
         }
     }

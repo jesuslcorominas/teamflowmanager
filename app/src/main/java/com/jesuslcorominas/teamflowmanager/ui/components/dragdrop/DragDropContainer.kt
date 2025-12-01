@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.ui.components.dragdrop
 
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
@@ -13,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -21,7 +21,6 @@ import kotlinx.coroutines.delay
 private const val AUTO_SCROLL_THRESHOLD = 100f
 private const val AUTO_SCROLL_SPEED = 15f
 private const val AUTO_SCROLL_DELAY = 16L
-private const val DROP_RESET_DELAY = 100L
 
 /**
  * Container that provides drag-drop functionality with auto-scroll support.
@@ -68,18 +67,6 @@ fun DragDropContainer(
         }
     }
 
-    // Reset state after drop ends if no valid target handled it
-    LaunchedEffect(dragDropState.dragJustEnded) {
-        if (dragDropState.dragJustEnded) {
-            // Give drop targets time to handle the drop
-            delay(DROP_RESET_DELAY)
-            // If still in dragJustEnded state, no drop target handled it - reset
-            if (dragDropState.dragJustEnded) {
-                dragDropState.reset()
-            }
-        }
-    }
-
     CompositionLocalProvider(LocalDragDropState provides dragDropState) {
         Box(
             modifier = modifier
@@ -90,32 +77,29 @@ fun DragDropContainer(
                     containerTop = position.y
                     containerBottom = position.y + coordinates.size.height
                 }
-                // Global drag handler that takes over once dragging is active
-                // This ensures the drag continues even if the original item scrolls off-screen
+                // Global pointer input to track ALL touch events
+                // This captures Move and Release events even when the original item scrolls away
                 .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = { /* Drag start is handled by DraggablePlayerItem */ },
-                        onDrag = { change, dragAmount ->
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            
                             if (dragDropState.isDragging) {
-                                change.consume()
-                                val newPosition = dragDropState.dragPosition + Offset(
-                                    dragAmount.x,
-                                    dragAmount.y
-                                )
-                                dragDropState.updateDragPosition(newPosition)
-                            }
-                        },
-                        onDragEnd = {
-                            if (dragDropState.isDragging) {
-                                dragDropState.endDrag()
-                            }
-                        },
-                        onDragCancel = {
-                            if (dragDropState.isDragging) {
-                                dragDropState.reset()
+                                when (event.type) {
+                                    PointerEventType.Move -> {
+                                        // Update drag position from any move event
+                                        event.changes.firstOrNull()?.let { change ->
+                                            dragDropState.updateDragPosition(change.position)
+                                        }
+                                    }
+                                    PointerEventType.Release -> {
+                                        // Touch released - end the drag
+                                        dragDropState.endDrag()
+                                    }
+                                }
                             }
                         }
-                    )
+                    }
                 }
         ) {
             content()

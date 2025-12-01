@@ -3,11 +3,11 @@ package com.jesuslcorominas.teamflowmanager.ui.components.dragdrop
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -17,21 +17,18 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
-import kotlinx.coroutines.launch
 
 /**
  * Wrapper composable that makes a player item draggable via long-press gesture.
  * Only inactive players (not currently playing) can be dragged.
  * 
- * The long-press initiates the drag, but drag updates and end are handled by
- * the parent DragDropContainer's global gesture handler. This ensures dragging
- * continues even if this item scrolls off-screen.
+ * The long-press initiates the drag. Drag position updates and release detection
+ * are handled by the parent DragDropContainer's global pointer listener.
  *
  * @param player The player data
  * @param isPlaying Whether the player is currently active/playing
  * @param dragDropState The shared drag-drop state
  * @param onDragStart Called when drag starts
- * @param onDragEnd Called when drag ends (from this item's perspective)
  * @param content The content to display (typically a PlayerItem)
  */
 @Composable
@@ -40,11 +37,9 @@ fun DraggablePlayerItem(
     isPlaying: Boolean,
     dragDropState: DragDropState,
     onDragStart: () -> Unit = {},
-    onDragEnd: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
-    val scope = rememberCoroutineScope()
 
     // Track item position for initial drag position calculation
     var itemPosition = remember { Offset.Zero }
@@ -55,8 +50,32 @@ fun DraggablePlayerItem(
     // Only inactive players can be dragged
     val canDrag = !isPlaying
 
-    // Check if THIS player is being dragged (using state from DragDropState, not local state)
+    // Check if THIS player is being dragged (using state from DragDropState)
     val isThisBeingDragged = dragDropState.isDragging && dragDropState.draggedPlayerId == player.id
+    
+    // Check if drag just ended for THIS player (to show bounce animation for invalid drop)
+    val dragJustEndedForThis = dragDropState.dragJustEnded && dragDropState.draggedPlayerId == player.id
+
+    // Animate bounce when drag ends on invalid target
+    LaunchedEffect(dragJustEndedForThis, dragDropState.isValidDropTarget) {
+        if (dragJustEndedForThis && !dragDropState.isValidDropTarget) {
+            // Animate bounce back for invalid drop
+            bounceScale.animateTo(
+                targetValue = 0.9f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessHigh
+                )
+            )
+            bounceScale.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            )
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -66,60 +85,21 @@ fun DraggablePlayerItem(
             .graphicsLayer {
                 scaleX = bounceScale.value
                 scaleY = bounceScale.value
-                // Hide the original item when dragging - use state from DragDropState
+                // Hide the original item when dragging
                 alpha = if (isThisBeingDragged) 0f else 1f
             }
             .then(
                 if (canDrag) {
                     Modifier.pointerInput(player.id) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = { offset ->
+                        detectTapGestures(
+                            onLongPress = { offset ->
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                // Start drag - container's pointer listener will handle move and release
                                 dragDropState.startDrag(
                                     player = player,
                                     initialPosition = itemPosition + offset
                                 )
                                 onDragStart()
-                            },
-                            onDrag = { change, dragAmount ->
-                                // Still update from here as backup, but container also handles this
-                                if (dragDropState.isDragging && dragDropState.draggedPlayerId == player.id) {
-                                    change.consume()
-                                    val newPosition = dragDropState.dragPosition + Offset(
-                                        dragAmount.x,
-                                        dragAmount.y
-                                    )
-                                    dragDropState.updateDragPosition(newPosition)
-                                }
-                            },
-                            onDragEnd = {
-                                // Only handle visual feedback here, actual endDrag is handled by container
-                                if (!dragDropState.isValidDropTarget && dragDropState.draggedPlayerId == player.id) {
-                                    // Animate bounce back for invalid drop
-                                    scope.launch {
-                                        bounceScale.animateTo(
-                                            targetValue = 0.9f,
-                                            animationSpec = spring(
-                                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                stiffness = Spring.StiffnessHigh
-                                            )
-                                        )
-                                        bounceScale.animateTo(
-                                            targetValue = 1f,
-                                            animationSpec = spring(
-                                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                stiffness = Spring.StiffnessMedium
-                                            )
-                                        )
-                                    }
-                                }
-                                onDragEnd()
-                            },
-                            onDragCancel = {
-                                // Only reset if this is the item being dragged
-                                if (dragDropState.draggedPlayerId == player.id) {
-                                    dragDropState.reset()
-                                }
                             }
                         )
                     }
