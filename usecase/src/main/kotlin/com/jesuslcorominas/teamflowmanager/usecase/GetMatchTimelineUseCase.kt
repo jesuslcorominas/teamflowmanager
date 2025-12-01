@@ -167,9 +167,7 @@ internal class GetMatchTimelineUseCaseImpl(
 
         // Add final point at match end (total actual play time, excluding breaks)
         // This matches how matchElapsedTimeMillis is calculated for events during the match
-        val totalElapsedTime = match.periods
-            .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
-            .sumOf { it.endTimeMillis - it.startTimeMillis }
+        val totalElapsedTime = calculateTotalElapsedTime(match)
 
         if (points.lastOrNull()?.timeMillis != totalElapsedTime) {
             points.add(
@@ -185,6 +183,15 @@ internal class GetMatchTimelineUseCaseImpl(
     }
 
     /**
+     * Calculates the total elapsed time for a match based on completed periods.
+     */
+    private fun calculateTotalElapsedTime(match: Match): Long {
+        return match.periods
+            .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
+            .sumOf { it.endTimeMillis - it.startTimeMillis }
+    }
+
+    /**
      * Build player activity intervals showing when each player was on the field.
      * Uses starting lineup and substitutions to compute time intervals.
      */
@@ -196,9 +203,7 @@ internal class GetMatchTimelineUseCaseImpl(
         val intervals = mutableListOf<PlayerActivityInterval>()
 
         // Calculate total match time
-        val totalElapsedTime = match.periods
-            .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
-            .sumOf { it.endTimeMillis - it.startTimeMillis }
+        val totalElapsedTime = calculateTotalElapsedTime(match)
 
         // Track which players are currently active and their start time
         val activePlayerStartTimes = mutableMapOf<Long, Long>()

@@ -48,6 +48,10 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import kotlin.math.max
 
+// Chart dimension constants
+private val BASE_CHART_HEIGHT = 200.dp
+private val PLAYER_ROW_HEIGHT = 20.dp
+
 /**
  * Predefined colors for player activity lines.
  */
@@ -68,6 +72,18 @@ private val playerColors = listOf(
     Color(0xFF673AB7), // Deep Purple
     Color(0xFF8BC34A), // Light Green
 )
+
+/**
+ * Converts a Compose Color to a native Android color int.
+ */
+private fun Color.toNativeColor(): Int {
+    return android.graphics.Color.argb(
+        (alpha * 255).toInt(),
+        (red * 255).toInt(),
+        (green * 255).toInt(),
+        (blue * 255).toInt()
+    )
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -192,7 +208,7 @@ fun PlayerActivityChart(
             val textSize = with(density) { 10.sp.toPx() }
 
             // Calculate chart height based on number of players
-            val chartHeight = 200.dp + (uniquePlayers.size * 20).dp
+            val chartHeight = BASE_CHART_HEIGHT + (PLAYER_ROW_HEIGHT * uniquePlayers.size)
 
             Canvas(
                 modifier = Modifier
@@ -205,12 +221,7 @@ fun PlayerActivityChart(
                 val playerChartTop = size.height * 0.5f + chartPadding / 2
                 val playerChartHeight = size.height * 0.5f - chartPadding
 
-                val labelColor = android.graphics.Color.argb(
-                    (ContentHigh.alpha * 255).toInt(),
-                    (ContentHigh.red * 255).toInt(),
-                    (ContentHigh.green * 255).toInt(),
-                    (ContentHigh.blue * 255).toInt()
-                )
+                val labelColor = ContentHigh.toNativeColor()
 
                 // Draw score Y-axis labels (integers only) - top half
                 for (i in 0..maxScore) {
