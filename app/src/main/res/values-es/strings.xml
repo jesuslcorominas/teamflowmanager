@@ -173,6 +173,24 @@
     <string name="player_out">Jugador Sale</string>
     <string name="player_in">Jugador Entra</string>
 
+    <!-- Timeline Tab -->
+    <string name="timeline_tab">Timeline</string>
+    <string name="summary_tab">Resumen</string>
+    <string name="substitutions_tab">Cambios</string>
+    <string name="statistics_tab">Estadísticas</string>
+    <string name="timeline_starting_lineup">Alineación Inicial</string>
+    <string name="timeline_goal">Gol</string>
+    <string name="timeline_own_goal">Gol en Propia</string>
+    <string name="timeline_opponent_goal">Gol Rival</string>
+    <string name="timeline_substitution">Cambio</string>
+    <string name="timeline_timeout">Tiempo Muerto</string>
+    <string name="timeline_halftime">Descanso</string>
+    <string name="timeline_quarter_break">Entrecuarto</string>
+    <string name="score_evolution_title">Evolución del Marcador</string>
+    <string name="player_activity_title">Marcador y Actividad de Jugadores</string>
+    <string name="score_lines_label">Líneas de Marcador</string>
+    <string name="player_activity_lines_label">Actividad de Jugadores</string>
+
     <!-- Match Creation Wizard -->
     <string name="wizard_step_general_data">Datos Generales</string>
     <string name="wizard_step_squad_callup">Convocatoria</string>

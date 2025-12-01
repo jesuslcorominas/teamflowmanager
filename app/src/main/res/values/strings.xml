@@ -173,6 +173,24 @@
     <string name="player_out">Player Out</string>
     <string name="player_in">Player In</string>
 
+    <!-- Timeline Tab -->
+    <string name="timeline_tab">Timeline</string>
+    <string name="summary_tab">Summary</string>
+    <string name="substitutions_tab">Substitutions</string>
+    <string name="statistics_tab">Statistics</string>
+    <string name="timeline_starting_lineup">Starting Lineup</string>
+    <string name="timeline_goal">Goal</string>
+    <string name="timeline_own_goal">Own Goal</string>
+    <string name="timeline_opponent_goal">Opponent Goal</string>
+    <string name="timeline_substitution">Substitution</string>
+    <string name="timeline_timeout">Timeout</string>
+    <string name="timeline_halftime">Half Time</string>
+    <string name="timeline_quarter_break">Quarter Break</string>
+    <string name="score_evolution_title">Score Evolution</string>
+    <string name="player_activity_title">Score &amp; Player Activity</string>
+    <string name="score_lines_label">Score Lines</string>
+    <string name="player_activity_lines_label">Player Activity</string>
+
     <!-- Match Creation Wizard -->
     <string name="wizard_step_general_data">General Data</string>
     <string name="wizard_step_squad_callup">Squad Call-Up</string>
