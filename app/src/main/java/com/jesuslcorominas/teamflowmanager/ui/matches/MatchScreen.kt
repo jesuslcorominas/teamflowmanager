@@ -331,6 +331,8 @@ private fun MatchDetailContent(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                // Disable user scrolling while dragging - auto-scroll handles edge scrolling
+                userScrollEnabled = !dragDropState.isDragging
             ) {
                 items(
                     items = state.playerTimes.sortedBy(currentSortOrder, state.match),
