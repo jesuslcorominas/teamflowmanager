@@ -41,6 +41,10 @@ val SubstitutionRed = Color(0xFF960615)
 
 val GoalKeeperBadge = Color(0xFF960615)
 
+// Score Evolution Chart Colors
+val ChartTeamColor = Color(0xFF003366) // Dark blue for team score line
+val ChartOpponentColor = Color(0xFFFF6B35) // Orange for opponent score line
+
 val LightColorScheme =
     lightColorScheme(
         primary = Primary,

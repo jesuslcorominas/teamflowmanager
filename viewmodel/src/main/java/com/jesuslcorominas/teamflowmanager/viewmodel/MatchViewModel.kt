@@ -10,8 +10,11 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
+import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCase
@@ -20,6 +23,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCase
@@ -49,6 +53,7 @@ class MatchViewModel(
     private val startPlayerTimerUseCase: StartPlayerTimerUseCase,
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
     private val getMatchSummaryUseCase: GetMatchSummaryUseCase,
+    private val getMatchTimelineUseCase: GetMatchTimelineUseCase,
     private val registerGoal: RegisterGoalUseCase,
     private val startTimeoutUseCase: StartTimeoutUseCase,
     private val endTimeoutUseCase: EndTimeoutUseCase,
@@ -413,26 +418,27 @@ class MatchViewModel(
         _showGoalScorerDialog.value = false
     }
 
-    fun registerGoal(scorerId: Long) {
+    fun registerGoal(scorerId: Long?) {
         viewModelScope.launch {
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                    crashReporter.log("Registering goal for player: $scorerId")
+                    crashReporter.log("Registering ${scorerId?.let { "goal for player: $it" } ?: "own goal (autogol by rival)"}")
                     registerGoal(
                         matchId = currentState.match.id,
                         scorerId = scorerId,
                         currentTimeMillis = _currentTime.value,
                         isOpponentGoal = false,
+                        isOwnGoal = scorerId == null
                     )
 
                     analyticsTracker.logEvent(
                         AnalyticsEvent.GOAL_SCORED,
                         mapOf(
                             AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
-                            AnalyticsParam.PLAYER_ID to scorerId.toString(),
+                            AnalyticsParam.PLAYER_ID to (scorerId?.toString() ?: ""),
                             AnalyticsParam.GOAL_MINUTE to (_currentTime.value / 60000).toString(),
-                            AnalyticsParam.TEAM_TYPE to "own",
-                        ),
+                            AnalyticsParam.TEAM_TYPE to (scorerId?.let { "own" } ?: "own_goal"),
+                        ).filter { it.value.isNotBlank() },
                     )
 
                     _showGoalScorerDialog.value = false
@@ -517,12 +523,15 @@ class MatchViewModel(
                 if (state != null) {
                     _uiState.value = state
                 } else {
-                    // Load finished match summary
+                    // Load finished match summary and timeline
                     getMatchById(matchId).collect { match ->
                         if (match != null && match.status == MatchStatus.FINISHED) {
-                            getMatchSummaryUseCase(match.id).collect { summary ->
+                            combine(
+                                getMatchSummaryUseCase(match.id),
+                                getMatchTimelineUseCase(match.id),
+                            ) { summary, timeline ->
                                 if (summary != null) {
-                                    _uiState.value = MatchUiState.Finished(
+                                    MatchUiState.Finished(
                                         match = match,
                                         currentTime = _currentTime.value,
                                         playerTimes = summary.playerTimes.map { playerTimeSummary ->
@@ -541,7 +550,16 @@ class MatchViewModel(
                                                 matchElapsedTimeMillis = sub.matchElapsedTimeMillis,
                                             )
                                         },
+                                        timelineEvents = timeline?.events ?: emptyList(),
+                                        scoreEvolution = timeline?.scoreEvolution ?: emptyList(),
+                                        playerActivity = timeline?.playerActivity ?: emptyList(),
                                     )
+                                } else {
+                                    null
+                                }
+                            }.collect { finishedState ->
+                                if (finishedState != null) {
+                                    _uiState.value = finishedState
                                 }
                             }
                         }
@@ -659,6 +677,9 @@ sealed class MatchUiState {
         val currentTime: Long,
         val playerTimes: List<PlayerTimeItem>,
         val substitutions: List<SubstitutionItem>,
+        val timelineEvents: List<TimelineEvent> = emptyList(),
+        val scoreEvolution: List<ScorePoint> = emptyList(),
+        val playerActivity: List<PlayerActivityInterval> = emptyList(),
     ) : MatchUiState()
 }
 
