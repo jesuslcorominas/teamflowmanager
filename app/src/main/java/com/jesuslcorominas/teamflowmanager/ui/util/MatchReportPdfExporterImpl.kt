@@ -529,9 +529,9 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         canvas.drawText(timeText, MARGIN, yPosition + SMALL_SIZE, timePaint)
 
         // Draw event icon with colored background circle
-        val iconCenterX = MARGIN + 45f
+        val iconCenterX = MARGIN + 48f
         val iconCenterY = yPosition + SMALL_SIZE / 2
-        val iconRadius = 10f
+        val iconRadius = 12f  // Increased from 10f for better quality
         
         // Draw background circle
         val backgroundPaint = Paint().apply {
@@ -549,7 +549,7 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
             textSize = SMALL_SIZE
             color = Color.BLACK
         }
-        canvas.drawText(eventText, MARGIN + 65f, yPosition + SMALL_SIZE, eventPaint)
+        canvas.drawText(eventText, MARGIN + 70f, yPosition + SMALL_SIZE, eventPaint)
 
         return yPosition + TIMELINE_ITEM_HEIGHT
     }
@@ -570,8 +570,8 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
             // Set the icon color to white
             it.colorFilter = PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
             
-            // Calculate icon size (70% of the circle diameter to fit nicely)
-            val iconSize = (radius * 1.4f).toInt()
+            // Calculate icon size (80% of the circle diameter for better visibility)
+            val iconSize = (radius * 1.6f).toInt()
             val halfSize = iconSize / 2
             
             // Set bounds centered on the icon position
@@ -621,8 +621,8 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
                 Color.rgb(150, 6, 21) // SubstitutionRed #960615
                 else Color.rgb(76, 175, 80) // SubstitutionGreen #4CAF50
             is TimelineEvent.Substitution -> Color.rgb(0, 51, 102) // Primary - Dark blue #003366
-            is TimelineEvent.Timeout -> Color.rgb(255, 152, 0) // Orange (tertiary approximation)
-            is TimelineEvent.PeriodBreak -> Color.rgb(96, 125, 139) // Blue Grey (secondary approximation)
+            is TimelineEvent.Timeout -> Color.rgb(59, 193, 91) // AccentAffirmative (tertiary) #3BC15B
+            is TimelineEvent.PeriodBreak -> Color.rgb(150, 6, 21) // AccentEmphasis (secondary) #960615
         }
     }
 
