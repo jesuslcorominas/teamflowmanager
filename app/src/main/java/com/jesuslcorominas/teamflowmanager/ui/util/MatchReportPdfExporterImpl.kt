@@ -242,6 +242,11 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         opponentName: String,
         yPosition: Float
     ): Float {
+        // Early return if insufficient data points to draw a meaningful chart
+        if (scoreEvolution.size < 2) {
+            return yPosition
+        }
+        
         val chartLeft = MARGIN + 30f
         val chartRight = PAGE_WIDTH - MARGIN
         val chartTop = yPosition

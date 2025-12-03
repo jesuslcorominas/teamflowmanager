@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.model.GoalReport
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerMatchReport
@@ -104,6 +105,17 @@ internal class GetMatchReportDataUseCaseImpl(
         }
     }
 
+    /**
+     * Builds a list of timeline events for a match.
+     * Events include starting lineup, goals, substitutions, and period breaks,
+     * sorted chronologically by match elapsed time.
+     *
+     * @param match The match data containing period information
+     * @param goals List of goals scored during the match
+     * @param substitutions List of player substitutions during the match
+     * @param players List of all players to resolve player references
+     * @return List of timeline events sorted by elapsed time
+     */
     private fun buildTimelineEvents(
         match: Match,
         goals: List<Goal>,
@@ -161,11 +173,11 @@ internal class GetMatchReportDataUseCaseImpl(
         // 4. Add period break events (for multi-period matches)
         match.periods.forEachIndexed { index, period ->
             // Add a break event at the end of each period except the last
-            if (index < match.periods.size - 1 && period.endTimeMillis > 0) {
+            if (index < match.periods.size - 1 && isCompletedPeriod(period)) {
                 // Calculate accumulated play time up to this period's end
                 val accumulatedPlayTime = match.periods
                     .take(index + 1)
-                    .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
+                    .filter { isCompletedPeriod(it) }
                     .sumOf { it.endTimeMillis - it.startTimeMillis }
 
                 events.add(
@@ -182,6 +194,14 @@ internal class GetMatchReportDataUseCaseImpl(
         return events.sortedBy { it.matchElapsedTimeMillis }
     }
 
+    /**
+     * Builds a list of score points representing the evolution of the score during the match.
+     * Used to render the score evolution chart in the PDF report.
+     *
+     * @param match The match data containing period information for total elapsed time
+     * @param goals List of goals scored during the match
+     * @return List of score points including start (0-0), all goals, and final score
+     */
     private fun buildScoreEvolution(
         match: Match,
         goals: List<Goal>,
@@ -227,9 +247,15 @@ internal class GetMatchReportDataUseCaseImpl(
         return points
     }
 
+    /**
+     * Checks if a match period has been completed (has valid start and end times).
+     */
+    private fun isCompletedPeriod(period: MatchPeriod): Boolean =
+        period.startTimeMillis > 0 && period.endTimeMillis > 0
+
     private fun calculateTotalElapsedTime(match: Match): Long {
         return match.periods
-            .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
+            .filter { isCompletedPeriod(it) }
             .sumOf { it.endTimeMillis - it.startTimeMillis }
     }
 }
