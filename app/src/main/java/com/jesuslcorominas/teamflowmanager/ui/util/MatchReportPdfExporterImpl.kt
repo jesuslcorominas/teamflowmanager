@@ -5,7 +5,10 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.pdf.PdfDocument
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
@@ -552,111 +555,35 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
     }
 
     private fun drawTimelineIcon(canvas: Canvas, event: TimelineEvent, centerX: Float, centerY: Float, radius: Float) {
-        val iconPaint = Paint().apply {
-            color = Color.WHITE
-            style = Paint.Style.STROKE
-            strokeWidth = 1.5f
-            isAntiAlias = true
-        }
-        val fillPaint = Paint().apply {
-            color = Color.WHITE
-            style = Paint.Style.FILL
-            isAntiAlias = true
+        // Get the appropriate drawable resource ID for the event
+        val drawableResId = when (event) {
+            is TimelineEvent.StartingLineup -> R.drawable.ic_people
+            is TimelineEvent.GoalScored -> R.drawable.ic_sports_soccer
+            is TimelineEvent.Substitution -> R.drawable.ic_swap_horiz
+            is TimelineEvent.Timeout -> R.drawable.ic_timer
+            is TimelineEvent.PeriodBreak -> R.drawable.ic_pause
         }
         
-        when (event) {
-            is TimelineEvent.StartingLineup -> {
-                // People icon - draw two simple person shapes
-                val personRadius = radius * 0.25f
-                val personOffsetX = radius * 0.35f
-                
-                // Left person head
-                canvas.drawCircle(centerX - personOffsetX, centerY - personRadius * 1.2f, personRadius, fillPaint)
-                // Left person body arc
-                val leftPath = Path().apply {
-                    addArc(
-                        centerX - personOffsetX - personRadius * 1.5f,
-                        centerY,
-                        centerX - personOffsetX + personRadius * 1.5f,
-                        centerY + personRadius * 2.5f,
-                        180f, 180f
-                    )
-                }
-                canvas.drawPath(leftPath, fillPaint)
-                
-                // Right person head
-                canvas.drawCircle(centerX + personOffsetX, centerY - personRadius * 1.2f, personRadius, fillPaint)
-                // Right person body arc
-                val rightPath = Path().apply {
-                    addArc(
-                        centerX + personOffsetX - personRadius * 1.5f,
-                        centerY,
-                        centerX + personOffsetX + personRadius * 1.5f,
-                        centerY + personRadius * 2.5f,
-                        180f, 180f
-                    )
-                }
-                canvas.drawPath(rightPath, fillPaint)
-            }
-            is TimelineEvent.GoalScored -> {
-                // Soccer ball icon - circle with pentagon pattern
-                val ballRadius = radius * 0.55f
-                canvas.drawCircle(centerX, centerY, ballRadius, iconPaint)
-                // Draw inner pattern (simplified)
-                val innerRadius = ballRadius * 0.5f
-                canvas.drawCircle(centerX, centerY, innerRadius, fillPaint)
-            }
-            is TimelineEvent.Substitution -> {
-                // Swap horizontal icon - two arrows
-                val arrowLength = radius * 0.6f
-                val arrowOffset = radius * 0.25f
-                
-                // Top arrow pointing right
-                canvas.drawLine(centerX - arrowLength, centerY - arrowOffset, centerX + arrowLength, centerY - arrowOffset, iconPaint)
-                val topArrowPath = Path().apply {
-                    moveTo(centerX + arrowLength, centerY - arrowOffset)
-                    lineTo(centerX + arrowLength - 3f, centerY - arrowOffset - 3f)
-                    moveTo(centerX + arrowLength, centerY - arrowOffset)
-                    lineTo(centerX + arrowLength - 3f, centerY - arrowOffset + 3f)
-                }
-                canvas.drawPath(topArrowPath, iconPaint)
-                
-                // Bottom arrow pointing left
-                canvas.drawLine(centerX + arrowLength, centerY + arrowOffset, centerX - arrowLength, centerY + arrowOffset, iconPaint)
-                val bottomArrowPath = Path().apply {
-                    moveTo(centerX - arrowLength, centerY + arrowOffset)
-                    lineTo(centerX - arrowLength + 3f, centerY + arrowOffset - 3f)
-                    moveTo(centerX - arrowLength, centerY + arrowOffset)
-                    lineTo(centerX - arrowLength + 3f, centerY + arrowOffset + 3f)
-                }
-                canvas.drawPath(bottomArrowPath, iconPaint)
-            }
-            is TimelineEvent.Timeout -> {
-                // Timer icon - clock face
-                val clockRadius = radius * 0.55f
-                canvas.drawCircle(centerX, centerY, clockRadius, iconPaint)
-                // Draw clock hands
-                canvas.drawLine(centerX, centerY, centerX, centerY - clockRadius * 0.7f, iconPaint)
-                canvas.drawLine(centerX, centerY, centerX + clockRadius * 0.5f, centerY, iconPaint)
-            }
-            is TimelineEvent.PeriodBreak -> {
-                // Pause icon - two vertical bars
-                val barWidth = radius * 0.2f
-                val barHeight = radius * 0.8f
-                val barOffset = radius * 0.25f
-                
-                fillPaint.style = Paint.Style.FILL
-                canvas.drawRect(
-                    centerX - barOffset - barWidth/2, centerY - barHeight/2,
-                    centerX - barOffset + barWidth/2, centerY + barHeight/2,
-                    fillPaint
-                )
-                canvas.drawRect(
-                    centerX + barOffset - barWidth/2, centerY - barHeight/2,
-                    centerX + barOffset + barWidth/2, centerY + barHeight/2,
-                    fillPaint
-                )
-            }
+        // Load the drawable and render it
+        val drawable = ContextCompat.getDrawable(context, drawableResId)
+        drawable?.let {
+            // Set the icon color to white
+            it.colorFilter = PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+            
+            // Calculate icon size (70% of the circle diameter to fit nicely)
+            val iconSize = (radius * 1.4f).toInt()
+            val halfSize = iconSize / 2
+            
+            // Set bounds centered on the icon position
+            it.setBounds(
+                (centerX - halfSize).toInt(),
+                (centerY - halfSize).toInt(),
+                (centerX + halfSize).toInt(),
+                (centerY + halfSize).toInt()
+            )
+            
+            // Draw the icon
+            it.draw(canvas)
         }
     }
 
