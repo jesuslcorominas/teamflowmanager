@@ -5,6 +5,7 @@ data class MatchReportData(
     val playerReports: List<PlayerMatchReport>,
     val timelineEvents: List<TimelineEvent> = emptyList(),
     val scoreEvolution: List<ScorePoint> = emptyList(),
+    val playerActivity: List<PlayerActivityInterval> = emptyList(),
 )
 
 data class PlayerMatchReport(

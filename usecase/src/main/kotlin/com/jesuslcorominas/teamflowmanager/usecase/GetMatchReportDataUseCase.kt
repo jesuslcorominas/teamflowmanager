@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerMatchReport
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
@@ -94,12 +95,14 @@ internal class GetMatchReportDataUseCaseImpl(
                 // Build timeline events and score evolution for the report
                 val timelineEvents = buildTimelineEvents(match, goals, substitutions, players)
                 val scoreEvolution = buildScoreEvolution(match, goals)
+                val playerActivity = buildPlayerActivity(match, substitutions, players)
                 
                 MatchReportData(
                     match = match,
                     playerReports = playerReports.sortedBy { it.number },
                     timelineEvents = timelineEvents,
                     scoreEvolution = scoreEvolution,
+                    playerActivity = playerActivity,
                 )
             }
         }
@@ -257,5 +260,72 @@ internal class GetMatchReportDataUseCaseImpl(
         return match.periods
             .filter { isCompletedPeriod(it) }
             .sumOf { it.endTimeMillis - it.startTimeMillis }
+    }
+
+    /**
+     * Build player activity intervals showing when each player was on the field.
+     * Uses starting lineup and substitutions to compute time intervals.
+     *
+     * @param match The match data containing starting lineup and period information
+     * @param substitutions List of player substitutions during the match
+     * @param players List of all players to resolve player references
+     * @return List of player activity intervals sorted by player number
+     */
+    private fun buildPlayerActivity(
+        match: Match,
+        substitutions: List<PlayerSubstitution>,
+        players: List<Player>,
+    ): List<PlayerActivityInterval> {
+        val intervals = mutableListOf<PlayerActivityInterval>()
+
+        // Calculate total match time
+        val totalElapsedTime = calculateTotalElapsedTime(match)
+
+        // Track which players are currently active and their start time
+        val activePlayerStartTimes = mutableMapOf<Long, Long>()
+
+        // Starting lineup players are active from time 0
+        match.startingLineupIds.forEach { playerId ->
+            activePlayerStartTimes[playerId] = 0L
+        }
+
+        // Process substitutions in chronological order
+        substitutions.sortedBy { it.matchElapsedTimeMillis }.forEach { substitution ->
+            // Player out: end their interval
+            val playerOutId = substitution.playerOutId
+            val playerOutStartTime = activePlayerStartTimes.remove(playerOutId)
+            if (playerOutStartTime != null) {
+                val player = players.find { it.id == playerOutId }
+                if (player != null) {
+                    intervals.add(
+                        PlayerActivityInterval(
+                            player = player,
+                            startTimeMillis = playerOutStartTime,
+                            endTimeMillis = substitution.matchElapsedTimeMillis,
+                        )
+                    )
+                }
+            }
+
+            // Player in: start their interval
+            activePlayerStartTimes[substitution.playerInId] = substitution.matchElapsedTimeMillis
+        }
+
+        // End intervals for players still active at match end
+        activePlayerStartTimes.forEach { (playerId, startTime) ->
+            val player = players.find { it.id == playerId }
+            if (player != null) {
+                intervals.add(
+                    PlayerActivityInterval(
+                        player = player,
+                        startTimeMillis = startTime,
+                        endTimeMillis = totalElapsedTime,
+                    )
+                )
+            }
+        }
+
+        // Sort by player number for consistent display
+        return intervals.sortedBy { it.player.number }
     }
 }

@@ -9,6 +9,7 @@ import android.graphics.pdf.PdfDocument
 import androidx.core.content.FileProvider
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.domain.utils.MatchReportPdfExporter
@@ -33,12 +34,32 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         private const val MIN_TABLE_ROW_HEIGHT = 20f
         private const val HEADER_ROW_HEIGHT = 24f
         private const val CHART_HEIGHT = 150f
+        private const val PLAYER_ACTIVITY_ROW_HEIGHT = 16f
         private const val TIMELINE_ITEM_HEIGHT = 24f
         
         // Chart colors
         private val CHART_TEAM_COLOR = Color.rgb(76, 175, 80) // Green
         private val CHART_OPPONENT_COLOR = Color.rgb(244, 67, 54) // Red
         private val CHART_GRID_COLOR = Color.rgb(200, 200, 200)
+        
+        // Player activity colors
+        private val PLAYER_COLORS = listOf(
+            Color.rgb(33, 150, 243),  // Blue
+            Color.rgb(76, 175, 80),   // Green
+            Color.rgb(255, 152, 0),   // Orange
+            Color.rgb(156, 39, 176),  // Purple
+            Color.rgb(233, 30, 99),   // Pink
+            Color.rgb(0, 188, 212),   // Cyan
+            Color.rgb(255, 235, 59),  // Yellow
+            Color.rgb(121, 85, 72),   // Brown
+            Color.rgb(96, 125, 139),  // Blue Gray
+            Color.rgb(255, 87, 34),   // Deep Orange
+            Color.rgb(63, 81, 181),   // Indigo
+            Color.rgb(0, 150, 136),   // Teal
+            Color.rgb(205, 220, 57),  // Lime
+            Color.rgb(103, 58, 183),  // Deep Purple
+            Color.rgb(139, 195, 74),  // Light Green
+        )
     }
 
     private fun formatTime(millis: Long): String {
@@ -58,7 +79,7 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         var currentPage = 1
         var yPosition = MARGIN
 
-        // Page 1: Match Report
+        // ========== PAGE 1: Match Summary and Player Table ==========
         var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
         var page = document.startPage(pageInfo)
         var canvas = page.canvas
@@ -86,72 +107,7 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         )
         yPosition += LINE_HEIGHT
 
-        // Score Evolution Chart Section
-        if (matchReportData.scoreEvolution.isNotEmpty()) {
-            // Check if we need a new page
-            if (yPosition + CHART_HEIGHT + LINE_HEIGHT * 3 > PAGE_HEIGHT - MARGIN) {
-                document.finishPage(page)
-                currentPage++
-                pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
-                page = document.startPage(pageInfo)
-                canvas = page.canvas
-                yPosition = MARGIN
-            }
-            
-            yPosition = drawSectionTitle(canvas, context.getString(R.string.score_evolution_title), yPosition)
-            yPosition += LINE_HEIGHT / 2
-            yPosition = drawScoreEvolutionChart(
-                canvas, 
-                matchReportData.scoreEvolution, 
-                match.teamName, 
-                match.opponent, 
-                yPosition
-            )
-            yPosition += LINE_HEIGHT
-        }
-
-        // Timeline Section
-        if (matchReportData.timelineEvents.isNotEmpty()) {
-            // Check if we need a new page
-            if (yPosition + LINE_HEIGHT * 3 > PAGE_HEIGHT - MARGIN) {
-                document.finishPage(page)
-                currentPage++
-                pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
-                page = document.startPage(pageInfo)
-                canvas = page.canvas
-                yPosition = MARGIN
-            }
-            
-            yPosition = drawSectionTitle(canvas, context.getString(R.string.timeline_tab), yPosition)
-            yPosition += LINE_HEIGHT / 2
-            
-            matchReportData.timelineEvents.forEach { event ->
-                // Check if we need a new page for timeline items
-                if (yPosition + TIMELINE_ITEM_HEIGHT > PAGE_HEIGHT - MARGIN) {
-                    document.finishPage(page)
-                    currentPage++
-                    pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
-                    page = document.startPage(pageInfo)
-                    canvas = page.canvas
-                    yPosition = MARGIN
-                }
-                
-                yPosition = drawTimelineEvent(canvas, event, yPosition)
-            }
-            yPosition += LINE_HEIGHT
-        }
-
         // Players section
-        // Check if we need a new page
-        if (yPosition + LINE_HEIGHT * 3 > PAGE_HEIGHT - MARGIN) {
-            document.finishPage(page)
-            currentPage++
-            pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
-            page = document.startPage(pageInfo)
-            canvas = page.canvas
-            yPosition = MARGIN
-        }
-        
         yPosition = drawSectionTitle(canvas, context.getString(R.string.players_section), yPosition)
         yPosition += LINE_HEIGHT
 
@@ -173,6 +129,69 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         }
 
         document.finishPage(page)
+
+        // ========== PAGE 2: Charts (Score Evolution + Player Activity) ==========
+        currentPage++
+        pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
+        page = document.startPage(pageInfo)
+        canvas = page.canvas
+        yPosition = MARGIN
+
+        // Score Evolution Chart Section
+        if (matchReportData.scoreEvolution.isNotEmpty()) {
+            yPosition = drawSectionTitle(canvas, context.getString(R.string.score_evolution_title), yPosition)
+            yPosition += LINE_HEIGHT / 2
+            yPosition = drawScoreEvolutionChart(
+                canvas, 
+                matchReportData.scoreEvolution, 
+                match.teamName, 
+                match.opponent, 
+                yPosition
+            )
+            yPosition += LINE_HEIGHT * 2
+        }
+
+        // Player Activity Chart Section
+        if (matchReportData.playerActivity.isNotEmpty()) {
+            yPosition = drawSectionTitle(canvas, context.getString(R.string.player_activity_title), yPosition)
+            yPosition += LINE_HEIGHT / 2
+            yPosition = drawPlayerActivityChart(
+                canvas,
+                matchReportData.playerActivity,
+                matchReportData.scoreEvolution,
+                yPosition
+            )
+        }
+
+        document.finishPage(page)
+
+        // ========== PAGE 3+: Timeline ==========
+        if (matchReportData.timelineEvents.isNotEmpty()) {
+            currentPage++
+            pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
+            page = document.startPage(pageInfo)
+            canvas = page.canvas
+            yPosition = MARGIN
+            
+            yPosition = drawSectionTitle(canvas, context.getString(R.string.timeline_tab), yPosition)
+            yPosition += LINE_HEIGHT / 2
+            
+            matchReportData.timelineEvents.forEach { event ->
+                // Check if we need a new page for timeline items
+                if (yPosition + TIMELINE_ITEM_HEIGHT > PAGE_HEIGHT - MARGIN) {
+                    document.finishPage(page)
+                    currentPage++
+                    pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
+                    page = document.startPage(pageInfo)
+                    canvas = page.canvas
+                    yPosition = MARGIN
+                }
+                
+                yPosition = drawTimelineEvent(canvas, event, yPosition)
+            }
+
+            document.finishPage(page)
+        }
 
         // Save to file
         return try {
@@ -295,23 +314,26 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         // Draw opponent score line (step-wise)
         drawStepLine(canvas, scoreEvolution, maxTime, maxScore, chartLeft, chartBottom, chartWidth, chartHeight, CHART_OPPONENT_COLOR, false)
 
-        // Draw dots at score change points
+        // Draw dots ONLY for the team that scored at each point
         val dotPaint = Paint().apply {
             style = Paint.Style.FILL
         }
         
         scoreEvolution.forEach { point ->
             val x = chartLeft + (point.timeMillis.toFloat() / maxTime * chartWidth)
-            val teamY = chartBottom - (point.teamScore.toFloat() / maxScore * chartHeight)
-            val opponentY = chartBottom - (point.opponentScore.toFloat() / maxScore * chartHeight)
 
-            // Team dot
-            dotPaint.color = CHART_TEAM_COLOR
-            canvas.drawCircle(x, teamY, 4f, dotPaint)
-            
-            // Opponent dot
-            dotPaint.color = CHART_OPPONENT_COLOR
-            canvas.drawCircle(x, opponentY, 4f, dotPaint)
+            // Only draw dot for the team that scored
+            if (point.isOpponentGoal) {
+                // Opponent scored - draw opponent dot
+                val opponentY = chartBottom - (point.opponentScore.toFloat() / maxScore * chartHeight)
+                dotPaint.color = CHART_OPPONENT_COLOR
+                canvas.drawCircle(x, opponentY, 4f, dotPaint)
+            } else if (point.teamScore > 0 || point.timeMillis == 0L) {
+                // Team scored (or it's the starting point) - draw team dot
+                val teamY = chartBottom - (point.teamScore.toFloat() / maxScore * chartHeight)
+                dotPaint.color = CHART_TEAM_COLOR
+                canvas.drawCircle(x, teamY, 4f, dotPaint)
+            }
         }
 
         // Draw X-axis time labels
@@ -398,6 +420,86 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         }
 
         canvas.drawPath(path, linePaint)
+    }
+
+    private fun drawPlayerActivityChart(
+        canvas: Canvas,
+        playerActivity: List<PlayerActivityInterval>,
+        scoreEvolution: List<ScorePoint>,
+        yPosition: Float
+    ): Float {
+        if (playerActivity.isEmpty()) return yPosition
+        
+        // Get unique players from activity intervals
+        val uniquePlayers = playerActivity.map { it.player }.distinctBy { it.id }.sortedBy { it.number }
+        
+        val chartLeft = MARGIN + 40f
+        val chartRight = PAGE_WIDTH - MARGIN
+        val chartWidth = chartRight - chartLeft
+        val chartHeight = uniquePlayers.size * PLAYER_ACTIVITY_ROW_HEIGHT + 20f
+        val chartBottom = yPosition + chartHeight
+        
+        // Calculate max time from both score evolution and player activity
+        val scoreMaxTime = scoreEvolution.maxOfOrNull { it.timeMillis } ?: 0L
+        val activityMaxTime = playerActivity.maxOfOrNull { it.endTimeMillis } ?: 0L
+        val maxTime = max(scoreMaxTime, activityMaxTime).coerceAtLeast(1L)
+        
+        // Draw chart background
+        val backgroundPaint = Paint().apply {
+            color = Color.WHITE
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(chartLeft, yPosition, chartRight, chartBottom, backgroundPaint)
+        
+        // Draw player activity bars
+        val labelPaint = Paint().apply {
+            textSize = SMALL_SIZE
+            color = Color.BLACK
+            textAlign = Paint.Align.RIGHT
+        }
+        
+        uniquePlayers.forEachIndexed { index, player ->
+            val rowY = yPosition + 10f + index * PLAYER_ACTIVITY_ROW_HEIGHT + PLAYER_ACTIVITY_ROW_HEIGHT / 2
+            val playerColor = PLAYER_COLORS[index % PLAYER_COLORS.size]
+            
+            // Draw player number label
+            canvas.drawText("${player.number}", chartLeft - 5f, rowY + SMALL_SIZE / 3, labelPaint)
+            
+            // Draw activity intervals for this player
+            val barPaint = Paint().apply {
+                color = playerColor
+                style = Paint.Style.FILL
+            }
+            
+            playerActivity
+                .filter { it.player.id == player.id }
+                .forEach { interval ->
+                    val startX = chartLeft + (interval.startTimeMillis.toFloat() / maxTime * chartWidth)
+                    val endX = chartLeft + (interval.endTimeMillis.toFloat() / maxTime * chartWidth)
+                    
+                    // Draw horizontal bar
+                    canvas.drawRect(startX, rowY - 4f, endX, rowY + 4f, barPaint)
+                    
+                    // Draw start and end dots
+                    canvas.drawCircle(startX, rowY, 4f, barPaint)
+                    canvas.drawCircle(endX, rowY, 4f, barPaint)
+                }
+        }
+        
+        // Draw X-axis time labels
+        val timeLabelPaint = Paint().apply {
+            textSize = SMALL_SIZE
+            color = Color.GRAY
+            textAlign = Paint.Align.CENTER
+        }
+        
+        val timeLabels = listOf(0L, maxTime / 2, maxTime)
+        timeLabels.forEach { time ->
+            val x = chartLeft + (time.toFloat() / maxTime * chartWidth)
+            canvas.drawText(formatTimeMinutes(time), x, chartBottom + SMALL_SIZE + 5f, timeLabelPaint)
+        }
+        
+        return chartBottom + LINE_HEIGHT
     }
 
     private fun drawTimelineEvent(canvas: Canvas, event: TimelineEvent, yPosition: Float): Float {

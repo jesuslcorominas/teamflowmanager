@@ -286,6 +286,69 @@ class GetMatchReportDataUseCaseTest {
         assertEquals(0, result.scoreEvolution[0].opponentScore)
     }
 
+    @Test
+    fun `invoke should include player activity intervals`() = runTest {
+        // Given
+        val matchId = 1L
+        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val player2 = createPlayer(2L, "Jane", "Smith", 7)
+        val player3 = createPlayer(3L, "Mike", "Johnson", 9)
+        val match = createFinishedMatch(
+            id = matchId,
+            startingLineupIds = listOf(1L, 2L),
+            squadCallUpIds = listOf(1L, 2L, 3L),
+            periods = listOf(
+                MatchPeriod(
+                    periodNumber = 1,
+                    periodDuration = 3000000L,
+                    startTimeMillis = 1000000L,
+                    endTimeMillis = 4000000L,
+                ),
+            ),
+        )
+        val substitutions = listOf(
+            PlayerSubstitution(
+                id = 1L,
+                matchId = matchId,
+                playerOutId = 1L,
+                playerInId = 3L,
+                substitutionTimeMillis = 2500000L,
+                matchElapsedTimeMillis = 1500000L,
+            ),
+        )
+
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2, player3))
+        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
+        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+
+        // When
+        val result = getMatchReportDataUseCase(matchId).first()
+
+        // Then
+        assertNotNull(result)
+        assertEquals(3, result!!.playerActivity.size)
+        
+        // Player 1 should have played from 0 to 1500000 (substitution time)
+        val player1Activity = result.playerActivity.find { it.player.id == 1L }
+        assertNotNull(player1Activity)
+        assertEquals(0L, player1Activity!!.startTimeMillis)
+        assertEquals(1500000L, player1Activity.endTimeMillis)
+        
+        // Player 2 should have played full match
+        val player2Activity = result.playerActivity.find { it.player.id == 2L }
+        assertNotNull(player2Activity)
+        assertEquals(0L, player2Activity!!.startTimeMillis)
+        assertEquals(3000000L, player2Activity.endTimeMillis)
+        
+        // Player 3 should have played from 1500000 to end
+        val player3Activity = result.playerActivity.find { it.player.id == 3L }
+        assertNotNull(player3Activity)
+        assertEquals(1500000L, player3Activity!!.startTimeMillis)
+        assertEquals(3000000L, player3Activity.endTimeMillis)
+    }
+
     private fun createPlayer(
         id: Long,
         firstName: String,
