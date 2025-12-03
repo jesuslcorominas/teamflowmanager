@@ -3,6 +3,8 @@ package com.jesuslcorominas.teamflowmanager.domain.model
 data class MatchReportData(
     val match: Match,
     val playerReports: List<PlayerMatchReport>,
+    val timelineEvents: List<TimelineEvent> = emptyList(),
+    val scoreEvolution: List<ScorePoint> = emptyList(),
 )
 
 data class PlayerMatchReport(

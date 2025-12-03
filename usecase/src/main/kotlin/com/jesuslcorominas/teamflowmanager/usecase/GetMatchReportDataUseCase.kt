@@ -1,11 +1,17 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.model.GoalReport
+import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
+import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerMatchReport
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionReport
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionType
+import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
@@ -84,11 +90,146 @@ internal class GetMatchReportDataUseCaseImpl(
                     )
                 }
                 
+                // Build timeline events and score evolution for the report
+                val timelineEvents = buildTimelineEvents(match, goals, substitutions, players)
+                val scoreEvolution = buildScoreEvolution(match, goals)
+                
                 MatchReportData(
                     match = match,
-                    playerReports = playerReports.sortedBy { it.number }
+                    playerReports = playerReports.sortedBy { it.number },
+                    timelineEvents = timelineEvents,
+                    scoreEvolution = scoreEvolution,
                 )
             }
         }
+    }
+
+    private fun buildTimelineEvents(
+        match: Match,
+        goals: List<Goal>,
+        substitutions: List<PlayerSubstitution>,
+        players: List<Player>,
+    ): List<TimelineEvent> {
+        val events = mutableListOf<TimelineEvent>()
+
+        // 1. Add starting lineup event
+        val startingPlayers = players.filter { it.id in match.startingLineupIds }
+        if (startingPlayers.isNotEmpty()) {
+            events.add(
+                TimelineEvent.StartingLineup(
+                    matchElapsedTimeMillis = 0L,
+                    players = startingPlayers.sortedBy { it.number },
+                )
+            )
+        }
+
+        // 2. Add goal events with running score
+        var teamScore = 0
+        var opponentScore = 0
+        goals.sortedBy { it.matchElapsedTimeMillis }.forEach { goal ->
+            if (goal.isOpponentGoal) {
+                opponentScore++
+            } else {
+                teamScore++
+            }
+            events.add(
+                TimelineEvent.GoalScored(
+                    matchElapsedTimeMillis = goal.matchElapsedTimeMillis,
+                    scorer = if (goal.scorerId != null) players.find { it.id == goal.scorerId } else null,
+                    isOpponentGoal = goal.isOpponentGoal,
+                    teamScore = teamScore,
+                    opponentScore = opponentScore,
+                )
+            )
+        }
+
+        // 3. Add substitution events
+        substitutions.forEach { substitution ->
+            val playerIn = players.find { it.id == substitution.playerInId }
+            val playerOut = players.find { it.id == substitution.playerOutId }
+            if (playerIn != null && playerOut != null) {
+                events.add(
+                    TimelineEvent.Substitution(
+                        matchElapsedTimeMillis = substitution.matchElapsedTimeMillis,
+                        playerIn = playerIn,
+                        playerOut = playerOut,
+                    )
+                )
+            }
+        }
+
+        // 4. Add period break events (for multi-period matches)
+        match.periods.forEachIndexed { index, period ->
+            // Add a break event at the end of each period except the last
+            if (index < match.periods.size - 1 && period.endTimeMillis > 0) {
+                // Calculate accumulated play time up to this period's end
+                val accumulatedPlayTime = match.periods
+                    .take(index + 1)
+                    .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
+                    .sumOf { it.endTimeMillis - it.startTimeMillis }
+
+                events.add(
+                    TimelineEvent.PeriodBreak(
+                        matchElapsedTimeMillis = accumulatedPlayTime,
+                        periodNumber = period.periodNumber,
+                        periodType = match.periodType,
+                    )
+                )
+            }
+        }
+
+        // Sort by time in ascending order
+        return events.sortedBy { it.matchElapsedTimeMillis }
+    }
+
+    private fun buildScoreEvolution(
+        match: Match,
+        goals: List<Goal>,
+    ): List<ScorePoint> {
+        val points = mutableListOf<ScorePoint>()
+
+        // Start at 0-0
+        points.add(ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0, isOpponentGoal = false))
+
+        // Add a point for each goal
+        var teamScore = 0
+        var opponentScore = 0
+        goals.sortedBy { it.matchElapsedTimeMillis }.forEach { goal ->
+            if (goal.isOpponentGoal) {
+                opponentScore++
+            } else {
+                teamScore++
+            }
+            points.add(
+                ScorePoint(
+                    timeMillis = goal.matchElapsedTimeMillis,
+                    teamScore = teamScore,
+                    opponentScore = opponentScore,
+                    isOpponentGoal = goal.isOpponentGoal
+                )
+            )
+        }
+
+        // Add final point at match end
+        val totalElapsedTime = calculateTotalElapsedTime(match)
+
+        if (points.lastOrNull()?.timeMillis != totalElapsedTime) {
+            points.add(
+                ScorePoint(
+                    timeMillis = totalElapsedTime,
+                    teamScore = teamScore,
+                    opponentScore = opponentScore,
+                    isOpponentGoal = false
+                )
+            )
+        }
+
+        return points
+    }
+
+    private fun calculateTotalElapsedTime(match: Match): Long {
+        return match.periods
+            .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
+            .sumOf { it.endTimeMillis - it.startTimeMillis }
     }
 }

@@ -4,16 +4,20 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.pdf.PdfDocument
 import androidx.core.content.FileProvider
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
+import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
+import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.domain.utils.MatchReportPdfExporter
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.max
 
 class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfExporter {
 
@@ -28,6 +32,13 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         private const val SMALL_SIZE = 8f
         private const val MIN_TABLE_ROW_HEIGHT = 20f
         private const val HEADER_ROW_HEIGHT = 24f
+        private const val CHART_HEIGHT = 150f
+        private const val TIMELINE_ITEM_HEIGHT = 24f
+        
+        // Chart colors
+        private val CHART_TEAM_COLOR = Color.rgb(76, 175, 80) // Green
+        private val CHART_OPPONENT_COLOR = Color.rgb(244, 67, 54) // Red
+        private val CHART_GRID_COLOR = Color.rgb(200, 200, 200)
     }
 
     private fun formatTime(millis: Long): String {
@@ -35,6 +46,11 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60
         return String.format("%d:%02d", minutes, seconds)
+    }
+    
+    private fun formatTimeMinutes(millis: Long): String {
+        val minutes = (millis / 60000).toInt()
+        return "${minutes}'"
     }
 
     override fun exportMatchReportToPdf(matchReportData: MatchReportData): String? {
@@ -70,7 +86,72 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         )
         yPosition += LINE_HEIGHT
 
+        // Score Evolution Chart Section
+        if (matchReportData.scoreEvolution.isNotEmpty()) {
+            // Check if we need a new page
+            if (yPosition + CHART_HEIGHT + LINE_HEIGHT * 3 > PAGE_HEIGHT - MARGIN) {
+                document.finishPage(page)
+                currentPage++
+                pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
+                page = document.startPage(pageInfo)
+                canvas = page.canvas
+                yPosition = MARGIN
+            }
+            
+            yPosition = drawSectionTitle(canvas, context.getString(R.string.score_evolution_title), yPosition)
+            yPosition += LINE_HEIGHT / 2
+            yPosition = drawScoreEvolutionChart(
+                canvas, 
+                matchReportData.scoreEvolution, 
+                match.teamName, 
+                match.opponent, 
+                yPosition
+            )
+            yPosition += LINE_HEIGHT
+        }
+
+        // Timeline Section
+        if (matchReportData.timelineEvents.isNotEmpty()) {
+            // Check if we need a new page
+            if (yPosition + LINE_HEIGHT * 3 > PAGE_HEIGHT - MARGIN) {
+                document.finishPage(page)
+                currentPage++
+                pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
+                page = document.startPage(pageInfo)
+                canvas = page.canvas
+                yPosition = MARGIN
+            }
+            
+            yPosition = drawSectionTitle(canvas, context.getString(R.string.timeline_tab), yPosition)
+            yPosition += LINE_HEIGHT / 2
+            
+            matchReportData.timelineEvents.forEach { event ->
+                // Check if we need a new page for timeline items
+                if (yPosition + TIMELINE_ITEM_HEIGHT > PAGE_HEIGHT - MARGIN) {
+                    document.finishPage(page)
+                    currentPage++
+                    pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
+                    page = document.startPage(pageInfo)
+                    canvas = page.canvas
+                    yPosition = MARGIN
+                }
+                
+                yPosition = drawTimelineEvent(canvas, event, yPosition)
+            }
+            yPosition += LINE_HEIGHT
+        }
+
         // Players section
+        // Check if we need a new page
+        if (yPosition + LINE_HEIGHT * 3 > PAGE_HEIGHT - MARGIN) {
+            document.finishPage(page)
+            currentPage++
+            pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, currentPage).create()
+            page = document.startPage(pageInfo)
+            canvas = page.canvas
+            yPosition = MARGIN
+        }
+        
         yPosition = drawSectionTitle(canvas, context.getString(R.string.players_section), yPosition)
         yPosition += LINE_HEIGHT
 
@@ -152,6 +233,235 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         canvas.drawText("$label:", MARGIN, yPosition, boldPaint)
         canvas.drawText(value, MARGIN + 120f, yPosition, paint)
         return yPosition + LINE_HEIGHT
+    }
+
+    private fun drawScoreEvolutionChart(
+        canvas: Canvas,
+        scoreEvolution: List<ScorePoint>,
+        teamName: String,
+        opponentName: String,
+        yPosition: Float
+    ): Float {
+        val chartLeft = MARGIN + 30f
+        val chartRight = PAGE_WIDTH - MARGIN
+        val chartTop = yPosition
+        val chartBottom = yPosition + CHART_HEIGHT
+        val chartWidth = chartRight - chartLeft
+        val chartHeight = CHART_HEIGHT
+
+        // Calculate max values
+        val maxScore = max(
+            scoreEvolution.maxOfOrNull { it.teamScore } ?: 0,
+            scoreEvolution.maxOfOrNull { it.opponentScore } ?: 0
+        ).coerceAtLeast(1)
+        
+        val maxTime = scoreEvolution.maxOfOrNull { it.timeMillis } ?: 1L
+
+        // Draw chart background
+        val backgroundPaint = Paint().apply {
+            color = Color.WHITE
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(chartLeft, chartTop, chartRight, chartBottom, backgroundPaint)
+
+        // Draw grid lines
+        val gridPaint = Paint().apply {
+            color = CHART_GRID_COLOR
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+        
+        val labelPaint = Paint().apply {
+            textSize = SMALL_SIZE
+            color = Color.GRAY
+            textAlign = Paint.Align.RIGHT
+        }
+
+        // Draw horizontal grid lines and Y-axis labels
+        for (i in 0..maxScore) {
+            val y = chartBottom - (i.toFloat() / maxScore * chartHeight)
+            canvas.drawLine(chartLeft, y, chartRight, y, gridPaint)
+            canvas.drawText(i.toString(), chartLeft - 5f, y + SMALL_SIZE / 3, labelPaint)
+        }
+
+        // Draw team score line (step-wise)
+        drawStepLine(canvas, scoreEvolution, maxTime, maxScore, chartLeft, chartBottom, chartWidth, chartHeight, CHART_TEAM_COLOR, true)
+        
+        // Draw opponent score line (step-wise)
+        drawStepLine(canvas, scoreEvolution, maxTime, maxScore, chartLeft, chartBottom, chartWidth, chartHeight, CHART_OPPONENT_COLOR, false)
+
+        // Draw dots at score change points
+        val dotPaint = Paint().apply {
+            style = Paint.Style.FILL
+        }
+        
+        scoreEvolution.forEach { point ->
+            val x = chartLeft + (point.timeMillis.toFloat() / maxTime * chartWidth)
+            val teamY = chartBottom - (point.teamScore.toFloat() / maxScore * chartHeight)
+            val opponentY = chartBottom - (point.opponentScore.toFloat() / maxScore * chartHeight)
+
+            // Team dot
+            dotPaint.color = CHART_TEAM_COLOR
+            canvas.drawCircle(x, teamY, 4f, dotPaint)
+            
+            // Opponent dot
+            dotPaint.color = CHART_OPPONENT_COLOR
+            canvas.drawCircle(x, opponentY, 4f, dotPaint)
+        }
+
+        // Draw X-axis time labels
+        val timeLabelPaint = Paint().apply {
+            textSize = SMALL_SIZE
+            color = Color.GRAY
+            textAlign = Paint.Align.CENTER
+        }
+        
+        val timeLabels = listOf(0L, maxTime / 2, maxTime)
+        timeLabels.forEach { time ->
+            val x = chartLeft + (time.toFloat() / maxTime * chartWidth)
+            canvas.drawText(formatTimeMinutes(time), x, chartBottom + SMALL_SIZE + 5f, timeLabelPaint)
+        }
+
+        // Draw legend
+        val legendY = chartBottom + LINE_HEIGHT + 5f
+        val legendPaint = Paint().apply {
+            textSize = SMALL_SIZE
+            color = Color.BLACK
+        }
+        val legendDotPaint = Paint().apply {
+            style = Paint.Style.FILL
+        }
+
+        // Team legend
+        val teamLegendX = MARGIN + 50f
+        legendDotPaint.color = CHART_TEAM_COLOR
+        canvas.drawCircle(teamLegendX, legendY - 3f, 5f, legendDotPaint)
+        canvas.drawText(teamName, teamLegendX + 10f, legendY, legendPaint)
+
+        // Opponent legend
+        val opponentLegendX = PAGE_WIDTH / 2 + 50f
+        legendDotPaint.color = CHART_OPPONENT_COLOR
+        canvas.drawCircle(opponentLegendX, legendY - 3f, 5f, legendDotPaint)
+        canvas.drawText(opponentName, opponentLegendX + 10f, legendY, legendPaint)
+
+        return chartBottom + LINE_HEIGHT * 1.5f
+    }
+
+    private fun drawStepLine(
+        canvas: Canvas,
+        scoreEvolution: List<ScorePoint>,
+        maxTime: Long,
+        maxScore: Int,
+        chartLeft: Float,
+        chartBottom: Float,
+        chartWidth: Float,
+        chartHeight: Float,
+        color: Int,
+        isTeamScore: Boolean
+    ) {
+        if (scoreEvolution.size < 2) return
+
+        val linePaint = Paint().apply {
+            this.color = color
+            style = Paint.Style.STROKE
+            strokeWidth = 2f
+            isAntiAlias = true
+        }
+
+        val path = Path()
+        var isFirst = true
+
+        for (i in scoreEvolution.indices) {
+            val point = scoreEvolution[i]
+            val score = if (isTeamScore) point.teamScore else point.opponentScore
+            val x = chartLeft + (point.timeMillis.toFloat() / maxTime * chartWidth)
+            val y = chartBottom - (score.toFloat() / maxScore * chartHeight)
+
+            if (isFirst) {
+                path.moveTo(x, y)
+                isFirst = false
+            } else {
+                val prevPoint = scoreEvolution[i - 1]
+                val prevScore = if (isTeamScore) prevPoint.teamScore else prevPoint.opponentScore
+                val prevY = chartBottom - (prevScore.toFloat() / maxScore * chartHeight)
+
+                // Draw horizontal line first (keep same Y as previous point)
+                path.lineTo(x, prevY)
+                // Then draw vertical line to new score
+                path.lineTo(x, y)
+            }
+        }
+
+        canvas.drawPath(path, linePaint)
+    }
+
+    private fun drawTimelineEvent(canvas: Canvas, event: TimelineEvent, yPosition: Float): Float {
+        val timeText = formatTimeMinutes(event.matchElapsedTimeMillis)
+        val eventText = getTimelineEventText(event)
+        val eventColor = getTimelineEventColor(event)
+
+        // Draw time badge
+        val timePaint = Paint().apply {
+            textSize = SMALL_SIZE
+            isFakeBoldText = true
+            color = Color.GRAY
+        }
+        canvas.drawText(timeText, MARGIN, yPosition + SMALL_SIZE, timePaint)
+
+        // Draw event indicator (colored circle)
+        val indicatorPaint = Paint().apply {
+            color = eventColor
+            style = Paint.Style.FILL
+        }
+        canvas.drawCircle(MARGIN + 45f, yPosition + SMALL_SIZE / 2, 6f, indicatorPaint)
+
+        // Draw event text
+        val eventPaint = Paint().apply {
+            textSize = SMALL_SIZE
+            color = Color.BLACK
+        }
+        canvas.drawText(eventText, MARGIN + 60f, yPosition + SMALL_SIZE, eventPaint)
+
+        return yPosition + TIMELINE_ITEM_HEIGHT
+    }
+
+    private fun getTimelineEventText(event: TimelineEvent): String {
+        return when (event) {
+            is TimelineEvent.StartingLineup -> {
+                val playerNames = event.players.take(5).joinToString(", ") { 
+                    "${it.number}. ${it.firstName}" 
+                }
+                val suffix = if (event.players.size > 5) " (+${event.players.size - 5})" else ""
+                "${context.getString(R.string.timeline_starting_lineup)}: $playerNames$suffix"
+            }
+            is TimelineEvent.GoalScored -> {
+                val scoreText = "(${event.teamScore}-${event.opponentScore})"
+                if (event.isOpponentGoal) {
+                    "${context.getString(R.string.timeline_opponent_goal)} $scoreText"
+                } else {
+                    val scorerName = event.scorer?.let { "${it.firstName} ${it.lastName}" } 
+                        ?: context.getString(R.string.own_goal_option)
+                    "${context.getString(R.string.timeline_goal)}: $scorerName $scoreText"
+                }
+            }
+            is TimelineEvent.Substitution -> {
+                "${context.getString(R.string.timeline_substitution)}: ${event.playerIn.firstName} ↑ ${event.playerOut.firstName} ↓"
+            }
+            is TimelineEvent.Timeout -> context.getString(R.string.timeline_timeout)
+            is TimelineEvent.PeriodBreak -> context.getString(R.string.timeline_halftime)
+        }
+    }
+
+    private fun getTimelineEventColor(event: TimelineEvent): Int {
+        return when (event) {
+            is TimelineEvent.StartingLineup -> Color.rgb(33, 150, 243) // Blue
+            is TimelineEvent.GoalScored -> if (event.isOpponentGoal) 
+                Color.rgb(244, 67, 54) // Red 
+                else Color.rgb(76, 175, 80) // Green
+            is TimelineEvent.Substitution -> Color.rgb(156, 39, 176) // Purple
+            is TimelineEvent.Timeout -> Color.rgb(255, 152, 0) // Orange
+            is TimelineEvent.PeriodBreak -> Color.rgb(96, 125, 139) // Blue Grey
+        }
     }
 
     private fun drawPlayerTableHeader(canvas: Canvas, yPosition: Float): Float {
