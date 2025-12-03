@@ -1,12 +1,14 @@
 package com.jesuslcorominas.teamflowmanager.ui.util
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.graphics.Rect
 import android.graphics.pdf.PdfDocument
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -38,7 +40,7 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         private const val HEADER_ROW_HEIGHT = 24f
         private const val CHART_HEIGHT = 150f
         private const val PLAYER_ACTIVITY_ROW_HEIGHT = 16f
-        private const val TIMELINE_ITEM_HEIGHT = 24f
+        private const val TIMELINE_ITEM_HEIGHT = 36f  // Increased from 24f for more spacing between items
         
         // Chart colors
         private val CHART_TEAM_COLOR = Color.rgb(76, 175, 80) // Green
@@ -526,14 +528,14 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
             isFakeBoldText = true
             color = Color.GRAY
         }
-        canvas.drawText(timeText, MARGIN, yPosition + SMALL_SIZE, timePaint)
+        canvas.drawText(timeText, MARGIN, yPosition + TIMELINE_ITEM_HEIGHT / 2 + SMALL_SIZE / 2, timePaint)
 
         // Draw event icon with colored background circle
         val iconCenterX = MARGIN + 48f
-        val iconCenterY = yPosition + SMALL_SIZE / 2
-        val iconRadius = 12f  // Increased from 10f for better quality
+        val iconCenterY = yPosition + TIMELINE_ITEM_HEIGHT / 2
+        val iconRadius = 12f
         
-        // Draw background circle
+        // Draw background circle with anti-aliasing
         val backgroundPaint = Paint().apply {
             color = eventColor
             style = Paint.Style.FILL
@@ -549,7 +551,7 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
             textSize = SMALL_SIZE
             color = Color.BLACK
         }
-        canvas.drawText(eventText, MARGIN + 70f, yPosition + SMALL_SIZE, eventPaint)
+        canvas.drawText(eventText, MARGIN + 70f, yPosition + TIMELINE_ITEM_HEIGHT / 2 + SMALL_SIZE / 2, eventPaint)
 
         return yPosition + TIMELINE_ITEM_HEIGHT
     }
@@ -564,26 +566,45 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
             is TimelineEvent.PeriodBreak -> R.drawable.ic_pause
         }
         
-        // Load the drawable and render it
+        // Load the drawable and render it at high resolution using Bitmap for better quality
         val drawable = ContextCompat.getDrawable(context, drawableResId)
         drawable?.let {
             // Set the icon color to white
             it.colorFilter = PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
             
-            // Calculate icon size (80% of the circle diameter for better visibility)
-            val iconSize = (radius * 1.6f).toInt()
-            val halfSize = iconSize / 2
+            // Render at higher resolution for better quality (4x scale)
+            val scale = 4
+            val bitmapSize = 24 * scale  // Original is 24dp, render at 96px
             
-            // Set bounds centered on the icon position
-            it.setBounds(
+            // Create a high-resolution bitmap
+            val bitmap = Bitmap.createBitmap(bitmapSize, bitmapSize, Bitmap.Config.ARGB_8888)
+            val bitmapCanvas = Canvas(bitmap)
+            
+            // Draw the drawable to the bitmap at full size
+            it.setBounds(0, 0, bitmapSize, bitmapSize)
+            it.draw(bitmapCanvas)
+            
+            // Calculate destination size (75% of circle diameter)
+            val destSize = (radius * 1.5f).toInt()
+            val halfSize = destSize / 2
+            
+            // Create destination rect centered on the icon position
+            val destRect = Rect(
                 (centerX - halfSize).toInt(),
                 (centerY - halfSize).toInt(),
                 (centerX + halfSize).toInt(),
                 (centerY + halfSize).toInt()
             )
             
-            // Draw the icon
-            it.draw(canvas)
+            // Draw the bitmap scaled down with anti-aliasing for smooth edges
+            val bitmapPaint = Paint().apply {
+                isAntiAlias = true
+                isFilterBitmap = true  // Enable bilinear filtering for smooth scaling
+            }
+            canvas.drawBitmap(bitmap, null, destRect, bitmapPaint)
+            
+            // Recycle the bitmap to free memory
+            bitmap.recycle()
         }
     }
 
