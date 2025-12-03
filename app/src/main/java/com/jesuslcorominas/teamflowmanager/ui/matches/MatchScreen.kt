@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -65,6 +66,10 @@ import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.components.dragdrop.DragDropContainer
+import com.jesuslcorominas.teamflowmanager.ui.components.dragdrop.DraggablePlayerItem
+import com.jesuslcorominas.teamflowmanager.ui.components.dragdrop.DropTargetPlayerItem
+import com.jesuslcorominas.teamflowmanager.ui.components.dragdrop.rememberDragDropState
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
@@ -148,6 +153,9 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
                         playerId -> viewModel.clearPlayerOutSelection()
                         else -> viewModel.substitutePlayer(playerId)
                     }
+                },
+                onDragDropSubstitute = { playerInId, playerOutId ->
+                    viewModel.substitutePlayerDirect(playerInId, playerOutId)
                 },
                 onSortOrderChange = { currentSortOrder = it },
                 onAddGoal = { viewModel.showGoalScorerDialog() },
@@ -243,6 +251,7 @@ private fun SuccessState(
     onStartTimeout: () -> Unit,
     onEndTimeout: () -> Unit,
     onPlayerClick: (Long) -> Unit,
+    onDragDropSubstitute: (playerInId: Long, playerOutId: Long) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
@@ -276,6 +285,7 @@ private fun SuccessState(
             onStartTimeout = onStartTimeout,
             onEndTimeout = onEndTimeout,
             onPlayerClick = onPlayerClick,
+            onDragDropSubstitute = onDragDropSubstitute,
             onSortOrderChange = onSortOrderChange,
             onAddGoal = onAddGoal,
             onAddOpponentGoal = onAddOpponentGoal,
@@ -295,11 +305,15 @@ private fun MatchDetailContent(
     onStartTimeout: () -> Unit,
     onEndTimeout: () -> Unit,
     onPlayerClick: (Long) -> Unit,
+    onDragDropSubstitute: (playerInId: Long, playerOutId: Long) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
     onBeginMatch: () -> Unit
 ) {
+    val dragDropState = rememberDragDropState()
+    val listState = rememberLazyListState()
+
     Column(modifier = Modifier.fillMaxSize()) {
         MatchTimeCard(match = state.match, currentTime = state.currentTime)
 
@@ -308,31 +322,102 @@ private fun MatchDetailContent(
             onSortOrderChange = onSortOrderChange
         )
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+        DragDropContainer(
+            dragDropState = dragDropState,
+            listState = listState,
+            modifier = Modifier.weight(1f)
         ) {
-            items(
-                items = state.playerTimes.sortedBy(currentSortOrder, state.match),
-                key = { it.player.id }
-            ) { playerTimeItem ->
-                PlayerItem(
-                    modifier = Modifier.animateItem(
-                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                        placementSpec = spring(),
-                        fadeOutSpec = tween(durationMillis = 300)
-                    ),
-                    player = playerTimeItem.player,
-                    showPositions = false,
-                    isPlaying = if (state.match.isInProgress) playerTimeItem.isRunning else false,
-                    timeMillis = playerTimeItem.timeMillis,
-                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
-                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
-                    isSelected = if (state.match.isInProgress) selectedPlayerOut == playerTimeItem.player.id else false,
-                    onClick = if (state.match.isInProgress) {
-                        { onPlayerClick(playerTimeItem.player.id) }
-                    } else null,
-                )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                // Disable user scrolling while dragging - auto-scroll handles edge scrolling
+                userScrollEnabled = !dragDropState.isDragging
+            ) {
+                items(
+                    items = state.playerTimes.sortedBy(currentSortOrder, state.match),
+                    key = { it.player.id }
+                ) { playerTimeItem ->
+                    val isPlaying = if (state.match.isInProgress) playerTimeItem.isRunning else false
+
+                    // Wrap each player item with drag-drop functionality
+                    if (state.match.isInProgress) {
+                        if (isPlaying) {
+                            // Active players are drop targets
+                            DropTargetPlayerItem(
+                                playerId = playerTimeItem.player.id,
+                                isPlaying = true,
+                                dragDropState = dragDropState,
+                                onDrop = {
+                                    dragDropState.draggedPlayer?.let { draggedPlayer ->
+                                        onDragDropSubstitute(
+                                            draggedPlayer.id,
+                                            playerTimeItem.player.id
+                                        )
+                                    }
+                                    dragDropState.reset()
+                                }
+                            ) {
+                                PlayerItem(
+                                    modifier = Modifier.animateItem(
+                                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                        placementSpec = spring(),
+                                        fadeOutSpec = tween(durationMillis = 300)
+                                    ),
+                                    player = playerTimeItem.player,
+                                    showPositions = false,
+                                    isPlaying = true,
+                                    timeMillis = playerTimeItem.timeMillis,
+                                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                                    isSelected = selectedPlayerOut == playerTimeItem.player.id,
+                                    onClick = { onPlayerClick(playerTimeItem.player.id) },
+                                )
+                            }
+                        } else {
+                            // Inactive players are draggable
+                            DraggablePlayerItem(
+                                player = playerTimeItem.player,
+                                isPlaying = false,
+                                dragDropState = dragDropState,
+                                // onDragEnd is optional - container handles the actual drag end
+                            ) {
+                                PlayerItem(
+                                    modifier = Modifier.animateItem(
+                                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                        placementSpec = spring(),
+                                        fadeOutSpec = tween(durationMillis = 300)
+                                    ),
+                                    player = playerTimeItem.player,
+                                    showPositions = false,
+                                    isPlaying = false,
+                                    timeMillis = playerTimeItem.timeMillis,
+                                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                                    isSelected = selectedPlayerOut == playerTimeItem.player.id,
+                                    onClick = { onPlayerClick(playerTimeItem.player.id) },
+                                )
+                            }
+                        }
+                    } else {
+                        // Match not in progress - no drag-drop
+                        PlayerItem(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                placementSpec = spring(),
+                                fadeOutSpec = tween(durationMillis = 300)
+                            ),
+                            player = playerTimeItem.player,
+                            showPositions = false,
+                            isPlaying = false,
+                            timeMillis = playerTimeItem.timeMillis,
+                            showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                            showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                            isSelected = false,
+                            onClick = null,
+                        )
+                    }
+                }
             }
         }
 
@@ -1008,6 +1093,7 @@ private fun OngoingMatchViewPreview() {
             onStartTimeout = {},
             onEndTimeout = {},
             onPlayerClick = {},
+            onDragDropSubstitute = { _, _ -> },
             onSortOrderChange = {},
             onAddGoal = {},
             onAddOpponentGoal = {},

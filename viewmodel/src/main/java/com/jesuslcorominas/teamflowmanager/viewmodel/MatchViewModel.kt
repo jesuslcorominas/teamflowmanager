@@ -335,16 +335,44 @@ class MatchViewModel(
     }
 
     fun substitutePlayer(playerInId: Long) {
+        val playerOut = _selectedPlayerOut.value ?: return
+
+        performSubstitution(
+            playerIn = playerInId,
+            playerOut = playerOut,
+            analyticsMessage = "Two-step substitution: $playerOut -> $playerInId",
+            method = "two_step"
+        )
+    }
+
+    /**
+     * Performs a direct substitution without requiring the two-step selection process.
+     * Used for drag-and-drop substitutions.
+     * Used for drag-and-drop substitutions.
+     *
+     * @param playerInId The ID of the player coming in (was inactive/not playing)
+     * @param playerOutId The ID of the player going out (was active/playing)
+     */
+    fun substitutePlayerDirect(playerInId: Long, playerOutId: Long) {
+        performSubstitution(
+            playerIn = playerInId,
+            playerOut = playerOutId,
+            analyticsMessage = "Direct substitution: $playerOutId -> $playerInId (drag-drop)",
+            method = "drag_drop"
+        )
+    }
+
+    private fun performSubstitution(playerIn: Long, playerOut: Long, analyticsMessage: String, method: String) {
         viewModelScope.launch {
             try {
-                val playerOutId = _selectedPlayerOut.value
                 val currentState = _uiState.value
-                if (playerOutId != null && currentState is MatchUiState.Success) {
-                    crashReporter.log("Substituting players: $playerOutId -> $playerInId")
+                if (currentState is MatchUiState.Success) {
+                    crashReporter.log(analyticsMessage)
+
                     registerPlayerSubstitutionUseCase(
                         matchId = currentState.match.id,
-                        playerOutId = playerOutId,
-                        playerInId = playerInId,
+                        playerOutId = playerOut,
+                        playerInId = playerIn,
                         currentTimeMillis = _currentTime.value,
                     )
 
@@ -352,17 +380,19 @@ class MatchViewModel(
                         AnalyticsEvent.SUBSTITUTION_MADE,
                         mapOf(
                             AnalyticsParam.MATCH_ID to currentState.match.id.toString(),
-                            AnalyticsParam.PLAYER_OUT to playerOutId.toString(),
-                            AnalyticsParam.PLAYER_IN to playerInId.toString(),
+                            AnalyticsParam.PLAYER_OUT to playerOut.toString(),
+                            AnalyticsParam.PLAYER_IN to playerIn.toString(),
                             AnalyticsParam.SUBSTITUTION_MINUTE to (_currentTime.value / 60000).toString(),
+                            AnalyticsParam.SUBSTITUTION_METHOD to method,
                         ),
                     )
 
+                    // Clear any existing selection
                     _selectedPlayerOut.value = null
                 }
             } catch (e: Exception) {
                 crashReporter.recordException(e)
-                crashReporter.log("Error substituting player: ${e.message}")
+                crashReporter.log("Error in $method substitution: ${e.message}")
                 throw e
             }
         }
