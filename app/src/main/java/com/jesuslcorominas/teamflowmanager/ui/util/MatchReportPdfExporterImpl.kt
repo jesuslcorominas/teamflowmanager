@@ -525,21 +525,139 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         }
         canvas.drawText(timeText, MARGIN, yPosition + SMALL_SIZE, timePaint)
 
-        // Draw event indicator (colored circle)
-        val indicatorPaint = Paint().apply {
+        // Draw event icon with colored background circle
+        val iconCenterX = MARGIN + 45f
+        val iconCenterY = yPosition + SMALL_SIZE / 2
+        val iconRadius = 10f
+        
+        // Draw background circle
+        val backgroundPaint = Paint().apply {
             color = eventColor
             style = Paint.Style.FILL
+            isAntiAlias = true
         }
-        canvas.drawCircle(MARGIN + 45f, yPosition + SMALL_SIZE / 2, 6f, indicatorPaint)
+        canvas.drawCircle(iconCenterX, iconCenterY, iconRadius, backgroundPaint)
+        
+        // Draw icon on top of background circle
+        drawTimelineIcon(canvas, event, iconCenterX, iconCenterY, iconRadius)
 
         // Draw event text
         val eventPaint = Paint().apply {
             textSize = SMALL_SIZE
             color = Color.BLACK
         }
-        canvas.drawText(eventText, MARGIN + 60f, yPosition + SMALL_SIZE, eventPaint)
+        canvas.drawText(eventText, MARGIN + 65f, yPosition + SMALL_SIZE, eventPaint)
 
         return yPosition + TIMELINE_ITEM_HEIGHT
+    }
+
+    private fun drawTimelineIcon(canvas: Canvas, event: TimelineEvent, centerX: Float, centerY: Float, radius: Float) {
+        val iconPaint = Paint().apply {
+            color = Color.WHITE
+            style = Paint.Style.STROKE
+            strokeWidth = 1.5f
+            isAntiAlias = true
+        }
+        val fillPaint = Paint().apply {
+            color = Color.WHITE
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        
+        when (event) {
+            is TimelineEvent.StartingLineup -> {
+                // People icon - draw two simple person shapes
+                val personRadius = radius * 0.25f
+                val personOffsetX = radius * 0.35f
+                
+                // Left person head
+                canvas.drawCircle(centerX - personOffsetX, centerY - personRadius * 1.2f, personRadius, fillPaint)
+                // Left person body arc
+                val leftPath = Path().apply {
+                    addArc(
+                        centerX - personOffsetX - personRadius * 1.5f,
+                        centerY,
+                        centerX - personOffsetX + personRadius * 1.5f,
+                        centerY + personRadius * 2.5f,
+                        180f, 180f
+                    )
+                }
+                canvas.drawPath(leftPath, fillPaint)
+                
+                // Right person head
+                canvas.drawCircle(centerX + personOffsetX, centerY - personRadius * 1.2f, personRadius, fillPaint)
+                // Right person body arc
+                val rightPath = Path().apply {
+                    addArc(
+                        centerX + personOffsetX - personRadius * 1.5f,
+                        centerY,
+                        centerX + personOffsetX + personRadius * 1.5f,
+                        centerY + personRadius * 2.5f,
+                        180f, 180f
+                    )
+                }
+                canvas.drawPath(rightPath, fillPaint)
+            }
+            is TimelineEvent.GoalScored -> {
+                // Soccer ball icon - circle with pentagon pattern
+                val ballRadius = radius * 0.55f
+                canvas.drawCircle(centerX, centerY, ballRadius, iconPaint)
+                // Draw inner pattern (simplified)
+                val innerRadius = ballRadius * 0.5f
+                canvas.drawCircle(centerX, centerY, innerRadius, fillPaint)
+            }
+            is TimelineEvent.Substitution -> {
+                // Swap horizontal icon - two arrows
+                val arrowLength = radius * 0.6f
+                val arrowOffset = radius * 0.25f
+                
+                // Top arrow pointing right
+                canvas.drawLine(centerX - arrowLength, centerY - arrowOffset, centerX + arrowLength, centerY - arrowOffset, iconPaint)
+                val topArrowPath = Path().apply {
+                    moveTo(centerX + arrowLength, centerY - arrowOffset)
+                    lineTo(centerX + arrowLength - 3f, centerY - arrowOffset - 3f)
+                    moveTo(centerX + arrowLength, centerY - arrowOffset)
+                    lineTo(centerX + arrowLength - 3f, centerY - arrowOffset + 3f)
+                }
+                canvas.drawPath(topArrowPath, iconPaint)
+                
+                // Bottom arrow pointing left
+                canvas.drawLine(centerX + arrowLength, centerY + arrowOffset, centerX - arrowLength, centerY + arrowOffset, iconPaint)
+                val bottomArrowPath = Path().apply {
+                    moveTo(centerX - arrowLength, centerY + arrowOffset)
+                    lineTo(centerX - arrowLength + 3f, centerY + arrowOffset - 3f)
+                    moveTo(centerX - arrowLength, centerY + arrowOffset)
+                    lineTo(centerX - arrowLength + 3f, centerY + arrowOffset + 3f)
+                }
+                canvas.drawPath(bottomArrowPath, iconPaint)
+            }
+            is TimelineEvent.Timeout -> {
+                // Timer icon - clock face
+                val clockRadius = radius * 0.55f
+                canvas.drawCircle(centerX, centerY, clockRadius, iconPaint)
+                // Draw clock hands
+                canvas.drawLine(centerX, centerY, centerX, centerY - clockRadius * 0.7f, iconPaint)
+                canvas.drawLine(centerX, centerY, centerX + clockRadius * 0.5f, centerY, iconPaint)
+            }
+            is TimelineEvent.PeriodBreak -> {
+                // Pause icon - two vertical bars
+                val barWidth = radius * 0.2f
+                val barHeight = radius * 0.8f
+                val barOffset = radius * 0.25f
+                
+                fillPaint.style = Paint.Style.FILL
+                canvas.drawRect(
+                    centerX - barOffset - barWidth/2, centerY - barHeight/2,
+                    centerX - barOffset + barWidth/2, centerY + barHeight/2,
+                    fillPaint
+                )
+                canvas.drawRect(
+                    centerX + barOffset - barWidth/2, centerY - barHeight/2,
+                    centerX + barOffset + barWidth/2, centerY + barHeight/2,
+                    fillPaint
+                )
+            }
+        }
     }
 
     private fun getTimelineEventText(event: TimelineEvent): String {
@@ -571,13 +689,13 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
 
     private fun getTimelineEventColor(event: TimelineEvent): Int {
         return when (event) {
-            is TimelineEvent.StartingLineup -> Color.rgb(33, 150, 243) // Blue
+            is TimelineEvent.StartingLineup -> Color.rgb(0, 51, 102) // Primary - Dark blue #003366
             is TimelineEvent.GoalScored -> if (event.isOpponentGoal) 
-                Color.rgb(244, 67, 54) // Red 
-                else Color.rgb(76, 175, 80) // Green
-            is TimelineEvent.Substitution -> Color.rgb(156, 39, 176) // Purple
-            is TimelineEvent.Timeout -> Color.rgb(255, 152, 0) // Orange
-            is TimelineEvent.PeriodBreak -> Color.rgb(96, 125, 139) // Blue Grey
+                Color.rgb(150, 6, 21) // SubstitutionRed #960615
+                else Color.rgb(76, 175, 80) // SubstitutionGreen #4CAF50
+            is TimelineEvent.Substitution -> Color.rgb(0, 51, 102) // Primary - Dark blue #003366
+            is TimelineEvent.Timeout -> Color.rgb(255, 152, 0) // Orange (tertiary approximation)
+            is TimelineEvent.PeriodBreak -> Color.rgb(96, 125, 139) // Blue Grey (secondary approximation)
         }
     }
 
