@@ -319,17 +319,27 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
             style = Paint.Style.FILL
         }
         
-        scoreEvolution.forEach { point ->
+        // Draw dots ONLY for goals (where score changed compared to previous point)
+        scoreEvolution.forEachIndexed { index, point ->
+            if (index == 0) return@forEachIndexed // Skip starting point (0-0, no goal scored)
+            
+            val prevPoint = scoreEvolution[index - 1]
+            val teamScoreChanged = point.teamScore > prevPoint.teamScore
+            val opponentScoreChanged = point.opponentScore > prevPoint.opponentScore
+            
+            // Only draw dot if a score actually changed (a goal was scored)
+            if (!teamScoreChanged && !opponentScoreChanged) return@forEachIndexed
+            
             val x = chartLeft + (point.timeMillis.toFloat() / maxTime * chartWidth)
 
-            // Only draw dot for the team that scored
-            if (point.isOpponentGoal) {
+            // Draw dot for the team that scored at this point
+            if (opponentScoreChanged) {
                 // Opponent scored - draw opponent dot
                 val opponentY = chartBottom - (point.opponentScore.toFloat() / maxScore * chartHeight)
                 dotPaint.color = CHART_OPPONENT_COLOR
                 canvas.drawCircle(x, opponentY, 4f, dotPaint)
-            } else if (point.teamScore > 0 || point.timeMillis == 0L) {
-                // Team scored (or it's the starting point) - draw team dot
+            } else if (teamScoreChanged) {
+                // Team scored - draw team dot
                 val teamY = chartBottom - (point.teamScore.toFloat() / maxScore * chartHeight)
                 dotPaint.color = CHART_TEAM_COLOR
                 canvas.drawCircle(x, teamY, 4f, dotPaint)
