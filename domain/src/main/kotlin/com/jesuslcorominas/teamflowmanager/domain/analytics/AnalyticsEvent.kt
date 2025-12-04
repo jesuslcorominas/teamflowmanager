@@ -131,5 +131,6 @@ object ScreenName {
     const val PLAYER_WIZARD = "Player Wizard"
     const val MATCH_WIZARD = "Match Wizard"
     const val SPLASH = "Splash"
+    const val LOGIN = "Login"
     const val SETTINGS = "Settings"
 }

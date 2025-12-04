@@ -5,18 +5,31 @@ import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val exportDatabaseUseCase: ExportDatabaseUseCase,
     private val importDatabaseUseCase: ImportDatabaseUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val signOutUseCase: SignOutUseCase,
     private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
+
+    val currentUser: StateFlow<User?> = getCurrentUserUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    private val _signOutComplete = MutableStateFlow(false)
+    val signOutComplete: StateFlow<Boolean> = _signOutComplete.asStateFlow()
 
     private val _exportResult = MutableStateFlow<Result<String?>?>(null)
     val exportResult: StateFlow<Result<String?>?> = _exportResult.asStateFlow()
@@ -118,5 +131,18 @@ class SettingsViewModel(
 
     fun clearImportResult() {
         _importResult.value = null
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            signOutUseCase()
+            analyticsTracker.logEvent("logout", emptyMap())
+            analyticsTracker.setUserId(null)
+            _signOutComplete.value = true
+        }
+    }
+
+    fun clearSignOutComplete() {
+        _signOutComplete.value = false
     }
 }

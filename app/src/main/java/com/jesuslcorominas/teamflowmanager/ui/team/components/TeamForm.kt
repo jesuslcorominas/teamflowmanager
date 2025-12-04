@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -14,7 +13,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,9 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -37,6 +33,7 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
+import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorHeader
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorList
@@ -47,7 +44,12 @@ import com.jesuslcorominas.teamflowmanager.ui.util.toStringRes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onShowTeamTypeChangeError: () -> Unit = {}, onSave: (Team, Long?) -> Unit) {
+fun TeamForm(
+    team: Team? = null,
+    players: List<Player> = listOf(),
+    onShowTeamTypeChangeError: () -> Unit = {},
+    onSave: (Team, Long?) -> Unit
+) {
     val focusManager = LocalFocusManager.current
     var formState by remember { mutableStateOf(team.toTeamFormState()) }
 
@@ -82,12 +84,7 @@ fun TeamForm(team: Team? = null, players: List<Player> = listOf(), onShowTeamTyp
             ) {
                 if (team == null) {
                     item {
-                        Icon(
-                            modifier = Modifier.size(TFMSpacing.spacing18),
-                            painter = painterResource(id = R.drawable.ic_launcher),
-                            contentDescription = stringResource(R.string.app_name),
-                            tint = Color.Unspecified
-                        )
+                        TeamFlowManagerIcon()
 
                         Text(
                             modifier = Modifier.padding(
@@ -318,7 +315,7 @@ private fun TeamFormPreview() {
                 Player(2, "Jane", "Smith", 2, listOf(), isCaptain = false, teamId = 1),
                 Player(3, "Bob", "Johnson", 17, listOf(), isCaptain = false, teamId = 1),
             ),
-            onSave = {_, _ -> }
+            onSave = { _, _ -> }
         )
     }
 }

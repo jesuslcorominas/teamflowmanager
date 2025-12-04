@@ -13,6 +13,7 @@ sealed class Route(
         val all by lazy {
             listOf(
                 Splash,
+                Login,
                 Players,
                 Team,
                 Matches,
@@ -83,6 +84,8 @@ sealed class Route(
     }
 
     data object Splash : Route(path = "splash", showTopBar = false)
+
+    data object Login : Route(path = "login", showTopBar = false)
 
     data object Team : Route(
         path = "team",
