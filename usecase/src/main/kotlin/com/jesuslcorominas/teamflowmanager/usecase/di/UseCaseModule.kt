@@ -18,6 +18,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCase
@@ -84,6 +86,10 @@ import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
@@ -169,6 +175,11 @@ internal val useCaseInternalModule =
 
         singleOf(::ExportDatabaseUseCaseImpl) bind ExportDatabaseUseCase::class
         singleOf(::ImportDatabaseUseCaseImpl) bind ImportDatabaseUseCase::class
+
+        // Auth use cases
+        singleOf(::GetCurrentUserUseCaseImpl) bind GetCurrentUserUseCase::class
+        singleOf(::SignInWithGoogleUseCaseImpl) bind SignInWithGoogleUseCase::class
+        singleOf(::SignOutUseCaseImpl) bind SignOutUseCase::class
     }
 
 val useCaseModule =

@@ -98,6 +98,10 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)
     implementation(libs.firebase.crashlytics.ktx)
+    implementation(libs.firebase.auth.ktx)
+
+    // Google Sign-In
+    implementation(libs.play.services.auth)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

@@ -2,6 +2,10 @@
     <string name="app_name">TeamFlow Manager</string>
     <string name="welcome_message">Welcome to TeamFlow Manager!</string>
 
+    <!-- Login Strings -->
+    <string name="login_subtitle">Gestiona tu equipo de forma sencilla</string>
+    <string name="sign_in_with_google">Iniciar sesión con Google</string>
+
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
