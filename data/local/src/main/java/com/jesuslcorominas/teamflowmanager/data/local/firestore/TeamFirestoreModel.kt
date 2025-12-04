@@ -9,6 +9,7 @@ import kotlin.math.abs
  * Firestore model for Team document.
  * This model is used for serialization/deserialization with Firestore.
  * The `id` field is automatically populated by Firestore with the document ID.
+ * The `ownerId` field is required by Firestore security rules to identify the owner.
  */
 data class TeamFirestoreModel(
     @DocumentId
@@ -18,6 +19,7 @@ data class TeamFirestoreModel(
     val delegateName: String = "",
     val captainId: Long? = null,
     val teamType: Int = TeamType.FOOTBALL_5.players,
+    val ownerId: String = "",
 ) {
     // No-arg constructor required by Firestore
     constructor() : this(
@@ -27,6 +29,7 @@ data class TeamFirestoreModel(
         delegateName = "",
         captainId = null,
         teamType = TeamType.FOOTBALL_5.players,
+        ownerId = "",
     )
 }
 
