@@ -20,7 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class SplashViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getTeamUseCase: GetTeamUseCase

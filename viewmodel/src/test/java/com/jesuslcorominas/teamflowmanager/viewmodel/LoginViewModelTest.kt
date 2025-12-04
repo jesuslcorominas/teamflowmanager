@@ -21,7 +21,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var signInWithGoogleUseCase: SignInWithGoogleUseCase
