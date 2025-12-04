@@ -16,7 +16,8 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * Firestore-based implementation of TeamLocalDataSource.
  * This implementation stores team data in Firebase Firestore instead of local Room database.
- * Team documents are stored in the "teams" collection with the coachId as the document ID.
+ * Team documents are stored in the "teams" collection with auto-generated document IDs.
+ * The document ID is stored in the domain model's coachId field for reference during updates.
  */
 class TeamFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
@@ -56,17 +57,11 @@ class TeamFirestoreDataSourceImpl(
     override suspend fun insertTeam(team: Team) {
         try {
             val firestoreModel = team.toFirestoreModel()
-            val documentId = team.coachId
-            if (documentId.isNullOrEmpty()) {
-                Log.w(TAG, "Cannot insert team without coachId")
-                return
-            }
-
-            firestore.collection(TEAMS_COLLECTION)
-                .document(documentId)
-                .set(firestoreModel)
-                .await()
-            Log.d(TAG, "Team inserted successfully for coachId: $documentId")
+            // Use auto-generated document ID for new teams
+            val docRef = firestore.collection(TEAMS_COLLECTION).document()
+            val modelWithId = firestoreModel.copy(id = docRef.id)
+            docRef.set(modelWithId).await()
+            Log.d(TAG, "Team inserted successfully with id: ${docRef.id}")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -76,18 +71,18 @@ class TeamFirestoreDataSourceImpl(
 
     override suspend fun updateTeam(team: Team) {
         try {
-            val firestoreModel = team.toFirestoreModel()
             val documentId = team.coachId
             if (documentId.isNullOrEmpty()) {
-                Log.w(TAG, "Cannot update team without coachId")
+                Log.w(TAG, "Cannot update team without document ID (stored in coachId)")
                 return
             }
 
+            val firestoreModel = team.toFirestoreModel()
             firestore.collection(TEAMS_COLLECTION)
                 .document(documentId)
                 .set(firestoreModel)
                 .await()
-            Log.d(TAG, "Team updated successfully for coachId: $documentId")
+            Log.d(TAG, "Team updated successfully with id: $documentId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

@@ -8,6 +8,7 @@ import kotlin.math.abs
 /**
  * Firestore model for Team document.
  * This model is used for serialization/deserialization with Firestore.
+ * The `id` field is automatically populated by Firestore with the document ID.
  */
 data class TeamFirestoreModel(
     @DocumentId
@@ -17,7 +18,6 @@ data class TeamFirestoreModel(
     val delegateName: String = "",
     val captainId: Long? = null,
     val teamType: Int = TeamType.FOOTBALL_5.players,
-    val coachId: String = "",
 ) {
     // No-arg constructor required by Firestore
     constructor() : this(
@@ -27,7 +27,6 @@ data class TeamFirestoreModel(
         delegateName = "",
         captainId = null,
         teamType = TeamType.FOOTBALL_5.players,
-        coachId = "",
     )
 }
 
@@ -49,22 +48,21 @@ private fun String.toStableId(): Long {
 
 fun TeamFirestoreModel.toDomain(): Team =
     Team(
-        id = coachId.toStableId(), // Generate a consistent Long id from coachId
+        id = id.toStableId(), // Generate a consistent Long id from document id
         name = name,
         coachName = coachName,
         delegateName = delegateName,
         captainId = captainId,
         teamType = TeamType.fromPlayers(teamType),
-        coachId = coachId,
+        coachId = id, // Store the Firestore document ID in coachId for reference
     )
 
 fun Team.toFirestoreModel(): TeamFirestoreModel =
     TeamFirestoreModel(
-        id = coachId ?: "", // Use coachId as document id
+        id = coachId ?: "", // Use coachId (which stores the document ID) 
         name = name,
         coachName = coachName,
         delegateName = delegateName,
         captainId = captainId,
         teamType = teamType.players,
-        coachId = coachId ?: "",
     )
