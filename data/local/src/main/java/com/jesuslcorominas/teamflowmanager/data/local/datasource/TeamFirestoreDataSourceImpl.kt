@@ -53,10 +53,29 @@ class TeamFirestoreDataSourceImpl(
                     return@addSnapshotListener
                 }
 
-                val team = snapshot?.documents?.firstOrNull()
-                    ?.toObject(TeamFirestoreModel::class.java)
-                    ?.toDomain()
-                trySend(team)
+                val document = snapshot?.documents?.firstOrNull()
+                if (document == null) {
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+
+                // Get the document ID explicitly to ensure it's available
+                val documentId = document.id
+                val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
+                
+                if (firestoreModel != null) {
+                    // Ensure the id field is set from the document ID
+                    val modelWithId = if (firestoreModel.id.isEmpty()) {
+                        firestoreModel.copy(id = documentId)
+                    } else {
+                        firestoreModel
+                    }
+                    val team = modelWithId.toDomain()
+                    Log.d(TAG, "Team loaded with documentId: $documentId, coachId: ${team.coachId}")
+                    trySend(team)
+                } else {
+                    trySend(null)
+                }
             }
 
         awaitClose {
@@ -127,8 +146,28 @@ class TeamFirestoreDataSourceImpl(
                     return@addSnapshotListener
                 }
 
-                val team = snapshot?.toObject(TeamFirestoreModel::class.java)?.toDomain()
-                trySend(team)
+                if (snapshot == null || !snapshot.exists()) {
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+
+                // Get the document ID explicitly to ensure it's available
+                val documentId = snapshot.id
+                val firestoreModel = snapshot.toObject(TeamFirestoreModel::class.java)
+                
+                if (firestoreModel != null) {
+                    // Ensure the id field is set from the document ID
+                    val modelWithId = if (firestoreModel.id.isEmpty()) {
+                        firestoreModel.copy(id = documentId)
+                    } else {
+                        firestoreModel
+                    }
+                    val team = modelWithId.toDomain()
+                    Log.d(TAG, "Team loaded by coachId with documentId: $documentId, coachId: ${team.coachId}")
+                    trySend(team)
+                } else {
+                    trySend(null)
+                }
             }
 
         awaitClose {
