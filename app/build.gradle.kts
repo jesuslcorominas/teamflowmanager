@@ -100,8 +100,10 @@ dependencies {
     implementation(libs.firebase.crashlytics.ktx)
     implementation(libs.firebase.auth.ktx)
 
-    // Google Sign-In
-    implementation(libs.play.services.auth)
+    // Credential Manager for Google Sign-In
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

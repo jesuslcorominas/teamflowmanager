@@ -1,9 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.login
 
-import android.app.Activity
 import android.content.Context
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -38,9 +35,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
@@ -61,27 +63,7 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                account.idToken?.let { idToken ->
-                    viewModel.signInWithGoogle(idToken)
-                } ?: run {
-                    scope.launch {
-                        snackbarHostState.showSnackbar("Error: No se pudo obtener el token de Google")
-                    }
-                }
-            } catch (e: ApiException) {
-                scope.launch {
-                    snackbarHostState.showSnackbar("Error al iniciar sesión con Google: ${e.message}")
-                }
-            }
-        }
-    }
+    val credentialManager = remember { CredentialManager.create(context) }
 
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -140,11 +122,72 @@ fun LoginScreen(
                 GoogleSignInButton(
                     isLoading = uiState is UiState.Loading,
                     onClick = {
-                        val signInIntent = getGoogleSignInIntent(context)
-                        googleSignInLauncher.launch(signInIntent)
+                        scope.launch {
+                            signInWithCredentialManager(
+                                context = context,
+                                credentialManager = credentialManager,
+                                onSuccess = { idToken ->
+                                    viewModel.signInWithGoogle(idToken)
+                                },
+                                onError = { errorMessage ->
+                                    snackbarHostState.showSnackbar(errorMessage)
+                                }
+                            )
+                        }
                     }
                 )
             }
+        }
+    }
+}
+
+private suspend fun signInWithCredentialManager(
+    context: Context,
+    credentialManager: CredentialManager,
+    onSuccess: (String) -> Unit,
+    onError: suspend (String) -> Unit
+) {
+    val googleIdOption = GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(false)
+        .setServerClientId(context.getString(R.string.default_web_client_id))
+        .setAutoSelectEnabled(true)
+        .build()
+
+    val request = GetCredentialRequest.Builder()
+        .addCredentialOption(googleIdOption)
+        .build()
+
+    try {
+        val result = credentialManager.getCredential(
+            request = request,
+            context = context
+        )
+        handleSignInResult(result, onSuccess, onError)
+    } catch (e: GetCredentialException) {
+        onError("Error al iniciar sesión: ${e.message}")
+    }
+}
+
+private suspend fun handleSignInResult(
+    result: GetCredentialResponse,
+    onSuccess: (String) -> Unit,
+    onError: suspend (String) -> Unit
+) {
+    when (val credential = result.credential) {
+        is CustomCredential -> {
+            if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                try {
+                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                    onSuccess(googleIdTokenCredential.idToken)
+                } catch (e: GoogleIdTokenParsingException) {
+                    onError("Error al procesar las credenciales de Google: ${e.message}")
+                }
+            } else {
+                onError("Tipo de credencial de Google no reconocido")
+            }
+        }
+        else -> {
+            onError("Se esperaba una credencial de Google")
         }
     }
 }
@@ -190,12 +233,3 @@ private fun GoogleSignInButton(
         }
     }
 }
-
-private fun getGoogleSignInIntent(context: Context) =
-    GoogleSignIn.getClient(
-        context,
-        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-    ).signInIntent
