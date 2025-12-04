@@ -87,6 +87,9 @@
     <string name="team_type_change_not_allowed">Cannot change team type</string>
     <string name="team_type_change_blocked_message">The team type cannot be changed because there are scheduled matches. Please delete or archive all scheduled matches first.</string>
 
+    <string name="save_error_title">Error saving data</string>
+    <string name="save_error_message">An error occurred while saving. Please check your internet connection and try again.</string>
+
     <string name="team_info">Team Info</string>
     <string name="team_info_description">Show team information</string>
     <string name="edit">Edit</string>

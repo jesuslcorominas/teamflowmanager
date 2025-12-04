@@ -66,6 +66,7 @@ class TeamFirestoreDataSourceImpl(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error inserting team to Firestore", e)
+            throw e
         }
     }
 
@@ -74,7 +75,7 @@ class TeamFirestoreDataSourceImpl(
             val documentId = team.coachId
             if (documentId.isNullOrEmpty()) {
                 Log.w(TAG, "Cannot update team without document ID (stored in coachId)")
-                return
+                throw IllegalStateException("Cannot update team without document ID")
             }
 
             val firestoreModel = team.toFirestoreModel()
@@ -87,6 +88,7 @@ class TeamFirestoreDataSourceImpl(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error updating team in Firestore", e)
+            throw e
         }
     }
 
