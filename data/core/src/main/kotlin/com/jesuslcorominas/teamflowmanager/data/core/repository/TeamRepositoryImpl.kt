@@ -17,4 +17,7 @@ internal class TeamRepositoryImpl(
     override suspend fun updateTeam(team: Team) {
         localDataSource.updateTeam(team)
     }
+
+    override fun getTeamByCoachId(coachId: String): Flow<Team?> =
+        localDataSource.getTeamByCoachId(coachId)
 }

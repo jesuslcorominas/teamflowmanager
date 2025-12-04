@@ -7,4 +7,5 @@ data class Team(
     val delegateName: String,
     val captainId: Long? = null,
     val teamType: TeamType,
+    val coachId: String? = null,
 )

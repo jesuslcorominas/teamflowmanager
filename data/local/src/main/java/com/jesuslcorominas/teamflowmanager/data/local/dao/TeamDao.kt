@@ -16,6 +16,9 @@ interface TeamDao {
     @Query("SELECT * FROM team LIMIT 1")
     suspend fun getTeamDirect(): TeamEntity?
 
+    @Query("SELECT * FROM team WHERE coachId = :coachId LIMIT 1")
+    fun getTeamByCoachId(coachId: String): Flow<TeamEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTeam(team: TeamEntity)
 

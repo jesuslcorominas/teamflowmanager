@@ -9,4 +9,11 @@ interface TeamLocalDataSource {
     suspend fun insertTeam(team: Team)
 
     suspend fun updateTeam(team: Team)
+
+    /**
+     * Get team by coach ID.
+     * @param coachId The Firebase user ID of the coach
+     * @return Flow emitting the team if found, null otherwise
+     */
+    fun getTeamByCoachId(coachId: String): Flow<Team?>
 }

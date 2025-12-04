@@ -74,3 +74,15 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("ALTER TABLE team ADD COLUMN teamType INTEGER NOT NULL DEFAULT 5")
     }
 }
+
+/**
+ * Migration from version 4 to 5
+ * Adds coachId column to team table to support Firestore integration.
+ * The coachId links the team to a Firebase user.
+ */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Add coachId column as nullable (existing teams won't have a coachId)
+        db.execSQL("ALTER TABLE team ADD COLUMN coachId TEXT")
+    }
+}

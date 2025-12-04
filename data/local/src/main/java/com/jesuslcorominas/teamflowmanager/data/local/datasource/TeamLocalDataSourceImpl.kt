@@ -20,4 +20,7 @@ internal class TeamLocalDataSourceImpl(
     override suspend fun updateTeam(team: Team) {
         teamDao.updateTeam(team.toEntity())
     }
+
+    override fun getTeamByCoachId(coachId: String): Flow<Team?> =
+        teamDao.getTeamByCoachId(coachId).map { it?.toDomain() }
 }
