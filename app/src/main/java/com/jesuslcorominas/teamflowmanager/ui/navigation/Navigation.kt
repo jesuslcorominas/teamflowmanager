@@ -196,6 +196,11 @@ fun Navigation(
                     navController.navigate(Route.Matches.createRoute()) {
                         popUpTo(Route.Settings.createRoute()) { inclusive = true }
                     }
+                },
+                onSignOut = {
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

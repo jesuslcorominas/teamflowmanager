@@ -1,15 +1,19 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.justRun
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -17,17 +21,20 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var exportDatabaseUseCase: ExportDatabaseUseCase
     private lateinit var importDatabaseUseCase: ImportDatabaseUseCase
+    private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
+    private lateinit var signOutUseCase: SignOutUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
     private lateinit var viewModel: SettingsViewModel
 
@@ -36,8 +43,19 @@ class SettingsViewModelTest {
         Dispatchers.setMain(testDispatcher)
         exportDatabaseUseCase = mockk()
         importDatabaseUseCase = mockk()
+        getCurrentUserUseCase = mockk()
+        signOutUseCase = mockk()
         analyticsTracker = mockk(relaxed = true)
-        viewModel = SettingsViewModel(exportDatabaseUseCase, importDatabaseUseCase, analyticsTracker)
+        
+        every { getCurrentUserUseCase() } returns flowOf(null)
+        
+        viewModel = SettingsViewModel(
+            exportDatabaseUseCase,
+            importDatabaseUseCase,
+            getCurrentUserUseCase,
+            signOutUseCase,
+            analyticsTracker
+        )
     }
 
     @After
@@ -207,5 +225,36 @@ class SettingsViewModelTest {
 
         // Then
         assertNull(viewModel.importResult.value)
+    }
+
+    @Test
+    fun `signOut should call sign out use case and set signOutComplete`() = runTest {
+        // Given
+        coEvery { signOutUseCase() } returns Unit
+
+        // When
+        viewModel.signOut()
+        advanceUntilIdle()
+
+        // Then
+        coVerify(exactly = 1) { signOutUseCase() }
+        verify { analyticsTracker.logEvent("logout", any()) }
+        verify { analyticsTracker.setUserId(null) }
+        assertTrue(viewModel.signOutComplete.value)
+    }
+
+    @Test
+    fun `clearSignOutComplete should reset signOutComplete to false`() = runTest {
+        // Given
+        coEvery { signOutUseCase() } returns Unit
+        viewModel.signOut()
+        advanceUntilIdle()
+        assertTrue(viewModel.signOutComplete.value)
+
+        // When
+        viewModel.clearSignOutComplete()
+
+        // Then
+        assertFalse(viewModel.signOutComplete.value)
     }
 }

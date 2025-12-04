@@ -153,6 +153,8 @@ val viewModelModule =
             SettingsViewModel(
                 exportDatabaseUseCase = get(),
                 importDatabaseUseCase = get(),
+                getCurrentUserUseCase = get(),
+                signOutUseCase = get(),
                 analyticsTracker = get()
             )
         }
