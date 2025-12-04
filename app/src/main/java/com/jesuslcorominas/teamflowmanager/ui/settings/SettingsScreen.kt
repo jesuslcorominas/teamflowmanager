@@ -78,7 +78,6 @@ fun SettingsScreen(
             onSignOut()
         }
     }
-    var pendingImportUri by remember { mutableStateOf<String?>(null) }
 
     // Handle incoming file URI from deep link
     LaunchedEffect(incomingFileUri) {
