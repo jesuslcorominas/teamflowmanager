@@ -45,6 +45,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel.UiState
@@ -71,10 +72,12 @@ fun LoginScreen(
                 onLoginSuccess()
                 viewModel.resetState()
             }
+
             is UiState.Error -> {
                 snackbarHostState.showSnackbar((uiState as UiState.Error).message)
                 viewModel.resetState()
             }
+
             else -> {}
         }
     }
@@ -92,13 +95,9 @@ fun LoginScreen(
                     .fillMaxSize()
                     .padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Top
             ) {
-                Image(
-                    painter = painterResource(id = R.mipmap.ic_launcher),
-                    contentDescription = null,
-                    modifier = Modifier.size(120.dp)
-                )
+                TeamFlowManagerIcon()
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -186,6 +185,7 @@ private suspend fun handleSignInResult(
                 onError("Tipo de credencial de Google no reconocido")
             }
         }
+
         else -> {
             onError("Se esperaba una credencial de Google")
         }
