@@ -24,6 +24,9 @@ internal class SignInWithGoogleUseCaseImpl(
             val existingTeam = teamRepository.getTeamByCoachId(user.id).first()
             if (existingTeam == null) {
                 // Create an initial team for the new coach
+                // Note: The id field (0) is a placeholder for the domain model.
+                // For Firestore storage, the coachId is used as the document ID.
+                // The actual ID will be derived from coachId when reading from Firestore.
                 val newTeam = Team(
                     id = 0,
                     name = "",

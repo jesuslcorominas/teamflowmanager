@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.local.datasource
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.firestore.TeamFirestoreModel
@@ -22,6 +23,7 @@ class TeamFirestoreDataSourceImpl(
 ) : TeamLocalDataSource {
 
     companion object {
+        private const val TAG = "TeamFirestoreDataSource"
         private const val TEAMS_COLLECTION = "teams"
     }
 
@@ -35,6 +37,7 @@ class TeamFirestoreDataSourceImpl(
             .limit(1)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
+                    Log.e(TAG, "Error getting team from Firestore", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
@@ -53,32 +56,42 @@ class TeamFirestoreDataSourceImpl(
     override suspend fun insertTeam(team: Team) {
         try {
             val firestoreModel = team.toFirestoreModel()
-            val documentId = team.coachId ?: return
+            val documentId = team.coachId
+            if (documentId.isNullOrEmpty()) {
+                Log.w(TAG, "Cannot insert team without coachId")
+                return
+            }
 
             firestore.collection(TEAMS_COLLECTION)
                 .document(documentId)
                 .set(firestoreModel)
                 .await()
+            Log.d(TAG, "Team inserted successfully for coachId: $documentId")
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
-            // Silently fail for now - in production, consider logging or error handling
+        } catch (e: Exception) {
+            Log.e(TAG, "Error inserting team to Firestore", e)
         }
     }
 
     override suspend fun updateTeam(team: Team) {
         try {
             val firestoreModel = team.toFirestoreModel()
-            val documentId = team.coachId ?: return
+            val documentId = team.coachId
+            if (documentId.isNullOrEmpty()) {
+                Log.w(TAG, "Cannot update team without coachId")
+                return
+            }
 
             firestore.collection(TEAMS_COLLECTION)
                 .document(documentId)
                 .set(firestoreModel)
                 .await()
+            Log.d(TAG, "Team updated successfully for coachId: $documentId")
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
-            // Silently fail for now - in production, consider logging or error handling
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating team in Firestore", e)
         }
     }
 
@@ -87,6 +100,7 @@ class TeamFirestoreDataSourceImpl(
             .document(coachId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
+                    Log.e(TAG, "Error getting team by coachId from Firestore", error)
                     trySend(null)
                     return@addSnapshotListener
                 }

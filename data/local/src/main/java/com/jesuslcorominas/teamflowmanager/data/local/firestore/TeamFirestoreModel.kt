@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.local.firestore
 import com.google.firebase.firestore.DocumentId
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
+import kotlin.math.abs
 
 /**
  * Firestore model for Team document.
@@ -30,9 +31,25 @@ data class TeamFirestoreModel(
     )
 }
 
+/**
+ * Generates a deterministic Long ID from a String document ID.
+ * Uses a simplified hash function that is more predictable than hashCode().
+ * The ID is based on the ASCII values of the characters to ensure consistency.
+ */
+private fun String.toStableId(): Long {
+    if (isEmpty()) return 0L
+    var result = 0L
+    var multiplier = 1L
+    for (char in this) {
+        result += char.code * multiplier
+        multiplier *= 31
+    }
+    return abs(result)
+}
+
 fun TeamFirestoreModel.toDomain(): Team =
     Team(
-        id = id.hashCode().toLong(), // Generate a consistent Long id from String document id
+        id = coachId.toStableId(), // Generate a consistent Long id from coachId
         name = name,
         coachName = coachName,
         delegateName = delegateName,
