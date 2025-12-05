@@ -33,7 +33,7 @@ class PlayerFirestoreDataSourceImpl(
         private const val TAG = "PlayerFirestoreDS"
         private const val PLAYERS_COLLECTION = "players"
         private const val TEAMS_COLLECTION = "teams"
-        private const val PLAYER_IMAGES_PATH = "player_images"
+        private const val PLAYER_IMAGES_PATH = "players_images"
     }
 
     /**
@@ -409,6 +409,7 @@ class PlayerFirestoreDataSourceImpl(
 
     /**
      * Uploads a player image to Firebase Storage if the URI is a local URI.
+     * The storage path follows the security rules format: players_images/{ownerId}/{playerId}.jpg
      * @return The download URL if uploaded, the original URI if it's already a remote URL, or null if no image.
      */
     private suspend fun uploadPlayerImageIfNeeded(imageUri: String?, playerId: String): String? {
@@ -421,7 +422,8 @@ class PlayerFirestoreDataSourceImpl(
         
         // Check if it's a local URI that needs to be uploaded
         if (isLocalUri(imageUri)) {
-            val storagePath = "$PLAYER_IMAGES_PATH/$playerId.jpg"
+            val ownerId = firebaseAuth.currentUser?.uid ?: return null
+            val storagePath = "$PLAYER_IMAGES_PATH/$ownerId/$playerId.jpg"
             return imageStorageDataSource.uploadImage(imageUri, storagePath)
         }
         
