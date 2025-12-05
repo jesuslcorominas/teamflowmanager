@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -82,7 +83,7 @@ fun PlayerDataStep(
     var isCaptain by remember { mutableStateOf(initialIsCaptain) }
     var imageUri by remember { mutableStateOf<String?>(initialImageUri) }
     var showImageOptions by remember { mutableStateOf(false) }
-    
+
     var firstNameError by remember { mutableStateOf<String?>(null) }
     var lastNameError by remember { mutableStateOf<String?>(null) }
     var numberError by remember { mutableStateOf<String?>(null) }
@@ -122,6 +123,10 @@ fun PlayerDataStep(
         }
         showImageOptions = false
     }
+
+    firstName = firstName.trim()
+    lastName = lastName.trim()
+    number = number.trim()
 
     val validateAndNext = {
         firstNameError = if (firstName.isBlank()) context.getString(R.string.first_name_required) else null
@@ -200,7 +205,10 @@ fun PlayerDataStep(
             supportingText = if (firstNameError != null) {
                 { Text(firstNameError!!) }
             } else null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Words
+            ),
             keyboardActions = KeyboardActions(onNext = {
                 focusManager.moveFocus(FocusDirection.Down)
             }),
@@ -219,7 +227,10 @@ fun PlayerDataStep(
             supportingText = if (lastNameError != null) {
                 { Text(lastNameError!!) }
             } else null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Words
+            ),
             keyboardActions = KeyboardActions(onNext = {
                 focusManager.moveFocus(FocusDirection.Down)
             }),
