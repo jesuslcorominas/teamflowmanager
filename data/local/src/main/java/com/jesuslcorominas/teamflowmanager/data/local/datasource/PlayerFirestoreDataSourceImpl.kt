@@ -18,7 +18,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * Firestore-based implementation of PlayerLocalDataSource.
  * This implementation stores player data in Firebase Firestore instead of local Room database.
  * Player documents are stored in the "players" collection with auto-generated document IDs.
- * The ownerId field is set to the current authenticated user's ID as required by security rules.
+ * The teamId field stores the Firestore document ID of the team, which is used by
+ * security rules to validate that the authenticated user is the owner of the team.
  */
 class PlayerFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
@@ -28,10 +29,34 @@ class PlayerFirestoreDataSourceImpl(
     companion object {
         private const val TAG = "PlayerFirestoreDS"
         private const val PLAYERS_COLLECTION = "players"
+        private const val TEAMS_COLLECTION = "teams"
     }
 
     /**
-     * Gets all players owned by the current user from Firestore as a real-time Flow.
+     * Gets the team's Firestore document ID for the current authenticated user.
+     * This is needed because security rules validate player access based on team ownership.
+     */
+    private suspend fun getTeamDocumentId(): String? {
+        val currentUserId = firebaseAuth.currentUser?.uid ?: return null
+        
+        return try {
+            val snapshot = firestore.collection(TEAMS_COLLECTION)
+                .whereEqualTo("ownerId", currentUserId)
+                .limit(1)
+                .get()
+                .await()
+            
+            snapshot.documents.firstOrNull()?.id
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting team document ID", e)
+            null
+        }
+    }
+
+    /**
+     * Gets all players for the current user's team from Firestore as a real-time Flow.
      */
     override fun getAllPlayers(): Flow<List<Player>> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
@@ -42,8 +67,17 @@ class PlayerFirestoreDataSourceImpl(
             return@callbackFlow
         }
 
+        // First, get the team document ID
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.w(TAG, "No team found for user, cannot get players")
+            trySend(emptyList())
+            awaitClose { }
+            return@callbackFlow
+        }
+
         val listenerRegistration = firestore.collection(PLAYERS_COLLECTION)
-            .whereEqualTo("ownerId", currentUserId)
+            .whereEqualTo("teamId", teamDocId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e(TAG, "Error getting players from Firestore", error)
@@ -64,7 +98,7 @@ class PlayerFirestoreDataSourceImpl(
                     }
                 } ?: emptyList()
 
-                Log.d(TAG, "Loaded ${players.size} players")
+                Log.d(TAG, "Loaded ${players.size} players for team: $teamDocId")
                 trySend(players)
             }
 
@@ -79,15 +113,15 @@ class PlayerFirestoreDataSourceImpl(
      * We need to query all players and filter by the stable ID.
      */
     override suspend fun getPlayerById(playerId: Long): Player? {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            Log.w(TAG, "No authenticated user, cannot get player")
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.w(TAG, "No team found, cannot get player")
             return null
         }
 
         return try {
             val snapshot = firestore.collection(PLAYERS_COLLECTION)
-                .whereEqualTo("ownerId", currentUserId)
+                .whereEqualTo("teamId", teamDocId)
                 .get()
                 .await()
 
@@ -115,15 +149,15 @@ class PlayerFirestoreDataSourceImpl(
      * Gets the captain player.
      */
     override suspend fun getCaptainPlayer(): Player? {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            Log.w(TAG, "No authenticated user, cannot get captain")
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.w(TAG, "No team found, cannot get captain")
             return null
         }
 
         return try {
             val snapshot = firestore.collection(PLAYERS_COLLECTION)
-                .whereEqualTo("ownerId", currentUserId)
+                .whereEqualTo("teamId", teamDocId)
                 .whereEqualTo("isCaptain", true)
                 .limit(1)
                 .get()
@@ -156,18 +190,18 @@ class PlayerFirestoreDataSourceImpl(
      * Sets a player as captain by their Long ID.
      */
     override suspend fun setPlayerAsCaptain(playerId: Long) {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            Log.e(TAG, "No authenticated user, cannot set captain")
-            throw IllegalStateException("User must be authenticated to set captain")
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.e(TAG, "No team found, cannot set captain")
+            throw IllegalStateException("Team must exist to set captain")
         }
 
         try {
             // First, clear all existing captains
-            clearAllCaptains(currentUserId)
+            clearAllCaptains(teamDocId)
 
             // Then, find the document ID for this player
-            val documentId = findDocumentIdByPlayerId(currentUserId, playerId)
+            val documentId = findDocumentIdByPlayerId(teamDocId, playerId)
             if (documentId == null) {
                 Log.w(TAG, "Cannot find player with id: $playerId")
                 return
@@ -191,15 +225,15 @@ class PlayerFirestoreDataSourceImpl(
      * Removes captain status from a player.
      */
     override suspend fun removePlayerAsCaptain(playerId: Long) {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            Log.e(TAG, "No authenticated user, cannot remove captain")
-            throw IllegalStateException("User must be authenticated to remove captain")
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.e(TAG, "No team found, cannot remove captain")
+            throw IllegalStateException("Team must exist to remove captain")
         }
 
         try {
             // First, find the document ID for this player
-            val documentId = findDocumentIdByPlayerId(currentUserId, playerId)
+            val documentId = findDocumentIdByPlayerId(teamDocId, playerId)
             if (documentId == null) {
                 Log.w(TAG, "Cannot find player with id: $playerId")
                 return
@@ -223,20 +257,20 @@ class PlayerFirestoreDataSourceImpl(
      * Inserts a new player into Firestore.
      */
     override suspend fun insertPlayer(player: Player) {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            Log.e(TAG, "No authenticated user, cannot insert player")
-            throw IllegalStateException("User must be authenticated to create a player")
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.e(TAG, "No team found, cannot insert player")
+            throw IllegalStateException("Team must exist to create a player")
         }
 
         try {
             val firestoreModel = player.toFirestoreModel()
             // Use auto-generated document ID for new players
             val docRef = firestore.collection(PLAYERS_COLLECTION).document()
-            // Set the ownerId to current user and document id
-            val modelWithOwner = firestoreModel.copy(id = docRef.id, ownerId = currentUserId)
-            docRef.set(modelWithOwner).await()
-            Log.d(TAG, "Player inserted successfully with id: ${docRef.id}, ownerId: $currentUserId")
+            // Set the teamId to the team's Firestore document ID
+            val modelWithTeam = firestoreModel.copy(id = docRef.id, teamId = teamDocId)
+            docRef.set(modelWithTeam).await()
+            Log.d(TAG, "Player inserted successfully with id: ${docRef.id}, teamId: $teamDocId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -249,15 +283,15 @@ class PlayerFirestoreDataSourceImpl(
      * Deletes a player from Firestore.
      */
     override suspend fun deletePlayer(playerId: Long) {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            Log.e(TAG, "No authenticated user, cannot delete player")
-            throw IllegalStateException("User must be authenticated to delete a player")
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.e(TAG, "No team found, cannot delete player")
+            throw IllegalStateException("Team must exist to delete a player")
         }
 
         try {
             // First, find the document ID for this player
-            val documentId = findDocumentIdByPlayerId(currentUserId, playerId)
+            val documentId = findDocumentIdByPlayerId(teamDocId, playerId)
             if (documentId == null) {
                 Log.w(TAG, "Cannot find player with id: $playerId to delete")
                 return
@@ -280,26 +314,26 @@ class PlayerFirestoreDataSourceImpl(
      * Updates an existing player in Firestore.
      */
     override suspend fun updatePlayer(player: Player) {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            Log.e(TAG, "No authenticated user, cannot update player")
-            throw IllegalStateException("User must be authenticated to update a player")
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.e(TAG, "No team found, cannot update player")
+            throw IllegalStateException("Team must exist to update a player")
         }
 
         try {
             // First, find the document ID for this player
-            val documentId = findDocumentIdByPlayerId(currentUserId, player.id)
+            val documentId = findDocumentIdByPlayerId(teamDocId, player.id)
             if (documentId == null) {
                 Log.w(TAG, "Cannot find player with id: ${player.id} to update")
                 throw IllegalStateException("Cannot update player without document ID")
             }
 
             val firestoreModel = player.toFirestoreModel()
-            // Ensure ownerId and id are set correctly
-            val modelWithOwner = firestoreModel.copy(id = documentId, ownerId = currentUserId)
+            // Ensure teamId and id are set correctly
+            val modelWithTeam = firestoreModel.copy(id = documentId, teamId = teamDocId)
             firestore.collection(PLAYERS_COLLECTION)
                 .document(documentId)
-                .set(modelWithOwner)
+                .set(modelWithTeam)
                 .await()
             Log.d(TAG, "Player updated successfully: $documentId")
         } catch (e: CancellationException) {
@@ -313,9 +347,9 @@ class PlayerFirestoreDataSourceImpl(
     /**
      * Helper function to find the Firestore document ID for a player based on the Long player ID.
      */
-    private suspend fun findDocumentIdByPlayerId(ownerId: String, playerId: Long): String? {
+    private suspend fun findDocumentIdByPlayerId(teamDocId: String, playerId: Long): String? {
         val snapshot = firestore.collection(PLAYERS_COLLECTION)
-            .whereEqualTo("ownerId", ownerId)
+            .whereEqualTo("teamId", teamDocId)
             .get()
             .await()
 
@@ -338,11 +372,11 @@ class PlayerFirestoreDataSourceImpl(
     }
 
     /**
-     * Helper function to clear captain status from all players for the current owner.
+     * Helper function to clear captain status from all players for the team.
      */
-    private suspend fun clearAllCaptains(ownerId: String) {
+    private suspend fun clearAllCaptains(teamDocId: String) {
         val snapshot = firestore.collection(PLAYERS_COLLECTION)
-            .whereEqualTo("ownerId", ownerId)
+            .whereEqualTo("teamId", teamDocId)
             .whereEqualTo("isCaptain", true)
             .get()
             .await()
