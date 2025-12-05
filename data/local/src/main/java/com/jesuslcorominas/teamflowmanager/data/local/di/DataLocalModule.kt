@@ -3,8 +3,10 @@ package com.jesuslcorominas.teamflowmanager.data.local.di
 import androidx.room.Room
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionLocalDataSource
@@ -21,9 +23,10 @@ import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionRunner
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.TransactionExecutor
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.FirebaseAuthDataSource
+import com.jesuslcorominas.teamflowmanager.data.local.datasource.FirebaseStorageDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.GoalLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.MatchLocalDataSourceImpl
-import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerLocalDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerSubstitutionLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeHistoryLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeLocalDataSourceImpl
@@ -81,7 +84,8 @@ internal val databaseModule =
 
 internal val dataSourceLocalModule =
     module {
-        singleOf(::PlayerLocalDataSourceImpl) bind PlayerLocalDataSource::class
+        // Using Firestore for Player data instead of Room
+        singleOf(::PlayerFirestoreDataSourceImpl) bind PlayerLocalDataSource::class
         // Using Firestore for Team data instead of Room
         singleOf(::TeamFirestoreDataSourceImpl) bind TeamLocalDataSource::class
         singleOf(::MatchLocalDataSourceImpl) bind MatchLocalDataSource::class
@@ -96,7 +100,9 @@ internal val firebaseModule =
     module {
         single { FirebaseAuth.getInstance() }
         single { FirebaseFirestore.getInstance() }
+        single { FirebaseStorage.getInstance() }
         singleOf(::FirebaseAuthDataSource) bind AuthDataSource::class
+        singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
     }
 
 internal val databaseExporterModule =
