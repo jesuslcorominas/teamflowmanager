@@ -74,6 +74,9 @@
     <string name="team_type_change_not_allowed">No se puede cambiar el tipo de equipo</string>
     <string name="team_type_change_blocked_message">El tipo de equipo no se puede cambiar porque hay partidos programados. Por favor, elimina o archiva todos los partidos programados primero.</string>
 
+    <string name="save_error_title">Error al guardar</string>
+    <string name="save_error_message">Ha ocurrido un error al guardar los datos. Por favor, comprueba tu conexión a internet e inténtalo de nuevo.</string>
+
     <string name="team_info">Información del Equipo</string>
     <string name="team_info_description">Mostrar información del equipo</string>
     <string name="edit">Editar</string>

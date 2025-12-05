@@ -39,6 +39,7 @@ fun TeamScreen(
     val uiState by viewModel.uiState.collectAsState()
     val showExitDialog by viewModel.showExitDialog.collectAsState()
     val showTeamTypeChangeError by viewModel.showTeamTypeChangeError.collectAsState()
+    val showSaveError by viewModel.showSaveError.collectAsState()
 
     val hasUnsavedChanges = remember { mutableStateOf(true) }
 
@@ -90,8 +91,9 @@ fun TeamScreen(
             is TeamUiState.NoTeam -> {
                 TeamForm(
                     onSave = { team, _ ->
-                        viewModel.createTeam(team)
-                        onNavigateToMatches(team.name)
+                        viewModel.createTeam(team) {
+                            onNavigateToMatches(team.name)
+                        }
                     },
                 )
             }
@@ -123,6 +125,19 @@ fun TeamScreen(
             onDismissRequest = { viewModel.dismissTeamTypeChangeError() },
             confirmButton = {
                 TextButton(onClick = { viewModel.dismissTeamTypeChangeError() }) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        )
+    }
+    
+    if (showSaveError) {
+        AlertDialog(
+            title = { Text(stringResource(R.string.save_error_title)) },
+            text = { Text(stringResource(R.string.save_error_message)) },
+            onDismissRequest = { viewModel.dismissSaveError() },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissSaveError() }) {
                     Text(stringResource(R.string.close))
                 }
             }

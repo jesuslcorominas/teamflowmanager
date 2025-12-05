@@ -84,4 +84,35 @@ class TeamRepositoryImplTest {
             // Then
             coVerify { localDataSource.updateTeam(team) }
         }
+
+    @Test
+    fun `getTeamByCoachId should return team from local data source`() =
+        runTest {
+            // Given
+            val coachId = "test-coach-id"
+            val team = Team(1, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5, coachId = coachId)
+            every { localDataSource.getTeamByCoachId(coachId) } returns flowOf(team)
+
+            // When
+            val result = repository.getTeamByCoachId(coachId).first()
+
+            // Then
+            assertEquals(team, result)
+            verify { localDataSource.getTeamByCoachId(coachId) }
+        }
+
+    @Test
+    fun `getTeamByCoachId should return null when no team exists for coach`() =
+        runTest {
+            // Given
+            val coachId = "non-existent-coach-id"
+            every { localDataSource.getTeamByCoachId(coachId) } returns flowOf(null)
+
+            // When
+            val result = repository.getTeamByCoachId(coachId).first()
+
+            // Then
+            assertNull(result)
+            verify { localDataSource.getTeamByCoachId(coachId) }
+        }
 }

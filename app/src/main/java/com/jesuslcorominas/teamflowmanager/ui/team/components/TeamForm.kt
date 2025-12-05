@@ -277,6 +277,7 @@ private data class TeamFormState(
     val coachName: String = "",
     val delegateName: String = "",
     val teamType: TeamType = TeamType.FOOTBALL_5,
+    val coachId: String? = null,
     val errors: FormErrors = FormErrors()
 )
 
@@ -285,7 +286,8 @@ private fun TeamFormState.toTeam(): Team = Team(
     name = name.trimEnd(),
     coachName = coachName.trimEnd(),
     delegateName = delegateName.trimEnd(),
-    teamType = teamType
+    teamType = teamType,
+    coachId = coachId
 )
 
 private fun Team?.toTeamFormState() = this?.let {
@@ -294,7 +296,8 @@ private fun Team?.toTeamFormState() = this?.let {
         name = it.name,
         coachName = it.coachName,
         delegateName = it.delegateName,
-        teamType = it.teamType
+        teamType = it.teamType,
+        coachId = it.coachId
     )
 } ?: TeamFormState()
 

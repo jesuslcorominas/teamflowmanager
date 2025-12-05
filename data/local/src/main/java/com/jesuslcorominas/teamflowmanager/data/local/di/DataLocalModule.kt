@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.local.di
 
 import androidx.room.Room
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalLocalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
@@ -14,6 +15,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSou
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_2_3
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_3_4
+import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_4_5
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.converters.Converters
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionExecutor
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionRunner
@@ -26,7 +28,7 @@ import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerSubstitut
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeHistoryLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PreferencesLocalDataSourceImpl
-import com.jesuslcorominas.teamflowmanager.data.local.datasource.TeamLocalDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.local.datasource.TeamFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.exporter.DatabaseExporterImpl
 import com.jesuslcorominas.teamflowmanager.data.local.exporter.DatabaseImporterImpl
 import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseExporter
@@ -61,7 +63,7 @@ internal val databaseModule =
                     "teamflowmanager_database",
                 )
                 .addTypeConverter(converters)
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4,)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
         }
 
@@ -80,7 +82,8 @@ internal val databaseModule =
 internal val dataSourceLocalModule =
     module {
         singleOf(::PlayerLocalDataSourceImpl) bind PlayerLocalDataSource::class
-        singleOf(::TeamLocalDataSourceImpl) bind TeamLocalDataSource::class
+        // Using Firestore for Team data instead of Room
+        singleOf(::TeamFirestoreDataSourceImpl) bind TeamLocalDataSource::class
         singleOf(::MatchLocalDataSourceImpl) bind MatchLocalDataSource::class
         singleOf(::PlayerTimeLocalDataSourceImpl) bind PlayerTimeLocalDataSource::class
         singleOf(::PlayerTimeHistoryLocalDataSourceImpl) bind PlayerTimeHistoryLocalDataSource::class
@@ -92,6 +95,7 @@ internal val dataSourceLocalModule =
 internal val firebaseModule =
     module {
         single { FirebaseAuth.getInstance() }
+        single { FirebaseFirestore.getInstance() }
         singleOf(::FirebaseAuthDataSource) bind AuthDataSource::class
     }
 

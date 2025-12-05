@@ -54,9 +54,10 @@ dependencies {
     implementation(libs.moshi.kotlin.codegen)
     ksp(libs.moshi.kotlin.codegen)
 
-    // Firebase Auth
+    // Firebase Auth & Firestore
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore.ktx)
 
     testImplementation(libs.junit)
 }
