@@ -17,7 +17,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Firestore-based implementation of PlayerLocalDataSource.
- * This implementation stores player data in Firebase Firestore instead of local Room database.
+ * This implementation stores player data in Firebase Firestore as a remote data source.
  * Player documents are stored in the "players" collection with auto-generated document IDs.
  * The teamId field stores the Firestore document ID of the team, which is used by
  * security rules to validate that the authenticated user is the owner of the team.
