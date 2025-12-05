@@ -124,11 +124,11 @@ fun PlayerDataStep(
         showImageOptions = false
     }
 
-    firstName = firstName.trim()
-    lastName = lastName.trim()
-    number = number.trim()
-
     val validateAndNext = {
+        firstName = firstName.trim()
+        lastName = lastName.trim()
+        number = number.trim()
+
         firstNameError = if (firstName.isBlank()) context.getString(R.string.first_name_required) else null
         lastNameError = if (lastName.isBlank()) context.getString(R.string.last_name_required) else null
         numberError = if (number.isBlank()) context.getString(R.string.number_required) else null
