@@ -1,12 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.data.local.di
 
 import androidx.room.Room
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_2_3
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_3_4
@@ -73,12 +73,12 @@ internal val databaseModule =
 
 internal val dataSourceLocalModule =
     module {
-        singleOf(::MatchLocalDataSourceImpl) bind MatchLocalDataSource::class
-        singleOf(::PlayerTimeLocalDataSourceImpl) bind PlayerTimeLocalDataSource::class
-        singleOf(::PlayerTimeHistoryLocalDataSourceImpl) bind PlayerTimeHistoryLocalDataSource::class
-        singleOf(::PlayerSubstitutionLocalDataSourceImpl) bind PlayerSubstitutionLocalDataSource::class
-        singleOf(::PreferencesLocalDataSourceImpl) bind PreferencesLocalDataSource::class
-        singleOf(::GoalLocalDataSourceImpl) bind GoalLocalDataSource::class
+        singleOf(::MatchLocalDataSourceImpl) bind MatchDataSource::class
+        singleOf(::PlayerTimeLocalDataSourceImpl) bind PlayerTimeDataSource::class
+        singleOf(::PlayerTimeHistoryLocalDataSourceImpl) bind PlayerTimeHistoryDataSource::class
+        singleOf(::PlayerSubstitutionLocalDataSourceImpl) bind PlayerSubstitutionDataSource::class
+        singleOf(::PreferencesLocalDataSourceImpl) bind PreferencesDataSource::class
+        singleOf(::GoalLocalDataSourceImpl) bind GoalDataSource::class
     }
 
 internal val databaseExporterModule =

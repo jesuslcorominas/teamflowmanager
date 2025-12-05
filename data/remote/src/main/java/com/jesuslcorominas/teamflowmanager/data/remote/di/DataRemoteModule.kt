@@ -5,9 +5,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseStorageDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreDataSourceImpl
@@ -38,16 +38,16 @@ internal val firebaseModule =
         single { FirebaseAuth.getInstance() }
         single { FirebaseFirestore.getInstance() }
         single { FirebaseStorage.getInstance() }
-        singleOf(::FirebaseAuthDataSource) bind AuthDataSource::class
+        singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
     }
 
 internal val firestoreDataSourceModule =
     module {
         // Using Firestore for Player data
-        singleOf(::PlayerFirestoreDataSourceImpl) bind PlayerLocalDataSource::class
+        singleOf(::PlayerFirestoreDataSourceImpl) bind PlayerDataSource::class
         // Using Firestore for Team data
-        singleOf(::TeamFirestoreDataSourceImpl) bind TeamLocalDataSource::class
+        singleOf(::TeamFirestoreDataSourceImpl) bind TeamDataSource::class
     }
 
 internal val ktorfitModule =

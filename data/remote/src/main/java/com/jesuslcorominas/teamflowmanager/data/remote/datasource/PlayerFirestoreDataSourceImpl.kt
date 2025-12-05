@@ -4,7 +4,7 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
@@ -27,7 +27,7 @@ class PlayerFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
     private val imageStorageDataSource: ImageStorageDataSource,
-) : PlayerLocalDataSource {
+) : PlayerDataSource {
 
     companion object {
         private const val TAG = "PlayerFirestoreDS"

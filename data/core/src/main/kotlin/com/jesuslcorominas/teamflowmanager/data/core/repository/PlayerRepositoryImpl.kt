@@ -1,36 +1,36 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import kotlinx.coroutines.flow.Flow
 
 internal class PlayerRepositoryImpl(
-    private val localDataSource: PlayerLocalDataSource,
+    private val playerDataSource: PlayerDataSource,
 ) : PlayerRepository {
-    override fun getAllPlayers(): Flow<List<Player>> = localDataSource.getAllPlayers()
+    override fun getAllPlayers(): Flow<List<Player>> = playerDataSource.getAllPlayers()
 
-    override suspend fun getPlayerById(playerId: Long): Player? = localDataSource.getPlayerById(playerId)
+    override suspend fun getPlayerById(playerId: Long): Player? = playerDataSource.getPlayerById(playerId)
 
-    override suspend fun getCaptainPlayer(): Player? = localDataSource.getCaptainPlayer()
+    override suspend fun getCaptainPlayer(): Player? = playerDataSource.getCaptainPlayer()
 
     override suspend fun addPlayer(player: Player) {
-        localDataSource.insertPlayer(player)
+        playerDataSource.insertPlayer(player)
     }
 
     override suspend fun deletePlayer(playerId: Long) {
-        localDataSource.deletePlayer(playerId)
+        playerDataSource.deletePlayer(playerId)
     }
 
     override suspend fun updatePlayer(player: Player) {
-        localDataSource.updatePlayer(player)
+        playerDataSource.updatePlayer(player)
     }
 
     override suspend fun setPlayerAsCaptain(playerId: Long) {
-        localDataSource.setPlayerAsCaptain(playerId)
+        playerDataSource.setPlayerAsCaptain(playerId)
     }
 
     override suspend fun removePlayerAsCaptain(playerId: Long) {
-        localDataSource.removePlayerAsCaptain(playerId)
+        playerDataSource.removePlayerAsCaptain(playerId)
     }
 }

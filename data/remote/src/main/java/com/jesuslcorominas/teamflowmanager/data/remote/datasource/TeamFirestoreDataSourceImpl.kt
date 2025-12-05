@@ -3,7 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.TeamFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
@@ -24,7 +24,7 @@ import kotlin.coroutines.cancellation.CancellationException
 class TeamFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
-) : TeamLocalDataSource {
+) : TeamDataSource {
 
     companion object {
         private const val TAG = "TeamFirestoreDataSource"
@@ -62,7 +62,7 @@ class TeamFirestoreDataSourceImpl(
                 // Get the document ID explicitly to ensure it's available
                 val documentId = document.id
                 val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
-                
+
                 if (firestoreModel != null) {
                     // Ensure the id field is set from the document ID
                     val modelWithId = if (firestoreModel.id.isEmpty()) {
@@ -154,7 +154,7 @@ class TeamFirestoreDataSourceImpl(
                 // Get the document ID explicitly to ensure it's available
                 val documentId = snapshot.id
                 val firestoreModel = snapshot.toObject(TeamFirestoreModel::class.java)
-                
+
                 if (firestoreModel != null) {
                     // Ensure the id field is set from the document ID
                     val modelWithId = if (firestoreModel.id.isEmpty()) {

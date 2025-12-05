@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.local.datasource
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerTimeDao
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toDomain
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toEntity
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
 
 internal class PlayerTimeLocalDataSourceImpl(
     private val playerTimeDao: PlayerTimeDao,
-) : PlayerTimeLocalDataSource {
+) : PlayerTimeDataSource {
     override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> =
         playerTimeDao
             .getPlayerTime(playerId)

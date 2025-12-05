@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
@@ -8,17 +8,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
 internal class PlayerTimeRepositoryImpl(
-    private val localDataSource: PlayerTimeLocalDataSource,
+    private val playerTimeDataSource: PlayerTimeDataSource,
 ) : PlayerTimeRepository {
-    override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> = localDataSource.getPlayerTime(playerId)
+    override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> = playerTimeDataSource.getPlayerTime(playerId)
 
-    override fun getAllPlayerTimes(): Flow<List<PlayerTime>> = localDataSource.getAllPlayerTimes()
+    override fun getAllPlayerTimes(): Flow<List<PlayerTime>> = playerTimeDataSource.getAllPlayerTimes()
 
     override suspend fun startTimer(
         playerId: Long,
         currentTimeMillis: Long,
     ) {
-        val currentPlayerTime = localDataSource.getPlayerTime(playerId).first()
+        val currentPlayerTime = playerTimeDataSource.getPlayerTime(playerId).first()
         val playerTime =
             if (currentPlayerTime != null) {
                 currentPlayerTime.copy(
@@ -35,14 +35,14 @@ internal class PlayerTimeRepositoryImpl(
                     status = PlayerTimeStatus.PLAYING,
                 )
             }
-        localDataSource.upsertPlayerTime(playerTime)
+        playerTimeDataSource.upsertPlayerTime(playerTime)
     }
 
     override suspend fun pauseTimer(
         playerId: Long,
         currentTimeMillis: Long,
     ) {
-        val currentPlayerTime = localDataSource.getPlayerTime(playerId).first()
+        val currentPlayerTime = playerTimeDataSource.getPlayerTime(playerId).first()
         if (currentPlayerTime != null && currentPlayerTime.isRunning) {
             val lastStartTime = currentPlayerTime.lastStartTimeMillis ?: currentTimeMillis
             val additionalTime = currentTimeMillis - lastStartTime
@@ -53,7 +53,7 @@ internal class PlayerTimeRepositoryImpl(
                     lastStartTimeMillis = null,
                     status = PlayerTimeStatus.ON_BENCH,
                 )
-            localDataSource.upsertPlayerTime(updatedPlayerTime)
+            playerTimeDataSource.upsertPlayerTime(updatedPlayerTime)
         }
     }
 
@@ -61,7 +61,7 @@ internal class PlayerTimeRepositoryImpl(
         playerId: Long,
         currentTimeMillis: Long,
     ) {
-        val currentPlayerTime = localDataSource.getPlayerTime(playerId).first()
+        val currentPlayerTime = playerTimeDataSource.getPlayerTime(playerId).first()
         if (currentPlayerTime != null && currentPlayerTime.isRunning) {
             val lastStartTime = currentPlayerTime.lastStartTimeMillis ?: currentTimeMillis
             val additionalTime = currentTimeMillis - lastStartTime
@@ -72,11 +72,11 @@ internal class PlayerTimeRepositoryImpl(
                     lastStartTimeMillis = lastStartTime,
                     status = PlayerTimeStatus.PAUSED,
                 )
-            localDataSource.upsertPlayerTime(updatedPlayerTime)
+            playerTimeDataSource.upsertPlayerTime(updatedPlayerTime)
         }
     }
 
     override suspend fun resetAllPlayerTimes() {
-        localDataSource.deleteAllPlayerTimes()
+        playerTimeDataSource.deleteAllPlayerTimes()
     }
 }
