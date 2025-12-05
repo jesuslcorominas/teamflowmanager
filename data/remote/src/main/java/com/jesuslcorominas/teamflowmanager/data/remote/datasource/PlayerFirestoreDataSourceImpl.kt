@@ -1,13 +1,13 @@
-package com.jesuslcorominas.teamflowmanager.data.local.datasource
+package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.local.firestore.PlayerFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.local.firestore.toDomain
-import com.jesuslcorominas.teamflowmanager.data.local.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

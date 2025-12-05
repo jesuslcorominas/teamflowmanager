@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.data.local.firestore
+package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.google.firebase.firestore.DocumentId
 import com.jesuslcorominas.teamflowmanager.domain.model.Team

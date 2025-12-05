@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.data.local.datasource
+package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
