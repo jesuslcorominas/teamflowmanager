@@ -254,27 +254,28 @@ class MatchFirestoreDataSourceImpl(
     override suspend fun updateMatchCaptain(matchId: Long, captainId: Long?) {
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot update match captain")
-            throw IllegalStateException("Team must exist to update match captain")
+            Log.w(TAG, "No team found, cannot update match captain - user may not be authenticated")
+            return
+        }
+
+        val documentId = findDocumentIdByMatchId(teamDocId, matchId)
+        if (documentId == null) {
+            Log.w(TAG, "Cannot find match with id: $matchId to update captain")
+            return
         }
 
         try {
-            val documentId = findDocumentIdByMatchId(teamDocId, matchId)
-            if (documentId == null) {
-                Log.w(TAG, "Cannot find match with id: $matchId")
-                return
-            }
-
             firestore.collection(MATCHES_COLLECTION)
                 .document(documentId)
                 .update("captainId", captainId ?: 0L)
                 .await()
             Log.d(TAG, "Match captain updated: $documentId")
         } catch (e: CancellationException) {
+            Log.w(TAG, "Match captain update was cancelled for id: $documentId")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating match captain", e)
-            throw e
+            Log.e(TAG, "Error updating match captain: ${e.message}", e)
+            // Don't rethrow - log the error but don't crash the app
         }
     }
 
@@ -285,26 +286,27 @@ class MatchFirestoreDataSourceImpl(
     override suspend fun insertMatch(match: Match): Long {
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot insert match")
+            Log.e(TAG, "No team found, cannot insert match - user may not be authenticated")
             throw IllegalStateException("Team must exist to create a match")
         }
 
+        val docRef = firestore.collection(MATCHES_COLLECTION).document()
+        val firestoreModel = match.toFirestoreModel()
+        val modelWithTeam = firestoreModel.copy(
+            id = docRef.id,
+            teamId = teamDocId,
+        )
+        
         try {
-            val docRef = firestore.collection(MATCHES_COLLECTION).document()
-
-            val firestoreModel = match.toFirestoreModel()
-            val modelWithTeam = firestoreModel.copy(
-                id = docRef.id,
-                teamId = teamDocId,
-            )
             docRef.set(modelWithTeam).await()
             Log.d(TAG, "Match inserted successfully with id: ${docRef.id}, teamId: $teamDocId")
-
             return docRef.id.toStableId()
         } catch (e: CancellationException) {
+            // Even if coroutine is cancelled, log the attempt
+            Log.w(TAG, "Match insert was cancelled for id: ${docRef.id}")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error inserting match to Firestore", e)
+            Log.e(TAG, "Error inserting match to Firestore: ${e.message}", e)
             throw e
         }
     }
@@ -315,31 +317,33 @@ class MatchFirestoreDataSourceImpl(
     override suspend fun updateMatch(match: Match) {
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot update match")
+            Log.e(TAG, "No team found, cannot update match - user may not be authenticated")
             throw IllegalStateException("Team must exist to update a match")
         }
 
-        try {
-            val documentId = findDocumentIdByMatchId(teamDocId, match.id)
-            if (documentId == null) {
-                Log.w(TAG, "Cannot find match with id: ${match.id} to update")
-                throw IllegalStateException("Cannot update match without document ID")
-            }
+        val documentId = findDocumentIdByMatchId(teamDocId, match.id)
+        if (documentId == null) {
+            Log.w(TAG, "Cannot find match with id: ${match.id} to update")
+            throw IllegalStateException("Cannot update match without document ID")
+        }
 
-            val firestoreModel = match.toFirestoreModel()
-            val modelWithTeam = firestoreModel.copy(
-                id = documentId,
-                teamId = teamDocId,
-            )
+        val firestoreModel = match.toFirestoreModel()
+        val modelWithTeam = firestoreModel.copy(
+            id = documentId,
+            teamId = teamDocId,
+        )
+        
+        try {
             firestore.collection(MATCHES_COLLECTION)
                 .document(documentId)
                 .set(modelWithTeam)
                 .await()
             Log.d(TAG, "Match updated successfully: $documentId")
         } catch (e: CancellationException) {
+            Log.w(TAG, "Match update was cancelled for id: $documentId")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating match in Firestore", e)
+            Log.e(TAG, "Error updating match in Firestore: ${e.message}", e)
             throw e
         }
     }
@@ -350,8 +354,8 @@ class MatchFirestoreDataSourceImpl(
     override suspend fun deleteMatch(matchId: Long) {
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot delete match")
-            throw IllegalStateException("Team must exist to delete a match")
+            Log.w(TAG, "No team found, cannot delete match - user may not be authenticated")
+            return
         }
 
         try {
@@ -370,7 +374,7 @@ class MatchFirestoreDataSourceImpl(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting match from Firestore", e)
-            throw e
+            // Don't rethrow - log the error but don't crash the app
         }
     }
 
