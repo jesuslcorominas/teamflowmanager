@@ -6,7 +6,6 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,7 +54,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
@@ -165,8 +164,8 @@ fun PlayerDataStep(
                 contentAlignment = Alignment.Center
             ) {
                 if (imageUri != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(imageUri),
+                    AsyncImage(
+                        model = imageUri,
                         contentDescription = stringResource(R.string.player_image),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
