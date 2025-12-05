@@ -1,6 +1,9 @@
 package com.jesuslcorominas.teamflowmanager
 
 import android.app.Application
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.util.DebugLogger
 import com.jesuslcorominas.teamflowmanager.di.appModule
 import com.jesuslcorominas.teamflowmanager.di.teamFlowManagerModule
 import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
@@ -12,7 +15,7 @@ import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
-class TeamFlowManagerApplication : Application() {
+class TeamFlowManagerApplication : Application(), ImageLoaderFactory {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private lateinit var notificationServiceManager: MatchNotificationServiceManager
 
@@ -38,4 +41,9 @@ class TeamFlowManagerApplication : Application() {
         super.onTerminate()
         notificationServiceManager.stop()
     }
+
+    override fun newImageLoader(): ImageLoader = ImageLoader
+        .Builder(this)
+        .logger(DebugLogger())
+        .build()
 }

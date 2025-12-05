@@ -42,14 +42,14 @@ class PlayerFirestoreDataSourceImpl(
      */
     private suspend fun getTeamDocumentId(): String? {
         val currentUserId = firebaseAuth.currentUser?.uid ?: return null
-        
+
         return try {
             val snapshot = firestore.collection(TEAMS_COLLECTION)
                 .whereEqualTo("ownerId", currentUserId)
                 .limit(1)
                 .get()
                 .await()
-            
+
             snapshot.documents.firstOrNull()?.id
         } catch (e: CancellationException) {
             throw e
@@ -272,10 +272,10 @@ class PlayerFirestoreDataSourceImpl(
         try {
             // Use auto-generated document ID for new players
             val docRef = firestore.collection(PLAYERS_COLLECTION).document()
-            
+
             // Upload image if present and it's a local URI
             val imageUrl = uploadPlayerImageIfNeeded(player.imageUri, docRef.id)
-            
+
             val firestoreModel = player.toFirestoreModel()
             // Set the teamId and image URL
             val modelWithTeam = firestoreModel.copy(
@@ -314,7 +314,7 @@ class PlayerFirestoreDataSourceImpl(
 
             // Get the player to check for image URL
             val player = getPlayerById(playerId)
-            
+
             // Delete the image from storage if it exists and is a Firebase Storage URL
             player?.imageUri?.let { imageUrl ->
                 if (isFirebaseStorageUrl(imageUrl)) {
@@ -357,7 +357,7 @@ class PlayerFirestoreDataSourceImpl(
             // Get current player to check if image changed
             val currentPlayer = getPlayerById(player.id)
             val currentImageUrl = currentPlayer?.imageUri
-            
+
             // Handle image update
             val newImageUrl = when {
                 // No image in update
@@ -373,7 +373,7 @@ class PlayerFirestoreDataSourceImpl(
                 // Same image URL (already uploaded)
                 player.imageUri == currentImageUrl -> currentImageUrl
                 // New local image - upload it
-                isLocalUri(player.imageUri) -> {
+                isLocalUri(player.imageUri ?: "") -> {
                     // Delete old image if exists
                     currentImageUrl?.let {
                         if (isFirebaseStorageUrl(it)) {
@@ -414,19 +414,19 @@ class PlayerFirestoreDataSourceImpl(
      */
     private suspend fun uploadPlayerImageIfNeeded(imageUri: String?, playerId: String): String? {
         if (imageUri == null) return null
-        
+
         // Check if it's already a Firebase Storage URL
         if (isFirebaseStorageUrl(imageUri)) {
             return imageUri
         }
-        
+
         // Check if it's a local URI that needs to be uploaded
         if (isLocalUri(imageUri)) {
             val ownerId = firebaseAuth.currentUser?.uid ?: return null
             val storagePath = "$PLAYER_IMAGES_PATH/$ownerId/$playerId.jpg"
             return imageStorageDataSource.uploadImage(imageUri, storagePath)
         }
-        
+
         // Unknown URI format, return as-is
         return imageUri
     }
@@ -442,7 +442,7 @@ class PlayerFirestoreDataSourceImpl(
      * Checks if a URL is a Firebase Storage URL.
      */
     private fun isFirebaseStorageUrl(url: String): Boolean {
-        return url.contains("firebasestorage.googleapis.com") || 
+        return url.contains("firebasestorage.googleapis.com") ||
                url.contains("storage.googleapis.com")
     }
 
