@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import io.mockk.coEvery
@@ -19,13 +19,13 @@ import org.junit.Test
 
 class PlayerRepositoryImplTest {
 
-    private lateinit var localDataSource: PlayerLocalDataSource
+    private lateinit var playerDataSource: PlayerDataSource
     private lateinit var repository: PlayerRepositoryImpl
 
     @Before
     fun setup() {
-        localDataSource = mockk(relaxed = true)
-        repository = PlayerRepositoryImpl(localDataSource)
+        playerDataSource = mockk(relaxed = true)
+        repository = PlayerRepositoryImpl(playerDataSource)
     }
 
     @Test
@@ -35,27 +35,27 @@ class PlayerRepositoryImplTest {
             Player(1, "John", "Doe", 10, listOf(Position.Forward)),
             Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder))
         )
-        every { localDataSource.getAllPlayers() } returns flowOf(players)
+        every { playerDataSource.getAllPlayers() } returns flowOf(players)
 
         // When
         val result = repository.getAllPlayers().first()
 
         // Then
         assertEquals(players, result)
-        verify { localDataSource.getAllPlayers() }
+        verify { playerDataSource.getAllPlayers() }
     }
 
     @Test
     fun `getAllPlayers should return empty list when no players exist`() = runTest {
         // Given
-        every { localDataSource.getAllPlayers() } returns flowOf(emptyList())
+        every { playerDataSource.getAllPlayers() } returns flowOf(emptyList())
 
         // When
         val result = repository.getAllPlayers().first()
 
         // Then
         assertEquals(emptyList<Player>(), result)
-        verify { localDataSource.getAllPlayers() }
+        verify { playerDataSource.getAllPlayers() }
     }
 
     @Test
@@ -73,20 +73,20 @@ class PlayerRepositoryImplTest {
         repository.addPlayer(player)
 
         // Then
-        coVerify { localDataSource.insertPlayer(player) }
+        coVerify { playerDataSource.insertPlayer(player) }
     }
 
     @Test
     fun `deletePlayer should delete player from local data source`() = runTest {
         // Given
         val playerId = 1L
-        coEvery { localDataSource.deletePlayer(playerId) } just runs
+        coEvery { playerDataSource.deletePlayer(playerId) } just runs
 
         // When
         repository.deletePlayer(playerId)
 
         // Then
-        coVerify { localDataSource.deletePlayer(playerId) }
+        coVerify { playerDataSource.deletePlayer(playerId) }
     }
 
     @Test
@@ -99,12 +99,12 @@ class PlayerRepositoryImplTest {
             number = 10,
             positions = listOf(Position.Forward)
         )
-        coEvery { localDataSource.updatePlayer(player) } just runs
+        coEvery { playerDataSource.updatePlayer(player) } just runs
 
         // When
         repository.updatePlayer(player)
 
         // Then
-        coVerify { localDataSource.updatePlayer(player) }
+        coVerify { playerDataSource.updatePlayer(player) }
     }
 }

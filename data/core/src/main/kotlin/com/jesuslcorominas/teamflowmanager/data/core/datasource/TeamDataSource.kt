@@ -3,7 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.datasource
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import kotlinx.coroutines.flow.Flow
 
-interface TeamLocalDataSource {
+interface TeamDataSource {
     fun getTeam(): Flow<Team?>
 
     suspend fun insertTeam(team: Team)

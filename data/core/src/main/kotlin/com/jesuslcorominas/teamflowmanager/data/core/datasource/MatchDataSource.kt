@@ -3,7 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.datasource
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import kotlinx.coroutines.flow.Flow
 
-interface MatchLocalDataSource {
+interface MatchDataSource {
     fun getMatchById(matchId: Long): Flow<Match?>
 
     fun getAllMatches(): Flow<List<Match>>

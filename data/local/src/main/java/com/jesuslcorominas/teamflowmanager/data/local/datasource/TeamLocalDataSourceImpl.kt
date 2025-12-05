@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.local.datasource
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.dao.TeamDao
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toDomain
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toEntity
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
 
 internal class TeamLocalDataSourceImpl(
     private val teamDao: TeamDao,
-) : TeamLocalDataSource {
+) : TeamDataSource {
     override fun getTeam(): Flow<Team?> = teamDao.getTeam().map { it?.toDomain() }
 
     override suspend fun insertTeam(team: Team) {

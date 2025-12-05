@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.data.local.datasource
+package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import android.net.Uri
 import android.util.Log

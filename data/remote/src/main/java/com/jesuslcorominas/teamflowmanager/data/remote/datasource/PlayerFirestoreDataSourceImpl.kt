@@ -1,13 +1,13 @@
-package com.jesuslcorominas.teamflowmanager.data.local.datasource
+package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
-import com.jesuslcorominas.teamflowmanager.data.local.firestore.PlayerFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.local.firestore.toDomain
-import com.jesuslcorominas.teamflowmanager.data.local.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +17,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Firestore-based implementation of PlayerLocalDataSource.
- * This implementation stores player data in Firebase Firestore instead of local Room database.
+ * This implementation stores player data in Firebase Firestore as a remote data source.
  * Player documents are stored in the "players" collection with auto-generated document IDs.
  * The teamId field stores the Firestore document ID of the team, which is used by
  * security rules to validate that the authenticated user is the owner of the team.
@@ -27,7 +27,7 @@ class PlayerFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
     private val imageStorageDataSource: ImageStorageDataSource,
-) : PlayerLocalDataSource {
+) : PlayerDataSource {
 
     companion object {
         private const val TAG = "PlayerFirestoreDS"

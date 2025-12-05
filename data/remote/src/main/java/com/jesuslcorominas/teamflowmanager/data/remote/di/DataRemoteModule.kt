@@ -1,5 +1,16 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.di
 
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseStorageDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreDataSourceImpl
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -9,23 +20,37 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
- * Sample DI module demonstrating KtorFit configuration.
- * This module shows how to set up Ktor HttpClient and Ktorfit for dependency injection.
+ * DI module for remote data sources including Firebase and KtorFit configuration.
  *
- * To use this module:
- * 1. Include it in your main Koin module configuration
- * 2. Customize the HttpClient configuration as needed
- * 3. Add your API interfaces using Ktorfit.create<YourApi>()
- *
- * Example:
- * ```
- * includes(dataRemoteModule)
- * ```
+ * This module provides:
+ * - Firebase Auth, Firestore, and Storage instances
+ * - Firebase-based data source implementations
+ * - Ktor HttpClient and Ktorfit for REST API calls
  */
-val dataRemoteModule =
+
+internal val firebaseModule =
+    module {
+        single { FirebaseAuth.getInstance() }
+        single { FirebaseFirestore.getInstance() }
+        single { FirebaseStorage.getInstance() }
+        singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
+        singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
+    }
+
+internal val firestoreDataSourceModule =
+    module {
+        // Using Firestore for Player data
+        singleOf(::PlayerFirestoreDataSourceImpl) bind PlayerDataSource::class
+        // Using Firestore for Team data
+        singleOf(::TeamFirestoreDataSourceImpl) bind TeamDataSource::class
+    }
+
+internal val ktorfitModule =
     module {
         // Configure JSON serialization
         single {
@@ -69,4 +94,9 @@ val dataRemoteModule =
         // Add your API interfaces here
         // Example:
         // single<SampleApi> { get<Ktorfit>().create() }
+    }
+
+val dataRemoteModule =
+    module {
+        includes(firebaseModule, firestoreDataSourceModule, ktorfitModule)
     }
