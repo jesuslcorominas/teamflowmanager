@@ -35,6 +35,25 @@ class MatchFirestoreDataSourceImpl(
     }
 
     /**
+     * Converts a Firestore document to a domain Match object.
+     * Ensures the id and teamId fields are properly set from document metadata.
+     */
+    private fun documentToMatch(
+        documentId: String,
+        firestoreModel: MatchFirestoreModel?,
+        teamDocId: String,
+    ): Match? {
+        return firestoreModel?.let {
+            val modelWithId = if (it.id.isEmpty()) {
+                it.copy(id = documentId, teamId = teamDocId)
+            } else {
+                it.copy(teamId = teamDocId)
+            }
+            modelWithId.toDomain()
+        }
+    }
+
+    /**
      * Gets the team's Firestore document ID for the current authenticated user.
      * This is needed because security rules validate match access based on team ownership.
      */
@@ -87,16 +106,11 @@ class MatchFirestoreDataSourceImpl(
                 }
 
                 val match = snapshot?.documents?.mapNotNull { document ->
-                    val documentId = document.id
-                    val firestoreModel = document.toObject(MatchFirestoreModel::class.java)
-                    firestoreModel?.let {
-                        val modelWithId = if (it.id.isEmpty()) {
-                            it.copy(id = documentId, teamId = teamDocId)
-                        } else {
-                            it.copy(teamId = teamDocId)
-                        }
-                        modelWithId.toDomain()
-                    }
+                    documentToMatch(
+                        document.id,
+                        document.toObject(MatchFirestoreModel::class.java),
+                        teamDocId
+                    )
                 }?.find { it.id == matchId }
 
                 trySend(match)
@@ -138,16 +152,11 @@ class MatchFirestoreDataSourceImpl(
                 }
 
                 val matches = snapshot?.documents?.mapNotNull { document ->
-                    val documentId = document.id
-                    val firestoreModel = document.toObject(MatchFirestoreModel::class.java)
-                    firestoreModel?.let {
-                        val modelWithId = if (it.id.isEmpty()) {
-                            it.copy(id = documentId, teamId = teamDocId)
-                        } else {
-                            it.copy(teamId = teamDocId)
-                        }
-                        modelWithId.toDomain()
-                    }
+                    documentToMatch(
+                        document.id,
+                        document.toObject(MatchFirestoreModel::class.java),
+                        teamDocId
+                    )
                 } ?: emptyList()
 
                 Log.d(TAG, "Loaded ${matches.size} matches for team: $teamDocId")
@@ -190,16 +199,11 @@ class MatchFirestoreDataSourceImpl(
                 }
 
                 val matches = snapshot?.documents?.mapNotNull { document ->
-                    val documentId = document.id
-                    val firestoreModel = document.toObject(MatchFirestoreModel::class.java)
-                    firestoreModel?.let {
-                        val modelWithId = if (it.id.isEmpty()) {
-                            it.copy(id = documentId, teamId = teamDocId)
-                        } else {
-                            it.copy(teamId = teamDocId)
-                        }
-                        modelWithId.toDomain()
-                    }
+                    documentToMatch(
+                        document.id,
+                        document.toObject(MatchFirestoreModel::class.java),
+                        teamDocId
+                    )
                 } ?: emptyList()
 
                 Log.d(TAG, "Loaded ${matches.size} archived matches for team: $teamDocId")
@@ -230,16 +234,11 @@ class MatchFirestoreDataSourceImpl(
                 .await()
 
             snapshot.documents.mapNotNull { document ->
-                val documentId = document.id
-                val firestoreModel = document.toObject(MatchFirestoreModel::class.java)
-                firestoreModel?.let {
-                    val modelWithId = if (it.id.isEmpty()) {
-                        it.copy(id = documentId, teamId = teamDocId)
-                    } else {
-                        it.copy(teamId = teamDocId)
-                    }
-                    modelWithId.toDomain()
-                }
+                documentToMatch(
+                    document.id,
+                    document.toObject(MatchFirestoreModel::class.java),
+                    teamDocId
+                )
             }
         } catch (e: CancellationException) {
             throw e
@@ -377,6 +376,8 @@ class MatchFirestoreDataSourceImpl(
 
     /**
      * Helper function to find the Firestore document ID for a match based on the Long match ID.
+     * Note: This iterates through documents because we use a stable hash of the document ID as the Long ID.
+     * This pattern is consistent with PlayerFirestoreDataSourceImpl.
      */
     private suspend fun findDocumentIdByMatchId(teamDocId: String, matchId: Long): String? {
         val snapshot = firestore.collection(MATCHES_COLLECTION)
@@ -385,18 +386,9 @@ class MatchFirestoreDataSourceImpl(
             .await()
 
         for (document in snapshot.documents) {
-            val documentId = document.id
-            val firestoreModel = document.toObject(MatchFirestoreModel::class.java)
-            firestoreModel?.let {
-                val modelWithId = if (it.id.isEmpty()) {
-                    it.copy(id = documentId)
-                } else {
-                    it
-                }
-                val match = modelWithId.toDomain()
-                if (match.id == matchId) {
-                    return documentId
-                }
+            val match = documentToMatch(document.id, document.toObject(MatchFirestoreModel::class.java), teamDocId)
+            if (match?.id == matchId) {
+                return document.id
             }
         }
         return null
