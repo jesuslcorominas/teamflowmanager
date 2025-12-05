@@ -77,11 +77,11 @@ fun PlayerDataStep(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
-    var firstName by remember { mutableStateOf(initialFirstName) }
-    var lastName by remember { mutableStateOf(initialLastName) }
-    var number by remember { mutableStateOf(initialNumber) }
-    var isCaptain by remember { mutableStateOf(initialIsCaptain) }
-    var imageUri by remember { mutableStateOf<String?>(initialImageUri) }
+    var firstName by remember(initialFirstName) { mutableStateOf(initialFirstName) }
+    var lastName by remember(initialLastName) { mutableStateOf(initialLastName) }
+    var number by remember(initialNumber) { mutableStateOf(initialNumber) }
+    var isCaptain by remember(initialIsCaptain) { mutableStateOf(initialIsCaptain) }
+    var imageUri by remember(initialImageUri) { mutableStateOf<String?>(initialImageUri) }
     var showImageOptions by remember { mutableStateOf(false) }
 
     var firstNameError by remember { mutableStateOf<String?>(null) }
