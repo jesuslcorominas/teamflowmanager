@@ -163,7 +163,10 @@ class PlayerFirestoreDataSourceImpl(
         }
 
         try {
-            // First, find the document ID for this player
+            // First, clear all existing captains
+            clearAllCaptains(currentUserId)
+
+            // Then, find the document ID for this player
             val documentId = findDocumentIdByPlayerId(currentUserId, playerId)
             if (documentId == null) {
                 Log.w(TAG, "Cannot find player with id: $playerId")
@@ -332,5 +335,24 @@ class PlayerFirestoreDataSourceImpl(
             }
         }
         return null
+    }
+
+    /**
+     * Helper function to clear captain status from all players for the current owner.
+     */
+    private suspend fun clearAllCaptains(ownerId: String) {
+        val snapshot = firestore.collection(PLAYERS_COLLECTION)
+            .whereEqualTo("ownerId", ownerId)
+            .whereEqualTo("isCaptain", true)
+            .get()
+            .await()
+
+        for (document in snapshot.documents) {
+            firestore.collection(PLAYERS_COLLECTION)
+                .document(document.id)
+                .update("isCaptain", false)
+                .await()
+        }
+        Log.d(TAG, "Cleared captain status from ${snapshot.documents.size} players")
     }
 }
