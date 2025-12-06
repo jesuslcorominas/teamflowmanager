@@ -74,6 +74,10 @@ class MatchCreationWizardViewModel(
     private var originalCaptainId: Long = 0L
     private var originalStartingLineupIds: Set<Long> = emptySet()
 
+    private var allPlayers: List<Player> = emptyList()
+    private var isEditMode = false
+    private var teamTypeValue: Int = 5 // Default to Football 5
+
     // Flag to track if match data is loaded for edit mode
     private var matchDataLoaded = false
     private var playersLoaded = false
