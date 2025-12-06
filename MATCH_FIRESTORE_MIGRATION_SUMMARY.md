@@ -44,7 +44,47 @@ This document summarizes the migration of all match in-progress functionality fr
 - ✅ Record match elapsed time at substitution
 - ✅ Real-time updates when substitutions occur
 
-### 3. Match Timer Operations (Already on Firestore)
+### 3. Player Time Tracking (Tiempo de Juego)
+**New Files Created:**
+- `data/remote/src/main/java/com/jesuslcorominas/teamflowmanager/data/remote/firestore/PlayerTimeFirestoreModel.kt`
+  - Firestore serialization model for PlayerTime entities
+  - Includes conversion functions to/from domain PlayerTime model
+  - Contains `@DocumentId` annotation for automatic document ID handling
+
+- `data/remote/src/main/java/com/jesuslcorominas/teamflowmanager/data/remote/datasource/PlayerTimeFirestoreDataSourceImpl.kt`
+  - Implements `PlayerTimeDataSource` interface using Firestore
+  - Provides real-time listeners for player time state
+  - Uses playerId as document ID for efficient retrieval
+  - Validates team ownership through teamId field
+
+**Functionality:**
+- ✅ Track current playing time for each player during active match
+- ✅ Monitor player status (playing, on bench, paused)
+- ✅ Track elapsed time and running state
+- ✅ Real-time updates when player time changes
+- ✅ Reset all player times when match finishes
+
+### 4. Player Time History (Historial de Tiempos)
+**New Files Created:**
+- `data/remote/src/main/java/com/jesuslcorominas/teamflowmanager/data/remote/firestore/PlayerTimeHistoryFirestoreModel.kt`
+  - Firestore serialization model for PlayerTimeHistory entities
+  - Includes conversion functions to/from domain PlayerTimeHistory model
+  - Contains `@DocumentId` annotation for automatic document ID handling
+
+- `data/remote/src/main/java/com/jesuslcorominas/teamflowmanager/data/remote/datasource/PlayerTimeHistoryFirestoreDataSourceImpl.kt`
+  - Implements `PlayerTimeHistoryDataSource` interface using Firestore
+  - Provides real-time listeners for historical player time data
+  - Uses stable ID generation from Firestore document IDs
+  - Validates team ownership through teamId field
+
+**Functionality:**
+- ✅ Store historical player time records after match completion
+- ✅ Query player time history by player
+- ✅ Query player time history by match
+- ✅ Support for player time statistics and analysis
+- ✅ Real-time updates when history is saved
+
+### 5. Match Timer Operations (Already on Firestore)
 **Existing Implementation:**
 - Match timer operations were already using Firestore through `MatchFirestoreDataSourceImpl`
 - No changes needed to these operations
@@ -87,6 +127,8 @@ The implementation follows clean architecture principles with the following flow
 │  Repositories (data:core module)                         │
 │  - GoalRepositoryImpl                                    │
 │  - PlayerSubstitutionRepositoryImpl                      │
+│  - PlayerTimeRepositoryImpl                              │
+│  - PlayerTimeHistoryRepositoryImpl                       │
 │  - MatchRepositoryImpl                                   │
 └────────────────────────┬─────────────────────────────────┘
                          │
@@ -95,6 +137,8 @@ The implementation follows clean architecture principles with the following flow
 │  Data Sources (data:remote module)                       │
 │  - GoalFirestoreDataSourceImpl         ← NEW            │
 │  - PlayerSubstitutionFirestoreDataSourceImpl ← NEW      │
+│  - PlayerTimeFirestoreDataSourceImpl ← NEW              │
+│  - PlayerTimeHistoryFirestoreDataSourceImpl ← NEW       │
 │  - MatchFirestoreDataSourceImpl                          │
 └────────────────────────┬─────────────────────────────────┘
                          │
@@ -104,6 +148,8 @@ The implementation follows clean architecture principles with the following flow
 │  Collections:                                            │
 │  - goals/                                                │
 │  - substitutions/                                        │
+│  - playerTimes/                                          │
+│  - playerTimeHistory/                                    │
 │  - matches/                                              │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -115,6 +161,8 @@ The implementation follows clean architecture principles with the following flow
 ```kotlin
 singleOf(::GoalFirestoreDataSourceImpl) bind GoalDataSource::class
 singleOf(::PlayerSubstitutionFirestoreDataSourceImpl) bind PlayerSubstitutionDataSource::class
+singleOf(::PlayerTimeFirestoreDataSourceImpl) bind PlayerTimeDataSource::class
+singleOf(::PlayerTimeHistoryFirestoreDataSourceImpl) bind PlayerTimeHistoryDataSource::class
 ```
 
 ### DataLocalModule (data:local)
@@ -123,6 +171,8 @@ singleOf(::PlayerSubstitutionFirestoreDataSourceImpl) bind PlayerSubstitutionDat
 // Removed from DI:
 // singleOf(::GoalLocalDataSourceImpl) bind GoalDataSource::class
 // singleOf(::PlayerSubstitutionLocalDataSourceImpl) bind PlayerSubstitutionDataSource::class
+// singleOf(::PlayerTimeLocalDataSourceImpl) bind PlayerTimeDataSource::class
+// singleOf(::PlayerTimeHistoryLocalDataSourceImpl) bind PlayerTimeHistoryDataSource::class
 ```
 
 ## Firestore Collections Structure
@@ -154,9 +204,34 @@ substitutions/
     matchElapsedTimeMillis: Long (elapsed match time at substitution)
 ```
 
+### playerTimes Collection
+```
+playerTimes/
+  player_{playerId}/
+    id: String (document ID based on playerId)
+    teamId: String (Firestore team document ID)
+    playerId: Long (player ID)
+    elapsedTimeMillis: Long (total elapsed playing time)
+    isRunning: Boolean (whether timer is currently running)
+    lastStartTimeMillis: Long? (timestamp when timer was last started)
+    status: String (player status: ON_BENCH, PLAYING, PAUSED)
+```
+
+### playerTimeHistory Collection
+```
+playerTimeHistory/
+  {documentId}/
+    id: String (Firestore document ID)
+    teamId: String (Firestore team document ID)
+    playerId: Long (player ID)
+    matchId: Long (stable hash of match document ID)
+    elapsedTimeMillis: Long (total time played in this match)
+    savedAtMillis: Long (timestamp when history was saved)
+```
+
 ## Security
 
-Both new data sources follow the same security pattern as existing Firestore implementations:
+All new data sources follow the same security pattern as existing Firestore implementations:
 
 1. **Authentication Required**: All operations require a logged-in Firebase user
 2. **Team Ownership Validation**: All documents include a `teamId` field that references the team's Firestore document ID
@@ -169,6 +244,8 @@ All Firestore data sources use real-time listeners via `callbackFlow`:
 
 - **Goals**: Updates immediately when any goal is added for a match
 - **Substitutions**: Updates immediately when any substitution is recorded
+- **Player Times**: Updates immediately when player time state changes during match
+- **Player Time History**: Updates immediately when history is saved after match completion
 - **Match State**: Updates immediately when match timer state changes (already implemented)
 
 This enables real-time collaboration and instant UI updates without polling.
@@ -181,6 +258,8 @@ As requested in the requirements, local data sources were NOT deleted:
 - `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/datasource/GoalLocalDataSourceImpl.kt`
 - `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/datasource/PlayerSubstitutionLocalDataSourceImpl.kt`
 - `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/datasource/MatchLocalDataSourceImpl.kt`
+- `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/datasource/PlayerTimeLocalDataSourceImpl.kt`
+- `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/datasource/PlayerTimeHistoryLocalDataSourceImpl.kt`
 
 These implementations remain available as:
 - Reference implementations
@@ -209,15 +288,17 @@ To fully validate this migration, the following testing should be performed:
    - Verify goals appear in real-time in the UI
    - Register player substitutions
    - Verify substitutions appear in real-time
+   - Track player times during match
+   - Verify player time updates in real-time
    - Pause and resume the match
    - Start and end timeouts
-   - Finish the match
+   - Finish the match and verify history is saved
 
 3. **Multi-Device Testing**:
    - Open the same match on two devices
    - Register a goal on device 1
    - Verify it appears immediately on device 2
-   - Same test for substitutions
+   - Same test for substitutions and player time changes
 
 4. **Offline/Online Testing**:
    - Test behavior when device goes offline
@@ -229,6 +310,13 @@ To fully validate this migration, the following testing should be performed:
 All match in-progress functionality is now running on Firestore:
 
 - ✅ Match creation and scheduling
+- ✅ Match timer (start, pause, resume)
+- ✅ Timeouts (start, end)
+- ✅ Goals registration
+- ✅ Player substitutions
+- ✅ Player time tracking
+- ✅ Player time history
+- ✅ Match finish
 - ✅ Match timer (start, pause, resume)
 - ✅ Timeouts (start, end)
 - ✅ Goals registration
