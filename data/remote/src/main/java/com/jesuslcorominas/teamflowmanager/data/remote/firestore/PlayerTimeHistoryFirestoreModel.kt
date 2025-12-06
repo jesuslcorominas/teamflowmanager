@@ -17,6 +17,7 @@ data class PlayerTimeHistoryFirestoreModel(
     val teamId: String = "",
     val playerId: Long = 0L,
     val matchId: Long = 0L,
+    val matchDocId: String = "", // Firestore document ID of the match (for security rules)
     val elapsedTimeMillis: Long = 0L,
     val savedAtMillis: Long = 0L,
 ) {
@@ -26,6 +27,7 @@ data class PlayerTimeHistoryFirestoreModel(
         teamId = "",
         playerId = 0L,
         matchId = 0L,
+        matchDocId = "",
         elapsedTimeMillis = 0L,
         savedAtMillis = 0L,
     )
@@ -46,6 +48,7 @@ fun PlayerTimeHistory.toFirestoreModel(): PlayerTimeHistoryFirestoreModel =
         teamId = "", // Will be set by the data source
         playerId = playerId,
         matchId = matchId,
+        matchDocId = "", // Will be set by the data source
         elapsedTimeMillis = elapsedTimeMillis,
         savedAtMillis = savedAtMillis,
     )

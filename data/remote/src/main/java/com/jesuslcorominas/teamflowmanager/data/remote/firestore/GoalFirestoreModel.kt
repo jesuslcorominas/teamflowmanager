@@ -16,6 +16,7 @@ data class GoalFirestoreModel(
     val id: String = "",
     val teamId: String = "",
     val matchId: Long = 0L,
+    val matchDocId: String = "", // Firestore document ID of the match (for security rules)
     val scorerId: Long? = null,
     val goalTimeMillis: Long = 0L,
     val matchElapsedTimeMillis: Long = 0L,
@@ -27,6 +28,7 @@ data class GoalFirestoreModel(
         id = "",
         teamId = "",
         matchId = 0L,
+        matchDocId = "",
         scorerId = null,
         goalTimeMillis = 0L,
         matchElapsedTimeMillis = 0L,
@@ -51,6 +53,7 @@ fun Goal.toFirestoreModel(): GoalFirestoreModel =
         id = "", // Will be set when inserting
         teamId = "", // Will be set by the data source
         matchId = matchId,
+        matchDocId = "", // Will be set by the data source
         scorerId = scorerId,
         goalTimeMillis = goalTimeMillis,
         matchElapsedTimeMillis = matchElapsedTimeMillis,

@@ -31,6 +31,7 @@ class GoalFirestoreDataSourceImpl(
         private const val TAG = "GoalFirestoreDS"
         private const val GOALS_COLLECTION = "goals"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     /**
@@ -62,6 +63,34 @@ class GoalFirestoreDataSourceImpl(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "getTeamDocumentId: Error getting team document ID", e)
+            null
+        }
+    }
+
+    /**
+     * Helper function to find the Firestore document ID for a match based on the Long match ID.
+     */
+    private suspend fun findMatchDocumentId(teamDocId: String, matchId: Long): String? {
+        return try {
+            val snapshot = firestore.collection(MATCHES_COLLECTION)
+                .whereEqualTo("teamId", teamDocId)
+                .get()
+                .await()
+
+            for (document in snapshot.documents) {
+                // Check if this match's stable ID matches
+                val docId = document.id
+                if (docId.toStableId() == matchId) {
+                    Log.d(TAG, "findMatchDocumentId: Found match document ID: $docId for matchId: $matchId")
+                    return docId
+                }
+            }
+            Log.w(TAG, "findMatchDocumentId: No match found for matchId: $matchId")
+            null
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "findMatchDocumentId: Error finding match document ID", e)
             null
         }
     }
@@ -170,6 +199,13 @@ class GoalFirestoreDataSourceImpl(
             throw IllegalStateException("Team must exist to create a goal")
         }
 
+        // Find the match document ID for security rules
+        val matchDocId = findMatchDocumentId(teamDocId, goal.matchId)
+        if (matchDocId == null) {
+            Log.e(TAG, "insertGoal: No match found for matchId=${goal.matchId}")
+            throw IllegalStateException("Match must exist to create a goal")
+        }
+
         val docRef = firestore.collection(GOALS_COLLECTION).document()
         Log.d(TAG, "insertGoal: Created document reference with id=${docRef.id}")
 
@@ -177,12 +213,13 @@ class GoalFirestoreDataSourceImpl(
         val modelWithTeam = firestoreModel.copy(
             id = docRef.id,
             teamId = teamDocId,
+            matchDocId = matchDocId,
         )
 
         Log.d(TAG, "insertGoal: Setting document in Firestore...")
         try {
             docRef.set(modelWithTeam).await()
-            Log.d(TAG, "insertGoal: Goal inserted successfully with id: ${docRef.id}, teamId: $teamDocId")
+            Log.d(TAG, "insertGoal: Goal inserted successfully with id: ${docRef.id}, teamId: $teamDocId, matchDocId: $matchDocId")
             return docRef.id.toStableId()
         } catch (e: CancellationException) {
             throw e

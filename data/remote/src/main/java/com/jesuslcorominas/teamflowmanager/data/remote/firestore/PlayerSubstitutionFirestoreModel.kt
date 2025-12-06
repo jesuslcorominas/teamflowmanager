@@ -16,6 +16,7 @@ data class PlayerSubstitutionFirestoreModel(
     val id: String = "",
     val teamId: String = "",
     val matchId: Long = 0L,
+    val matchDocId: String = "", // Firestore document ID of the match (for security rules)
     val playerOutId: Long = 0L,
     val playerInId: Long = 0L,
     val substitutionTimeMillis: Long = 0L,
@@ -26,6 +27,7 @@ data class PlayerSubstitutionFirestoreModel(
         id = "",
         teamId = "",
         matchId = 0L,
+        matchDocId = "",
         playerOutId = 0L,
         playerInId = 0L,
         substitutionTimeMillis = 0L,
@@ -48,6 +50,7 @@ fun PlayerSubstitution.toFirestoreModel(): PlayerSubstitutionFirestoreModel =
         id = "", // Will be set when inserting
         teamId = "", // Will be set by the data source
         matchId = matchId,
+        matchDocId = "", // Will be set by the data source
         playerOutId = playerOutId,
         playerInId = playerInId,
         substitutionTimeMillis = substitutionTimeMillis,
