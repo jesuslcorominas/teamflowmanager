@@ -115,4 +115,32 @@ class TeamRepositoryImplTest {
             assertNull(result)
             verify { teamDataSource.getTeamByCoachId(coachId) }
         }
+
+    @Test
+    fun `hasLocalTeamWithoutUserId should return true when team without coachId exists`() =
+        runTest {
+            // Given
+            coEvery { teamDataSource.hasLocalTeamWithoutUserId() } returns true
+
+            // When
+            val result = repository.hasLocalTeamWithoutUserId()
+
+            // Then
+            assertEquals(true, result)
+            coVerify { teamDataSource.hasLocalTeamWithoutUserId() }
+        }
+
+    @Test
+    fun `hasLocalTeamWithoutUserId should return false when no team without coachId exists`() =
+        runTest {
+            // Given
+            coEvery { teamDataSource.hasLocalTeamWithoutUserId() } returns false
+
+            // When
+            val result = repository.hasLocalTeamWithoutUserId()
+
+            // Then
+            assertEquals(false, result)
+            coVerify { teamDataSource.hasLocalTeamWithoutUserId() }
+        }
 }
