@@ -54,25 +54,21 @@ class SplashViewModel(
         }
     }
 
-    private fun checkAuthAndLoadTeam() {
-        viewModelScope.launch {
-            val user = getCurrentUser().first()
-            if (user == null) {
-                _uiState.value = UiState.NotAuthenticated
-            } else {
-                loadTeam()
-            }
+    private suspend fun checkAuthAndLoadTeam() {
+        val user = getCurrentUser().first()
+        if (user == null) {
+            _uiState.value = UiState.NotAuthenticated
+        } else {
+            loadTeam()
         }
     }
 
-    private fun loadTeam() {
-        viewModelScope.launch {
-            getTeam().collect { team ->
-                if (team == null) {
-                    _uiState.value = UiState.NoTeam
-                } else {
-                    _uiState.value = UiState.TeamExists
-                }
+    private suspend fun loadTeam() {
+        getTeam().collect { team ->
+            if (team == null) {
+                _uiState.value = UiState.NoTeam
+            } else {
+                _uiState.value = UiState.TeamExists
             }
         }
     }
