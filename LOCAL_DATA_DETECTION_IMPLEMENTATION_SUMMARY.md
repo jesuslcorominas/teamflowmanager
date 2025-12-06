@@ -9,6 +9,8 @@ As a Developer, I want the system to verify at application startup if there are 
 
 This implementation adds functionality to detect local data without an associated user ID at application startup. This is particularly useful for identifying data created before user authentication was added to the application.
 
+The check is performed in the **SplashViewModel** during app startup, keeping the Application class simple and following the MVVM pattern.
+
 ## Changes Made
 
 ### 1. Data Layer
@@ -83,24 +85,47 @@ Registered the new use case in the DI container:
 singleOf(::HasLocalDataWithoutUserIdUseCaseImpl) bind HasLocalDataWithoutUserIdUseCase::class
 ```
 
-### 4. Application Layer
+### 4. ViewModel Layer
 
-#### TeamFlowManagerApplication.kt
+#### SplashViewModel.kt
 Integrated the check at app startup:
 ```kotlin
-// Check for local data without user ID
-val hasLocalDataWithoutUserIdUseCase: HasLocalDataWithoutUserIdUseCase by inject()
-applicationScope.launch(Dispatchers.IO) {
-    try {
-        val hasLocalData = hasLocalDataWithoutUserIdUseCase()
-        if (hasLocalData) {
-            Log.i(TAG, "Local data without user ID detected. Team exists without coachId.")
-        } else {
-            Log.d(TAG, "No local data without user ID found.")
-        }
-    } catch (e: Exception) {
-        Log.e(TAG, "Error checking for local data without user ID", e)
+class SplashViewModel(
+    private val getTeam: GetTeamUseCase,
+    private val getCurrentUser: GetCurrentUserUseCase,
+    private val hasLocalDataWithoutUserId: HasLocalDataWithoutUserIdUseCase
+) : ViewModel() {
+    
+    init {
+        checkLocalDataAndAuth()
     }
+
+    private fun checkLocalDataAndAuth() {
+        viewModelScope.launch {
+            // Check for local data without user ID
+            try {
+                val hasLocalData = hasLocalDataWithoutUserId()
+                if (hasLocalData) {
+                    Log.i(TAG, "Local data without user ID detected. Team exists without coachId.")
+                } else {
+                    Log.d(TAG, "No local data without user ID found.")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking for local data without user ID", e)
+            }
+
+            // Continue with authentication check
+            checkAuthAndLoadTeam()
+        }
+    }
+}
+```
+
+#### ViewModelModule.kt
+Updated the SplashViewModel instantiation:
+```kotlin
+viewModel {
+    SplashViewModel(getTeam = get(), getCurrentUser = get(), hasLocalDataWithoutUserId = get())
 }
 ```
 
@@ -117,26 +142,34 @@ Added tests for the new repository method:
 - Test when team without coachId exists (returns true)
 - Test when no team without coachId exists (returns false)
 
+#### SplashViewModelTest.kt
+Updated tests to include the new dependency:
+- Added mock for `HasLocalDataWithoutUserIdUseCase`
+- Verified the check is called at startup
+- Added test for error handling
+
 ## Technical Details
 
 ### Design Decisions
-1. **Suspend Function**: The check is implemented as a suspend function to avoid blocking the main thread
-2. **IO Dispatcher**: The check runs in the IO dispatcher via coroutine scope to ensure it doesn't impact app startup performance
+1. **ViewModel Instead of Application**: Following the feedback, the check is now performed in the SplashViewModel instead of the Application class. This keeps the Application class simple and follows the MVVM pattern.
+2. **ViewModelScope**: The check runs in the viewModelScope with proper error handling
 3. **Logging**: Results are logged for debugging purposes (INFO level for detection, DEBUG for no detection, ERROR for exceptions)
 4. **SQL Efficiency**: Uses `EXISTS` query for efficient checking without loading the entire entity
 5. **Remote Implementation**: Returns `false` for Firestore implementation since remote storage always has userId association
 
 ### Architecture
 - Follows the clean architecture pattern already established in the project
-- Maintains separation of concerns across layers (Data, Repository, Use Case, Application)
+- Maintains separation of concerns across layers (Data, Repository, Use Case, ViewModel)
 - Uses dependency injection (Koin) for all dependencies
 - Implements proper error handling
+- Check runs in the Splash screen during app startup
 
 ### Testing
 - Unit tests at the use case layer mock the repository
 - Unit tests at the repository layer mock the data source
+- Unit tests at the ViewModel layer mock the use case
 - All tests use MockK for mocking and follow existing test patterns
-- Tests cover both positive and negative scenarios
+- Tests cover both positive and negative scenarios, including error handling
 
 ## Code Quality
 
@@ -153,15 +186,15 @@ Added tests for the new repository method:
 
 ## Usage
 
-The check runs automatically at application startup. When local data without a userId is detected, it will be logged:
+The check runs automatically when the Splash screen is displayed. When local data without a userId is detected, it will be logged:
 
 ```
-I/TeamFlowManagerApp: Local data without user ID detected. Team exists without coachId.
+I/SplashViewModel: Local data without user ID detected. Team exists without coachId.
 ```
 
 When no such data exists:
 ```
-D/TeamFlowManagerApp: No local data without user ID found.
+D/SplashViewModel: No local data without user ID found.
 ```
 
 ## Future Enhancements
@@ -173,12 +206,13 @@ This implementation can be extended to:
 4. Check other entities (players, matches) for missing userId associations
 
 ## Files Changed
-- `app/src/main/java/com/jesuslcorominas/teamflowmanager/TeamFlowManagerApplication.kt`
 - `data/core/src/main/kotlin/com/jesuslcorominas/teamflowmanager/data/core/datasource/TeamDataSource.kt`
 - `data/core/src/main/kotlin/com/jesuslcorominas/teamflowmanager/data/core/repository/TeamRepositoryImpl.kt`
 - `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/dao/TeamDao.kt`
 - `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/datasource/TeamLocalDataSourceImpl.kt`
 - `data/remote/src/main/java/com/jesuslcorominas/teamflowmanager/data/remote/datasource/TeamFirestoreDataSourceImpl.kt`
+- `viewmodel/src/main/java/com/jesuslcorominas/teamflowmanager/viewmodel/SplashViewModel.kt`
+- `viewmodel/src/main/java/com/jesuslcorominas/teamflowmanager/viewmodel/di/ViewModelModule.kt`
 - `usecase/src/main/kotlin/com/jesuslcorominas/teamflowmanager/usecase/HasLocalDataWithoutUserIdUseCase.kt`
 - `usecase/src/main/kotlin/com/jesuslcorominas/teamflowmanager/usecase/di/UseCaseModule.kt`
 - `usecase/src/main/kotlin/com/jesuslcorominas/teamflowmanager/usecase/repository/TeamRepository.kt`
@@ -186,13 +220,17 @@ This implementation can be extended to:
 ## Files Added
 - `usecase/src/main/kotlin/com/jesuslcorominas/teamflowmanager/usecase/HasLocalDataWithoutUserIdUseCase.kt`
 - `usecase/src/test/kotlin/com/jesuslcorominas/teamflowmanager/usecase/HasLocalDataWithoutUserIdUseCaseTest.kt`
-- `data/core/src/test/kotlin/com/jesuslcorominas/teamflowmanager/data/core/repository/TeamRepositoryImplTest.kt` (tests added)
+
+## Tests Updated
+- `data/core/src/test/kotlin/com/jesuslcorominas/teamflowmanager/data/core/repository/TeamRepositoryImplTest.kt`
+- `viewmodel/src/test/java/com/jesuslcorominas/teamflowmanager/viewmodel/SplashViewModelTest.kt`
 
 ## Conclusion
 
 The implementation successfully fulfills the requirement to detect local data without an associated user ID at application startup. The solution:
 - ✅ Is minimal and focused
-- ✅ Follows the existing architecture patterns
+- ✅ Follows the existing architecture patterns (MVVM)
+- ✅ Keeps the Application class simple
 - ✅ Is well-tested
 - ✅ Handles errors gracefully
 - ✅ Provides clear logging for debugging
