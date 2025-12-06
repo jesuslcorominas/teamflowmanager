@@ -156,10 +156,10 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         }
 
         // Find the match document ID for security rules
+        // If we can't find it, use empty string and rely on teamId validation in security rules
         val matchDocId = findMatchDocumentId(teamDocId, substitution.matchId)
         if (matchDocId == null) {
-            Log.e(TAG, "insertSubstitution: No match found for matchId=${substitution.matchId}")
-            throw IllegalStateException("Match must exist to create a substitution")
+            Log.w(TAG, "insertSubstitution: No match document found for matchId=${substitution.matchId}, continuing with empty matchDocId")
         }
 
         val docRef = firestore.collection(SUBSTITUTIONS_COLLECTION).document()
@@ -169,13 +169,13 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         val modelWithTeam = firestoreModel.copy(
             id = docRef.id,
             teamId = teamDocId,
-            matchDocId = matchDocId,
+            matchDocId = matchDocId ?: "",
         )
 
         Log.d(TAG, "insertSubstitution: Setting document in Firestore...")
         try {
             docRef.set(modelWithTeam).await()
-            Log.d(TAG, "insertSubstitution: Substitution inserted successfully with id: ${docRef.id}, teamId: $teamDocId, matchDocId: $matchDocId")
+            Log.d(TAG, "insertSubstitution: Substitution inserted successfully with id: ${docRef.id}, teamId: $teamDocId, matchDocId: ${matchDocId ?: "empty"}")
             return docRef.id.toStableId()
         } catch (e: CancellationException) {
             throw e

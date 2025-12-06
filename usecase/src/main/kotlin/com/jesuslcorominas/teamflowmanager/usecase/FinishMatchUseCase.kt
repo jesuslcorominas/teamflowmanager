@@ -19,61 +19,87 @@ internal class FinishMatchUseCaseImpl(
     private val transactionRunner: TransactionRunner,
 ) : FinishMatchUseCase {
     override suspend fun invoke(matchId: Long, currentTime: Long) {
-        // Get the current match
-        val match = matchRepository.getMatchById(matchId).first()
-        if (match == null) {
-            return
-        }
-
-        if (match.status != MatchStatus.IN_PROGRESS && match.status != MatchStatus.PAUSED) {
-            return
-        }
-
-        val periods = match.periods.toMutableList()
-        // If the match is in progress, we need to close the current period
-        if (match.status == MatchStatus.IN_PROGRESS) {
-            val lastPeriodIndex = periods.indexOfLast { it.startTimeMillis > 0L }
-            if (lastPeriodIndex != -1) {
-                val lastPeriod = periods[lastPeriodIndex]
-                val updatedLastPeriod = lastPeriod.copy(
-                    endTimeMillis = currentTime
-                )
-                periods[lastPeriodIndex] = updatedLastPeriod
+        try {
+            // Get the current match
+            val match = matchRepository.getMatchById(matchId).first()
+            if (match == null) {
+                return
             }
-        }
 
-        // Update match to mark it as finished
-        val finishedMatch = match.copy(
-            periods = periods,
-            status = MatchStatus.FINISHED,
-        )
+            if (match.status != MatchStatus.IN_PROGRESS && match.status != MatchStatus.PAUSED) {
+                return
+            }
 
-        val playerTimes = playerTimeRepository.getAllPlayerTimes().first()
-
-        transactionRunner.run {
-            matchRepository.updateMatch(finishedMatch)
-
-            playerTimes.forEach { playerTime ->
-                // Calculate final elapsed time if running
-                val finalElapsedTime = if (playerTime.isRunning && playerTime.lastStartTimeMillis != null) {
-                    playerTime.elapsedTimeMillis + (currentTime - (playerTime.lastStartTimeMillis ?: 0L))
-                } else {
-                    playerTime.elapsedTimeMillis
-                }
-
-                // Only save if there's time recorded
-                if (finalElapsedTime > 0) {
-                    val history = PlayerTimeHistory(
-                        playerId = playerTime.playerId,
-                        matchId = match.id,
-                        elapsedTimeMillis = finalElapsedTime,
-                        savedAtMillis = currentTime,
+            val periods = match.periods.toMutableList()
+            // If the match is in progress, we need to close the current period
+            if (match.status == MatchStatus.IN_PROGRESS) {
+                val lastPeriodIndex = periods.indexOfLast { it.startTimeMillis > 0L }
+                if (lastPeriodIndex != -1) {
+                    val lastPeriod = periods[lastPeriodIndex]
+                    val updatedLastPeriod = lastPeriod.copy(
+                        endTimeMillis = currentTime
                     )
-                    playerTimeHistoryRepository.insertPlayerTimeHistory(history)
+                    periods[lastPeriodIndex] = updatedLastPeriod
                 }
             }
 
-            playerTimeRepository.resetAllPlayerTimes()
+            // Update match to mark it as finished
+            val finishedMatch = match.copy(
+                periods = periods,
+                status = MatchStatus.FINISHED,
+            )
+
+            val playerTimes = try {
+                playerTimeRepository.getAllPlayerTimes().first()
+            } catch (e: Exception) {
+                // If we can't get player times, log error and continue with empty list
+                println("FinishMatchUseCase: Error getting player times: ${e.message}")
+                e.printStackTrace()
+                emptyList()
+            }
+
+            transactionRunner.run {
+                matchRepository.updateMatch(finishedMatch)
+
+                playerTimes.forEach { playerTime ->
+                    try {
+                        // Calculate final elapsed time if running
+                        val finalElapsedTime = if (playerTime.isRunning && playerTime.lastStartTimeMillis != null) {
+                            playerTime.elapsedTimeMillis + (currentTime - (playerTime.lastStartTimeMillis ?: 0L))
+                        } else {
+                            playerTime.elapsedTimeMillis
+                        }
+
+                        // Only save if there's time recorded
+                        if (finalElapsedTime > 0) {
+                            val history = PlayerTimeHistory(
+                                playerId = playerTime.playerId,
+                                matchId = match.id,
+                                elapsedTimeMillis = finalElapsedTime,
+                                savedAtMillis = currentTime,
+                            )
+                            playerTimeHistoryRepository.insertPlayerTimeHistory(history)
+                        }
+                    } catch (e: Exception) {
+                        // Log error but continue with other players
+                        println("FinishMatchUseCase: Error saving player time history for player ${playerTime.playerId}: ${e.message}")
+                        e.printStackTrace()
+                    }
+                }
+
+                try {
+                    playerTimeRepository.resetAllPlayerTimes()
+                } catch (e: Exception) {
+                    // Log error but don't fail the finish operation
+                    println("FinishMatchUseCase: Error resetting player times: ${e.message}")
+                    e.printStackTrace()
+                }
+            }
+        } catch (e: Exception) {
+            // Catch any unexpected errors to prevent app crash
+            println("FinishMatchUseCase: Unexpected error finishing match: ${e.message}")
+            e.printStackTrace()
+            throw e
         }
     }
 }

@@ -245,10 +245,10 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
         }
 
         // Find the match document ID for security rules
+        // If we can't find it, use empty string and rely on teamId validation in security rules
         val matchDocId = findMatchDocumentId(teamDocId, playerTimeHistory.matchId)
         if (matchDocId == null) {
-            Log.e(TAG, "insertPlayerTimeHistory: No match found for matchId=${playerTimeHistory.matchId}")
-            throw IllegalStateException("Match must exist to create player time history")
+            Log.w(TAG, "insertPlayerTimeHistory: No match document found for matchId=${playerTimeHistory.matchId}, continuing with empty matchDocId")
         }
 
         val docRef = firestore.collection(PLAYER_TIME_HISTORY_COLLECTION).document()
@@ -258,13 +258,13 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
         val modelWithTeam = firestoreModel.copy(
             id = docRef.id,
             teamId = teamDocId,
-            matchDocId = matchDocId,
+            matchDocId = matchDocId ?: "",
         )
 
         Log.d(TAG, "insertPlayerTimeHistory: Setting document in Firestore...")
         try {
             docRef.set(modelWithTeam).await()
-            Log.d(TAG, "insertPlayerTimeHistory: PlayerTimeHistory inserted successfully with id: ${docRef.id}, teamId: $teamDocId, matchDocId: $matchDocId")
+            Log.d(TAG, "insertPlayerTimeHistory: PlayerTimeHistory inserted successfully with id: ${docRef.id}, teamId: $teamDocId, matchDocId: ${matchDocId ?: "empty"}")
             return docRef.id.toStableId()
         } catch (e: CancellationException) {
             throw e
