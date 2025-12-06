@@ -44,11 +44,9 @@ class MatchFirestoreDataSourceImpl(
         teamDocId: String,
     ): Match? {
         return firestoreModel?.let {
-            val modelWithId = if (it.id.isEmpty()) {
-                it.copy(id = documentId, teamId = teamDocId)
-            } else {
-                it.copy(teamId = teamDocId)
-            }
+            // Always use the actual Firestore document ID and team ID
+            // to ensure consistency, even if the model has these fields set
+            val modelWithId = it.copy(id = documentId, teamId = teamDocId)
             modelWithId.toDomain()
         }
     }
@@ -80,6 +78,8 @@ class MatchFirestoreDataSourceImpl(
      * Gets a match by its ID as a real-time Flow.
      */
     override fun getMatchById(matchId: Long): Flow<Match?> = callbackFlow {
+        Log.d(TAG, "getMatchById called with matchId: $matchId")
+        
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
             Log.w(TAG, "No authenticated user, cannot get match")
@@ -95,6 +95,8 @@ class MatchFirestoreDataSourceImpl(
             awaitClose { }
             return@callbackFlow
         }
+        
+        Log.d(TAG, "getMatchById: teamDocId=$teamDocId, looking for matchId=$matchId")
 
         val listenerRegistration = firestore.collection(MATCHES_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
@@ -105,13 +107,16 @@ class MatchFirestoreDataSourceImpl(
                     return@addSnapshotListener
                 }
 
-                val match = snapshot?.documents?.mapNotNull { document ->
-                    documentToMatch(
-                        document.id,
-                        document.toObject(MatchFirestoreModel::class.java),
-                        teamDocId
-                    )
-                }?.find { it.id == matchId }
+                val allMatches = snapshot?.documents?.mapNotNull { document ->
+                    val model = document.toObject(MatchFirestoreModel::class.java)
+                    Log.d(TAG, "getMatchById: Found document ${document.id}, model.id=${model?.id}, computed stableId=${document.id.toStableId()}")
+                    documentToMatch(document.id, model, teamDocId)
+                } ?: emptyList()
+                
+                Log.d(TAG, "getMatchById: Total matches found: ${allMatches.size}, IDs: ${allMatches.map { it.id }}")
+                
+                val match = allMatches.find { it.id == matchId }
+                Log.d(TAG, "getMatchById: Match found for id $matchId: ${match != null}, opponent: ${match?.opponent}")
 
                 trySend(match)
             }
