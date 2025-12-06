@@ -78,11 +78,9 @@ class MatchFirestoreDataSourceImpl(
      * Gets a match by its ID as a real-time Flow.
      */
     override fun getMatchById(matchId: Long): Flow<Match?> = callbackFlow {
-        Log.d(TAG, "getMatchById called with matchId: $matchId")
-        
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.w(TAG, "No authenticated user, cannot get match")
+            Log.w(TAG, "getMatchById: No authenticated user, cannot get match (matchId=$matchId)")
             trySend(null)
             awaitClose { }
             return@callbackFlow
@@ -90,33 +88,29 @@ class MatchFirestoreDataSourceImpl(
 
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "No team found for user, cannot get match")
+            Log.w(TAG, "getMatchById: No team found for user (matchId=$matchId)")
             trySend(null)
             awaitClose { }
             return@callbackFlow
         }
         
-        Log.d(TAG, "getMatchById: teamDocId=$teamDocId, looking for matchId=$matchId")
+        Log.d(TAG, "getMatchById: teamDocId=$teamDocId, matchId=$matchId")
 
         val listenerRegistration = firestore.collection(MATCHES_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Error getting match from Firestore", error)
+                    Log.e(TAG, "getMatchById: Error from Firestore", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
 
                 val allMatches = snapshot?.documents?.mapNotNull { document ->
-                    val model = document.toObject(MatchFirestoreModel::class.java)
-                    Log.d(TAG, "getMatchById: Found document ${document.id}, model.id=${model?.id}, computed stableId=${document.id.toStableId()}")
-                    documentToMatch(document.id, model, teamDocId)
+                    documentToMatch(document.id, document.toObject(MatchFirestoreModel::class.java), teamDocId)
                 } ?: emptyList()
                 
-                Log.d(TAG, "getMatchById: Total matches found: ${allMatches.size}, IDs: ${allMatches.map { it.id }}")
-                
                 val match = allMatches.find { it.id == matchId }
-                Log.d(TAG, "getMatchById: Match found for id $matchId: ${match != null}, opponent: ${match?.opponent}")
+                Log.d(TAG, "getMatchById: Found ${allMatches.size} matches, target matchId=$matchId found=${match != null}")
 
                 trySend(match)
             }
