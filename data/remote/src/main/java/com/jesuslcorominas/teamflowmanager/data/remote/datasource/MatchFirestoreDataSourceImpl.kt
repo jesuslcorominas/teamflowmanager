@@ -56,20 +56,30 @@ class MatchFirestoreDataSourceImpl(
      * This is needed because security rules validate match access based on team ownership.
      */
     private suspend fun getTeamDocumentId(): String? {
-        val currentUserId = firebaseAuth.currentUser?.uid ?: return null
+        val currentUserId = firebaseAuth.currentUser?.uid
+        Log.d(TAG, "getTeamDocumentId: currentUserId=$currentUserId")
+        
+        if (currentUserId == null) {
+            Log.w(TAG, "getTeamDocumentId: No authenticated user")
+            return null
+        }
 
         return try {
+            Log.d(TAG, "getTeamDocumentId: Querying Firestore for team with ownerId=$currentUserId")
             val snapshot = firestore.collection(TEAMS_COLLECTION)
                 .whereEqualTo("ownerId", currentUserId)
                 .limit(1)
                 .get()
                 .await()
 
-            snapshot.documents.firstOrNull()?.id
+            val teamDocId = snapshot.documents.firstOrNull()?.id
+            Log.d(TAG, "getTeamDocumentId: Found teamDocId=$teamDocId (${snapshot.documents.size} documents)")
+            teamDocId
         } catch (e: CancellationException) {
+            Log.w(TAG, "getTeamDocumentId: Query was cancelled")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting team document ID", e)
+            Log.e(TAG, "getTeamDocumentId: Error getting team document ID", e)
             null
         }
     }
@@ -283,29 +293,36 @@ class MatchFirestoreDataSourceImpl(
      * Returns a stable Long ID derived from the Firestore document ID.
      */
     override suspend fun insertMatch(match: Match): Long {
+        Log.d(TAG, "insertMatch: Starting insert for match opponent=${match.opponent}")
+        
         val teamDocId = getTeamDocumentId()
+        Log.d(TAG, "insertMatch: Got teamDocId=$teamDocId")
+        
         if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot insert match - user may not be authenticated")
+            Log.e(TAG, "insertMatch: No team found, cannot insert match - user may not be authenticated")
             throw IllegalStateException("Team must exist to create a match")
         }
 
         val docRef = firestore.collection(MATCHES_COLLECTION).document()
+        Log.d(TAG, "insertMatch: Created document reference with id=${docRef.id}")
+        
         val firestoreModel = match.toFirestoreModel()
         val modelWithTeam = firestoreModel.copy(
             id = docRef.id,
             teamId = teamDocId,
         )
         
+        Log.d(TAG, "insertMatch: Setting document in Firestore...")
         try {
             docRef.set(modelWithTeam).await()
-            Log.d(TAG, "Match inserted successfully with id: ${docRef.id}, teamId: $teamDocId")
+            Log.d(TAG, "insertMatch: Match inserted successfully with id: ${docRef.id}, teamId: $teamDocId")
             return docRef.id.toStableId()
         } catch (e: CancellationException) {
             // Even if coroutine is cancelled, log the attempt
-            Log.w(TAG, "Match insert was cancelled for id: ${docRef.id}")
+            Log.w(TAG, "insertMatch: Insert was cancelled for id: ${docRef.id}")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error inserting match to Firestore: ${e.message}", e)
+            Log.e(TAG, "insertMatch: Error inserting to Firestore: ${e.message}", e)
             throw e
         }
     }

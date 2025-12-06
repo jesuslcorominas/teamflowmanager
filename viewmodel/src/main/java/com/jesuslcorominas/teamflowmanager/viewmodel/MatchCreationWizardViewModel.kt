@@ -262,7 +262,7 @@ class MatchCreationWizardViewModel(
         startingLineupIds = startingLineupIds.toList(),
     )
 
-    fun createMatch(skeletonMatch: SkeletonMatch) {
+    fun createMatch(skeletonMatch: SkeletonMatch, onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             try {
                 crashReporter.log("Creating match via wizard: ${skeletonMatch.opponent}")
@@ -283,15 +283,20 @@ class MatchCreationWizardViewModel(
                         AnalyticsParam.STEP_NUMBER to "final",
                     ),
                 )
+                
+                // Call onComplete callback after successful creation
+                onComplete()
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error creating match in wizard: ${e.message}")
+                // Still call onComplete to avoid leaving the user stuck
+                onComplete()
                 throw e
             }
         }
     }
 
-    fun updateMatch() {
+    fun updateMatch(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             try {
                 matchId?.let { id ->
@@ -318,9 +323,13 @@ class MatchCreationWizardViewModel(
                         )
                     }
                 }
+                // Call onComplete callback after successful update
+                onComplete()
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error updating match in wizard: ${e.message}")
+                // Still call onComplete to avoid leaving the user stuck
+                onComplete()
                 throw e
             }
         }

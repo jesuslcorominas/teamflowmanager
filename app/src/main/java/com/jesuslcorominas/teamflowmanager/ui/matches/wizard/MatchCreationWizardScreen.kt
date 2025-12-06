@@ -158,12 +158,15 @@ fun MatchCreationWizardScreen(
                                 },
                                 onCreate = {
                                     if (wizardViewModel.isEditMode()) {
-                                        wizardViewModel.updateMatch()
+                                        wizardViewModel.updateMatch {
+                                            onNavigateBack()
+                                        }
                                     } else {
                                         val match = wizardViewModel.buildMatch()
-                                        wizardViewModel.createMatch(match)
+                                        wizardViewModel.createMatch(match) {
+                                            onNavigateBack()
+                                        }
                                     }
-                                    onNavigateBack()
                                 },
                                 onPrevious = {
                                     wizardViewModel.goToPreviousStep()
