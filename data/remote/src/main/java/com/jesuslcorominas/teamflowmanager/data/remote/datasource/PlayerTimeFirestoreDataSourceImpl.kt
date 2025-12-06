@@ -85,7 +85,7 @@ class PlayerTimeFirestoreDataSourceImpl(
             return@callbackFlow
         }
 
-        Log.d(TAG, "getPlayerTime: teamDocId=$teamDocId, playerId=$playerId")
+        Log.d(TAG, "getPlayerTime: Setting up listener for teamDocId=$teamDocId, playerId=$playerId")
 
         // Use playerId as document ID for easy retrieval
         val docId = "player_$playerId"
@@ -93,26 +93,42 @@ class PlayerTimeFirestoreDataSourceImpl(
             .document(docId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "getPlayerTime: Error from Firestore", error)
+                    Log.e(TAG, "getPlayerTime: Error from Firestore for docId=$docId", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
 
-                val playerTime = snapshot?.toObject(PlayerTimeFirestoreModel::class.java)?.let {
-                    // Verify this belongs to the user's team
-                    if (it.teamId == teamDocId) {
-                        it.toDomain()
-                    } else {
-                        Log.w(TAG, "getPlayerTime: PlayerTime teamId mismatch")
-                        null
-                    }
+                if (snapshot == null || !snapshot.exists()) {
+                    Log.d(TAG, "getPlayerTime: Document $docId does not exist")
+                    trySend(null)
+                    return@addSnapshotListener
                 }
 
-                Log.d(TAG, "getPlayerTime: Found playerTime for playerId=$playerId: ${playerTime != null}")
-                trySend(playerTime)
+                try {
+                    val model = snapshot.toObject(PlayerTimeFirestoreModel::class.java)
+                    if (model == null) {
+                        Log.w(TAG, "getPlayerTime: Failed to deserialize document $docId")
+                        trySend(null)
+                        return@addSnapshotListener
+                    }
+
+                    // Verify this belongs to the user's team
+                    if (model.teamId != teamDocId) {
+                        Log.w(TAG, "getPlayerTime: PlayerTime teamId mismatch (expected=$teamDocId, got=${model.teamId})")
+                        trySend(null)
+                        return@addSnapshotListener
+                    }
+
+                    Log.d(TAG, "getPlayerTime: Found playerTime for playerId=$playerId: status=${model.status}, isRunning=${model.isRunning}, elapsed=${model.elapsedTimeMillis}ms")
+                    trySend(model.toDomain())
+                } catch (e: Exception) {
+                    Log.e(TAG, "getPlayerTime: Error deserializing document $docId", e)
+                    trySend(null)
+                }
             }
 
         awaitClose {
+            Log.d(TAG, "getPlayerTime: Removing listener for playerId=$playerId")
             listenerRegistration.remove()
         }
     }
@@ -137,7 +153,7 @@ class PlayerTimeFirestoreDataSourceImpl(
             return@callbackFlow
         }
 
-        Log.d(TAG, "getAllPlayerTimes: teamDocId=$teamDocId")
+        Log.d(TAG, "getAllPlayerTimes: Setting up listener for teamDocId=$teamDocId")
 
         val listenerRegistration = firestore.collection(PLAYER_TIMES_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
@@ -148,15 +164,36 @@ class PlayerTimeFirestoreDataSourceImpl(
                     return@addSnapshotListener
                 }
 
-                val playerTimes = snapshot?.documents?.mapNotNull { document ->
-                    document.toObject(PlayerTimeFirestoreModel::class.java)?.toDomain()
-                } ?: emptyList()
+                if (snapshot == null) {
+                    Log.w(TAG, "getAllPlayerTimes: Snapshot is null")
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
 
-                Log.d(TAG, "getAllPlayerTimes: Loaded ${playerTimes.size} player times for team $teamDocId")
+                Log.d(TAG, "getAllPlayerTimes: Received snapshot with ${snapshot.documents.size} documents")
+
+                val playerTimes = snapshot.documents.mapNotNull { document ->
+                    try {
+                        val model = document.toObject(PlayerTimeFirestoreModel::class.java)
+                        if (model == null) {
+                            Log.w(TAG, "getAllPlayerTimes: Failed to deserialize document ${document.id}")
+                            null
+                        } else {
+                            Log.d(TAG, "getAllPlayerTimes: Document ${document.id}: playerId=${model.playerId}, status=${model.status}, isRunning=${model.isRunning}, teamId=${model.teamId}")
+                            model.toDomain()
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "getAllPlayerTimes: Error deserializing document ${document.id}", e)
+                        null
+                    }
+                }
+
+                Log.d(TAG, "getAllPlayerTimes: Returning ${playerTimes.size} player times for team $teamDocId")
                 trySend(playerTimes)
             }
 
         awaitClose {
+            Log.d(TAG, "getAllPlayerTimes: Removing listener for teamDocId=$teamDocId")
             listenerRegistration.remove()
         }
     }
