@@ -69,6 +69,7 @@ fun MatchCreationWizardScreen(
 
     when (val state = uiState) {
         is MatchCreationWizardUiState.Loading -> Loading()
+        is MatchCreationWizardUiState.Saving -> Loading()
         is MatchCreationWizardUiState.Ready -> {
             Column(
                 modifier = Modifier.fillMaxSize()

@@ -86,6 +86,11 @@ fun MatchListScreen(
                 onDismiss = { viewModel.cancelDeleteMatch() },
             )
         }
+        
+        // Show loading overlay during delete operation
+        if (deleteConfirmationState is MatchDeleteConfirmationState.Deleting) {
+            Loading()
+        }
     }
 }
 
