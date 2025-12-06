@@ -289,9 +289,9 @@ class MatchCreationWizardViewModel(
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error creating match in wizard: ${e.message}")
-                // Still call onComplete to avoid leaving the user stuck
+                // On error, still navigate back to avoid leaving user stuck
+                // The error has already been logged and reported
                 onComplete()
-                throw e
             }
         }
     }
@@ -328,9 +328,9 @@ class MatchCreationWizardViewModel(
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error updating match in wizard: ${e.message}")
-                // Still call onComplete to avoid leaving the user stuck
+                // On error, still navigate back to avoid leaving user stuck
+                // The error has already been logged and reported
                 onComplete()
-                throw e
             }
         }
     }
