@@ -174,4 +174,11 @@ class TeamFirestoreDataSourceImpl(
             listenerRegistration.remove()
         }
     }
+
+    /**
+     * This method is not applicable for remote Firestore data source.
+     * It's only relevant for local Room database.
+     * @return false as remote storage always has userId association
+     */
+    override suspend fun hasLocalTeamWithoutUserId(): Boolean = false
 }
