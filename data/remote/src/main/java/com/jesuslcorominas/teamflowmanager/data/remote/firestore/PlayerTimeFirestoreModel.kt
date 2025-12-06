@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.PropertyName
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
@@ -18,7 +19,9 @@ data class PlayerTimeFirestoreModel(
     val teamId: String = "",
     val playerId: Long = 0L,
     val elapsedTimeMillis: Long = 0L,
-    val isRunning: Boolean = false,
+    @get:PropertyName("running")
+    @set:PropertyName("running")
+    var isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
     val status: String = PlayerTimeStatus.ON_BENCH.name,
 ) {
