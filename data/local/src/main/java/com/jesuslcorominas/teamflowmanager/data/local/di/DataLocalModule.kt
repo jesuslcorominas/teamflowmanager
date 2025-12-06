@@ -74,8 +74,8 @@ internal val dataSourceLocalModule =
         // Note: MatchDataSource is now provided by data:remote module (MatchFirestoreDataSourceImpl)
         // Note: GoalDataSource is now provided by data:remote module (GoalFirestoreDataSourceImpl)
         // Note: PlayerSubstitutionDataSource is now provided by data:remote module (PlayerSubstitutionFirestoreDataSourceImpl)
-        singleOf(::PlayerTimeLocalDataSourceImpl) bind PlayerTimeDataSource::class
-        singleOf(::PlayerTimeHistoryLocalDataSourceImpl) bind PlayerTimeHistoryDataSource::class
+        // Note: PlayerTimeDataSource is now provided by data:remote module (PlayerTimeFirestoreDataSourceImpl)
+        // Note: PlayerTimeHistoryDataSource is now provided by data:remote module (PlayerTimeHistoryFirestoreDataSourceImpl)
         singleOf(::PreferencesLocalDataSourceImpl) bind PreferencesDataSource::class
     }
 
