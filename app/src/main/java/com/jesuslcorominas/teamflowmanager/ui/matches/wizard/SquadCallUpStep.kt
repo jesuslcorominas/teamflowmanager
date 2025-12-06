@@ -111,8 +111,9 @@ fun SquadCallUpStep(
         PlayerList(
             modifier = Modifier.weight(1F),
             paddingValues = PaddingValues(TFMSpacing.spacing02),
-            players = players,
+            players = players.sortedBy { it.number },
             showPositions = false,
+            showGoalKeeperBadge = true,
             selectedPlayerIds = currentSelection,
             onMultiSelectionChange = { player, isSelected ->
                 currentSelection = if (isSelected) {

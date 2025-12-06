@@ -2,10 +2,9 @@ package com.jesuslcorominas.teamflowmanager.data.local.di
 
 import androidx.room.Room
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDatabase
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_2_3
@@ -16,7 +15,6 @@ import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionRunner
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.TransactionExecutor
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.GoalLocalDataSourceImpl
-import com.jesuslcorominas.teamflowmanager.data.local.datasource.MatchLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerSubstitutionLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeHistoryLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.PlayerTimeLocalDataSourceImpl
@@ -73,7 +71,7 @@ internal val databaseModule =
 
 internal val dataSourceLocalModule =
     module {
-        singleOf(::MatchLocalDataSourceImpl) bind MatchDataSource::class
+        // Note: MatchDataSource is now provided by data:remote module (MatchFirestoreDataSourceImpl)
         singleOf(::PlayerTimeLocalDataSourceImpl) bind PlayerTimeDataSource::class
         singleOf(::PlayerTimeHistoryLocalDataSourceImpl) bind PlayerTimeHistoryDataSource::class
         singleOf(::PlayerSubstitutionLocalDataSourceImpl) bind PlayerSubstitutionDataSource::class

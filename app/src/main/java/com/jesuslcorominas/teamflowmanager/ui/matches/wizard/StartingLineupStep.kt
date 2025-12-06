@@ -78,11 +78,12 @@ fun StartingLineupStep(
 
         PlayerList(
             modifier = Modifier.weight(1F),
-            players = players,
+            players = players.sortedBy { it.number },
             selectedPlayerIds = currentSelection,
             showPositions = false,
             captainId = captainId,
             showCaptainBadge = true,
+            showGoalKeeperBadge = true,
             paddingValues = PaddingValues(TFMSpacing.spacing02),
             onMultiSelectionChange = { player, isSelected ->
                 if (isSelected) {

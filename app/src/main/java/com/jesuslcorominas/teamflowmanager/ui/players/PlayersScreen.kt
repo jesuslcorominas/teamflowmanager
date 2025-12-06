@@ -39,7 +39,7 @@ fun PlayersScreen(
     onNavigateToEditPlayer: (Long) -> Unit = {},
 ) {
     TrackScreenView(screenName = ScreenName.PLAYERS, screenClass = "PlayersScreen")
-    
+
     val uiState by viewModel.uiState.collectAsState()
     val deleteConfirmationState by viewModel.deleteConfirmationState.collectAsState()
 
@@ -90,7 +90,7 @@ private fun PlayersListSuccess(
 ) {
     PlayerList(
         modifier = Modifier.fillMaxSize(),
-        players = players,
+        players = players.sortedBy { it.number },
         onEditClick = onEditClick,
         onDeleteClick = onDeleteClick,
     )
