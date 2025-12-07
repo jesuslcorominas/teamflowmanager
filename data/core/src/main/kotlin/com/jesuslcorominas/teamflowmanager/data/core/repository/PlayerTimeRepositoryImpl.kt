@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.first
 
 internal class PlayerTimeRepositoryImpl(
     private val playerTimeDataSource: PlayerTimeDataSource,
+    private val playerTimeLocalDataSource: PlayerTimeDataSource,
 ) : PlayerTimeRepository {
     override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> = playerTimeDataSource.getPlayerTime(playerId)
 
@@ -78,5 +79,12 @@ internal class PlayerTimeRepositoryImpl(
 
     override suspend fun resetAllPlayerTimes() {
         playerTimeDataSource.deleteAllPlayerTimes()
+    }
+
+    override suspend fun getAllLocalPlayerTimesDirect(): List<PlayerTime> =
+        playerTimeLocalDataSource.getAllPlayerTimesDirect()
+
+    override suspend fun clearLocalPlayerTimeData() {
+        playerTimeLocalDataSource.clearLocalData()
     }
 }

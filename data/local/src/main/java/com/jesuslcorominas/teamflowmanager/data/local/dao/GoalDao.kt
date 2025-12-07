@@ -19,4 +19,7 @@ interface GoalDao {
 
     @Insert
     suspend fun insert(goal: GoalEntity): Long
+
+    @Query("DELETE FROM goal")
+    suspend fun deleteAllGoals()
 }

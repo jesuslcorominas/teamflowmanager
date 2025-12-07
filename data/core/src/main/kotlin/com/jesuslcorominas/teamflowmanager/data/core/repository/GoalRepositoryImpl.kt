@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 internal class GoalRepositoryImpl(
     private val goalDataSource: GoalDataSource,
+    private val goalLocalDataSource: GoalDataSource,
 ) : GoalRepository {
     override fun getMatchGoals(matchId: Long): Flow<List<Goal>> =
         goalDataSource.getMatchGoals(matchId)
@@ -16,4 +17,11 @@ internal class GoalRepositoryImpl(
 
     override suspend fun insertGoal(goal: Goal): Long =
         goalDataSource.insertGoal(goal)
+
+    override suspend fun getAllLocalGoalsDirect(): List<Goal> =
+        goalLocalDataSource.getAllGoalsDirect()
+
+    override suspend fun clearLocalGoalData() {
+        goalLocalDataSource.clearLocalData()
+    }
 }

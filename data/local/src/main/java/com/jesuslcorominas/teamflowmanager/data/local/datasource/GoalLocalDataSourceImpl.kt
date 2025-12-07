@@ -23,4 +23,11 @@ internal class GoalLocalDataSourceImpl(
 
     override suspend fun insertGoal(goal: Goal): Long =
         goalDao.insert(goal.toEntity())
+
+    override suspend fun getAllGoalsDirect(): List<Goal> =
+        goalDao.getAllGoalsDirect().map { it.toDomain() }
+
+    override suspend fun clearLocalData() {
+        goalDao.deleteAllGoals()
+    }
 }

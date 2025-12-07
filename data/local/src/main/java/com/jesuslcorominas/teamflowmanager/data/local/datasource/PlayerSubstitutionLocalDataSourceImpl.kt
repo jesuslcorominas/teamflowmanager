@@ -18,4 +18,11 @@ internal class PlayerSubstitutionLocalDataSourceImpl(
 
     override suspend fun insertSubstitution(substitution: PlayerSubstitution): Long =
         playerSubstitutionDao.insert(substitution.toEntity())
+
+    override suspend fun getAllPlayerSubstitutionsDirect(): List<PlayerSubstitution> =
+        playerSubstitutionDao.getAllPlayerSubstitutionsDirect().map { it.toDomain() }
+
+    override suspend fun clearLocalData() {
+        playerSubstitutionDao.deleteAllPlayerSubstitutions()
+    }
 }

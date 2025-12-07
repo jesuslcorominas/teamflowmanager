@@ -22,4 +22,7 @@ interface PlayerTimeHistoryDao {
 
     @Insert
     suspend fun insert(playerTimeHistory: PlayerTimeHistoryEntity): Long
+
+    @Query("DELETE FROM player_time_history")
+    suspend fun deleteAllPlayerTimeHistory()
 }

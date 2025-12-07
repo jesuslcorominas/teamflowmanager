@@ -48,26 +48,32 @@ internal val repositoryModule =
 
         single {
             PlayerTimeRepositoryImpl(
-                get(named("PLAYER_TIME_FIRESTORE_DATA_SOURCE_IMPL"))
+                get(named("PLAYER_TIME_FIRESTORE_DATA_SOURCE_IMPL")),
+                get(named("PLAYER_TIME_LOCAL_DATA_SOURCE_IMPL"))
             )
         } bind PlayerTimeRepository::class
 
         single {
             PlayerTimeHistoryRepositoryImpl(
-                get(named("PLAYER_TIME_HISTORY_FIRESTORE_DATA_SOURCE_IMPL"))
+                get(named("PLAYER_TIME_HISTORY_FIRESTORE_DATA_SOURCE_IMPL")),
+                get(named("PLAYER_TIME_HISTORY_LOCAL_DATA_SOURCE_IMPL"))
             )
         } bind PlayerTimeHistoryRepository::class
 
         single {
             PlayerSubstitutionRepositoryImpl(
-                get(named("PLAYER_SUBSTITUTION_FIRESTORE_DATA_SOURCE_IMPL"))
+                get(named("PLAYER_SUBSTITUTION_FIRESTORE_DATA_SOURCE_IMPL")),
+                get(named("PLAYER_SUBSTITUTION_LOCAL_DATA_SOURCE_IMPL"))
             )
         } bind PlayerSubstitutionRepository::class
 
         singleOf(::PreferencesRepositoryImpl) bind PreferencesRepository::class
 
         single {
-            GoalRepositoryImpl(get(named("GOAL_FIRESTORE_DATA_SOURCE_IMPL")))
+            GoalRepositoryImpl(
+                get(named("GOAL_FIRESTORE_DATA_SOURCE_IMPL")),
+                get(named("GOAL_LOCAL_DATA_SOURCE_IMPL"))
+            )
         } bind GoalRepository::class
 
         singleOf(::AuthRepositoryImpl) bind AuthRepository::class

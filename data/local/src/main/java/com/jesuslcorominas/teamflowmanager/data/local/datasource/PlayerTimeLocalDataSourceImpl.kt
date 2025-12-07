@@ -28,4 +28,11 @@ internal class PlayerTimeLocalDataSourceImpl(
     override suspend fun deleteAllPlayerTimes() {
         playerTimeDao.deleteAll()
     }
+
+    override suspend fun getAllPlayerTimesDirect(): List<PlayerTime> =
+        playerTimeDao.getAllPlayerTimesDirect().map { it.toDomain() }
+
+    override suspend fun clearLocalData() {
+        playerTimeDao.deleteAll()
+    }
 }
