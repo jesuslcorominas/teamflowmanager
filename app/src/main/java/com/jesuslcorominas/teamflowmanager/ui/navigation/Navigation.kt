@@ -233,6 +233,7 @@ fun Navigation(
     BackHandler {
         when (route) {
             Route.Login -> activity?.finish()
+            Route.Migration -> activity?.finish()
             Route.Matches -> if (searchState.isActive) {
                 searchState.clear()
                 searchState.isActive = false
