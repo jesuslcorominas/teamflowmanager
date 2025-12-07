@@ -10,6 +10,15 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeReposito
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 
 /**
+ * Migration step information
+ */
+data class MigrationStep(
+    val step: Int,
+    val totalSteps: Int,
+    val description: String
+)
+
+/**
  * Use case to migrate local Room data to Firebase Firestore.
  * This process includes:
  * 1. Creating a Team in Firestore with the current user as owner
@@ -22,9 +31,13 @@ interface MigrateLocalDataToFirestoreUseCase {
     /**
      * Execute the migration process.
      * @param userId The current authenticated user's ID
+     * @param onProgress Callback to report migration progress
      * @return Result indicating success or failure with error message
      */
-    suspend operator fun invoke(userId: String): Result<Unit>
+    suspend operator fun invoke(
+        userId: String,
+        onProgress: (MigrationStep) -> Unit = {}
+    ): Result<Unit>
 }
 
 internal class MigrateLocalDataToFirestoreUseCaseImpl(
@@ -39,13 +52,18 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
 
     companion object {
         private const val TAG = "MigrateLocalDataUseCase"
+        private const val TOTAL_STEPS = 8
     }
 
-    override suspend fun invoke(userId: String): Result<Unit> {
+    override suspend fun invoke(
+        userId: String,
+        onProgress: (MigrationStep) -> Unit
+    ): Result<Unit> {
         return try {
             Log.i(TAG, "Starting local data migration to Firestore for user: $userId")
 
             // Step 1: Migrate Team
+            onProgress(MigrationStep(1, TOTAL_STEPS, "Migrando equipo..."))
             val team = teamRepository.getLocalTeamDirect()
             if (team == null) {
                 Log.w(TAG, "No local team found to migrate")
@@ -59,6 +77,7 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             Log.d(TAG, "Team migrated successfully")
 
             // Step 2: Migrate Players and build ID mapping
+            onProgress(MigrationStep(2, TOTAL_STEPS, "Migrando jugadores..."))
             val players = playerRepository.getAllLocalPlayersDirect()
             Log.d(TAG, "Found ${players.size} players to migrate")
             val playerIdMap = mutableMapOf<Long, Long>() // old ID -> new ID
@@ -72,6 +91,7 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             Log.d(TAG, "All players migrated successfully with ${playerIdMap.size} ID mappings")
 
             // Step 3: Migrate Matches and build ID mapping, updating player references
+            onProgress(MigrationStep(3, TOTAL_STEPS, "Migrando partidos..."))
             val matches = matchRepository.getAllLocalMatchesDirect()
             Log.d(TAG, "Found ${matches.size} matches to migrate")
             val matchIdMap = mutableMapOf<Long, Long>() // old ID -> new ID
@@ -93,6 +113,7 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             Log.d(TAG, "All matches migrated successfully with ${matchIdMap.size} ID mappings")
 
             // Step 4: Migrate Goals with updated references
+            onProgress(MigrationStep(4, TOTAL_STEPS, "Migrando goles..."))
             val goals = goalRepository.getAllLocalGoalsDirect()
             Log.d(TAG, "Found ${goals.size} goals to migrate")
             goals.forEach { goal ->
@@ -105,6 +126,7 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             Log.d(TAG, "All goals migrated successfully")
 
             // Step 5: Migrate Player Substitutions with updated references
+            onProgress(MigrationStep(5, TOTAL_STEPS, "Migrando sustituciones..."))
             val substitutions = playerSubstitutionRepository.getAllLocalPlayerSubstitutionsDirect()
             Log.d(TAG, "Found ${substitutions.size} substitutions to migrate")
             substitutions.forEach { substitution ->
@@ -118,6 +140,7 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             Log.d(TAG, "All substitutions migrated successfully")
 
             // Step 6: Migrate Player Times
+            onProgress(MigrationStep(6, TOTAL_STEPS, "Migrando tiempos de juego..."))
             val playerTimes = playerTimeRepository.getAllLocalPlayerTimesDirect()
             Log.d(TAG, "Found ${playerTimes.size} player times to migrate")
             playerTimes.forEach { playerTime ->
@@ -127,6 +150,7 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             Log.d(TAG, "Skipped player times migration (transient state)")
 
             // Step 7: Migrate Player Time History with updated references
+            onProgress(MigrationStep(7, TOTAL_STEPS, "Migrando histórico de tiempos..."))
             val timeHistory = playerTimeHistoryRepository.getAllLocalPlayerTimeHistoryDirect()
             Log.d(TAG, "Found ${timeHistory.size} time history records to migrate")
             timeHistory.forEach { history ->
@@ -139,6 +163,7 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             Log.d(TAG, "All time history migrated successfully")
 
             // Step 8: Clear local data after successful migration
+            onProgress(MigrationStep(8, TOTAL_STEPS, "Limpiando datos locales..."))
             Log.d(TAG, "Clearing local Room data...")
             teamRepository.clearLocalTeamData()
             playerRepository.clearLocalPlayerData()

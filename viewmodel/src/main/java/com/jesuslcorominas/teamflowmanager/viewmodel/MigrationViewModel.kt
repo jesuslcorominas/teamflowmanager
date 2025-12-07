@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.MigrateLocalDataToFirestoreUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.MigrationStep
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,11 +18,11 @@ class MigrationViewModel(
     private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UiState>(UiState.Migrating)
+    private val _uiState = MutableStateFlow<UiState>(UiState.Migrating(null))
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     sealed interface UiState {
-        data object Migrating : UiState
+        data class Migrating(val step: MigrationStep?) : UiState
         data object Success : UiState
         data class Error(val message: String) : UiState
     }
@@ -46,8 +47,10 @@ class MigrationViewModel(
 
                 analyticsTracker.logEvent("migration_started", emptyMap())
 
-                // Execute migration
-                migrateLocalDataToFirestoreUseCase(user.id)
+                // Execute migration with progress callback
+                migrateLocalDataToFirestoreUseCase(user.id) { step ->
+                    _uiState.value = UiState.Migrating(step)
+                }
                     .onSuccess {
                         analyticsTracker.logEvent("migration_completed", emptyMap())
                         _uiState.value = UiState.Success
