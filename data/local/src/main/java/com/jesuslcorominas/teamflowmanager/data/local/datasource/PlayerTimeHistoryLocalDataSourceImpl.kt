@@ -28,4 +28,11 @@ internal class PlayerTimeHistoryLocalDataSourceImpl(
 
     override suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): Long =
         playerTimeHistoryDao.insert(playerTimeHistory.toEntity())
+
+    override suspend fun getAllPlayerTimeHistoryDirect(): List<PlayerTimeHistory> =
+        playerTimeHistoryDao.getAllPlayerTimeHistoryDirect().map { it.toDomain() }
+
+    override suspend fun clearLocalData() {
+        playerTimeHistoryDao.deleteAllPlayerTimeHistory()
+    }
 }

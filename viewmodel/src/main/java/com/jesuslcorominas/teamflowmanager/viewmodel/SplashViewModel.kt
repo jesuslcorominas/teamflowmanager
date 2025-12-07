@@ -26,6 +26,8 @@ class SplashViewModel(
 
         data object NotAuthenticated : UiState
 
+        data object LocalDataNeedsAuth : UiState
+
         data object NoTeam : UiState
 
         data object TeamExists : UiState
@@ -42,8 +44,13 @@ class SplashViewModel(
                 val hasLocalData = hasLocalDataWithoutUserId()
                 if (hasLocalData) {
                     Log.i(TAG, "Local data without user ID detected. Team exists without coachId.")
-                } else {
-                    Log.d(TAG, "No local data without user ID found.")
+                    // Check if user is authenticated
+                    val user = getCurrentUser().first()
+                    if (user == null) {
+                        // Force authentication when local data exists but user is not authenticated
+                        _uiState.value = UiState.LocalDataNeedsAuth
+                        return@launch
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error checking for local data without user ID", e)

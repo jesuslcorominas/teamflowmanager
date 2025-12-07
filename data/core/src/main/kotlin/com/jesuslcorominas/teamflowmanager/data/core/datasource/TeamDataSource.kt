@@ -22,4 +22,16 @@ interface TeamDataSource {
      * @return true if there is a team without a coachId, false otherwise
      */
     suspend fun hasLocalTeamWithoutUserId(): Boolean
+
+    /**
+     * Get team directly (not as a Flow) for migration purposes.
+     * @return Team if exists, null otherwise
+     */
+    suspend fun getTeamDirect(): Team?
+
+    /**
+     * Clear all team data from local storage.
+     * Only applicable for local data sources.
+     */
+    suspend fun clearLocalData()
 }

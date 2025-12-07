@@ -11,4 +11,16 @@ interface PlayerTimeHistoryDataSource {
     fun getAllPlayerTimeHistory(): Flow<List<PlayerTimeHistory>>
 
     suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): Long
+
+    /**
+     * Get all player time history directly (not as a Flow) for migration purposes.
+     * @return List of all player time history records
+     */
+    suspend fun getAllPlayerTimeHistoryDirect(): List<PlayerTimeHistory>
+
+    /**
+     * Clear all player time history data from local storage.
+     * Only applicable for local data sources.
+     */
+    suspend fun clearLocalData()
 }

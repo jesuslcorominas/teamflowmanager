@@ -27,4 +27,10 @@ interface TeamDao {
 
     @Update
     suspend fun updateTeam(team: TeamEntity)
+
+    @Query("DELETE FROM team WHERE id = :teamId")
+    suspend fun deleteTeamById(teamId: Long)
+
+    @Query("DELETE FROM team")
+    suspend fun deleteAllTeams()
 }

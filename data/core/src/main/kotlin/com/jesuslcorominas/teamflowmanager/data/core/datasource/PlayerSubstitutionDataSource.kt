@@ -7,4 +7,16 @@ interface PlayerSubstitutionDataSource {
     fun getMatchSubstitutions(matchId: Long): Flow<List<PlayerSubstitution>>
 
     suspend fun insertSubstitution(substitution: PlayerSubstitution): Long
+
+    /**
+     * Get all substitutions directly (not as a Flow) for migration purposes.
+     * @return List of all substitutions
+     */
+    suspend fun getAllPlayerSubstitutionsDirect(): List<PlayerSubstitution>
+
+    /**
+     * Clear all substitution data from local storage.
+     * Only applicable for local data sources.
+     */
+    suspend fun clearLocalData()
 }

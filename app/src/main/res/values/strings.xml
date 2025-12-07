@@ -355,4 +355,10 @@
     <!-- Match Notification -->
     <string name="match_notification_channel_name">Match Countdown</string>
     <string name="match_notification_channel_description">Shows remaining time during active matches</string>
+
+    <!-- Migration Screen -->
+    <string name="migration_in_progress_title">Migrando tus datos</string>
+    <string name="migration_in_progress_message">Por favor espera mientras migramos tus datos locales a la nube. Este proceso puede tardar unos momentos.</string>
+    <string name="migration_error_title">Error en la migración</string>
+    <string name="continue_button">Continuar</string>
 </resources>

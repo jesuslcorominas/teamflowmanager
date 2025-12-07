@@ -84,7 +84,7 @@ internal val dataSourceLocalModule =
         single(named("PLAYER_TIME_LOCAL_DATA_SOURCE_IMPL")) { PlayerTimeLocalDataSourceImpl(get()) } bind PlayerTimeDataSource::class
         single(named("PLAYER_TIME_HISTORY_LOCAL_DATA_SOURCE_IMPL")) { PlayerTimeHistoryLocalDataSourceImpl(get()) } bind PlayerTimeHistoryDataSource::class
         single(named("PLAYER_SUBSTITUTION_LOCAL_DATA_SOURCE_IMPL")) { PlayerSubstitutionLocalDataSourceImpl(get()) } bind PlayerSubstitutionDataSource::class
-        single(named("PLAYER_GOAL_LOCAL_DATA_SOURCE_IMPL")) { GoalLocalDataSourceImpl(get()) } bind GoalDataSource::class
+        single(named("GOAL_LOCAL_DATA_SOURCE_IMPL")) { GoalLocalDataSourceImpl(get()) } bind GoalDataSource::class
 
         singleOf(::PreferencesLocalDataSourceImpl) bind PreferencesDataSource::class
     }

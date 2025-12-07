@@ -16,7 +16,19 @@ interface PlayerDataSource {
 
     suspend fun updatePlayer(player: Player)
 
-    suspend fun insertPlayer(player: Player)
+    suspend fun insertPlayer(player: Player): Long
 
     suspend fun deletePlayer(playerId: Long)
+
+    /**
+     * Get all players directly (not as a Flow) for migration purposes.
+     * @return List of all players
+     */
+    suspend fun getAllPlayersDirect(): List<Player>
+
+    /**
+     * Clear all player data from local storage.
+     * Only applicable for local data sources.
+     */
+    suspend fun clearLocalData()
 }

@@ -14,6 +14,7 @@ sealed class Route(
             listOf(
                 Splash,
                 Login,
+                Migration,
                 Players,
                 Team,
                 Matches,
@@ -86,6 +87,8 @@ sealed class Route(
     data object Splash : Route(path = "splash", showTopBar = false)
 
     data object Login : Route(path = "login", showTopBar = false)
+
+    data object Migration : Route(path = "migration", showTopBar = false)
 
     data object Team : Route(
         path = "team",

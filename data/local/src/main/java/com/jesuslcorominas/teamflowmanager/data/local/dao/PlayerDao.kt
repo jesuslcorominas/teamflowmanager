@@ -34,6 +34,9 @@ interface PlayerDao {
     @Query("DELETE FROM players WHERE id = :playerId")
     suspend fun deletePlayer(playerId: Long)
 
+    @Query("DELETE FROM players")
+    suspend fun deleteAllPlayers()
+
     @Transaction
     suspend fun setPlayerAsCaptain(playerId: Long) {
         clearAllCaptains()

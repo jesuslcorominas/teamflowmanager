@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.first
 
 internal class MatchRepositoryImpl(
     private val matchDataSource: MatchDataSource,
+    private val matchLocalDataSource: MatchDataSource,
 ) : MatchRepository {
     override fun getMatchById(matchId: Long): Flow<Match?> = matchDataSource.getMatchById(matchId)
 
@@ -128,5 +129,12 @@ internal class MatchRepositoryImpl(
         if (match != null) {
             matchDataSource.updateMatch(match.copy(archived = false))
         }
+    }
+
+    override suspend fun getAllLocalMatchesDirect(): List<Match> =
+        matchLocalDataSource.getAllMatchesDirect()
+
+    override suspend fun clearLocalMatchData() {
+        matchLocalDataSource.clearLocalData()
     }
 }

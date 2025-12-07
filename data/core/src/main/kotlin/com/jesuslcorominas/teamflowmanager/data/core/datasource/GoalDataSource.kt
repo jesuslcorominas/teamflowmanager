@@ -9,4 +9,16 @@ interface GoalDataSource {
     fun getAllTeamGoals(): Flow<List<Goal>>
 
     suspend fun insertGoal(goal: Goal): Long
+
+    /**
+     * Get all goals directly (not as a Flow) for migration purposes.
+     * @return List of all goals
+     */
+    suspend fun getAllGoalsDirect(): List<Goal>
+
+    /**
+     * Clear all goal data from local storage.
+     * Only applicable for local data sources.
+     */
+    suspend fun clearLocalData()
 }

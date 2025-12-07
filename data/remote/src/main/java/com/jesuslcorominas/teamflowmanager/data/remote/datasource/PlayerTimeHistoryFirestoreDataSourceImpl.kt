@@ -276,4 +276,18 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             throw e
         }
     }
+
+    /**
+     * This method is not applicable for remote Firestore data source.
+     * @return empty list as direct access is not needed for remote storage
+     */
+    override suspend fun getAllPlayerTimeHistoryDirect(): List<PlayerTimeHistory> = emptyList()
+
+    /**
+     * This method is not applicable for remote Firestore data source.
+     * Only relevant for local Room database cleanup.
+     */
+    override suspend fun clearLocalData() {
+        // No-op for remote data source
+    }
 }
