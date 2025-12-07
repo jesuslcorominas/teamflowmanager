@@ -491,4 +491,18 @@ class PlayerFirestoreDataSourceImpl(
         }
         Log.d(TAG, "Cleared captain status from ${snapshot.documents.size} players")
     }
+
+    /**
+     * This method is not applicable for remote Firestore data source.
+     * @return empty list as direct access is not needed for remote storage
+     */
+    override suspend fun getAllPlayersDirect(): List<Player> = emptyList()
+
+    /**
+     * This method is not applicable for remote Firestore data source.
+     * Only relevant for local Room database cleanup.
+     */
+    override suspend fun clearLocalData() {
+        // No-op for remote data source
+    }
 }

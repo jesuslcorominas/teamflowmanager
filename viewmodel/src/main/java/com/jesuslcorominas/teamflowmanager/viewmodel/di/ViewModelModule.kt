@@ -34,6 +34,7 @@ val viewModelModule =
         viewModel {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
+                hasLocalDataWithoutUserId = get(),
                 analyticsTracker = get()
             )
         }

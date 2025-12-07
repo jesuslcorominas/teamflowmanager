@@ -31,4 +31,16 @@ interface MatchRepository {
     suspend fun archiveMatch(matchId: Long)
 
     suspend fun unarchiveMatch(matchId: Long)
+
+    /**
+     * Get all local matches directly (not as a Flow) for migration purposes.
+     * @return List of all matches
+     */
+    suspend fun getAllLocalMatchesDirect(): List<Match>
+
+    /**
+     * Clear local match data from Room database.
+     * Used after successful migration to Firestore.
+     */
+    suspend fun clearLocalMatchData()
 }

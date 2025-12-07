@@ -23,4 +23,16 @@ interface TeamRepository {
      * @return true if there is a team without a coachId, false otherwise
      */
     suspend fun hasLocalTeamWithoutUserId(): Boolean
+
+    /**
+     * Get local team directly (not as a Flow) for migration purposes.
+     * @return Team if exists, null otherwise
+     */
+    suspend fun getLocalTeamDirect(): Team?
+
+    /**
+     * Clear local team data from Room database.
+     * Used after successful migration to Firestore.
+     */
+    suspend fun clearLocalTeamData()
 }

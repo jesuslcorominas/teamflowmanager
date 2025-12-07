@@ -27,7 +27,8 @@ internal val repositoryModule =
     module {
         single {
             PlayerRepositoryImpl(
-                get(named("PLAYER_FIRESTORE_DATA_SOURCE_IMPL"))
+                get(named("PLAYER_FIRESTORE_DATA_SOURCE_IMPL")),
+                get(named("PLAYER_LOCAL_DATA_SOURCE_IMPL"))
             )
         } bind PlayerRepository::class
 
@@ -40,7 +41,8 @@ internal val repositoryModule =
 
         single {
             MatchRepositoryImpl(
-                get(named("MATCH_FIRESTORE_DATA_SOURCE_IMPL"))
+                get(named("MATCH_FIRESTORE_DATA_SOURCE_IMPL")),
+                get(named("MATCH_LOCAL_DATA_SOURCE_IMPL"))
             )
         } bind MatchRepository::class
 

@@ -19,4 +19,16 @@ interface MatchDataSource {
     suspend fun updateMatch(match: Match)
 
     suspend fun deleteMatch(matchId: Long)
+
+    /**
+     * Get all matches directly (not as a Flow) for migration purposes.
+     * @return List of all matches
+     */
+    suspend fun getAllMatchesDirect(): List<Match>
+
+    /**
+     * Clear all match data from local storage.
+     * Only applicable for local data sources.
+     */
+    suspend fun clearLocalData()
 }

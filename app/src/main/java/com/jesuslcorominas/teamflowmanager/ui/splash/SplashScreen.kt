@@ -25,6 +25,7 @@ fun SplashScreen(
     LaunchedEffect(uiState) {
         when (uiState) {
             is UiState.NotAuthenticated -> onNavigateToLogin()
+            is UiState.LocalDataNeedsAuth -> onNavigateToLogin()
             is UiState.NoTeam -> onNavigateToCreateTeam()
             is UiState.TeamExists -> onNavigateToMatches()
             is UiState.Loading -> {

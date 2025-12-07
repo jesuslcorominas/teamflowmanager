@@ -26,4 +26,13 @@ internal class TeamLocalDataSourceImpl(
 
     override suspend fun hasLocalTeamWithoutUserId(): Boolean =
         teamDao.hasLocalTeamWithoutUserId()
+
+    override suspend fun getTeamDirect(): Team? =
+        teamDao.getTeamDirect()?.toDomain()
+
+    override suspend fun clearLocalData() {
+        teamDao.getTeamDirect()?.let { team ->
+            teamDao.deleteTeam(team.id)
+        }
+    }
 }

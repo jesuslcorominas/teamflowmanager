@@ -24,4 +24,11 @@ internal class TeamRepositoryImpl(
 
     override suspend fun hasLocalTeamWithoutUserId(): Boolean =
         teamLocalDataSource.hasLocalTeamWithoutUserId()
+
+    override suspend fun getLocalTeamDirect(): Team? =
+        teamLocalDataSource.getTeamDirect()
+
+    override suspend fun clearLocalTeamData() {
+        teamLocalDataSource.clearLocalData()
+    }
 }

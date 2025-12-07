@@ -32,6 +32,9 @@ interface MatchDao {
     @Query("DELETE FROM match WHERE id = :matchId")
     suspend fun deleteMatch(matchId: Long)
 
+    @Query("DELETE FROM match")
+    suspend fun deleteAllMatches()
+
     @Query("SELECT * FROM match WHERE status = 'SCHEDULED' AND archived = 0")
     suspend fun getScheduledMatches(): List<MatchEntity>
 

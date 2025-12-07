@@ -41,4 +41,11 @@ internal class PlayerLocalDataSourceImpl(
     override suspend fun updatePlayer(player: Player) {
         playerDao.updatePlayer(player.toEntity())
     }
+
+    override suspend fun getAllPlayersDirect(): List<Player> =
+        playerDao.getAllPlayersDirect().map { it.toDomain() }
+
+    override suspend fun clearLocalData() {
+        playerDao.deleteAllPlayers()
+    }
 }

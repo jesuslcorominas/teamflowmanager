@@ -181,4 +181,18 @@ class TeamFirestoreDataSourceImpl(
      * @return false as remote storage always has userId association
      */
     override suspend fun hasLocalTeamWithoutUserId(): Boolean = false
+
+    /**
+     * This method is not applicable for remote Firestore data source.
+     * @return null as direct access is not needed for remote storage
+     */
+    override suspend fun getTeamDirect(): Team? = null
+
+    /**
+     * This method is not applicable for remote Firestore data source.
+     * Only relevant for local Room database cleanup.
+     */
+    override suspend fun clearLocalData() {
+        // No-op for remote data source
+    }
 }

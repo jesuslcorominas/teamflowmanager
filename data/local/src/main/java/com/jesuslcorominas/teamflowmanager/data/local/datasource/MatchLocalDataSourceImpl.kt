@@ -36,4 +36,11 @@ internal class MatchLocalDataSourceImpl(
     override suspend fun deleteMatch(matchId: Long) {
         matchDao.deleteMatch(matchId)
     }
+
+    override suspend fun getAllMatchesDirect(): List<Match> =
+        matchDao.getAllMatchesDirect().map { it.toDomain() }
+
+    override suspend fun clearLocalData() {
+        matchDao.deleteAllMatches()
+    }
 }
