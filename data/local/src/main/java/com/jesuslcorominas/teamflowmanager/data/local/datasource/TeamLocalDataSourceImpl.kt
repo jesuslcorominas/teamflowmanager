@@ -31,8 +31,6 @@ internal class TeamLocalDataSourceImpl(
         teamDao.getTeamDirect()?.toDomain()
 
     override suspend fun clearLocalData() {
-        teamDao.getTeamDirect()?.let { team ->
-            teamDao.deleteTeam(team.id)
-        }
+        teamDao.deleteAllTeams()
     }
 }
