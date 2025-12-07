@@ -20,6 +20,7 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
+import com.jesuslcorominas.teamflowmanager.ui.migration.MigrationScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
@@ -65,6 +66,21 @@ fun Navigation(
                 onLoginSuccess = {
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.Login.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToMigration = {
+                    navController.navigate(Route.Migration.createRoute()) {
+                        popUpTo(Route.Login.createRoute()) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Route.Migration.createRoute()) {
+            MigrationScreen(
+                onMigrationComplete = {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Migration.createRoute()) { inclusive = true }
                     }
                 }
             )

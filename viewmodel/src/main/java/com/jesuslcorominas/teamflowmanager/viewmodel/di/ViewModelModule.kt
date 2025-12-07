@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.MigrationViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
@@ -35,6 +36,14 @@ val viewModelModule =
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
                 hasLocalDataWithoutUserId = get(),
+                analyticsTracker = get()
+            )
+        }
+
+        viewModel {
+            MigrationViewModel(
+                migrateLocalDataToFirestoreUseCase = get(),
+                getCurrentUserUseCase = get(),
                 analyticsTracker = get()
             )
         }
