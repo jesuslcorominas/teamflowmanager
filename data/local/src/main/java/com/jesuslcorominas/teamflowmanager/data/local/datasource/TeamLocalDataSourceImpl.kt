@@ -23,4 +23,7 @@ internal class TeamLocalDataSourceImpl(
 
     override fun getTeamByCoachId(coachId: String): Flow<Team?> =
         teamDao.getTeamByCoachId(coachId).map { it?.toDomain() }
+
+    override suspend fun hasLocalTeamWithoutUserId(): Boolean =
+        teamDao.hasLocalTeamWithoutUserId()
 }

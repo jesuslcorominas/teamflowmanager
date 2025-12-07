@@ -62,6 +62,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCase
@@ -123,6 +125,7 @@ internal val useCaseInternalModule =
         singleOf(::GetTeamUseCaseImpl) bind GetTeamUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
+        singleOf(::HasLocalDataWithoutUserIdUseCaseImpl) bind HasLocalDataWithoutUserIdUseCase::class
 
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class

@@ -22,15 +22,14 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFire
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeHistoryFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreDataSourceImpl
 import de.jensklingenberg.ktorfit.Ktorfit
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -54,20 +53,39 @@ internal val firebaseModule =
 
 internal val firestoreDataSourceModule =
     module {
-        // Using Firestore for Player data
-        singleOf(::PlayerFirestoreDataSourceImpl) bind PlayerDataSource::class
-        // Using Firestore for Team data
-        singleOf(::TeamFirestoreDataSourceImpl) bind TeamDataSource::class
-        // Using Firestore for Match data
-        singleOf(::MatchFirestoreDataSourceImpl) bind MatchDataSource::class
-        // Using Firestore for Goal data
-        singleOf(::GoalFirestoreDataSourceImpl) bind GoalDataSource::class
-        // Using Firestore for PlayerSubstitution data
-        singleOf(::PlayerSubstitutionFirestoreDataSourceImpl) bind PlayerSubstitutionDataSource::class
-        // Using Firestore for PlayerTime data
-        singleOf(::PlayerTimeFirestoreDataSourceImpl) bind PlayerTimeDataSource::class
-        // Using Firestore for PlayerTimeHistory data
-        singleOf(::PlayerTimeHistoryFirestoreDataSourceImpl) bind PlayerTimeHistoryDataSource::class
+        single(named("PLAYER_FIRESTORE_DATA_SOURCE_IMPL")) {
+            PlayerFirestoreDataSourceImpl(
+                get(),
+                get(),
+                get()
+            )
+        } bind PlayerDataSource::class
+
+        single(named("TEAM_FIRESTORE_DATA_SOURCE_IMPL")) {
+            TeamFirestoreDataSourceImpl(get(), get())
+        } bind TeamDataSource::class
+
+
+        single(named("MATCH_FIRESTORE_DATA_SOURCE_IMPL")) {
+            MatchFirestoreDataSourceImpl(get(), get())
+        } bind MatchDataSource::class
+
+        single(named("GOAL_FIRESTORE_DATA_SOURCE_IMPL")) {
+            GoalFirestoreDataSourceImpl(get(), get())
+        } bind GoalDataSource::class
+
+
+        single(named("PLAYER_SUBSTITUTION_FIRESTORE_DATA_SOURCE_IMPL")) {
+            PlayerSubstitutionFirestoreDataSourceImpl(get(), get())
+        } bind PlayerSubstitutionDataSource::class
+
+        single(named("PLAYER_TIME_FIRESTORE_DATA_SOURCE_IMPL")) {
+            PlayerTimeFirestoreDataSourceImpl(get(), get())
+        } bind PlayerTimeDataSource::class
+
+        single(named("PLAYER_TIME_HISTORY_FIRESTORE_DATA_SOURCE_IMPL")) {
+            PlayerTimeHistoryFirestoreDataSourceImpl(get(), get())
+        } bind PlayerTimeHistoryDataSource::class
     }
 
 internal val ktorfitModule =
