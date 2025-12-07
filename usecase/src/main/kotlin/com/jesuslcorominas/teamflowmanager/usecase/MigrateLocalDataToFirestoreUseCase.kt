@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import android.util.Log
+import com.jesuslcorominas.teamflowmanager.domain.model.MigrationStep
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
@@ -9,14 +9,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryR
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 
-/**
- * Migration step information
- */
-data class MigrationStep(
-    val step: Int,
-    val totalSteps: Int,
-    val description: String
-)
+
 
 /**
  * Use case to migrate local Room data to Firebase Firestore.
@@ -60,62 +53,62 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
         onProgress: (MigrationStep) -> Unit
     ): Result<Unit> {
         return try {
-            Log.i(TAG, "Starting local data migration to Firestore for user: $userId")
+            println("$TAG: Starting local data migration to Firestore for user: $userId")
 
             // Step 1: Migrate Team
             onProgress(MigrationStep(1, TOTAL_STEPS, "Migrando equipo..."))
             val team = teamRepository.getLocalTeamDirect()
             if (team == null) {
-                Log.w(TAG, "No local team found to migrate")
+                println("$TAG: No local team found to migrate")
                 return Result.failure(IllegalStateException("No local team found"))
             }
 
-            Log.d(TAG, "Found local team: ${team.name}, migrating...")
+            println("$TAG: Found local team: ${team.name}, migrating...")
             // Create team in Firestore with userId as coachId
             val teamWithCoachId = team.copy(coachId = userId)
             teamRepository.createTeam(teamWithCoachId)
-            Log.d(TAG, "Team migrated successfully")
+            println("$TAG: Team migrated successfully")
 
             // Step 2: Migrate Players and build ID mapping
             onProgress(MigrationStep(2, TOTAL_STEPS, "Migrando jugadores..."))
             val players = playerRepository.getAllLocalPlayersDirect()
-            Log.d(TAG, "Found ${players.size} players to migrate")
+            println("$TAG: Found ${players.size} players to migrate")
             val playerIdMap = mutableMapOf<Long, Long>() // old ID -> new ID
-            
+
             players.forEach { player ->
                 val oldId = player.id
                 val newId = playerRepository.addPlayer(player)
                 playerIdMap[oldId] = newId
-                Log.d(TAG, "Player ID mapping: $oldId -> $newId")
+                println("$TAG: Player ID mapping: $oldId -> $newId")
             }
-            Log.d(TAG, "All players migrated successfully with ${playerIdMap.size} ID mappings")
+            println("$TAG: All players migrated successfully with ${playerIdMap.size} ID mappings")
 
             // Step 3: Migrate Matches and build ID mapping, updating player references
             onProgress(MigrationStep(3, TOTAL_STEPS, "Migrando partidos..."))
             val matches = matchRepository.getAllLocalMatchesDirect()
-            Log.d(TAG, "Found ${matches.size} matches to migrate")
+            println("$TAG: Found ${matches.size} matches to migrate")
             val matchIdMap = mutableMapOf<Long, Long>() // old ID -> new ID
-            
+
             matches.forEach { match ->
                 val oldMatchId = match.id
-                
+
                 // Update player references in match
                 val updatedMatch = match.copy(
                     captainId = playerIdMap[match.captainId] ?: match.captainId,
                     squadCallUpIds = match.squadCallUpIds.map { playerIdMap[it] ?: it },
                     startingLineupIds = match.startingLineupIds.map { playerIdMap[it] ?: it }
                 )
-                
+
                 val newMatchId = matchRepository.createMatch(updatedMatch)
                 matchIdMap[oldMatchId] = newMatchId
-                Log.d(TAG, "Match ID mapping: $oldMatchId -> $newMatchId")
+                println("$TAG: Match ID mapping: $oldMatchId -> $newMatchId")
             }
-            Log.d(TAG, "All matches migrated successfully with ${matchIdMap.size} ID mappings")
+            println("$TAG: All matches migrated successfully with ${matchIdMap.size} ID mappings")
 
             // Step 4: Migrate Goals with updated references
             onProgress(MigrationStep(4, TOTAL_STEPS, "Migrando goles..."))
             val goals = goalRepository.getAllLocalGoalsDirect()
-            Log.d(TAG, "Found ${goals.size} goals to migrate")
+            println("$TAG: Found ${goals.size} goals to migrate")
             goals.forEach { goal ->
                 val updatedGoal = goal.copy(
                     matchId = matchIdMap[goal.matchId] ?: goal.matchId,
@@ -123,12 +116,12 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
                 )
                 goalRepository.insertGoal(updatedGoal)
             }
-            Log.d(TAG, "All goals migrated successfully")
+            println("$TAG: All goals migrated successfully")
 
             // Step 5: Migrate Player Substitutions with updated references
             onProgress(MigrationStep(5, TOTAL_STEPS, "Migrando sustituciones..."))
             val substitutions = playerSubstitutionRepository.getAllLocalPlayerSubstitutionsDirect()
-            Log.d(TAG, "Found ${substitutions.size} substitutions to migrate")
+            println("$TAG: Found ${substitutions.size} substitutions to migrate")
             substitutions.forEach { substitution ->
                 val updatedSubstitution = substitution.copy(
                     matchId = matchIdMap[substitution.matchId] ?: substitution.matchId,
@@ -137,22 +130,22 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
                 )
                 playerSubstitutionRepository.insertSubstitution(updatedSubstitution)
             }
-            Log.d(TAG, "All substitutions migrated successfully")
+            println("$TAG: All substitutions migrated successfully")
 
             // Step 6: Migrate Player Times
             onProgress(MigrationStep(6, TOTAL_STEPS, "Migrando tiempos de juego..."))
             val playerTimes = playerTimeRepository.getAllLocalPlayerTimesDirect()
-            Log.d(TAG, "Found ${playerTimes.size} player times to migrate")
+            println("$TAG: Found ${playerTimes.size} player times to migrate")
             playerTimes.forEach { playerTime ->
                 // Player times are upserted, not inserted
                 // We skip this migration as current player times are transient state
             }
-            Log.d(TAG, "Skipped player times migration (transient state)")
+            println("$TAG: Skipped player times migration (transient state)")
 
             // Step 7: Migrate Player Time History with updated references
             onProgress(MigrationStep(7, TOTAL_STEPS, "Migrando histórico de tiempos..."))
             val timeHistory = playerTimeHistoryRepository.getAllLocalPlayerTimeHistoryDirect()
-            Log.d(TAG, "Found ${timeHistory.size} time history records to migrate")
+            println("$TAG: Found ${timeHistory.size} time history records to migrate")
             timeHistory.forEach { history ->
                 val updatedHistory = history.copy(
                     playerId = playerIdMap[history.playerId] ?: history.playerId,
@@ -160,11 +153,11 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
                 )
                 playerTimeHistoryRepository.insertPlayerTimeHistory(updatedHistory)
             }
-            Log.d(TAG, "All time history migrated successfully")
+            println("$TAG: All time history migrated successfully")
 
             // Step 8: Clear local data after successful migration
             onProgress(MigrationStep(8, TOTAL_STEPS, "Limpiando datos locales..."))
-            Log.d(TAG, "Clearing local Room data...")
+            println("$TAG: Clearing local Room data...")
             teamRepository.clearLocalTeamData()
             playerRepository.clearLocalPlayerData()
             matchRepository.clearLocalMatchData()
@@ -172,11 +165,12 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             playerSubstitutionRepository.clearLocalPlayerSubstitutionData()
             playerTimeRepository.clearLocalPlayerTimeData()
             playerTimeHistoryRepository.clearLocalPlayerTimeHistoryData()
-            Log.i(TAG, "Local data migration completed successfully")
+            println("$TAG: Local data migration completed successfully")
 
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error during local data migration", e)
+            println("$TAG: Error during local data migration: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }

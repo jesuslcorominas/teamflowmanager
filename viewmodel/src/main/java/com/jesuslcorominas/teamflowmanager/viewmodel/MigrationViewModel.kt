@@ -3,9 +3,9 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.model.MigrationStep
 import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.MigrateLocalDataToFirestoreUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.MigrationStep
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
