@@ -124,6 +124,51 @@ class SplashViewModelTest {
     }
 
     @Test
+    fun `should emit LocalDataNeedsAuth when local data exists without user and user is not authenticated`() = runTest {
+        // Given
+        coEvery { hasLocalDataWithoutUserIdUseCase() } returns true
+        every { getCurrentUserUseCase() } returns flowOf(null)
+
+        // When
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, hasLocalDataWithoutUserIdUseCase)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(SplashViewModel.UiState.LocalDataNeedsAuth, viewModel.uiState.value)
+        coVerify { hasLocalDataWithoutUserIdUseCase() }
+    }
+
+    @Test
+    fun `should continue loading when local data exists but user is authenticated`() = runTest {
+        // Given
+        val user = User(
+            id = "user123",
+            email = "test@example.com",
+            displayName = "Test User",
+            photoUrl = null
+        )
+        val team = Team(
+            id = 1,
+            name = "Test Team",
+            coachName = "Coach",
+            delegateName = "Delegate",
+            teamType = TeamType.FOOTBALL_5
+        )
+        coEvery { hasLocalDataWithoutUserIdUseCase() } returns true
+        every { getCurrentUserUseCase() } returns flowOf(user)
+        every { getTeamUseCase() } returns flowOf(team)
+
+        // When
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, hasLocalDataWithoutUserIdUseCase)
+        advanceUntilIdle()
+
+        // Then
+        // Should continue to TeamExists since user is already authenticated
+        assertEquals(SplashViewModel.UiState.TeamExists, viewModel.uiState.value)
+        coVerify { hasLocalDataWithoutUserIdUseCase() }
+    }
+
+    @Test
     fun `should continue with authentication check even if local data check fails`() = runTest {
         // Given
         coEvery { hasLocalDataWithoutUserIdUseCase() } throws Exception("Test exception")
