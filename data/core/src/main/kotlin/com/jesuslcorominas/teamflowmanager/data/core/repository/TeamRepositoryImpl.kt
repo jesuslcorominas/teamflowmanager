@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 internal class TeamRepositoryImpl(
     private val teamDataSource: TeamDataSource,
+    private val teamLocalDataSource: TeamDataSource,
 ) : TeamRepository {
     override fun getTeam(): Flow<Team?> = teamDataSource.getTeam()
 
@@ -22,5 +23,5 @@ internal class TeamRepositoryImpl(
         teamDataSource.getTeamByCoachId(coachId)
 
     override suspend fun hasLocalTeamWithoutUserId(): Boolean =
-        teamDataSource.hasLocalTeamWithoutUserId()
+        teamLocalDataSource.hasLocalTeamWithoutUserId()
 }
