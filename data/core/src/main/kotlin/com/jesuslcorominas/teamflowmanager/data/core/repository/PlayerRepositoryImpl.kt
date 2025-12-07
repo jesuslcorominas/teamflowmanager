@@ -15,8 +15,8 @@ internal class PlayerRepositoryImpl(
 
     override suspend fun getCaptainPlayer(): Player? = playerDataSource.getCaptainPlayer()
 
-    override suspend fun addPlayer(player: Player) {
-        playerDataSource.insertPlayer(player)
+    override suspend fun addPlayer(player: Player): Long {
+        return playerDataSource.insertPlayer(player)
     }
 
     override suspend fun deletePlayer(playerId: Long) {

@@ -10,7 +10,7 @@ interface PlayerRepository {
 
     suspend fun getCaptainPlayer(): Player?
 
-    suspend fun addPlayer(player: Player)
+    suspend fun addPlayer(player: Player): Long
 
     suspend fun deletePlayer(playerId: Long)
 

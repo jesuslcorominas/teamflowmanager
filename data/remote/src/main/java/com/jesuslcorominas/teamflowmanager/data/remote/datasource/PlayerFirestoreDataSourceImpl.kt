@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -262,7 +263,7 @@ class PlayerFirestoreDataSourceImpl(
      * If the player has a local image URI, it will be uploaded to Firebase Storage
      * and the download URL will be stored in Firestore.
      */
-    override suspend fun insertPlayer(player: Player) {
+    override suspend fun insertPlayer(player: Player): Long {
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
             Log.e(TAG, "No team found, cannot insert player")
@@ -284,7 +285,11 @@ class PlayerFirestoreDataSourceImpl(
                 imageUri = imageUrl
             )
             docRef.set(modelWithTeam).await()
-            Log.d(TAG, "Player inserted successfully with id: ${docRef.id}, teamId: $teamDocId, imageUrl: $imageUrl")
+            
+            // Convert Firestore document ID to stable Long ID
+            val newPlayerId = docRef.id.toStableId()
+            Log.d(TAG, "Player inserted successfully with id: ${docRef.id} (Long: $newPlayerId), teamId: $teamDocId, imageUrl: $imageUrl")
+            return newPlayerId
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

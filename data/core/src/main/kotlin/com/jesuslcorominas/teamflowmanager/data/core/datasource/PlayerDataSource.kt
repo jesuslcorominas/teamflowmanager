@@ -16,7 +16,7 @@ interface PlayerDataSource {
 
     suspend fun updatePlayer(player: Player)
 
-    suspend fun insertPlayer(player: Player)
+    suspend fun insertPlayer(player: Player): Long
 
     suspend fun deletePlayer(playerId: Long)
 

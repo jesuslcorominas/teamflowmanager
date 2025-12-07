@@ -58,35 +58,62 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             teamRepository.createTeam(teamWithCoachId)
             Log.d(TAG, "Team migrated successfully")
 
-            // Step 2: Migrate Players
+            // Step 2: Migrate Players and build ID mapping
             val players = playerRepository.getAllLocalPlayersDirect()
             Log.d(TAG, "Found ${players.size} players to migrate")
+            val playerIdMap = mutableMapOf<Long, Long>() // old ID -> new ID
+            
             players.forEach { player ->
-                playerRepository.addPlayer(player)
+                val oldId = player.id
+                val newId = playerRepository.addPlayer(player)
+                playerIdMap[oldId] = newId
+                Log.d(TAG, "Player ID mapping: $oldId -> $newId")
             }
-            Log.d(TAG, "All players migrated successfully")
+            Log.d(TAG, "All players migrated successfully with ${playerIdMap.size} ID mappings")
 
-            // Step 3: Migrate Matches
+            // Step 3: Migrate Matches and build ID mapping, updating player references
             val matches = matchRepository.getAllLocalMatchesDirect()
             Log.d(TAG, "Found ${matches.size} matches to migrate")
+            val matchIdMap = mutableMapOf<Long, Long>() // old ID -> new ID
+            
             matches.forEach { match ->
-                matchRepository.createMatch(match)
+                val oldMatchId = match.id
+                
+                // Update player references in match
+                val updatedMatch = match.copy(
+                    captainId = playerIdMap[match.captainId] ?: match.captainId,
+                    squadCallUpIds = match.squadCallUpIds.map { playerIdMap[it] ?: it },
+                    startingLineupIds = match.startingLineupIds.map { playerIdMap[it] ?: it }
+                )
+                
+                val newMatchId = matchRepository.createMatch(updatedMatch)
+                matchIdMap[oldMatchId] = newMatchId
+                Log.d(TAG, "Match ID mapping: $oldMatchId -> $newMatchId")
             }
-            Log.d(TAG, "All matches migrated successfully")
+            Log.d(TAG, "All matches migrated successfully with ${matchIdMap.size} ID mappings")
 
-            // Step 4: Migrate Goals
+            // Step 4: Migrate Goals with updated references
             val goals = goalRepository.getAllLocalGoalsDirect()
             Log.d(TAG, "Found ${goals.size} goals to migrate")
             goals.forEach { goal ->
-                goalRepository.insertGoal(goal)
+                val updatedGoal = goal.copy(
+                    matchId = matchIdMap[goal.matchId] ?: goal.matchId,
+                    scorerId = goal.scorerId?.let { playerIdMap[it] ?: it }
+                )
+                goalRepository.insertGoal(updatedGoal)
             }
             Log.d(TAG, "All goals migrated successfully")
 
-            // Step 5: Migrate Player Substitutions
+            // Step 5: Migrate Player Substitutions with updated references
             val substitutions = playerSubstitutionRepository.getAllLocalPlayerSubstitutionsDirect()
             Log.d(TAG, "Found ${substitutions.size} substitutions to migrate")
             substitutions.forEach { substitution ->
-                playerSubstitutionRepository.insertSubstitution(substitution)
+                val updatedSubstitution = substitution.copy(
+                    matchId = matchIdMap[substitution.matchId] ?: substitution.matchId,
+                    playerOutId = playerIdMap[substitution.playerOutId] ?: substitution.playerOutId,
+                    playerInId = playerIdMap[substitution.playerInId] ?: substitution.playerInId
+                )
+                playerSubstitutionRepository.insertSubstitution(updatedSubstitution)
             }
             Log.d(TAG, "All substitutions migrated successfully")
 
@@ -99,11 +126,15 @@ internal class MigrateLocalDataToFirestoreUseCaseImpl(
             }
             Log.d(TAG, "Skipped player times migration (transient state)")
 
-            // Step 7: Migrate Player Time History
+            // Step 7: Migrate Player Time History with updated references
             val timeHistory = playerTimeHistoryRepository.getAllLocalPlayerTimeHistoryDirect()
             Log.d(TAG, "Found ${timeHistory.size} time history records to migrate")
             timeHistory.forEach { history ->
-                playerTimeHistoryRepository.insertPlayerTimeHistory(history)
+                val updatedHistory = history.copy(
+                    playerId = playerIdMap[history.playerId] ?: history.playerId,
+                    matchId = matchIdMap[history.matchId] ?: history.matchId
+                )
+                playerTimeHistoryRepository.insertPlayerTimeHistory(updatedHistory)
             }
             Log.d(TAG, "All time history migrated successfully")
 
