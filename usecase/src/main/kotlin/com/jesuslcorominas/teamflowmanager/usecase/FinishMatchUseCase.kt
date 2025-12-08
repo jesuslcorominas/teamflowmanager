@@ -58,6 +58,7 @@ internal class FinishMatchUseCaseImpl(
                 emptyList()
             }
 
+            // Save player time history in Room transaction
             transactionRunner.run {
                 matchRepository.updateMatch(finishedMatch)
 
@@ -86,14 +87,19 @@ internal class FinishMatchUseCaseImpl(
                         e.printStackTrace()
                     }
                 }
+            }
 
-                try {
-                    playerTimeRepository.resetAllPlayerTimes()
-                } catch (e: Exception) {
-                    // Log error but don't fail the finish operation
-                    println("FinishMatchUseCase: Error resetting player times: ${e.message}")
-                    e.printStackTrace()
-                }
+            // Reset player times in Firestore (outside Room transaction)
+            // This must be done separately because Firestore operations don't participate in Room transactions
+            try {
+                playerTimeRepository.resetAllPlayerTimes()
+                println("FinishMatchUseCase: Successfully reset all player times")
+            } catch (e: Exception) {
+                // Log error but don't fail the finish operation
+                println("FinishMatchUseCase: Error resetting player times: ${e.message}")
+                e.printStackTrace()
+                // Re-throw to make the error more visible
+                throw IllegalStateException("Failed to reset player times after finishing match", e)
             }
         } catch (e: Exception) {
             // Catch any unexpected errors to prevent app crash
