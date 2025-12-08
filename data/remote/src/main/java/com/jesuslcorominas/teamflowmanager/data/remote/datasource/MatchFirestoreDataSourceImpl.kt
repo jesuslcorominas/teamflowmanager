@@ -459,24 +459,21 @@ class MatchFirestoreDataSourceImpl(
             }
             
             val docRef = firestore.collection(MATCHES_COLLECTION).document(documentId)
+            val fieldPath = "periods.$periodIndex.startTimeMillis"
             
-            // Write serverTimestamp and read it back in one round-trip using a transaction
-            val timeMillis = firestore.runTransaction { transaction ->
-                // Write serverTimestamp to the period start time field
-                val fieldPath = "periods.$periodIndex.startTimeMillis"
-                transaction.update(docRef, fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp())
-                
-                // Read it back immediately to get the actual server timestamp
-                val snapshot = transaction.get(docRef)
-                val periods = snapshot.get("periods") as? List<Map<String, Any>>
-                val serverTimestamp = periods?.getOrNull(periodIndex)?.get("startTimeMillis")
-                
-                when (serverTimestamp) {
-                    is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
-                    is Long -> serverTimestamp
-                    else -> null
-                }
-            }.await()
+            // Write serverTimestamp to Firestore
+            docRef.update(fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp()).await()
+            
+            // Read it back in a separate operation to get the actual server timestamp
+            val snapshot = docRef.get().await()
+            val periods = snapshot.get("periods") as? List<Map<String, Any>>
+            val serverTimestamp = periods?.getOrNull(periodIndex)?.get("startTimeMillis")
+            
+            val timeMillis = when (serverTimestamp) {
+                is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
+                is Long -> serverTimestamp
+                else -> null
+            }
             
             if (timeMillis != null) {
                 Log.d(TAG, "Period $periodNumber start time updated with server timestamp: $timeMillis")
@@ -519,24 +516,21 @@ class MatchFirestoreDataSourceImpl(
             }
             
             val docRef = firestore.collection(MATCHES_COLLECTION).document(documentId)
+            val fieldPath = "periods.$periodIndex.endTimeMillis"
             
-            // Write serverTimestamp and read it back in one round-trip using a transaction
-            val timeMillis = firestore.runTransaction { transaction ->
-                // Write serverTimestamp to the end time field
-                val fieldPath = "periods.$periodIndex.endTimeMillis"
-                transaction.update(docRef, fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp())
-                
-                // Read it back immediately to get the actual server timestamp
-                val snapshot = transaction.get(docRef)
-                val periods = snapshot.get("periods") as? List<Map<String, Any>>
-                val serverTimestamp = periods?.getOrNull(periodIndex)?.get("endTimeMillis")
-                
-                when (serverTimestamp) {
-                    is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
-                    is Long -> serverTimestamp
-                    else -> null
-                }
-            }.await()
+            // Write serverTimestamp to Firestore
+            docRef.update(fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp()).await()
+            
+            // Read it back in a separate operation to get the actual server timestamp
+            val snapshot = docRef.get().await()
+            val periods = snapshot.get("periods") as? List<Map<String, Any>>
+            val serverTimestamp = periods?.getOrNull(periodIndex)?.get("endTimeMillis")
+            
+            val timeMillis = when (serverTimestamp) {
+                is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
+                is Long -> serverTimestamp
+                else -> null
+            }
             
             if (timeMillis != null) {
                 Log.d(TAG, "Period $periodNumber end time updated with server timestamp: $timeMillis")
