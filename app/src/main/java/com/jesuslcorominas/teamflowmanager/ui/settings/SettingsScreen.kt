@@ -19,11 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -259,23 +257,24 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
-            // Export data item
-            SettingsItem(
-                icon = Icons.Outlined.CloudUpload,
-                title = stringResource(R.string.export_data),
-                subtitle = stringResource(R.string.export_data_description),
-                onClick = { viewModel.exportData() }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
-
-            // Import data item
-            SettingsItem(
-                icon = Icons.Outlined.CloudDownload,
-                title = stringResource(R.string.import_data),
-                subtitle = stringResource(R.string.import_data_description),
-                onClick = { importLauncher.launch("*/*") }
-            )
+            // Hidden export/import items
+//            // Export data item
+//            SettingsItem(
+//                icon = Icons.Outlined.CloudUpload,
+//                title = stringResource(R.string.export_data),
+//                subtitle = stringResource(R.string.export_data_description),
+//                onClick = { viewModel.exportData() }
+//            )
+//
+//            HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+//
+//            // Import data item
+//            SettingsItem(
+//                icon = Icons.Outlined.CloudDownload,
+//                title = stringResource(R.string.import_data),
+//                subtitle = stringResource(R.string.import_data_description),
+//                onClick = { importLauncher.launch("*/*") }
+//            )
         }
     }
 }
