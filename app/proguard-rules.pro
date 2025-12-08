@@ -21,3 +21,27 @@
 #-renamesourcefileattribute SourceFile
 -dontwarn com.google.devtools.ksp.**
 -dontwarn com.squareup.moshi.kotlin.codegen.ksp.**
+
+# === Firestore & Firebase ===
+-keep class com.google.firebase.firestore.** { *; }
+-dontwarn com.google.firebase.firestore.**
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+-keep class com.google.firebase.storage.** { *; }
+
+# === Modelos Firestore del módulo :data:remote ===
+-keep class com.jesuslcorominas.teamflowmanager.data.remote.firestore.** { *; }
+
+# === Mantener TODOS los constructores públicos (muy importante) ===
+-keepclassmembers class * {
+    public <init>();
+}
+
+# === Mantener nombres de campos anotados por Firestore ===
+-keepclassmembers class * {
+    @com.google.firebase.firestore.PropertyName <fields>;
+    @com.google.firebase.firestore.DocumentId <fields>;
+}
+
+# === Mantener clases anotadas para Firestore ===
+-keep @com.google.firebase.firestore.IgnoreExtraProperties class * { *; }
