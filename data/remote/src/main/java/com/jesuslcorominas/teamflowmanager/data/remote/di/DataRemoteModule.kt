@@ -51,7 +51,7 @@ internal val firebaseModule =
         single { FirebaseStorage.getInstance() }
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
-        single<TimeProvider> { FirestoreTimeProvider(get()) }
+        singleOf(::FirestoreTimeProvider) bind TimeProvider::class
     }
 
 internal val firestoreDataSourceModule =

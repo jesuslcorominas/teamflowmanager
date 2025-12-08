@@ -29,7 +29,12 @@ val viewModelModule =
         }
 
         viewModel {
-            SplashViewModel(getTeam = get(), getCurrentUser = get(), hasLocalDataWithoutUserId = get())
+            SplashViewModel(
+                getTeam = get(),
+                getCurrentUser = get(),
+                hasLocalDataWithoutUserId = get(),
+                synchronizeTimeUseCase = get()
+            )
         }
 
         viewModel {
