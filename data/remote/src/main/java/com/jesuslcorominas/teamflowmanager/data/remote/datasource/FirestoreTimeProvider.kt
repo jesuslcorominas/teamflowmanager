@@ -41,19 +41,20 @@ class FirestoreTimeProvider(
             docRef.set(mapOf(TIMESTAMP_FIELD to FieldValue.serverTimestamp())).await()
             
             // Read the document back to get the server timestamp
+            val readTime = System.currentTimeMillis()
             val snapshot = docRef.get().await()
             val serverTimestamp = snapshot.getTimestamp(TIMESTAMP_FIELD)
             
             if (serverTimestamp != null) {
                 val serverTimeMillis = serverTimestamp.toDate().time
-                val deviceTimeMillis = System.currentTimeMillis()
                 
                 // Calculate offset considering the round-trip time
-                // Use the midpoint between write and read as reference
-                val roundTripTime = deviceTimeMillis - writeTime
-                val estimatedServerTime = serverTimeMillis - (roundTripTime / 2)
+                // The server timestamp was recorded when the write occurred
+                // We estimate that occurred at writeTime + (roundTripTime / 2)
+                val roundTripTime = readTime - writeTime
+                val estimatedWriteTime = writeTime + (roundTripTime / 2)
                 
-                serverOffset = estimatedServerTime - deviceTimeMillis
+                serverOffset = serverTimeMillis - estimatedWriteTime
                 
                 Log.d(TAG, "synchronize: Time sync complete - offset: $serverOffset ms, round-trip: $roundTripTime ms")
             } else {
@@ -64,7 +65,7 @@ class FirestoreTimeProvider(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "synchronize: Error synchronizing time with server", e)
-            // Don't throw - keep using existing offset or 0 if first sync fails
+            // Do not throw - keep using existing offset or 0 if first sync fails
         }
     }
 

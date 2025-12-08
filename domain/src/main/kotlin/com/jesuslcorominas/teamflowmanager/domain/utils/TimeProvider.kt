@@ -9,7 +9,7 @@ interface TimeProvider {
      * Get the current time in milliseconds, adjusted for server time offset.
      * This should be used instead of System.currentTimeMillis() for match timing.
      */
-    suspend fun getCurrentTime(): Long
+    fun getCurrentTime(): Long
 
     /**
      * Synchronize with server time to calculate offset.
