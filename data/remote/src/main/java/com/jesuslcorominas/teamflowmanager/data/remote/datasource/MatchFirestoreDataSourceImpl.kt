@@ -416,6 +416,130 @@ class MatchFirestoreDataSourceImpl(
     }
 
     /**
+     * Update period start time using Firestore serverTimestamp.
+     * This ensures all devices see the exact same timestamp from the server.
+     */
+    override suspend fun updatePeriodStartWithServerTime(matchId: Long, periodNumber: Int): Long? {
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.w(TAG, "No team found, cannot update period start time")
+            return null
+        }
+
+        val documentId = findDocumentIdByMatchId(teamDocId, matchId)
+        if (documentId == null) {
+            Log.w(TAG, "Cannot find match with id: $matchId")
+            return null
+        }
+
+        return try {
+            val docRef = firestore.collection(MATCHES_COLLECTION).document(documentId)
+            
+            // Get current match to find the period index (0-based)
+            val currentDoc = docRef.get().await()
+            val periods = currentDoc.get("periods") as? List<Map<String, Any>>
+            val periodIndex = periods?.indexOfFirst { 
+                (it["periodNumber"] as? Long)?.toInt() == periodNumber 
+            } ?: -1
+            
+            if (periodIndex < 0) {
+                Log.w(TAG, "Period $periodNumber not found in match")
+                return null
+            }
+            
+            // Write serverTimestamp to the period start time field
+            val fieldPath = "periods.$periodIndex.startTimeMillis"
+            docRef.update(fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp()).await()
+            
+            // Read it back immediately to get the actual server timestamp
+            val snapshot = docRef.get().await()
+            val updatedPeriods = snapshot.get("periods") as? List<Map<String, Any>>
+            val serverTimestamp = updatedPeriods?.getOrNull(periodIndex)?.get("startTimeMillis")
+            
+            val timeMillis = when (serverTimestamp) {
+                is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
+                is Long -> serverTimestamp
+                else -> null
+            }
+            
+            if (timeMillis != null) {
+                Log.d(TAG, "Period $periodNumber start time updated with server timestamp: $timeMillis")
+            } else {
+                Log.w(TAG, "Failed to read back server timestamp for period $periodNumber start")
+            }
+            
+            timeMillis
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating period start time with server timestamp", e)
+            null
+        }
+    }
+
+    /**
+     * Update period end time using Firestore serverTimestamp.
+     * This ensures all devices see the exact same timestamp from the server.
+     */
+    override suspend fun updatePeriodEndWithServerTime(matchId: Long, periodNumber: Int): Long? {
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.w(TAG, "No team found, cannot update period end time")
+            return null
+        }
+
+        val documentId = findDocumentIdByMatchId(teamDocId, matchId)
+        if (documentId == null) {
+            Log.w(TAG, "Cannot find match with id: $matchId")
+            return null
+        }
+
+        return try {
+            val docRef = firestore.collection(MATCHES_COLLECTION).document(documentId)
+            
+            // Get current match to find the period index (0-based)
+            val currentDoc = docRef.get().await()
+            val periods = currentDoc.get("periods") as? List<Map<String, Any>>
+            val periodIndex = periods?.indexOfFirst { 
+                (it["periodNumber"] as? Long)?.toInt() == periodNumber 
+            } ?: -1
+            
+            if (periodIndex < 0) {
+                Log.w(TAG, "Period $periodNumber not found in match")
+                return null
+            }
+            
+            // Write serverTimestamp to the end time field
+            val fieldPath = "periods.$periodIndex.endTimeMillis"
+            docRef.update(fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp()).await()
+            
+            // Read it back immediately to get the actual server timestamp
+            val snapshot = docRef.get().await()
+            val updatedPeriods = snapshot.get("periods") as? List<Map<String, Any>>
+            val serverTimestamp = updatedPeriods?.getOrNull(periodIndex)?.get("endTimeMillis")
+            
+            val timeMillis = when (serverTimestamp) {
+                is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
+                is Long -> serverTimestamp
+                else -> null
+            }
+            
+            if (timeMillis != null) {
+                Log.d(TAG, "Period $periodNumber end time updated with server timestamp: $timeMillis")
+            } else {
+                Log.w(TAG, "Failed to read back server timestamp for period $periodNumber end")
+            }
+            
+            timeMillis
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating period end time with server timestamp", e)
+            null
+        }
+    }
+
+    /**
      * This method is not applicable for remote Firestore data source.
      * @return empty list as direct access is not needed for remote storage
      */
