@@ -83,6 +83,7 @@ class PlayerFirestoreDataSourceImpl(
 
         val listenerRegistration = firestore.collection(PLAYERS_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
+            .whereEqualTo("deleted", false)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e(TAG, "Error getting players from Firestore", error)
@@ -127,6 +128,7 @@ class PlayerFirestoreDataSourceImpl(
         return try {
             val snapshot = firestore.collection(PLAYERS_COLLECTION)
                 .whereEqualTo("teamId", teamDocId)
+                .whereEqualTo("deleted", false)
                 .get()
                 .await()
 
@@ -163,6 +165,7 @@ class PlayerFirestoreDataSourceImpl(
         return try {
             val snapshot = firestore.collection(PLAYERS_COLLECTION)
                 .whereEqualTo("teamId", teamDocId)
+                .whereEqualTo("deleted", false)
                 .whereEqualTo("isCaptain", true)
                 .limit(1)
                 .get()
@@ -299,8 +302,8 @@ class PlayerFirestoreDataSourceImpl(
     }
 
     /**
-     * Deletes a player from Firestore.
-     * Also deletes the player's image from Firebase Storage if present.
+     * Logically deletes a player from Firestore by setting the deleted flag to true.
+     * This preserves the player's data including goals and playing time history.
      */
     override suspend fun deletePlayer(playerId: Long) {
         val teamDocId = getTeamDocumentId()
@@ -310,28 +313,19 @@ class PlayerFirestoreDataSourceImpl(
         }
 
         try {
-            // First, find the document ID and get the player data to delete the image
+            // First, find the document ID
             val documentId = findDocumentIdByPlayerId(teamDocId, playerId)
             if (documentId == null) {
                 Log.w(TAG, "Cannot find player with id: $playerId to delete")
                 return
             }
 
-            // Get the player to check for image URL
-            val player = getPlayerById(playerId)
-
-            // Delete the image from storage if it exists and is a Firebase Storage URL
-            player?.imageUri?.let { imageUrl ->
-                if (isFirebaseStorageUrl(imageUrl)) {
-                    imageStorageDataSource.deleteImage(imageUrl)
-                }
-            }
-
+            // Perform logical deletion by setting deleted flag to true
             firestore.collection(PLAYERS_COLLECTION)
                 .document(documentId)
-                .delete()
+                .update("deleted", true)
                 .await()
-            Log.d(TAG, "Player deleted successfully: $documentId")
+            Log.d(TAG, "Player logically deleted successfully: $documentId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -457,6 +451,7 @@ class PlayerFirestoreDataSourceImpl(
     private suspend fun findDocumentIdByPlayerId(teamDocId: String, playerId: Long): String? {
         val snapshot = firestore.collection(PLAYERS_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
+            .whereEqualTo("deleted", false)
             .get()
             .await()
 
@@ -484,6 +479,7 @@ class PlayerFirestoreDataSourceImpl(
     private suspend fun clearAllCaptains(teamDocId: String) {
         val snapshot = firestore.collection(PLAYERS_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
+            .whereEqualTo("deleted", false)
             .whereEqualTo("isCaptain", true)
             .get()
             .await()

@@ -25,6 +25,7 @@ data class PlayerFirestoreModel(
     @set:PropertyName("captain")
     var isCaptain: Boolean = false,
     val imageUri: String? = null,
+    val deleted: Boolean = false,
 ) {
     // No-arg constructor required by Firestore
     constructor() : this(
@@ -36,6 +37,7 @@ data class PlayerFirestoreModel(
         teamId = "",
         isCaptain = false,
         imageUri = null,
+        deleted = false,
     )
 }
 
@@ -52,6 +54,7 @@ fun PlayerFirestoreModel.toDomain(): Player =
         teamId = teamId.toStableId(),
         isCaptain = isCaptain,
         imageUri = imageUri,
+        deleted = deleted,
     )
 
 fun Player.toFirestoreModel(): PlayerFirestoreModel =
@@ -64,4 +67,5 @@ fun Player.toFirestoreModel(): PlayerFirestoreModel =
         teamId = "", // Will be set by the data source
         isCaptain = isCaptain,
         imageUri = imageUri,
+        deleted = deleted,
     )
