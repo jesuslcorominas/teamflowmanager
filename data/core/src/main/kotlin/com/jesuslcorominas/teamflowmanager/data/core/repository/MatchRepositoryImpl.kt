@@ -37,20 +37,11 @@ internal class MatchRepositoryImpl(
         matchDataSource.getMatchById(matchId).first()?.let { currentMatch ->
             val firstNotStartedPeriod = currentMatch.periods.first { it.startTimeMillis == 0L }
 
-            // Try to use server timestamp from Firestore
-            val serverTime = matchDataSource.updatePeriodStartWithServerTime(
-                matchId,
-                firstNotStartedPeriod.periodNumber
-            )
-
-            // Use server time if available, otherwise fall back to provided time
-            val actualStartTime = serverTime ?: currentTimeMillis
-
             val updatedMatch = currentMatch.copy(
                 status = MatchStatus.IN_PROGRESS,
                 periods = currentMatch.periods.map { period ->
                     if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
-                        period.copy(startTimeMillis = actualStartTime)
+                        period.copy(startTimeMillis = currentTimeMillis)
                     } else {
                         period
                     }
@@ -66,20 +57,11 @@ internal class MatchRepositoryImpl(
         if (currentMatch != null && currentMatch.status == MatchStatus.IN_PROGRESS) {
             val firstNotFinishedPeriod = currentMatch.periods.first { it.endTimeMillis == 0L }
 
-            // Try to use server timestamp from Firestore
-            val serverTime = matchDataSource.updatePeriodEndWithServerTime(
-                matchId,
-                firstNotFinishedPeriod.periodNumber
-            )
-
-            // Use server time if available, otherwise fall back to provided time
-            val actualEndTime = serverTime ?: currentTimeMillis
-
             val updatedMatch =
                 currentMatch.copy(
                     periods = currentMatch.periods.map { period ->
                         if (period.periodNumber == firstNotFinishedPeriod.periodNumber) {
-                            period.copy(endTimeMillis = actualEndTime)
+                            period.copy(endTimeMillis = currentTimeMillis)
                         } else {
                             period
                         }

@@ -37,18 +37,6 @@ internal class MatchLocalDataSourceImpl(
         matchDao.deleteMatch(matchId)
     }
 
-    /**
-     * Local data source doesn't support server timestamps.
-     * Returns null to indicate the operation is not supported.
-     */
-    override suspend fun updatePeriodStartWithServerTime(matchId: Long, periodNumber: Int): Long? = null
-
-    /**
-     * Local data source doesn't support server timestamps.
-     * Returns null to indicate the operation is not supported.
-     */
-    override suspend fun updatePeriodEndWithServerTime(matchId: Long, periodNumber: Int): Long? = null
-
     override suspend fun getAllMatchesDirect(): List<Match> =
         matchDao.getAllMatchesDirect().map { it.toDomain() }
 

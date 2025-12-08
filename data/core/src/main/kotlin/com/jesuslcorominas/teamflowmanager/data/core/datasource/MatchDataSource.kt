@@ -21,20 +21,6 @@ interface MatchDataSource {
     suspend fun deleteMatch(matchId: Long)
 
     /**
-     * Update period start time using server timestamp.
-     * This ensures all devices see the same start time from Firestore.
-     * @return the actual server timestamp that was written
-     */
-    suspend fun updatePeriodStartWithServerTime(matchId: Long, periodNumber: Int): Long?
-
-    /**
-     * Update period end time using server timestamp.
-     * This ensures all devices see the same end time from Firestore.
-     * @return the actual server timestamp that was written
-     */
-    suspend fun updatePeriodEndWithServerTime(matchId: Long, periodNumber: Int): Long?
-
-    /**
      * Get all matches directly (not as a Flow) for migration purposes.
      * @return List of all matches
      */
