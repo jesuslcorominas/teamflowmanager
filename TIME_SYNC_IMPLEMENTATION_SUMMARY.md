@@ -8,7 +8,27 @@ This implementation fixes the time synchronization issue where match timing was 
 
 Previously, when a match was started, it used `System.currentTimeMillis()` from the device that initiated it. If this time didn't match other devices' clocks, there would be a visible offset in elapsed time displays, making it confusing for coaches and team managers using different devices.
 
+**Root Cause of Desync:** The initial implementation calculated time on the client (device time + offset) and stored this calculated value in Firestore. This caused desync because:
+1. Device A calculated time with its offset and wrote to Firestore
+2. Device B read that time but had a different offset
+3. When calculating elapsed time, there was a mismatch because each device used its own offset
+
 ## Solution Architecture
+
+### Dual-Layer Approach
+
+The solution uses a two-layer synchronization strategy:
+
+1. **Layer 1: Firestore serverTimestamp() for Persistence** (Primary - Single Source of Truth)
+   - When starting/pausing match periods, write `FieldValue.serverTimestamp()` directly to Firestore
+   - Read back the actual server timestamp immediately
+   - All devices see the EXACT SAME timestamp from Firestore server
+   - Eliminates desync completely
+
+2. **Layer 2: Offset-based Synchronization for Real-time UI** (Secondary - Smooth Updates)
+   - Calculate server time offset for local time calculations
+   - Use for real-time UI updates between Firestore writes
+   - Provides smooth countdown and elapsed time displays
 
 ### 1. Core Components
 
@@ -44,6 +64,23 @@ Implements the TimeProvider interface using Firestore's `serverTimestamp()` func
    ```kotlin
    fun getCurrentTime(): Long = System.currentTimeMillis() + serverOffset
    ```
+
+#### Firestore ServerTimestamp for Match Periods (NEW - Critical Fix)
+
+**MatchFirestoreDataSource** now has methods to write period times using `FieldValue.serverTimestamp()`:
+
+```kotlin
+override suspend fun updatePeriodStartWithServerTime(matchId: Long, periodNumber: Int): Long? {
+    // Write serverTimestamp to Firestore
+    docRef.update(fieldPath, FieldValue.serverTimestamp()).await()
+    
+    // Read back the actual server timestamp
+    val snapshot = docRef.get().await()
+    return extractedServerTimestamp
+}
+```
+
+This ensures all devices read the exact same timestamp from Firestore, implementing **Step 2** from the original issue.
 
 #### SynchronizeTimeUseCase (`usecase/SynchronizeTimeUseCase.kt`)
 
@@ -210,11 +247,13 @@ fun `invoke should call synchronize on timeProvider`() = runTest {
 
 ## Benefits
 
-1. **Consistency**: All devices now use the same reference time from the server
-2. **Accuracy**: Round-trip time compensation provides better accuracy
-3. **Reliability**: Graceful fallback if synchronization fails
-4. **Maintainability**: Clean separation of concerns with proper interfaces
-5. **Single Source of Truth**: Server time is the only source for all timing operations (player timers, goals, substitutions, match periods)
+1. **Complete Consistency**: All devices now read the EXACT same timestamp from Firestore server for period start/end times
+2. **Zero Desync**: Using `FieldValue.serverTimestamp()` eliminates any possibility of time desync between devices
+3. **Accuracy**: Round-trip time compensation provides better accuracy for real-time UI updates
+4. **Reliability**: Graceful fallback if synchronization fails
+5. **Maintainability**: Clean separation of concerns with proper interfaces
+6. **Single Source of Truth**: Firestore server is the ultimate source for all critical timing (period starts/ends)
+7. **Smooth UX**: Offset-based synchronization provides smooth real-time updates between Firestore writes
 
 ## Future Enhancements
 
