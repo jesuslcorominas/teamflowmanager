@@ -251,6 +251,16 @@ class MatchViewModel(
         viewModelScope.launch {
             try {
                 crashReporter.log("Resuming match: $matchId")
+                
+                // Synchronize time with server before resuming
+                try {
+                    synchronizeTimeUseCase()
+                } catch (e: Exception) {
+                    crashReporter.recordException(e)
+                    crashReporter.log("Error synchronizing time before match resume: ${e.message}")
+                    // Continue with match resume even if sync fails
+                }
+                
                 getMatchById(matchId).first()?.let {
                     resumeMatchUseCase(it.id, _currentTime.value)
 
