@@ -121,6 +121,8 @@ val viewModelModule =
                 deleteMatchUseCase = get(),
                 resumeMatchUseCase = get(),
                 archiveMatchUseCase = get(),
+                synchronizeTimeUseCase = get(),
+                timeProvider = get(),
                 analyticsTracker = get(),
                 crashReporter = get()
             )
