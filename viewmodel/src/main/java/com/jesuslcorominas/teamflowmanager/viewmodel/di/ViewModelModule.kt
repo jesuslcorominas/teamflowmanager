@@ -106,6 +106,7 @@ val viewModelModule =
                 endTimeoutUseCase = get(),
                 getMatchReportData = get(),
                 exportMatchReportToPdf = get(),
+                synchronizeTimeUseCase = get(),
                 preferencesRepository = get(),
                 timeTicker = get(),
                 analyticsTracker = get(),
@@ -169,5 +170,5 @@ val viewModelModule =
             )
         }
 
-        factory { RealTimeTicker() } bind TimeTicker::class
+        factory { RealTimeTicker(get()) } bind TimeTicker::class
     }

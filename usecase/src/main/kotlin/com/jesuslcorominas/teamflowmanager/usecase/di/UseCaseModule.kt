@@ -94,6 +94,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
@@ -186,6 +188,9 @@ internal val useCaseInternalModule =
         singleOf(::GetCurrentUserUseCaseImpl) bind GetCurrentUserUseCase::class
         singleOf(::SignInWithGoogleUseCaseImpl) bind SignInWithGoogleUseCase::class
         singleOf(::SignOutUseCaseImpl) bind SignOutUseCase::class
+
+        // Time synchronization
+        singleOf(::SynchronizeTimeUseCaseImpl) bind SynchronizeTimeUseCase::class
     }
 
 val useCaseModule =
