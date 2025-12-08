@@ -416,6 +416,24 @@ class MatchFirestoreDataSourceImpl(
     }
 
     /**
+     * Helper method to find the Firestore array index for a period by its periodNumber.
+     * @return the 0-based index in the periods array, or -1 if not found
+     */
+    private suspend fun findPeriodIndex(documentId: String, periodNumber: Int): Int {
+        return try {
+            val docRef = firestore.collection(MATCHES_COLLECTION).document(documentId)
+            val snapshot = docRef.get().await()
+            val periods = snapshot.get("periods") as? List<Map<String, Any>>
+            periods?.indexOfFirst { 
+                (it["periodNumber"] as? Long)?.toInt() == periodNumber 
+            } ?: -1
+        } catch (e: Exception) {
+            Log.e(TAG, "Error finding period index for period $periodNumber", e)
+            -1
+        }
+    }
+
+    /**
      * Update period start time using Firestore serverTimestamp.
      * This ensures all devices see the exact same timestamp from the server.
      */
@@ -433,34 +451,32 @@ class MatchFirestoreDataSourceImpl(
         }
 
         return try {
-            val docRef = firestore.collection(MATCHES_COLLECTION).document(documentId)
-            
-            // Get current match to find the period index (0-based)
-            val currentDoc = docRef.get().await()
-            val periods = currentDoc.get("periods") as? List<Map<String, Any>>
-            val periodIndex = periods?.indexOfFirst { 
-                (it["periodNumber"] as? Long)?.toInt() == periodNumber 
-            } ?: -1
-            
+            // Find the period index
+            val periodIndex = findPeriodIndex(documentId, periodNumber)
             if (periodIndex < 0) {
                 Log.w(TAG, "Period $periodNumber not found in match")
                 return null
             }
             
-            // Write serverTimestamp to the period start time field
-            val fieldPath = "periods.$periodIndex.startTimeMillis"
-            docRef.update(fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp()).await()
+            val docRef = firestore.collection(MATCHES_COLLECTION).document(documentId)
             
-            // Read it back immediately to get the actual server timestamp
-            val snapshot = docRef.get().await()
-            val updatedPeriods = snapshot.get("periods") as? List<Map<String, Any>>
-            val serverTimestamp = updatedPeriods?.getOrNull(periodIndex)?.get("startTimeMillis")
-            
-            val timeMillis = when (serverTimestamp) {
-                is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
-                is Long -> serverTimestamp
-                else -> null
-            }
+            // Write serverTimestamp and read it back in one round-trip using a transaction
+            val timeMillis = firestore.runTransaction { transaction ->
+                // Write serverTimestamp to the period start time field
+                val fieldPath = "periods.$periodIndex.startTimeMillis"
+                transaction.update(docRef, fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp())
+                
+                // Read it back immediately to get the actual server timestamp
+                val snapshot = transaction.get(docRef)
+                val periods = snapshot.get("periods") as? List<Map<String, Any>>
+                val serverTimestamp = periods?.getOrNull(periodIndex)?.get("startTimeMillis")
+                
+                when (serverTimestamp) {
+                    is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
+                    is Long -> serverTimestamp
+                    else -> null
+                }
+            }.await()
             
             if (timeMillis != null) {
                 Log.d(TAG, "Period $periodNumber start time updated with server timestamp: $timeMillis")
@@ -495,34 +511,32 @@ class MatchFirestoreDataSourceImpl(
         }
 
         return try {
-            val docRef = firestore.collection(MATCHES_COLLECTION).document(documentId)
-            
-            // Get current match to find the period index (0-based)
-            val currentDoc = docRef.get().await()
-            val periods = currentDoc.get("periods") as? List<Map<String, Any>>
-            val periodIndex = periods?.indexOfFirst { 
-                (it["periodNumber"] as? Long)?.toInt() == periodNumber 
-            } ?: -1
-            
+            // Find the period index
+            val periodIndex = findPeriodIndex(documentId, periodNumber)
             if (periodIndex < 0) {
                 Log.w(TAG, "Period $periodNumber not found in match")
                 return null
             }
             
-            // Write serverTimestamp to the end time field
-            val fieldPath = "periods.$periodIndex.endTimeMillis"
-            docRef.update(fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp()).await()
+            val docRef = firestore.collection(MATCHES_COLLECTION).document(documentId)
             
-            // Read it back immediately to get the actual server timestamp
-            val snapshot = docRef.get().await()
-            val updatedPeriods = snapshot.get("periods") as? List<Map<String, Any>>
-            val serverTimestamp = updatedPeriods?.getOrNull(periodIndex)?.get("endTimeMillis")
-            
-            val timeMillis = when (serverTimestamp) {
-                is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
-                is Long -> serverTimestamp
-                else -> null
-            }
+            // Write serverTimestamp and read it back in one round-trip using a transaction
+            val timeMillis = firestore.runTransaction { transaction ->
+                // Write serverTimestamp to the end time field
+                val fieldPath = "periods.$periodIndex.endTimeMillis"
+                transaction.update(docRef, fieldPath, com.google.firebase.firestore.FieldValue.serverTimestamp())
+                
+                // Read it back immediately to get the actual server timestamp
+                val snapshot = transaction.get(docRef)
+                val periods = snapshot.get("periods") as? List<Map<String, Any>>
+                val serverTimestamp = periods?.getOrNull(periodIndex)?.get("endTimeMillis")
+                
+                when (serverTimestamp) {
+                    is com.google.firebase.Timestamp -> serverTimestamp.toDate().time
+                    is Long -> serverTimestamp
+                    else -> null
+                }
+            }.await()
             
             if (timeMillis != null) {
                 Log.d(TAG, "Period $periodNumber end time updated with server timestamp: $timeMillis")
