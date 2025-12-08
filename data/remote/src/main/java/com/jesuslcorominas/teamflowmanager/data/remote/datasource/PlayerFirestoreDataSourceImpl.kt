@@ -484,6 +484,7 @@ class PlayerFirestoreDataSourceImpl(
             .get()
             .await()
 
+        var clearedCount = 0
         for (document in snapshot.documents) {
             // Only clear captain status for non-deleted players
             val firestoreModel = document.toObject(PlayerFirestoreModel::class.java)
@@ -492,9 +493,10 @@ class PlayerFirestoreDataSourceImpl(
                     .document(document.id)
                     .update("isCaptain", false)
                     .await()
+                clearedCount++
             }
         }
-        Log.d(TAG, "Cleared captain status from non-deleted players")
+        Log.d(TAG, "Cleared captain status from $clearedCount player(s)")
     }
 
     /**
