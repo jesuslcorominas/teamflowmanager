@@ -83,7 +83,6 @@ class PlayerFirestoreDataSourceImpl(
 
         val listenerRegistration = firestore.collection(PLAYERS_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
-            .whereEqualTo("deleted", false)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e(TAG, "Error getting players from Firestore", error)
@@ -102,7 +101,7 @@ class PlayerFirestoreDataSourceImpl(
                         }
                         modelWithId.toDomain()
                     }
-                } ?: emptyList()
+                }?.filter { !it.deleted } ?: emptyList()
 
                 Log.d(TAG, "Loaded ${players.size} players for team: $teamDocId")
                 trySend(players)
@@ -128,7 +127,6 @@ class PlayerFirestoreDataSourceImpl(
         return try {
             val snapshot = firestore.collection(PLAYERS_COLLECTION)
                 .whereEqualTo("teamId", teamDocId)
-                .whereEqualTo("deleted", false)
                 .get()
                 .await()
 
@@ -143,7 +141,7 @@ class PlayerFirestoreDataSourceImpl(
                     }
                     modelWithId.toDomain()
                 }
-            }.find { it.id == playerId }
+            }.filter { !it.deleted }.find { it.id == playerId }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -165,7 +163,6 @@ class PlayerFirestoreDataSourceImpl(
         return try {
             val snapshot = firestore.collection(PLAYERS_COLLECTION)
                 .whereEqualTo("teamId", teamDocId)
-                .whereEqualTo("deleted", false)
                 .whereEqualTo("isCaptain", true)
                 .limit(1)
                 .get()
@@ -184,7 +181,9 @@ class PlayerFirestoreDataSourceImpl(
                 } else {
                     it
                 }
-                modelWithId.toDomain()
+                val player = modelWithId.toDomain()
+                // Filter out deleted players
+                if (player.deleted) null else player
             }
         } catch (e: CancellationException) {
             throw e
@@ -454,7 +453,6 @@ class PlayerFirestoreDataSourceImpl(
     private suspend fun findDocumentIdByPlayerId(teamDocId: String, playerId: Long): String? {
         val snapshot = firestore.collection(PLAYERS_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
-            .whereEqualTo("deleted", false)
             .get()
             .await()
 
@@ -468,7 +466,7 @@ class PlayerFirestoreDataSourceImpl(
                     it
                 }
                 val player = modelWithId.toDomain()
-                if (player.id == playerId) {
+                if (player.id == playerId && !player.deleted) {
                     return documentId
                 }
             }
@@ -482,18 +480,21 @@ class PlayerFirestoreDataSourceImpl(
     private suspend fun clearAllCaptains(teamDocId: String) {
         val snapshot = firestore.collection(PLAYERS_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
-            .whereEqualTo("deleted", false)
             .whereEqualTo("isCaptain", true)
             .get()
             .await()
 
         for (document in snapshot.documents) {
-            firestore.collection(PLAYERS_COLLECTION)
-                .document(document.id)
-                .update("isCaptain", false)
-                .await()
+            // Only clear captain status for non-deleted players
+            val firestoreModel = document.toObject(PlayerFirestoreModel::class.java)
+            if (firestoreModel != null && !firestoreModel.deleted) {
+                firestore.collection(PLAYERS_COLLECTION)
+                    .document(document.id)
+                    .update("isCaptain", false)
+                    .await()
+            }
         }
-        Log.d(TAG, "Cleared captain status from ${snapshot.documents.size} players")
+        Log.d(TAG, "Cleared captain status from non-deleted players")
     }
 
     /**

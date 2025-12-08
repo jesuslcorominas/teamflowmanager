@@ -25,12 +25,15 @@ Changed from physical deletion to logical deletion by adding a `deleted` flag to
 - Updated `toDomain()` and `toFirestoreModel()` mapper functions
 
 **File:** `data/remote/src/main/java/com/jesuslcorominas/teamflowmanager/data/remote/datasource/PlayerFirestoreDataSourceImpl.kt`
-- Updated all Firestore queries to filter deleted players using `.whereEqualTo("deleted", false)`
-  - `getAllPlayers()`
-  - `getPlayerById()`
-  - `getCaptainPlayer()`
-  - `clearAllCaptains()`
-  - `findDocumentIdByPlayerId()`
+- Removed `.whereEqualTo("deleted", false)` from Firestore queries for backward compatibility
+- Added client-side filtering using `.filter { !it.deleted }` after retrieving documents
+- This ensures existing documents without the `deleted` field are treated as not deleted
+- Updated methods:
+  - `getAllPlayers()` - filters deleted players after retrieval
+  - `getPlayerById()` - filters deleted players after retrieval
+  - `getCaptainPlayer()` - checks deleted flag after retrieval
+  - `clearAllCaptains()` - only clears captain status for non-deleted players
+  - `findDocumentIdByPlayerId()` - checks deleted flag in condition
 - Changed `deletePlayer()` from physical document deletion to logical update
 - Added documentation about image retention policy for soft-deleted players
 
@@ -42,7 +45,8 @@ Changed from physical deletion to logical deletion by adding a `deleted` flag to
 - Player images in Firebase Storage are retained
 
 ### 2. Backward Compatibility
-- Existing Firestore documents can work with or without the `deleted` field (defaults to false)
+- Existing Firestore documents without the `deleted` field are treated as not deleted (default behavior)
+- Queries retrieve all documents and filter on the client side
 - No data loss
 
 ### 3. Consistent Behavior
