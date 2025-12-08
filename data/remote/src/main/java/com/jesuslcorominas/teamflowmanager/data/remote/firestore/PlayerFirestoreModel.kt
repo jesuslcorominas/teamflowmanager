@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.PropertyName
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
@@ -20,7 +21,9 @@ data class PlayerFirestoreModel(
     val number: Int = 0,
     val positions: String = "",
     val teamId: String = "",
-    val isCaptain: Boolean = false,
+    @get:PropertyName("captain")
+    @set:PropertyName("captain")
+    var isCaptain: Boolean = false,
     val imageUri: String? = null,
 ) {
     // No-arg constructor required by Firestore
