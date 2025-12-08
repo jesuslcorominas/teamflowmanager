@@ -36,10 +36,10 @@ class SplashViewModel(
     }
 
     init {
-        synchronizeTimeAndCheckAuth()
+        performStartupTasks()
     }
 
-    private fun synchronizeTimeAndCheckAuth() {
+    private fun performStartupTasks() {
         viewModelScope.launch {
             // Synchronize time with server on app startup
             try {
