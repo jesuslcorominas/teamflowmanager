@@ -86,15 +86,3 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
         db.execSQL("ALTER TABLE team ADD COLUMN coachId TEXT")
     }
 }
-
-/**
- * Migration from version 5 to 6
- * Adds deleted column to players table to support logical deletion (soft delete).
- * This preserves player data including goals and playing time history.
- */
-val MIGRATION_5_6 = object : Migration(5, 6) {
-    override fun migrate(db: SupportSQLiteDatabase) {
-        // Add deleted column with default value of 0 (false) for existing players
-        db.execSQL("ALTER TABLE players ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0")
-    }
-}

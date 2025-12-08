@@ -21,7 +21,7 @@ import com.jesuslcorominas.teamflowmanager.data.local.entity.TeamEntity
 
 @Database(
     entities = [PlayerEntity::class, TeamEntity::class, MatchEntity::class, PlayerTimeEntity::class, PlayerTimeHistoryEntity::class, PlayerSubstitutionEntity::class, GoalEntity::class],
-    version = 6,
+    version = 5,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)

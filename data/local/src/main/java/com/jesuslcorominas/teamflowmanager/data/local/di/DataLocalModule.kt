@@ -13,7 +13,6 @@ import com.jesuslcorominas.teamflowmanager.data.local.database.TeamFlowManagerDa
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_2_3
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_3_4
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_4_5
-import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_5_6
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.converters.Converters
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionExecutor
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionRunner
@@ -61,7 +60,7 @@ internal val databaseModule =
                     "teamflowmanager_database",
                 )
                 .addTypeConverter(converters)
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
         }
 

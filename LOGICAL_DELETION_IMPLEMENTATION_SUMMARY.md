@@ -7,7 +7,9 @@ Implemented logical deletion (soft delete) for the Player entity to preserve his
 The Player entity could be deleted from the app, but this deletion was physical, removing all player data from the database. This caused loss of historical information including goals and playing time statistics associated with the deleted player.
 
 ## Solution
-Changed from physical deletion to logical deletion by adding a `deleted` flag to the Player entity. When a player is "deleted", they are marked as deleted but remain in the database, preserving all historical data.
+Changed from physical deletion to logical deletion by adding a `deleted` flag to the Player entity. When a player is "deleted", they are marked as deleted but remain in Firestore, preserving all historical data.
+
+**Note:** Local database (Room) changes were intentionally omitted as this layer is legacy code that will be removed in a future update. Only Firestore (remote database) implementation was modified.
 
 ## Changes Made
 
@@ -15,32 +17,7 @@ Changed from physical deletion to logical deletion by adding a `deleted` flag to
 **File:** `domain/src/main/kotlin/com/jesuslcorominas/teamflowmanager/domain/model/Player.kt`
 - Added `deleted: Boolean = false` field to the Player data class
 
-### 2. Data Layer - Room (Local Database)
-
-**File:** `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/entity/PlayerEntity.kt`
-- Added `deleted: Boolean = false` field to PlayerEntity
-- Updated `toDomain()` and `toEntity()` mapper functions to include deleted field
-
-**File:** `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/dao/PlayerDao.kt`
-- Updated all queries to filter out deleted players using `WHERE deleted = 0`
-  - `getAllPlayers()`
-  - `getAllPlayersDirect()`
-  - `getCaptainPlayer()`
-  - `getPlayerById()`
-  - `clearAllCaptains()`
-- Changed `deletePlayer()` from physical DELETE to logical update: `UPDATE players SET deleted = 1`
-- Added documentation to `deleteAllPlayers()` clarifying it's for migration/data clearing only
-
-**File:** `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/database/TeamFlowManagerDatabase.kt`
-- Incremented database version from 5 to 6
-
-**File:** `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/database/migration/Migrations.kt`
-- Added `MIGRATION_5_6` to add `deleted` column with default value of 0 (false)
-
-**File:** `data/local/src/main/java/com/jesuslcorominas/teamflowmanager/data/local/di/DataLocalModule.kt`
-- Added `MIGRATION_5_6` to the database builder's migration list
-
-### 3. Data Layer - Firestore (Remote Database)
+### 2. Data Layer - Firestore (Remote Database)
 
 **File:** `data/remote/src/main/java/com/jesuslcorominas/teamflowmanager/data/remote/firestore/PlayerFirestoreModel.kt`
 - Added `deleted: Boolean = false` field to PlayerFirestoreModel
@@ -65,37 +42,33 @@ Changed from physical deletion to logical deletion by adding a `deleted` flag to
 - Player images in Firebase Storage are retained
 
 ### 2. Backward Compatibility
-- Database migration adds `deleted` column with default value of 0 (false)
-- Existing players automatically get `deleted = false`
-- No data loss during migration
+- Existing Firestore documents can work with or without the `deleted` field (defaults to false)
+- No data loss
 
 ### 3. Consistent Behavior
-- Both Room (local) and Firestore (remote) implementations filter deleted players
+- Firestore implementation filters deleted players
 - Deleted players don't appear in:
   - Player lists
   - Captain selection
   - Player queries by ID
 
 ### 4. Special Cases Handled
-- `deleteAllPlayers()` method remains for physical deletion during data migration
 - Captain status queries exclude deleted players
 - Helper methods for finding players filter out deleted records
 
 ## Testing
 - Code review completed: ✅ No issues
 - Security scan (CodeQL): ✅ No vulnerabilities detected
-- Backward compatibility: ✅ Migration handles existing data
 
 ## Files Changed
-Total: 8 files
+Total: 3 files
 - Domain: 1 file
-- Data Local: 5 files
-- Data Remote: 2 files
+- Data Remote (Firestore): 2 files
 
 ## Statistics
-- Lines added: 49
-- Lines removed: 23
-- Net change: +26 lines
+- Lines added: ~30
+- Lines removed: ~10
+- Net change: ~20 lines
 
 ## Future Considerations
 
@@ -111,14 +84,9 @@ If complete removal of player data is needed (e.g., for GDPR compliance), consid
 - Admin-only access to physical deletion
 - Cascade deletion of all related data (goals, times, etc.)
 
-## Migration Path
-1. Database automatically migrates from version 5 to 6 on app upgrade
-2. `deleted` column is added to players table with default value 0
-3. All existing players are marked as not deleted
-4. No user action required
-
 ## Notes
 - The logical deletion is transparent to the application logic
 - No changes needed to use cases or view models
 - The delete operation signature remains the same
 - Historical data queries can be expanded in the future to include deleted players if needed
+- Local database (Room) layer intentionally not modified as it's legacy code scheduled for removal

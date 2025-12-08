@@ -29,7 +29,6 @@ data class PlayerEntity(
     val teamId: Long = 1,
     val isCaptain: Boolean = false,
     val imageUri: String? = null,
-    val deleted: Boolean = false,
 )
 
 fun PlayerEntity.toDomain(): Player =
@@ -45,7 +44,6 @@ fun PlayerEntity.toDomain(): Player =
         teamId = teamId,
         isCaptain = isCaptain,
         imageUri = imageUri,
-        deleted = deleted,
     )
 
 fun Player.toEntity(): PlayerEntity =
@@ -58,5 +56,4 @@ fun Player.toEntity(): PlayerEntity =
         teamId = teamId,
         isCaptain = isCaptain,
         imageUri = imageUri,
-        deleted = deleted,
     )

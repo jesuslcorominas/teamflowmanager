@@ -10,19 +10,19 @@ import androidx.room.Transaction
 
 @Dao
 interface PlayerDao {
-    @Query("SELECT * FROM players WHERE deleted = 0 ORDER BY number ASC")
+    @Query("SELECT * FROM players ORDER BY number ASC")
     fun getAllPlayers(): Flow<List<PlayerEntity>>
 
-    @Query("SELECT * FROM players WHERE deleted = 0 ORDER BY number ASC")
+    @Query("SELECT * FROM players ORDER BY number ASC")
     suspend fun getAllPlayersDirect(): List<PlayerEntity>
 
-    @Query("SELECT * FROM players WHERE isCaptain = 1 AND deleted = 0 LIMIT 1")
+    @Query("SELECT * FROM players WHERE isCaptain = 1 LIMIT 1")
     suspend fun getCaptainPlayer(): PlayerEntity?
 
-    @Query("UPDATE players SET isCaptain = 0 WHERE deleted = 0")
+    @Query("UPDATE players SET isCaptain = 0")
     suspend fun clearAllCaptains()
 
-    @Query("SELECT * FROM players WHERE id = :playerId AND deleted = 0 LIMIT 1")
+    @Query("SELECT * FROM players WHERE id = :playerId LIMIT 1")
     suspend fun getPlayerById(playerId: Long): PlayerEntity?
 
     @Insert
@@ -31,15 +31,9 @@ interface PlayerDao {
     @Update
     suspend fun updatePlayer(player: PlayerEntity)
 
-    @Query("UPDATE players SET deleted = 1 WHERE id = :playerId")
+    @Query("DELETE FROM players WHERE id = :playerId")
     suspend fun deletePlayer(playerId: Long)
 
-    /**
-     * Physically deletes all players from the database.
-     * This method is used for clearing local Room data during migration to Firestore,
-     * not for regular player deletion. Regular deletion should use deletePlayer() which
-     * performs logical deletion.
-     */
     @Query("DELETE FROM players")
     suspend fun deleteAllPlayers()
 

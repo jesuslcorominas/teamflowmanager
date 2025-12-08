@@ -4,7 +4,7 @@
 2025-12-08
 
 ## Changes Analyzed
-Implementation of logical deletion (soft delete) for the Player entity in the TeamFlowManager application.
+Implementation of logical deletion (soft delete) for the Player entity in the TeamFlowManager application (Firestore implementation only; local Room database intentionally not modified as it's legacy code).
 
 ## Security Tools Used
 1. **Code Review**: Automated code review completed
@@ -40,24 +40,22 @@ The implementation retains deleted player data in the database:
 
 The implementation maintains existing security measures:
 - Firestore security rules continue to apply (team ownership validation)
-- Room database access remains local to the device
 - No new data exposure vectors introduced
 
 ### 3. Query Performance ✅
 **Assessment**: Good
 
-All queries properly filter deleted players:
-- Uses indexed columns where appropriate
+All Firestore queries properly filter deleted players:
+- Uses compound queries efficiently
 - Minimal performance impact from additional WHERE clauses
-- Firestore queries use compound queries efficiently
 
 ### 4. Data Integrity ✅
 **Assessment**: Excellent
 
 The implementation maintains data integrity:
-- Foreign key relationships preserved
+- Foreign key relationships preserved in Firestore
 - Goals and playing time records remain consistent
-- Migration handles existing data safely with default values
+- Existing Firestore documents work with or without the deleted field (defaults to false)
 
 ### 5. Image Storage ✅
 **Assessment**: Acceptable
@@ -75,7 +73,7 @@ Player images are retained in Firebase Storage:
 **Description**: Soft-deleted players can theoretically be recovered by modifying the `deleted` flag.
 
 **Mitigation**: 
-- Access to database is already restricted by Firebase security rules and device-level security
+- Access to Firestore is restricted by Firebase security rules
 - No new attack vectors introduced
 - Current security model is maintained
 
