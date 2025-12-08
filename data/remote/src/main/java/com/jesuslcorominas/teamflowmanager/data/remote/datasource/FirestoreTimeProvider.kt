@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
@@ -10,23 +11,25 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * Firestore-based implementation of TimeProvider.
  * Synchronizes time with Firestore server timestamp to avoid device time discrepancies.
+ * 
+ * Uses the user's team document to store time sync data, ensuring proper permissions.
  */
 class FirestoreTimeProvider(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val firebaseAuth: FirebaseAuth
 ) : TimeProvider {
 
     companion object {
         private const val TAG = "FirestoreTimeProvider"
-        private const val SYNC_COLLECTION = "time_sync"
-        private const val SYNC_DOCUMENT = "server_time_check"
-        private const val TIMESTAMP_FIELD = "timestamp"
+        private const val TEAMS_COLLECTION = "teams"
+        private const val TIME_SYNC_FIELD = "lastTimeSync"
     }
 
     // Server time offset in milliseconds (server time - device time)
     @Volatile
     private var serverOffset: Long = 0L
 
-    override suspend fun getCurrentTime(): Long {
+    override fun getCurrentTime(): Long {
         return System.currentTimeMillis() + serverOffset
     }
 
@@ -34,16 +37,35 @@ class FirestoreTimeProvider(
         try {
             Log.d(TAG, "synchronize: Starting time synchronization with Firestore")
             
-            val docRef = firestore.collection(SYNC_COLLECTION).document(SYNC_DOCUMENT)
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                Log.w(TAG, "synchronize: No authenticated user, skipping time sync")
+                return
+            }
             
-            // Write a document with server timestamp
+            // Find the user's team document
+            val teamQuery = firestore.collection(TEAMS_COLLECTION)
+                .whereEqualTo("ownerId", currentUserId)
+                .limit(1)
+                .get()
+                .await()
+            
+            val teamDoc = teamQuery.documents.firstOrNull()
+            if (teamDoc == null) {
+                Log.w(TAG, "synchronize: No team found for user, skipping time sync")
+                return
+            }
+            
+            val docRef = teamDoc.reference
+            
+            // Write a field with server timestamp
             val writeTime = System.currentTimeMillis()
-            docRef.set(mapOf(TIMESTAMP_FIELD to FieldValue.serverTimestamp())).await()
+            docRef.update(TIME_SYNC_FIELD, FieldValue.serverTimestamp()).await()
             
             // Read the document back to get the server timestamp
             val readTime = System.currentTimeMillis()
             val snapshot = docRef.get().await()
-            val serverTimestamp = snapshot.getTimestamp(TIMESTAMP_FIELD)
+            val serverTimestamp = snapshot.getTimestamp(TIME_SYNC_FIELD)
             
             if (serverTimestamp != null) {
                 val serverTimeMillis = serverTimestamp.toDate().time
