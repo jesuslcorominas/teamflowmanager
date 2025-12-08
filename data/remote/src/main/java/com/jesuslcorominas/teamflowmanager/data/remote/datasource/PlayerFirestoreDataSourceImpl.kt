@@ -304,6 +304,9 @@ class PlayerFirestoreDataSourceImpl(
     /**
      * Logically deletes a player from Firestore by setting the deleted flag to true.
      * This preserves the player's data including goals and playing time history.
+     * Note: The player's image in Firebase Storage is intentionally not deleted to
+     * preserve historical data. If storage cleanup is needed in the future, implement
+     * a separate maintenance task to remove orphaned images.
      */
     override suspend fun deletePlayer(playerId: Long) {
         val teamDocId = getTeamDocumentId()

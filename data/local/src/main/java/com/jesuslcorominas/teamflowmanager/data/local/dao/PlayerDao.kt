@@ -34,6 +34,12 @@ interface PlayerDao {
     @Query("UPDATE players SET deleted = 1 WHERE id = :playerId")
     suspend fun deletePlayer(playerId: Long)
 
+    /**
+     * Physically deletes all players from the database.
+     * This method is used for clearing local Room data during migration to Firestore,
+     * not for regular player deletion. Regular deletion should use deletePlayer() which
+     * performs logical deletion.
+     */
     @Query("DELETE FROM players")
     suspend fun deleteAllPlayers()
 
