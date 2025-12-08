@@ -9,4 +9,5 @@ data class Player(
     val teamId: Long,
     val isCaptain: Boolean,
     val imageUri: String? = null,
+    val deleted: Boolean = false,
 )
