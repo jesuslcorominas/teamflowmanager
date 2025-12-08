@@ -114,27 +114,32 @@ val notification = notificationManager.buildNotification(
 )
 ```
 
-#### TeamFlowManagerApplication
-Initializes time synchronization on app startup:
+#### SplashViewModel (`viewmodel/SplashViewModel.kt`)
+Initializes time synchronization on app startup to keep the Application class simple:
 ```kotlin
-override fun onCreate() {
-    super.onCreate()
-    startKoin {
-        androidContext(this@TeamFlowManagerApplication)
-        modules(appModule, teamFlowManagerModule)
-    }
-    
-    val timeProvider: TimeProvider by inject()
-    applicationScope.launch(Dispatchers.IO) {
+init {
+    synchronizeTimeAndCheckAuth()
+}
+
+private fun synchronizeTimeAndCheckAuth() {
+    viewModelScope.launch {
+        // Synchronize time with server on app startup
         try {
-            timeProvider.synchronize()
+            synchronizeTimeUseCase()
+            Log.d(TAG, "Time synchronized successfully on splash")
         } catch (e: Exception) {
-            Log.w("TeamFlowManager", "Failed to synchronize time on startup", e)
+            Log.w(TAG, "Failed to synchronize time on splash", e)
+            // Continue anyway - time sync will be attempted again when starting matches
         }
+        
+        // Continue with authentication checks
+        checkLocalDataAndAuth()
     }
-    // ...
 }
 ```
+
+#### TeamFlowManagerApplication
+Kept minimal and simple - time synchronization is handled by SplashViewModel instead of Application class.
 
 ### 3. Dependency Injection
 
@@ -146,7 +151,7 @@ internal val firebaseModule = module {
     single { FirebaseStorage.getInstance() }
     singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
     singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
-    single<TimeProvider> { FirestoreTimeProvider(get()) }
+    singleOf(::FirestoreTimeProvider) bind TimeProvider::class
 }
 ```
 
@@ -160,7 +165,14 @@ internal val useCaseInternalModule = module {
 
 #### ViewModelModule
 ```kotlin
-factory { RealTimeTicker(get()) } bind TimeTicker::class
+viewModel {
+    SplashViewModel(
+        getTeam = get(),
+        getCurrentUser = get(),
+        hasLocalDataWithoutUserId = get(),
+        synchronizeTimeUseCase = get()
+    )
+}
 
 viewModel {
     MatchViewModel(
@@ -202,6 +214,7 @@ fun `invoke should call synchronize on timeProvider`() = runTest {
 2. **Accuracy**: Round-trip time compensation provides better accuracy
 3. **Reliability**: Graceful fallback if synchronization fails
 4. **Maintainability**: Clean separation of concerns with proper interfaces
+5. **Single Source of Truth**: Server time is the only source for all timing operations (player timers, goals, substitutions, match periods)
 
 ## Future Enhancements
 
