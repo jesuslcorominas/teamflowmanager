@@ -7,4 +7,5 @@ data class Goal(
     val goalTimeMillis: Long,
     val matchElapsedTimeMillis: Long,
     val isOpponentGoal: Boolean = false,
+    val isOwnGoal: Boolean = false,
 )

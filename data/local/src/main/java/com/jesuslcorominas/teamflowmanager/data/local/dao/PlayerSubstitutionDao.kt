@@ -16,4 +16,7 @@ interface PlayerSubstitutionDao {
 
     @Insert
     suspend fun insert(substitution: PlayerSubstitutionEntity): Long
+
+    @Query("DELETE FROM player_substitution")
+    suspend fun deleteAllPlayerSubstitutions()
 }

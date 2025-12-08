@@ -85,6 +85,7 @@ class MatchListViewModel(
     fun confirmDeleteMatch() {
         val state = _deleteConfirmationState.value
         if (state is MatchDeleteConfirmationState.Requested) {
+            _deleteConfirmationState.value = MatchDeleteConfirmationState.Deleting
             viewModelScope.launch {
                 try {
                     crashReporter.log("Deleting match: ${state.match.id}")
@@ -101,7 +102,7 @@ class MatchListViewModel(
                 } catch (e: Exception) {
                     crashReporter.recordException(e)
                     crashReporter.log("Error deleting match: ${e.message}")
-                    throw e
+                    _deleteConfirmationState.value = MatchDeleteConfirmationState.None
                 }
             }
         }
@@ -145,4 +146,5 @@ sealed class MatchListUiState {
 sealed class MatchDeleteConfirmationState {
     data object None : MatchDeleteConfirmationState()
     data class Requested(val match: Match) : MatchDeleteConfirmationState()
+    data object Deleting : MatchDeleteConfirmationState()
 }

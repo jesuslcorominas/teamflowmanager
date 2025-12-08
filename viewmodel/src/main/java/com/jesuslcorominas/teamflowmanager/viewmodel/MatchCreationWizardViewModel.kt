@@ -78,14 +78,26 @@ class MatchCreationWizardViewModel(
     private var isEditMode = false
     private var teamTypeValue: Int = 5 // Default to Football 5
 
+    // Flag to track if match data is loaded for edit mode
+    private var matchDataLoaded = false
+    private var playersLoaded = false
+    private var pendingMatchIdForEdit: Long? = null
+
     init {
-        loadPlayers()
-        loadTeam()
-        
         // Check if we have a matchId in savedStateHandle for edit mode
         val matchIdFromState = savedStateHandle.get<Long>(Route.CreateMatch.ARG_MATCH_ID)
         if (matchIdFromState != null && matchIdFromState != 0L) {
-            loadMatchForEdit(matchIdFromState)
+            pendingMatchIdForEdit = matchIdFromState
+            isEditMode = true
+            this.matchId = matchIdFromState
+        }
+        
+        loadPlayers()
+        loadTeam()
+        
+        // Load match data if in edit mode
+        if (pendingMatchIdForEdit != null) {
+            loadMatchForEdit(pendingMatchIdForEdit!!)
         }
     }
     
@@ -98,12 +110,12 @@ class MatchCreationWizardViewModel(
 
     private fun loadMatchForEdit(matchId: Long) {
         viewModelScope.launch {
-            this@MatchCreationWizardViewModel.matchId = matchId
-            isEditMode = true
             val match = getMatchByIdUseCase.invoke(matchId).firstOrNull()
             if (match != null) {
                 initializeFromMatch(match)
             }
+            matchDataLoaded = true
+            checkAndSetReady()
         }
     }
 
@@ -131,8 +143,23 @@ class MatchCreationWizardViewModel(
     private fun loadPlayers() {
         viewModelScope.launch {
             allPlayers = getPlayersUseCase.invoke().first()
-            _uiState.value = MatchCreationWizardUiState.Ready(allPlayers)
+            playersLoaded = true
+            checkAndSetReady()
         }
+    }
+    
+    /**
+     * Check if all required data is loaded and set the Ready state.
+     * In edit mode, we need both players AND match data.
+     * In create mode, we only need players.
+     */
+    private fun checkAndSetReady() {
+        if (!playersLoaded) return
+        
+        // In edit mode, wait for match data too
+        if (isEditMode && !matchDataLoaded) return
+        
+        _uiState.value = MatchCreationWizardUiState.Ready(allPlayers)
     }
 
     fun setGeneralData(opponent: String, location: String, date: Long?, time: Long?, numberOfPeriods: Int) {
@@ -262,7 +289,8 @@ class MatchCreationWizardViewModel(
         startingLineupIds = startingLineupIds.toList(),
     )
 
-    fun createMatch(skeletonMatch: SkeletonMatch) {
+    fun createMatch(skeletonMatch: SkeletonMatch, onComplete: () -> Unit = {}) {
+        _uiState.value = MatchCreationWizardUiState.Saving
         viewModelScope.launch {
             try {
                 crashReporter.log("Creating match via wizard: ${skeletonMatch.opponent}")
@@ -283,15 +311,21 @@ class MatchCreationWizardViewModel(
                         AnalyticsParam.STEP_NUMBER to "final",
                     ),
                 )
+                
+                // Call onComplete callback after successful creation
+                onComplete()
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error creating match in wizard: ${e.message}")
-                throw e
+                // On error, restore the Ready state and navigate back
+                _uiState.value = MatchCreationWizardUiState.Ready(allPlayers)
+                onComplete()
             }
         }
     }
 
-    fun updateMatch() {
+    fun updateMatch(onComplete: () -> Unit = {}) {
+        _uiState.value = MatchCreationWizardUiState.Saving
         viewModelScope.launch {
             try {
                 matchId?.let { id ->
@@ -318,10 +352,14 @@ class MatchCreationWizardViewModel(
                         )
                     }
                 }
+                // Call onComplete callback after successful update
+                onComplete()
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error updating match in wizard: ${e.message}")
-                throw e
+                // On error, restore the Ready state and navigate back
+                _uiState.value = MatchCreationWizardUiState.Ready(allPlayers)
+                onComplete()
             }
         }
     }
@@ -375,6 +413,7 @@ class MatchCreationWizardViewModel(
 
 sealed class MatchCreationWizardUiState {
     data object Loading : MatchCreationWizardUiState()
+    data object Saving : MatchCreationWizardUiState()
     data class Ready(val players: List<Player>) : MatchCreationWizardUiState()
 }
 

@@ -14,15 +14,18 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SplashScreen(
     viewModel: SplashViewModel = koinViewModel(),
+    onNavigateToLogin: () -> Unit,
     onNavigateToCreateTeam: () -> Unit,
     onNavigateToMatches: () -> Unit,
 ) {
     TrackScreenView(screenName = ScreenName.SPLASH, screenClass = "SplashScreen")
-    
+
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState) {
         when (uiState) {
+            is UiState.NotAuthenticated -> onNavigateToLogin()
+            is UiState.LocalDataNeedsAuth -> onNavigateToLogin()
             is UiState.NoTeam -> onNavigateToCreateTeam()
             is UiState.TeamExists -> onNavigateToMatches()
             is UiState.Loading -> {

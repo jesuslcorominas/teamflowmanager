@@ -20,10 +20,12 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
+import com.jesuslcorominas.teamflowmanager.ui.migration.MigrationScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
+import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 
@@ -41,6 +43,11 @@ fun Navigation(
     ) {
         composable(Route.Splash.createRoute()) {
             SplashScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
                 onNavigateToCreateTeam = {
                     navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
@@ -51,6 +58,31 @@ fun Navigation(
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
+            )
+        }
+
+        composable(Route.Login.createRoute()) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(Route.Splash.createRoute()) {
+                        popUpTo(Route.Login.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToMigration = {
+                    navController.navigate(Route.Migration.createRoute()) {
+                        popUpTo(Route.Login.createRoute()) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Route.Migration.createRoute()) {
+            MigrationScreen(
+                onMigrationComplete = {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Migration.createRoute()) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -180,6 +212,11 @@ fun Navigation(
                     navController.navigate(Route.Matches.createRoute()) {
                         popUpTo(Route.Settings.createRoute()) { inclusive = true }
                     }
+                },
+                onSignOut = {
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
@@ -195,6 +232,8 @@ fun Navigation(
 
     BackHandler {
         when (route) {
+            Route.Login -> activity?.finish()
+            Route.Migration -> activity?.finish()
             Route.Matches -> if (searchState.isActive) {
                 searchState.clear()
                 searchState.isActive = false

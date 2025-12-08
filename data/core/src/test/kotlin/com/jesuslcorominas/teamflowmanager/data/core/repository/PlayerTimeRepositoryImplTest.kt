@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -14,13 +14,13 @@ import org.junit.Before
 import org.junit.Test
 
 class PlayerTimeRepositoryImplTest {
-    private lateinit var localDataSource: PlayerTimeLocalDataSource
+    private lateinit var playerTimeDataSource: PlayerTimeDataSource
     private lateinit var repository: PlayerTimeRepositoryImpl
 
     @Before
     fun setup() {
-        localDataSource = mockk(relaxed = true)
-        repository = PlayerTimeRepositoryImpl(localDataSource)
+        playerTimeDataSource = mockk(relaxed = true)
+        repository = PlayerTimeRepositoryImpl(playerTimeDataSource)
     }
 
     @Test
@@ -29,7 +29,7 @@ class PlayerTimeRepositoryImplTest {
             // Given
             val playerId = 1L
             val playerTime = PlayerTime(playerId = playerId, elapsedTimeMillis = 5000L, isRunning = true)
-            every { localDataSource.getPlayerTime(playerId) } returns flowOf(playerTime)
+            every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(playerTime)
 
             // When
             val result = repository.getPlayerTime(playerId).first()
@@ -47,7 +47,7 @@ class PlayerTimeRepositoryImplTest {
                     PlayerTime(playerId = 1L, elapsedTimeMillis = 5000L, isRunning = true),
                     PlayerTime(playerId = 2L, elapsedTimeMillis = 3000L, isRunning = false),
                 )
-            every { localDataSource.getAllPlayerTimes() } returns flowOf(playerTimes)
+            every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(playerTimes)
 
             // When
             val result = repository.getAllPlayerTimes().first()
@@ -62,15 +62,15 @@ class PlayerTimeRepositoryImplTest {
             // Given
             val playerId = 1L
             val currentTime = 1000L
-            every { localDataSource.getPlayerTime(playerId) } returns flowOf(null)
-            coEvery { localDataSource.upsertPlayerTime(any()) } returns Unit
+            every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(null)
+            coEvery { playerTimeDataSource.upsertPlayerTime(any()) } returns Unit
 
             // When
             repository.startTimer(playerId, currentTime)
 
             // Then
             coVerify {
-                localDataSource.upsertPlayerTime(
+                playerTimeDataSource.upsertPlayerTime(
                     match {
                         it.playerId == playerId &&
                             it.elapsedTimeMillis == 0L &&
@@ -88,15 +88,15 @@ class PlayerTimeRepositoryImplTest {
             val playerId = 1L
             val currentTime = 2000L
             val existingPlayerTime = PlayerTime(playerId = playerId, elapsedTimeMillis = 5000L, isRunning = false)
-            every { localDataSource.getPlayerTime(playerId) } returns flowOf(existingPlayerTime)
-            coEvery { localDataSource.upsertPlayerTime(any()) } returns Unit
+            every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(existingPlayerTime)
+            coEvery { playerTimeDataSource.upsertPlayerTime(any()) } returns Unit
 
             // When
             repository.startTimer(playerId, currentTime)
 
             // Then
             coVerify {
-                localDataSource.upsertPlayerTime(
+                playerTimeDataSource.upsertPlayerTime(
                     match {
                         it.playerId == playerId &&
                             it.elapsedTimeMillis == 5000L &&
@@ -121,15 +121,15 @@ class PlayerTimeRepositoryImplTest {
                     isRunning = true,
                     lastStartTimeMillis = startTime,
                 )
-            every { localDataSource.getPlayerTime(playerId) } returns flowOf(existingPlayerTime)
-            coEvery { localDataSource.upsertPlayerTime(any()) } returns Unit
+            every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(existingPlayerTime)
+            coEvery { playerTimeDataSource.upsertPlayerTime(any()) } returns Unit
 
             // When
             repository.pauseTimer(playerId, pauseTime)
 
             // Then
             coVerify {
-                localDataSource.upsertPlayerTime(
+                playerTimeDataSource.upsertPlayerTime(
                     match {
                         it.playerId == playerId &&
                             it.elapsedTimeMillis == 4000L &&
@@ -147,13 +147,13 @@ class PlayerTimeRepositoryImplTest {
             val playerId = 1L
             val pauseTime = 3000L
             val existingPlayerTime = PlayerTime(playerId = playerId, elapsedTimeMillis = 2000L, isRunning = false)
-            every { localDataSource.getPlayerTime(playerId) } returns flowOf(existingPlayerTime)
+            every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(existingPlayerTime)
 
             // When
             repository.pauseTimer(playerId, pauseTime)
 
             // Then
-            coVerify(exactly = 0) { localDataSource.upsertPlayerTime(any()) }
+            coVerify(exactly = 0) { playerTimeDataSource.upsertPlayerTime(any()) }
         }
 
     @Test
@@ -162,13 +162,13 @@ class PlayerTimeRepositoryImplTest {
             // Given
             val playerId = 1L
             val pauseTime = 3000L
-            every { localDataSource.getPlayerTime(playerId) } returns flowOf(null)
+            every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(null)
 
             // When
             repository.pauseTimer(playerId, pauseTime)
 
             // Then
-            coVerify(exactly = 0) { localDataSource.upsertPlayerTime(any()) }
+            coVerify(exactly = 0) { playerTimeDataSource.upsertPlayerTime(any()) }
         }
 
     @Test
@@ -181,8 +181,8 @@ class PlayerTimeRepositoryImplTest {
             val secondStartTime = 5000L
 
             // First start
-            every { localDataSource.getPlayerTime(playerId) } returns flowOf(null)
-            coEvery { localDataSource.upsertPlayerTime(any()) } returns Unit
+            every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(null)
+            coEvery { playerTimeDataSource.upsertPlayerTime(any()) } returns Unit
             repository.startTimer(playerId, firstStartTime)
 
             // Pause
@@ -193,19 +193,19 @@ class PlayerTimeRepositoryImplTest {
                     isRunning = true,
                     lastStartTimeMillis = firstStartTime,
                 )
-            every { localDataSource.getPlayerTime(playerId) } returns flowOf(runningPlayerTime)
+            every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(runningPlayerTime)
             repository.pauseTimer(playerId, pauseTime)
 
             // Second start
             val pausedPlayerTime = PlayerTime(playerId = playerId, elapsedTimeMillis = 2000L, isRunning = false)
-            every { localDataSource.getPlayerTime(playerId) } returns flowOf(pausedPlayerTime)
+            every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(pausedPlayerTime)
 
             // When
             repository.startTimer(playerId, secondStartTime)
 
             // Then
             coVerify {
-                localDataSource.upsertPlayerTime(
+                playerTimeDataSource.upsertPlayerTime(
                     match {
                         it.playerId == playerId &&
                             it.elapsedTimeMillis == 2000L &&
@@ -220,12 +220,12 @@ class PlayerTimeRepositoryImplTest {
     fun `resetAllPlayerTimes should delete all player times from local data source`() =
         runTest {
             // Given
-            coEvery { localDataSource.deleteAllPlayerTimes() } returns Unit
+            coEvery { playerTimeDataSource.deleteAllPlayerTimes() } returns Unit
 
             // When
             repository.resetAllPlayerTimes()
 
             // Then
-            coVerify { localDataSource.deleteAllPlayerTimes() }
+            coVerify { playerTimeDataSource.deleteAllPlayerTimes() }
         }
 }

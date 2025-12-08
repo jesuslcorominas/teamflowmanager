@@ -5,8 +5,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,23 +17,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,21 +38,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
+import com.google.firebase.storage.FirebaseStorage
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import kotlinx.coroutines.tasks.await
 import java.io.File
 
 @Composable
@@ -76,13 +74,13 @@ fun PlayerDataStep(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
-    var firstName by remember { mutableStateOf(initialFirstName) }
-    var lastName by remember { mutableStateOf(initialLastName) }
-    var number by remember { mutableStateOf(initialNumber) }
-    var isCaptain by remember { mutableStateOf(initialIsCaptain) }
-    var imageUri by remember { mutableStateOf<String?>(initialImageUri) }
+    var firstName by remember(initialFirstName) { mutableStateOf(initialFirstName) }
+    var lastName by remember(initialLastName) { mutableStateOf(initialLastName) }
+    var number by remember(initialNumber) { mutableStateOf(initialNumber) }
+    var isCaptain by remember(initialIsCaptain) { mutableStateOf(initialIsCaptain) }
+    var imageUri by remember(initialImageUri) { mutableStateOf<String?>(initialImageUri) }
     var showImageOptions by remember { mutableStateOf(false) }
-    
+
     var firstNameError by remember { mutableStateOf<String?>(null) }
     var lastNameError by remember { mutableStateOf<String?>(null) }
     var numberError by remember { mutableStateOf<String?>(null) }
@@ -124,6 +122,10 @@ fun PlayerDataStep(
     }
 
     val validateAndNext = {
+        firstName = firstName.trim()
+        lastName = lastName.trim()
+        number = number.trim()
+
         firstNameError = if (firstName.isBlank()) context.getString(R.string.first_name_required) else null
         lastNameError = if (lastName.isBlank()) context.getString(R.string.last_name_required) else null
         numberError = if (number.isBlank()) context.getString(R.string.number_required) else null
@@ -159,17 +161,27 @@ fun PlayerDataStep(
                     .clickable { showImageOptions = true },
                 contentAlignment = Alignment.Center
             ) {
-                if (imageUri != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(imageUri),
-                        contentDescription = stringResource(R.string.player_image),
+                val contentDescription = "${stringResource(R.string.player_image)} $firstName $lastName"
+
+                imageUri?.let { fullUrl ->
+                    var downloadUrl by remember { mutableStateOf<String?>(null) }
+
+                    LaunchedEffect(imageUri) {
+                        val storageRef = FirebaseStorage.getInstance().getReferenceFromUrl(fullUrl)
+                        downloadUrl = storageRef.downloadUrl.await().toString()
+                    }
+
+                    AsyncImage(
+                        model = downloadUrl,
+                        placeholder = rememberVectorPainter(Icons.Default.Person),
+                        contentDescription = contentDescription,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-                } else {
+                } ?: run {
                     Icon(
                         imageVector = Icons.Default.Person,
-                        contentDescription = stringResource(R.string.player_image),
+                        contentDescription = contentDescription,
                         modifier = Modifier.size(60.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -200,7 +212,10 @@ fun PlayerDataStep(
             supportingText = if (firstNameError != null) {
                 { Text(firstNameError!!) }
             } else null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Words
+            ),
             keyboardActions = KeyboardActions(onNext = {
                 focusManager.moveFocus(FocusDirection.Down)
             }),
@@ -219,7 +234,10 @@ fun PlayerDataStep(
             supportingText = if (lastNameError != null) {
                 { Text(lastNameError!!) }
             } else null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Words
+            ),
             keyboardActions = KeyboardActions(onNext = {
                 focusManager.moveFocus(FocusDirection.Down)
             }),

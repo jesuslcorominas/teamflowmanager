@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.local.datasource
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.dao.PlayerDao
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toDomain
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toEntity
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
 
 internal class PlayerLocalDataSourceImpl(
     private val playerDao: PlayerDao,
-) : PlayerLocalDataSource {
+) : PlayerDataSource {
     override fun getAllPlayers(): Flow<List<Player>> =
         playerDao.getAllPlayers().map { entities ->
             entities.map { it.toDomain() }
@@ -30,8 +30,9 @@ internal class PlayerLocalDataSourceImpl(
         playerDao.removePlayerAsCaptain(playerId)
     }
 
-    override suspend fun insertPlayer(player: Player) {
+    override suspend fun insertPlayer(player: Player): Long {
         playerDao.insertPlayer(player.toEntity())
+        return player.id
     }
 
     override suspend fun deletePlayer(playerId: Long) {
@@ -40,5 +41,12 @@ internal class PlayerLocalDataSourceImpl(
 
     override suspend fun updatePlayer(player: Player) {
         playerDao.updatePlayer(player.toEntity())
+    }
+
+    override suspend fun getAllPlayersDirect(): List<Player> =
+        playerDao.getAllPlayersDirect().map { it.toDomain() }
+
+    override suspend fun clearLocalData() {
+        playerDao.deleteAllPlayers()
     }
 }

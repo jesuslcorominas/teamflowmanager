@@ -2,10 +2,12 @@ package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.MigrationViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
@@ -27,7 +29,23 @@ val viewModelModule =
         }
 
         viewModel {
-            SplashViewModel(getTeam = get())
+            SplashViewModel(getTeam = get(), getCurrentUser = get(), hasLocalDataWithoutUserId = get())
+        }
+
+        viewModel {
+            LoginViewModel(
+                signInWithGoogleUseCase = get(),
+                hasLocalDataWithoutUserId = get(),
+                analyticsTracker = get()
+            )
+        }
+
+        viewModel {
+            MigrationViewModel(
+                migrateLocalDataToFirestoreUseCase = get(),
+                getCurrentUserUseCase = get(),
+                analyticsTracker = get()
+            )
         }
 
         viewModel {
@@ -92,7 +110,8 @@ val viewModelModule =
                 timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
-                savedStateHandle = get()
+                savedStateHandle = get(),
+                getMatchTimelineUseCase = get()
             )
         }
         viewModel {
@@ -144,6 +163,8 @@ val viewModelModule =
             SettingsViewModel(
                 exportDatabaseUseCase = get(),
                 importDatabaseUseCase = get(),
+                getCurrentUserUseCase = get(),
+                signOutUseCase = get(),
                 analyticsTracker = get()
             )
         }

@@ -57,9 +57,10 @@ fun CaptainSelectionStep(
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
         PlayerList(
-            players = players,
+            players = players.sortedBy { it.number },
             modifier = Modifier.weight(1F),
             showPositions = false,
+            showGoalKeeperBadge = true,
             paddingValues = PaddingValues(TFMSpacing.spacing02),
             selectedPlayerIds = setOf(currentCaptainId).map { it }.toSet(),
             onSingleSelectionChange = { player ->

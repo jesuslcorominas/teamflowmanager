@@ -1,6 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.local.datasource
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.local.dao.MatchDao
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toDomain
 import com.jesuslcorominas.teamflowmanager.data.local.entity.toEntity
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
 
 internal class MatchLocalDataSourceImpl(
     private val matchDao: MatchDao,
-) : MatchLocalDataSource {
+) : MatchDataSource {
     override fun getMatchById(matchId: Long): Flow<Match?> =
         matchDao.getMatchById(matchId).map { it?.toDomain() }
 
@@ -35,5 +35,12 @@ internal class MatchLocalDataSourceImpl(
 
     override suspend fun deleteMatch(matchId: Long) {
         matchDao.deleteMatch(matchId)
+    }
+
+    override suspend fun getAllMatchesDirect(): List<Match> =
+        matchDao.getAllMatchesDirect().map { it.toDomain() }
+
+    override suspend fun clearLocalData() {
+        matchDao.deleteAllMatches()
     }
 }

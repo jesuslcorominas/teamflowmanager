@@ -1,31 +1,94 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.di
 
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseStorageDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitutionFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeHistoryFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreDataSourceImpl
 import de.jensklingenberg.ktorfit.Ktorfit
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
- * Sample DI module demonstrating KtorFit configuration.
- * This module shows how to set up Ktor HttpClient and Ktorfit for dependency injection.
+ * DI module for remote data sources including Firebase and KtorFit configuration.
  *
- * To use this module:
- * 1. Include it in your main Koin module configuration
- * 2. Customize the HttpClient configuration as needed
- * 3. Add your API interfaces using Ktorfit.create<YourApi>()
- *
- * Example:
- * ```
- * includes(dataRemoteModule)
- * ```
+ * This module provides:
+ * - Firebase Auth, Firestore, and Storage instances
+ * - Firebase-based data source implementations
+ * - Ktor HttpClient and Ktorfit for REST API calls
  */
-val dataRemoteModule =
+
+internal val firebaseModule =
+    module {
+        single { FirebaseAuth.getInstance() }
+        single { FirebaseFirestore.getInstance() }
+        single { FirebaseStorage.getInstance() }
+        singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
+        singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
+    }
+
+internal val firestoreDataSourceModule =
+    module {
+        single(named("PLAYER_FIRESTORE_DATA_SOURCE_IMPL")) {
+            PlayerFirestoreDataSourceImpl(
+                get(),
+                get(),
+                get()
+            )
+        } bind PlayerDataSource::class
+
+        single(named("TEAM_FIRESTORE_DATA_SOURCE_IMPL")) {
+            TeamFirestoreDataSourceImpl(get(), get())
+        } bind TeamDataSource::class
+
+
+        single(named("MATCH_FIRESTORE_DATA_SOURCE_IMPL")) {
+            MatchFirestoreDataSourceImpl(get(), get())
+        } bind MatchDataSource::class
+
+        single(named("GOAL_FIRESTORE_DATA_SOURCE_IMPL")) {
+            GoalFirestoreDataSourceImpl(get(), get())
+        } bind GoalDataSource::class
+
+
+        single(named("PLAYER_SUBSTITUTION_FIRESTORE_DATA_SOURCE_IMPL")) {
+            PlayerSubstitutionFirestoreDataSourceImpl(get(), get())
+        } bind PlayerSubstitutionDataSource::class
+
+        single(named("PLAYER_TIME_FIRESTORE_DATA_SOURCE_IMPL")) {
+            PlayerTimeFirestoreDataSourceImpl(get(), get())
+        } bind PlayerTimeDataSource::class
+
+        single(named("PLAYER_TIME_HISTORY_FIRESTORE_DATA_SOURCE_IMPL")) {
+            PlayerTimeHistoryFirestoreDataSourceImpl(get(), get())
+        } bind PlayerTimeHistoryDataSource::class
+    }
+
+internal val ktorfitModule =
     module {
         // Configure JSON serialization
         single {
@@ -69,4 +132,9 @@ val dataRemoteModule =
         // Add your API interfaces here
         // Example:
         // single<SampleApi> { get<Ktorfit>().create() }
+    }
+
+val dataRemoteModule =
+    module {
+        includes(firebaseModule, firestoreDataSourceModule, ktorfitModule)
     }

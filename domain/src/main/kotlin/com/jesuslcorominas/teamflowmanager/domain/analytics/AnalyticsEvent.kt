@@ -89,6 +89,7 @@ object AnalyticsParam {
     const val DURATION_MINUTES = "duration_minutes"
     const val GOAL_MINUTE = "goal_minute"
     const val SUBSTITUTION_MINUTE = "substitution_minute"
+    const val SUBSTITUTION_METHOD = "substitution_method"
 
     // Navigation Parameters
     const val SCREEN_NAME = "screen_name"
@@ -130,5 +131,7 @@ object ScreenName {
     const val PLAYER_WIZARD = "Player Wizard"
     const val MATCH_WIZARD = "Match Wizard"
     const val SPLASH = "Splash"
+    const val LOGIN = "Login"
+    const val MIGRATION = "Migration"
     const val SETTINGS = "Settings"
 }

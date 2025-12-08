@@ -18,6 +18,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCase
@@ -46,6 +48,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCase
@@ -58,6 +62,10 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.MigrateLocalDataToFirestoreUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.MigrateLocalDataToFirestoreUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCase
@@ -82,6 +90,10 @@ import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
@@ -115,6 +127,8 @@ internal val useCaseInternalModule =
         singleOf(::GetTeamUseCaseImpl) bind GetTeamUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
+        singleOf(::HasLocalDataWithoutUserIdUseCaseImpl) bind HasLocalDataWithoutUserIdUseCase::class
+        singleOf(::MigrateLocalDataToFirestoreUseCaseImpl) bind MigrateLocalDataToFirestoreUseCase::class
 
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class
@@ -136,6 +150,7 @@ internal val useCaseInternalModule =
         singleOf(::EndTimeoutUseCaseImpl) bind EndTimeoutUseCase::class
         singleOf(::FinishMatchUseCaseImpl) bind FinishMatchUseCase::class
         singleOf(::GetMatchSummaryUseCaseImpl) bind GetMatchSummaryUseCase::class
+        singleOf(::GetMatchTimelineUseCaseImpl) bind GetMatchTimelineUseCase::class
 
         singleOf(::GetPlayerTimeUseCaseImpl) bind GetPlayerTimeUseCase::class
         singleOf(::GetAllPlayerTimesUseCaseImpl) bind GetAllPlayerTimesUseCase::class
@@ -166,6 +181,11 @@ internal val useCaseInternalModule =
 
         singleOf(::ExportDatabaseUseCaseImpl) bind ExportDatabaseUseCase::class
         singleOf(::ImportDatabaseUseCaseImpl) bind ImportDatabaseUseCase::class
+
+        // Auth use cases
+        singleOf(::GetCurrentUserUseCaseImpl) bind GetCurrentUserUseCase::class
+        singleOf(::SignInWithGoogleUseCaseImpl) bind SignInWithGoogleUseCase::class
+        singleOf(::SignOutUseCaseImpl) bind SignOutUseCase::class
     }
 
 val useCaseModule =

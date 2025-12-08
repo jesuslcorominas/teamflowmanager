@@ -21,6 +21,7 @@ fun PlayerList(
     paddingValues: PaddingValues = PaddingValues(TFMSpacing.spacing04),
     captainId: Long? = null,
     showCaptainBadge: Boolean = false,
+    showGoalKeeperBadge: Boolean = false,
     players: List<Player>,
     showPositions: Boolean = true,
     selectedPlayerIds: Set<Long> = setOf(),
@@ -44,6 +45,7 @@ fun PlayerList(
                     } else {
                         false
                     },
+                showGoalkeeperBadge = showGoalKeeperBadge && player.positions.any { it == Position.Goalkeeper },
                 showPositions = showPositions,
                 onEditClick = onEditClick?.let { { onEditClick(player) } },
                 onDeleteClick = onDeleteClick?.let { { onDeleteClick(player) } },

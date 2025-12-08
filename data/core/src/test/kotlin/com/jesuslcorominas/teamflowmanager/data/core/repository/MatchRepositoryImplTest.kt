@@ -1,11 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchLocalDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
@@ -16,13 +15,13 @@ import org.junit.Before
 import org.junit.Test
 
 class MatchRepositoryImplTest {
-    private lateinit var localDataSource: MatchLocalDataSource
+    private lateinit var matchDataSource: MatchDataSource
     private lateinit var repository: MatchRepositoryImpl
 
     @Before
     fun setup() {
-        localDataSource = mockk(relaxed = true)
-        repository = MatchRepositoryImpl(localDataSource)
+        matchDataSource = mockk(relaxed = true)
+        repository = MatchRepositoryImpl(matchDataSource)
     }
 
     @Test
@@ -30,7 +29,7 @@ class MatchRepositoryImplTest {
         runTest {
             // Given
             val match = Match(id = 1L, elapsedTimeMillis = 5000L, teamName = "Team A")
-            every { localDataSource.getRunningMatch() } returns flowOf(match)
+            every { matchDataSource.getRunningMatch() } returns flowOf(match)
 
             // When
             val result = repository.getMatch().first()
@@ -44,13 +43,13 @@ class MatchRepositoryImplTest {
         runTest {
             // Given
             val currentTime = 1000L
-            every { localDataSource.getRunningMatch() } returns flowOf(null)
+            every { matchDataSource.getRunningMatch() } returns flowOf(null)
 
             // When
             repository.startTimer(1L, currentTime)
 
             // Then
-            coVerify { localDataSource wasNot Called }
+            coVerify { matchDataSource wasNot Called }
         }
 
     @Test
@@ -59,15 +58,15 @@ class MatchRepositoryImplTest {
             // Given
             val currentTime = 2000L
             val existingMatch = Match(id = 1L, elapsedTimeMillis = 5000L, teamName = "Team A")
-            every { localDataSource.getRunningMatch() } returns flowOf(existingMatch)
-            coEvery { localDataSource.upsertMatch(any()) } returns Unit
+            every { matchDataSource.getRunningMatch() } returns flowOf(existingMatch)
+            coEvery { matchDataSource.upsertMatch(any()) } returns Unit
 
             // When
             repository.startTimer(existingMatch.id, currentTime)
 
             // Then
             coVerify {
-                localDataSource.upsertMatch(
+                matchDataSource.upsertMatch(
                     match {
                         it.id == 1L &&
                             it.elapsedTimeMillis == 5000L &&
@@ -84,15 +83,15 @@ class MatchRepositoryImplTest {
             val startTime = 1000L
             val pauseTime = 3000L
             val existingMatch = Match(id = 1L, elapsedTimeMillis = 2000L, lastStartTimeMillis = startTime, teamName = "Team A")
-            every { localDataSource.getRunningMatch() } returns flowOf(existingMatch)
-            coEvery { localDataSource.upsertMatch(any()) } returns Unit
+            every { matchDataSource.getRunningMatch() } returns flowOf(existingMatch)
+            coEvery { matchDataSource.upsertMatch(any()) } returns Unit
 
             // When
             repository.pauseTimer(pauseTime)
 
             // Then
             coVerify {
-                localDataSource.upsertMatch(
+                matchDataSource.upsertMatch(
                     match {
                         it.id == 1L &&
                             it.elapsedTimeMillis == 4000L &&
@@ -108,13 +107,13 @@ class MatchRepositoryImplTest {
             // Given
             val pauseTime = 3000L
             val existingMatch = Match(id = 1L, elapsedTimeMillis = 2000L, teamName = "Team A")
-            every { localDataSource.getRunningMatch() } returns flowOf(existingMatch)
+            every { matchDataSource.getRunningMatch() } returns flowOf(existingMatch)
 
             // When
             repository.pauseTimer(pauseTime)
 
             // Then
-            coVerify(exactly = 0) { localDataSource.upsertMatch(any()) }
+            coVerify(exactly = 0) { matchDataSource.upsertMatch(any()) }
         }
 
     @Test
@@ -122,12 +121,12 @@ class MatchRepositoryImplTest {
         runTest {
             // Given
             val pauseTime = 3000L
-            every { localDataSource.getRunningMatch() } returns flowOf(null)
+            every { matchDataSource.getRunningMatch() } returns flowOf(null)
 
             // When
             repository.pauseTimer(pauseTime)
 
             // Then
-            coVerify(exactly = 0) { localDataSource.upsertMatch(any()) }
+            coVerify(exactly = 0) { matchDataSource.upsertMatch(any()) }
         }
 }

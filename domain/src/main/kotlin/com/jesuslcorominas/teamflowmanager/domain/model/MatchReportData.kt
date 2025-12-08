@@ -3,6 +3,9 @@ package com.jesuslcorominas.teamflowmanager.domain.model
 data class MatchReportData(
     val match: Match,
     val playerReports: List<PlayerMatchReport>,
+    val timelineEvents: List<TimelineEvent> = emptyList(),
+    val scoreEvolution: List<ScorePoint> = emptyList(),
+    val playerActivity: List<PlayerActivityInterval> = emptyList(),
 )
 
 data class PlayerMatchReport(
@@ -18,6 +21,7 @@ data class PlayerMatchReport(
 
 data class GoalReport(
     val matchElapsedTimeMillis: Long,
+    val isOwnGoal: Boolean = false,
 )
 
 data class SubstitutionReport(

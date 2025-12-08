@@ -43,6 +43,9 @@ class TeamViewModel(
     private val _showTeamTypeChangeError = MutableStateFlow(false)
     val showTeamTypeChangeError: StateFlow<Boolean> = _showTeamTypeChangeError
 
+    private val _showSaveError = MutableStateFlow(false)
+    val showSaveError: StateFlow<Boolean> = _showSaveError
+
     private var originalTeam: Team? = null
 
     val isEditMode: Boolean = (savedStateHandle[Route.Team.ARG_MODE] as? String) == Route.Team.MODE_EDIT
@@ -74,61 +77,75 @@ class TeamViewModel(
         _showTeamTypeChangeError.value = false
     }
 
-    fun createTeam(team: Team) {
-        viewModelScope.launch {
-            createTeam.invoke(team)
+    fun dismissSaveError() {
+        _showSaveError.value = false
+    }
 
-            // Track team creation event
-            analyticsTracker.logEvent(
-                AnalyticsEvent.TEAM_CREATED,
-                mapOf(
-                    AnalyticsParam.TEAM_NAME to team.name,
-                ),
-            )
+    fun createTeam(team: Team, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                createTeam.invoke(team)
+
+                // Track team creation event
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.TEAM_CREATED,
+                    mapOf(
+                        AnalyticsParam.TEAM_NAME to team.name,
+                    ),
+                )
+                
+                onSuccess()
+            } catch (e: Exception) {
+                _showSaveError.value = true
+            }
         }
     }
 
     fun updateTeam(team: Team, captainId: Long?, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            val original = originalTeam
-            val teamTypeChanged = original != null && original.teamType != team.teamType
+            try {
+                val original = originalTeam
+                val teamTypeChanged = original != null && original.teamType != team.teamType
 
-            // Only check for scheduled matches if team type changed
-            if (teamTypeChanged) {
-                val hasScheduled = hasScheduledMatches.invoke()
-                if (hasScheduled) {
-                    showTeamTypeChangeError()
-                    return@launch
+                // Only check for scheduled matches if team type changed
+                if (teamTypeChanged) {
+                    val hasScheduled = hasScheduledMatches.invoke()
+                    if (hasScheduled) {
+                        showTeamTypeChangeError()
+                        return@launch
+                    }
                 }
-            }
 
-            // Handle captain changes
-            val captain = getCaptainPlayer.invoke()
-            val currentCaptainId = captain?.id
-            val captainChanged = currentCaptainId != captainId
+                // Handle captain changes
+                val captain = getCaptainPlayer.invoke()
+                val currentCaptainId = captain?.id
+                val captainChanged = currentCaptainId != captainId
 
-            if (captainChanged) {
-                if (captain != null && captainId == null) {
-                    // Remove current captain
-                    playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase
-                } else if (captainId != null && (captain == null || captain.id != captainId)) {
-                    // Set new captain
-                    playerRepository.setPlayerAsCaptain(captainId) // TODO extract to usecase
+                if (captainChanged) {
+                    if (captain != null && captainId == null) {
+                        // Remove current captain
+                        playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase
+                    } else if (captainId != null && (captain == null || captain.id != captainId)) {
+                        // Set new captain
+                        playerRepository.setPlayerAsCaptain(captainId) // TODO extract to usecase
+                    }
                 }
+
+                updateTeam.invoke(team)
+
+                // Track team update event
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.TEAM_UPDATED,
+                    mapOf(
+                        AnalyticsParam.TEAM_ID to team.id.toString(),
+                    ),
+                )
+                
+                // Only navigate back on success
+                onSuccess()
+            } catch (e: Exception) {
+                _showSaveError.value = true
             }
-
-            updateTeam.invoke(team)
-
-            // Track team update event
-            analyticsTracker.logEvent(
-                AnalyticsEvent.TEAM_UPDATED,
-                mapOf(
-                    AnalyticsParam.TEAM_ID to team.id.toString(),
-                ),
-            )
-            
-            // Only navigate back on success
-            onSuccess()
         }
     }
 

@@ -15,22 +15,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,9 +37,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,19 +57,26 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
+import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
+import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppIconButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
-import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
+import com.jesuslcorominas.teamflowmanager.ui.components.dragdrop.DragDropContainer
+import com.jesuslcorominas.teamflowmanager.ui.components.dragdrop.DraggablePlayerItem
+import com.jesuslcorominas.teamflowmanager.ui.components.dragdrop.DropTargetPlayerItem
+import com.jesuslcorominas.teamflowmanager.ui.components.dragdrop.rememberDragDropState
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
+import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
+import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import com.jesuslcorominas.teamflowmanager.ui.util.scrollToItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.ExportState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
@@ -79,7 +85,10 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 import org.koin.androidx.compose.koinViewModel
 import androidx.core.net.toUri
 
-private const val SUBSTITUTIONS_HEADER = "substitutions_header"
+private const val TAB_SUMMARY = 0
+//private const val TAB_SUBSTITUTIONS = 1
+private const val TAB_TIMELINE = 1
+private const val TAB_STATISTICS = 2
 
 @Composable
 fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (String?) -> Unit) {
@@ -145,6 +154,9 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
                         else -> viewModel.substitutePlayer(playerId)
                     }
                 },
+                onDragDropSubstitute = { playerInId, playerOutId ->
+                    viewModel.substitutePlayerDirect(playerInId, playerOutId)
+                },
                 onSortOrderChange = { currentSortOrder = it },
                 onAddGoal = { viewModel.showGoalScorerDialog() },
                 onAddOpponentGoal = { viewModel.showOpponentGoalDialog() },
@@ -185,9 +197,10 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
         }
 
         // Show confirmation dialog if pausing match early
-        if (showPauseConfirmation) {
+        showPauseConfirmation?.let {
             PauseMatchEarlyConfirmationDialog(
-                onConfirm = { viewModel.confirmPauseMatch() },
+                isBreak = it.isBreak,
+                onConfirm = { if (it.isBreak) viewModel.confirmPauseMatch() else viewModel.confirmStopMatch() },
                 onDismiss = { viewModel.dismissPauseConfirmation() }
             )
         }
@@ -197,10 +210,8 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
             val state = uiState
             if (state is MatchUiState.Success) {
                 GoalScorerSelectionDialog(
-                    players = state.playerTimes.map { it.player },
-                    onPlayerSelected = { playerId ->
-                        viewModel.registerGoal(playerId)
-                    },
+                    players = state.playerTimes.filter { it.isRunning }.map { it.player },
+                    onGoal = { playerId -> viewModel.registerGoal(playerId) },
                     onDismiss = { viewModel.dismissGoalScorerDialog() }
                 )
             }
@@ -240,6 +251,7 @@ private fun SuccessState(
     onStartTimeout: () -> Unit,
     onEndTimeout: () -> Unit,
     onPlayerClick: (Long) -> Unit,
+    onDragDropSubstitute: (playerInId: Long, playerOutId: Long) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
@@ -273,6 +285,7 @@ private fun SuccessState(
             onStartTimeout = onStartTimeout,
             onEndTimeout = onEndTimeout,
             onPlayerClick = onPlayerClick,
+            onDragDropSubstitute = onDragDropSubstitute,
             onSortOrderChange = onSortOrderChange,
             onAddGoal = onAddGoal,
             onAddOpponentGoal = onAddOpponentGoal,
@@ -292,11 +305,15 @@ private fun MatchDetailContent(
     onStartTimeout: () -> Unit,
     onEndTimeout: () -> Unit,
     onPlayerClick: (Long) -> Unit,
+    onDragDropSubstitute: (playerInId: Long, playerOutId: Long) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
     onBeginMatch: () -> Unit
 ) {
+    val dragDropState = rememberDragDropState()
+    val listState = rememberLazyListState()
+
     Column(modifier = Modifier.fillMaxSize()) {
         MatchTimeCard(match = state.match, currentTime = state.currentTime)
 
@@ -305,31 +322,102 @@ private fun MatchDetailContent(
             onSortOrderChange = onSortOrderChange
         )
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+        DragDropContainer(
+            dragDropState = dragDropState,
+            listState = listState,
+            modifier = Modifier.weight(1f)
         ) {
-            items(
-                items = state.playerTimes.sortedBy(currentSortOrder, state.match),
-                key = { it.player.id }
-            ) { playerTimeItem ->
-                PlayerItem(
-                    modifier = Modifier.animateItem(
-                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                        placementSpec = spring(),
-                        fadeOutSpec = tween(durationMillis = 300)
-                    ),
-                    player = playerTimeItem.player,
-                    showPositions = false,
-                    isPlaying = if (state.match.isInProgress) playerTimeItem.isRunning else false,
-                    timeMillis = playerTimeItem.timeMillis,
-                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
-                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
-                    isSelected = if (state.match.isInProgress) selectedPlayerOut == playerTimeItem.player.id else false,
-                    onClick = if (state.match.isInProgress) {
-                        { onPlayerClick(playerTimeItem.player.id) }
-                    } else null,
-                )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+                // Disable user scrolling while dragging - auto-scroll handles edge scrolling
+                userScrollEnabled = !dragDropState.isDragging
+            ) {
+                items(
+                    items = state.playerTimes.sortedBy(currentSortOrder, state.match),
+                    key = { it.player.id }
+                ) { playerTimeItem ->
+                    val isPlaying = if (state.match.isInProgress) playerTimeItem.isRunning else false
+
+                    // Wrap each player item with drag-drop functionality
+                    if (state.match.isInProgress) {
+                        if (isPlaying) {
+                            // Active players are drop targets
+                            DropTargetPlayerItem(
+                                playerId = playerTimeItem.player.id,
+                                isPlaying = true,
+                                dragDropState = dragDropState,
+                                onDrop = {
+                                    dragDropState.draggedPlayer?.let { draggedPlayer ->
+                                        onDragDropSubstitute(
+                                            draggedPlayer.id,
+                                            playerTimeItem.player.id
+                                        )
+                                    }
+                                    dragDropState.reset()
+                                }
+                            ) {
+                                PlayerItem(
+                                    modifier = Modifier.animateItem(
+                                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                        placementSpec = spring(),
+                                        fadeOutSpec = tween(durationMillis = 300)
+                                    ),
+                                    player = playerTimeItem.player,
+                                    showPositions = false,
+                                    isPlaying = true,
+                                    timeMillis = playerTimeItem.timeMillis,
+                                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                                    isSelected = selectedPlayerOut == playerTimeItem.player.id,
+                                    onClick = { onPlayerClick(playerTimeItem.player.id) },
+                                )
+                            }
+                        } else {
+                            // Inactive players are draggable
+                            DraggablePlayerItem(
+                                player = playerTimeItem.player,
+                                isPlaying = false,
+                                dragDropState = dragDropState,
+                                // onDragEnd is optional - container handles the actual drag end
+                            ) {
+                                PlayerItem(
+                                    modifier = Modifier.animateItem(
+                                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                        placementSpec = spring(),
+                                        fadeOutSpec = tween(durationMillis = 300)
+                                    ),
+                                    player = playerTimeItem.player,
+                                    showPositions = false,
+                                    isPlaying = false,
+                                    timeMillis = playerTimeItem.timeMillis,
+                                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                                    isSelected = selectedPlayerOut == playerTimeItem.player.id,
+                                    onClick = { onPlayerClick(playerTimeItem.player.id) },
+                                )
+                            }
+                        }
+                    } else {
+                        // Match not in progress - no drag-drop
+                        PlayerItem(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                placementSpec = spring(),
+                                fadeOutSpec = tween(durationMillis = 300)
+                            ),
+                            player = playerTimeItem.player,
+                            showPositions = false,
+                            isPlaying = false,
+                            timeMillis = playerTimeItem.timeMillis,
+                            showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                            showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                            isSelected = false,
+                            onClick = null,
+                        )
+                    }
+                }
             }
         }
 
@@ -540,95 +628,204 @@ private fun FinishedMatchState(
         onDispose { onTitleChange(null) }
     }
 
-    var expanded by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableIntStateOf(TAB_SUMMARY) }
 
-    val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TFMSpacing.spacing04),
-            state = listState,
-            contentPadding = PaddingValues(bottom = TFMSpacing.spacing04),
-            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Match Time Card at top (always visible) with share button
+        Box(
+            modifier = Modifier.padding(
+                horizontal = TFMSpacing.spacing04,
+                vertical = TFMSpacing.spacing02
+            )
         ) {
-            item { MatchTimeCard(state.match, state.currentTime) }
+            MatchTimeCard(
+                match = state.match,
+                currentTime = state.currentTime,
+                onExport = onExport,
+            )
+        }
 
-            item {
-                PlayerSortOrder(
-                    availableSorts = PlayerSortOrderBy.entries.minus(PlayerSortOrderBy.BY_ACTIVE_FIRST),
+        // Scrollable Tab Row with 4 tabs
+        SecondaryScrollableTabRow (
+            modifier = Modifier.fillMaxWidth(),
+            selectedTabIndex = selectedTab,
+            edgePadding = TFMSpacing.spacing04,
+        ) {
+            Tab(
+                selected = selectedTab == TAB_SUMMARY,
+                onClick = { selectedTab = TAB_SUMMARY },
+                text = {
+                    Text(
+                        text = stringResource(R.string.summary_tab),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            )
+            // Removed substitutions tab for finished matches
+//            Tab(
+//                selected = selectedTab == TAB_SUBSTITUTIONS,
+//                onClick = { selectedTab = TAB_SUBSTITUTIONS },
+//                text = {
+//                    Text(
+//                        text = stringResource(R.string.substitutions_tab),
+//                        style = MaterialTheme.typography.titleMedium
+//                    )
+//                }
+//            )
+            Tab(
+                selected = selectedTab == TAB_TIMELINE,
+                onClick = { selectedTab = TAB_TIMELINE },
+                text = {
+                    Text(
+                        text = stringResource(R.string.timeline_tab),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            )
+            Tab(
+                selected = selectedTab == TAB_STATISTICS,
+                onClick = { selectedTab = TAB_STATISTICS },
+                text = {
+                    Text(
+                        text = stringResource(R.string.statistics_tab),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            )
+        }
+
+        // Tab Content
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (selectedTab) {
+                TAB_SUMMARY -> SummaryTabContent(
+                    state = state,
                     currentSortOrder = currentSortOrder,
                     onSortOrderChange = onSortOrderChange,
                 )
-            }
-
-            items(
-                items = state.playerTimes.sortedBy(currentSortOrder, state.match),
-                key = { it.player.id }
-            ) { playerTimeItem ->
-                PlayerItem(
-                    modifier = Modifier.animateItem(
-                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                        placementSpec = spring(),
-                        fadeOutSpec = tween(durationMillis = 300)
-                    ),
-                    player = playerTimeItem.player,
-                    showPositions = false,
-                    isPlaying = false,
-                    timeMillis = playerTimeItem.timeMillis,
-                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
-                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
-                    isSelected = false,
+//                TAB_SUBSTITUTIONS -> SubstitutionsTabContent(
+//                    substitutions = state.substitutions,
+//                )
+                TAB_TIMELINE -> TimelineTabContent(
+                    timelineEvents = state.timelineEvents,
                 )
-            }
-
-            if (state.substitutions.isNotEmpty()) {
-                substitutionsSection(
-                    substitutions = state.substitutions,
-                    expanded = expanded,
-                    onExpandToggle = {
-                        expanded = !expanded
-
-                        if (expanded) {
-                            scrollToItem(SUBSTITUTIONS_HEADER, listState, coroutineScope)
-                        }
-                    }
+                TAB_STATISTICS -> StatisticsTabContent(
+                    scoreEvolution = state.scoreEvolution,
+                    playerActivity = state.playerActivity,
+                    teamName = state.match.teamName,
+                    opponentName = state.match.opponent,
                 )
             }
         }
+    }
+}
 
-        FloatingActionButton(
-            onClick = onExport,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(TFMSpacing.spacing04)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Share,
-                contentDescription = stringResource(R.string.export_match_report_description)
+@Composable
+private fun SummaryTabContent(
+    state: MatchUiState.Finished,
+    currentSortOrder: PlayerSortOrderBy,
+    onSortOrderChange: (PlayerSortOrderBy) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = TFMSpacing.spacing04),
+        contentPadding = PaddingValues(
+            top = TFMSpacing.spacing03,
+            bottom = TFMSpacing.spacing04
+        ),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+    ) {
+        item {
+            PlayerSortOrder(
+                availableSorts = PlayerSortOrderBy.entries.minus(PlayerSortOrderBy.BY_ACTIVE_FIRST),
+                currentSortOrder = currentSortOrder,
+                onSortOrderChange = onSortOrderChange,
+            )
+        }
+
+        items(
+            items = state.playerTimes.sortedBy(currentSortOrder, state.match),
+            key = { it.player.id }
+        ) { playerTimeItem ->
+            PlayerItem(
+                modifier = Modifier.animateItem(
+                    fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                    placementSpec = spring(),
+                    fadeOutSpec = tween(durationMillis = 300)
+                ),
+                player = playerTimeItem.player,
+                showPositions = false,
+                isPlaying = false,
+                timeMillis = playerTimeItem.timeMillis,
+                showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                isSelected = false,
             )
         }
     }
 }
 
-private fun LazyListScope.substitutionsSection(
+@Composable
+private fun SubstitutionsTabContent(
     substitutions: List<SubstitutionItem>,
-    expanded: Boolean,
-    onExpandToggle: () -> Unit,
 ) {
-    item(key = SUBSTITUTIONS_HEADER) {
-        ExpandableTitle(
-            title = stringResource(R.string.substitutions_title),
-            expanded = expanded,
-            onClick = onExpandToggle
-        )
-    }
-
-    if (expanded) {
-        items(substitutions) { substitution ->
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = TFMSpacing.spacing04),
+        contentPadding = PaddingValues(
+            top = TFMSpacing.spacing03,
+            bottom = TFMSpacing.spacing04
+        ),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+    ) {
+        items(
+            items = substitutions,
+            key = { "${it.playerIn.id}_${it.playerOut.id}_${it.matchElapsedTimeMillis}" }
+        ) { substitution ->
             SubstitutionCard(substitution = substitution)
+        }
+    }
+}
+
+@Composable
+private fun TimelineTabContent(
+    timelineEvents: List<TimelineEvent>,
+) {
+    // Timeline Events only (no chart)
+    TimelineContent(
+        events = timelineEvents,
+        modifier = Modifier.fillMaxSize(),
+    )
+}
+
+@Composable
+private fun StatisticsTabContent(
+    scoreEvolution: List<ScorePoint>,
+    playerActivity: List<PlayerActivityInterval>,
+    teamName: String,
+    opponentName: String,
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = TFMSpacing.spacing04),
+        contentPadding = PaddingValues(
+            top = TFMSpacing.spacing03,
+            bottom = TFMSpacing.spacing04
+        ),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
+    ) {
+        // Player Activity Chart with toggleable lines
+        if (scoreEvolution.size > 1 || playerActivity.isNotEmpty()) {
+            item {
+                PlayerActivityChart(
+                    scoreEvolution = scoreEvolution,
+                    playerActivity = playerActivity,
+                    teamName = teamName,
+                    opponentName = opponentName,
+                )
+            }
         }
     }
 }
@@ -698,7 +895,7 @@ private fun StopMatchEarlyConfirmationDialog(
         },
         text = {
             Text(
-                stringResource(R.string.stop_match_early_message),
+                stringResource(R.string.stop_match_early_period_message),
                 style = MaterialTheme.typography.bodyMedium
             )
         },
@@ -722,6 +919,7 @@ private fun StopMatchEarlyConfirmationDialog(
 
 @Composable
 private fun PauseMatchEarlyConfirmationDialog(
+    isBreak: Boolean,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -730,15 +928,15 @@ private fun PauseMatchEarlyConfirmationDialog(
         onConfirm = onConfirm,
         confirmText = stringResource(R.string.yes),
         dismissText = stringResource(R.string.no),
-        title = stringResource(R.string.pause_match_early_title),
-        message = stringResource(R.string.pause_match_early_message),
+        title = stringResource(if (isBreak) R.string.pause_match_early_title else R.string.stop_match_early_title),
+        message = stringResource(if (isBreak) R.string.pause_match_early_message else R.string.stop_match_early_message),
     )
 }
 
 @Composable
 private fun GoalScorerSelectionDialog(
     players: List<Player>,
-    onPlayerSelected: (Long) -> Unit,
+    onGoal: (Long?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
@@ -752,30 +950,20 @@ private fun GoalScorerSelectionDialog(
         text = {
             LazyColumn {
                 items(players) { player ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = TFMSpacing.spacing01),
-                        onClick = { onPlayerSelected(player.id) },
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(TFMSpacing.spacing03),
-                            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = player.number.toString(),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = "${player.firstName} ${player.lastName}",
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        }
-                    }
+                    ScorerItem(
+                        number = player.number.toString(),
+                        name = "${player.firstName} ${player.lastName}",
+                        onScorerSelected = { onGoal(player.id) }
+                    )
+                }
+
+                // Own Goal option at the bottom
+                item {
+                    ScorerItem(
+                        number = "-",
+                        name = stringResource(R.string.own_goal_option),
+                        onScorerSelected = { onGoal(null) }
+                    )
                 }
             }
         },
@@ -789,6 +977,34 @@ private fun GoalScorerSelectionDialog(
         },
         shape = MaterialTheme.shapes.medium,
     )
+}
+
+@Composable
+private fun ScorerItem(number: String, name: String, onScorerSelected: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = TFMSpacing.spacing01),
+        onClick =  onScorerSelected,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TFMSpacing.spacing03),
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = number,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+    }
 }
 
 @Composable
@@ -877,6 +1093,7 @@ private fun OngoingMatchViewPreview() {
             onStartTimeout = {},
             onEndTimeout = {},
             onPlayerClick = {},
+            onDragDropSubstitute = { _, _ -> },
             onSortOrderChange = {},
             onAddGoal = {},
             onAddOpponentGoal = {},
