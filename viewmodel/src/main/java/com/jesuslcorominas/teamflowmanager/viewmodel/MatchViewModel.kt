@@ -622,9 +622,9 @@ class MatchViewModel(
         currentTimeMillis: Long,
     ): Long {
         return if (isRunning && lastStartTimeMillis != null) {
-            elapsedTimeMillis + (currentTimeMillis - lastStartTimeMillis)
+            (elapsedTimeMillis + (currentTimeMillis - lastStartTimeMillis)).coerceAtLeast(0L)
         } else {
-            elapsedTimeMillis
+            elapsedTimeMillis.coerceAtLeast(0L)
         }
     }
 
