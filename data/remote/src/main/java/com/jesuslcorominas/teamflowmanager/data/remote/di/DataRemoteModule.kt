@@ -22,7 +22,9 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitu
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeHistoryFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.transaction.FirestoreTransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -52,6 +54,7 @@ internal val firebaseModule =
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
         singleOf(::FirestoreTimeProvider) bind TimeProvider::class
+        singleOf(::FirestoreTransactionRunner) bind TransactionRunner::class
     }
 
 internal val firestoreDataSourceModule =

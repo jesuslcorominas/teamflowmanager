@@ -33,6 +33,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,6 +62,7 @@ class MatchViewModel(
     private val getMatchReportData: GetMatchReportDataUseCase,
     private val exportMatchReportToPdf: ExportMatchReportToPdfUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
+    private val playerTimeRepository: PlayerTimeRepository,
     private val preferencesRepository: PreferencesRepository, // TODO extract to usecases
     private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
@@ -120,8 +122,9 @@ class MatchViewModel(
                 val currentTime = _currentTime.value
                 getMatchById(matchId).first()?.let {
                     startMatchTimerUseCase(matchId = it.id, currentTime)
-                    it.startingLineupIds.forEach { playerId ->
-                        startPlayerTimerUseCase(playerId, currentTime)
+                    // Start all player timers at once using batch operation
+                    if (it.startingLineupIds.isNotEmpty()) {
+                        playerTimeRepository.startTimersBatch(it.startingLineupIds, currentTime)
                     }
                 }
             }

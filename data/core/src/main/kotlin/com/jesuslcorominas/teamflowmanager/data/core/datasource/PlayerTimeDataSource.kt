@@ -10,6 +10,13 @@ interface PlayerTimeDataSource {
 
     suspend fun upsertPlayerTime(playerTime: PlayerTime)
 
+    /**
+     * Batch upsert multiple player times at once.
+     * Uses Firestore batch write for atomic operation.
+     * @param playerTimes List of player times to upsert
+     */
+    suspend fun batchUpsertPlayerTimes(playerTimes: List<PlayerTime>)
+
     suspend fun deleteAllPlayerTimes()
 
     /**

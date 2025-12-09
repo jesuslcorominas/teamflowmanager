@@ -77,6 +77,40 @@ internal class PlayerTimeRepositoryImpl(
         }
     }
 
+    override suspend fun startTimersBatch(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+    ) {
+        if (playerIds.isEmpty()) return
+
+        // Get current player times for all players
+        val allCurrentTimes = playerTimeDataSource.getAllPlayerTimes().first()
+        val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
+
+        // Create player times for batch upsert
+        val playerTimesToUpsert = playerIds.map { playerId ->
+            val currentPlayerTime = currentTimesMap[playerId]
+            if (currentPlayerTime != null) {
+                currentPlayerTime.copy(
+                    isRunning = true,
+                    lastStartTimeMillis = currentTimeMillis,
+                    status = PlayerTimeStatus.PLAYING,
+                )
+            } else {
+                PlayerTime(
+                    playerId = playerId,
+                    elapsedTimeMillis = 0L,
+                    isRunning = true,
+                    lastStartTimeMillis = currentTimeMillis,
+                    status = PlayerTimeStatus.PLAYING,
+                )
+            }
+        }
+
+        // Batch upsert all player times at once
+        playerTimeDataSource.batchUpsertPlayerTimes(playerTimesToUpsert)
+    }
+
     override suspend fun resetAllPlayerTimes() {
         playerTimeDataSource.deleteAllPlayerTimes()
     }

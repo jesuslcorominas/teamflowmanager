@@ -112,6 +112,7 @@ val viewModelModule =
                 getMatchReportData = get(),
                 exportMatchReportToPdf = get(),
                 synchronizeTimeUseCase = get(),
+                playerTimeRepository = get(),
                 preferencesRepository = get(),
                 timeTicker = get(),
                 analyticsTracker = get(),

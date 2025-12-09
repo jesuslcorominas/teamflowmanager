@@ -15,7 +15,6 @@ import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATI
 import com.jesuslcorominas.teamflowmanager.data.local.database.migration.MIGRATION_4_5
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.converters.Converters
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionExecutor
-import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.RoomTransactionRunner
 import com.jesuslcorominas.teamflowmanager.data.local.database.utils.transaction.TransactionExecutor
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.GoalLocalDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.local.datasource.MatchLocalDataSourceImpl
@@ -29,7 +28,6 @@ import com.jesuslcorominas.teamflowmanager.data.local.exporter.DatabaseExporterI
 import com.jesuslcorominas.teamflowmanager.data.local.exporter.DatabaseImporterImpl
 import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseExporter
 import com.jesuslcorominas.teamflowmanager.domain.utils.DatabaseImporter
-import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.koin.android.ext.koin.androidContext
@@ -72,7 +70,7 @@ internal val databaseModule =
         single { get<TeamFlowManagerDatabase>().playerSubstitutionDao() }
         single { get<TeamFlowManagerDatabase>().goalDao() }
 
-        singleOf(::RoomTransactionRunner) bind TransactionRunner::class
+        // Keep RoomTransactionExecutor for Room-specific operations
         singleOf(::RoomTransactionExecutor) bind TransactionExecutor::class
     }
 
