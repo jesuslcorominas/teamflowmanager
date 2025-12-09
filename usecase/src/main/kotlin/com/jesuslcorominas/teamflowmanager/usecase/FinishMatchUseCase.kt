@@ -49,10 +49,10 @@ internal class FinishMatchUseCaseImpl(
                 status = MatchStatus.FINISHED,
             )
 
-            // Get player times from local database snapshot (not Flow)
-            // This ensures we have the data before deleting from Firestore
+            // Get player times from Firestore (not local DB)
+            // This ensures we have the latest data that was written via batch operations
             val playerTimes = try {
-                playerTimeRepository.getAllLocalPlayerTimesDirect()
+                playerTimeRepository.getAllPlayerTimes().first()
             } catch (e: Exception) {
                 // If we can't get player times, log error and continue with empty list
                 println("FinishMatchUseCase: Error getting player times: ${e.message}")
