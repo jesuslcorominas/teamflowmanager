@@ -32,6 +32,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,6 +61,8 @@ class MatchViewModel(
     private val endTimeoutUseCase: EndTimeoutUseCase,
     private val getMatchReportData: GetMatchReportDataUseCase,
     private val exportMatchReportToPdf: ExportMatchReportToPdfUseCase,
+    private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
+    private val playerTimeRepository: PlayerTimeRepository,
     private val preferencesRepository: PreferencesRepository, // TODO extract to usecases
     private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
@@ -106,11 +110,21 @@ class MatchViewModel(
         viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState is MatchUiState.Success && !currentState.match.isStarted) {
+                // Synchronize time with server before starting the match
+                try {
+                    synchronizeTimeUseCase()
+                } catch (e: Exception) {
+                    crashReporter.recordException(e)
+                    crashReporter.log("Error synchronizing time before match start: ${e.message}")
+                    // Continue with match start even if sync fails
+                }
+                
                 val currentTime = _currentTime.value
                 getMatchById(matchId).first()?.let {
                     startMatchTimerUseCase(matchId = it.id, currentTime)
-                    it.startingLineupIds.forEach { playerId ->
-                        startPlayerTimerUseCase(playerId, currentTime)
+                    // Start all player timers at once using batch operation
+                    if (it.startingLineupIds.isNotEmpty()) {
+                        playerTimeRepository.startTimersBatch(it.startingLineupIds, currentTime)
                     }
                 }
             }
@@ -240,6 +254,16 @@ class MatchViewModel(
         viewModelScope.launch {
             try {
                 crashReporter.log("Resuming match: $matchId")
+                
+                // Synchronize time with server before resuming
+                try {
+                    synchronizeTimeUseCase()
+                } catch (e: Exception) {
+                    crashReporter.recordException(e)
+                    crashReporter.log("Error synchronizing time before match resume: ${e.message}")
+                    // Continue with match resume even if sync fails
+                }
+                
                 getMatchById(matchId).first()?.let {
                     resumeMatchUseCase(it.id, _currentTime.value)
 
@@ -598,9 +622,9 @@ class MatchViewModel(
         currentTimeMillis: Long,
     ): Long {
         return if (isRunning && lastStartTimeMillis != null) {
-            elapsedTimeMillis + (currentTimeMillis - lastStartTimeMillis)
+            (elapsedTimeMillis + (currentTimeMillis - lastStartTimeMillis)).coerceAtLeast(0L)
         } else {
-            elapsedTimeMillis
+            elapsedTimeMillis.coerceAtLeast(0L)
         }
     }
 

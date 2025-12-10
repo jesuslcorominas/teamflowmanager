@@ -29,7 +29,12 @@ val viewModelModule =
         }
 
         viewModel {
-            SplashViewModel(getTeam = get(), getCurrentUser = get(), hasLocalDataWithoutUserId = get())
+            SplashViewModel(
+                getTeam = get(),
+                getCurrentUser = get(),
+                hasLocalDataWithoutUserId = get(),
+                synchronizeTimeUseCase = get()
+            )
         }
 
         viewModel {
@@ -106,6 +111,8 @@ val viewModelModule =
                 endTimeoutUseCase = get(),
                 getMatchReportData = get(),
                 exportMatchReportToPdf = get(),
+                synchronizeTimeUseCase = get(),
+                playerTimeRepository = get(),
                 preferencesRepository = get(),
                 timeTicker = get(),
                 analyticsTracker = get(),
@@ -120,6 +127,8 @@ val viewModelModule =
                 deleteMatchUseCase = get(),
                 resumeMatchUseCase = get(),
                 archiveMatchUseCase = get(),
+                synchronizeTimeUseCase = get(),
+                timeProvider = get(),
                 analyticsTracker = get(),
                 crashReporter = get()
             )
@@ -169,5 +178,5 @@ val viewModelModule =
             )
         }
 
-        factory { RealTimeTicker() } bind TimeTicker::class
+        factory { RealTimeTicker(get()) } bind TimeTicker::class
     }

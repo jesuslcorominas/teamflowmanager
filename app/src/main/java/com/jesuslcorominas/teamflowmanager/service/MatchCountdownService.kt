@@ -4,6 +4,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
+import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -13,6 +14,7 @@ import org.koin.android.ext.android.inject
 class MatchCountdownService : Service() {
 
     private val matchNotificationController: MatchNotificationController by inject()
+    private val timeProvider: TimeProvider by inject()
 
     private lateinit var notificationManager: MatchNotificationManager
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
@@ -45,7 +47,7 @@ class MatchCountdownService : Service() {
                         val notification =
                             notificationManager.buildNotification(
                                 match,
-                                System.currentTimeMillis(),
+                                timeProvider.getCurrentTime(),
                             )
                         startForeground(MatchNotificationManager.NOTIFICATION_ID, notification)
                     } else {

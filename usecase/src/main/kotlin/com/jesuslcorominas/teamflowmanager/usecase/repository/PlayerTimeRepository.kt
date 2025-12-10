@@ -23,6 +23,17 @@ interface PlayerTimeRepository {
         currentTimeMillis: Long,
     )
 
+    /**
+     * Start timers for multiple players at once using batch write.
+     * All timers start with the same timestamp for synchronization.
+     * @param playerIds List of player IDs to start timers for
+     * @param currentTimeMillis The current time in milliseconds
+     */
+    suspend fun startTimersBatch(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+    )
+
     suspend fun resetAllPlayerTimes()
 
     /**

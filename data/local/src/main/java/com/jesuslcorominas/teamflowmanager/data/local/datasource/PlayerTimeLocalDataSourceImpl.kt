@@ -25,6 +25,14 @@ internal class PlayerTimeLocalDataSourceImpl(
         playerTimeDao.upsert(playerTime.toEntity())
     }
 
+    override suspend fun batchUpsertPlayerTimes(playerTimes: List<PlayerTime>) {
+        // For local data source, just upsert each one individually
+        // Room handles this efficiently
+        playerTimes.forEach { playerTime ->
+            playerTimeDao.upsert(playerTime.toEntity())
+        }
+    }
+
     override suspend fun deleteAllPlayerTimes() {
         playerTimeDao.deleteAll()
     }
