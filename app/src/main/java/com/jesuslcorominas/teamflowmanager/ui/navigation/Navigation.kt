@@ -64,11 +64,6 @@ fun Navigation(
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.Login.createRoute()) { inclusive = true }
                     }
-                },
-                onNavigateToMigration = {
-                    navController.navigate(Route.Migration.createRoute()) {
-                        popUpTo(Route.Login.createRoute()) { inclusive = true }
-                    }
                 }
             )
         }

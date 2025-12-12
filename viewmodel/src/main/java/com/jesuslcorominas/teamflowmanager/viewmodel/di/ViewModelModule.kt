@@ -31,7 +31,6 @@ val viewModelModule =
             SplashViewModel(
                 getTeam = get(),
                 getCurrentUser = get(),
-                hasLocalDataWithoutUserId = get(),
                 synchronizeTimeUseCase = get()
             )
         }
@@ -39,7 +38,6 @@ val viewModelModule =
         viewModel {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
-                hasLocalDataWithoutUserId = get(),
                 analyticsTracker = get()
             )
         }
@@ -164,8 +162,6 @@ val viewModelModule =
         }
         viewModel {
             SettingsViewModel(
-                exportDatabaseUseCase = get(),
-                importDatabaseUseCase = get(),
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
                 analyticsTracker = get()

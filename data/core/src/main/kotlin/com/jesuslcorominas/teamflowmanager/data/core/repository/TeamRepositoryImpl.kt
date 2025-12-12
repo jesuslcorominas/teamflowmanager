@@ -6,8 +6,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import kotlinx.coroutines.flow.Flow
 
 internal class TeamRepositoryImpl(
-    private val teamDataSource: TeamDataSource,
-    private val teamLocalDataSource: TeamDataSource,
+    private val teamDataSource: TeamDataSource
 ) : TeamRepository {
     override fun getTeam(): Flow<Team?> = teamDataSource.getTeam()
 
@@ -21,14 +20,4 @@ internal class TeamRepositoryImpl(
 
     override fun getTeamByCoachId(coachId: String): Flow<Team?> =
         teamDataSource.getTeamByCoachId(coachId)
-
-    override suspend fun hasLocalTeamWithoutUserId(): Boolean =
-        teamLocalDataSource.hasLocalTeamWithoutUserId()
-
-    override suspend fun getLocalTeamDirect(): Team? =
-        teamLocalDataSource.getTeamDirect()
-
-    override suspend fun clearLocalTeamData() {
-        teamLocalDataSource.clearLocalData()
-    }
 }

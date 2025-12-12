@@ -10,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
@@ -29,10 +30,8 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.HasLocalDataWithoutUserIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.MigrateLocalDataToFirestoreUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
@@ -65,6 +64,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCaseImpl
@@ -84,10 +84,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.MigrateLocalDataToFirestoreUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCaseImpl
@@ -125,8 +123,6 @@ internal val useCaseInternalModule =
         singleOf(::GetTeamUseCaseImpl) bind GetTeamUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
-        singleOf(::HasLocalDataWithoutUserIdUseCaseImpl) bind HasLocalDataWithoutUserIdUseCase::class
-        singleOf(::MigrateLocalDataToFirestoreUseCaseImpl) bind MigrateLocalDataToFirestoreUseCase::class
 
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class
@@ -183,6 +179,8 @@ internal val useCaseInternalModule =
 
         // Time synchronization
         singleOf(::SynchronizeTimeUseCaseImpl) bind SynchronizeTimeUseCase::class
+
+        singleOf(::GetActiveMatchUseCaseImpl) bind GetActiveMatchUseCase::class
     }
 
 val useCaseModule =
