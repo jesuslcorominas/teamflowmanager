@@ -14,6 +14,8 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCas
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +31,8 @@ class TeamViewModel(
     private val updateTeam: UpdateTeamUseCase,
     private val getCaptainPlayer: GetCaptainPlayerUseCase,
     private val hasScheduledMatches: HasScheduledMatchesUseCase,
-    private val playerRepository: PlayerRepository, // TODO extract to usecase
+    private val setPlayerAsCaptainUseCase: SetPlayerAsCaptainUseCase,
+    private val removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase,
     private val analyticsTracker: AnalyticsTracker,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -123,10 +126,10 @@ class TeamViewModel(
                 if (captainChanged) {
                     if (captain != null && captainId == null) {
                         // Remove current captain
-                        playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase
+                        removePlayerAsCaptainUseCase(captain.id)
                     } else if (captainId != null && (captain == null || captain.id != captainId)) {
                         // Set new captain
-                        playerRepository.setPlayerAsCaptain(captainId) // TODO extract to usecase
+                        setPlayerAsCaptainUseCase(captainId)
                     }
                 }
 

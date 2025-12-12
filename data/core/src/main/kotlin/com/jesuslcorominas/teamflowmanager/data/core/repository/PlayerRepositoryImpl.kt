@@ -6,8 +6,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import kotlinx.coroutines.flow.Flow
 
 internal class PlayerRepositoryImpl(
-    private val playerDataSource: PlayerDataSource,
-    private val playerLocalDataSource: PlayerDataSource,
+    private val playerDataSource: PlayerDataSource
 ) : PlayerRepository {
     override fun getAllPlayers(): Flow<List<Player>> = playerDataSource.getAllPlayers()
 
@@ -33,12 +32,5 @@ internal class PlayerRepositoryImpl(
 
     override suspend fun removePlayerAsCaptain(playerId: Long) {
         playerDataSource.removePlayerAsCaptain(playerId)
-    }
-
-    override suspend fun getAllLocalPlayersDirect(): List<Player> =
-        playerLocalDataSource.getAllPlayersDirect()
-
-    override suspend fun clearLocalPlayerData() {
-        playerLocalDataSource.clearLocalData()
     }
 }

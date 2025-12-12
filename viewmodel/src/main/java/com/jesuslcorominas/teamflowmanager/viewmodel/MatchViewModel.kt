@@ -29,7 +29,10 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartPlayerTimersBatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
@@ -58,8 +61,9 @@ class MatchViewModel(
     private val getMatchReportData: GetMatchReportDataUseCase,
     private val exportMatchReportToPdf: ExportMatchReportToPdfUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
-    private val playerTimeRepository: PlayerTimeRepository,
-    private val preferencesRepository: PreferencesRepository, // TODO extract to usecases
+    private val startPlayerTimersBatchUseCase: StartPlayerTimersBatchUseCase,
+    private val shouldShowInvalidSubstitutionAlertUseCase: ShouldShowInvalidSubstitutionAlertUseCase,
+    private val setShouldShowInvalidSubstitutionAlertUseCase: SetShouldShowInvalidSubstitutionAlertUseCase,
     private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
@@ -120,7 +124,7 @@ class MatchViewModel(
                     startMatchTimerUseCase(matchId = it.id, currentTime)
                     // Start all player timers at once using batch operation
                     if (it.startingLineupIds.isNotEmpty()) {
-                        playerTimeRepository.startTimersBatch(it.startingLineupIds, currentTime)
+                        startPlayerTimersBatchUseCase(it.startingLineupIds, currentTime)
                     }
                 }
             }
@@ -336,7 +340,7 @@ class MatchViewModel(
                 _selectedPlayerOut.value = playerId
             } else {
                 // Player is not currently playing, show alert if preferences allow
-                if (preferencesRepository.shouldShowInvalidSubstitutionAlert()) {
+                if (shouldShowInvalidSubstitutionAlertUseCase()) {
                     _showInvalidSubstitutionAlert.value = true
                 }
             }
@@ -350,7 +354,7 @@ class MatchViewModel(
     fun dismissInvalidSubstitutionAlert(dontShowAgain: Boolean = false) {
         _showInvalidSubstitutionAlert.value = false
         if (dontShowAgain) {
-            preferencesRepository.setShouldShowInvalidSubstitutionAlert(false)
+            setShouldShowInvalidSubstitutionAlertUseCase(false)
         }
     }
 

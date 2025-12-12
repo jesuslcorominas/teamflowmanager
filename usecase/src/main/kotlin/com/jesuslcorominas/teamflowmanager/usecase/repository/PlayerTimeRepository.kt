@@ -35,16 +35,4 @@ interface PlayerTimeRepository {
     )
 
     suspend fun resetAllPlayerTimes()
-
-    /**
-     * Get all local player times directly (not as a Flow) for migration purposes.
-     * @return List of all player times
-     */
-    suspend fun getAllLocalPlayerTimesDirect(): List<PlayerTime>
-
-    /**
-     * Clear local player time data from Room database.
-     * Used after successful migration to Firestore.
-     */
-    suspend fun clearLocalPlayerTimeData()
 }

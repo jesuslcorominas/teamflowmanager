@@ -6,8 +6,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryR
 import kotlinx.coroutines.flow.Flow
 
 internal class PlayerTimeHistoryRepositoryImpl(
-    private val playerTimeHistoryDataSource: PlayerTimeHistoryDataSource,
-    private val playerTimeHistoryLocalDataSource: PlayerTimeHistoryDataSource,
+    private val playerTimeHistoryDataSource: PlayerTimeHistoryDataSource
 ) : PlayerTimeHistoryRepository {
     override fun getPlayerTimeHistory(playerId: Long): Flow<List<PlayerTimeHistory>> =
         playerTimeHistoryDataSource.getPlayerTimeHistory(playerId)
@@ -20,11 +19,4 @@ internal class PlayerTimeHistoryRepositoryImpl(
 
     override suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): Long =
         playerTimeHistoryDataSource.insertPlayerTimeHistory(playerTimeHistory)
-
-    override suspend fun getAllLocalPlayerTimeHistoryDirect(): List<PlayerTimeHistory> =
-        playerTimeHistoryLocalDataSource.getAllPlayerTimeHistoryDirect()
-
-    override suspend fun clearLocalPlayerTimeHistoryData() {
-        playerTimeHistoryLocalDataSource.clearLocalData()
-    }
 }

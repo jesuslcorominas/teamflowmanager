@@ -2,12 +2,12 @@ package com.jesuslcorominas.teamflowmanager.service
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.notification.MatchNotificationController
-import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
 import kotlinx.coroutines.flow.Flow
 
 /**

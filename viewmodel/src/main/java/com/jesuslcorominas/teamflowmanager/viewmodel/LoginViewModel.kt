@@ -3,7 +3,6 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
-import com.jesuslcorominas.teamflowmanager.domain.usecase.HasLocalDataWithoutUserIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +11,6 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
-    private val hasLocalDataWithoutUserId: HasLocalDataWithoutUserIdUseCase,
     private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
 
@@ -23,7 +21,6 @@ class LoginViewModel(
         data object Idle : UiState
         data object Loading : UiState
         data object Success : UiState
-        data object NeedsMigration : UiState
         data class Error(val message: String) : UiState
     }
 
@@ -41,18 +38,7 @@ class LoginViewModel(
                         )
                     )
 
-                    // Check if there's local data that needs migration
-                    try {
-                        val hasLocalData = hasLocalDataWithoutUserId()
-                        if (hasLocalData) {
-                            _uiState.value = UiState.NeedsMigration
-                        } else {
-                            _uiState.value = UiState.Success
-                        }
-                    } catch (e: Exception) {
-                        // If check fails, just proceed without migration
-                        _uiState.value = UiState.Success
-                    }
+                    _uiState.value = UiState.Success
                 }
                 .onFailure { exception ->
                     analyticsTracker.logEvent(

@@ -2,11 +2,17 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.UpdateScheduledMatchesCaptainUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -35,6 +41,12 @@ class PlayerViewModelTest {
     private lateinit var deletePlayerUseCase: DeletePlayerUseCase
     private lateinit var updatePlayerUseCase: UpdatePlayerUseCase
     private lateinit var getCaptainPlayerUseCase: GetCaptainPlayerUseCase
+    private lateinit var updateScheduledMatchesCaptainUseCase: UpdateScheduledMatchesCaptainUseCase
+    private lateinit var setPlayerAsCaptainUseCase: SetPlayerAsCaptainUseCase
+    private lateinit var removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase
+    private lateinit var getScheduledMatchesUseCase: GetScheduledMatchesUseCase
+    private lateinit var analyticsTracker: AnalyticsTracker
+    private lateinit var crashReporter: CrashReporter
     private lateinit var viewModel: PlayerViewModel
 
     @Before
@@ -45,6 +57,12 @@ class PlayerViewModelTest {
         deletePlayerUseCase = mockk()
         updatePlayerUseCase = mockk()
         getCaptainPlayerUseCase = mockk()
+        updateScheduledMatchesCaptainUseCase = mockk(relaxed = true)
+        setPlayerAsCaptainUseCase = mockk(relaxed = true)
+        removePlayerAsCaptainUseCase = mockk(relaxed = true)
+        getScheduledMatchesUseCase = mockk()
+        analyticsTracker = mockk(relaxed = true)
+        crashReporter = mockk(relaxed = true)
     }
 
     @After
@@ -64,9 +82,12 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = ,
-            playerRepository = ,
-            matchRepository =
+            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
+            analyticsTracker = analyticsTracker,
+            crashReporter = crashReporter
         )
 
         // Then
@@ -89,9 +110,12 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = ,
-            playerRepository = ,
-            matchRepository =
+            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
+            analyticsTracker = analyticsTracker,
+            crashReporter = crashReporter
         )
         advanceUntilIdle()
 
@@ -112,9 +136,12 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = ,
-            playerRepository = ,
-            matchRepository =
+            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
+            analyticsTracker = analyticsTracker,
+            crashReporter = crashReporter
         )
         advanceUntilIdle()
 
@@ -139,9 +166,12 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = ,
-            playerRepository = ,
-            matchRepository =
+            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
+            analyticsTracker = analyticsTracker,
+            crashReporter = crashReporter
         )
 
         // When
@@ -163,9 +193,12 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = ,
-            playerRepository = ,
-            matchRepository =
+            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
+            analyticsTracker = analyticsTracker,
+            crashReporter = crashReporter
         )
 
         // When
@@ -186,9 +219,12 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = ,
-            playerRepository = ,
-            matchRepository =
+            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
+            analyticsTracker = analyticsTracker,
+            crashReporter = crashReporter
         )
         viewModel.showDeleteConfirmation(player)
 
@@ -211,9 +247,12 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = ,
-            playerRepository = ,
-            matchRepository =
+            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
+            analyticsTracker = analyticsTracker,
+            crashReporter = crashReporter
         )
 
         // When
@@ -244,9 +283,12 @@ class PlayerViewModelTest {
             updatePlayerUseCase = updatePlayerUseCase,
             deletePlayerUseCase = deletePlayerUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = ,
-            playerRepository = ,
-            matchRepository =
+            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
+            analyticsTracker = analyticsTracker,
+            crashReporter = crashReporter
         )
         advanceUntilIdle()
 
