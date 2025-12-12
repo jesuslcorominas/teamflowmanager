@@ -11,6 +11,9 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,8 +28,9 @@ class PlayerViewModel(
     private val deletePlayerUseCase: DeletePlayerUseCase,
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
     private val updateScheduledMatchesCaptainUseCase: UpdateScheduledMatchesCaptainUseCase,
-    private val playerRepository: PlayerRepository, // TODO extract to usecase
-    private val matchRepository: MatchRepository, // TODO extract to usecase
+    private val setPlayerAsCaptainUseCase: SetPlayerAsCaptainUseCase,
+    private val removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase,
+    private val getScheduledMatchesUseCase: GetScheduledMatchesUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
 ) : ViewModel() {
@@ -75,7 +79,7 @@ class PlayerViewModel(
                 )
             } else if (!player.isCaptain && currentCaptain != null && currentCaptain.id == player.id) {
                 // Player is being updated to no longer be captain
-                val scheduledMatches = matchRepository.getScheduledMatches()
+                val scheduledMatches = getScheduledMatchesUseCase()
                 if (scheduledMatches.isNotEmpty()) {
                     _captainConfirmationState.value = CaptainConfirmationState.ConfirmRemoveWithMatches(
                         player = player,
@@ -98,7 +102,7 @@ class PlayerViewModel(
                     // Save the new captain
                     savePlayerDirectly(state.newCaptain)
                     // Check if we should update scheduled matches
-                    val scheduledMatches = matchRepository.getScheduledMatches()
+                    val scheduledMatches = getScheduledMatchesUseCase()
                     if (scheduledMatches.isNotEmpty()) {
                         updateScheduledMatchesCaptainUseCase.invoke(state.newCaptain.id)
                     }
@@ -153,9 +157,9 @@ class PlayerViewModel(
                     )
                 }
 
-                // Update captain status in repository
+                // Update captain status
                 if (player.isCaptain) {
-                    playerRepository.setPlayerAsCaptain(player.id)
+                    setPlayerAsCaptainUseCase(player.id)
 
                     analyticsTracker.logEvent(
                         AnalyticsEvent.CAPTAIN_SELECTED,
@@ -166,7 +170,7 @@ class PlayerViewModel(
                 } else {
                     val currentCaptain = getCaptainPlayerUseCase.invoke()
                     if (currentCaptain?.id == player.id) {
-                        playerRepository.removePlayerAsCaptain(player.id)
+                        removePlayerAsCaptainUseCase(player.id)
 
                         analyticsTracker.logEvent(
                             AnalyticsEvent.CAPTAIN_REMOVED,

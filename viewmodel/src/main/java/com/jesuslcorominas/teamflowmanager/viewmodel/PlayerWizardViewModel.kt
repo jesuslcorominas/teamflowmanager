@@ -13,6 +13,9 @@ import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,8 +29,9 @@ class PlayerWizardViewModel(
     private val updatePlayerUseCase: UpdatePlayerUseCase,
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
     private val updateScheduledMatchesCaptainUseCase: UpdateScheduledMatchesCaptainUseCase,
-    private val playerRepository: PlayerRepository, // TODO extract to usecase
-    private val matchRepository: MatchRepository,// TODO extract to usecase
+    private val setPlayerAsCaptainUseCase: SetPlayerAsCaptainUseCase,
+    private val removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase,
+    private val getScheduledMatchesUseCase: GetScheduledMatchesUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
     savedStateHandle: SavedStateHandle,
@@ -203,7 +207,7 @@ class PlayerWizardViewModel(
             if (player.isCaptain && currentCaptain != null && currentCaptain.id != player.id) {
                 // Show confirmation to replace captain
                 // Check if there are scheduled matches
-                val scheduledMatches = matchRepository.getScheduledMatches()
+                val scheduledMatches = getScheduledMatchesUseCase()
                 if (scheduledMatches.isNotEmpty()) {
                     _captainConfirmationState.value = CaptainConfirmationState.ConfirmReplaceWithMatches(
                         currentCaptain = currentCaptain,
@@ -218,7 +222,7 @@ class PlayerWizardViewModel(
                 }
             } else if (!player.isCaptain && currentCaptain != null && currentCaptain.id == player.id) {
                 // Player is being updated to no longer be captain
-                val scheduledMatches = matchRepository.getScheduledMatches()
+                val scheduledMatches = getScheduledMatchesUseCase()
                 if (scheduledMatches.isNotEmpty()) {
                     _captainConfirmationState.value = CaptainConfirmationState.ConfirmRemoveWithMatches(
                         player = player,
@@ -295,13 +299,13 @@ class PlayerWizardViewModel(
                     )
                 }
 
-                // Update captain status in repository
+                // Update captain status
                 if (player.isCaptain) {
-                    playerRepository.setPlayerAsCaptain(player.id)
+                    setPlayerAsCaptainUseCase(player.id)
                 } else {
                     val currentCaptain = getCaptainPlayerUseCase.invoke()
                     if (currentCaptain?.id == player.id) {
-                        playerRepository.removePlayerAsCaptain(player.id)
+                        removePlayerAsCaptainUseCase(player.id)
                     }
                 }
 
