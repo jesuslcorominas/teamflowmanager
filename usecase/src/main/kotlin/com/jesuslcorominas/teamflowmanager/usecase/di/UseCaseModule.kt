@@ -7,7 +7,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportDatabaseUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
@@ -32,7 +31,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasLocalDataWithoutUserIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.ImportDatabaseUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MigrateLocalDataToFirestoreUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
@@ -58,7 +56,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
@@ -83,7 +80,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.MigrateLocalDataToFirestoreUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
@@ -161,9 +157,6 @@ internal val useCaseInternalModule =
         singleOf(::ExportToPdfUseCaseImpl) bind ExportToPdfUseCase::class
         singleOf(::GetMatchReportDataUseCaseImpl) bind GetMatchReportDataUseCase::class
         singleOf(::ExportMatchReportToPdfUseCaseImpl) bind ExportMatchReportToPdfUseCase::class
-
-        singleOf(::ExportDatabaseUseCaseImpl) bind ExportDatabaseUseCase::class
-        singleOf(::ImportDatabaseUseCaseImpl) bind ImportDatabaseUseCase::class
 
         // Auth use cases
         singleOf(::GetCurrentUserUseCaseImpl) bind GetCurrentUserUseCase::class
