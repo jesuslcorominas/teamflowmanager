@@ -3,10 +3,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.HasLocalDataWithoutUserIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

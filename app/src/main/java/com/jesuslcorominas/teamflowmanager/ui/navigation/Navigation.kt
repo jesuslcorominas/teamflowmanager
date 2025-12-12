@@ -1,12 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
-import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,19 +13,18 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
+import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
+import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
-import com.jesuslcorominas.teamflowmanager.ui.migration.MigrationScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
-import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
-import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 
 @Composable
 fun Navigation(
@@ -71,16 +68,6 @@ fun Navigation(
                 onNavigateToMigration = {
                     navController.navigate(Route.Migration.createRoute()) {
                         popUpTo(Route.Login.createRoute()) { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        composable(Route.Migration.createRoute()) {
-            MigrationScreen(
-                onMigrationComplete = {
-                    navController.navigate(Route.Matches.createRoute()) {
-                        popUpTo(Route.Migration.createRoute()) { inclusive = true }
                     }
                 }
             )
@@ -186,33 +173,8 @@ fun Navigation(
             MatchScreen(onTitleChange = onTitleChange)
         }
 
-        composable(
-            route = Route.Settings.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.Settings.ARG_FILE_URI) {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                }
-            ),
-            deepLinks = listOf(
-                navDeepLink {
-                    action = Intent.ACTION_VIEW
-                    mimeType = "application/*"
-                }
-            )
-        ) { entry ->
-
-            val intent = entry.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
-            val fileUri = intent?.data?.toString()
-
+        composable(route = Route.Settings.createRoute()) {
             SettingsScreen(
-                incomingFileUri = fileUri,
-                onNavigateToMatches = {
-                    navController.navigate(Route.Matches.createRoute()) {
-                        popUpTo(Route.Settings.createRoute()) { inclusive = true }
-                    }
-                },
                 onSignOut = {
                     navController.navigate(Route.Login.createRoute()) {
                         popUpTo(0) { inclusive = true }
@@ -249,6 +211,7 @@ fun Navigation(
                     Route.Team.MODE_VIEW -> navController.navigateToMatches()
                 }
             }
+
             Route.Players -> navController.navigateToMatches()
             Route.Analysis -> navController.navigateToMatches()
             Route.Settings -> {

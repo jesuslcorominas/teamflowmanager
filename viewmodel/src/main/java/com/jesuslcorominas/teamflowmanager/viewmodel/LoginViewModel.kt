@@ -3,8 +3,8 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
-import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.HasLocalDataWithoutUserIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,7 +40,7 @@ class LoginViewModel(
                             "is_new_user" to "unknown"
                         )
                     )
-                    
+
                     // Check if there's local data that needs migration
                     try {
                         val hasLocalData = hasLocalDataWithoutUserId()

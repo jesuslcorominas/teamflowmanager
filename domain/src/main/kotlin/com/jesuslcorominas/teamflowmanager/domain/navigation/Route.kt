@@ -70,19 +70,7 @@ sealed class Route(
         const val FULL_ROUTE = "$PATH/{$ARG_MATCH_ID}"
     }
 
-    data object Settings : Route(path = "settings", canGoBack = true) {
-        const val ARG_FILE_URI = "fileUri"
-        private const val PATH = "settings"
-        const val FULL_ROUTE = "$PATH?$ARG_FILE_URI={$ARG_FILE_URI}"
-
-        fun createRoute(fileUri: String? = null): String {
-            return if (fileUri != null) {
-                "$PATH?$ARG_FILE_URI=$fileUri"
-            } else {
-                PATH
-            }
-        }
-    }
+    data object Settings : Route(path = "settings", canGoBack = true)
 
     data object Splash : Route(path = "splash", showTopBar = false)
 

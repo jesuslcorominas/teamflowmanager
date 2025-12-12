@@ -8,11 +8,11 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerGoalStats
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStats
-import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeStatsUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportToPdfUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetExportDataUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerGoalStatsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerTimeStatsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,7 +33,7 @@ class AnalysisViewModel(
 
     private val _selectedTab = MutableStateFlow(AnalysisTab.TIMES)
     val selectedTab: StateFlow<AnalysisTab> = _selectedTab.asStateFlow()
-    
+
     private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
     val exportState: StateFlow<ExportState> = _exportState.asStateFlow()
 
@@ -44,7 +44,7 @@ class AnalysisViewModel(
 
     fun selectTab(tab: AnalysisTab) {
         _selectedTab.value = tab
-        
+
         analyticsTracker.logEvent(
             AnalyticsEvent.TAB_CHANGED,
             mapOf(
@@ -53,7 +53,7 @@ class AnalysisViewModel(
             ),
         )
     }
-    
+
     fun requestExport() {
         viewModelScope.launch {
             try {
@@ -62,7 +62,7 @@ class AnalysisViewModel(
                 val team = getTeam().firstOrNull()
                 val teamName = team?.name ?: "Mi Equipo"
                 val exportData = getExportData().firstOrNull()
-                
+
                 if (exportData != null) {
                     val uri = exportToPdf(exportData, teamName)
                     _exportState.value = if (uri != null) {
@@ -87,7 +87,7 @@ class AnalysisViewModel(
             }
         }
     }
-    
+
     fun exportCompleted() {
         _exportState.value = ExportState.Idle
     }
