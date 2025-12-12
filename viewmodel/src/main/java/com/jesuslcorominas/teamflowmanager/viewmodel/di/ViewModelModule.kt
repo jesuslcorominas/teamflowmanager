@@ -7,7 +7,6 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.MigrationViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
@@ -32,7 +31,6 @@ val viewModelModule =
             SplashViewModel(
                 getTeam = get(),
                 getCurrentUser = get(),
-                hasLocalDataWithoutUserId = get(),
                 synchronizeTimeUseCase = get()
             )
         }
@@ -40,15 +38,6 @@ val viewModelModule =
         viewModel {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
-                hasLocalDataWithoutUserId = get(),
-                analyticsTracker = get()
-            )
-        }
-
-        viewModel {
-            MigrationViewModel(
-                migrateLocalDataToFirestoreUseCase = get(),
-                getCurrentUserUseCase = get(),
                 analyticsTracker = get()
             )
         }
@@ -61,8 +50,9 @@ val viewModelModule =
                 deletePlayerUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 updateScheduledMatchesCaptainUseCase = get(),
-                playerRepository = get(),
-                matchRepository = get(),
+                setPlayerAsCaptainUseCase = get(),
+                removePlayerAsCaptainUseCase = get(),
+                getScheduledMatchesUseCase = get(),
                 analyticsTracker = get(),
                 crashReporter = get()
             )
@@ -74,8 +64,9 @@ val viewModelModule =
                 updatePlayerUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 updateScheduledMatchesCaptainUseCase = get(),
-                playerRepository = get(),
-                matchRepository = get(),
+                setPlayerAsCaptainUseCase = get(),
+                removePlayerAsCaptainUseCase = get(),
+                getScheduledMatchesUseCase = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
                 savedStateHandle = get(),
@@ -89,7 +80,8 @@ val viewModelModule =
                 updateTeam = get(),
                 getCaptainPlayer = get(),
                 hasScheduledMatches = get(),
-                playerRepository = get(),
+                setPlayerAsCaptainUseCase = get(),
+                removePlayerAsCaptainUseCase = get(),
                 analyticsTracker = get(),
                 savedStateHandle = get()
             )
@@ -103,22 +95,22 @@ val viewModelModule =
                 pauseMatch = get(),
                 resumeMatchUseCase = get(),
                 startMatchTimerUseCase = get(),
-                startPlayerTimerUseCase = get(),
                 registerPlayerSubstitutionUseCase = get(),
                 getMatchSummaryUseCase = get(),
+                getMatchTimelineUseCase = get(),
                 registerGoal = get(),
                 startTimeoutUseCase = get(),
                 endTimeoutUseCase = get(),
                 getMatchReportData = get(),
                 exportMatchReportToPdf = get(),
                 synchronizeTimeUseCase = get(),
-                playerTimeRepository = get(),
-                preferencesRepository = get(),
+                startPlayerTimersBatchUseCase = get(),
+                shouldShowInvalidSubstitutionAlertUseCase = get(),
+                setShouldShowInvalidSubstitutionAlertUseCase = get(),
                 timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
-                savedStateHandle = get(),
-                getMatchTimelineUseCase = get()
+                savedStateHandle = get()
             )
         }
         viewModel {
@@ -170,8 +162,6 @@ val viewModelModule =
         }
         viewModel {
             SettingsViewModel(
-                exportDatabaseUseCase = get(),
-                importDatabaseUseCase = get(),
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
                 analyticsTracker = get()

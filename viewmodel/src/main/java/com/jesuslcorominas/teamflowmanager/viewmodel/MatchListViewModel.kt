@@ -7,12 +7,12 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ArchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
-import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,7 +66,7 @@ class MatchListViewModel(
         viewModelScope.launch {
             try {
                 crashReporter.log("Resuming match: $matchId")
-                
+
                 // Synchronize time with server before resuming
                 try {
                     synchronizeTimeUseCase()
@@ -75,7 +75,7 @@ class MatchListViewModel(
                     crashReporter.log("Error synchronizing time before match resume: ${e.message}")
                     // Continue with match resume even if sync fails
                 }
-                
+
                 resumeMatchUseCase(matchId, timeProvider.getCurrentTime())
 
                 analyticsTracker.logEvent(

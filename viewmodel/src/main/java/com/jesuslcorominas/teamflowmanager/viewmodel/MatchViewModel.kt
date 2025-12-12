@@ -16,25 +16,25 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
-import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
-import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
+import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartPlayerTimersBatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,7 +52,6 @@ class MatchViewModel(
     private val pauseMatch: PauseMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
     private val startMatchTimerUseCase: StartMatchTimerUseCase,
-    private val startPlayerTimerUseCase: StartPlayerTimerUseCase,
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
     private val getMatchSummaryUseCase: GetMatchSummaryUseCase,
     private val getMatchTimelineUseCase: GetMatchTimelineUseCase,
@@ -62,8 +61,9 @@ class MatchViewModel(
     private val getMatchReportData: GetMatchReportDataUseCase,
     private val exportMatchReportToPdf: ExportMatchReportToPdfUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
-    private val playerTimeRepository: PlayerTimeRepository,
-    private val preferencesRepository: PreferencesRepository, // TODO extract to usecases
+    private val startPlayerTimersBatchUseCase: StartPlayerTimersBatchUseCase,
+    private val shouldShowInvalidSubstitutionAlertUseCase: ShouldShowInvalidSubstitutionAlertUseCase,
+    private val setShouldShowInvalidSubstitutionAlertUseCase: SetShouldShowInvalidSubstitutionAlertUseCase,
     private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
@@ -118,13 +118,13 @@ class MatchViewModel(
                     crashReporter.log("Error synchronizing time before match start: ${e.message}")
                     // Continue with match start even if sync fails
                 }
-                
+
                 val currentTime = _currentTime.value
                 getMatchById(matchId).first()?.let {
                     startMatchTimerUseCase(matchId = it.id, currentTime)
                     // Start all player timers at once using batch operation
                     if (it.startingLineupIds.isNotEmpty()) {
-                        playerTimeRepository.startTimersBatch(it.startingLineupIds, currentTime)
+                        startPlayerTimersBatchUseCase(it.startingLineupIds, currentTime)
                     }
                 }
             }
@@ -254,7 +254,7 @@ class MatchViewModel(
         viewModelScope.launch {
             try {
                 crashReporter.log("Resuming match: $matchId")
-                
+
                 // Synchronize time with server before resuming
                 try {
                     synchronizeTimeUseCase()
@@ -263,7 +263,7 @@ class MatchViewModel(
                     crashReporter.log("Error synchronizing time before match resume: ${e.message}")
                     // Continue with match resume even if sync fails
                 }
-                
+
                 getMatchById(matchId).first()?.let {
                     resumeMatchUseCase(it.id, _currentTime.value)
 
@@ -340,7 +340,7 @@ class MatchViewModel(
                 _selectedPlayerOut.value = playerId
             } else {
                 // Player is not currently playing, show alert if preferences allow
-                if (preferencesRepository.shouldShowInvalidSubstitutionAlert()) {
+                if (shouldShowInvalidSubstitutionAlertUseCase()) {
                     _showInvalidSubstitutionAlert.value = true
                 }
             }
@@ -354,7 +354,7 @@ class MatchViewModel(
     fun dismissInvalidSubstitutionAlert(dontShowAgain: Boolean = false) {
         _showInvalidSubstitutionAlert.value = false
         if (dontShowAgain) {
-            preferencesRepository.setShouldShowInvalidSubstitutionAlert(false)
+            setShouldShowInvalidSubstitutionAlertUseCase(false)
         }
     }
 

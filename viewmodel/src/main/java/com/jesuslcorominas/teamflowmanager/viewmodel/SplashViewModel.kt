@@ -3,10 +3,9 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +15,6 @@ import kotlinx.coroutines.launch
 class SplashViewModel(
     private val getTeam: GetTeamUseCase,
     private val getCurrentUser: GetCurrentUserUseCase,
-    private val hasLocalDataWithoutUserId: HasLocalDataWithoutUserIdUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase
 ) : ViewModel() {
 
@@ -51,30 +49,8 @@ class SplashViewModel(
             }
 
             // Continue with authentication checks
-            checkLocalDataAndAuth()
+            checkAuthAndLoadTeam()
         }
-    }
-
-    private suspend fun checkLocalDataAndAuth() {
-        // Check for local data without user ID
-        try {
-            val hasLocalData = hasLocalDataWithoutUserId()
-            if (hasLocalData) {
-                Log.i(TAG, "Local data without user ID detected. Team exists without coachId.")
-                // Check if user is authenticated
-                val user = getCurrentUser().first()
-                if (user == null) {
-                    // Force authentication when local data exists but user is not authenticated
-                    _uiState.value = UiState.LocalDataNeedsAuth
-                    return
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking for local data without user ID", e)
-        }
-
-        // Continue with authentication check
-        checkAuthAndLoadTeam()
     }
 
     private suspend fun checkAuthAndLoadTeam() {
