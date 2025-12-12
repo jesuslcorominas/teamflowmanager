@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">TeamFlow Manager</string>
-    <string name="welcome_message">Welcome to TeamFlow Manager!</string>
 
     <!-- Login Strings -->
     <string name="login_subtitle">Manage your team in an easy way</string>
@@ -54,8 +53,6 @@
     <string name="last_name_required">Last name is required</string>
     <string name="number">Number</string>
     <string name="number_required">Number is required</string>
-    <string name="positions">Positions</string>
-    <string name="no_positions">Not assigned position</string>
     <string name="is_captain">Team Captain</string>
     <string name="captain_confirm_title">Change Team Captain?</string>
     <string name="captain_confirm_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. Continue?</string>
@@ -67,8 +64,6 @@
     <string name="captain_remove_with_matches_message">By unchecking this, %1$s %2$s will no longer be the team captain. There are %3$d scheduled matches. What do you want to do?</string>
     <string name="keep_captain_for_matches">Keep as captain in scheduled matches</string>
     <string name="remove_captain_from_matches">Remove from scheduled matches</string>
-    <string name="update_matches_captain_title">Update Scheduled Matches</string>
-    <string name="update_matches_captain_message">There are %1$d scheduled matches. Do you want to update them with the new captain?</string>
     <string name="team_captain">Captain</string>
 
     <string name="delete_player_message">Are you sure you want to delete %1$s %2$s from the roster?</string>
@@ -78,11 +73,9 @@
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>
     <string name="coach_name">Coach Name</string>
-    <string name="coach_name_required">Coach name is required</string>
     <string name="delegate_name">Delegate Name</string>
     <string name="delegate_name_required">Delegate name is required</string>
     <string name="team_type">Team Type</string>
-    <string name="team_type_required">Team type is required</string>
     <string name="team_type_football">Football %d</string>
     <string name="team_type_change_not_allowed">Cannot change team type</string>
     <string name="team_type_change_blocked_message">The team type cannot be changed because there are scheduled matches. Please delete or archive all scheduled matches first.</string>
@@ -90,29 +83,19 @@
     <string name="save_error_title">Error saving data</string>
     <string name="save_error_message">An error occurred while saving. Please check your internet connection and try again.</string>
 
-    <string name="team_info">Team Info</string>
-    <string name="team_info_description">Show team information</string>
     <string name="edit">Edit</string>
     <string name="edit_team_title">Edit Team</string>
     <string name="close">Close</string>
 
     <string name="current_match_title">Current Match</string>
     <string name="no_match_message">No active match</string>
-    <string name="match_time_label">Match Time</string>
-    <string name="player_times_title">Player Times</string>
     <string name="player_time_title">Active time</string>
-    <string name="running_indicator">ACTIVE</string>
-    <string name="player_number_format">#%d</string>
     <string name="pause_match_button">Half Time</string>
     <string name="resume_match_button">Resume</string>
     <string name="finish_match_button">Finish match</string>
     <string name="add_goal_button">Goal</string>
-    <string name="add_opponent_goal_button">Opponent Goal</string>
     <string name="add_opponent_goal_title">Add Opponent Goal</string>
     <string name="add_opponent_goal_message">Do you want to add a goal for the opponent team?</string>
-    <string name="scoreboard_label">Scoreboard</string>
-    <string name="my_team_label">My Team</string>
-    <string name="opponent_team_label">Opponent</string>
     <string name="select_goal_scorer_title">Select Goal Scorer</string>
     <string name="own_goal_option">Own Goal (Autogol)</string>
 
@@ -120,7 +103,6 @@
     <string name="matches_title">Matches</string>
     <string name="no_matches_message">No matches registered yet</string>
     <string name="add_match_title">Register Match</string>
-    <string name="edit_match_title">Edit Match</string>
     <string name="delete_match_title">Delete Match</string>
     <string name="delete_match_message">Are you sure you want to delete this match?</string>
 
@@ -133,20 +115,8 @@
     <string name="match_time">Match Time</string>
     <string name="match_time_required">Match time is required</string>
     <string name="number_of_periods">Number of Periods</string>
-    <string name="period_duration">Period Duration (minutes)</string>
     <string name="two_halves">2 Halves</string>
     <string name="four_quarters">4 Quarters</string>
-
-    <string name="starting_lineup">Starting Lineup</string>
-    <string name="initial_lineup">Initial Lineup</string>
-    <string name="substitutes">Substitutes</string>
-    <string name="select_players">Select Players</string>
-    <string name="no_starting_lineup">No starting lineup selected</string>
-    <string name="no_substitutes">No substitutes selected</string>
-    <string name="select_starting_lineup">Select Starting Lineup</string>
-    <string name="select_substitutes">Select Substitutes</string>
-    <string name="player_selected">Selected</string>
-    <string name="player_not_selected">Not Selected</string>
 
     <!-- Navigation -->
     <string name="nav_players">Team Roster</string>
@@ -163,11 +133,8 @@
     <string name="start_match">Start</string>
     <string name="view_match">View Detail</string>
     <string name="match_score">%1$d - %2$d</string>
-    <string name="match_active_warning">There is already an active match</string>
     <string name="archive_match">Archive</string>
     <string name="unarchive_match">Unarchive</string>
-    <string name="archive_match_title">Archive Match</string>
-    <string name="archive_match_message">Are you sure you want to archive this match? You can unarchive it later from the Archived section.</string>
     <string name="no_archived_matches">No matches archived yet</string>
 
     <!-- Player Substitution -->
@@ -178,25 +145,13 @@
     <!-- Match Summary -->
     <string name="match_finished">Match Finished</string>
     <string name="match_next">Upcoming Match</string>
-    <string name="match_summary_title">Match Summary</string>
-    <string name="match_not_found">Match not found</string>
-    <string name="total_time_label">Total Time</string>
-    <string name="first_half_label">First Half</string>
-    <string name="second_half_label">Second Half</string>
-    <string name="stoppage_time_format">%1$s + %2$s</string>
-    <string name="substitutions_title">Substitutions</string>
-    <string name="substitution_count">%d substitution(s)</string>
-    <string name="player_out">Player Out</string>
-    <string name="player_in">Player In</string>
 
     <!-- Timeline Tab -->
     <string name="timeline_tab">Timeline</string>
     <string name="summary_tab">Summary</string>
-    <string name="substitutions_tab">Substitutions</string>
     <string name="statistics_tab">Statistics</string>
     <string name="timeline_starting_lineup">Starting Lineup</string>
     <string name="timeline_goal">Goal</string>
-    <string name="timeline_own_goal">Own Goal</string>
     <string name="timeline_opponent_goal">Opponent Goal</string>
     <string name="timeline_substitution">Substitution</string>
     <string name="timeline_timeout">Timeout</string>
@@ -209,9 +164,6 @@
 
     <!-- Match Creation Wizard -->
     <string name="wizard_step_general_data">General Data</string>
-    <string name="wizard_step_squad_callup">Squad Call-Up</string>
-    <string name="wizard_step_captain">Captain</string>
-    <string name="wizard_step_lineup">Starting Lineup</string>
 
     <string name="next">Next</string>
     <string name="previous">Previous</string>
@@ -220,7 +172,6 @@
     <string name="squad_callup_subtitle">Select players for this match (minimum %d)</string>
     <string name="squad_callup_count">Selected: %d players</string>
     <string name="squad_callup_select_all">Select All</string>
-    <string name="squad_callup_min_error">You must select at least %d players</string>
     <string name="squad_callup_no_goalkeeper_warning">No goalkeeper selected</string>
     <string name="squad_callup_no_goalkeeper_message">You haven\'t selected any goalkeeper for the squad. Do you want to continue anyway?</string>
 
@@ -235,7 +186,6 @@
     <string name="starting_lineup_subtitle">Select exactly %d players to start</string>
     <string name="starting_lineup_count">Selected: %d/%d players</string>
     <string name="starting_lineup_max_error">You can only select up to %d players</string>
-    <string name="starting_lineup_min_error">You must select exactly %d players</string>
     <string name="starting_lineup_no_goalkeeper_warning">No goalkeeper in starting lineup</string>
     <string name="starting_lineup_no_goalkeeper_message">You haven\'t selected a goalkeeper in the starting lineup. Do you want to continue anyway?</string>
 
@@ -254,13 +204,11 @@
     <string name="fourth_quarter">4th Quarter</string>
     <string name="first_half">1st Half</string>
     <string name="second_half">2nd Half</string>
-    <string name="period_time_label">Period Time</string>
     <string name="stop_match_early_title">Stop Match Early?</string>
     <string name="stop_match_early_period_message">The match is not in the final period. Are you sure you want to end match now?</string>
     <string name="stop_match_early_message">There is more than 1 minute remaining. Are you sure you want to end match now?</string>
     <string name="pause_match_early_title">Go to break early?</string>
     <string name="pause_match_early_message">There is more than 1 minute remaining. Are you sure you want to go to the break now?</string>
-    <string name="pause_limit_reached">Cannot pause. Maximum pauses reached.</string>
     <string name="begin_match">Begin Match</string>
 
     <string name="list_single">%1$s</string>
@@ -271,7 +219,6 @@
 
     <string name="timeout_button">Timeout</string>
     <string name="end_timeout_button">End Timeout</string>
-    <string name="finish_timeout_button">Finish Timeout</string>
     <string name="match_timeout">Timeout</string>
 
     <string name="search_match_placeholder">Search matches by opponent or place</string>
@@ -282,12 +229,7 @@
     <string name="analysis_goals_tab">SCORERS</string>
     <string name="analysis_no_data">No playing time data available</string>
     <string name="analysis_no_goals_data">No goals data available</string>
-    <string name="analysis_player_time_chart_title">Playing Time Distribution</string>
-    <string name="analysis_player_goals_chart_title">Top Scorers</string>
-    <string name="analysis_minutes_label">min</string>
-    <string name="analysis_matches_played">%d matches</string>
     <string name="analysis_goals_label">Goals</string>
-    <string name="analysis_matches_with_goals">%d matches with goals</string>
     <string name="export_button_description">Export statistics</string>
     <string name="export_share_title">Share statistics</string>
 
@@ -321,7 +263,6 @@
     <string name="starter_short">ST</string>
     <string name="time_short">Time</string>
     <string name="goals_short">Goals</string>
-    <string name="export_match_report">Export</string>
     <string name="export_match_report_description">Export match report</string>
 
     <!-- Player Wizard Strings -->
