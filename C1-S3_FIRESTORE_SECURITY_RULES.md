@@ -477,15 +477,23 @@ const snapshot = await getDocs(q);
 
 ### Potential Issues
 
-1. **Document Reads**: Each permission check requires reading related documents (team, club, clubMember)
+1. **Document Reads for Permission Checks**: Each permission check requires reading related documents (team, club, clubMember)
    - **Impact**: Increased read operations and potential cost
    - **Mitigation**: Cache frequently accessed documents in client-side code
+   - **Note**: Firestore Security Rules language doesn't support variable caching or memoization within rules
+   - **Example**: Checking if a user is Presidente requires reading team document, then club member document
 
-2. **clubMember Document ID Convention**: Uses `userId_clubId` pattern
+2. **Subcollection Rules**: Statistics subcollections require fetching parent documents (player, match)
+   - **Impact**: Multiple document reads per permission check
+   - **Limitation**: Inherent to Firestore Security Rules - parent document data must be fetched for validation
+   - **Trade-off**: Security and proper access control vs. read operation costs
+   - **Mitigation**: Consider denormalizing critical permission data if read costs become significant
+
+3. **clubMember Document ID Convention**: Uses `userId_clubId` pattern
    - **Impact**: Requires consistent ID format across application
    - **Mitigation**: Document this pattern clearly and enforce in application code
 
-3. **Role String Matching**: Checks for exact "Presidente" string
+4. **Role String Matching**: Checks for exact "Presidente" string
    - **Impact**: Case-sensitive, typos will fail
    - **Mitigation**: Use constants in application code for role values
 

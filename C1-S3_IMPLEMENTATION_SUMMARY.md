@@ -400,6 +400,13 @@ await getDoc(teamRef);
    - Not part of Android build process
    - Command: `firebase deploy --only firestore:rules`
 
+4. **Document Reads for Permissions**: Security checks require reading related documents
+   - Each permission check reads team/club/clubMember documents
+   - Subcollection rules read parent documents (player, match)
+   - This is inherent to Firestore Security Rules - no variable caching available
+   - Trade-off: Security and proper access control vs. read operation costs
+   - Monitor read operations in production and consider denormalizing if costs become significant
+
 ## Future Enhancements
 
 1. **CI/CD Integration**: Add GitHub Actions workflow to run tests automatically
