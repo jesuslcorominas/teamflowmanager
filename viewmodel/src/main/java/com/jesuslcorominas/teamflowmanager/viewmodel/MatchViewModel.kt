@@ -361,6 +361,21 @@ class MatchViewModel(
     fun substitutePlayer(playerInId: Long) {
         val playerOut = _selectedPlayerOut.value ?: return
 
+        // Validate that the incoming player is not already playing
+        val currentState = _uiState.value
+        if (currentState is MatchUiState.Success) {
+            val playerIn = currentState.playerTimes.find { it.player.id == playerInId }
+            if (playerIn?.isRunning == true) {
+                // Player is already playing, show alert and don't proceed with substitution
+                if (shouldShowInvalidSubstitutionAlertUseCase()) {
+                    _showInvalidSubstitutionAlert.value = true
+                }
+                // Clear the selection
+                _selectedPlayerOut.value = null
+                return
+            }
+        }
+
         performSubstitution(
             playerIn = playerInId,
             playerOut = playerOut,
@@ -378,6 +393,19 @@ class MatchViewModel(
      * @param playerOutId The ID of the player going out (was active/playing)
      */
     fun substitutePlayerDirect(playerInId: Long, playerOutId: Long) {
+        // Validate that the incoming player is not already playing
+        val currentState = _uiState.value
+        if (currentState is MatchUiState.Success) {
+            val playerIn = currentState.playerTimes.find { it.player.id == playerInId }
+            if (playerIn?.isRunning == true) {
+                // Player is already playing, show alert and don't proceed with substitution
+                if (shouldShowInvalidSubstitutionAlertUseCase()) {
+                    _showInvalidSubstitutionAlert.value = true
+                }
+                return
+            }
+        }
+
         performSubstitution(
             playerIn = playerInId,
             playerOut = playerOutId,
