@@ -362,18 +362,10 @@ class MatchViewModel(
         val playerOut = _selectedPlayerOut.value ?: return
 
         // Validate that the incoming player is not already playing
-        val currentState = _uiState.value
-        if (currentState is MatchUiState.Success) {
-            val playerIn = currentState.playerTimes.find { it.player.id == playerInId }
-            if (playerIn?.isRunning == true) {
-                // Player is already playing, show alert and don't proceed with substitution
-                if (shouldShowInvalidSubstitutionAlertUseCase()) {
-                    _showInvalidSubstitutionAlert.value = true
-                }
-                // Clear the selection
-                _selectedPlayerOut.value = null
-                return
-            }
+        if (!isValidSubstitution(playerInId)) {
+            // Clear the selection since the substitution is invalid
+            _selectedPlayerOut.value = null
+            return
         }
 
         performSubstitution(
@@ -394,16 +386,9 @@ class MatchViewModel(
      */
     fun substitutePlayerDirect(playerInId: Long, playerOutId: Long) {
         // Validate that the incoming player is not already playing
-        val currentState = _uiState.value
-        if (currentState is MatchUiState.Success) {
-            val playerIn = currentState.playerTimes.find { it.player.id == playerInId }
-            if (playerIn?.isRunning == true) {
-                // Player is already playing, show alert and don't proceed with substitution
-                if (shouldShowInvalidSubstitutionAlertUseCase()) {
-                    _showInvalidSubstitutionAlert.value = true
-                }
-                return
-            }
+        if (!isValidSubstitution(playerInId)) {
+            // No selection state to clear for direct substitution
+            return
         }
 
         performSubstitution(
@@ -412,6 +397,28 @@ class MatchViewModel(
             analyticsMessage = "Direct substitution: $playerOutId -> $playerInId (drag-drop)",
             method = "drag_drop"
         )
+    }
+
+    /**
+     * Validates that a player can be substituted in.
+     * A valid substitution requires the incoming player to NOT be currently playing.
+     *
+     * @param playerInId The ID of the player coming in
+     * @return true if the substitution is valid, false otherwise (shows alert)
+     */
+    private fun isValidSubstitution(playerInId: Long): Boolean {
+        val currentState = _uiState.value
+        if (currentState is MatchUiState.Success) {
+            val playerIn = currentState.playerTimes.find { it.player.id == playerInId }
+            if (playerIn?.isRunning == true) {
+                // Player is already playing, show alert and don't proceed with substitution
+                if (shouldShowInvalidSubstitutionAlertUseCase()) {
+                    _showInvalidSubstitutionAlert.value = true
+                }
+                return false
+            }
+        }
+        return true
     }
 
     private fun performSubstitution(playerIn: Long, playerOut: Long, analyticsMessage: String, method: String) {
