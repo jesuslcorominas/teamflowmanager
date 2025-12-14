@@ -379,7 +379,6 @@ class MatchViewModel(
     /**
      * Performs a direct substitution without requiring the two-step selection process.
      * Used for drag-and-drop substitutions.
-     * Used for drag-and-drop substitutions.
      *
      * @param playerInId The ID of the player coming in (was inactive/not playing)
      * @param playerOutId The ID of the player going out (was active/playing)
