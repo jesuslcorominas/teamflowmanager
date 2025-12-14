@@ -37,3 +37,9 @@ google-services.json
 # Android Profiling
 *.hprof
 /app/google-services.json
+
+# Firestore tests
+firestore-tests/node_modules/
+firestore-tests/package-lock.json
+firestore-tests/firebase-debug.log
+firestore-tests/.firebase/
