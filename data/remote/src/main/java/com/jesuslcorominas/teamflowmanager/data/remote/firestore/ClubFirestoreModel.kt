@@ -37,7 +37,7 @@ fun ClubFirestoreModel.toDomain(): Club =
 
 fun Club.toFirestoreModel(): ClubFirestoreModel =
     ClubFirestoreModel(
-        id = firestoreId ?: "",
+        id = firestoreId ?: "", // Will be set when inserting/updating
         ownerId = ownerId,
         name = name,
         invitationCode = invitationCode,

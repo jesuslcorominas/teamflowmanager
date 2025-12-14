@@ -43,10 +43,10 @@ fun ClubMemberFirestoreModel.toDomain(): ClubMember =
 
 fun ClubMember.toFirestoreModel(): ClubMemberFirestoreModel =
     ClubMemberFirestoreModel(
-        id = firestoreId ?: "",
+        id = firestoreId ?: "", // Will be set when inserting/updating
         userId = userId,
         name = name,
         email = email,
-        clubId = "",
+        clubId = "", // Will be set by the data source
         role = role,
     )
