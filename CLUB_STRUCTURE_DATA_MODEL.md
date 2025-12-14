@@ -291,26 +291,32 @@ See the companion document `CLUB_STRUCTURE_MIGRATION_GUIDE.md` for detailed migr
 package com.jesuslcorominas.teamflowmanager.domain.model
 
 data class Club(
-    val id: String,
+    val id: Long,
     val ownerId: String,
     val name: String,
     val invitationCode: String,
+    val firestoreId: String? = null,
 )
 ```
+
+**Note**: The domain model uses `Long` for the `id` field to maintain consistency with other domain models in the codebase. The Firestore document ID (String) is converted to a stable Long ID using the `toStableId()` utility function, and the original Firestore document ID is optionally stored in the `firestoreId` field for reference.
 
 **ClubMember.kt**
 ```kotlin
 package com.jesuslcorominas.teamflowmanager.domain.model
 
 data class ClubMember(
-    val id: String,
+    val id: Long,
     val userId: String,
     val name: String,
     val email: String,
-    val clubId: String,
+    val clubId: Long,
     val role: String,
+    val firestoreId: String? = null,
 )
 ```
+
+**Note**: The domain model uses `Long` for both `id` and `clubId` fields. The Firestore document IDs (String) are converted to stable Long IDs using the `toStableId()` utility function. The original Firestore document ID is optionally stored in the `firestoreId` field for reference.
 
 ## Firestore Models
 
