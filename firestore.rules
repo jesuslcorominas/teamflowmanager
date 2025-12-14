@@ -36,11 +36,11 @@ service cloud.firestore {
       }
       // Check if user is a club member with role "Presidente"
       let clubId = team.data.clubId;
-      let membership = existsAfter(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId));
-      if (!membership) {
+      let memberPath = /databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId);
+      if (!exists(memberPath)) {
         return false;
       }
-      let memberDoc = get(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId));
+      let memberDoc = get(memberPath);
       return memberDoc.data.role == "Presidente";
     }
     
