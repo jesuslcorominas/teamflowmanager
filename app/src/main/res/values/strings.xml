@@ -139,7 +139,7 @@
 
     <!-- Player Substitution -->
     <string name="invalid_substitution_title">Invalid Substitution</string>
-    <string name="invalid_substitution_message">You must first select a player who is currently on the field to substitute out.</string>
+    <string name="invalid_substitution_message">Invalid substitution: the player going out must be on the field, and the player coming in must be on the bench.</string>
     <string name="dont_show_again">Don\'t show this again</string>
 
     <!-- Match Summary -->
