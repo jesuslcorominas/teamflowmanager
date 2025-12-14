@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.google.firebase.firestore.DocumentId
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 
 /**
@@ -31,20 +32,21 @@ data class ClubMemberFirestoreModel(
 
 fun ClubMemberFirestoreModel.toDomain(): ClubMember =
     ClubMember(
-        id = id,
+        id = id.toStableId(),
         userId = userId,
         name = name,
         email = email,
-        clubId = clubId,
+        clubId = clubId.toStableId(),
         role = role,
+        firestoreId = id,
     )
 
 fun ClubMember.toFirestoreModel(): ClubMemberFirestoreModel =
     ClubMemberFirestoreModel(
-        id = id,
+        id = firestoreId ?: "",
         userId = userId,
         name = name,
         email = email,
-        clubId = clubId,
+        clubId = "",
         role = role,
     )

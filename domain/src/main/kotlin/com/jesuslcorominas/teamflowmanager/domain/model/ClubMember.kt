@@ -1,10 +1,11 @@
 package com.jesuslcorominas.teamflowmanager.domain.model
 
 data class ClubMember(
-    val id: String,
+    val id: Long,
     val userId: String,
     val name: String,
     val email: String,
-    val clubId: String,
+    val clubId: Long,
     val role: String,
+    val firestoreId: String? = null,
 )
