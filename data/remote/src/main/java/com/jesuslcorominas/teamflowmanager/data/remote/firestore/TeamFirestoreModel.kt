@@ -10,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
  * This model is used for serialization/deserialization with Firestore.
  * The `id` field is automatically populated by Firestore with the document ID.
  * The `ownerId` field is required by Firestore security rules to identify the owner.
+ * The `clubId` field is optional - teams can be orphaned (null) or belong to a club (string).
  */
 data class TeamFirestoreModel(
     @DocumentId
@@ -20,6 +21,7 @@ data class TeamFirestoreModel(
     val captainId: Long? = null,
     val teamType: Int = TeamType.FOOTBALL_5.players,
     val ownerId: String = "",
+    val clubId: String? = null,
 ) {
     // No-arg constructor required by Firestore
     constructor() : this(
@@ -30,6 +32,7 @@ data class TeamFirestoreModel(
         captainId = null,
         teamType = TeamType.FOOTBALL_5.players,
         ownerId = "",
+        clubId = null,
     )
 }
 
@@ -42,6 +45,8 @@ fun TeamFirestoreModel.toDomain(): Team =
         captainId = captainId,
         teamType = TeamType.fromPlayers(teamType),
         coachId = id, // Store the Firestore document ID in coachId for reference
+        clubId = clubId?.takeIf { it.isNotEmpty() }?.toStableId(), // Convert club Firestore ID to Long, null if empty/null
+        clubFirestoreId = clubId?.takeIf { it.isNotEmpty() }, // Store original club Firestore ID
     )
 
 fun Team.toFirestoreModel(): TeamFirestoreModel =
@@ -52,4 +57,5 @@ fun Team.toFirestoreModel(): TeamFirestoreModel =
         delegateName = delegateName,
         captainId = captainId,
         teamType = teamType.players,
+        clubId = clubFirestoreId, // Use the stored club Firestore ID, null for orphaned teams
     )

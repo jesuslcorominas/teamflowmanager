@@ -143,4 +143,95 @@ class TeamRepositoryImplTest {
             assertEquals(false, result)
             coVerify { teamDataSource.hasLocalTeamWithoutUserId() }
         }
+
+    @Test
+    fun `createTeam should handle team with clubId`() =
+        runTest {
+            // Given
+            val team = Team(
+                id = 0,
+                name = "Test Team",
+                coachName = "Coach Name",
+                delegateName = "Delegate Name",
+                teamType = TeamType.FOOTBALL_5,
+                clubId = 123L,
+                clubFirestoreId = "club_abc123xyz",
+            )
+            coEvery { teamDataSource.insertTeam(team) } just runs
+
+            // When
+            repository.createTeam(team)
+
+            // Then
+            coVerify { teamDataSource.insertTeam(team) }
+        }
+
+    @Test
+    fun `createTeam should handle orphaned team with null clubId`() =
+        runTest {
+            // Given
+            val team = Team(
+                id = 0,
+                name = "Orphaned Team",
+                coachName = "Coach Name",
+                delegateName = "Delegate Name",
+                teamType = TeamType.FOOTBALL_5,
+                clubId = null,
+                clubFirestoreId = null,
+            )
+            coEvery { teamDataSource.insertTeam(team) } just runs
+
+            // When
+            repository.createTeam(team)
+
+            // Then
+            coVerify { teamDataSource.insertTeam(team) }
+        }
+
+    @Test
+    fun `updateTeam should handle team with clubId`() =
+        runTest {
+            // Given
+            val team = Team(
+                id = 1,
+                name = "Updated Team",
+                coachName = "New Coach",
+                delegateName = "New Delegate",
+                teamType = TeamType.FOOTBALL_5,
+                clubId = 456L,
+                clubFirestoreId = "club_def456uvw",
+            )
+            coEvery { teamDataSource.updateTeam(team) } just runs
+
+            // When
+            repository.updateTeam(team)
+
+            // Then
+            coVerify { teamDataSource.updateTeam(team) }
+        }
+
+    @Test
+    fun `getTeam should return team with clubId`() =
+        runTest {
+            // Given
+            val team = Team(
+                id = 1,
+                name = "Test Team",
+                coachName = "Coach Name",
+                delegateName = "Delegate Name",
+                teamType = TeamType.FOOTBALL_5,
+                clubId = 789L,
+                clubFirestoreId = "club_ghi789rst",
+            )
+            every { teamDataSource.getTeam() } returns flowOf(team)
+
+            // When
+            val result = repository.getTeam().first()
+
+            // Then
+            assertEquals(team, result)
+            assertEquals(789L, result?.clubId)
+            assertEquals("club_ghi789rst", result?.clubFirestoreId)
+            verify { teamDataSource.getTeam() }
+        }
 }
