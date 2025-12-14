@@ -139,7 +139,7 @@
 
     <!-- Player Substitution -->
     <string name="invalid_substitution_title">Cambio Inválido</string>
-    <string name="invalid_substitution_message">Debes seleccionar primero un jugador que esté actualmente en el campo para sustituir.</string>
+    <string name="invalid_substitution_message">Cambio inválido: el jugador que sale debe estar en el campo y el jugador que entra debe estar en el banquillo.</string>
     <string name="dont_show_again">No mostrar más</string>
 
     <!-- Match Summary -->
