@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -13,24 +14,24 @@ import org.junit.Test
 class ResumeMatchUseCaseTest {
     private lateinit var startMatchTimerUseCase: StartMatchTimerUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
-    private lateinit var startPlayerTimerUseCase: StartPlayerTimerUseCase
+    private lateinit var playerTimeRepository: PlayerTimeRepository
     private lateinit var resumeMatchUseCase: ResumeMatchUseCase
 
     @Before
     fun setup() {
         startMatchTimerUseCase = mockk(relaxed = true)
         getAllPlayerTimesUseCase = mockk(relaxed = true)
-        startPlayerTimerUseCase = mockk(relaxed = true)
+        playerTimeRepository = mockk(relaxed = true)
         resumeMatchUseCase =
             ResumeMatchUseCaseImpl(
                 startMatchTimerUseCase,
                 getAllPlayerTimesUseCase,
-                startPlayerTimerUseCase,
+                playerTimeRepository,
             )
     }
 
     @Test
-    fun `invoke should resume match timer and all player timers with elapsed time`() =
+    fun `invoke should resume all paused player timers in batch and then resume match timer`() =
         runTest {
             // Given
             val currentTime = 1000L
@@ -45,13 +46,11 @@ class ResumeMatchUseCaseTest {
             coEvery { getAllPlayerTimesUseCase() } returns flowOf(pausedPlayerTimes)
 
             // When
-            resumeMatchUseCase.invoke(1L, currentTime)
+            resumeMatchUseCase.invoke(matchId, currentTime)
 
             // Then
+            coVerify { playerTimeRepository.startTimersBatch(listOf(1L, 2L), currentTime) }
             coVerify { startMatchTimerUseCase(matchId, currentTime) }
-            coVerify { startPlayerTimerUseCase(1L, currentTime) }
-            coVerify { startPlayerTimerUseCase(2L, currentTime) }
-            coVerify(exactly = 0) { startPlayerTimerUseCase(3L, any()) }
         }
 
     @Test
@@ -72,8 +71,8 @@ class ResumeMatchUseCaseTest {
             resumeMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { startMatchTimerUseCase(matchId,currentTime) }
-            coVerify(exactly = 0) { startPlayerTimerUseCase(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.startTimersBatch(any(), any()) }
+            coVerify { startMatchTimerUseCase(matchId, currentTime) }
         }
 
     @Test
@@ -88,7 +87,7 @@ class ResumeMatchUseCaseTest {
             resumeMatchUseCase.invoke(matchId, currentTime)
 
             // Then
+            coVerify(exactly = 0) { playerTimeRepository.startTimersBatch(any(), any()) }
             coVerify { startMatchTimerUseCase(matchId, currentTime) }
-            coVerify(exactly = 0) { startPlayerTimerUseCase(any(), any()) }
         }
 }

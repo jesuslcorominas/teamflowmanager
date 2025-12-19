@@ -2,6 +2,8 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -11,31 +13,29 @@ import org.junit.Before
 import org.junit.Test
 
 class PauseMatchUseCaseTest {
-    private lateinit var pauseMatchTimerUseCase: PauseMatchTimerUseCase
+    private lateinit var matchRepository: MatchRepository
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
-    private lateinit var pausePlayerTimerUseCase: PausePlayerTimerUseCase
+    private lateinit var playerTimeRepository: PlayerTimeRepository
     private lateinit var pauseMatchUseCase: PauseMatchUseCase
-
-    private lateinit var pausePlayerTimerForMatchPauseUseCase: PausePlayerTimerForMatchPauseUseCase
 
     @Before
     fun setup() {
-        pauseMatchTimerUseCase = mockk(relaxed = true)
+        matchRepository = mockk(relaxed = true)
         getAllPlayerTimesUseCase = mockk(relaxed = true)
-        pausePlayerTimerUseCase = mockk(relaxed = true)
-        pausePlayerTimerForMatchPauseUseCase = mockk(relaxed = true)
+        playerTimeRepository = mockk(relaxed = true)
         pauseMatchUseCase =
             PauseMatchUseCaseImpl(
-                pauseMatchTimerUseCase,
+                matchRepository,
                 getAllPlayerTimesUseCase,
-                pausePlayerTimerForMatchPauseUseCase
+                playerTimeRepository
             )
     }
 
     @Test
-    fun `invoke should pause match timer and all running player timers`() =
+    fun `invoke should pause all running player timers in batch and then pause match timer`() =
         runTest {
             // Given
+            val matchId = 1L
             val currentTime = 1000L
             val runningPlayerTimes =
                 listOf(
@@ -45,22 +45,20 @@ class PauseMatchUseCaseTest {
                 )
 
             coEvery { getAllPlayerTimesUseCase() } returns flowOf(runningPlayerTimes)
-            coEvery { pausePlayerTimerForMatchPauseUseCase(any(), any()) } returns Unit
 
             // When
-            pauseMatchUseCase.invoke(currentTime)
+            pauseMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { pauseMatchTimerUseCase(currentTime) }
-            coVerify { pausePlayerTimerForMatchPauseUseCase(1L, currentTime) }
-            coVerify { pausePlayerTimerForMatchPauseUseCase(2L, currentTime) }
-            coVerify(exactly = 0) { pausePlayerTimerForMatchPauseUseCase(3L, any()) }
+            coVerify { playerTimeRepository.pauseTimersBatch(listOf(1L, 2L), currentTime) }
+            coVerify { matchRepository.pauseTimer(matchId, currentTime) }
         }
 
     @Test
     fun `invoke should pause match timer even when no player timers are running`() =
         runTest {
             // Given
+            val matchId = 1L
             val currentTime = 1000L
             val playerTimes =
                 listOf(
@@ -71,25 +69,26 @@ class PauseMatchUseCaseTest {
             coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
 
             // When
-            pauseMatchUseCase.invoke(currentTime)
+            pauseMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { pauseMatchTimerUseCase(currentTime) }
-            coVerify(exactly = 0) { pausePlayerTimerUseCase(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatch(any(), any()) }
+            coVerify { matchRepository.pauseTimer(matchId, currentTime) }
         }
 
     @Test
     fun `invoke should pause match timer when no player times exist`() =
         runTest {
             // Given
+            val matchId = 1L
             val currentTime = 1000L
             coEvery { getAllPlayerTimesUseCase() } returns flowOf(emptyList())
 
             // When
-            pauseMatchUseCase.invoke(currentTime)
+            pauseMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { pauseMatchTimerUseCase(currentTime) }
-            coVerify(exactly = 0) { pausePlayerTimerUseCase(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatch(any(), any()) }
+            coVerify { matchRepository.pauseTimer(matchId, currentTime) }
         }
 }

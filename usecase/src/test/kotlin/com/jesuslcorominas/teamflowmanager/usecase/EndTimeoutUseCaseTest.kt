@@ -2,6 +2,8 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -11,26 +13,26 @@ import org.junit.Before
 import org.junit.Test
 
 class EndTimeoutUseCaseTest {
-    private lateinit var endTimeoutTimerUseCase: EndTimeoutTimerUseCase
+    private lateinit var matchRepository: MatchRepository
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
-    private lateinit var startPlayerTimerUseCase: StartPlayerTimerUseCase
+    private lateinit var playerTimeRepository: PlayerTimeRepository
     private lateinit var endTimeoutUseCase: EndTimeoutUseCase
 
     @Before
     fun setup() {
-        endTimeoutTimerUseCase = mockk(relaxed = true)
+        matchRepository = mockk(relaxed = true)
         getAllPlayerTimesUseCase = mockk(relaxed = true)
-        startPlayerTimerUseCase = mockk(relaxed = true)
+        playerTimeRepository = mockk(relaxed = true)
         endTimeoutUseCase =
             EndTimeoutUseCaseImpl(
-                endTimeoutTimerUseCase,
+                matchRepository,
                 getAllPlayerTimesUseCase,
-                startPlayerTimerUseCase
+                playerTimeRepository
             )
     }
 
     @Test
-    fun `invoke should end timeout timer and resume all paused player timers`() =
+    fun `invoke should resume all paused player timers in batch and then end timeout timer`() =
         runTest {
             // Given
             val matchId = 1L
@@ -43,16 +45,13 @@ class EndTimeoutUseCaseTest {
                 )
 
             coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
-            coEvery { startPlayerTimerUseCase(any(), any()) } returns Unit
 
             // When
             endTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { endTimeoutTimerUseCase(matchId, currentTime) }
-            coVerify { startPlayerTimerUseCase(1L, currentTime) }
-            coVerify { startPlayerTimerUseCase(2L, currentTime) }
-            coVerify(exactly = 0) { startPlayerTimerUseCase(3L, any()) }
+            coVerify { playerTimeRepository.startTimersBatch(listOf(1L, 2L), currentTime) }
+            coVerify { matchRepository.endTimeout(matchId, currentTime) }
         }
 
     @Test
@@ -73,8 +72,8 @@ class EndTimeoutUseCaseTest {
             endTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { endTimeoutTimerUseCase(matchId, currentTime) }
-            coVerify(exactly = 0) { startPlayerTimerUseCase(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.startTimersBatch(any(), any()) }
+            coVerify { matchRepository.endTimeout(matchId, currentTime) }
         }
 
     @Test
@@ -89,7 +88,7 @@ class EndTimeoutUseCaseTest {
             endTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { endTimeoutTimerUseCase(matchId, currentTime) }
-            coVerify(exactly = 0) { startPlayerTimerUseCase(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.startTimersBatch(any(), any()) }
+            coVerify { matchRepository.endTimeout(matchId, currentTime) }
         }
 }

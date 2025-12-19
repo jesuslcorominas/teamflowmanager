@@ -3,7 +3,6 @@ package com.jesuslcorominas.teamflowmanager.usecase
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
-import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
@@ -15,7 +14,6 @@ internal class FinishMatchUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val playerTimeRepository: PlayerTimeRepository,
     private val playerTimeHistoryRepository: PlayerTimeHistoryRepository,
-    private val transactionRunner: TransactionRunner,
 ) : FinishMatchUseCase {
     override suspend fun invoke(matchId: Long, currentTime: Long) {
         try {
@@ -59,38 +57,37 @@ internal class FinishMatchUseCaseImpl(
                 emptyList()
             }
 
-            // Save player time history in Room transaction
-            transactionRunner.run {
-                matchRepository.updateMatch(finishedMatch)
+            // Update match
+            matchRepository.updateMatch(finishedMatch)
 
-                playerTimes.forEach { playerTime ->
-                    try {
-                        // Calculate final elapsed time if running
-                        val finalElapsedTime = if (playerTime.isRunning && playerTime.lastStartTimeMillis != null) {
-                            playerTime.elapsedTimeMillis + (currentTime - (playerTime.lastStartTimeMillis ?: 0L))
-                        } else {
-                            playerTime.elapsedTimeMillis
-                        }
-
-                        // Only save if there's time recorded
-                        if (finalElapsedTime > 0) {
-                            val history = PlayerTimeHistory(
-                                playerId = playerTime.playerId,
-                                matchId = match.id,
-                                elapsedTimeMillis = finalElapsedTime,
-                                savedAtMillis = currentTime,
-                            )
-                            playerTimeHistoryRepository.insertPlayerTimeHistory(history)
-                        }
-                    } catch (e: Exception) {
-                        // Log error but continue with other players
-                        println("FinishMatchUseCase: Error saving player time history for player ${playerTime.playerId}: ${e.message}")
-                        e.printStackTrace()
+            // Save player time history
+            playerTimes.forEach { playerTime ->
+                try {
+                    // Calculate final elapsed time if running
+                    val finalElapsedTime = if (playerTime.isRunning && playerTime.lastStartTimeMillis != null) {
+                        playerTime.elapsedTimeMillis + (currentTime - (playerTime.lastStartTimeMillis ?: 0L))
+                    } else {
+                        playerTime.elapsedTimeMillis
                     }
+
+                    // Only save if there's time recorded
+                    if (finalElapsedTime > 0) {
+                        val history = PlayerTimeHistory(
+                            playerId = playerTime.playerId,
+                            matchId = match.id,
+                            elapsedTimeMillis = finalElapsedTime,
+                            savedAtMillis = currentTime,
+                        )
+                        playerTimeHistoryRepository.insertPlayerTimeHistory(history)
+                    }
+                } catch (e: Exception) {
+                    // Log error but continue with other players
+                    println("FinishMatchUseCase: Error saving player time history for player ${playerTime.playerId}: ${e.message}")
+                    e.printStackTrace()
                 }
             }
 
-            // Reset player times in Firestore (outside Room transaction)
+            // Reset player times in Firestore
             // This must be done separately because Firestore operations don't participate in Room transactions
             try {
                 playerTimeRepository.resetAllPlayerTimes()
