@@ -2,7 +2,6 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
-import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import kotlinx.coroutines.flow.first
@@ -11,7 +10,6 @@ import kotlinx.coroutines.flow.first
 internal class RegisterGoalUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val goalRepository: GoalRepository,
-    private val transactionRunner: TransactionRunner
 ) : RegisterGoalUseCase {
     override suspend fun invoke(
         matchId: Long,
@@ -41,10 +39,8 @@ internal class RegisterGoalUseCaseImpl(
             opponentGoals = if (isOpponentGoal) match.opponentGoals + 1 else match.opponentGoals
         )
 
-        return transactionRunner.run {
-            matchRepository.updateMatch(updatedMatch)
+        matchRepository.updateMatch(updatedMatch)
 
-            goalRepository.insertGoal(goal)
-        }
+        return goalRepository.insertGoal(goal)
     }
 }

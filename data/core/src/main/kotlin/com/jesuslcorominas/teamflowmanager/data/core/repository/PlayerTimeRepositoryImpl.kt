@@ -89,25 +89,55 @@ internal class PlayerTimeRepositoryImpl(
         // Create player times for batch upsert
         val playerTimesToUpsert = playerIds.map { playerId ->
             val currentPlayerTime = currentTimesMap[playerId]
-            if (currentPlayerTime != null) {
-                currentPlayerTime.copy(
-                    isRunning = true,
-                    lastStartTimeMillis = currentTimeMillis,
-                    status = PlayerTimeStatus.PLAYING,
-                )
-            } else {
-                PlayerTime(
+            currentPlayerTime?.copy(
+                isRunning = true,
+                lastStartTimeMillis = currentTimeMillis,
+                status = PlayerTimeStatus.PLAYING,
+            )
+                ?: PlayerTime(
                     playerId = playerId,
                     elapsedTimeMillis = 0L,
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis,
                     status = PlayerTimeStatus.PLAYING,
                 )
-            }
         }
 
         // Batch upsert all player times at once
         playerTimeDataSource.batchUpsertPlayerTimes(playerTimesToUpsert)
+    }
+
+    override suspend fun pauseTimersBatch(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+    ) {
+        if (playerIds.isEmpty()) return
+
+        // Get current player times for all players
+        val allCurrentTimes = playerTimeDataSource.getAllPlayerTimes().first()
+        val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
+
+        // Create updated player times for batch upsert
+        val playerTimesToUpsert = playerIds.mapNotNull { playerId ->
+            val currentPlayerTime = currentTimesMap[playerId]
+            if (currentPlayerTime != null && currentPlayerTime.isRunning) {
+                val lastStartTime = currentPlayerTime.lastStartTimeMillis ?: currentTimeMillis
+                val additionalTime = currentTimeMillis - lastStartTime
+                currentPlayerTime.copy(
+                    elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
+                    isRunning = false,
+                    lastStartTimeMillis = lastStartTime,
+                    status = PlayerTimeStatus.PAUSED,
+                )
+            } else {
+                null // Skip players that aren't running
+            }
+        }
+
+        // Batch upsert all player times at once
+        if (playerTimesToUpsert.isNotEmpty()) {
+            playerTimeDataSource.batchUpsertPlayerTimes(playerTimesToUpsert)
+        }
     }
 
     override suspend fun resetAllPlayerTimes() {

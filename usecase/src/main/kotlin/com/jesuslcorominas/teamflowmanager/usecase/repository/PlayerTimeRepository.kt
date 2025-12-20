@@ -34,5 +34,16 @@ interface PlayerTimeRepository {
         currentTimeMillis: Long,
     )
 
+    /**
+     * Pause timers for multiple players at once using batch write for match pause.
+     * All timers pause with the same timestamp and are marked as PAUSED.
+     * @param playerIds List of player IDs to pause timers for
+     * @param currentTimeMillis The current time in milliseconds
+     */
+    suspend fun pauseTimersBatch(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+    )
+
     suspend fun resetAllPlayerTimes()
 }
