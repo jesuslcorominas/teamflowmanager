@@ -89,21 +89,18 @@ internal class PlayerTimeRepositoryImpl(
         // Create player times for batch upsert
         val playerTimesToUpsert = playerIds.map { playerId ->
             val currentPlayerTime = currentTimesMap[playerId]
-            if (currentPlayerTime != null) {
-                currentPlayerTime.copy(
-                    isRunning = true,
-                    lastStartTimeMillis = currentTimeMillis,
-                    status = PlayerTimeStatus.PLAYING,
-                )
-            } else {
-                PlayerTime(
+            currentPlayerTime?.copy(
+                isRunning = true,
+                lastStartTimeMillis = currentTimeMillis,
+                status = PlayerTimeStatus.PLAYING,
+            )
+                ?: PlayerTime(
                     playerId = playerId,
                     elapsedTimeMillis = 0L,
                     isRunning = true,
                     lastStartTimeMillis = currentTimeMillis,
                     status = PlayerTimeStatus.PLAYING,
                 )
-            }
         }
 
         // Batch upsert all player times at once
