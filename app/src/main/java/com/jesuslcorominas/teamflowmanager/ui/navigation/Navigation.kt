@@ -14,6 +14,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
@@ -45,6 +46,11 @@ fun Navigation(
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
+                onNavigateToClubSelection = {
+                    navController.navigate(Route.ClubSelection.createRoute()) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
                 onNavigateToCreateTeam = {
                     navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
@@ -64,6 +70,17 @@ fun Navigation(
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.Login.createRoute()) { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable(Route.ClubSelection.createRoute()) {
+            ClubSelectionScreen(
+                onCreateClub = {
+                    // TODO: Navigate to Create Club flow (will be implemented in future story)
+                },
+                onJoinClub = {
+                    // TODO: Navigate to Join Club flow (will be implemented in future story)
                 }
             )
         }

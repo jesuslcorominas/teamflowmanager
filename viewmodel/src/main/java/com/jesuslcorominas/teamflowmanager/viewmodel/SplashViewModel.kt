@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 class SplashViewModel(
     private val getTeam: GetTeamUseCase,
     private val getCurrentUser: GetCurrentUserUseCase,
-    private val synchronizeTimeUseCase: SynchronizeTimeUseCase
+    private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
+    private val getUserClubMembership: GetUserClubMembershipUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
@@ -27,6 +29,8 @@ class SplashViewModel(
         data object NotAuthenticated : UiState
 
         data object LocalDataNeedsAuth : UiState
+
+        data object NoClub : UiState
 
         data object NoTeam : UiState
 
@@ -57,6 +61,15 @@ class SplashViewModel(
         val user = getCurrentUser().first()
         if (user == null) {
             _uiState.value = UiState.NotAuthenticated
+        } else {
+            checkClubMembership()
+        }
+    }
+
+    private suspend fun checkClubMembership() {
+        val clubMember = getUserClubMembership().first()
+        if (clubMember == null) {
+            _uiState.value = UiState.NoClub
         } else {
             loadTeam()
         }

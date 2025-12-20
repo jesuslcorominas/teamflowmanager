@@ -15,6 +15,7 @@ import org.koin.androidx.compose.koinViewModel
 fun SplashScreen(
     viewModel: SplashViewModel = koinViewModel(),
     onNavigateToLogin: () -> Unit,
+    onNavigateToClubSelection: () -> Unit,
     onNavigateToCreateTeam: () -> Unit,
     onNavigateToMatches: () -> Unit,
 ) {
@@ -26,6 +27,7 @@ fun SplashScreen(
         when (uiState) {
             is UiState.NotAuthenticated -> onNavigateToLogin()
             is UiState.LocalDataNeedsAuth -> onNavigateToLogin()
+            is UiState.NoClub -> onNavigateToClubSelection()
             is UiState.NoTeam -> onNavigateToCreateTeam()
             is UiState.TeamExists -> onNavigateToMatches()
             is UiState.Loading -> {

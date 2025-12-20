@@ -127,4 +127,5 @@ object ScreenName {
     const val LOGIN = "Login"
     const val MIGRATION = "Migration"
     const val SETTINGS = "Settings"
+    const val CLUB_SELECTION = "Club Selection"
 }
