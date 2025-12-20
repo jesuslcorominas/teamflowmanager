@@ -19,64 +19,29 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeReposito
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
 internal val repositoryModule =
     module {
-        single {
-            PlayerRepositoryImpl(
-                get(named("PLAYER_FIRESTORE_DATA_SOURCE_IMPL")),
-                get(named("PLAYER_LOCAL_DATA_SOURCE_IMPL"))
-            )
-        } bind PlayerRepository::class
+        singleOf(::PlayerRepositoryImpl) bind PlayerRepository::class
 
-        single {
-            TeamRepositoryImpl(
-                get(named("TEAM_FIRESTORE_DATA_SOURCE_IMPL")),
-                get(named("TEAM_LOCAL_DATA_SOURCE_IMPL"))
-            )
-        } bind TeamRepository::class
+        singleOf(::TeamRepositoryImpl) bind TeamRepository::class
 
-        single {
-            MatchRepositoryImpl(
-                get(named("MATCH_FIRESTORE_DATA_SOURCE_IMPL")),
-                get(named("MATCH_LOCAL_DATA_SOURCE_IMPL"))
-            )
-        } bind MatchRepository::class
+        singleOf(::MatchRepositoryImpl) bind MatchRepository::class
 
-        single {
-            PlayerTimeRepositoryImpl(
-                get(named("PLAYER_TIME_FIRESTORE_DATA_SOURCE_IMPL")),
-                get(named("PLAYER_TIME_LOCAL_DATA_SOURCE_IMPL"))
-            )
-        } bind PlayerTimeRepository::class
+        singleOf(::PlayerTimeRepositoryImpl) bind PlayerTimeRepository::class
 
-        single {
-            PlayerTimeHistoryRepositoryImpl(
-                get(named("PLAYER_TIME_HISTORY_FIRESTORE_DATA_SOURCE_IMPL")),
-                get(named("PLAYER_TIME_HISTORY_LOCAL_DATA_SOURCE_IMPL"))
-            )
-        } bind PlayerTimeHistoryRepository::class
+        singleOf(::PlayerTimeHistoryRepositoryImpl) bind PlayerTimeHistoryRepository::class
 
-        single {
-            PlayerSubstitutionRepositoryImpl(
-                get(named("PLAYER_SUBSTITUTION_FIRESTORE_DATA_SOURCE_IMPL")),
-                get(named("PLAYER_SUBSTITUTION_LOCAL_DATA_SOURCE_IMPL"))
-            )
-        } bind PlayerSubstitutionRepository::class
+        singleOf(::PlayerSubstitutionRepositoryImpl) bind PlayerSubstitutionRepository::class
 
         singleOf(::PreferencesRepositoryImpl) bind PreferencesRepository::class
 
-        single {
-            GoalRepositoryImpl(
-                get(named("GOAL_FIRESTORE_DATA_SOURCE_IMPL")),
-                get(named("GOAL_LOCAL_DATA_SOURCE_IMPL"))
-            )
-        } bind GoalRepository::class
+        singleOf(::GoalRepositoryImpl) bind GoalRepository::class
 
         singleOf(::AuthRepositoryImpl) bind AuthRepository::class
+
     }
 
 val dataCoreModule =

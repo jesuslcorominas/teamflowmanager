@@ -2,7 +2,6 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
-import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.coEvery
@@ -18,23 +17,16 @@ import org.junit.Test
 class RegisterGoalUseCaseTest {
     private lateinit var matchRepository: MatchRepository
     private lateinit var goalRepository: GoalRepository
-    private lateinit var transactionRunner: TransactionRunner
     private lateinit var registerGoalUseCase: RegisterGoalUseCase
 
     @Before
     fun setup() {
         matchRepository = mockk(relaxed = true)
         goalRepository = mockk(relaxed = true)
-        transactionRunner = mockk()
-        coEvery { transactionRunner.run<Long>(any()) } coAnswers {
-            val block = firstArg<suspend () -> Long>()
-            block()
-        }
         registerGoalUseCase =
             RegisterGoalUseCaseImpl(
                 matchRepository,
                 goalRepository,
-                transactionRunner,
             )
     }
 

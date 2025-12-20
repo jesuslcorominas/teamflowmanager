@@ -14,6 +14,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistor
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseStorageDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirestoreTimeProvider
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
@@ -21,6 +22,9 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitu
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeHistoryFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.transaction.FirestoreTransactionRunner
+import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -29,7 +33,6 @@ import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -49,43 +52,25 @@ internal val firebaseModule =
         single { FirebaseStorage.getInstance() }
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
+        singleOf(::FirestoreTimeProvider) bind TimeProvider::class
+        singleOf(::FirestoreTransactionRunner) bind TransactionRunner::class
     }
 
 internal val firestoreDataSourceModule =
     module {
-        single(named("PLAYER_FIRESTORE_DATA_SOURCE_IMPL")) {
-            PlayerFirestoreDataSourceImpl(
-                get(),
-                get(),
-                get()
-            )
-        } bind PlayerDataSource::class
+        singleOf(::PlayerFirestoreDataSourceImpl) bind PlayerDataSource::class
 
-        single(named("TEAM_FIRESTORE_DATA_SOURCE_IMPL")) {
-            TeamFirestoreDataSourceImpl(get(), get())
-        } bind TeamDataSource::class
+        singleOf(::TeamFirestoreDataSourceImpl) bind TeamDataSource::class
 
+        singleOf(::MatchFirestoreDataSourceImpl) bind MatchDataSource::class
 
-        single(named("MATCH_FIRESTORE_DATA_SOURCE_IMPL")) {
-            MatchFirestoreDataSourceImpl(get(), get())
-        } bind MatchDataSource::class
+        singleOf(::GoalFirestoreDataSourceImpl) bind GoalDataSource::class
 
-        single(named("GOAL_FIRESTORE_DATA_SOURCE_IMPL")) {
-            GoalFirestoreDataSourceImpl(get(), get())
-        } bind GoalDataSource::class
+        singleOf(::PlayerSubstitutionFirestoreDataSourceImpl) bind PlayerSubstitutionDataSource::class
 
+        singleOf(::PlayerTimeFirestoreDataSourceImpl) bind PlayerTimeDataSource::class
 
-        single(named("PLAYER_SUBSTITUTION_FIRESTORE_DATA_SOURCE_IMPL")) {
-            PlayerSubstitutionFirestoreDataSourceImpl(get(), get())
-        } bind PlayerSubstitutionDataSource::class
-
-        single(named("PLAYER_TIME_FIRESTORE_DATA_SOURCE_IMPL")) {
-            PlayerTimeFirestoreDataSourceImpl(get(), get())
-        } bind PlayerTimeDataSource::class
-
-        single(named("PLAYER_TIME_HISTORY_FIRESTORE_DATA_SOURCE_IMPL")) {
-            PlayerTimeHistoryFirestoreDataSourceImpl(get(), get())
-        } bind PlayerTimeHistoryDataSource::class
+        singleOf(::PlayerTimeHistoryFirestoreDataSourceImpl) bind PlayerTimeHistoryDataSource::class
     }
 
 internal val ktorfitModule =

@@ -55,8 +55,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = koinViewModel(),
-    onLoginSuccess: () -> Unit,
-    onNavigateToMigration: () -> Unit
+    onLoginSuccess: () -> Unit
 ) {
     TrackScreenView(screenName = ScreenName.LOGIN, screenClass = "LoginScreen")
 
@@ -71,11 +70,6 @@ fun LoginScreen(
         when (uiState) {
             is UiState.Success -> {
                 onLoginSuccess()
-                viewModel.resetState()
-            }
-
-            is UiState.NeedsMigration -> {
-                onNavigateToMigration()
                 viewModel.resetState()
             }
 

@@ -2,11 +2,17 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
+import androidx.lifecycle.SavedStateHandle
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -30,20 +36,30 @@ import org.junit.Test
 class TeamViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getTeamUseCase: GetTeamUseCase
+    private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var createTeamUseCase: CreateTeamUseCase
     private lateinit var updateTeamUseCase: UpdateTeamUseCase
     private lateinit var getCaptainPlayerUseCase: GetCaptainPlayerUseCase
-    private lateinit var playerRepository: PlayerRepository
+    private lateinit var hasScheduledMatchesUseCase: HasScheduledMatchesUseCase
+    private lateinit var setPlayerAsCaptainUseCase: SetPlayerAsCaptainUseCase
+    private lateinit var removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase
+    private lateinit var analyticsTracker: AnalyticsTracker
+    private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: TeamViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getTeamUseCase = mockk()
+        getPlayersUseCase = mockk()
         createTeamUseCase = mockk(relaxed = true)
         updateTeamUseCase = mockk(relaxed = true)
         getCaptainPlayerUseCase = mockk()
-        playerRepository = mockk()
+        hasScheduledMatchesUseCase = mockk()
+        setPlayerAsCaptainUseCase = mockk(relaxed = true)
+        removePlayerAsCaptainUseCase = mockk(relaxed = true)
+        analyticsTracker = mockk(relaxed = true)
+        savedStateHandle = mockk(relaxed = true)
     }
 
     @After
@@ -55,14 +71,20 @@ class TeamViewModelTest {
     fun `initial state should be Loading`() {
         // Given
         every { getTeamUseCase.invoke() } returns flowOf(null)
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
 
         // When
         viewModel = TeamViewModel(
-            getTeamUseCase = getTeamUseCase,
+            getTeam = getTeamUseCase,
+            getPlayers = getPlayersUseCase,
             createTeam = createTeamUseCase,
             updateTeam = updateTeamUseCase,
             getCaptainPlayer = getCaptainPlayerUseCase,
-            playerRepository = playerRepository
+            hasScheduledMatches = hasScheduledMatchesUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            analyticsTracker = analyticsTracker,
+            savedStateHandle = savedStateHandle
         )
 
         // Then
@@ -74,14 +96,20 @@ class TeamViewModelTest {
         runTest(testDispatcher) {
             // Given
             every { getTeamUseCase.invoke() } returns flowOf(null)
+            every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
 
             // When
             viewModel = TeamViewModel(
-                getTeamUseCase = getTeamUseCase,
+                getTeam = getTeamUseCase,
+                getPlayers = getPlayersUseCase,
                 createTeam = createTeamUseCase,
                 updateTeam = updateTeamUseCase,
                 getCaptainPlayer = getCaptainPlayerUseCase,
-                playerRepository = playerRepository
+                hasScheduledMatches = hasScheduledMatchesUseCase,
+                setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+                removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+                analyticsTracker = analyticsTracker,
+                savedStateHandle = savedStateHandle
             )
             advanceUntilIdle()
 
@@ -90,25 +118,31 @@ class TeamViewModelTest {
         }
 
     @Test
-    fun `uiState should be TeamExists when team exists`() =
+    fun `uiState should be Success when team exists`() =
         runTest(testDispatcher) {
             // Given
             val team = Team(1, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(team)
+            every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
 
             // When
             viewModel = TeamViewModel(
-                getTeamUseCase = getTeamUseCase,
+                getTeam = getTeamUseCase,
+                getPlayers = getPlayersUseCase,
                 createTeam = createTeamUseCase,
                 updateTeam = updateTeamUseCase,
                 getCaptainPlayer = getCaptainPlayerUseCase,
-                playerRepository = playerRepository
+                hasScheduledMatches = hasScheduledMatchesUseCase,
+                setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+                removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+                analyticsTracker = analyticsTracker,
+                savedStateHandle = savedStateHandle
             )
             advanceUntilIdle()
 
             // Then
             val state = viewModel.uiState.value
-            assertEquals(TeamUiState.TeamExists(team), state)
+            assertEquals(TeamUiState.Success(team, emptyList()), state)
         }
 
     @Test
@@ -117,17 +151,24 @@ class TeamViewModelTest {
             // Given
             val team = Team(0, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(null)
+            every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
             coEvery { createTeamUseCase.invoke(any()) } just runs
             viewModel = TeamViewModel(
-                getTeamUseCase = getTeamUseCase,
+                getTeam = getTeamUseCase,
+                getPlayers = getPlayersUseCase,
                 createTeam = createTeamUseCase,
                 updateTeam = updateTeamUseCase,
                 getCaptainPlayer = getCaptainPlayerUseCase,
-                playerRepository = playerRepository
+                hasScheduledMatches = hasScheduledMatchesUseCase,
+                setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+                removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+                analyticsTracker = analyticsTracker,
+                savedStateHandle = savedStateHandle
             )
+            val onSuccess: () -> Unit = mockk(relaxed = true)
 
             // When
-            viewModel.createTeam(team)
+            viewModel.createTeam(team, onSuccess)
             advanceUntilIdle()
 
             // Then
@@ -140,17 +181,26 @@ class TeamViewModelTest {
             // Given
             val team = Team(1, "Updated Team", "Updated Coach", "Updated Delegate", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(team)
+            every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
             coEvery { updateTeamUseCase.invoke(any()) } just runs
+            coEvery { getCaptainPlayerUseCase.invoke() } returns null
+            coEvery { hasScheduledMatchesUseCase.invoke() } returns false
             viewModel = TeamViewModel(
-                getTeamUseCase = getTeamUseCase,
+                getTeam = getTeamUseCase,
+                getPlayers = getPlayersUseCase,
                 createTeam = createTeamUseCase,
                 updateTeam = updateTeamUseCase,
                 getCaptainPlayer = getCaptainPlayerUseCase,
-                playerRepository = playerRepository
+                hasScheduledMatches = hasScheduledMatchesUseCase,
+                setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+                removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+                analyticsTracker = analyticsTracker,
+                savedStateHandle = savedStateHandle
             )
+            val onSuccess: () -> Unit = mockk(relaxed = true)
 
             // When
-            viewModel.updateTeam(team)
+            viewModel.updateTeam(team, null, onSuccess)
             advanceUntilIdle()
 
             // Then

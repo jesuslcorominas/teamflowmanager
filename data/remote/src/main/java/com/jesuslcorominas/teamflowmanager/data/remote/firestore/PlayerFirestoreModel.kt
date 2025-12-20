@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.PropertyName
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
@@ -20,8 +21,11 @@ data class PlayerFirestoreModel(
     val number: Int = 0,
     val positions: String = "",
     val teamId: String = "",
-    val isCaptain: Boolean = false,
+    @get:PropertyName("captain")
+    @set:PropertyName("captain")
+    var isCaptain: Boolean = false,
     val imageUri: String? = null,
+    val deleted: Boolean = false,
 ) {
     // No-arg constructor required by Firestore
     constructor() : this(
@@ -33,6 +37,7 @@ data class PlayerFirestoreModel(
         teamId = "",
         isCaptain = false,
         imageUri = null,
+        deleted = false,
     )
 }
 
@@ -49,6 +54,7 @@ fun PlayerFirestoreModel.toDomain(): Player =
         teamId = teamId.toStableId(),
         isCaptain = isCaptain,
         imageUri = imageUri,
+        deleted = deleted,
     )
 
 fun Player.toFirestoreModel(): PlayerFirestoreModel =
@@ -61,4 +67,5 @@ fun Player.toFirestoreModel(): PlayerFirestoreModel =
         teamId = "", // Will be set by the data source
         isCaptain = isCaptain,
         imageUri = imageUri,
+        deleted = deleted,
     )

@@ -241,6 +241,50 @@ class PlayerTimeFirestoreDataSourceImpl(
     }
 
     /**
+     * Batch upserts multiple player times at once using Firestore batch write.
+     * All operations complete atomically or fail together.
+     */
+    override suspend fun batchUpsertPlayerTimes(playerTimes: List<PlayerTime>) {
+        if (playerTimes.isEmpty()) {
+            Log.d(TAG, "batchUpsertPlayerTimes: Empty list, nothing to upsert")
+            return
+        }
+
+        Log.d(TAG, "batchUpsertPlayerTimes: Starting batch upsert for ${playerTimes.size} player times")
+
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.e(TAG, "batchUpsertPlayerTimes: No team found, cannot upsert player times")
+            throw IllegalStateException("Team must exist to upsert player times")
+        }
+
+        try {
+            val batch = firestore.batch()
+
+            playerTimes.forEach { playerTime ->
+                val docId = "player_${playerTime.playerId}"
+                val firestoreModel = playerTime.toFirestoreModel()
+                val modelWithTeam = firestoreModel.copy(
+                    id = docId,
+                    teamId = teamDocId,
+                )
+
+                val docRef = firestore.collection(PLAYER_TIMES_COLLECTION).document(docId)
+                batch.set(docRef, modelWithTeam)
+                Log.d(TAG, "batchUpsertPlayerTimes: Added playerId=${playerTime.playerId} to batch")
+            }
+
+            batch.commit().await()
+            Log.d(TAG, "batchUpsertPlayerTimes: Batch commit successful for ${playerTimes.size} player times")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "batchUpsertPlayerTimes: Error performing batch upsert", e)
+            throw e
+        }
+    }
+
+    /**
      * Deletes all player times for the current user's team from Firestore.
      * This is typically called when finishing a match.
      */

@@ -9,13 +9,14 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
-import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +31,8 @@ class TeamViewModel(
     private val updateTeam: UpdateTeamUseCase,
     private val getCaptainPlayer: GetCaptainPlayerUseCase,
     private val hasScheduledMatches: HasScheduledMatchesUseCase,
-    private val playerRepository: PlayerRepository, // TODO extract to usecase
+    private val setPlayerAsCaptainUseCase: SetPlayerAsCaptainUseCase,
+    private val removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase,
     private val analyticsTracker: AnalyticsTracker,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -93,7 +95,7 @@ class TeamViewModel(
                         AnalyticsParam.TEAM_NAME to team.name,
                     ),
                 )
-                
+
                 onSuccess()
             } catch (e: Exception) {
                 _showSaveError.value = true
@@ -124,10 +126,10 @@ class TeamViewModel(
                 if (captainChanged) {
                     if (captain != null && captainId == null) {
                         // Remove current captain
-                        playerRepository.removePlayerAsCaptain(captain.id) // TODO extract to usecase
+                        removePlayerAsCaptainUseCase(captain.id)
                     } else if (captainId != null && (captain == null || captain.id != captainId)) {
                         // Set new captain
-                        playerRepository.setPlayerAsCaptain(captainId) // TODO extract to usecase
+                        setPlayerAsCaptainUseCase(captainId)
                     }
                 }
 
@@ -140,7 +142,7 @@ class TeamViewModel(
                         AnalyticsParam.TEAM_ID to team.id.toString(),
                     ),
                 )
-                
+
                 // Only navigate back on success
                 onSuccess()
             } catch (e: Exception) {

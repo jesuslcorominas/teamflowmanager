@@ -23,17 +23,27 @@ interface PlayerTimeRepository {
         currentTimeMillis: Long,
     )
 
+    /**
+     * Start timers for multiple players at once using batch write.
+     * All timers start with the same timestamp for synchronization.
+     * @param playerIds List of player IDs to start timers for
+     * @param currentTimeMillis The current time in milliseconds
+     */
+    suspend fun startTimersBatch(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+    )
+
+    /**
+     * Pause timers for multiple players at once using batch write for match pause.
+     * All timers pause with the same timestamp and are marked as PAUSED.
+     * @param playerIds List of player IDs to pause timers for
+     * @param currentTimeMillis The current time in milliseconds
+     */
+    suspend fun pauseTimersBatch(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+    )
+
     suspend fun resetAllPlayerTimes()
-
-    /**
-     * Get all local player times directly (not as a Flow) for migration purposes.
-     * @return List of all player times
-     */
-    suspend fun getAllLocalPlayerTimesDirect(): List<PlayerTime>
-
-    /**
-     * Clear local player time data from Room database.
-     * Used after successful migration to Firestore.
-     */
-    suspend fun clearLocalPlayerTimeData()
 }

@@ -1,116 +1,112 @@
 package com.jesuslcorominas.teamflowmanager.usecase.di
 
-import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ArchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportToPdfUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetExportDataUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSubstitutionsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerGoalStatsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerTimeStatsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SaveDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartPlayerTimersBatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UnarchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutTimerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeStatsUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeStatsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.MigrateLocalDataToFirestoreUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.MigrateLocalDataToFirestoreUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchTimerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.RemovePlayerAsCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SetShouldShowInvalidSubstitutionAlertUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ShouldShowInvalidSubstitutionAlertUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutTimerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutTimerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimersBatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateScheduledMatchesCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateScheduledMatchesCaptainUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCaseImpl
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -127,39 +123,32 @@ internal val useCaseInternalModule =
         singleOf(::GetTeamUseCaseImpl) bind GetTeamUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
-        singleOf(::HasLocalDataWithoutUserIdUseCaseImpl) bind HasLocalDataWithoutUserIdUseCase::class
-        singleOf(::MigrateLocalDataToFirestoreUseCaseImpl) bind MigrateLocalDataToFirestoreUseCase::class
 
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class
-        singleOf(::GetActiveMatchUseCaseImpl) bind GetActiveMatchUseCase::class
         singleOf(::GetArchivedMatchesUseCaseImpl) bind GetArchivedMatchesUseCase::class
         singleOf(::HasScheduledMatchesUseCaseImpl) bind HasScheduledMatchesUseCase::class
+        singleOf(::GetScheduledMatchesUseCaseImpl) bind GetScheduledMatchesUseCase::class
         singleOf(::CreateMatchUseCaseImpl) bind CreateMatchUseCase::class
         singleOf(::UpdateMatchUseCaseImpl) bind UpdateMatchUseCase::class
         singleOf(::DeleteMatchUseCaseImpl) bind DeleteMatchUseCase::class
         singleOf(::ArchiveMatchUseCaseImpl) bind ArchiveMatchUseCase::class
         singleOf(::UnarchiveMatchUseCaseImpl) bind UnarchiveMatchUseCase::class
         singleOf(::StartMatchTimerUseCaseImpl) bind StartMatchTimerUseCase::class
-        singleOf(::PauseMatchTimerUseCaseImpl) bind PauseMatchTimerUseCase::class
         singleOf(::PauseMatchUseCaseImpl) bind PauseMatchUseCase::class
         singleOf(::ResumeMatchUseCaseImpl) bind ResumeMatchUseCase::class
-        singleOf(::StartTimeoutTimerUseCaseImpl) bind StartTimeoutTimerUseCase::class
-        singleOf(::EndTimeoutTimerUseCaseImpl) bind EndTimeoutTimerUseCase::class
         singleOf(::StartTimeoutUseCaseImpl) bind StartTimeoutUseCase::class
         singleOf(::EndTimeoutUseCaseImpl) bind EndTimeoutUseCase::class
         singleOf(::FinishMatchUseCaseImpl) bind FinishMatchUseCase::class
         singleOf(::GetMatchSummaryUseCaseImpl) bind GetMatchSummaryUseCase::class
         singleOf(::GetMatchTimelineUseCaseImpl) bind GetMatchTimelineUseCase::class
 
-        singleOf(::GetPlayerTimeUseCaseImpl) bind GetPlayerTimeUseCase::class
         singleOf(::GetAllPlayerTimesUseCaseImpl) bind GetAllPlayerTimesUseCase::class
-        singleOf(::GetPlayerTimeStatsUseCase)
-        singleOf(::GetPlayerGoalStatsUseCase)
+        singleOf(::GetPlayerTimeStatsUseCaseImpl) bind GetPlayerTimeStatsUseCase::class
+        singleOf(::GetPlayerGoalStatsUseCaseImpl) bind GetPlayerGoalStatsUseCase::class
         singleOf(::GetExportDataUseCaseImpl) bind GetExportDataUseCase::class
-        singleOf(::StartPlayerTimerUseCaseImpl) bind StartPlayerTimerUseCase::class
-        singleOf(::PausePlayerTimerUseCaseImpl) bind PausePlayerTimerUseCase::class
         singleOf(::PausePlayerTimerForMatchPauseUseCaseImpl) bind PausePlayerTimerForMatchPauseUseCase::class
+        singleOf(::StartPlayerTimersBatchUseCaseImpl) bind StartPlayerTimersBatchUseCase::class
 
         singleOf(::RegisterPlayerSubstitutionUseCaseImpl) bind RegisterPlayerSubstitutionUseCase::class
         singleOf(::GetMatchSubstitutionsUseCaseImpl) bind GetMatchSubstitutionsUseCase::class
@@ -169,9 +158,13 @@ internal val useCaseInternalModule =
         singleOf(::SaveDefaultCaptainUseCaseImpl) bind SaveDefaultCaptainUseCase::class
         singleOf(::GetCaptainPlayerUseCaseImpl) bind GetCaptainPlayerUseCase::class
         singleOf(::UpdateScheduledMatchesCaptainUseCaseImpl) bind UpdateScheduledMatchesCaptainUseCase::class
+        singleOf(::SetPlayerAsCaptainUseCaseImpl) bind SetPlayerAsCaptainUseCase::class
+        singleOf(::RemovePlayerAsCaptainUseCaseImpl) bind RemovePlayerAsCaptainUseCase::class
 
         singleOf(::HasNotificationPermissionBeenRequestedUseCaseImpl) bind HasNotificationPermissionBeenRequestedUseCase::class
         singleOf(::SetNotificationPermissionRequestedUseCaseImpl) bind SetNotificationPermissionRequestedUseCase::class
+        singleOf(::ShouldShowInvalidSubstitutionAlertUseCaseImpl) bind ShouldShowInvalidSubstitutionAlertUseCase::class
+        singleOf(::SetShouldShowInvalidSubstitutionAlertUseCaseImpl) bind SetShouldShowInvalidSubstitutionAlertUseCase::class
 
         singleOf(::RegisterGoalUseCaseImpl) bind RegisterGoalUseCase::class
 
@@ -179,13 +172,15 @@ internal val useCaseInternalModule =
         singleOf(::GetMatchReportDataUseCaseImpl) bind GetMatchReportDataUseCase::class
         singleOf(::ExportMatchReportToPdfUseCaseImpl) bind ExportMatchReportToPdfUseCase::class
 
-        singleOf(::ExportDatabaseUseCaseImpl) bind ExportDatabaseUseCase::class
-        singleOf(::ImportDatabaseUseCaseImpl) bind ImportDatabaseUseCase::class
-
         // Auth use cases
         singleOf(::GetCurrentUserUseCaseImpl) bind GetCurrentUserUseCase::class
         singleOf(::SignInWithGoogleUseCaseImpl) bind SignInWithGoogleUseCase::class
         singleOf(::SignOutUseCaseImpl) bind SignOutUseCase::class
+
+        // Time synchronization
+        singleOf(::SynchronizeTimeUseCaseImpl) bind SynchronizeTimeUseCase::class
+
+        singleOf(::GetActiveMatchUseCaseImpl) bind GetActiveMatchUseCase::class
     }
 
 val useCaseModule =

@@ -13,15 +13,15 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
-import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchByIdUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SaveDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateMatchUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -91,16 +91,16 @@ class MatchCreationWizardViewModel(
             isEditMode = true
             this.matchId = matchIdFromState
         }
-        
+
         loadPlayers()
         loadTeam()
-        
+
         // Load match data if in edit mode
         if (pendingMatchIdForEdit != null) {
             loadMatchForEdit(pendingMatchIdForEdit!!)
         }
     }
-    
+
     private fun loadTeam() {
         viewModelScope.launch {
             val team = getTeamUseCase.invoke().first()
@@ -147,7 +147,7 @@ class MatchCreationWizardViewModel(
             checkAndSetReady()
         }
     }
-    
+
     /**
      * Check if all required data is loaded and set the Ready state.
      * In edit mode, we need both players AND match data.
@@ -155,10 +155,10 @@ class MatchCreationWizardViewModel(
      */
     private fun checkAndSetReady() {
         if (!playersLoaded) return
-        
+
         // In edit mode, wait for match data too
         if (isEditMode && !matchDataLoaded) return
-        
+
         _uiState.value = MatchCreationWizardUiState.Ready(allPlayers)
     }
 
@@ -172,12 +172,12 @@ class MatchCreationWizardViewModel(
 
     fun setSquadCallUp(playerIds: Set<Long>) {
         this.squadCallUpIds = playerIds
-        
+
         // If captain is not in the squad anymore, clear captain selection
         if (captainId != 0L && captainId !in playerIds) {
             captainId = 0L
         }
-        
+
         // Remove players from starting lineup if they're not in the squad anymore
         startingLineupIds = startingLineupIds.filter { it in playerIds }.toSet()
     }
@@ -295,7 +295,7 @@ class MatchCreationWizardViewModel(
             try {
                 crashReporter.log("Creating match via wizard: ${skeletonMatch.opponent}")
                 createMatch.invoke(skeletonMatch)
-                
+
                 analyticsTracker.logEvent(
                     AnalyticsEvent.MATCH_CREATED,
                     mapOf(
@@ -303,7 +303,7 @@ class MatchCreationWizardViewModel(
                         AnalyticsParam.MATCH_TYPE to "scheduled",
                     ),
                 )
-                
+
                 analyticsTracker.logEvent(
                     AnalyticsEvent.WIZARD_STEP_COMPLETED,
                     mapOf(
@@ -311,7 +311,7 @@ class MatchCreationWizardViewModel(
                         AnalyticsParam.STEP_NUMBER to "final",
                     ),
                 )
-                
+
                 // Call onComplete callback after successful creation
                 onComplete()
             } catch (e: Exception) {
@@ -342,7 +342,7 @@ class MatchCreationWizardViewModel(
                             startingLineupIds = startingLineupIds.toList(),
                         )
                         updateMatchUseCase.invoke(updatedMatch)
-                        
+
                         analyticsTracker.logEvent(
                             AnalyticsEvent.MATCH_UPDATED,
                             mapOf(
@@ -376,7 +376,7 @@ class MatchCreationWizardViewModel(
                 captainId != originalCaptainId ||
                 startingLineupIds != originalStartingLineupIds
         }
-        
+
         // In create mode, check if user has entered any data
         return opponent.isNotEmpty() ||
             location.isNotEmpty() ||

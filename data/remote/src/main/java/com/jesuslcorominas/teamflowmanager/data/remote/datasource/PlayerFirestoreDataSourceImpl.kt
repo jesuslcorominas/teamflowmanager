@@ -101,7 +101,7 @@ class PlayerFirestoreDataSourceImpl(
                         }
                         modelWithId.toDomain()
                     }
-                } ?: emptyList()
+                }?.filter { !it.deleted } ?: emptyList()
 
                 Log.d(TAG, "Loaded ${players.size} players for team: $teamDocId")
                 trySend(players)
@@ -141,7 +141,7 @@ class PlayerFirestoreDataSourceImpl(
                     }
                     modelWithId.toDomain()
                 }
-            }.find { it.id == playerId }
+            }.filter { !it.deleted }.find { it.id == playerId }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -181,7 +181,9 @@ class PlayerFirestoreDataSourceImpl(
                 } else {
                     it
                 }
-                modelWithId.toDomain()
+                val player = modelWithId.toDomain()
+                // Filter out deleted players
+                if (player.deleted) null else player
             }
         } catch (e: CancellationException) {
             throw e
@@ -299,8 +301,11 @@ class PlayerFirestoreDataSourceImpl(
     }
 
     /**
-     * Deletes a player from Firestore.
-     * Also deletes the player's image from Firebase Storage if present.
+     * Logically deletes a player from Firestore by setting the deleted flag to true.
+     * This preserves the player's data including goals and playing time history.
+     * Note: The player's image in Firebase Storage is intentionally not deleted to
+     * preserve historical data. If storage cleanup is needed in the future, implement
+     * a separate maintenance task to remove orphaned images.
      */
     override suspend fun deletePlayer(playerId: Long) {
         val teamDocId = getTeamDocumentId()
@@ -310,28 +315,19 @@ class PlayerFirestoreDataSourceImpl(
         }
 
         try {
-            // First, find the document ID and get the player data to delete the image
+            // First, find the document ID
             val documentId = findDocumentIdByPlayerId(teamDocId, playerId)
             if (documentId == null) {
                 Log.w(TAG, "Cannot find player with id: $playerId to delete")
                 return
             }
 
-            // Get the player to check for image URL
-            val player = getPlayerById(playerId)
-
-            // Delete the image from storage if it exists and is a Firebase Storage URL
-            player?.imageUri?.let { imageUrl ->
-                if (isFirebaseStorageUrl(imageUrl)) {
-                    imageStorageDataSource.deleteImage(imageUrl)
-                }
-            }
-
+            // Perform logical deletion by setting deleted flag to true
             firestore.collection(PLAYERS_COLLECTION)
                 .document(documentId)
-                .delete()
+                .update("deleted", true)
                 .await()
-            Log.d(TAG, "Player deleted successfully: $documentId")
+            Log.d(TAG, "Player logically deleted successfully: $documentId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -470,7 +466,7 @@ class PlayerFirestoreDataSourceImpl(
                     it
                 }
                 val player = modelWithId.toDomain()
-                if (player.id == playerId) {
+                if (player.id == playerId && !player.deleted) {
                     return documentId
                 }
             }
@@ -488,13 +484,19 @@ class PlayerFirestoreDataSourceImpl(
             .get()
             .await()
 
+        var clearedCount = 0
         for (document in snapshot.documents) {
-            firestore.collection(PLAYERS_COLLECTION)
-                .document(document.id)
-                .update("isCaptain", false)
-                .await()
+            // Only clear captain status for non-deleted players
+            val firestoreModel = document.toObject(PlayerFirestoreModel::class.java)
+            if (firestoreModel != null && !firestoreModel.deleted) {
+                firestore.collection(PLAYERS_COLLECTION)
+                    .document(document.id)
+                    .update("isCaptain", false)
+                    .await()
+                clearedCount++
+            }
         }
-        Log.d(TAG, "Cleared captain status from ${snapshot.documents.size} players")
+        Log.d(TAG, "Cleared captain status from $clearedCount player(s)")
     }
 
     /**
