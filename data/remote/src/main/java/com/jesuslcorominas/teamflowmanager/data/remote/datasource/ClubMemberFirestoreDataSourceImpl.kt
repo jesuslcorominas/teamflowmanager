@@ -56,6 +56,8 @@ class ClubMemberFirestoreDataSourceImpl(
 
                 if (firestoreModel != null) {
                     // Ensure the id field is set from the document ID
+                    // This is needed because @DocumentId may not always populate the field
+                    // during snapshot listener callbacks (consistent with TeamFirestoreDataSourceImpl)
                     val modelWithId = if (firestoreModel.id.isEmpty()) {
                         firestoreModel.copy(id = documentId)
                     } else {
