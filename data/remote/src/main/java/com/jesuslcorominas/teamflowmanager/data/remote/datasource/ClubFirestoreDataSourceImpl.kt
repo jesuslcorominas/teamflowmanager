@@ -30,7 +30,9 @@ class ClubFirestoreDataSourceImpl(
 
     /**
      * Creates a new club with the current user as owner and president.
-     * This operation is atomic using Firestore batch writes - both club and clubMember are created together.
+     * This operation creates the club first, then the clubMember, to work with Firestore security rules.
+     * Note: We can't use batch writes here because the clubMember creation rule checks if the user
+     * is the club owner, which requires the club document to exist first.
      */
     override suspend fun createClubWithOwner(
         clubName: String,
@@ -59,9 +61,14 @@ class ClubFirestoreDataSourceImpl(
                 invitationCode = invitationCode
             )
 
-            // Create clubMember document reference
-            val clubMemberDocRef = firestore.collection(CLUB_MEMBERS_COLLECTION).document()
-            val clubMemberId = clubMemberDocRef.id
+            // First, create the club document
+            clubDocRef.set(clubModel).await()
+            Log.d(TAG, "Club created successfully with id: $clubId, invitationCode: $invitationCode")
+
+            // Create clubMember document reference with predictable ID format: userId_clubId
+            // This format is required by Firestore security rules
+            val clubMemberId = "${currentUserId}_${clubId}"
+            val clubMemberDocRef = firestore.collection(CLUB_MEMBERS_COLLECTION).document(clubMemberId)
 
             // Create clubMember model for the president
             val clubMemberModel = ClubMemberFirestoreModel(
@@ -73,13 +80,8 @@ class ClubFirestoreDataSourceImpl(
                 role = ROLE_PRESIDENTE
             )
 
-            // Use batch write to ensure atomicity
-            val batch = firestore.batch()
-            batch.set(clubDocRef, clubModel)
-            batch.set(clubMemberDocRef, clubMemberModel)
-            batch.commit().await()
-
-            Log.d(TAG, "Club created successfully with id: $clubId, invitationCode: $invitationCode")
+            // Then create the clubMember document (now the club exists and security rules can verify ownership)
+            clubMemberDocRef.set(clubMemberModel).await()
             Log.d(TAG, "ClubMember created for userId: $currentUserId with role: $ROLE_PRESIDENTE")
 
             return clubModel.toDomain()

@@ -6,7 +6,10 @@ import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 interface ClubDataSource {
     /**
      * Create a new club with the current user as owner and president.
-     * This operation should be atomic - both club and clubMember must be created together.
+     * This operation creates the club first, then the clubMember sequentially,
+     * to work with Firestore security rules that require the club to exist
+     * before creating the clubMember.
+     * 
      * @param clubName The name of the club to create
      * @param currentUserId The user ID of the club owner
      * @param currentUserName The display name of the club owner
