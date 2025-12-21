@@ -89,8 +89,8 @@ fun Navigation(
         composable(Route.CreateClub.createRoute()) {
             CreateClubScreen(
                 onClubCreated = {
-                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
-                        popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
+                    navController.navigate(Route.Splash.createRoute()) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
