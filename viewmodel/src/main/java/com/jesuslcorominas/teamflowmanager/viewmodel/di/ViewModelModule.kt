@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
@@ -39,6 +40,13 @@ val viewModelModule =
         viewModel {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
+                analyticsTracker = get()
+            )
+        }
+
+        viewModel {
+            CreateClubViewModel(
+                createClubUseCase = get(),
                 analyticsTracker = get()
             )
         }

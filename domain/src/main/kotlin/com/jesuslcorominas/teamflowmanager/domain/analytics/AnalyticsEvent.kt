@@ -11,6 +11,9 @@ object AnalyticsEvent {
     const val TEAM_DELETED = "team_deleted"
     const val TEAM_VIEWED = "team_viewed"
 
+    // Club Management Events
+    const val CLUB_CREATED = "club_created"
+
     // Player Management Events
     const val PLAYER_CREATED = "player_created"
     const val PLAYER_UPDATED = "player_updated"
@@ -70,6 +73,8 @@ object AnalyticsParam {
     const val TEAM_ID = "team_id"
     const val TEAM_NAME = "team_name"
     const val TEAM_CATEGORY = "team_category"
+    const val CLUB_ID = "club_id"
+    const val CLUB_NAME = "club_name"
     const val PLAYER_ID = "player_id"
     const val PLAYER_NAME = "player_name"
     const val PLAYER_NUMBER = "player_number"
@@ -128,4 +133,5 @@ object ScreenName {
     const val MIGRATION = "Migration"
     const val SETTINGS = "Settings"
     const val CLUB_SELECTION = "Club Selection"
+    const val CREATE_CLUB = "Create Club"
 }

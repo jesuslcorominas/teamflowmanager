@@ -1,0 +1,134 @@
+package com.jesuslcorominas.teamflowmanager.ui.club
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
+import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
+import org.koin.androidx.compose.koinViewModel
+
+@Composable
+fun CreateClubScreen(
+    onClubCreated: () -> Unit,
+    viewModel: CreateClubViewModel = koinViewModel()
+) {
+    TrackScreenView(screenName = ScreenName.CREATE_CLUB, screenClass = "CreateClubScreen")
+
+    val uiState by viewModel.uiState.collectAsState()
+    val clubName by viewModel.clubName.collectAsState()
+    val clubNameError by viewModel.clubNameError.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Handle success
+    LaunchedEffect(uiState) {
+        when (val state = uiState) {
+            is CreateClubViewModel.UiState.Success -> {
+                snackbarHostState.showSnackbar("Club created successfully!")
+                viewModel.resetState()
+                onClubCreated()
+            }
+            is CreateClubViewModel.UiState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState()
+            }
+            else -> { /* No action needed */ }
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            TeamFlowManagerIcon()
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = stringResource(id = R.string.create_club_title),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(id = R.string.create_club_subtitle),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            OutlinedTextField(
+                value = clubName,
+                onValueChange = { viewModel.onClubNameChanged(it) },
+                label = { Text(stringResource(id = R.string.club_name_label)) },
+                placeholder = { Text(stringResource(id = R.string.club_name_placeholder)) },
+                isError = clubNameError != null,
+                supportingText = clubNameError?.let { { Text(it) } },
+                enabled = uiState !is CreateClubViewModel.UiState.Loading,
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = { viewModel.createClub() },
+                enabled = uiState !is CreateClubViewModel.UiState.Loading && clubName.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                if (uiState is CreateClubViewModel.UiState.Loading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.height(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = stringResource(id = R.string.create_club_button),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
