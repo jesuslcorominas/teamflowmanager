@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -22,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +30,7 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
+import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -40,6 +41,7 @@ fun CreateClubScreen(
 ) {
     TrackScreenView(screenName = ScreenName.CREATE_CLUB, screenClass = "CreateClubScreen")
 
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val clubName by viewModel.clubName.collectAsState()
     val clubNameError by viewModel.clubNameError.collectAsState()
@@ -49,7 +51,7 @@ fun CreateClubScreen(
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is CreateClubViewModel.UiState.Success -> {
-                snackbarHostState.showSnackbar("Club created successfully!")
+                snackbarHostState.showSnackbar(context.getString(R.string.create_club_success))
                 viewModel.resetState()
                 onClubCreated()
             }
@@ -94,16 +96,15 @@ fun CreateClubScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            OutlinedTextField(
+            AppTextField(
                 value = clubName,
                 onValueChange = { viewModel.onClubNameChanged(it) },
                 label = { Text(stringResource(id = R.string.club_name_label)) },
-                placeholder = { Text(stringResource(id = R.string.club_name_placeholder)) },
                 isError = clubNameError != null,
-                supportingText = clubNameError?.let { { Text(it) } },
-                enabled = uiState !is CreateClubViewModel.UiState.Loading,
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                supportingText = clubNameError?.let { errorResId ->
+                    { Text(stringResource(id = errorResId)) }
+                },
+                readOnly = uiState is CreateClubViewModel.UiState.Loading
             )
 
             Spacer(modifier = Modifier.height(24.dp))

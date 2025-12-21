@@ -23,8 +23,8 @@ class CreateClubViewModel(
     private val _clubName = MutableStateFlow("")
     val clubName: StateFlow<String> = _clubName.asStateFlow()
 
-    private val _clubNameError = MutableStateFlow<String?>(null)
-    val clubNameError: StateFlow<String?> = _clubNameError.asStateFlow()
+    private val _clubNameError = MutableStateFlow<Int?>(null)
+    val clubNameError: StateFlow<Int?> = _clubNameError.asStateFlow()
 
     sealed interface UiState {
         data object Idle : UiState
@@ -44,15 +44,15 @@ class CreateClubViewModel(
         // Validate club name
         when {
             name.isEmpty() -> {
-                _clubNameError.value = "Club name cannot be empty"
+                _clubNameError.value = com.jesuslcorominas.teamflowmanager.R.string.club_name_error_empty
                 return
             }
             name.length < 3 -> {
-                _clubNameError.value = "Club name must be at least 3 characters"
+                _clubNameError.value = com.jesuslcorominas.teamflowmanager.R.string.club_name_error_too_short
                 return
             }
             name.length > 50 -> {
-                _clubNameError.value = "Club name must be less than 50 characters"
+                _clubNameError.value = com.jesuslcorominas.teamflowmanager.R.string.club_name_error_too_long
                 return
             }
         }

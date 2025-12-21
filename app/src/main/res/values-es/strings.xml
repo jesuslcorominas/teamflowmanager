@@ -13,6 +13,19 @@
     <string name="create_club">Crear un Club</string>
     <string name="join_club">Unirme a un Club</string>
 
+    <!-- Create Club Strings -->
+    <string name="create_club_title">Crea tu Club</string>
+    <string name="create_club_subtitle">Dale un nombre a tu club para comenzar</string>
+    <string name="club_name_label">Nombre del Club</string>
+    <string name="club_name_placeholder">Introduce el nombre del club</string>
+    <string name="club_name_error_empty">El nombre del club no puede estar vacío</string>
+    <string name="club_name_error_too_short">El nombre del club debe tener al menos 3 caracteres</string>
+    <string name="club_name_error_too_long">El nombre del club debe tener menos de 50 caracteres</string>
+    <string name="create_club_button">Crear Club</string>
+    <string name="create_club_loading">Creando tu club…</string>
+    <string name="create_club_error">Error al crear el club. Por favor, inténtalo de nuevo.</string>
+    <string name="create_club_success">¡Club creado correctamente!</string>
+
     <!-- Account Strings -->
     <string name="settings_account_section">Cuenta</string>
     <string name="sign_out">Cerrar sesión</string>

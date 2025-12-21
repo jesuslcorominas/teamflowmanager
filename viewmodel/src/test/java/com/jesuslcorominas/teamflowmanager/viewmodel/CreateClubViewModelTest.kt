@@ -74,7 +74,7 @@ class CreateClubViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertEquals("Club name cannot be empty", viewModel.clubNameError.value)
+        assertEquals(com.jesuslcorominas.teamflowmanager.R.string.club_name_error_empty, viewModel.clubNameError.value)
         assertEquals(CreateClubViewModel.UiState.Idle, viewModel.uiState.value)
         coVerify(exactly = 0) { createClubUseCase(any()) }
     }
@@ -89,7 +89,7 @@ class CreateClubViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertEquals("Club name must be at least 3 characters", viewModel.clubNameError.value)
+        assertEquals(com.jesuslcorominas.teamflowmanager.R.string.club_name_error_too_short, viewModel.clubNameError.value)
         assertEquals(CreateClubViewModel.UiState.Idle, viewModel.uiState.value)
         coVerify(exactly = 0) { createClubUseCase(any()) }
     }
@@ -105,7 +105,7 @@ class CreateClubViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertEquals("Club name must be less than 50 characters", viewModel.clubNameError.value)
+        assertEquals(com.jesuslcorominas.teamflowmanager.R.string.club_name_error_too_long, viewModel.clubNameError.value)
         assertEquals(CreateClubViewModel.UiState.Idle, viewModel.uiState.value)
         coVerify(exactly = 0) { createClubUseCase(any()) }
     }
