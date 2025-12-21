@@ -29,19 +29,21 @@ service cloud.firestore {
     
     // Helper function to check if user is "Presidente" of the club linked to a team
     function isPresidenteOfTeamClub(teamId) {
-      let team = getTeam(teamId);
-      // Check if team has a clubId
-      if (!('clubId' in team.data) || team.data.clubId == null) {
-        return false;
-      }
-      // Check if user is a club member with role "Presidente"
-      let clubId = team.data.clubId;
-      let memberPath = /databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId);
-      if (!exists(memberPath)) {
-        return false;
-      }
-      let memberDoc = get(memberPath);
-      return memberDoc.data.role == "Presidente";
+      return isAuthenticated() 
+        && getTeamClubId(teamId) != null
+        && isPresidenteOfClub(getTeamClubId(teamId));
+    }
+    
+    // Helper function to get team's clubId (returns null if not set)
+    function getTeamClubId(teamId) {
+      return ('clubId' in getTeam(teamId).data) ? getTeam(teamId).data.clubId : null;
+    }
+    
+    // Helper function to check if user is Presidente of a specific club
+    function isPresidenteOfClub(clubId) {
+      return clubId != null 
+        && exists(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId))
+        && get(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId)).data.role == "Presidente";
     }
     
     // Clubs collection rules

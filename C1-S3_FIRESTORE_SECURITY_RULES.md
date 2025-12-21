@@ -111,10 +111,28 @@ allow read: if isAuthenticated() && (
 
 #### `isPresidenteOfTeamClub(teamId)`
 Checks if the authenticated user is a "Presidente" of the club linked to the specified team:
-1. Retrieves team document to get `clubId`
-2. Checks if team has a valid `clubId` (not null)
-3. Verifies club membership document exists for user
-4. Confirms the member's role is "Presidente"
+1. Gets the team's `clubId` using `getTeamClubId(teamId)` 
+2. Checks if `clubId` is not null
+3. Verifies user is Presidente of that club using `isPresidenteOfClub(clubId)`
+
+**Implementation:**
+```javascript
+function isPresidenteOfTeamClub(teamId) {
+  return isAuthenticated() 
+    && getTeamClubId(teamId) != null
+    && isPresidenteOfClub(getTeamClubId(teamId));
+}
+
+function getTeamClubId(teamId) {
+  return ('clubId' in getTeam(teamId).data) ? getTeam(teamId).data.clubId : null;
+}
+
+function isPresidenteOfClub(clubId) {
+  return clubId != null 
+    && exists(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId))
+    && get(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId)).data.role == "Presidente";
+}
+```
 
 #### `isTeamCoach(teamId)`
 Checks if the authenticated user is the coach (owner) of the specified team:
