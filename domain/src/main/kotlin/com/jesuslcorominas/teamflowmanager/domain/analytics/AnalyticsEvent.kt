@@ -13,6 +13,7 @@ object AnalyticsEvent {
 
     // Club Management Events
     const val CLUB_CREATED = "club_created"
+    const val CLUB_CREATION_ERROR = "club_creation_error"
 
     // Player Management Events
     const val PLAYER_CREATED = "player_created"

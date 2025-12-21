@@ -74,7 +74,7 @@ class CreateClubViewModel(
                 _uiState.value = UiState.Success(club)
             } catch (e: Exception) {
                 analyticsTracker.logEvent(
-                    "club_creation_error",
+                    AnalyticsEvent.CLUB_CREATION_ERROR,
                     mapOf(
                         AnalyticsParam.ERROR_MESSAGE to (e.message ?: "Unknown error")
                     )

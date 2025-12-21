@@ -189,7 +189,7 @@ class CreateClubViewModelTest {
         assertEquals(CreateClubViewModel.UiState.Error(errorMessage), viewModel.uiState.value)
         verify {
             analyticsTracker.logEvent(
-                "club_creation_error",
+                AnalyticsEvent.CLUB_CREATION_ERROR,
                 mapOf(AnalyticsParam.ERROR_MESSAGE to errorMessage)
             )
         }
