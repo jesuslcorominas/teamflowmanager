@@ -12,6 +12,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+
+enum class ClubNameError {
+    EMPTY_NAME,
+    NAME_TOO_SHORT,
+    NAME_TOO_LONG
+}
+
+private const val MIN_CLUB_NAME_LENGTH = 3
+private const val MAX_CLUB_NAME_LENGTH = 50
+
 class CreateClubViewModel(
     private val createClubUseCase: CreateClubUseCase,
     private val analyticsTracker: AnalyticsTracker
@@ -23,8 +33,8 @@ class CreateClubViewModel(
     private val _clubName = MutableStateFlow("")
     val clubName: StateFlow<String> = _clubName.asStateFlow()
 
-    private val _clubNameError = MutableStateFlow<Int?>(null)
-    val clubNameError: StateFlow<Int?> = _clubNameError.asStateFlow()
+    private val _clubNameError = MutableStateFlow<ClubNameError?>(null)
+    val clubNameError: StateFlow<ClubNameError?> = _clubNameError.asStateFlow()
 
     sealed interface UiState {
         data object Idle : UiState
@@ -40,19 +50,19 @@ class CreateClubViewModel(
 
     fun createClub() {
         val name = _clubName.value.trim()
-        
+
         // Validate club name
         when {
             name.isEmpty() -> {
-                _clubNameError.value = com.jesuslcorominas.teamflowmanager.R.string.club_name_error_empty
+                _clubNameError.value = ClubNameError.EMPTY_NAME
                 return
             }
-            name.length < 3 -> {
-                _clubNameError.value = com.jesuslcorominas.teamflowmanager.R.string.club_name_error_too_short
+            name.length < MIN_CLUB_NAME_LENGTH -> {
+                _clubNameError.value = ClubNameError.NAME_TOO_SHORT
                 return
             }
-            name.length > 50 -> {
-                _clubNameError.value = com.jesuslcorominas.teamflowmanager.R.string.club_name_error_too_long
+            name.length > MAX_CLUB_NAME_LENGTH -> {
+                _clubNameError.value = ClubNameError.NAME_TOO_LONG
                 return
             }
         }
@@ -61,7 +71,7 @@ class CreateClubViewModel(
             _uiState.value = UiState.Loading
             try {
                 val club = createClubUseCase(name)
-                
+
                 // Track club creation
                 analyticsTracker.logEvent(
                     AnalyticsEvent.CLUB_CREATED,
@@ -70,7 +80,7 @@ class CreateClubViewModel(
                         AnalyticsParam.CLUB_NAME to club.name
                     )
                 )
-                
+
                 _uiState.value = UiState.Success(club)
             } catch (e: Exception) {
                 analyticsTracker.logEvent(

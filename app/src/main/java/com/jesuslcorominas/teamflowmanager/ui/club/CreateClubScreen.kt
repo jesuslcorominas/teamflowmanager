@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
@@ -31,6 +34,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubNameError
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -102,8 +106,22 @@ fun CreateClubScreen(
                 label = { Text(stringResource(id = R.string.club_name_label)) },
                 isError = clubNameError != null,
                 supportingText = clubNameError?.let { errorResId ->
-                    { Text(stringResource(id = errorResId)) }
+                    {
+                        Text(
+                            text = stringResource(
+                                id = when (errorResId) {
+                                    ClubNameError.EMPTY_NAME -> R.string.club_name_error_empty
+                                    ClubNameError.NAME_TOO_SHORT -> R.string.club_name_error_too_short
+                                    ClubNameError.NAME_TOO_LONG -> R.string.club_name_error_too_long
+                                }
+                            )
+                        )
+                    }
                 },
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    capitalization = KeyboardCapitalization.Words
+                ),
                 readOnly = uiState is CreateClubViewModel.UiState.Loading
             )
 
