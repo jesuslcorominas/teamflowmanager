@@ -21,6 +21,11 @@ fun SplashScreen(
 ) {
     TrackScreenView(screenName = ScreenName.SPLASH, screenClass = "SplashScreen")
 
+    // Refresh the splash state whenever this screen is shown
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState) {

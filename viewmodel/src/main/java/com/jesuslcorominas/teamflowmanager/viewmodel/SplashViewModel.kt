@@ -41,6 +41,11 @@ class SplashViewModel(
         performStartupTasks()
     }
 
+    fun refresh() {
+        _uiState.value = UiState.Loading
+        performStartupTasks()
+    }
+
     private fun performStartupTasks() {
         viewModelScope.launch {
             // Synchronize time with server on app startup
