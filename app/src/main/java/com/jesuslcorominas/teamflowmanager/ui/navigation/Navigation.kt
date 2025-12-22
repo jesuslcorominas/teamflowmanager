@@ -90,7 +90,7 @@ fun Navigation(
             CreateClubScreen(
                 onClubCreated = {
                     navController.navigate(Route.Splash.createRoute()) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
                     }
                 }
             )
