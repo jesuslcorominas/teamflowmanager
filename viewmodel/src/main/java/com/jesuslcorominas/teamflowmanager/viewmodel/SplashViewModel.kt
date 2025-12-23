@@ -72,10 +72,14 @@ class SplashViewModel(
     }
 
     private suspend fun checkClubMembership() {
+        Log.d(TAG, "Checking club membership...")
         val clubMember = getUserClubMembership().first()
+        Log.d(TAG, "Club membership result: ${if (clubMember == null) "NO CLUB MEMBERSHIP" else "HAS CLUB MEMBERSHIP (clubId: ${clubMember.clubId}, role: ${clubMember.role})"}")
         if (clubMember == null) {
+            Log.d(TAG, "Setting state to NoClub")
             _uiState.value = UiState.NoClub
         } else {
+            Log.d(TAG, "User has club membership, checking team...")
             loadTeam()
         }
     }
