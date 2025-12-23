@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +23,8 @@ class SplashViewModel(
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    
+    private var startupJob: Job? = null
 
     sealed interface UiState {
         data object Loading : UiState
@@ -42,12 +45,14 @@ class SplashViewModel(
     }
 
     fun refresh() {
+        Log.d(TAG, "Refresh called - cancelling previous job and restarting")
+        startupJob?.cancel()
         _uiState.value = UiState.Loading
         performStartupTasks()
     }
 
     private fun performStartupTasks() {
-        viewModelScope.launch {
+        startupJob = viewModelScope.launch {
             // Synchronize time with server on app startup
             try {
                 synchronizeTimeUseCase()
@@ -85,12 +90,15 @@ class SplashViewModel(
     }
 
     private suspend fun loadTeam() {
-        getTeam().collect { team ->
-            if (team == null) {
-                _uiState.value = UiState.NoTeam
-            } else {
-                _uiState.value = UiState.TeamExists
-            }
+        Log.d(TAG, "Loading team...")
+        val team = getTeam().first()
+        Log.d(TAG, "Team result: ${if (team == null) "NO TEAM" else "HAS TEAM (id: ${team.id}, name: ${team.name})"}")
+        if (team == null) {
+            Log.d(TAG, "Setting state to NoTeam")
+            _uiState.value = UiState.NoTeam
+        } else {
+            Log.d(TAG, "Setting state to TeamExists")
+            _uiState.value = UiState.TeamExists
         }
     }
 
