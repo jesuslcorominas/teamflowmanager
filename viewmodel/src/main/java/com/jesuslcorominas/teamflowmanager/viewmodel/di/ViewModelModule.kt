@@ -32,8 +32,7 @@ val viewModelModule =
             SplashViewModel(
                 getTeam = get(),
                 getCurrentUser = get(),
-                synchronizeTimeUseCase = get(),
-                getUserClubMembership = get()
+                synchronizeTimeUseCase = get()
             )
         }
 
