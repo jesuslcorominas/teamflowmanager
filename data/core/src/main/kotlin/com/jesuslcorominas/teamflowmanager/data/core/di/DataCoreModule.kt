@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.di
 
 import com.jesuslcorominas.teamflowmanager.data.core.repository.AuthRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubMemberRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.GoalRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerRepositoryImpl
@@ -12,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.PreferencesRepos
 import com.jesuslcorominas.teamflowmanager.data.core.repository.TeamRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
@@ -29,6 +31,8 @@ internal val repositoryModule =
         singleOf(::PlayerRepositoryImpl) bind PlayerRepository::class
 
         singleOf(::TeamRepositoryImpl) bind TeamRepository::class
+
+        singleOf(::ClubRepositoryImpl) bind ClubRepository::class
 
         singleOf(::ClubMemberRepositoryImpl) bind ClubMemberRepository::class
 

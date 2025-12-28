@@ -16,6 +16,7 @@ sealed class Route(
                 Login,
                 Migration,
                 ClubSelection,
+                CreateClub,
                 Players,
                 Team,
                 Matches,
@@ -80,6 +81,8 @@ sealed class Route(
     data object Migration : Route(path = "migration", showTopBar = false)
 
     data object ClubSelection : Route(path = "club_selection", showTopBar = false)
+
+    data object CreateClub : Route(path = "create_club", showTopBar = false)
 
     data object Team : Route(
         path = "team",

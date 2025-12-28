@@ -13,6 +13,23 @@
     <string name="create_club">Create a Club</string>
     <string name="join_club">Join a Club</string>
 
+    <!-- Create Club Strings -->
+    <string name="create_club_title">Create Your Club</string>
+    <string name="create_club_subtitle">Give your club a name to get started</string>
+    <string name="club_name_label">Club Name</string>
+    <string name="club_name_placeholder">Enter club name</string>
+    <string name="club_name_error_empty">Club name cannot be empty</string>
+    <string name="club_name_error_too_short">Club name must be at least 3 characters</string>
+    <string name="club_name_error_too_long">Club name must be less than 50 characters</string>
+    <string name="create_club_button">Create Club</string>
+    <string name="create_club_loading">Creating your club…</string>
+    <string name="create_club_error">Failed to create club. Please try again.</string>
+    <string name="create_club_success">Club created successfully!</string>
+    <string name="create_club_success_title">Club Created Successfully!</string>
+    <string name="create_club_success_message">Your club has been created successfully and you can now start managing your teams.</string>
+    <string name="create_club_redirecting">You will be redirected automatically in a few seconds…</string>
+    <string name="create_club_continue">Continue</string>
+
     <!-- Account Strings -->
     <string name="settings_account_section">Account</string>
     <string name="sign_out">Logout</string>

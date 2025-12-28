@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,11 +17,12 @@ class SplashViewModel(
     private val getTeam: GetTeamUseCase,
     private val getCurrentUser: GetCurrentUserUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
-    private val getUserClubMembership: GetUserClubMembershipUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    
+    private var startupJob: Job? = null
 
     sealed interface UiState {
         data object Loading : UiState
@@ -41,8 +42,15 @@ class SplashViewModel(
         performStartupTasks()
     }
 
+    fun refresh() {
+        Log.d(TAG, "Refresh called - cancelling previous job and restarting")
+        startupJob?.cancel()
+        _uiState.value = UiState.Loading
+        performStartupTasks()
+    }
+
     private fun performStartupTasks() {
-        viewModelScope.launch {
+        startupJob = viewModelScope.launch {
             // Synchronize time with server on app startup
             try {
                 synchronizeTimeUseCase()
@@ -62,25 +70,30 @@ class SplashViewModel(
         if (user == null) {
             _uiState.value = UiState.NotAuthenticated
         } else {
-            checkClubMembership()
-        }
-    }
-
-    private suspend fun checkClubMembership() {
-        val clubMember = getUserClubMembership().first()
-        if (clubMember == null) {
-            _uiState.value = UiState.NoClub
-        } else {
+            Log.d(TAG, "User authenticated, loading team...")
             loadTeam()
         }
     }
 
     private suspend fun loadTeam() {
-        getTeam().collect { team ->
-            if (team == null) {
-                _uiState.value = UiState.NoTeam
-            } else {
+        Log.d(TAG, "Loading team...")
+        val team = getTeam().first()
+        
+        if (team == null) {
+            Log.d(TAG, "NO TEAM found - navigating to club selection")
+            _uiState.value = UiState.NoClub
+        } else {
+            Log.d(TAG, "TEAM found (id: ${team.id}, name: ${team.name}, clubId: ${team.clubId}, clubFirestoreId: ${team.clubFirestoreId})")
+            
+            // Check if team has a club
+            val hasClub = team.clubId != null || team.clubFirestoreId != null
+            
+            if (hasClub) {
+                Log.d(TAG, "Team HAS club - navigating to matches")
                 _uiState.value = UiState.TeamExists
+            } else {
+                Log.d(TAG, "Team DOES NOT have club - navigating to club selection")
+                _uiState.value = UiState.NoClub
             }
         }
     }
