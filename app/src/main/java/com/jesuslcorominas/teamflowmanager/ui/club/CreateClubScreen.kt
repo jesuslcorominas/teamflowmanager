@@ -60,7 +60,7 @@ fun CreateClubScreen(
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is CreateClubViewModel.UiState.Success -> {
-                delay(2000) // Auto-redirect after 2 seconds
+                delay(5000) // Auto-redirect after 5 seconds
                 viewModel.resetState()
                 onClubCreated()
             }
