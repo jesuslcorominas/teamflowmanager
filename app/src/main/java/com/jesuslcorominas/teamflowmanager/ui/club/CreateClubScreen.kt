@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -20,14 +19,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -59,13 +55,11 @@ fun CreateClubScreen(
     val clubName by viewModel.clubName.collectAsState()
     val clubNameError by viewModel.clubNameError.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showSuccessDialog by remember { mutableStateOf(false) }
 
-    // Handle success
+    // Handle success - auto-redirect after delay
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is CreateClubViewModel.UiState.Success -> {
-                showSuccessDialog = true
                 delay(2000) // Auto-redirect after 2 seconds
                 viewModel.resetState()
                 onClubCreated()
@@ -76,55 +70,6 @@ fun CreateClubScreen(
             }
             else -> { /* No action needed */ }
         }
-    }
-
-    // Success Dialog
-    if (showSuccessDialog) {
-        AlertDialog(
-            onDismissRequest = { /* Prevent dismissal, will auto-redirect */ },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(48.dp)
-                )
-            },
-            title = {
-                Text(
-                    text = stringResource(id = R.string.create_club_success_title),
-                    textAlign = TextAlign.Center
-                )
-            },
-            text = {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.create_club_success_message),
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(id = R.string.create_club_redirecting),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showSuccessDialog = false
-                        viewModel.resetState()
-                        onClubCreated()
-                    }
-                ) {
-                    Text(stringResource(id = R.string.create_club_continue))
-                }
-            }
-        )
     }
 
     Scaffold(
@@ -138,74 +83,131 @@ fun CreateClubScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            TeamFlowManagerIcon()
+            // Show success state instead of form
+            if (uiState is CreateClubViewModel.UiState.Success) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(72.dp)
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = stringResource(id = R.string.create_club_title),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
+                Text(
+                    text = stringResource(id = R.string.create_club_success_title),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = stringResource(id = R.string.create_club_subtitle),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                Text(
+                    text = stringResource(id = R.string.create_club_success_message),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
-            Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            AppTextField(
-                value = clubName,
-                onValueChange = { viewModel.onClubNameChanged(it) },
-                label = { Text(stringResource(id = R.string.club_name_label)) },
-                isError = clubNameError != null,
-                supportingText = clubNameError?.let { errorResId ->
-                    {
-                        Text(
-                            text = stringResource(
-                                id = when (errorResId) {
-                                    ClubNameError.EMPTY_NAME -> R.string.club_name_error_empty
-                                    ClubNameError.NAME_TOO_SHORT -> R.string.club_name_error_too_short
-                                    ClubNameError.NAME_TOO_LONG -> R.string.club_name_error_too_long
-                                }
-                            )
-                        )
-                    }
-                },
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done,
-                    capitalization = KeyboardCapitalization.Words
-                ),
-                readOnly = uiState is CreateClubViewModel.UiState.Loading
-            )
+                Text(
+                    text = stringResource(id = R.string.create_club_redirecting),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
-                onClick = { viewModel.createClub() },
-                enabled = uiState !is CreateClubViewModel.UiState.Loading && clubName.isNotBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.small
-            ) {
-                if (uiState is CreateClubViewModel.UiState.Loading) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.height(24.dp)
-                    )
-                } else {
+                Button(
+                    onClick = {
+                        viewModel.resetState()
+                        onClubCreated()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = MaterialTheme.shapes.small
+                ) {
                     Text(
-                        text = stringResource(id = R.string.create_club_button),
+                        text = stringResource(id = R.string.create_club_continue),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium
                     )
+                }
+            } else {
+                // Show form
+                TeamFlowManagerIcon()
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = stringResource(id = R.string.create_club_title),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(id = R.string.create_club_subtitle),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                AppTextField(
+                    value = clubName,
+                    onValueChange = { viewModel.onClubNameChanged(it) },
+                    label = { Text(stringResource(id = R.string.club_name_label)) },
+                    isError = clubNameError != null,
+                    supportingText = clubNameError?.let { errorResId ->
+                        {
+                            Text(
+                                text = stringResource(
+                                    id = when (errorResId) {
+                                        ClubNameError.EMPTY_NAME -> R.string.club_name_error_empty
+                                        ClubNameError.NAME_TOO_SHORT -> R.string.club_name_error_too_short
+                                        ClubNameError.NAME_TOO_LONG -> R.string.club_name_error_too_long
+                                    }
+                                )
+                            )
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done,
+                        capitalization = KeyboardCapitalization.Words
+                    ),
+                    readOnly = uiState is CreateClubViewModel.UiState.Loading
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = { viewModel.createClub() },
+                    enabled = uiState !is CreateClubViewModel.UiState.Loading && clubName.isNotBlank(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    if (uiState is CreateClubViewModel.UiState.Loading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.height(24.dp)
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(id = R.string.create_club_button),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
