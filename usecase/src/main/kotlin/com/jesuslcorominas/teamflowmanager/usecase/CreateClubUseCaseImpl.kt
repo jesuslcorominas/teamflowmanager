@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import android.util.Log
 import com.jesuslcorominas.teamflowmanager.domain.model.Club
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
@@ -38,19 +37,11 @@ internal class CreateClubUseCaseImpl(
         
         // If user has a team, associate it with the newly created club
         val team = getTeam().first()
-        if (team != null) {
-            Log.d(TAG, "User has team (${team.id}), associating with club (${club.id})")
-            val updatedTeam = team.copy(clubFirestoreId = club.id)
+        if (team != null && club.firestoreId != null) {
+            val updatedTeam = team.copy(clubFirestoreId = club.firestoreId)
             updateTeam(updatedTeam)
-            Log.d(TAG, "Team ${team.id} successfully associated with club ${club.id}")
-        } else {
-            Log.d(TAG, "User has no team, club created without team association")
         }
         
         return club
-    }
-    
-    companion object {
-        private const val TAG = "CreateClubUseCase"
     }
 }
