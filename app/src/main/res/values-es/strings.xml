@@ -25,6 +25,10 @@
     <string name="create_club_loading">Creando tu club…</string>
     <string name="create_club_error">Error al crear el club. Por favor, inténtalo de nuevo.</string>
     <string name="create_club_success">¡Club creado correctamente!</string>
+    <string name="create_club_success_title">¡Club creado con éxito!</string>
+    <string name="create_club_success_message">Tu club ha sido creado correctamente y ya puedes empezar a gestionar tus equipos.</string>
+    <string name="create_club_redirecting">Serás redirigido automáticamente en unos segundos…</string>
+    <string name="create_club_continue">Continuar</string>
 
     <!-- Account Strings -->
     <string name="settings_account_section">Cuenta</string>

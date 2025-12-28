@@ -25,6 +25,10 @@
     <string name="create_club_loading">Creating your club…</string>
     <string name="create_club_error">Failed to create club. Please try again.</string>
     <string name="create_club_success">Club created successfully!</string>
+    <string name="create_club_success_title">Club Created Successfully!</string>
+    <string name="create_club_success_message">Your club has been created successfully and you can now start managing your teams.</string>
+    <string name="create_club_redirecting">You will be redirected automatically in a few seconds…</string>
+    <string name="create_club_continue">Continue</string>
 
     <!-- Account Strings -->
     <string name="settings_account_section">Account</string>
