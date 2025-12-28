@@ -46,6 +46,11 @@ fun Navigation(
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
+                onNavigateToJoinClub = {
+                    navController.navigate(Route.JoinClub.createRoute()) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
                 onNavigateToCreateTeam = {
                     navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }

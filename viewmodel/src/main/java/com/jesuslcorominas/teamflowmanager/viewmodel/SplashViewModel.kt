@@ -28,9 +28,13 @@ class SplashViewModel(
 
         data object LocalDataNeedsAuth : UiState
 
-        data object NoTeam : UiState
+        data object NoTeamNoClub : UiState
 
-        data object TeamExists : UiState
+        data object NoTeamHasClub : UiState
+
+        data object HasTeamNoClub : UiState
+
+        data object HasTeamAndClub : UiState
     }
 
     init {
@@ -65,9 +69,16 @@ class SplashViewModel(
     private suspend fun loadTeam() {
         getTeam().collect { team ->
             if (team == null) {
-                _uiState.value = UiState.NoTeam
+                // No team - need to check if user has club membership
+                // For now, assume no club (we'll add club membership check later if needed)
+                _uiState.value = UiState.NoTeamNoClub
             } else {
-                _uiState.value = UiState.TeamExists
+                // Has team - check if team is linked to a club
+                if (team.clubId != null) {
+                    _uiState.value = UiState.HasTeamAndClub
+                } else {
+                    _uiState.value = UiState.HasTeamNoClub
+                }
             }
         }
     }
