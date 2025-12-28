@@ -20,4 +20,7 @@ internal class TeamRepositoryImpl(
 
     override fun getTeamByCoachId(coachId: String): Flow<Team?> =
         teamDataSource.getTeamByCoachId(coachId)
+
+    override fun getOrphanTeams(): Flow<List<Team>> =
+        teamDataSource.getOrphanTeams()
 }

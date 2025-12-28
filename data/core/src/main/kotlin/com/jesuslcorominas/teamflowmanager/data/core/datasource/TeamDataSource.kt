@@ -34,4 +34,10 @@ interface TeamDataSource {
      * Only applicable for local data sources.
      */
     suspend fun clearLocalData()
+
+    /**
+     * Get orphan teams owned by the current user (teams with null clubId).
+     * @return Flow emitting list of orphan teams
+     */
+    fun getOrphanTeams(): Flow<List<Team>>
 }

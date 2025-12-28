@@ -195,4 +195,52 @@ class TeamFirestoreDataSourceImpl(
     override suspend fun clearLocalData() {
         // No-op for remote data source
     }
+
+    override fun getOrphanTeams(): Flow<List<Team>> = callbackFlow {
+        val currentUserId = firebaseAuth.currentUser?.uid
+        if (currentUserId == null) {
+            Log.w(TAG, "No authenticated user, cannot get orphan teams")
+            trySend(emptyList())
+            awaitClose { }
+            return@callbackFlow
+        }
+
+        val listenerRegistration = firestore.collection(TEAMS_COLLECTION)
+            .whereEqualTo("ownerId", currentUserId)
+            .whereEqualTo("clubId", null)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(TAG, "Error getting orphan teams from Firestore", error)
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+
+                if (snapshot == null || snapshot.isEmpty) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+
+                val teams = snapshot.documents.mapNotNull { document ->
+                    val documentId = document.id
+                    val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
+
+                    if (firestoreModel != null) {
+                        val modelWithId = if (firestoreModel.id.isEmpty()) {
+                            firestoreModel.copy(id = documentId)
+                        } else {
+                            firestoreModel
+                        }
+                        modelWithId.toDomain()
+                    } else {
+                        null
+                    }
+                }
+                Log.d(TAG, "Found ${teams.size} orphan teams for user $currentUserId")
+                trySend(teams)
+            }
+
+        awaitClose {
+            listenerRegistration.remove()
+        }
+    }
 }

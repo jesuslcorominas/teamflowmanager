@@ -16,4 +16,10 @@ interface TeamRepository {
      * @return Flow emitting the team if found, null otherwise
      */
     fun getTeamByCoachId(coachId: String): Flow<Team?>
+
+    /**
+     * Get orphan teams owned by the current user (teams with null clubId).
+     * @return Flow emitting list of orphan teams
+     */
+    fun getOrphanTeams(): Flow<List<Team>>
 }
