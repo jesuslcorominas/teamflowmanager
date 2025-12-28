@@ -44,7 +44,7 @@ fun JoinClubScreen(
     onNavigateBack: () -> Unit,
     viewModel: JoinClubViewModel = koinViewModel(),
 ) {
-    TrackScreenView(screenName = ScreenName.SETTINGS, screenClass = "JoinClubScreen")
+    TrackScreenView(screenName = ScreenName.TEAM, screenClass = "JoinClubScreen")
 
     val uiState by viewModel.uiState.collectAsState()
     val invitationCode by viewModel.invitationCode.collectAsState()

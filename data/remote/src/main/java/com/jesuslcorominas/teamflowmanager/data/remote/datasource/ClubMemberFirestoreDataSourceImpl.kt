@@ -27,22 +27,18 @@ class ClubMemberFirestoreDataSourceImpl(
         try {
             val firestoreModel = clubMember.toFirestoreModel()
             
+            // Get clubFirestoreId and validate
+            val clubFirestoreId = validateClubFirestoreId(clubMember.firestoreId)
+            
             // Query for existing member with same userId and clubId
-            val existingMember = getClubMember(clubMember.userId, clubMember.firestoreId ?: "")
+            val existingMember = getClubMember(clubMember.userId, clubFirestoreId)
             
             if (existingMember != null) {
                 // Update existing member
                 val documentId = existingMember.firestoreId
-                if (documentId.isNullOrEmpty()) {
+                if (documentId.isNullOrBlank()) {
                     Log.e(TAG, "Cannot update club member without document ID")
                     throw IllegalStateException("Cannot update club member without document ID")
-                }
-                
-                // Get clubFirestoreId from the clubMember (passed from use case)
-                val clubFirestoreId = clubMember.firestoreId
-                if (clubFirestoreId.isNullOrEmpty()) {
-                    Log.e(TAG, "Cannot update club member without club Firestore ID")
-                    throw IllegalStateException("Cannot update club member without club Firestore ID")
                 }
                 
                 val modelWithClubId = firestoreModel.copy(
@@ -57,13 +53,6 @@ class ClubMemberFirestoreDataSourceImpl(
             } else {
                 // Create new member
                 val docRef = firestore.collection(CLUB_MEMBERS_COLLECTION).document()
-                
-                // Get clubFirestoreId from the clubMember (passed from use case)
-                val clubFirestoreId = clubMember.firestoreId
-                if (clubFirestoreId.isNullOrEmpty()) {
-                    Log.e(TAG, "Cannot create club member without club Firestore ID")
-                    throw IllegalStateException("Cannot create club member without club Firestore ID")
-                }
                 
                 val modelWithClubId = firestoreModel.copy(
                     id = docRef.id,
@@ -120,5 +109,17 @@ class ClubMemberFirestoreDataSourceImpl(
             Log.e(TAG, "Error getting club member from Firestore", e)
             throw e
         }
+    }
+
+    /**
+     * Validates that clubFirestoreId is not null or blank.
+     * @throws IllegalStateException if validation fails
+     */
+    private fun validateClubFirestoreId(clubFirestoreId: String?): String {
+        if (clubFirestoreId.isNullOrBlank()) {
+            Log.e(TAG, "Cannot create/update club member without club Firestore ID")
+            throw IllegalStateException("Cannot create/update club member without club Firestore ID")
+        }
+        return clubFirestoreId
     }
 }
