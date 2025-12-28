@@ -87,6 +87,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCaseImp
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.JoinClubWithInvitationCodeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCaseImpl
@@ -184,7 +185,7 @@ internal val useCaseInternalModule =
         singleOf(::GetActiveMatchUseCaseImpl) bind GetActiveMatchUseCase::class
 
         // Club use cases
-        singleOf(::JoinClubWithInvitationCodeUseCase)
+        singleOf(::JoinClubWithInvitationCodeUseCaseImpl) bind JoinClubWithInvitationCodeUseCase::class
     }
 
 val useCaseModule =
