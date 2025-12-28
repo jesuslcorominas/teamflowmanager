@@ -283,4 +283,19 @@
     <string name="match_notification_channel_name">Match Countdown</string>
     <string name="match_notification_channel_description">Shows remaining time during active matches</string>
 
+    <!-- Join Club Strings -->
+    <string name="join_club_title">Join a Club</string>
+    <string name="join_club_description">Enter the invitation code provided by the club administrator</string>
+    <string name="invitation_code">Invitation Code</string>
+    <string name="invitation_code_placeholder">INVITE123</string>
+    <string name="join_club_button">Join Club</string>
+    <string name="joining_club">Joining…</string>
+    <string name="orphan_team_info">Your existing orphan team will be automatically linked to the club</string>
+    <string name="join_club_success_title">You joined the club!</string>
+    <string name="join_club_success_message">Welcome to %1$s</string>
+    <string name="join_club_team_linked">Your team \'%1$s\' has been linked to the club.</string>
+    <string name="join_club_role_assigned">Assigned role: %1$s</string>
+    <string name="accept">Accept</string>
+    <string name="error_title">Error</string>
+
 </resources>

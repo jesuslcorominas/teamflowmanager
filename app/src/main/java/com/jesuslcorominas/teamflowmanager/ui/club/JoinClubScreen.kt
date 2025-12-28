@@ -28,10 +28,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -72,20 +74,20 @@ fun JoinClubScreen(
                 )
             },
             title = {
-                Text(text = "¡Te has unido al club!")
+                Text(text = stringResource(R.string.join_club_success_title))
             },
             text = {
                 Column {
-                    Text(text = "Bienvenido a ${successState.clubName}")
+                    Text(text = stringResource(R.string.join_club_success_message, successState.clubName))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Tu equipo '${successState.teamName}' ha sido vinculado al club.")
+                    Text(text = stringResource(R.string.join_club_team_linked, successState.teamName))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Rol asignado: ${successState.role}")
+                    Text(text = stringResource(R.string.join_club_role_assigned, successState.role))
                 }
             },
             confirmButton = {
                 TextButton(onClick = { onNavigateBack() }) {
-                    Text("Aceptar")
+                    Text(stringResource(R.string.accept))
                 }
             }
         )
@@ -104,14 +106,14 @@ fun JoinClubScreen(
                 )
             },
             title = {
-                Text(text = "Error")
+                Text(text = stringResource(R.string.error_title))
             },
             text = {
                 Text(text = errorState.message)
             },
             confirmButton = {
                 TextButton(onClick = { viewModel.dismissError() }) {
-                    Text("Aceptar")
+                    Text(stringResource(R.string.accept))
                 }
             }
         )
@@ -124,7 +126,7 @@ fun JoinClubScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(TFMSpacing.medium)
+                .padding(TFMSpacing.spacing04)
         ) {
             Column(
                 modifier = Modifier
@@ -133,27 +135,27 @@ fun JoinClubScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Unirse a un Club",
+                    text = stringResource(R.string.join_club_title),
                     style = MaterialTheme.typography.headlineMedium,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(TFMSpacing.medium))
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
 
                 Text(
-                    text = "Introduce el código de invitación proporcionado por el administrador del club",
+                    text = stringResource(R.string.join_club_description),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(TFMSpacing.large))
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
 
                 OutlinedTextField(
                     value = invitationCode,
                     onValueChange = { viewModel.onInvitationCodeChange(it) },
-                    label = { Text("Código de invitación") },
-                    placeholder = { Text("INVITE123") },
+                    label = { Text(stringResource(R.string.invitation_code)) },
+                    placeholder = { Text(stringResource(R.string.invitation_code_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = uiState !is JoinClubUiState.Loading,
                     singleLine = true,
@@ -171,7 +173,7 @@ fun JoinClubScreen(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(TFMSpacing.large))
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
 
                 Button(
                     onClick = {
@@ -190,14 +192,18 @@ fun JoinClubScreen(
                         )
                     }
                     Text(
-                        text = if (uiState is JoinClubUiState.Loading) "Uniéndose..." else "Unirse al club"
+                        text = if (uiState is JoinClubUiState.Loading) {
+                            stringResource(R.string.joining_club)
+                        } else {
+                            stringResource(R.string.join_club_button)
+                        }
                     )
                 }
 
-                Spacer(modifier = Modifier.height(TFMSpacing.medium))
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
 
                 Text(
-                    text = "Tu equipo huérfano existente será automáticamente vinculado al club",
+                    text = stringResource(R.string.orphan_team_info),
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
