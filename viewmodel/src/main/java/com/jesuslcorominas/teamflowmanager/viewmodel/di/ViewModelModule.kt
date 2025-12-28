@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
@@ -165,6 +166,12 @@ val viewModelModule =
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
                 analyticsTracker = get()
+            )
+        }
+
+        viewModel {
+            JoinClubViewModel(
+                joinClubWithInvitationCodeUseCase = get()
             )
         }
 

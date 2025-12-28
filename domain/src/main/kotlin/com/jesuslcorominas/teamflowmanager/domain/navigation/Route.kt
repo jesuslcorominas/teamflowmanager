@@ -24,6 +24,7 @@ sealed class Route(
                 Match,
                 Analysis,
                 Settings,
+                JoinClub,
             )
         }
 
@@ -125,4 +126,6 @@ sealed class Route(
     }
 
     data object Analysis : Route(path = "analysis", showBottomBar = true)
+
+    data object JoinClub : Route(path = "join_club", canGoBack = true)
 }
