@@ -14,6 +14,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
@@ -175,6 +176,12 @@ fun Navigation(
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(route = Route.JoinClub.createRoute()) {
+            JoinClubScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
