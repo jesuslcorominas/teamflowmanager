@@ -16,6 +16,7 @@ import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
@@ -81,7 +82,7 @@ fun Navigation(
                     navController.navigate(Route.CreateClub.createRoute())
                 },
                 onJoinClub = {
-                    // TODO: Navigate to Join Club flow (will be implemented in future story)
+                    navController.navigate(Route.JoinClub.createRoute())
                 }
             )
         }
@@ -89,6 +90,16 @@ fun Navigation(
         composable(Route.CreateClub.createRoute()) {
             CreateClubScreen(
                 onClubCreated = {
+                    navController.navigate(Route.Splash.createRoute()) {
+                        popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Route.JoinClub.createRoute()) {
+            JoinClubScreen(
+                onClubJoined = {
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
                     }
