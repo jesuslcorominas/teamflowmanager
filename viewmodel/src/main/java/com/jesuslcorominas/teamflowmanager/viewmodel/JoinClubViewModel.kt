@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 enum class InvitationCodeError {
     EMPTY_CODE,
     CODE_TOO_SHORT,
+    CODE_TOO_LONG,
     INVALID_FORMAT
 }
 
@@ -61,6 +62,10 @@ class JoinClubViewModel(
             }
             code.length < MIN_INVITATION_CODE_LENGTH -> {
                 _invitationCodeError.value = InvitationCodeError.CODE_TOO_SHORT
+                return
+            }
+            code.length > MAX_INVITATION_CODE_LENGTH -> {
+                _invitationCodeError.value = InvitationCodeError.CODE_TOO_LONG
                 return
             }
             !code.all { it.isLetterOrDigit() } -> {

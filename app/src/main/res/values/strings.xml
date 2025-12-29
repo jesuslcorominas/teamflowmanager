@@ -37,6 +37,7 @@
     <string name="invitation_code_placeholder">Enter invitation code</string>
     <string name="invitation_code_error_empty">Invitation code cannot be empty</string>
     <string name="invitation_code_error_too_short">Invitation code must be at least 6 characters</string>
+    <string name="invitation_code_error_too_long">Invitation code must be less than 10 characters</string>
     <string name="invitation_code_error_invalid_format">Invitation code must contain only letters and numbers</string>
     <string name="join_club_button">Join Club</string>
     <string name="join_club_loading">Joining club…</string>

@@ -237,6 +237,7 @@ private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewMo
                             id = when (errorResId) {
                                 InvitationCodeError.EMPTY_CODE -> R.string.invitation_code_error_empty
                                 InvitationCodeError.CODE_TOO_SHORT -> R.string.invitation_code_error_too_short
+                                InvitationCodeError.CODE_TOO_LONG -> R.string.invitation_code_error_too_long
                                 InvitationCodeError.INVALID_FORMAT -> R.string.invitation_code_error_invalid_format
                             }
                         )
@@ -244,8 +245,7 @@ private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewMo
                 }
             },
             keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                capitalization = KeyboardCapitalization.Characters
+                imeAction = ImeAction.Done
             ),
             readOnly = uiState is JoinClubViewModel.UiState.Loading
         )

@@ -65,7 +65,10 @@ internal class JoinClubByCodeUseCaseImpl(
 
         try {
             // Step 1: Link orphan team to club if exists
-            if (orphanTeam != null && orphanTeam.coachId != null) {
+            if (orphanTeam != null) {
+                require(orphanTeam.coachId != null) {
+                    "Orphan team must have a coachId (document ID)"
+                }
                 Log.d(TAG, "Linking orphan team to club...")
                 teamRepository.updateTeamClubId(
                     teamCoachId = orphanTeam.coachId!!,
@@ -97,7 +100,7 @@ internal class JoinClubByCodeUseCaseImpl(
             
             // If club member creation failed but team was linked, we have inconsistent data
             // Log this for manual investigation
-            if (orphanTeam != null && orphanTeam.coachId != null) {
+            if (orphanTeam != null) {
                 Log.e(TAG, "INCONSISTENT STATE: Team ${orphanTeam.coachId} may be linked to club ${club.firestoreId} but clubMember creation failed")
             }
             
