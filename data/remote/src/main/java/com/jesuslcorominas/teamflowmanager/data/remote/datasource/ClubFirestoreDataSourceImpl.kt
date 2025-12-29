@@ -92,4 +92,45 @@ class ClubFirestoreDataSourceImpl(
             throw e
         }
     }
+
+    override suspend fun getClubByInvitationCode(invitationCode: String): Club? {
+        require(invitationCode.isNotBlank()) { "Invitation code cannot be blank" }
+
+        try {
+            val querySnapshot = firestore.collection(CLUBS_COLLECTION)
+                .whereEqualTo("invitationCode", invitationCode)
+                .limit(1)
+                .get()
+                .await()
+
+            if (querySnapshot.isEmpty) {
+                Log.d(TAG, "No club found with invitation code: $invitationCode")
+                return null
+            }
+
+            val document = querySnapshot.documents.first()
+            val documentId = document.id
+            val firestoreModel = document.toObject(ClubFirestoreModel::class.java)
+
+            if (firestoreModel == null) {
+                Log.w(TAG, "Could not deserialize club document")
+                return null
+            }
+
+            // Ensure the id field is set from the document ID
+            val modelWithId = if (firestoreModel.id.isEmpty()) {
+                firestoreModel.copy(id = documentId)
+            } else {
+                firestoreModel
+            }
+
+            Log.d(TAG, "Found club with invitation code: ${modelWithId.name} (id: ${modelWithId.id})")
+            return modelWithId.toDomain()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting club by invitation code from Firestore", e)
+            throw e
+        }
+    }
 }

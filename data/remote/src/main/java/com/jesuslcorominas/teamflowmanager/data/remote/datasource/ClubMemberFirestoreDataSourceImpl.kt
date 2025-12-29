@@ -9,6 +9,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 
 /**
  * Firestore-based implementation of ClubMemberDataSource.
@@ -73,6 +74,47 @@ class ClubMemberFirestoreDataSourceImpl(
 
         awaitClose {
             listenerRegistration.remove()
+        }
+    }
+
+    override suspend fun createOrUpdateClubMember(
+        userId: String,
+        name: String,
+        email: String,
+        clubId: Long,
+        clubFirestoreId: String,
+        role: String
+    ): ClubMember {
+        require(userId.isNotBlank()) { "User ID cannot be blank" }
+        require(name.isNotBlank()) { "Name cannot be blank" }
+        require(email.isNotBlank()) { "Email cannot be blank" }
+        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+        require(role.isNotBlank()) { "Role cannot be blank" }
+
+        try {
+            // Use predictable ID format: userId_clubFirestoreId
+            // This format is required by Firestore security rules
+            val clubMemberId = "${userId}_${clubFirestoreId}"
+            val clubMemberDocRef = firestore.collection(CLUB_MEMBERS_COLLECTION).document(clubMemberId)
+
+            // Create club member model
+            val clubMemberModel = ClubMemberFirestoreModel(
+                id = clubMemberId,
+                userId = userId,
+                name = name,
+                email = email,
+                clubId = clubFirestoreId,
+                role = role
+            )
+
+            // Create or update the club member document
+            clubMemberDocRef.set(clubMemberModel).await()
+            Log.d(TAG, "ClubMember created/updated for userId: $userId with role: $role in club: $clubFirestoreId")
+
+            return clubMemberModel.toDomain()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating/updating club member in Firestore", e)
+            throw e
         }
     }
 }

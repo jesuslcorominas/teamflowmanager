@@ -15,4 +15,8 @@ internal class ClubRepositoryImpl(
     ): Club {
         return clubDataSource.createClubWithOwner(clubName, currentUserId, currentUserName, currentUserEmail)
     }
+
+    override suspend fun getClubByInvitationCode(invitationCode: String): Club? {
+        return clubDataSource.getClubByInvitationCode(invitationCode)
+    }
 }

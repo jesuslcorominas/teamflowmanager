@@ -10,4 +10,23 @@ interface ClubMemberDataSource {
      * @return Flow emitting the club member if found, null otherwise
      */
     fun getClubMemberByUserId(userId: String): Flow<ClubMember?>
+
+    /**
+     * Create or update a club member.
+     * @param userId The Firebase user ID
+     * @param name The user's display name
+     * @param email The user's email
+     * @param clubId The club's numeric ID
+     * @param clubFirestoreId The club's Firestore document ID
+     * @param role The member's role in the club
+     * @return The created or updated ClubMember
+     */
+    suspend fun createOrUpdateClubMember(
+        userId: String,
+        name: String,
+        email: String,
+        clubId: Long,
+        clubFirestoreId: String,
+        role: String
+    ): ClubMember
 }
