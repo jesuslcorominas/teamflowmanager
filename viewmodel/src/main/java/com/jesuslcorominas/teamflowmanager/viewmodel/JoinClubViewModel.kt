@@ -91,12 +91,13 @@ class JoinClubViewModel(
                 )
 
                 // Track orphan team linkage if applicable
-                if (result.orphanTeam != null) {
+                val orphanTeam = result.orphanTeam
+                if (orphanTeam != null) {
                     analyticsTracker.logEvent(
                         AnalyticsEvent.ORPHAN_TEAM_LINKED,
                         mapOf(
-                            AnalyticsParam.TEAM_ID to result.orphanTeam.id.toString(),
-                            AnalyticsParam.TEAM_NAME to result.orphanTeam.name,
+                            AnalyticsParam.TEAM_ID to orphanTeam.id.toString(),
+                            AnalyticsParam.TEAM_NAME to orphanTeam.name,
                             AnalyticsParam.CLUB_ID to result.club.id.toString()
                         )
                     )
