@@ -78,12 +78,12 @@ fun JoinClubScreen(
     ) { paddingValues ->
         // Show success state instead of form
         if (uiState is JoinClubViewModel.UiState.Success) {
-            val result = (uiState as JoinClubViewModel.UiState.Success).result
+            val successState = uiState as JoinClubViewModel.UiState.Success
             ClubJoinedSuccessfullyContent(
                 paddingValues = paddingValues,
-                clubName = result.club.name,
-                hasOrphanTeam = result.orphanTeam != null,
-                role = result.clubMember.role
+                clubName = successState.result.club.name,
+                hasOrphanTeam = successState.result.orphanTeam != null,
+                role = successState.result.clubMember.role
             ) {
                 viewModel.resetState()
                 onClubJoined()
@@ -228,7 +228,6 @@ private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewMo
             value = invitationCode,
             onValueChange = { viewModel.onInvitationCodeChanged(it) },
             label = { Text(stringResource(id = R.string.invitation_code_label)) },
-            placeholder = { Text(stringResource(id = R.string.invitation_code_placeholder)) },
             isError = invitationCodeError != null,
             supportingText = invitationCodeError?.let { errorResId ->
                 {

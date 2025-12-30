@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import android.util.Log
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubResult
@@ -17,7 +16,6 @@ internal class JoinClubByCodeUseCaseImpl(
 ) : JoinClubByCodeUseCase {
 
     companion object {
-        private const val TAG = "JoinClubByCodeUseCase"
         private const val ROLE_COACH = "Coach"
         private const val ROLE_MIEMBRO = "Miembro"
     }
@@ -44,8 +42,6 @@ internal class JoinClubByCodeUseCaseImpl(
         val club = clubRepository.getClubByInvitationCode(invitationCode)
             ?: throw IllegalArgumentException("Club not found with invitation code: $invitationCode")
 
-        Log.d(TAG, "Found club: ${club.name} (id: ${club.id}, firestoreId: ${club.firestoreId})")
-
         require(club.firestoreId != null) {
             "Club firestore ID is required"
         }
@@ -53,12 +49,6 @@ internal class JoinClubByCodeUseCaseImpl(
         // Get orphan teams (teams without clubId) for current user
         val orphanTeams = teamRepository.getOrphanTeams(currentUser.id)
         val orphanTeam = orphanTeams.firstOrNull()
-
-        if (orphanTeam != null) {
-            Log.d(TAG, "Found orphan team: ${orphanTeam.name} (coachId: ${orphanTeam.coachId})")
-        } else {
-            Log.d(TAG, "No orphan team found for user")
-        }
 
         // Determine role based on whether user has an orphan team
         val role = if (orphanTeam != null) ROLE_COACH else ROLE_MIEMBRO
@@ -69,17 +59,14 @@ internal class JoinClubByCodeUseCaseImpl(
                 require(orphanTeam.coachId != null) {
                     "Orphan team must have a coachId (document ID)"
                 }
-                Log.d(TAG, "Linking orphan team to club...")
                 teamRepository.updateTeamClubId(
                     teamCoachId = orphanTeam.coachId!!,
                     clubId = club.id,
                     clubFirestoreId = club.firestoreId!!
                 )
-                Log.d(TAG, "Team linked successfully")
             }
 
             // Step 2: Create or update club member with appropriate role
-            Log.d(TAG, "Creating club member with role: $role")
             val clubMember = clubMemberRepository.createOrUpdateClubMember(
                 userId = currentUser.id,
                 name = currentUser.displayName!!,
@@ -88,7 +75,6 @@ internal class JoinClubByCodeUseCaseImpl(
                 clubFirestoreId = club.firestoreId!!,
                 role = role
             )
-            Log.d(TAG, "Club member created successfully")
 
             return JoinClubResult(
                 club = club,
@@ -96,14 +82,8 @@ internal class JoinClubByCodeUseCaseImpl(
                 clubMember = clubMember
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Error during club join process", e)
-            
             // If club member creation failed but team was linked, we have inconsistent data
-            // Log this for manual investigation
-            if (orphanTeam != null) {
-                Log.e(TAG, "INCONSISTENT STATE: Team ${orphanTeam.coachId} may be linked to club ${club.firestoreId} but clubMember creation failed")
-            }
-            
+            // This requires manual investigation
             throw e
         }
     }
