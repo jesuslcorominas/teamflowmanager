@@ -55,10 +55,11 @@ fun TeamForm(
 ) {
     val focusManager = LocalFocusManager.current
     var formState by remember { 
+        val baseState = team.toTeamFormState()
         mutableStateOf(
-            team.toTeamFormState().copy(
-                clubId = clubId ?: team?.clubId,
-                clubFirestoreId = clubFirestoreId ?: team?.clubFirestoreId
+            baseState.copy(
+                clubId = clubId ?: baseState.clubId,
+                clubFirestoreId = clubFirestoreId ?: baseState.clubFirestoreId
             )
         ) 
     }

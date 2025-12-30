@@ -38,6 +38,11 @@ class TeamViewModel(
     private val analyticsTracker: AnalyticsTracker,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    companion object {
+        private const val ROLE_PRESIDENT = "Presidente"
+    }
+
     private val _uiState = MutableStateFlow<TeamUiState>(TeamUiState.Loading)
     val uiState: StateFlow<TeamUiState> = _uiState.asStateFlow()
 
@@ -71,7 +76,7 @@ class TeamViewModel(
                 
                 if (team == null) {
                     // No team exists, provide club info for creation if user is a President
-                    val isPresident = clubMember?.role == "Presidente"
+                    val isPresident = clubMember?.role == ROLE_PRESIDENT
                     val clubId = clubMember?.clubId
                     val clubFirestoreId = clubMember?.firestoreId
                     _uiState.update { TeamUiState.NoTeam(clubId, clubFirestoreId, isPresident) }
