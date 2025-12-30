@@ -47,11 +47,21 @@ import com.jesuslcorominas.teamflowmanager.ui.util.toStringRes
 fun TeamForm(
     team: Team? = null,
     players: List<Player> = listOf(),
+    clubId: Long? = null,
+    clubFirestoreId: String? = null,
+    isPresident: Boolean = false,
     onShowTeamTypeChangeError: () -> Unit = {},
     onSave: (Team, Long?) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
-    var formState by remember { mutableStateOf(team.toTeamFormState()) }
+    var formState by remember { 
+        mutableStateOf(
+            team.toTeamFormState().copy(
+                clubId = clubId ?: team?.clubId,
+                clubFirestoreId = clubFirestoreId ?: team?.clubFirestoreId
+            )
+        ) 
+    }
 
     var selectedOption by remember { mutableStateOf(players.firstOrNull { it.isCaptain }?.id) }
 
@@ -278,6 +288,8 @@ private data class TeamFormState(
     val delegateName: String = "",
     val teamType: TeamType = TeamType.FOOTBALL_5,
     val coachId: String? = null,
+    val clubId: Long? = null,
+    val clubFirestoreId: String? = null,
     val errors: FormErrors = FormErrors()
 )
 
@@ -287,7 +299,9 @@ private fun TeamFormState.toTeam(): Team = Team(
     coachName = coachName.trimEnd(),
     delegateName = delegateName.trimEnd(),
     teamType = teamType,
-    coachId = coachId
+    coachId = coachId,
+    clubId = clubId,
+    clubFirestoreId = clubFirestoreId
 )
 
 private fun Team?.toTeamFormState() = this?.let {

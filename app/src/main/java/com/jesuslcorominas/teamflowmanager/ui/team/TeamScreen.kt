@@ -90,6 +90,9 @@ fun TeamScreen(
 
             is TeamUiState.NoTeam -> {
                 TeamForm(
+                    clubId = state.clubId,
+                    clubFirestoreId = state.clubFirestoreId,
+                    isPresident = state.isPresident,
                     onSave = { team, _ ->
                         viewModel.createTeam(team) {
                             onNavigateToMatches(team.name)

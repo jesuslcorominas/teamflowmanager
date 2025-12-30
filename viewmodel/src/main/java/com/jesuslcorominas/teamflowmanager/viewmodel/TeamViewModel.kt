@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
@@ -33,6 +34,7 @@ class TeamViewModel(
     private val hasScheduledMatches: HasScheduledMatchesUseCase,
     private val setPlayerAsCaptainUseCase: SetPlayerAsCaptainUseCase,
     private val removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase,
+    private val getUserClubMembership: GetUserClubMembershipUseCase,
     private val analyticsTracker: AnalyticsTracker,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -59,14 +61,23 @@ class TeamViewModel(
     private fun loadTeam() {
         viewModelScope.launch {
             combine(
-                getTeam(), getPlayers()
-            ) { team, players ->
-                team to players
-            }.collect { (team, players) ->
+                getTeam(), getPlayers(), getUserClubMembership()
+            ) { team, players, clubMember ->
+                Triple(team, players, clubMember)
+            }.collect { (team, players, clubMember) ->
                 if (originalTeam == null) {
                     originalTeam = team
                 }
-                _uiState.update { if (team == null) TeamUiState.NoTeam else TeamUiState.Success(team, players) }
+                
+                if (team == null) {
+                    // No team exists, provide club info for creation if user is a President
+                    val isPresident = clubMember?.role == "Presidente"
+                    val clubId = clubMember?.clubId
+                    val clubFirestoreId = clubMember?.firestoreId
+                    _uiState.update { TeamUiState.NoTeam(clubId, clubFirestoreId, isPresident) }
+                } else {
+                    _uiState.update { TeamUiState.Success(team, players) }
+                }
             }
         }
     }
@@ -173,7 +184,7 @@ class TeamViewModel(
 sealed interface TeamUiState {
     data object Loading : TeamUiState
 
-    data object NoTeam : TeamUiState
+    data class NoTeam(val clubId: Long? = null, val clubFirestoreId: String? = null, val isPresident: Boolean = false) : TeamUiState
 
     data class Success(val team: Team, val players: List<Player>) : TeamUiState
 }

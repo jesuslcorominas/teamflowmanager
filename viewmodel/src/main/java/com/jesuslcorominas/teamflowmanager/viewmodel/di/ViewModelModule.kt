@@ -98,6 +98,7 @@ val viewModelModule =
                 hasScheduledMatches = get(),
                 setPlayerAsCaptainUseCase = get(),
                 removePlayerAsCaptainUseCase = get(),
+                getUserClubMembership = get(),
                 analyticsTracker = get(),
                 savedStateHandle = get()
             )
