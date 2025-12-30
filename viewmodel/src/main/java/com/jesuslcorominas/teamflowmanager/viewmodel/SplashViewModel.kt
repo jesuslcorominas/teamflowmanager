@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,8 +17,14 @@ import kotlinx.coroutines.launch
 class SplashViewModel(
     private val getTeam: GetTeamUseCase,
     private val getCurrentUser: GetCurrentUserUseCase,
+    private val getUserClubMembership: GetUserClubMembershipUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "SplashViewModel"
+        private const val ROLE_PRESIDENT = "Presidente"
+    }
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -36,6 +43,8 @@ class SplashViewModel(
         data object NoTeam : UiState
 
         data object TeamExists : UiState
+
+        data object ClubPresident : UiState
     }
 
     init {
@@ -80,8 +89,25 @@ class SplashViewModel(
         val team = getTeam().first()
         
         if (team == null) {
-            Log.d(TAG, "NO TEAM found - navigating to club selection")
-            _uiState.value = UiState.NoClub
+            Log.d(TAG, "NO TEAM found - checking club membership")
+            // Check if user is a club member (particularly a President)
+            val clubMember = getUserClubMembership().first()
+            
+            if (clubMember != null) {
+                Log.d(TAG, "User is club member with role: ${clubMember.role}")
+                // User is a club member without their own team
+                // If they're a President, they can create teams for the club
+                if (clubMember.role == ROLE_PRESIDENT) {
+                    Log.d(TAG, "User is President - navigating to team creation")
+                    _uiState.value = UiState.ClubPresident
+                } else {
+                    Log.d(TAG, "User is not President - navigating to club selection")
+                    _uiState.value = UiState.NoClub
+                }
+            } else {
+                Log.d(TAG, "User is not a club member - navigating to club selection")
+                _uiState.value = UiState.NoClub
+            }
         } else {
             Log.d(TAG, "TEAM found (id: ${team.id}, name: ${team.name}, clubId: ${team.clubId}, clubFirestoreId: ${team.clubFirestoreId})")
             
@@ -96,9 +122,5 @@ class SplashViewModel(
                 _uiState.value = UiState.NoClub
             }
         }
-    }
-
-    companion object {
-        private const val TAG = "SplashViewModel"
     }
 }
