@@ -30,6 +30,25 @@
     <string name="create_club_redirecting">Serás redirigido automáticamente en unos segundos…</string>
     <string name="create_club_continue">Continuar</string>
 
+    <!-- Join Club Strings -->
+    <string name="join_club_title">Unirse a un Club</string>
+    <string name="join_club_subtitle">Introduce el código de invitación para unirte a un club</string>
+    <string name="invitation_code_label">Código de Invitación</string>
+    <string name="invitation_code_placeholder">Introduce el código de invitación</string>
+    <string name="invitation_code_error_empty">El código de invitación no puede estar vacío</string>
+    <string name="invitation_code_error_too_short">El código de invitación debe tener al menos 6 caracteres</string>
+    <string name="invitation_code_error_too_long">El código de invitación debe tener menos de 10 caracteres</string>
+    <string name="invitation_code_error_invalid_format">El código de invitación solo puede contener letras y números</string>
+    <string name="join_club_button">Unirse al Club</string>
+    <string name="join_club_loading">Uniéndose al club…</string>
+    <string name="join_club_error">Error al unirse al club. Por favor, inténtalo de nuevo.</string>
+    <string name="join_club_success_title">¡Bienvenido al Club!</string>
+    <string name="join_club_success_message">Te has unido correctamente a %1$s</string>
+    <string name="join_club_success_role">Tu rol: %1$s</string>
+    <string name="join_club_success_team_linked">Tu equipo existente ha sido vinculado a este club</string>
+    <string name="join_club_redirecting">Serás redirigido automáticamente en unos segundos…</string>
+    <string name="join_club_continue">Continuar</string>
+
     <!-- Account Strings -->
     <string name="settings_account_section">Cuenta</string>
     <string name="sign_out">Cerrar sesión</string>

@@ -30,6 +30,25 @@
     <string name="create_club_redirecting">You will be redirected automatically in a few seconds…</string>
     <string name="create_club_continue">Continue</string>
 
+    <!-- Join Club Strings -->
+    <string name="join_club_title">Join a Club</string>
+    <string name="join_club_subtitle">Enter the invitation code to join a club</string>
+    <string name="invitation_code_label">Invitation Code</string>
+    <string name="invitation_code_placeholder">Enter invitation code</string>
+    <string name="invitation_code_error_empty">Invitation code cannot be empty</string>
+    <string name="invitation_code_error_too_short">Invitation code must be at least 6 characters</string>
+    <string name="invitation_code_error_too_long">Invitation code must be less than 10 characters</string>
+    <string name="invitation_code_error_invalid_format">Invitation code must contain only letters and numbers</string>
+    <string name="join_club_button">Join Club</string>
+    <string name="join_club_loading">Joining club…</string>
+    <string name="join_club_error">Failed to join club. Please try again.</string>
+    <string name="join_club_success_title">Welcome to the Club!</string>
+    <string name="join_club_success_message">You have successfully joined %1$s</string>
+    <string name="join_club_success_role">Your role: %1$s</string>
+    <string name="join_club_success_team_linked">Your existing team has been linked to this club</string>
+    <string name="join_club_redirecting">You will be redirected automatically in a few seconds…</string>
+    <string name="join_club_continue">Continue</string>
+
     <!-- Account Strings -->
     <string name="settings_account_section">Account</string>
     <string name="sign_out">Logout</string>

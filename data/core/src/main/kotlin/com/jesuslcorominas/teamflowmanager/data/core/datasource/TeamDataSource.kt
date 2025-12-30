@@ -34,4 +34,19 @@ interface TeamDataSource {
      * Only applicable for local data sources.
      */
     suspend fun clearLocalData()
+
+    /**
+     * Get orphan teams for a user (teams without a clubId).
+     * @param ownerId The Firebase user ID of the team owner
+     * @return List of teams without clubId
+     */
+    suspend fun getOrphanTeams(ownerId: String): List<Team>
+
+    /**
+     * Update the clubId of a team.
+     * @param teamCoachId The coachId (document ID) of the team
+     * @param clubId The club's numeric ID
+     * @param clubFirestoreId The club's Firestore document ID
+     */
+    suspend fun updateTeamClubId(teamCoachId: String, clubId: Long, clubFirestoreId: String)
 }

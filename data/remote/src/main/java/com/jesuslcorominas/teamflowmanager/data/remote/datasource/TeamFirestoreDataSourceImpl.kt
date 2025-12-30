@@ -195,4 +195,76 @@ class TeamFirestoreDataSourceImpl(
     override suspend fun clearLocalData() {
         // No-op for remote data source
     }
+
+    override suspend fun getOrphanTeams(ownerId: String): List<Team> {
+        require(ownerId.isNotBlank()) { "Owner ID cannot be blank" }
+
+        try {
+            // Get all teams for this owner
+            // Note: We can't use whereEqualTo("clubId", null) because that only matches
+            // documents with clubId explicitly set to null, not documents without the field
+            val querySnapshot = firestore.collection(TEAMS_COLLECTION)
+                .whereEqualTo("ownerId", ownerId)
+                .get()
+                .await()
+
+            // Filter to only include teams without a clubId field (orphan teams)
+            val teams = querySnapshot.documents.mapNotNull { document ->
+                val documentId = document.id
+                
+                // Check if document has clubId field and skip if it does
+                val hasClubId = document.contains("clubId") && document.getString("clubId") != null
+                if (hasClubId) {
+                    return@mapNotNull null
+                }
+                
+                val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
+
+                if (firestoreModel != null) {
+                    // Ensure the id field is set from the document ID
+                    val modelWithId = if (firestoreModel.id.isEmpty()) {
+                        firestoreModel.copy(id = documentId)
+                    } else {
+                        firestoreModel
+                    }
+                    modelWithId.toDomain()
+                } else {
+                    null
+                }
+            }
+
+            Log.d(TAG, "Found ${teams.size} orphan teams for user $ownerId")
+            return teams
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting orphan teams from Firestore", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateTeamClubId(teamCoachId: String, clubId: Long, clubFirestoreId: String) {
+        require(teamCoachId.isNotBlank()) { "Team coach ID cannot be blank" }
+        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+
+        try {
+            val updates = mapOf(
+                "clubId" to clubFirestoreId
+            )
+
+            // Use set with merge to ensure the operation succeeds even if the document
+            // doesn't have all fields yet
+            firestore.collection(TEAMS_COLLECTION)
+                .document(teamCoachId)
+                .set(updates, com.google.firebase.firestore.SetOptions.merge())
+                .await()
+
+            Log.d(TAG, "Team $teamCoachId linked to club $clubFirestoreId")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating team club ID in Firestore", e)
+            throw e
+        }
+    }
 }

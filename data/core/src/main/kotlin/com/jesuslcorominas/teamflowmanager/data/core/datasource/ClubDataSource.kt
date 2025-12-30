@@ -17,4 +17,11 @@ interface ClubDataSource {
      * @return The created club with generated invitation code
      */
     suspend fun createClubWithOwner(clubName: String, currentUserId: String, currentUserName: String, currentUserEmail: String): Club
+
+    /**
+     * Get a club by its invitation code.
+     * @param invitationCode The invitation code to search for
+     * @return The club if found, null otherwise
+     */
+    suspend fun getClubByInvitationCode(invitationCode: String): Club?
 }
