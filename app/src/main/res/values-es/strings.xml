@@ -124,6 +124,8 @@
 
     <string name="save_error_title">Error al guardar</string>
     <string name="save_error_message">Ha ocurrido un error al guardar los datos. Por favor, comprueba tu conexión a internet e inténtalo de nuevo.</string>
+    <string name="team_creation_permission_error_title">Permiso Denegado</string>
+    <string name="team_creation_permission_error_message">Solo los Presidentes del club pueden crear equipos. Por favor, contacta con el Presidente de tu club para crear un equipo.</string>
 
     <string name="edit">Editar</string>
     <string name="edit_team_title">Editar Equipo</string>
