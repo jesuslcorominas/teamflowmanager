@@ -17,6 +17,7 @@ fun SplashScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToClubSelection: () -> Unit,
     onNavigateToCreateTeam: () -> Unit,
+    onNavigateToTeamList: () -> Unit,
     onNavigateToMatches: () -> Unit,
 ) {
     TrackScreenView(screenName = ScreenName.SPLASH, screenClass = "SplashScreen")
@@ -34,7 +35,7 @@ fun SplashScreen(
             is UiState.LocalDataNeedsAuth -> onNavigateToLogin()
             is UiState.NoClub -> onNavigateToClubSelection()
             is UiState.NoTeam -> onNavigateToCreateTeam()
-            is UiState.ClubPresident -> onNavigateToCreateTeam()
+            is UiState.ClubPresident -> onNavigateToTeamList()
             is UiState.TeamExists -> onNavigateToMatches()
             is UiState.Loading -> {
                 // Wait for loading to finish

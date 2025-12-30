@@ -175,6 +175,48 @@ class TeamFirestoreDataSourceImpl(
         }
     }
 
+    override fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>> = callbackFlow {
+        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+
+        val listenerRegistration = firestore.collection(TEAMS_COLLECTION)
+            .whereEqualTo("clubId", clubFirestoreId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(TAG, "Error getting teams by club from Firestore", error)
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+
+                if (snapshot == null || snapshot.isEmpty) {
+                    Log.d(TAG, "No teams found for club: $clubFirestoreId")
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+
+                val teams = snapshot.documents.mapNotNull { document ->
+                    val documentId = document.id
+                    val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
+
+                    firestoreModel?.let {
+                        // Ensure the id field is set from the document ID
+                        val modelWithId = if (it.id.isEmpty()) {
+                            it.copy(id = documentId)
+                        } else {
+                            it
+                        }
+                        modelWithId.toDomain()
+                    }
+                }
+
+                Log.d(TAG, "Loaded ${teams.size} teams for club: $clubFirestoreId")
+                trySend(teams)
+            }
+
+        awaitClose {
+            listenerRegistration.remove()
+        }
+    }
+
     /**
      * This method is not applicable for remote Firestore data source.
      * It's only relevant for local Room database.

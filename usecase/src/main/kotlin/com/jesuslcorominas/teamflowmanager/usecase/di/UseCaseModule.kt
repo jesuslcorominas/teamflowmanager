@@ -32,6 +32,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
@@ -89,6 +90,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetTeamsByClubUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetUserClubMembershipUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
@@ -127,6 +129,7 @@ internal val useCaseInternalModule =
         singleOf(::UpdatePlayerUseCaseImpl) bind UpdatePlayerUseCase::class
 
         singleOf(::GetTeamUseCaseImpl) bind GetTeamUseCase::class
+        singleOf(::GetTeamsByClubUseCaseImpl) bind GetTeamsByClubUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
         singleOf(::GetUserClubMembershipUseCaseImpl) bind GetUserClubMembershipUseCase::class

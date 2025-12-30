@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.RealTimeTicker
@@ -102,6 +103,12 @@ val viewModelModule =
                 getUserClubMembership = get(),
                 analyticsTracker = get(),
                 savedStateHandle = get()
+            )
+        }
+        viewModel {
+            TeamListViewModel(
+                getTeamsByClub = get(),
+                getUserClubMembership = get()
             )
         }
         viewModel {

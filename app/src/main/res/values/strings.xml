@@ -111,6 +111,8 @@
     <string name="delete_player_message">Are you sure you want to delete %1$s %2$s from the roster?</string>
 
     <string name="team_title">Team</string>
+    <string name="team_list_title">Club Teams</string>
+    <string name="no_teams_message">No teams yet. Create your first team!</string>
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>
