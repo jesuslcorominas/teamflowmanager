@@ -202,7 +202,7 @@ class TeamFirestoreDataSourceImpl(
         try {
             val querySnapshot = firestore.collection(TEAMS_COLLECTION)
                 .whereEqualTo("ownerId", ownerId)
-                .whereEqualTo("clubFirestoreId", null)
+                .whereEqualTo("clubId", null)
                 .get()
                 .await()
 
@@ -239,8 +239,7 @@ class TeamFirestoreDataSourceImpl(
 
         try {
             val updates = mapOf(
-                "clubId" to clubId,
-                "clubFirestoreId" to clubFirestoreId
+                "clubId" to clubFirestoreId
             )
 
             firestore.collection(TEAMS_COLLECTION)
