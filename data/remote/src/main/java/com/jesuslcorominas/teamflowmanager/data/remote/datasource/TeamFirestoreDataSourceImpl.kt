@@ -242,9 +242,11 @@ class TeamFirestoreDataSourceImpl(
                 "clubId" to clubFirestoreId
             )
 
+            // Use set with merge to ensure the operation succeeds even if the document
+            // doesn't have all fields yet
             firestore.collection(TEAMS_COLLECTION)
                 .document(teamCoachId)
-                .update(updates)
+                .set(updates, com.google.firebase.firestore.SetOptions.merge())
                 .await()
 
             Log.d(TAG, "Team $teamCoachId linked to club $clubFirestoreId")

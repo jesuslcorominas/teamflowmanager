@@ -17,7 +17,7 @@ internal class JoinClubByCodeUseCaseImpl(
 
     companion object {
         private const val ROLE_COACH = "Coach"
-        private const val ROLE_MIEMBRO = "Miembro"
+        private const val ROLE_STAFF = "Staff"
     }
 
     override suspend fun invoke(invitationCode: String): JoinClubResult {
@@ -51,7 +51,7 @@ internal class JoinClubByCodeUseCaseImpl(
         val orphanTeam = orphanTeams.firstOrNull()
 
         // Determine role based on whether user has an orphan team
-        val role = if (orphanTeam != null) ROLE_COACH else ROLE_MIEMBRO
+        val role = if (orphanTeam != null) ROLE_COACH else ROLE_STAFF
 
         try {
             // Step 1: Link orphan team to club if exists
