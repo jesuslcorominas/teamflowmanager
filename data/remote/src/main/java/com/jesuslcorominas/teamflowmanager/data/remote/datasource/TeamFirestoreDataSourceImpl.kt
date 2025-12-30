@@ -200,14 +200,24 @@ class TeamFirestoreDataSourceImpl(
         require(ownerId.isNotBlank()) { "Owner ID cannot be blank" }
 
         try {
+            // Get all teams for this owner
+            // Note: We can't use whereEqualTo("clubId", null) because that only matches
+            // documents with clubId explicitly set to null, not documents without the field
             val querySnapshot = firestore.collection(TEAMS_COLLECTION)
                 .whereEqualTo("ownerId", ownerId)
-                .whereEqualTo("clubId", null)
                 .get()
                 .await()
 
+            // Filter to only include teams without a clubId field (orphan teams)
             val teams = querySnapshot.documents.mapNotNull { document ->
                 val documentId = document.id
+                
+                // Check if document has clubId field and skip if it does
+                val hasClubId = document.contains("clubId") && document.getString("clubId") != null
+                if (hasClubId) {
+                    return@mapNotNull null
+                }
+                
                 val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
 
                 if (firestoreModel != null) {
