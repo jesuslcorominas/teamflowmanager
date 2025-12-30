@@ -124,6 +124,8 @@
 
     <string name="save_error_title">Error saving data</string>
     <string name="save_error_message">An error occurred while saving. Please check your internet connection and try again.</string>
+    <string name="team_creation_permission_error_title">Permission Denied</string>
+    <string name="team_creation_permission_error_message">Only club Presidents can create teams. Please contact your club President to create a team.</string>
 
     <string name="edit">Edit</string>
     <string name="edit_team_title">Edit Team</string>

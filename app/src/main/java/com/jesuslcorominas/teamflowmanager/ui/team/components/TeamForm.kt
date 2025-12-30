@@ -311,7 +311,9 @@ private fun Team?.toTeamFormState() = this?.let {
         coachName = it.coachName,
         delegateName = it.delegateName,
         teamType = it.teamType,
-        coachId = it.coachId
+        coachId = it.coachId,
+        clubId = it.clubId,
+        clubFirestoreId = it.clubFirestoreId
     )
 } ?: TeamFormState()
 

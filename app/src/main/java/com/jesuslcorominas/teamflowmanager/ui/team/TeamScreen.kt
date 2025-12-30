@@ -89,16 +89,30 @@ fun TeamScreen(
             }
 
             is TeamUiState.NoTeam -> {
-                TeamForm(
-                    clubId = state.clubId,
-                    clubFirestoreId = state.clubFirestoreId,
-                    isPresident = state.isPresident,
-                    onSave = { team, _ ->
-                        viewModel.createTeam(team) {
-                            onNavigateToMatches(team.name)
+                if (state.clubId != null && !state.isPresident) {
+                    // User has club membership but is not a President
+                    AlertDialog(
+                        title = { Text(stringResource(R.string.team_creation_permission_error_title)) },
+                        text = { Text(stringResource(R.string.team_creation_permission_error_message)) },
+                        onDismissRequest = { onNavigateBackRequest() },
+                        confirmButton = {
+                            TextButton(onClick = { onNavigateBackRequest() }) {
+                                Text(stringResource(R.string.close))
+                            }
                         }
-                    },
-                )
+                    )
+                } else {
+                    TeamForm(
+                        clubId = state.clubId,
+                        clubFirestoreId = state.clubFirestoreId,
+                        isPresident = state.isPresident,
+                        onSave = { team, _ ->
+                            viewModel.createTeam(team) {
+                                onNavigateToMatches(team.name)
+                            }
+                        },
+                    )
+                }
             }
         }
     }
