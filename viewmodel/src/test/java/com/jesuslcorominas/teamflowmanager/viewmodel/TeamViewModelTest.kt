@@ -5,6 +5,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import androidx.lifecycle.SavedStateHandle
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
@@ -262,6 +263,7 @@ class TeamViewModelTest {
             assertEquals(100, noTeamState.clubId)
             assertEquals("club_firestore_123", noTeamState.clubFirestoreId)
             assertEquals(true, noTeamState.isPresident)
+            assertEquals(ClubRole.PRESIDENT, noTeamState.userRole)
         }
 
     @Test
@@ -305,5 +307,6 @@ class TeamViewModelTest {
             assertEquals(100, noTeamState.clubId)
             assertEquals("club_firestore_123", noTeamState.clubFirestoreId)
             assertEquals(false, noTeamState.isPresident)
+            assertEquals(ClubRole.COACH, noTeamState.userRole)
         }
 }

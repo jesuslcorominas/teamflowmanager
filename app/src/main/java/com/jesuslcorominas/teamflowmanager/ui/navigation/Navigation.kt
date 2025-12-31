@@ -122,10 +122,6 @@ fun Navigation(
             )
         ) { backStackEntry ->
             val mode = backStackEntry.arguments?.getString(Route.Team.ARG_MODE) ?: ""
-            
-            // Check if we came from TeamList to determine where to navigate on success
-            val previousRoute = navController.previousBackStackEntry?.destination?.route
-            val cameFromTeamList = previousRoute == Route.TeamList.createRoute()
 
             TeamScreen(
                 onNavigateToMatches = { _ ->
@@ -134,13 +130,11 @@ fun Navigation(
                     }
                 },
                 onNavigateBackRequest = { navController.popBackStack() },
-                onNavigateToTeamList = if (cameFromTeamList) {
-                    {
-                        navController.navigate(Route.TeamList.createRoute()) {
-                            popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
-                        }
+                onNavigateToTeamList = {
+                    navController.navigate(Route.TeamList.createRoute()) {
+                        popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
                     }
-                } else null,
+                },
                 currentBackHandler = if (mode == Route.Team.MODE_EDIT) currentBackHandler else null,
             )
         }

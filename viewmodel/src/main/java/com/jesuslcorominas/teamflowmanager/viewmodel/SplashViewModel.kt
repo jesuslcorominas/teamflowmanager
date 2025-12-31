@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
@@ -23,6 +24,8 @@ class SplashViewModel(
 
     companion object {
         private const val TAG = "SplashViewModel"
+        // Kept for backward compatibility, but use ClubRole enum instead
+        @Deprecated("Use ClubRole.PRESIDENT instead", ReplaceWith("ClubRole.PRESIDENT.roleName"))
         private const val ROLE_PRESIDENT = "Presidente"
     }
 
@@ -97,8 +100,9 @@ class SplashViewModel(
                 Log.d(TAG, "User is club member with role: ${clubMember.role}")
                 // User is a club member without their own team
                 // If they're a President, they can create teams for the club
-                if (clubMember.role == ROLE_PRESIDENT) {
-                    Log.d(TAG, "User is President - navigating to team creation")
+                val userRole = ClubRole.fromString(clubMember.role)
+                if (userRole == ClubRole.PRESIDENT) {
+                    Log.d(TAG, "User is President - navigating to team list")
                     _uiState.value = UiState.ClubPresident
                 } else {
                     Log.d(TAG, "User is not President - navigating to club selection")

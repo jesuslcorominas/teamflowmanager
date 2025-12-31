@@ -109,7 +109,7 @@ fun TeamScreen(
                         isPresident = state.isPresident,
                         onSave = { team, _ ->
                             viewModel.createTeam(team) {
-                                // If user is a President and onNavigateToTeamList is provided, go to TeamList
+                                // If user is a President (based on role), go to TeamList
                                 // Otherwise, go to Matches (normal flow for personal teams)
                                 if (state.isPresident && onNavigateToTeamList != null) {
                                     onNavigateToTeamList()

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
@@ -40,6 +41,8 @@ class TeamViewModel(
 ) : ViewModel() {
 
     companion object {
+        // Kept for backward compatibility, but use ClubRole enum instead
+        @Deprecated("Use ClubRole.PRESIDENT instead", ReplaceWith("ClubRole.PRESIDENT.roleName"))
         private const val ROLE_PRESIDENT = "Presidente"
     }
 
@@ -76,10 +79,11 @@ class TeamViewModel(
                 
                 if (team == null) {
                     // No team exists, provide club info for creation if user is a President
-                    val isPresident = clubMember?.role == ROLE_PRESIDENT
+                    val userRole = clubMember?.role?.let { ClubRole.fromString(it) }
+                    val isPresident = userRole == ClubRole.PRESIDENT
                     val clubId = clubMember?.clubId
                     val clubFirestoreId = clubMember?.clubFirestoreId
-                    _uiState.update { TeamUiState.NoTeam(clubId, clubFirestoreId, isPresident) }
+                    _uiState.update { TeamUiState.NoTeam(clubId, clubFirestoreId, isPresident, userRole) }
                 } else {
                     _uiState.update { TeamUiState.Success(team, players) }
                 }
@@ -189,7 +193,12 @@ class TeamViewModel(
 sealed interface TeamUiState {
     data object Loading : TeamUiState
 
-    data class NoTeam(val clubId: Long? = null, val clubFirestoreId: String? = null, val isPresident: Boolean = false) : TeamUiState
+    data class NoTeam(
+        val clubId: Long? = null,
+        val clubFirestoreId: String? = null,
+        val isPresident: Boolean = false,
+        val userRole: ClubRole? = null
+    ) : TeamUiState
 
     data class Success(val team: Team, val players: List<Player>) : TeamUiState
 }
