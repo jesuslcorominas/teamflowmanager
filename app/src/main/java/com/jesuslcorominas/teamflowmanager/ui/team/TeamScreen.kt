@@ -31,6 +31,7 @@ import org.koin.androidx.compose.koinViewModel
 fun TeamScreen(
     onNavigateToMatches: (String) -> Unit,
     onNavigateBackRequest: () -> Unit,
+    onNavigateToTeamList: (() -> Unit)? = null,
     currentBackHandler: BackHandlerController?,
     viewModel: TeamViewModel = koinViewModel(),
 ) {
@@ -108,7 +109,13 @@ fun TeamScreen(
                         isPresident = state.isPresident,
                         onSave = { team, _ ->
                             viewModel.createTeam(team) {
-                                onNavigateToMatches(team.name)
+                                // If user is a President and onNavigateToTeamList is provided, go to TeamList
+                                // Otherwise, go to Matches (normal flow for personal teams)
+                                if (state.isPresident && onNavigateToTeamList != null) {
+                                    onNavigateToTeamList()
+                                } else {
+                                    onNavigateToMatches(team.name)
+                                }
                             }
                         },
                     )
