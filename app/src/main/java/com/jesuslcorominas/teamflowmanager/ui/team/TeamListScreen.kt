@@ -10,14 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,64 +33,38 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun TeamListScreen(
     viewModel: TeamListViewModel = koinViewModel(),
-    onNavigateToCreateTeam: () -> Unit,
     onTeamClick: (Team) -> Unit = {}
 ) {
     TrackScreenView(screenName = ScreenName.TEAM, screenClass = "TeamListScreen")
 
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        floatingActionButton = {
-            if (uiState is TeamListViewModel.UiState.Success) {
-                FloatingActionButton(
-                    onClick = onNavigateToCreateTeam,
-                    containerColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.create_team_title)
-                    )
-                }
+    when (val state = uiState) {
+        is TeamListViewModel.UiState.Loading -> {
+            Loading()
+        }
+        is TeamListViewModel.UiState.Success -> {
+            if (state.teams.isEmpty()) {
+                EmptyTeamsMessage(modifier = Modifier.fillMaxSize())
+            } else {
+                TeamsListContent(
+                    teams = state.teams,
+                    modifier = Modifier.fillMaxSize(),
+                    onTeamClick = onTeamClick
+                )
             }
         }
-    ) { paddingValues ->
-        when (val state = uiState) {
-            is TeamListViewModel.UiState.Loading -> {
-                Loading()
-            }
-            is TeamListViewModel.UiState.Success -> {
-                if (state.teams.isEmpty()) {
-                    EmptyTeamsMessage(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                    )
-                } else {
-                    TeamsListContent(
-                        teams = state.teams,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        onTeamClick = onTeamClick
-                    )
-                }
-            }
-            is TeamListViewModel.UiState.Error -> {
-                ErrorMessage(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                )
-            }
-            is TeamListViewModel.UiState.NoClubMembership -> {
-                ErrorMessage(
-                    message = "No club membership found",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                )
-            }
+        is TeamListViewModel.UiState.Error -> {
+            ErrorMessage(
+                message = "An error occurred",
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        is TeamListViewModel.UiState.NoClubMembership -> {
+            ErrorMessage(
+                message = "No club membership found",
+                modifier = Modifier.fillMaxSize()
+            )
         }
     }
 }

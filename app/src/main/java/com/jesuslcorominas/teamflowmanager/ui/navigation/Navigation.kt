@@ -135,11 +135,7 @@ fun Navigation(
         }
 
         composable(Route.TeamList.createRoute()) {
-            TeamListScreen(
-                onNavigateToCreateTeam = {
-                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE))
-                }
-            )
+            TeamListScreen()
         }
 
         composable(Route.Players.createRoute()) {
