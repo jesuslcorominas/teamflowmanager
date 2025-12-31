@@ -98,7 +98,8 @@ class SplashViewModelTest {
             email = "test@example.com",
             clubId = 100,
             role = "Presidente",
-            firestoreId = "club123"
+            firestoreId = "clubmember_doc_123",
+            clubFirestoreId = "club123"
         )
         every { getCurrentUserUseCase() } returns flowOf(user)
         every { getTeamUseCase() } returns flowOf(null)
@@ -128,7 +129,8 @@ class SplashViewModelTest {
             email = "test@example.com",
             clubId = 100,
             role = "Coach",
-            firestoreId = "club123"
+            firestoreId = "clubmember_doc_123",
+            clubFirestoreId = "club123"
         )
         every { getCurrentUserUseCase() } returns flowOf(user)
         every { getTeamUseCase() } returns flowOf(null)

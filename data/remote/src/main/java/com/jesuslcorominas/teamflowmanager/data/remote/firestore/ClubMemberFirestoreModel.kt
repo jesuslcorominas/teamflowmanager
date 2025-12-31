@@ -39,6 +39,7 @@ fun ClubMemberFirestoreModel.toDomain(): ClubMember =
         clubId = clubId.toStableId(),
         role = role,
         firestoreId = id,
+        clubFirestoreId = clubId,
     )
 
 fun ClubMember.toFirestoreModel(): ClubMemberFirestoreModel =

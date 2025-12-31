@@ -36,13 +36,13 @@ class TeamListViewModel(
                 // Get user's club membership
                 val clubMember = getUserClubMembership().first()
                 
-                if (clubMember == null || clubMember.firestoreId == null) {
+                if (clubMember == null || clubMember.clubFirestoreId == null) {
                     _uiState.value = UiState.NoClubMembership
                     return@launch
                 }
 
                 // Load teams for the club
-                getTeamsByClub(clubMember.firestoreId).collect { teams ->
+                getTeamsByClub(clubMember.clubFirestoreId).collect { teams ->
                     _uiState.value = UiState.Success(teams, clubMember.name)
                 }
             } catch (e: Exception) {

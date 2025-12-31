@@ -78,7 +78,7 @@ class TeamViewModel(
                     // No team exists, provide club info for creation if user is a President
                     val isPresident = clubMember?.role == ROLE_PRESIDENT
                     val clubId = clubMember?.clubId
-                    val clubFirestoreId = clubMember?.firestoreId
+                    val clubFirestoreId = clubMember?.clubFirestoreId
                     _uiState.update { TeamUiState.NoTeam(clubId, clubFirestoreId, isPresident) }
                 } else {
                     _uiState.update { TeamUiState.Success(team, players) }

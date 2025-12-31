@@ -232,7 +232,8 @@ class TeamViewModelTest {
                 email = "john@example.com",
                 clubId = 100,
                 role = "Presidente",
-                firestoreId = "club_firestore_123"
+                firestoreId = "clubmember_doc_123",
+                clubFirestoreId = "club_firestore_123"
             )
             every { getTeamUseCase.invoke() } returns flowOf(null)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
@@ -274,7 +275,8 @@ class TeamViewModelTest {
                 email = "john@example.com",
                 clubId = 100,
                 role = "Coach",
-                firestoreId = "club_firestore_123"
+                firestoreId = "clubmember_doc_123",
+                clubFirestoreId = "club_firestore_123"
             )
             every { getTeamUseCase.invoke() } returns flowOf(null)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
