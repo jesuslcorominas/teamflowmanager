@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +25,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -112,11 +111,8 @@ private fun TeamCard(
     team: Team,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    AppCard(
+        modifier = Modifier.clickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier
