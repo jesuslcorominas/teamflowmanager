@@ -89,25 +89,27 @@ class SplashViewModel(
 
     private suspend fun loadTeam() {
         Log.d(TAG, "Loading team...")
+        
+        // First, check if user is a President - Presidents should always see team list
+        val clubMember = getUserClubMembership().first()
+        if (clubMember != null) {
+            val userRole = ClubRole.fromString(clubMember.role)
+            if (userRole == ClubRole.PRESIDENT) {
+                Log.d(TAG, "User is President - navigating to team list")
+                _uiState.value = UiState.ClubPresident
+                return
+            }
+        }
+        
+        // For non-Presidents, check if they have their own team
         val team = getTeam().first()
         
         if (team == null) {
             Log.d(TAG, "NO TEAM found - checking club membership")
-            // Check if user is a club member (particularly a President)
-            val clubMember = getUserClubMembership().first()
             
             if (clubMember != null) {
-                Log.d(TAG, "User is club member with role: ${clubMember.role}")
-                // User is a club member without their own team
-                // If they're a President, they can create teams for the club
-                val userRole = ClubRole.fromString(clubMember.role)
-                if (userRole == ClubRole.PRESIDENT) {
-                    Log.d(TAG, "User is President - navigating to team list")
-                    _uiState.value = UiState.ClubPresident
-                } else {
-                    Log.d(TAG, "User is not President - navigating to club selection")
-                    _uiState.value = UiState.NoClub
-                }
+                Log.d(TAG, "User is club member with role: ${clubMember.role} - navigating to club selection")
+                _uiState.value = UiState.NoClub
             } else {
                 Log.d(TAG, "User is not a club member - navigating to club selection")
                 _uiState.value = UiState.NoClub
