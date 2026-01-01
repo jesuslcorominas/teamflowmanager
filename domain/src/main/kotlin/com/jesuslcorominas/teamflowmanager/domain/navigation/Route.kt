@@ -22,6 +22,7 @@ sealed class Route(
                 Players,
                 Team,
                 TeamList,
+                ClubMembers,
                 Matches,
                 ArchivedMatches,
                 CreateMatch,
@@ -123,6 +124,13 @@ sealed class Route(
         showBottomBar = false,
         showFab = true,
         hasSearchBar = false,
+        showSettingsButton = true
+    )
+
+    data object ClubMembers : Route(
+        path = "club_members",
+        showTopBar = true,
+        showBottomBar = true,
         showSettingsButton = true
     )
 

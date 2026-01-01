@@ -113,6 +113,9 @@
     <string name="team_title">Team</string>
     <string name="team_list_title">Club Teams</string>
     <string name="no_teams_message">No teams yet. Create your first team!</string>
+    <string name="no_members_message">No staff members yet</string>
+    <string name="error_loading_members">Error loading staff members</string>
+    <string name="no_club_membership_error">No club membership found</string>
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>
@@ -167,6 +170,8 @@
     <!-- Navigation -->
     <string name="nav_players">Team Roster</string>
     <string name="nav_team">Team</string>
+    <string name="nav_teams">Teams</string>
+    <string name="nav_staff">Staff</string>
     <string name="nav_matches">Matches</string>
     <string name="nav_analysis">Analysis</string>
 

@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
@@ -108,6 +109,12 @@ val viewModelModule =
         viewModel {
             TeamListViewModel(
                 getTeamsByClub = get(),
+                getUserClubMembership = get()
+            )
+        }
+        viewModel {
+            ClubMembersViewModel(
+                getClubMembers = get(),
                 getUserClubMembership = get()
             )
         }
