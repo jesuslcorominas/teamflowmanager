@@ -18,8 +18,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * Firestore-based implementation of TeamLocalDataSource.
  * This implementation stores team data in Firebase Firestore as a remote data source.
  * Team documents are stored in the "teams" collection with auto-generated document IDs.
- * The document ID is stored in the domain model's coachId field for reference during updates.
- * The ownerId field is set to the current authenticated user's ID as required by security rules.
+ * The assignedCoachId field stores the user ID of the assigned coach (null if no coach assigned yet).
+ * Teams are associated with clubs via the clubId field.
  */
 class TeamFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
@@ -32,7 +32,7 @@ class TeamFirestoreDataSourceImpl(
     }
 
     /**
-     * Gets the first team owned by the current user from Firestore.
+     * Gets the first team assigned to the current user (as coach) from Firestore.
      */
     override fun getTeam(): Flow<Team?> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
@@ -44,7 +44,7 @@ class TeamFirestoreDataSourceImpl(
         }
 
         val listenerRegistration = firestore.collection(TEAMS_COLLECTION)
-            .whereEqualTo("ownerId", currentUserId)
+            .whereEqualTo("assignedCoachId", currentUserId)
             .limit(1)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -71,7 +71,7 @@ class TeamFirestoreDataSourceImpl(
                         firestoreModel
                     }
                     val team = modelWithId.toDomain()
-                    Log.d(TAG, "Team loaded with documentId: $documentId, coachId: ${team.coachId}")
+                    Log.d(TAG, "Team loaded with documentId: $documentId, assignedCoachId: ${team.coachId}")
                     trySend(team)
                 } else {
                     trySend(null)
@@ -94,10 +94,10 @@ class TeamFirestoreDataSourceImpl(
             val firestoreModel = team.toFirestoreModel()
             // Use auto-generated document ID for new teams
             val docRef = firestore.collection(TEAMS_COLLECTION).document()
-            // Set the ownerId to current user and document id
-            val modelWithOwner = firestoreModel.copy(id = docRef.id, ownerId = currentUserId)
-            docRef.set(modelWithOwner).await()
-            Log.d(TAG, "Team inserted successfully with id: ${docRef.id}, ownerId: $currentUserId")
+            // Set the document id
+            val modelWithId = firestoreModel.copy(id = docRef.id)
+            docRef.set(modelWithId).await()
+            Log.d(TAG, "Team inserted successfully with id: ${docRef.id}")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -114,18 +114,16 @@ class TeamFirestoreDataSourceImpl(
         }
 
         try {
-            val documentId = team.coachId
+            val documentId = team.firestoreId
             if (documentId.isNullOrEmpty()) {
-                Log.w(TAG, "Cannot update team without document ID (stored in coachId)")
-                throw IllegalStateException("Cannot update team without document ID")
+                Log.w(TAG, "Cannot update team without Firestore document ID")
+                throw IllegalStateException("Cannot update team without Firestore document ID")
             }
 
             val firestoreModel = team.toFirestoreModel()
-            // Ensure ownerId is set for security rules
-            val modelWithOwner = firestoreModel.copy(ownerId = currentUserId)
             firestore.collection(TEAMS_COLLECTION)
                 .document(documentId)
-                .set(modelWithOwner)
+                .set(firestoreModel)
                 .await()
             Log.d(TAG, "Team updated successfully with id: $documentId")
         } catch (e: CancellationException) {
@@ -242,11 +240,9 @@ class TeamFirestoreDataSourceImpl(
         require(ownerId.isNotBlank()) { "Owner ID cannot be blank" }
 
         try {
-            // Get all teams for this owner
-            // Note: We can't use whereEqualTo("clubId", null) because that only matches
-            // documents with clubId explicitly set to null, not documents without the field
+            // Get all teams that don't have a clubId (orphan teams)
+            // Since we removed ownerId, orphan teams are simply teams without a clubId
             val querySnapshot = firestore.collection(TEAMS_COLLECTION)
-                .whereEqualTo("ownerId", ownerId)
                 .get()
                 .await()
 
@@ -275,7 +271,7 @@ class TeamFirestoreDataSourceImpl(
                 }
             }
 
-            Log.d(TAG, "Found ${teams.size} orphan teams for user $ownerId")
+            Log.d(TAG, "Found ${teams.size} orphan teams")
             return teams
         } catch (e: CancellationException) {
             throw e

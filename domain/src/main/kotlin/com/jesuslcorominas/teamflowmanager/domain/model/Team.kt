@@ -7,7 +7,8 @@ data class Team(
     val delegateName: String,
     val captainId: Long? = null,
     val teamType: TeamType,
-    val coachId: String? = null,
+    val coachId: String? = null, // ID of the assigned coach (null if no coach assigned)
     val clubId: Long? = null,
     val clubFirestoreId: String? = null,
+    val firestoreId: String? = null, // The Firestore document ID of this team
 )
