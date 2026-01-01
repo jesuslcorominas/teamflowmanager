@@ -113,9 +113,9 @@
     <string name="team_title">Team</string>
     <string name="team_list_title">Club Teams</string>
     <string name="no_teams_message">No teams yet. Create your first team!</string>
-    <string name="no_members_message">No staff members yet</string>
-    <string name="error_loading_members">Error loading staff members</string>
-    <string name="no_club_membership_error">No club membership found</string>
+    <string name="no_members_message">No staff members in your club yet. Invite members to join!</string>
+    <string name="error_loading_members">Unable to load staff members. Please check your internet connection and try again.</string>
+    <string name="no_club_membership_error">You need to join or create a club first to view staff members.</string>
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>

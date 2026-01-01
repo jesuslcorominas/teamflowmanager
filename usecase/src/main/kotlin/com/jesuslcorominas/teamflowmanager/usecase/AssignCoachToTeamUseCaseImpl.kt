@@ -57,6 +57,11 @@ internal class AssignCoachToTeamUseCaseImpl(
         ) ?: throw IllegalArgumentException("Coach must be a member of the club")
 
         try {
+            // TODO: Implement Firestore transaction or batch write for atomicity
+            // Currently, these are two separate operations which could fail independently
+            // causing data inconsistency. This should be refactored to use Firestore
+            // batch writes or transactions to ensure both operations succeed or fail together.
+            
             // Step 1: Update team's coachId
             teamRepository.updateTeamCoachId(
                 teamFirestoreId = teamFirestoreId,

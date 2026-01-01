@@ -14,6 +14,8 @@ internal class GenerateTeamInvitationUseCaseImpl(
 ) : GenerateTeamInvitationUseCase {
 
     companion object {
+        // TODO: Externalize these URL constants to BuildConfig or a configuration file
+        // to support different environments (dev, staging, production)
         private const val BASE_URL = "https://teamflowmanager.app"
         private const val TEAM_INVITATION_PATH = "/team/accept"
     }
