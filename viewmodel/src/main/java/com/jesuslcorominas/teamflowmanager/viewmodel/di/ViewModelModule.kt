@@ -27,7 +27,8 @@ val viewModelModule =
         viewModel {
             MainViewModel(
                 hasNotificationPermissionBeenRequestedUseCase = get(),
-                setNotificationPermissionRequestedUseCase = get()
+                setNotificationPermissionRequestedUseCase = get(),
+                getUserClubMembership = get()
             )
         }
 

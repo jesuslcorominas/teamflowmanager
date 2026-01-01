@@ -12,6 +12,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,11 +33,17 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.PendingNavigation
+import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(pendingNavigation: PendingNavigation? = null) {
+fun MainScreen(
+    pendingNavigation: PendingNavigation? = null,
+    viewModel: MainViewModel = koinViewModel()
+) {
     val navController = rememberNavController()
+    val isPresident by viewModel.isPresident.collectAsState()
 
     LaunchedEffect(pendingNavigation) {
         when (val nav = pendingNavigation) {
@@ -60,11 +67,11 @@ fun MainScreen(pendingNavigation: PendingNavigation? = null) {
         }
     }
 
-    MainScaffold(navController = navController)
+    MainScaffold(navController = navController, isPresident = isPresident)
 }
 
 @Composable
-private fun MainScaffold(navController: NavHostController) {
+private fun MainScaffold(navController: NavHostController, isPresident: Boolean) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val backHandlerController = remember { BackHandlerController() }
     val searchState = rememberSearchState()
@@ -101,7 +108,7 @@ private fun MainScaffold(navController: NavHostController) {
             },
             bottomBar = {
                 if (uiConfig?.showBottomBar == true) {
-                    BottomNavigationBar(navController = navController)
+                    BottomNavigationBar(navController = navController, isPresident = isPresident)
                 }
             },
             floatingActionButton = {
