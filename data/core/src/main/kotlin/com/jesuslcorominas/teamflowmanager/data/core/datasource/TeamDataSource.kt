@@ -56,4 +56,18 @@ interface TeamDataSource {
      * @param clubFirestoreId The club's Firestore document ID
      */
     suspend fun updateTeamClubId(teamCoachId: String, clubId: Long, clubFirestoreId: String)
+
+    /**
+     * Get team by Firestore document ID.
+     * @param teamFirestoreId The Firestore document ID of the team
+     * @return The team if found, null otherwise
+     */
+    suspend fun getTeamByFirestoreId(teamFirestoreId: String): Team?
+
+    /**
+     * Update the coachId of a team.
+     * @param teamFirestoreId The Firestore document ID of the team
+     * @param coachId The Firebase user ID of the coach to assign
+     */
+    suspend fun updateTeamCoachId(teamFirestoreId: String, coachId: String)
 }

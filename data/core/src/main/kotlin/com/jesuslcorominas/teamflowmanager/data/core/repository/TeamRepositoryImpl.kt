@@ -31,4 +31,12 @@ internal class TeamRepositoryImpl(
     override suspend fun updateTeamClubId(teamCoachId: String, clubId: Long, clubFirestoreId: String) {
         teamDataSource.updateTeamClubId(teamCoachId, clubId, clubFirestoreId)
     }
+
+    override suspend fun getTeamByFirestoreId(teamFirestoreId: String): Team? {
+        return teamDataSource.getTeamByFirestoreId(teamFirestoreId)
+    }
+
+    override suspend fun updateTeamCoachId(teamFirestoreId: String, coachId: String) {
+        teamDataSource.updateTeamCoachId(teamFirestoreId, coachId)
+    }
 }

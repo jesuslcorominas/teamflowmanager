@@ -29,4 +29,27 @@ interface ClubMemberRepository {
         clubFirestoreId: String,
         role: String
     ): ClubMember
+
+    /**
+     * Update the role of a club member.
+     * @param userId The Firebase user ID
+     * @param clubFirestoreId The club's Firestore document ID
+     * @param role The new role for the member
+     */
+    suspend fun updateClubMemberRole(
+        userId: String,
+        clubFirestoreId: String,
+        role: String
+    )
+
+    /**
+     * Get club member by user ID and club ID.
+     * @param userId The Firebase user ID
+     * @param clubFirestoreId The club's Firestore document ID
+     * @return The club member if found, null otherwise
+     */
+    suspend fun getClubMemberByUserIdAndClub(
+        userId: String,
+        clubFirestoreId: String
+    ): ClubMember?
 }

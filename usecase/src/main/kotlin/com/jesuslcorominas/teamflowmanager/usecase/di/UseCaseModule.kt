@@ -1,10 +1,13 @@
 package com.jesuslcorominas.teamflowmanager.usecase.di
 
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AcceptTeamInvitationUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ArchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
@@ -59,10 +62,13 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.AcceptTeamInvitationUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.AssignCoachToTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateClubUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GenerateTeamInvitationUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.JoinClubByCodeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
@@ -132,6 +138,9 @@ internal val useCaseInternalModule =
         singleOf(::GetTeamsByClubUseCaseImpl) bind GetTeamsByClubUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
+        singleOf(::AssignCoachToTeamUseCaseImpl) bind AssignCoachToTeamUseCase::class
+        singleOf(::GenerateTeamInvitationUseCaseImpl) bind GenerateTeamInvitationUseCase::class
+        singleOf(::AcceptTeamInvitationUseCaseImpl) bind AcceptTeamInvitationUseCase::class
         singleOf(::GetUserClubMembershipUseCaseImpl) bind GetUserClubMembershipUseCase::class
         singleOf(::CreateClubUseCaseImpl) bind CreateClubUseCase::class
         singleOf(::JoinClubByCodeUseCaseImpl) bind JoinClubByCodeUseCase::class

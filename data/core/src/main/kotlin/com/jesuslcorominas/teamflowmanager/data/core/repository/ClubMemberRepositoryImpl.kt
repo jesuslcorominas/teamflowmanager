@@ -23,4 +23,19 @@ internal class ClubMemberRepositoryImpl(
             userId, name, email, clubId, clubFirestoreId, role
         )
     }
+
+    override suspend fun updateClubMemberRole(
+        userId: String,
+        clubFirestoreId: String,
+        role: String
+    ) {
+        clubMemberDataSource.updateClubMemberRole(userId, clubFirestoreId, role)
+    }
+
+    override suspend fun getClubMemberByUserIdAndClub(
+        userId: String,
+        clubFirestoreId: String
+    ): ClubMember? {
+        return clubMemberDataSource.getClubMemberByUserIdAndClub(userId, clubFirestoreId)
+    }
 }
