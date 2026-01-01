@@ -12,6 +12,13 @@ interface ClubMemberDataSource {
     fun getClubMemberByUserId(userId: String): Flow<ClubMember?>
 
     /**
+     * Get all members of a club.
+     * @param clubFirestoreId The Firestore document ID of the club
+     * @return Flow emitting list of club members
+     */
+    fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>>
+
+    /**
      * Create or update a club member.
      * @param userId The Firebase user ID
      * @param name The user's display name

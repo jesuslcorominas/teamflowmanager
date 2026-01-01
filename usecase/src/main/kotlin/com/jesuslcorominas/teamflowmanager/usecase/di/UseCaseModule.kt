@@ -20,6 +20,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubMembersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetExportDataUseCase
@@ -81,6 +82,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetClubMembersUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCaseImpl
@@ -142,6 +144,7 @@ internal val useCaseInternalModule =
         singleOf(::GenerateTeamInvitationUseCaseImpl) bind GenerateTeamInvitationUseCase::class
         singleOf(::AcceptTeamInvitationUseCaseImpl) bind AcceptTeamInvitationUseCase::class
         singleOf(::GetUserClubMembershipUseCaseImpl) bind GetUserClubMembershipUseCase::class
+        singleOf(::GetClubMembersUseCaseImpl) bind GetClubMembersUseCase::class
         singleOf(::CreateClubUseCaseImpl) bind CreateClubUseCase::class
         singleOf(::JoinClubByCodeUseCaseImpl) bind JoinClubByCodeUseCase::class
 

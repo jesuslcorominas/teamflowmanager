@@ -11,6 +11,9 @@ internal class ClubMemberRepositoryImpl(
     override fun getClubMemberByUserId(userId: String): Flow<ClubMember?> =
         clubMemberDataSource.getClubMemberByUserId(userId)
 
+    override fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>> =
+        clubMemberDataSource.getClubMembers(clubFirestoreId)
+
     override suspend fun createOrUpdateClubMember(
         userId: String,
         name: String,
