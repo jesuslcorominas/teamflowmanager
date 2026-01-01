@@ -121,7 +121,7 @@ sealed class Route(
     data object TeamList : Route(
         path = "team_list",
         showTopBar = true,
-        showBottomBar = false,
+        showBottomBar = true,
         showFab = true,
         hasSearchBar = false,
         showSettingsButton = true
