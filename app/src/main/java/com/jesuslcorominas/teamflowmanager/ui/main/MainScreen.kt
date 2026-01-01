@@ -144,12 +144,14 @@ private fun Route.toFABIcon() = when (this) {
 private fun Route.toFABContentDescriptionRes(): Int? = when (this) {
     Route.Players -> R.string.add_player_title
     Route.Team -> R.string.edit_team_title
+    Route.TeamList -> R.string.create_team_title
     Route.Matches -> R.string.add_match_title
     else -> null
 }
 
 private fun Route.toDestination() = when (this) {
     Route.Team -> Route.Team.createRoute(Route.Team.MODE_EDIT)
+    Route.TeamList -> Route.Team.createRoute(Route.Team.MODE_CREATE)
     Route.Matches -> Route.CreateMatch.createRoute(Route.CreateMatch.DEFAULT_MATCH_ID)
     else -> null
 }
@@ -166,6 +168,7 @@ fun Route.toTitleRes(backStackEntry: NavBackStackEntry?): Int? = when (this) {
         }
     }
 
+    Route.TeamList -> R.string.team_list_title
     Route.Matches -> R.string.matches_title
     Route.ArchivedMatches -> R.string.archived_matches
     Route.Analysis -> R.string.analysis_title

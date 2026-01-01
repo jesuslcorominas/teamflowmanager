@@ -27,6 +27,7 @@ import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
+import com.jesuslcorominas.teamflowmanager.ui.team.TeamListScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 
 @Composable
@@ -55,6 +56,11 @@ fun Navigation(
                 },
                 onNavigateToCreateTeam = {
                     navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeamList = {
+                    navController.navigate(Route.TeamList.createRoute()) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
@@ -90,7 +96,7 @@ fun Navigation(
         composable(Route.CreateClub.createRoute()) {
             CreateClubScreen(
                 onClubCreated = {
-                    navController.navigate(Route.Splash.createRoute()) {
+                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
                         popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
                     }
                 }
@@ -124,8 +130,17 @@ fun Navigation(
                     }
                 },
                 onNavigateBackRequest = { navController.popBackStack() },
+                onNavigateToTeamList = {
+                    navController.navigate(Route.TeamList.createRoute()) {
+                        popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
+                    }
+                },
                 currentBackHandler = if (mode == Route.Team.MODE_EDIT) currentBackHandler else null,
             )
+        }
+
+        composable(Route.TeamList.createRoute()) {
+            TeamListScreen()
         }
 
         composable(Route.Players.createRoute()) {
@@ -231,6 +246,7 @@ fun Navigation(
             Route.Login -> activity?.finish()
             Route.Migration -> activity?.finish()
             Route.ClubSelection -> activity?.finish()
+            Route.TeamList -> activity?.finish()
             Route.CreateClub -> navController.navigate(Route.ClubSelection.createRoute()) {
                 popUpTo(Route.CreateClub.createRoute()) { inclusive = true }
             }

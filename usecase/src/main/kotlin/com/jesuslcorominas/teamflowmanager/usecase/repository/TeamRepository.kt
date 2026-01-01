@@ -18,6 +18,13 @@ interface TeamRepository {
     fun getTeamByCoachId(coachId: String): Flow<Team?>
 
     /**
+     * Get all teams for a club.
+     * @param clubFirestoreId The Firestore document ID of the club
+     * @return Flow emitting list of teams in the club
+     */
+    fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>>
+
+    /**
      * Get orphan teams for a user (teams without a clubId).
      * @param ownerId The Firebase user ID of the team owner
      * @return List of teams without clubId

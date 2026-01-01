@@ -1,10 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -28,6 +30,7 @@ class SplashViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getTeamUseCase: GetTeamUseCase
     private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
+    private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
     private lateinit var synchronizeTimeUseCase: SynchronizeTimeUseCase
 
     @Before
@@ -35,6 +38,7 @@ class SplashViewModelTest {
         Dispatchers.setMain(testDispatcher)
         getTeamUseCase = mockk()
         getCurrentUserUseCase = mockk()
+        getUserClubMembershipUseCase = mockk()
         synchronizeTimeUseCase = mockk()
         coEvery { synchronizeTimeUseCase() } returns Unit
     }
@@ -50,7 +54,7 @@ class SplashViewModelTest {
         every { getCurrentUserUseCase() } returns flowOf(null)
 
         // When
-        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, synchronizeTimeUseCase)
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
         advanceUntilIdle()
 
         // Then
@@ -58,7 +62,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `should emit NoClub when user is authenticated but has no team`() = runTest {
+    fun `should emit NoClub when user is authenticated but has no team and no club membership`() = runTest {
         // Given
         val user = User(
             id = "user123",
@@ -68,13 +72,116 @@ class SplashViewModelTest {
         )
         every { getCurrentUserUseCase() } returns flowOf(user)
         every { getTeamUseCase() } returns flowOf(null)
+        every { getUserClubMembershipUseCase() } returns flowOf(null)
 
         // When
-        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, synchronizeTimeUseCase)
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
         advanceUntilIdle()
 
         // Then
         assertEquals(SplashViewModel.UiState.NoClub, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `should emit ClubPresident when user has no team but is a President`() = runTest {
+        // Given
+        val user = User(
+            id = "user123",
+            email = "test@example.com",
+            displayName = "Test User",
+            photoUrl = null
+        )
+        val clubMember = ClubMember(
+            id = 1,
+            userId = "user123",
+            name = "Test User",
+            email = "test@example.com",
+            clubId = 100,
+            role = "Presidente",
+            firestoreId = "clubmember_doc_123",
+            clubFirestoreId = "club123"
+        )
+        every { getCurrentUserUseCase() } returns flowOf(user)
+        every { getTeamUseCase() } returns flowOf(null)
+        every { getUserClubMembershipUseCase() } returns flowOf(clubMember)
+
+        // When
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(SplashViewModel.UiState.ClubPresident, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `should emit NoClub when user has no team and is a club member but not President`() = runTest {
+        // Given
+        val user = User(
+            id = "user123",
+            email = "test@example.com",
+            displayName = "Test User",
+            photoUrl = null
+        )
+        val clubMember = ClubMember(
+            id = 1,
+            userId = "user123",
+            name = "Test User",
+            email = "test@example.com",
+            clubId = 100,
+            role = "Coach",
+            firestoreId = "clubmember_doc_123",
+            clubFirestoreId = "club123"
+        )
+        every { getCurrentUserUseCase() } returns flowOf(user)
+        every { getTeamUseCase() } returns flowOf(null)
+        every { getUserClubMembershipUseCase() } returns flowOf(clubMember)
+
+        // When
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(SplashViewModel.UiState.NoClub, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `should emit ClubPresident when user is President even if they own a team`() = runTest {
+        // Given
+        val user = User(
+            id = "user123",
+            email = "test@example.com",
+            displayName = "Test User",
+            photoUrl = null
+        )
+        val clubMember = ClubMember(
+            id = 1,
+            userId = "user123",
+            name = "Test User",
+            email = "test@example.com",
+            clubId = 100,
+            role = "Presidente",
+            firestoreId = "clubmember_doc_123",
+            clubFirestoreId = "club123"
+        )
+        val teamWithClub = Team(
+            id = 1,
+            name = "Test Team",
+            coachName = "Coach",
+            delegateName = "Delegate",
+            teamType = TeamType.FOOTBALL_5,
+            clubId = 100L,
+            clubFirestoreId = "club123"
+        )
+        every { getCurrentUserUseCase() } returns flowOf(user)
+        every { getUserClubMembershipUseCase() } returns flowOf(clubMember)
+        every { getTeamUseCase() } returns flowOf(teamWithClub)
+
+        // When
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(SplashViewModel.UiState.ClubPresident, viewModel.uiState.value)
     }
 
     @Test
@@ -96,10 +203,11 @@ class SplashViewModelTest {
             clubFirestoreId = null
         )
         every { getCurrentUserUseCase() } returns flowOf(user)
+        every { getUserClubMembershipUseCase() } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(teamWithoutClub)
 
         // When
-        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, synchronizeTimeUseCase)
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
         advanceUntilIdle()
 
         // Then
@@ -115,6 +223,16 @@ class SplashViewModelTest {
             displayName = "Test User",
             photoUrl = null
         )
+        val clubMember = ClubMember(
+            id = 1,
+            userId = "user123",
+            name = "Test User",
+            email = "test@example.com",
+            clubId = 100,
+            role = "Coach",
+            firestoreId = "clubmember_doc_123",
+            clubFirestoreId = "club123"
+        )
         val teamWithClub = Team(
             id = 1,
             name = "Test Team",
@@ -125,10 +243,11 @@ class SplashViewModelTest {
             clubFirestoreId = null
         )
         every { getCurrentUserUseCase() } returns flowOf(user)
+        every { getUserClubMembershipUseCase() } returns flowOf(clubMember)
         every { getTeamUseCase() } returns flowOf(teamWithClub)
 
         // When
-        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, synchronizeTimeUseCase)
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
         advanceUntilIdle()
 
         // Then
@@ -144,6 +263,16 @@ class SplashViewModelTest {
             displayName = "Test User",
             photoUrl = null
         )
+        val clubMember = ClubMember(
+            id = 1,
+            userId = "user123",
+            name = "Test User",
+            email = "test@example.com",
+            clubId = 100,
+            role = "Coach",
+            firestoreId = "clubmember_doc_123",
+            clubFirestoreId = "club123"
+        )
         val teamWithClub = Team(
             id = 1,
             name = "Test Team",
@@ -154,10 +283,11 @@ class SplashViewModelTest {
             clubFirestoreId = "club123"
         )
         every { getCurrentUserUseCase() } returns flowOf(user)
+        every { getUserClubMembershipUseCase() } returns flowOf(clubMember)
         every { getTeamUseCase() } returns flowOf(teamWithClub)
 
         // When
-        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, synchronizeTimeUseCase)
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
         advanceUntilIdle()
 
         // Then
@@ -170,7 +300,7 @@ class SplashViewModelTest {
         every { getCurrentUserUseCase() } returns flowOf(null)
 
         // When
-        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, synchronizeTimeUseCase)
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
         advanceUntilIdle()
 
         // Then
@@ -184,7 +314,7 @@ class SplashViewModelTest {
         every { getCurrentUserUseCase() } returns flowOf(null)
 
         // When
-        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, synchronizeTimeUseCase)
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
         advanceUntilIdle()
 
         // Then

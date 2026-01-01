@@ -18,6 +18,13 @@ interface TeamDataSource {
     fun getTeamByCoachId(coachId: String): Flow<Team?>
 
     /**
+     * Get all teams for a club.
+     * @param clubFirestoreId The Firestore document ID of the club
+     * @return Flow emitting list of teams in the club
+     */
+    fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>>
+
+    /**
      * Check if there is local data (team) without an associated user ID.
      * @return true if there is a team without a coachId, false otherwise
      */
