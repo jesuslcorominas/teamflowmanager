@@ -1,22 +1,31 @@
 package com.jesuslcorominas.teamflowmanager.ui.team
 
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,6 +46,21 @@ fun TeamListScreen(
     TrackScreenView(screenName = ScreenName.TEAM, screenClass = "TeamListScreen")
 
     val uiState by viewModel.uiState.collectAsState()
+    val shareEvent by viewModel.shareEvent.collectAsState()
+    val context = LocalContext.current
+
+    // Handle share event
+    LaunchedEffect(shareEvent) {
+        shareEvent?.let { event ->
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_team_subject, event.teamName))
+                putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_team_message, event.teamName, event.invitationLink))
+            }
+            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_team_title)))
+            viewModel.onShareEventConsumed()
+        }
+    }
 
     when (val state = uiState) {
         is TeamListViewModel.UiState.Loading -> {
@@ -49,7 +73,8 @@ fun TeamListScreen(
                 TeamsListContent(
                     teams = state.teams,
                     modifier = Modifier.fillMaxSize(),
-                    onTeamClick = onTeamClick
+                    onTeamClick = onTeamClick,
+                    onShareTeam = { team -> viewModel.shareTeam(team) }
                 )
             }
         }
@@ -91,7 +116,8 @@ private fun EmptyTeamsMessage(modifier: Modifier = Modifier) {
 private fun TeamsListContent(
     teams: List<Team>,
     modifier: Modifier = Modifier,
-    onTeamClick: (Team) -> Unit
+    onTeamClick: (Team) -> Unit,
+    onShareTeam: (Team) -> Unit
 ) {
     LazyColumn(
         modifier = modifier.padding(16.dp),
@@ -100,7 +126,8 @@ private fun TeamsListContent(
         items(teams, key = { it.id }) { team ->
             TeamCard(
                 team = team,
-                onClick = { onTeamClick(team) }
+                onClick = { onTeamClick(team) },
+                onShare = { onShareTeam(team) }
             )
         }
     }
@@ -109,7 +136,8 @@ private fun TeamsListContent(
 @Composable
 private fun TeamCard(
     team: Team,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onShare: () -> Unit
 ) {
     AppCard(
         modifier = Modifier.clickable(onClick = onClick)
@@ -119,11 +147,33 @@ private fun TeamCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = team.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = team.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // Show share button only if team has no coach
+                if (team.coachName.isBlank()) {
+                    Button(
+                        onClick = onShare,
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = stringResource(R.string.share_team_button)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.share_team_button))
+                    }
+                }
+            }
             
             if (team.coachName.isNotBlank()) {
                 Row(

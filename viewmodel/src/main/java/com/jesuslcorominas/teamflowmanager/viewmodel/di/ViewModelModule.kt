@@ -110,7 +110,8 @@ val viewModelModule =
         viewModel {
             TeamListViewModel(
                 getTeamsByClub = get(),
-                getUserClubMembership = get()
+                getUserClubMembership = get(),
+                generateTeamInvitation = get()
             )
         }
         viewModel {
