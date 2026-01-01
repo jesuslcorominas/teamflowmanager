@@ -159,8 +159,8 @@ private fun TeamCard(
                     modifier = Modifier.weight(1f)
                 )
                 
-                // Show share button only if team has no coach
-                if (team.coachName.isBlank()) {
+                // Show share button only if team has no coach assigned
+                if (team.coachId == null) {
                     Button(
                         onClick = onShare,
                         modifier = Modifier.padding(start = 8.dp)
