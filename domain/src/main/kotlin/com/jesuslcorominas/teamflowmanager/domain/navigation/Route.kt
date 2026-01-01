@@ -165,5 +165,7 @@ sealed class Route(
         private const val PATH = "accept_team_invitation"
 
         const val FULL_ROUTE = "$PATH?$ARG_TEAM_ID={$ARG_TEAM_ID}"
+
+        fun createRoute(teamId: String): String = "$PATH?$ARG_TEAM_ID=$teamId"
     }
 }

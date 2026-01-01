@@ -254,8 +254,12 @@ fun Navigation(
         ) {
             AcceptTeamInvitationScreen(
                 onNavigateToLogin = { teamId ->
+                    // TODO: Implement proper state saving mechanism
+                    // Current limitation: teamId will be lost after login
+                    // Consider using SavedStateHandle or SharedPreferences to persist the teamId
+                    // so it can be retrieved after login is complete
                     navController.navigate(Route.Login.createRoute()) {
-                        // Save teamId to handle after login - would need additional logic in LoginScreen/SplashScreen
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
                     }
                 },
                 onNavigateToTeam = {
