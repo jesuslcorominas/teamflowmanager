@@ -55,13 +55,13 @@ fun TeamListScreen(
         }
         is TeamListViewModel.UiState.Error -> {
             ErrorMessage(
-                message = "An error occurred",
+                message = stringResource(R.string.error_loading_teams),
                 modifier = Modifier.fillMaxSize()
             )
         }
         is TeamListViewModel.UiState.NoClubMembership -> {
             ErrorMessage(
-                message = "No club membership found",
+                message = stringResource(R.string.no_club_membership_teams_error),
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -160,7 +160,7 @@ private fun TeamCard(
 
 @Composable
 private fun ErrorMessage(
-    message: String = "An error occurred",
+    message: String,
     modifier: Modifier = Modifier
 ) {
     Box(
