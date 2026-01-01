@@ -14,6 +14,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
@@ -141,6 +142,10 @@ fun Navigation(
 
         composable(Route.TeamList.createRoute()) {
             TeamListScreen()
+        }
+
+        composable(Route.ClubMembers.createRoute()) {
+            ClubMembersScreen()
         }
 
         composable(Route.Players.createRoute()) {
