@@ -18,6 +18,7 @@ import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
@@ -232,6 +233,39 @@ fun Navigation(
                 onSignOut = {
                     navController.navigate(Route.Login.createRoute()) {
                         popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Route.AcceptTeamInvitation.FULL_ROUTE,
+            arguments = listOf(
+                navArgument(Route.AcceptTeamInvitation.ARG_TEAM_ID) {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "https://teamflowmanager.app/team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                }
+            )
+        ) {
+            AcceptTeamInvitationScreen(
+                onNavigateToLogin = { teamId ->
+                    navController.navigate(Route.Login.createRoute()) {
+                        // Save teamId to handle after login - would need additional logic in LoginScreen/SplashScreen
+                    }
+                },
+                onNavigateToTeam = {
+                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_VIEW)) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeams = {
+                    navController.navigate(Route.TeamList.createRoute()) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
                     }
                 }
             )

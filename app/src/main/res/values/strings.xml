@@ -122,6 +122,16 @@
     <string name="share_team_title">Share Team Invitation</string>
     <string name="share_team_subject">Join %1$s as Coach</string>
     <string name="share_team_message">You\'ve been invited to be the coach of %1$s! Click the link to accept: %2$s</string>
+
+    <!-- Team Invitation Acceptance Strings -->
+    <string name="accepting_team_invitation">Processing invitation…</string>
+    <string name="redirecting_to_login">Please log in to accept the invitation…</string>
+    <string name="team_invitation_accepted">Invitation Accepted!</string>
+    <string name="team_invitation_success_message">You are now the coach of %1$s</string>
+    <string name="team_invitation_error">Failed to Accept Invitation</string>
+    <string name="go_to_team">Go to Team</string>
+    <string name="go_to_teams">Go to Teams</string>
+    <string name="retry">Retry</string>
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>

@@ -202,5 +202,13 @@ val viewModelModule =
             )
         }
 
+        viewModel {
+            AcceptTeamInvitationViewModel(
+                savedStateHandle = get(),
+                acceptTeamInvitation = get(),
+                getCurrentUser = get()
+            )
+        }
+
         factory { RealTimeTicker(get()) } bind TimeTicker::class
     }
