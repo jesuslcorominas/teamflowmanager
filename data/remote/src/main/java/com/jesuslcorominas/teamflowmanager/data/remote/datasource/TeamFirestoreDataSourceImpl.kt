@@ -309,4 +309,61 @@ class TeamFirestoreDataSourceImpl(
             throw e
         }
     }
+
+    override suspend fun getTeamByFirestoreId(teamFirestoreId: String): Team? {
+        require(teamFirestoreId.isNotBlank()) { "Team Firestore ID cannot be blank" }
+
+        try {
+            val document = firestore.collection(TEAMS_COLLECTION)
+                .document(teamFirestoreId)
+                .get()
+                .await()
+
+            if (!document.exists()) {
+                Log.d(TAG, "Team not found with Firestore ID: $teamFirestoreId")
+                return null
+            }
+
+            val documentId = document.id
+            val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
+
+            return firestoreModel?.let {
+                // Ensure the id field is set from the document ID
+                val modelWithId = if (it.id.isEmpty()) {
+                    it.copy(id = documentId)
+                } else {
+                    it
+                }
+                modelWithId.toDomain()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting team by Firestore ID from Firestore", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateTeamCoachId(teamFirestoreId: String, coachId: String) {
+        require(teamFirestoreId.isNotBlank()) { "Team Firestore ID cannot be blank" }
+        require(coachId.isNotBlank()) { "Coach ID cannot be blank" }
+
+        try {
+            val updates = mapOf(
+                "coachId" to coachId
+            )
+
+            firestore.collection(TEAMS_COLLECTION)
+                .document(teamFirestoreId)
+                .update(updates)
+                .await()
+
+            Log.d(TAG, "Team $teamFirestoreId coach updated to $coachId")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating team coach ID in Firestore", e)
+            throw e
+        }
+    }
 }
