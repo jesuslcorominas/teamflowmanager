@@ -6,7 +6,8 @@ sealed class Route(
     val showBottomBar: Boolean = false,
     val canGoBack: Boolean = false,
     val showFab: Boolean = false,
-    val hasSearchBar: Boolean = false
+    val hasSearchBar: Boolean = false,
+    val showSettingsButton: Boolean = false
 ) {
 
     companion object {
@@ -49,6 +50,7 @@ sealed class Route(
         val canGoBack: Boolean,
         val showFab: Boolean,
         val hasSearchBar: Boolean,
+        val showSettingsButton: Boolean,
     )
 
     open fun uiConfig(arguments: Map<String, Any?>?): UiConfig =
@@ -58,13 +60,15 @@ sealed class Route(
             canGoBack = canGoBack,
             showFab = showFab,
             hasSearchBar = hasSearchBar,
+            showSettingsButton = showSettingsButton,
         )
 
     data object Matches : Route(
         path = "matches",
         showBottomBar = true,
         showFab = true,
-        hasSearchBar = true
+        hasSearchBar = true,
+        showSettingsButton = true
     )
 
     data object Match : Route(path = "match", canGoBack = true) {
@@ -108,6 +112,7 @@ sealed class Route(
                 canGoBack = mode == MODE_EDIT,
                 showFab = mode == MODE_VIEW,
                 hasSearchBar = false,
+                showSettingsButton = mode == MODE_EDIT || mode == MODE_VIEW,
             )
         }
     }
@@ -117,10 +122,11 @@ sealed class Route(
         showTopBar = true,
         showBottomBar = false,
         showFab = true,
-        hasSearchBar = false
+        hasSearchBar = false,
+        showSettingsButton = true
     )
 
-    data object Players : Route(path = "players", showBottomBar = true)
+    data object Players : Route(path = "players", showBottomBar = true, showSettingsButton = true)
 
     data object PlayerWizard : Route(path = "player_wizard", showTopBar = false) {
         const val ARG_PLAYER_ID = "playerId"
@@ -132,6 +138,7 @@ sealed class Route(
         path = "archived_matches",
         showBottomBar = true,
         canGoBack = true,
+        showSettingsButton = true
     )
 
     data object CreateMatch : Route(path = "create_match", showTopBar = false) {
@@ -142,5 +149,5 @@ sealed class Route(
         const val FULL_ROUTE = "$PATH/{$ARG_MATCH_ID}"
     }
 
-    data object Analysis : Route(path = "analysis", showBottomBar = true)
+    data object Analysis : Route(path = "analysis", showBottomBar = true, showSettingsButton = true)
 }
