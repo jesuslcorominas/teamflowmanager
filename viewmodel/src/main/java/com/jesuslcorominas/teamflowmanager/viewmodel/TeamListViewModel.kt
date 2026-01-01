@@ -62,7 +62,7 @@ class TeamListViewModel(
     fun shareTeam(team: Team) {
         viewModelScope.launch {
             try {
-                val teamFirestoreId = team.coachId ?: return@launch
+                val teamFirestoreId = team.firestoreId ?: return@launch
                 val invitationLink = generateTeamInvitation(teamFirestoreId, team.name)
                 _shareEvent.value = ShareEvent(invitationLink, team.name)
             } catch (e: Exception) {

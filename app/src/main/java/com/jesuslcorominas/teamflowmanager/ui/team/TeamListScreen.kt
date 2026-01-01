@@ -15,8 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -159,18 +159,13 @@ private fun TeamCard(
                     modifier = Modifier.weight(1f)
                 )
                 
-                // Show share button only if team has no coach assigned
+                // Show share icon button only if team has no coach assigned
                 if (team.coachId == null) {
-                    Button(
-                        onClick = onShare,
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) {
+                    IconButton(onClick = onShare) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = stringResource(R.string.share_team_button)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.share_team_button))
                     }
                 }
             }
