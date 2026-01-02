@@ -40,6 +40,20 @@
                     android:host="match" />
             </intent-filter>
 
+            <!-- Custom scheme deep link for team invitations - always works -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="teamflowmanager"
+                    android:host="team"
+                    android:pathPrefix="/accept" />
+            </intent-filter>
+
+            <!-- HTTPS deep link for team invitations - requires assetlinks.json on server -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
 

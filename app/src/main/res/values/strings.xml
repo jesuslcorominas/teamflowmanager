@@ -119,19 +119,19 @@
     <string name="error_loading_members">Unable to load staff members. Please check your internet connection and try again.</string>
     <string name="no_club_membership_error">You need to join or create a club first to view staff members.</string>
     <string name="share_team_button">Compartir</string>
-    <string name="share_team_title">Share Team Invitation</string>
-    <string name="share_team_subject">Join %1$s as Coach</string>
-    <string name="share_team_message">You\'ve been invited to be the coach of %1$s! Click the link to accept: %2$s</string>
+    <string name="share_team_title">Compartir Invitación de Equipo</string>
+    <string name="share_team_subject">Únete a %1$s como Entrenador</string>
+    <string name="share_team_message">Has sido invitado a ser el entrenador de %1$s! Haz clic en el enlace para aceptar: %2$s</string>
 
     <!-- Team Invitation Acceptance Strings -->
-    <string name="accepting_team_invitation">Processing invitation…</string>
-    <string name="redirecting_to_login">Please log in to accept the invitation…</string>
-    <string name="team_invitation_accepted">Invitation Accepted!</string>
-    <string name="team_invitation_success_message">You are now the coach of %1$s</string>
-    <string name="team_invitation_error">Failed to Accept Invitation</string>
-    <string name="go_to_team">Go to Team</string>
-    <string name="go_to_teams">Go to Teams</string>
-    <string name="retry">Retry</string>
+    <string name="accepting_team_invitation">Procesando invitación…</string>
+    <string name="redirecting_to_login">Por favor inicia sesión para aceptar la invitación…</string>
+    <string name="team_invitation_accepted">¡Invitación Aceptada!</string>
+    <string name="team_invitation_success_message">Ahora eres el entrenador de %1$s</string>
+    <string name="team_invitation_error">Error al Aceptar Invitación</string>
+    <string name="go_to_team">Ir al Equipo</string>
+    <string name="go_to_teams">Ir a Equipos</string>
+    <string name="retry">Reintentar</string>
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>

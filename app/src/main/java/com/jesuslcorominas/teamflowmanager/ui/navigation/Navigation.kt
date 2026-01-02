@@ -247,6 +247,11 @@ fun Navigation(
                 }
             ),
             deepLinks = listOf(
+                // Custom scheme deep link - always works
+                navDeepLink {
+                    uriPattern = "teamflowmanager://team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                },
+                // HTTPS deep link - requires server configuration
                 navDeepLink {
                     uriPattern = "https://teamflowmanager.app/team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
                 }

@@ -16,8 +16,12 @@ internal class GenerateTeamInvitationUseCaseImpl(
     companion object {
         // TODO: Externalize these URL constants to BuildConfig or a configuration file
         // to support different environments (dev, staging, production)
-        private const val BASE_URL = "https://teamflowmanager.app"
-        private const val TEAM_INVITATION_PATH = "/team/accept"
+        // Using custom scheme teamflowmanager:// instead of https:// because:
+        // - Custom schemes always work without server configuration
+        // - HTTPS App Links require .well-known/assetlinks.json on the server
+        // - Can switch to HTTPS later when server is configured
+        private const val BASE_URL = "teamflowmanager://team"
+        private const val TEAM_INVITATION_PATH = "/accept"
     }
 
     override suspend fun invoke(teamFirestoreId: String, teamName: String): String {
