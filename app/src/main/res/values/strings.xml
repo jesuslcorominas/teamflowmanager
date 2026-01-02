@@ -121,7 +121,7 @@
     <string name="share_team_button">Compartir</string>
     <string name="share_team_title">Compartir Invitación de Equipo</string>
     <string name="share_team_subject">Únete a %1$s como Entrenador</string>
-    <string name="share_team_message">Has sido invitado a ser el entrenador de %1$s! Haz clic en el enlace para aceptar: %2$s</string>
+    <string name="share_team_message">¡Has sido invitado a ser el entrenador de %1$s! Haz clic en el enlace para aceptar: %2$s</string>
 
     <!-- Team Invitation Acceptance Strings -->
     <string name="accepting_team_invitation">Procesando invitación…</string>
