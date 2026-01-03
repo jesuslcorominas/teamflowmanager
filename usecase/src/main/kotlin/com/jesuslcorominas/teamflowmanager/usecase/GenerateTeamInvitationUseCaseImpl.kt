@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
@@ -12,7 +11,6 @@ internal class GenerateTeamInvitationUseCaseImpl(
     private val teamRepository: TeamRepository,
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
-    private val dynamicLinkDataSource: DynamicLinkDataSource,
 ) : GenerateTeamInvitationUseCase {
 
     override suspend fun invoke(teamFirestoreId: String, teamName: String): String {
@@ -48,8 +46,8 @@ internal class GenerateTeamInvitationUseCaseImpl(
             "User and team must be in the same club"
         }
 
-        // Generate dynamic link using the data source
-        return dynamicLinkDataSource.generateTeamInvitationLink(teamFirestoreId, teamName)
+        // Generate invitation link using the repository (which delegates to data source)
+        return teamRepository.generateTeamInvitationLink(teamFirestoreId, teamName)
     }
 }
 

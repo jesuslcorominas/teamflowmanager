@@ -52,4 +52,12 @@ interface TeamRepository {
      * @param coachId The Firebase user ID of the coach to assign
      */
     suspend fun updateTeamCoachId(teamFirestoreId: String, coachId: String)
+
+    /**
+     * Generate a shareable invitation link for a team.
+     * @param teamFirestoreId The Firestore document ID of the team
+     * @param teamName The name of the team for display in the invitation
+     * @return The generated invitation link (Firebase Dynamic Link or fallback)
+     */
+    suspend fun generateTeamInvitationLink(teamFirestoreId: String, teamName: String): String
 }
