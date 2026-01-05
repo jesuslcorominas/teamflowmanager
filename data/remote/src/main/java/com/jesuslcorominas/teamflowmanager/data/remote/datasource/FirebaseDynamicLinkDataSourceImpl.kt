@@ -2,8 +2,8 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import android.util.Log
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.api.CreateShortLinkRequest
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
+import com.jesuslcorominas.teamflowmanager.data.remote.apimodel.CreateShortLinkRequest
 import java.net.URLEncoder
 
 /**
