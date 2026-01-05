@@ -58,7 +58,11 @@ internal val firebaseModule =
         single { FirebaseStorage.getInstance() }
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
-        singleOf(::FirebaseDynamicLinkDataSourceImpl) bind DynamicLinkDataSource::class
+        single<DynamicLinkDataSource> { 
+            FirebaseDynamicLinkDataSourceImpl(
+                shortLinkApi = get()
+            ) 
+        }
         singleOf(::FirestoreTimeProvider) bind TimeProvider::class
         singleOf(::FirestoreTransactionRunner) bind TransactionRunner::class
     }
@@ -121,13 +125,14 @@ internal val ktorfitModule =
             Ktorfit
                 .Builder()
                 .httpClient(get<HttpClient>()) // Use the configured HttpClient
-                .baseUrl("https://api.example.com/") // Replace with your actual base URL
+                .baseUrl("https://teamflowmanager.web.app/") // Firebase Hosting base URL
                 .build()
         }
 
-        // Add your API interfaces here
-        // Example:
-        // single<SampleApi> { get<Ktorfit>().create() }
+        // API interfaces
+        single<com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi> { 
+            get<Ktorfit>().create() 
+        }
     }
 
 val dataRemoteModule =
