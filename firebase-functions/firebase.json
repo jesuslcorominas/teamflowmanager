@@ -1,0 +1,24 @@
+{
+  "functions": {
+    "source": ".",
+    "runtime": "nodejs18"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/l/**",
+        "function": "redirectShortLink"
+      },
+      {
+        "source": "/api/createShortLink",
+        "function": "createShortLink"
+      }
+    ]
+  }
+}
