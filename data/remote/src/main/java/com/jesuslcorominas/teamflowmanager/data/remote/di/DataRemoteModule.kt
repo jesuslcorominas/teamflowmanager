@@ -15,6 +15,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstituti
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
@@ -58,10 +59,10 @@ internal val firebaseModule =
         single { FirebaseStorage.getInstance() }
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
-        single<DynamicLinkDataSource> { 
+        single<DynamicLinkDataSource> {
             FirebaseDynamicLinkDataSourceImpl(
                 shortLinkApi = get()
-            ) 
+            )
         }
         singleOf(::FirestoreTimeProvider) bind TimeProvider::class
         singleOf(::FirestoreTransactionRunner) bind TransactionRunner::class
@@ -130,8 +131,8 @@ internal val ktorfitModule =
         }
 
         // API interfaces
-        single<com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi> { 
-            get<Ktorfit>().create() 
+        single<ShortLinkApi> {
+            get<Ktorfit>().create()
         }
     }
 

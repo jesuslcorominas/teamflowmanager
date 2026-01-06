@@ -11,7 +11,7 @@ import de.jensklingenberg.ktorfit.http.POST
  * This API replaces deprecated Firebase Dynamic Links with a custom solution
  * that uses Firebase Hosting + Cloud Functions to create short, clickable URLs.
  */
-interface ShortLinkApi {
+internal interface ShortLinkApi {
     /**
      * Creates a short link for team invitation.
      *
