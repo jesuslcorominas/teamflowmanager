@@ -3,12 +3,13 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import android.util.Log
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
-import com.jesuslcorominas.teamflowmanager.data.remote.apimodel.CreateShortLinkRequest
+import com.jesuslcorominas.teamflowmanager.data.remote.api.model.CreateShortLinkRequest
+import kotlinx.serialization.InternalSerializationApi
 import java.net.URLEncoder
 
 /**
  * Custom short link implementation using Firebase Cloud Functions + Hosting via Ktorfit.
- * 
+ *
  * Replaces deprecated Firebase Dynamic Links with a custom solution that:
  * - Generates short, clickable URLs (https://teamflowmanager.web.app/l/xxxxx)
  * - Works in all messaging apps (WhatsApp, Email, SMS)
@@ -24,11 +25,12 @@ internal class FirebaseDynamicLinkDataSourceImpl(
 
     companion object {
         private const val TAG = "FirebaseShortLink"
-        
+
         // Fallback custom scheme if Cloud Function fails
         private const val FALLBACK_SCHEME = "teamflowmanager://team/accept"
     }
 
+    @OptIn(InternalSerializationApi::class)
     override suspend fun generateTeamInvitationLink(
         teamFirestoreId: String,
         teamName: String
@@ -39,9 +41,9 @@ internal class FirebaseDynamicLinkDataSourceImpl(
                 teamId = teamFirestoreId,
                 teamName = teamName
             )
-            
+
             val response = shortLinkApi.createShortLink(request)
-            
+
             Log.d(TAG, "Successfully created short link: ${response.shortLink}")
             response.shortLink
         } catch (e: Exception) {
