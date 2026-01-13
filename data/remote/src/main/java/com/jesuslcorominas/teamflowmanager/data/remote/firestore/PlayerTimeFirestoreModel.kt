@@ -24,6 +24,7 @@ data class PlayerTimeFirestoreModel(
     var isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,
     val status: String = PlayerTimeStatus.ON_BENCH.name,
+    val lastOperationId: String? = null,
 ) {
     // No-arg constructor required by Firestore
     constructor() : this(
@@ -34,6 +35,7 @@ data class PlayerTimeFirestoreModel(
         isRunning = false,
         lastStartTimeMillis = null,
         status = PlayerTimeStatus.ON_BENCH.name,
+        lastOperationId = null,
     )
 }
 
@@ -48,6 +50,7 @@ fun PlayerTimeFirestoreModel.toDomain(): PlayerTime =
         } catch (_: Exception) {
             PlayerTimeStatus.ON_BENCH
         },
+        lastOperationId = lastOperationId,
     )
 
 fun PlayerTime.toFirestoreModel(): PlayerTimeFirestoreModel =
@@ -59,4 +62,5 @@ fun PlayerTime.toFirestoreModel(): PlayerTimeFirestoreModel =
         isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
         status = status.name,
+        lastOperationId = lastOperationId,
     )
