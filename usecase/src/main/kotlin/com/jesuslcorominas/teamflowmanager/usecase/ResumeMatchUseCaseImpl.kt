@@ -23,6 +23,12 @@ internal class ResumeMatchUseCaseImpl(
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
 ) : ResumeMatchUseCase {
     override suspend fun invoke(matchId: Long, currentTimeMillis: Long) {
+        // Get the match first to validate it exists
+        val match = getMatchByIdUseCase(matchId).first()
+        if (match == null) {
+            return // Match doesn't exist, cannot resume
+        }
+
         // Step 1: Create operation with IN_PROGRESS status
         val operation = MatchOperation(
             matchId = matchId,
@@ -44,30 +50,32 @@ internal class ResumeMatchUseCaseImpl(
         }
 
         // Step 4: Resume the match timer
-        val match = getMatchByIdUseCase(matchId).first()
-        if (match != null) {
-            val firstNotStartedPeriod = match.periods.first { it.startTimeMillis == 0L }
-            val updatedMatch = match.copy(
-                status = MatchStatus.IN_PROGRESS,
-                periods = match.periods.map { period ->
-                    if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
-                        period.copy(startTimeMillis = currentTimeMillis)
-                    } else {
-                        period
-                    }
-                },
-            )
-            matchRepository.updateMatch(updatedMatch)
-
-            // Step 5: Mark operation as COMPLETED
-            val completedOperation = operation.copy(
-                id = operationId,
-                status = MatchOperationStatus.COMPLETED
-            )
-            matchOperationRepository.updateOperation(completedOperation)
-
-            // Step 6: Update match with lastCompletedOperationId
-            matchRepository.updateMatchWithOperationId(updatedMatch, operationId)
+        // For resume, find the next period that hasn't started yet
+        val firstNotStartedPeriod = match.periods.firstOrNull { it.startTimeMillis == 0L }
+        if (firstNotStartedPeriod == null) {
+            return // All periods already started, cannot resume to start a new period
         }
+
+        val updatedMatch = match.copy(
+            status = MatchStatus.IN_PROGRESS,
+            periods = match.periods.map { period ->
+                if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
+                    period.copy(startTimeMillis = currentTimeMillis)
+                } else {
+                    period
+                }
+            },
+        )
+        matchRepository.updateMatch(updatedMatch)
+
+        // Step 5: Mark operation as COMPLETED
+        val completedOperation = operation.copy(
+            id = operationId,
+            status = MatchOperationStatus.COMPLETED
+        )
+        matchOperationRepository.updateOperation(completedOperation)
+
+        // Step 6: Update match with lastCompletedOperationId
+        matchRepository.updateMatchWithOperationId(updatedMatch, operationId)
     }
 }

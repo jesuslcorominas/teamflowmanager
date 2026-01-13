@@ -190,6 +190,7 @@ internal class PlayerTimeRepositoryImpl(
         val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
 
         // Create updated player times for batch upsert with operation ID
+        // Only pause player timers that are currently running - players on the bench don't need to be paused
         val playerTimesToUpsert = playerIds.mapNotNull { playerId ->
             val currentPlayerTime = currentTimesMap[playerId]
             if (currentPlayerTime != null && currentPlayerTime.isRunning) {
@@ -203,7 +204,7 @@ internal class PlayerTimeRepositoryImpl(
                     lastOperationId = operationId,
                 )
             } else {
-                null // Skip players that aren't running
+                null // Skip players that aren't running - they don't need to be paused
             }
         }
 

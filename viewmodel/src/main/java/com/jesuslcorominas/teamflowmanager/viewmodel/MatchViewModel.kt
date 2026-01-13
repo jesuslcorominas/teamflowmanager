@@ -625,8 +625,11 @@ class MatchViewModel(
 
     /**
      * Checks if the state is consistent for atomic operations.
-     * Returns true if no operation is in progress, or if all player times
+     * Returns true if no operation is in progress, or if all relevant player times
      * have been updated with the same operation ID as the match's lastCompletedOperationId.
+     * 
+     * Player times with null operation IDs are acceptable only if they are not part of 
+     * the squad (not relevant to the match operation).
      */
     private fun isStateConsistent(match: Match, playerTimes: List<PlayerTime>): Boolean {
         val completedOperationId = match.lastCompletedOperationId
@@ -642,10 +645,10 @@ class MatchViewModel(
             match.squadCallUpIds.contains(playerTime.playerId)
         }
 
-        // All relevant player times should have the same lastOperationId as the match
-        // or have no operation ID (for players not affected by the operation)
+        // All relevant player times should have the completed operation ID
+        // Players not in the squad are allowed to have null operation IDs
         return relevantPlayerTimes.all { playerTime ->
-            playerTime.lastOperationId == null || playerTime.lastOperationId == completedOperationId
+            playerTime.lastOperationId == completedOperationId
         }
     }
 

@@ -23,6 +23,12 @@ internal class PauseMatchUseCaseImpl(
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
 ) : PauseMatchUseCase {
     override suspend fun invoke(matchId: Long, currentTimeMillis: Long) {
+        // Get the match first to validate it exists and is in correct state
+        val match = getMatchByIdUseCase(matchId).first()
+        if (match == null || match.status != MatchStatus.IN_PROGRESS) {
+            return // Match doesn't exist or not in progress, cannot pause
+        }
+
         // Step 1: Create operation with IN_PROGRESS status
         val operation = MatchOperation(
             matchId = matchId,
@@ -44,31 +50,32 @@ internal class PauseMatchUseCaseImpl(
         }
 
         // Step 4: Pause the match timer
-        val match = getMatchByIdUseCase(matchId).first()
-        if (match != null && match.status == MatchStatus.IN_PROGRESS) {
-            val firstNotFinishedPeriod = match.periods.first { it.endTimeMillis == 0L }
-            val updatedMatch = match.copy(
-                periods = match.periods.map { period ->
-                    if (period.periodNumber == firstNotFinishedPeriod.periodNumber) {
-                        period.copy(endTimeMillis = currentTimeMillis)
-                    } else {
-                        period
-                    }
-                },
-                status = MatchStatus.PAUSED,
-                pauseCount = match.pauseCount + 1,
-            )
-            matchRepository.updateMatch(updatedMatch)
-
-            // Step 5: Mark operation as COMPLETED
-            val completedOperation = operation.copy(
-                id = operationId,
-                status = MatchOperationStatus.COMPLETED
-            )
-            matchOperationRepository.updateOperation(completedOperation)
-
-            // Step 6: Update match with lastCompletedOperationId
-            matchRepository.updateMatchWithOperationId(updatedMatch, operationId)
+        val firstNotFinishedPeriod = match.periods.firstOrNull { it.endTimeMillis == 0L }
+        if (firstNotFinishedPeriod == null) {
+            return // All periods already finished, cannot pause
         }
+
+        val updatedMatch = match.copy(
+            periods = match.periods.map { period ->
+                if (period.periodNumber == firstNotFinishedPeriod.periodNumber) {
+                    period.copy(endTimeMillis = currentTimeMillis)
+                } else {
+                    period
+                }
+            },
+            status = MatchStatus.PAUSED,
+            pauseCount = match.pauseCount + 1,
+        )
+        matchRepository.updateMatch(updatedMatch)
+
+        // Step 5: Mark operation as COMPLETED
+        val completedOperation = operation.copy(
+            id = operationId,
+            status = MatchOperationStatus.COMPLETED
+        )
+        matchOperationRepository.updateOperation(completedOperation)
+
+        // Step 6: Update match with lastCompletedOperationId
+        matchRepository.updateMatchWithOperationId(updatedMatch, operationId)
     }
 }
