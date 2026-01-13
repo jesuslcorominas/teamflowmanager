@@ -553,6 +553,14 @@ class MatchViewModel(
                     }
 
                     else -> {
+                        // Check if state is consistent (atomic operation completed)
+                        if (!isStateConsistent(match, playerTimes)) {
+                            // State is inconsistent, keep current UI state
+                            // This buffers intermediate states until all documents are updated
+                            return@combine (_uiState.value as? MatchUiState.Success)
+                                ?: MatchUiState.Loading
+                        }
+
                         // Only include players that are in the squad call-up
                         val squadPlayers = players.filter { it.id in match.squadCallUpIds }
                         val playerTimeItems = squadPlayers.toPlayerItems(playerTimes, currentTime, match.captainId)
@@ -612,6 +620,32 @@ class MatchViewModel(
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Checks if the state is consistent for atomic operations.
+     * Returns true if no operation is in progress, or if all player times
+     * have been updated with the same operation ID as the match's lastCompletedOperationId.
+     */
+    private fun isStateConsistent(match: Match, playerTimes: List<PlayerTime>): Boolean {
+        val completedOperationId = match.lastCompletedOperationId
+
+        // If no operation ID is set, state is consistent (no atomic operation in progress)
+        if (completedOperationId == null) {
+            return true
+        }
+
+        // Check that all relevant player times have the same operation ID
+        // Only check player times for players in the squad
+        val relevantPlayerTimes = playerTimes.filter { playerTime ->
+            match.squadCallUpIds.contains(playerTime.playerId)
+        }
+
+        // All relevant player times should have the same lastOperationId as the match
+        // or have no operation ID (for players not affected by the operation)
+        return relevantPlayerTimes.all { playerTime ->
+            playerTime.lastOperationId == null || playerTime.lastOperationId == completedOperationId
         }
     }
 
