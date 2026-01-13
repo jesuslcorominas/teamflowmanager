@@ -9,6 +9,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSo
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
@@ -21,6 +22,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseStorag
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirestoreTimeProvider
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchOperationFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitutionFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFirestoreDataSourceImpl
@@ -71,6 +73,8 @@ internal val firestoreDataSourceModule =
         singleOf(::ClubMemberFirestoreDataSourceImpl) bind ClubMemberDataSource::class
 
         singleOf(::MatchFirestoreDataSourceImpl) bind MatchDataSource::class
+
+        singleOf(::MatchOperationFirestoreDataSourceImpl) bind MatchOperationDataSource::class
 
         singleOf(::GoalFirestoreDataSourceImpl) bind GoalDataSource::class
 
