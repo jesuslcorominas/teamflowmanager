@@ -51,7 +51,7 @@ class MatchOperationFirestoreDataSourceImpl(
 
         val firestoreModel = operation.toFirestoreModel()
 
-        return try {
+        try {
             firestore.collection(OPERATIONS_COLLECTION)
                 .document(operation.id)
                 .set(firestoreModel)
