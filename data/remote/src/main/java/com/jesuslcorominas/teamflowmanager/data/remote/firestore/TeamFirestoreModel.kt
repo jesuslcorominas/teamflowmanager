@@ -9,7 +9,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
  * Firestore model for Team document.
  * This model is used for serialization/deserialization with Firestore.
  * The `id` field is automatically populated by Firestore with the document ID.
- * The `ownerId` field is required by Firestore security rules to identify the owner.
+ * The `assignedCoachId` field stores the user ID of the assigned coach (null if no coach assigned yet).
  * The `clubId` field is optional - teams can be orphaned (null) or belong to a club (string).
  */
 data class TeamFirestoreModel(
@@ -20,7 +20,7 @@ data class TeamFirestoreModel(
     val delegateName: String = "",
     val captainId: Long? = null,
     val teamType: Int = TeamType.FOOTBALL_5.players,
-    val ownerId: String = "",
+    val assignedCoachId: String? = null,
     val clubId: String? = null,
 ) {
     // No-arg constructor required by Firestore
@@ -31,7 +31,7 @@ data class TeamFirestoreModel(
         delegateName = "",
         captainId = null,
         teamType = TeamType.FOOTBALL_5.players,
-        ownerId = "",
+        assignedCoachId = null,
         clubId = null,
     )
 }
@@ -44,18 +44,20 @@ fun TeamFirestoreModel.toDomain(): Team =
         delegateName = delegateName,
         captainId = captainId,
         teamType = TeamType.fromPlayers(teamType),
-        coachId = id, // Store the Firestore document ID in coachId for reference
+        coachId = assignedCoachId, // Store the assigned coach's user ID (null if no coach assigned)
         clubId = clubId?.takeIf { it.isNotEmpty() }?.toStableId(), // Convert club Firestore ID to Long, null if empty/null
         clubFirestoreId = clubId?.takeIf { it.isNotEmpty() }, // Store original club Firestore ID
+        firestoreId = id, // Store the Firestore document ID
     )
 
 fun Team.toFirestoreModel(): TeamFirestoreModel =
     TeamFirestoreModel(
-        id = coachId ?: "", // Use coachId (which stores the document ID) 
+        id = firestoreId ?: "", // Use the team's Firestore document ID
         name = name,
         coachName = coachName,
         delegateName = delegateName,
         captainId = captainId,
         teamType = teamType.players,
+        assignedCoachId = coachId, // Store the assigned coach's user ID
         clubId = clubFirestoreId, // Use the stored club Firestore ID, null for orphaned teams
     )

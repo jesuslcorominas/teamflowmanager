@@ -1,0 +1,242 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get club document
+    function getClub(clubId) {
+      return get(/databases/$(database)/documents/clubs/$(clubId));
+    }
+    
+    // Helper function to get team document
+    function getTeam(teamId) {
+      return get(/databases/$(database)/documents/teams/$(teamId));
+    }
+    
+    // Helper function to check if user is team owner (assignedCoachId field)
+    function userIsTeamOwner(teamId) {
+      return isAuthenticated() && getTeam(teamId).data.assignedCoachId == request.auth.uid;
+    }
+    
+    // Helper function to check if user is club owner
+    function isClubOwner(clubId) {
+      return isAuthenticated() && getClub(clubId).data.ownerId == request.auth.uid;
+    }
+    
+    // Helper function to check if user is team coach (assignedCoachId in teams collection)
+    function isTeamCoach(teamId) {
+      return isAuthenticated() && getTeam(teamId).data.assignedCoachId == request.auth.uid;
+    }
+    
+    // Helper function to check if user is "Presidente" of the club linked to a team
+    function isPresidenteOfTeamClub(teamId) {
+      return isAuthenticated() 
+        && getTeamClubId(teamId) != null
+        && isPresidenteOfClub(getTeamClubId(teamId));
+    }
+    
+    // Helper function to get team's clubId (returns null if not set)
+    function getTeamClubId(teamId) {
+      return ('clubId' in getTeam(teamId).data) ? getTeam(teamId).data.clubId : null;
+    }
+    
+    // Helper function to check if user is Presidente of a specific club
+    function isPresidenteOfClub(clubId) {
+      return clubId != null 
+        && exists(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId))
+        && get(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId)).data.role == "Presidente";
+    }
+    
+    // =======================================================================
+    // CLUBS AND CLUB MEMBERS - Hierarchical permissions
+    // =======================================================================
+    
+    // Clubs collection rules
+    match /clubs/{clubId} {
+      // Permitir a cualquier usuario autenticado leer clubs
+      // Necesario para el flujo de unirse por código de invitación
+      allow read: if isAuthenticated();
+      
+      // Allow create if user is authenticated and sets themselves as owner
+      allow create: if isAuthenticated() && 
+        request.resource.data.ownerId == request.auth.uid;
+      
+      // Allow update/delete only by the owner (ownerId)
+      allow update, delete: if isAuthenticated() && 
+        resource.data.ownerId == request.auth.uid;
+    }
+    
+    // ClubMembers collection rules
+    match /clubMembers/{memberId} {
+      // Allow read if user is the member or the club owner
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isClubOwner(resource.data.clubId)
+      );
+
+      // Allow create by:
+      // 1. Club owner (for any member)
+      // 2. User creating their own membership (userId matches auth.uid and document ID is userId_clubId)
+      allow create: if isAuthenticated() && (
+        isClubOwner(request.resource.data.clubId) ||
+        (
+          request.resource.data.userId == request.auth.uid &&
+          memberId == request.auth.uid + '_' + request.resource.data.clubId &&
+          exists(/databases/$(database)/documents/clubs/$(request.resource.data.clubId))
+        )
+      );
+
+      // Allow update/delete only by club owner
+      allow update, delete: if isAuthenticated() && 
+        isClubOwner(resource.data.clubId);
+    }	
+    
+    // =======================================================================
+    // TEAMS - Main collection with club linkage support
+    // =======================================================================
+    
+    // Teams collection rules
+    match /teams/{teamId} {
+      // Allow read if authenticated (keep backward compatibility)
+      // Plus hierarchical permissions for club Presidente
+      allow read: if isAuthenticated();
+      
+      // Allow create if:
+      // 1. User is authenticated and sets themselves as assigned coach (for independent teams)
+      // 2. User is a Presidente of the club the team is being created for (for club teams)
+      allow create: if isAuthenticated() && (
+        request.resource.data.assignedCoachId == request.auth.uid ||
+        (
+          'clubId' in request.resource.data &&
+          request.resource.data.clubId != null &&
+          isPresidenteOfClub(request.resource.data.clubId)
+        )
+      );
+      
+      // Allow update/delete only by the team's assigned coach
+      allow update, delete: if isAuthenticated() && 
+        resource.data.assignedCoachId == request.auth.uid;
+    }
+    
+    // =======================================================================
+    // PLAYERS AND MATCHES - Team-based permissions
+    // =======================================================================
+    
+    // Players collection rules
+    match /players/{playerId} {
+      // Allow read if authenticated (backward compatibility)
+      allow read: if isAuthenticated();
+      
+      // Allow create/update if user is the team owner
+      allow create, update: if isAuthenticated() && 
+        userIsTeamOwner(request.resource.data.teamId);
+      
+      // Allow delete if user is the team owner
+      allow delete: if isAuthenticated() && 
+        userIsTeamOwner(resource.data.teamId);
+    }
+    
+    // Matches collection rules
+    match /matches/{matchId} {
+      // Allow read if authenticated (backward compatibility)
+      allow read: if isAuthenticated();
+      
+      // Allow create/update if user is the team owner
+      allow create, update: if isAuthenticated() && 
+        userIsTeamOwner(request.resource.data.teamId);
+      
+      // Allow delete if user is the team owner
+      allow delete: if isAuthenticated() && 
+        userIsTeamOwner(resource.data.teamId);
+    }
+    
+    // =======================================================================
+    // MATCH-RELATED TOP-LEVEL COLLECTIONS
+    // =======================================================================
+    
+    // Goals collection
+    match /goals/{docId} {
+      allow read: if isAuthenticated();
+      
+      allow create, update: if isAuthenticated() && 
+        userIsTeamOwner(request.resource.data.teamId);
+    }
+    
+    // Substitutions collection
+    match /substitutions/{docId} {
+      allow read: if isAuthenticated();
+      
+      allow create, update: if isAuthenticated() && 
+        userIsTeamOwner(request.resource.data.teamId);
+    }
+    
+    // Player time history collection
+    match /playerTimeHistory/{docId} {
+      allow read: if isAuthenticated();
+      
+      allow create, update: if isAuthenticated() && 
+        userIsTeamOwner(request.resource.data.teamId);
+    }
+    
+    // Player times collection (current times)
+    match /playerTimes/{docId} {
+      allow read: if isAuthenticated();
+      
+      allow create, update: if isAuthenticated() && 
+        userIsTeamOwner(request.resource.data.teamId);
+      
+      allow delete: if isAuthenticated() && 
+        userIsTeamOwner(resource.data.teamId);
+    }
+    
+    // =======================================================================
+    // STATISTICS SUBCOLLECTIONS (optional enhanced permissions)
+    // =======================================================================
+    
+    // Team statistics subcollection
+    match /teams/{teamId}/teamStats/{statId} {
+      allow read: if isAuthenticated();
+      
+      allow create, update, delete: if isAuthenticated() && 
+        userIsTeamOwner(teamId);
+    }
+    
+    // Player statistics subcollection
+    match /players/{playerId}/playerStats/{statId} {
+      allow read: if isAuthenticated();
+      
+      allow create, update, delete: if isAuthenticated() && 
+        userIsTeamOwner(get(/databases/$(database)/documents/players/$(playerId)).data.teamId);
+    }
+    
+    // Match statistics subcollection
+    match /matches/{matchId}/matchStats/{statId} {
+      allow read: if isAuthenticated();
+      
+      allow create, update, delete: if isAuthenticated() && 
+        userIsTeamOwner(get(/databases/$(database)/documents/matches/$(matchId)).data.teamId);
+    }
+    
+    // Match-related subcollections wildcard (substitutions, timelineEvents, etc.)
+    match /matches/{matchId}/{document=**} {
+      allow read: if isAuthenticated();
+      
+      allow write: if isAuthenticated() && 
+        userIsTeamOwner(get(/databases/$(database)/documents/matches/$(matchId)).data.teamId);
+    }
+    
+    // =======================================================================
+    // USERS COLLECTION
+    // =======================================================================
+    
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && 
+        request.auth.uid == userId;
+    }
+  }
+}

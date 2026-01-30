@@ -113,6 +113,25 @@
     <string name="team_title">Team</string>
     <string name="team_list_title">Club Teams</string>
     <string name="no_teams_message">No teams yet. Create your first team!</string>
+    <string name="error_loading_teams">Unable to load teams. Please check your internet connection and try again.</string>
+    <string name="no_club_membership_teams_error">You need to join or create a club first to view teams.</string>
+    <string name="no_members_message">No staff members in your club yet. Invite members to join!</string>
+    <string name="error_loading_members">Unable to load staff members. Please check your internet connection and try again.</string>
+    <string name="no_club_membership_error">You need to join or create a club first to view staff members.</string>
+    <string name="share_team_button">Compartir</string>
+    <string name="share_team_title">Compartir Invitación de Equipo</string>
+    <string name="share_team_subject">Únete a %1$s como Entrenador</string>
+    <string name="share_team_message">¡Has sido invitado a ser el entrenador de %1$s! Haz clic en el enlace para aceptar: %2$s</string>
+
+    <!-- Team Invitation Acceptance Strings -->
+    <string name="accepting_team_invitation">Procesando invitación…</string>
+    <string name="redirecting_to_login">Por favor inicia sesión para aceptar la invitación…</string>
+    <string name="team_invitation_accepted">¡Invitación Aceptada!</string>
+    <string name="team_invitation_success_message">Ahora eres el entrenador de %1$s</string>
+    <string name="team_invitation_error">Error al Aceptar Invitación</string>
+    <string name="go_to_team">Ir al Equipo</string>
+    <string name="go_to_teams">Ir a Equipos</string>
+    <string name="retry">Reintentar</string>
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>
@@ -167,6 +186,8 @@
     <!-- Navigation -->
     <string name="nav_players">Team Roster</string>
     <string name="nav_team">Team</string>
+    <string name="nav_teams">Teams</string>
+    <string name="nav_staff">Staff</string>
     <string name="nav_matches">Matches</string>
     <string name="nav_analysis">Analysis</string>
 

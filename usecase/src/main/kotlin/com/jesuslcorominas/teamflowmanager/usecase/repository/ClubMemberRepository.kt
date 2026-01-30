@@ -12,6 +12,13 @@ interface ClubMemberRepository {
     fun getClubMemberByUserId(userId: String): Flow<ClubMember?>
 
     /**
+     * Get all members of a club.
+     * @param clubFirestoreId The Firestore document ID of the club
+     * @return Flow emitting list of club members
+     */
+    fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>>
+
+    /**
      * Create or update a club member.
      * @param userId The Firebase user ID
      * @param name The user's display name
@@ -29,4 +36,27 @@ interface ClubMemberRepository {
         clubFirestoreId: String,
         role: String
     ): ClubMember
+
+    /**
+     * Update the role of a club member.
+     * @param userId The Firebase user ID
+     * @param clubFirestoreId The club's Firestore document ID
+     * @param role The new role for the member
+     */
+    suspend fun updateClubMemberRole(
+        userId: String,
+        clubFirestoreId: String,
+        role: String
+    )
+
+    /**
+     * Get club member by user ID and club ID.
+     * @param userId The Firebase user ID
+     * @param clubFirestoreId The club's Firestore document ID
+     * @return The club member if found, null otherwise
+     */
+    suspend fun getClubMemberByUserIdAndClub(
+        userId: String,
+        clubFirestoreId: String
+    ): ClubMember?
 }

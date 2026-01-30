@@ -128,6 +128,7 @@ object AnalyticsParam {
 object ScreenName {
     const val TEAM = "Team"
     const val PLAYERS = "Players"
+    const val CLUB_MEMBERS = "Club Members"
     const val MATCHES = "Matches"
     const val MATCH_DETAIL = "Match Detail"
     const val ARCHIVED_MATCHES = "Archived Matches"

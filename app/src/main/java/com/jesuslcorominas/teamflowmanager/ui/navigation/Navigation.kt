@@ -14,9 +14,11 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
@@ -143,6 +145,10 @@ fun Navigation(
             TeamListScreen()
         }
 
+        composable(Route.ClubMembers.createRoute()) {
+            ClubMembersScreen()
+        }
+
         composable(Route.Players.createRoute()) {
             PlayersScreen(
                 onNavigateToCreatePlayer = {
@@ -227,6 +233,48 @@ fun Navigation(
                 onSignOut = {
                     navController.navigate(Route.Login.createRoute()) {
                         popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Route.AcceptTeamInvitation.FULL_ROUTE,
+            arguments = listOf(
+                navArgument(Route.AcceptTeamInvitation.ARG_TEAM_ID) {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            ),
+            deepLinks = listOf(
+                // Custom scheme deep link - always works
+                navDeepLink {
+                    uriPattern = "teamflowmanager://team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                },
+                // HTTPS deep link - requires server configuration
+                navDeepLink {
+                    uriPattern = "https://teamflowmanager.app/team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                }
+            )
+        ) {
+            AcceptTeamInvitationScreen(
+                onNavigateToLogin = { teamId ->
+                    // TODO: Implement proper state saving mechanism
+                    // Current limitation: teamId will be lost after login
+                    // Consider using SavedStateHandle or SharedPreferences to persist the teamId
+                    // so it can be retrieved after login is complete
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeam = {
+                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_VIEW)) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeams = {
+                    navController.navigate(Route.TeamList.createRoute()) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
                     }
                 }
             )

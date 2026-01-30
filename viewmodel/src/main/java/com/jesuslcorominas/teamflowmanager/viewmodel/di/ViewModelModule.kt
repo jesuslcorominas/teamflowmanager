@@ -1,7 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
+import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
@@ -26,7 +28,8 @@ val viewModelModule =
         viewModel {
             MainViewModel(
                 hasNotificationPermissionBeenRequestedUseCase = get(),
-                setNotificationPermissionRequestedUseCase = get()
+                setNotificationPermissionRequestedUseCase = get(),
+                getUserClubMembership = get()
             )
         }
 
@@ -108,6 +111,13 @@ val viewModelModule =
         viewModel {
             TeamListViewModel(
                 getTeamsByClub = get(),
+                getUserClubMembership = get(),
+                generateTeamInvitation = get()
+            )
+        }
+        viewModel {
+            ClubMembersViewModel(
+                getClubMembers = get(),
                 getUserClubMembership = get()
             )
         }
@@ -190,6 +200,14 @@ val viewModelModule =
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
                 analyticsTracker = get()
+            )
+        }
+
+        viewModel {
+            AcceptTeamInvitationViewModel(
+                savedStateHandle = get(),
+                acceptTeamInvitation = get(),
+                getCurrentUser = get()
             )
         }
 
