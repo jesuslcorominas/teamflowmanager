@@ -105,9 +105,17 @@ service cloud.firestore {
       // Plus hierarchical permissions for club Presidente
       allow read: if isAuthenticated();
       
-      // Allow create if user is authenticated and sets themselves as assigned coach
-      allow create: if isAuthenticated() && 
-        request.resource.data.assignedCoachId == request.auth.uid;
+      // Allow create if:
+      // 1. User is authenticated and sets themselves as assigned coach (for independent teams)
+      // 2. User is a Presidente of the club the team is being created for (for club teams)
+      allow create: if isAuthenticated() && (
+        request.resource.data.assignedCoachId == request.auth.uid ||
+        (
+          'clubId' in request.resource.data &&
+          request.resource.data.clubId != null &&
+          isPresidenteOfClub(request.resource.data.clubId)
+        )
+      );
       
       // Allow update/delete only by the team's assigned coach
       allow update, delete: if isAuthenticated() && 
