@@ -56,11 +56,11 @@ internal class JoinClubByCodeUseCaseImpl(
         try {
             // Step 1: Link orphan team to club if exists
             if (orphanTeam != null) {
-                require(orphanTeam.coachId != null) {
-                    "Orphan team must have a coachId (document ID)"
+                require(orphanTeam.firestoreId != null) {
+                    "Orphan team must have a firestoreId (Firestore document ID)"
                 }
                 teamRepository.updateTeamClubId(
-                    teamCoachId = orphanTeam.coachId!!,
+                    teamFirestoreId = orphanTeam.firestoreId!!,
                     clubId = club.id,
                     clubFirestoreId = club.firestoreId!!
                 )

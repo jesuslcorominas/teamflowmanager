@@ -14,8 +14,12 @@ This replaces the deprecated **Firebase Dynamic Links** with a custom solution u
 
 - **`index.js`** - Cloud Functions code (createShortLink, redirectShortLink)
 - **`package.json`** - Node.js dependencies
-- **`firebase.json`** - Firebase configuration (rewrites, hosting)
+- **`firebase.json`** - Local Firebase configuration (functions, hosting)
 - **`public/index.html`** - Landing page
+
+**Note**: The main Firebase configuration including Firestore rules is now at the project root:
+- **`../firebase.json`** - Main Firebase project configuration
+- **`../firestore.rules`** - Firestore security rules
 
 ## Quick Start
 
@@ -27,8 +31,18 @@ npm install
 
 ### 2. Deploy
 
+Deploy everything (from project root):
 ```bash
+firebase deploy
+```
+
+Or deploy specific components:
+```bash
+# Deploy only Cloud Functions and Hosting
 firebase deploy --only functions,hosting
+
+# Deploy only Firestore rules (from project root)
+firebase deploy --only firestore:rules
 ```
 
 ### 3. Test
