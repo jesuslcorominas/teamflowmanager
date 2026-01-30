@@ -106,11 +106,11 @@ internal val ktorfitModule =
         // Configure Ktor HttpClient
         single {
             HttpClient(OkHttp) {
-                // Timeout configuration
+                // Timeout configuration  
                 install(HttpTimeout) {
-                    requestTimeoutMillis = 30_000 // 30 seconds total request timeout
-                    connectTimeoutMillis = 10_000 // 10 seconds to establish connection
-                    socketTimeoutMillis = 30_000   // 30 seconds for socket read/write
+                    requestTimeoutMillis = 5_000  // 5 seconds total request timeout
+                    connectTimeoutMillis = 3_000  // 3 seconds to establish connection
+                    socketTimeoutMillis = 5_000   // 5 seconds for socket read/write
                 }
 
                 // Content negotiation for JSON serialization

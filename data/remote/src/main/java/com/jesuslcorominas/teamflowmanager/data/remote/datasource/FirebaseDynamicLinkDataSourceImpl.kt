@@ -41,14 +41,28 @@ internal class FirebaseDynamicLinkDataSourceImpl(
             )
 
             Log.d(TAG, "Calling Cloud Function to create short link for team: $teamName")
-            val response = shortLinkApi.createShortLink(request)
-
+            
+            // Make the API call - this is a suspend function that should complete or throw
+            val response = try {
+                shortLinkApi.createShortLink(request)
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception while calling shortLinkApi.createShortLink", e)
+                Log.e(TAG, "Exception type: ${e.javaClass.simpleName}")
+                Log.e(TAG, "Exception message: ${e.message}")
+                e.printStackTrace()
+                throw e
+            }
+            
+            Log.d(TAG, "Received response from Cloud Function")
+            Log.d(TAG, "Response shortLink: ${response.shortLink}")
+            Log.d(TAG, "Response linkId: ${response.linkId}")
             Log.d(TAG, "Successfully created short link: ${response.shortLink}")
             response.shortLink
         } catch (e: Exception) {
             // If any error occurs, fall back to custom scheme
             Log.e(TAG, "Error creating short link via Cloud Function. This usually means the Cloud Functions are not deployed yet.", e)
             Log.e(TAG, "Error details: ${e.message}")
+            Log.e(TAG, "Error type: ${e.javaClass.name}")
             Log.w(TAG, "Falling back to custom scheme (not clickable in WhatsApp)")
             
             createFallbackLink(teamFirestoreId, teamName)
