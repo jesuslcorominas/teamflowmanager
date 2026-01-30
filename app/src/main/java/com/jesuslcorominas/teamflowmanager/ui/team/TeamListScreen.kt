@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.team
 
 import android.content.Intent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,11 +11,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,34 +66,52 @@ fun TeamListScreen(
         }
     }
 
-    when (val state = uiState) {
-        is TeamListViewModel.UiState.Loading -> {
-            Loading()
-        }
-        is TeamListViewModel.UiState.Success -> {
-            if (state.teams.isEmpty()) {
-                EmptyTeamsMessage(modifier = Modifier.fillMaxSize())
-            } else {
-                TeamsListContent(
-                    teams = state.teams,
-                    modifier = Modifier.fillMaxSize(),
-                    onTeamClick = onTeamClick,
-                    onShareTeam = { team -> viewModel.shareTeam(team) },
-                    sharingTeamId = sharingTeamId
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val state = uiState) {
+            is TeamListViewModel.UiState.Loading -> {
+                Loading()
+            }
+            is TeamListViewModel.UiState.Success -> {
+                if (state.teams.isEmpty()) {
+                    EmptyTeamsMessage(modifier = Modifier.fillMaxSize())
+                } else {
+                    TeamsListContent(
+                        teams = state.teams,
+                        modifier = Modifier.fillMaxSize(),
+                        onTeamClick = onTeamClick,
+                        onShareTeam = { team -> viewModel.shareTeam(team) },
+                        sharingTeamId = sharingTeamId
+                    )
+                }
+            }
+            is TeamListViewModel.UiState.Error -> {
+                ErrorMessage(
+                    message = stringResource(R.string.error_loading_teams),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            is TeamListViewModel.UiState.NoClubMembership -> {
+                ErrorMessage(
+                    message = stringResource(R.string.no_club_membership_teams_error),
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }
-        is TeamListViewModel.UiState.Error -> {
-            ErrorMessage(
-                message = stringResource(R.string.error_loading_teams),
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-        is TeamListViewModel.UiState.NoClubMembership -> {
-            ErrorMessage(
-                message = stringResource(R.string.no_club_membership_teams_error),
-                modifier = Modifier.fillMaxSize()
-            )
+        
+        // Show full-screen loading overlay while sharing
+        if (sharingTeamId != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                    .clickable(enabled = false) { }, // Block all clicks
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
