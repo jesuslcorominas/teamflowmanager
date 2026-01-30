@@ -17,9 +17,9 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/teams/$(teamId));
     }
     
-    // Helper function to check if user is team owner (ownerId field)
+    // Helper function to check if user is team owner (assignedCoachId field)
     function userIsTeamOwner(teamId) {
-      return isAuthenticated() && getTeam(teamId).data.ownerId == request.auth.uid;
+      return isAuthenticated() && getTeam(teamId).data.assignedCoachId == request.auth.uid;
     }
     
     // Helper function to check if user is club owner
@@ -27,9 +27,9 @@ service cloud.firestore {
       return isAuthenticated() && getClub(clubId).data.ownerId == request.auth.uid;
     }
     
-    // Helper function to check if user is team coach (ownerId in teams collection)
+    // Helper function to check if user is team coach (assignedCoachId in teams collection)
     function isTeamCoach(teamId) {
-      return isAuthenticated() && getTeam(teamId).data.ownerId == request.auth.uid;
+      return isAuthenticated() && getTeam(teamId).data.assignedCoachId == request.auth.uid;
     }
     
     // Helper function to check if user is "Presidente" of the club linked to a team
@@ -105,13 +105,13 @@ service cloud.firestore {
       // Plus hierarchical permissions for club Presidente
       allow read: if isAuthenticated();
       
-      // Allow create if user is authenticated and sets themselves as owner
+      // Allow create if user is authenticated and sets themselves as assigned coach
       allow create: if isAuthenticated() && 
-        request.resource.data.ownerId == request.auth.uid;
+        request.resource.data.assignedCoachId == request.auth.uid;
       
-      // Allow update/delete only by the team owner (coach)
+      // Allow update/delete only by the team's assigned coach
       allow update, delete: if isAuthenticated() && 
-        resource.data.ownerId == request.auth.uid;
+        resource.data.assignedCoachId == request.auth.uid;
     }
     
     // =======================================================================

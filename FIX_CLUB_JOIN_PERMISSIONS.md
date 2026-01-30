@@ -1,26 +1,33 @@
 # Club Join Permissions Fix - Summary
 
-## Issue
-Users were unable to join clubs using invitation codes due to a circular dependency in Firestore security rules.
+## Issues
+1. Users were unable to join clubs using invitation codes due to a circular dependency in Firestore security rules.
+2. The `updateTeamClubId` operation was failing due to field name mismatch in Firestore rules.
 
-## Root Cause
+## Root Causes
+
+### Issue 1: Circular Dependency
 The Firestore security rules had a catch-22 situation:
 1. To create a `clubMember` document, the rules check if the club exists with `exists()`
 2. Reading the club (via `exists()`) required being the owner OR already a member
 3. But users can't be members yet - they're trying to join!
 
+### Issue 2: Field Name Mismatch
+The Firestore security rules checked for `resource.data.ownerId` for team permissions, but the actual team documents use `assignedCoachId` field instead. This caused all team update operations (including linking teams to clubs) to fail with permission denied errors.
+
 ## Solution Implemented
 
 ### Files Created
-1. **`firestore.rules`** - Complete Firestore security rules with the fix
+1. **`firestore.rules`** - Complete Firestore security rules with both fixes
 2. **`firebase.json`** - Firebase project configuration
 3. **`FIRESTORE_RULES_DEPLOYMENT.md`** - Comprehensive deployment guide
 
 ### Files Modified
 4. **`firebase-functions/README.md`** - Updated to reference new configuration structure
 
-## The Fix
+## The Fixes
 
+### Fix 1: Club Read Access
 Changed the clubs collection read rule from restrictive to authenticated-only:
 
 **Before** (problematic):
@@ -39,6 +46,35 @@ match /clubs/{clubId} {
   // Permitir a cualquier usuario autenticado leer clubs
   // Necesario para el flujo de unirse por código de invitación
   allow read: if isAuthenticated();
+}
+```
+
+### Fix 2: Team Field Name Correction
+Changed all team-related rules to use `assignedCoachId` instead of `ownerId`:
+
+**Before** (problematic):
+```javascript
+// Helper function uses wrong field name
+function userIsTeamOwner(teamId) {
+  return isAuthenticated() && getTeam(teamId).data.ownerId == request.auth.uid;
+}
+
+match /teams/{teamId} {
+  allow update, delete: if isAuthenticated() && 
+    resource.data.ownerId == request.auth.uid;
+}
+```
+
+**After** (fixed):
+```javascript
+// Helper function uses correct field name
+function userIsTeamOwner(teamId) {
+  return isAuthenticated() && getTeam(teamId).data.assignedCoachId == request.auth.uid;
+}
+
+match /teams/{teamId} {
+  allow update, delete: if isAuthenticated() && 
+    resource.data.assignedCoachId == request.auth.uid;
 }
 ```
 

@@ -2,21 +2,30 @@
 
 ## Issue Summary
 
-**Problem**: Users cannot join a club using an invitation code because of a circular dependency in the Firestore security rules.
+**Problem 1**: Users cannot join a club using an invitation code because of a circular dependency in the Firestore security rules.
 
-**Root Cause**: The current Firestore rules create a catch-22 situation:
+**Root Cause 1**: The current Firestore rules create a catch-22 situation:
 1. To create a `clubMember` document, the security rules check if the club exists using `exists()`
 2. The `exists()` function triggers a read operation on the clubs collection
 3. The clubs read permission requires the user to be the owner OR already be a club member
 4. But the user can't be a member yet - they're trying to join for the first time!
 
-**Solution**: Allow any authenticated user to read clubs. This is the fix shown in the issue's problem statement and documented in `FIRESTORE_RULES_FIX.md`.
+**Solution 1**: Allow any authenticated user to read clubs. This is the fix shown in the issue's problem statement and documented in `FIRESTORE_RULES_FIX.md`.
+
+**Problem 2**: The `updateTeamClubId` call fails during club joining because the Firestore rules use `ownerId` for teams, but the actual team documents use `assignedCoachId`.
+
+**Root Cause 2**: Field name mismatch between Firestore rules and actual data model:
+- Firestore rules check: `resource.data.ownerId == request.auth.uid`
+- Actual team documents have: `assignedCoachId` field (not `ownerId`)
+
+**Solution 2**: Update Firestore rules to use `assignedCoachId` instead of `ownerId` for team-related permissions.
 
 ## Files Created/Modified
 
 ### 1. `/firestore.rules` (NEW)
-Complete Firestore security rules with the fix applied. The key change is in the clubs collection:
+Complete Firestore security rules with the fixes applied. The key changes are:
 
+**Fix 1 - Clubs collection:**
 ```javascript
 // Clubs collection rules
 match /clubs/{clubId} {
@@ -28,14 +37,40 @@ match /clubs/{clubId} {
 }
 ```
 
-**Previous problematic rule** (from issue description, not actually found in repo):
+**Fix 2 - Teams collection and helper functions:**
 ```javascript
+// Helper function to check if user is team owner (assignedCoachId field)
+function userIsTeamOwner(teamId) {
+  return isAuthenticated() && getTeam(teamId).data.assignedCoachId == request.auth.uid;
+}
+
+// Teams collection rules
+match /teams/{teamId} {
+  allow read: if isAuthenticated();
+  
+  // Allow create if user is authenticated and sets themselves as assigned coach
+  allow create: if isAuthenticated() && 
+    request.resource.data.assignedCoachId == request.auth.uid;
+  
+  // Allow update/delete only by the team's assigned coach
+  allow update, delete: if isAuthenticated() && 
+    resource.data.assignedCoachId == request.auth.uid;
+}
+```
+
+**Previous problematic rules:**
+```javascript
+// Problem 1: User needs to be owner or member to read clubs
 match /clubs/{clubId} {
-  // Problem: User needs to be owner or member to read
   allow read: if isAuthenticated() && (
     resource.data.ownerId == request.auth.uid ||
     exists(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId))
   );
+}
+
+// Problem 2: Teams use ownerId instead of assignedCoachId
+function userIsTeamOwner(teamId) {
+  return isAuthenticated() && getTeam(teamId).data.ownerId == request.auth.uid;
 }
 ```
 
