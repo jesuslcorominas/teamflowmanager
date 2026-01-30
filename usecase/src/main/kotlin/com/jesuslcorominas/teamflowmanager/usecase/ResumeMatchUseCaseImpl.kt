@@ -32,6 +32,7 @@ internal class ResumeMatchUseCaseImpl(
         // Step 1: Create operation with IN_PROGRESS status
         val operation = MatchOperation(
             matchId = matchId,
+            teamId = match.teamId,
             type = MatchOperationType.RESUME,
             status = MatchOperationStatus.IN_PROGRESS,
             createdAt = currentTimeMillis

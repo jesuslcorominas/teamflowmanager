@@ -35,6 +35,7 @@ internal class FinishMatchUseCaseImpl(
             // Step 1: Create operation with IN_PROGRESS status
             val operation = MatchOperation(
                 matchId = matchId,
+                teamId = match.teamId,
                 type = MatchOperationType.FINISH,
                 status = MatchOperationStatus.IN_PROGRESS,
                 createdAt = currentTime

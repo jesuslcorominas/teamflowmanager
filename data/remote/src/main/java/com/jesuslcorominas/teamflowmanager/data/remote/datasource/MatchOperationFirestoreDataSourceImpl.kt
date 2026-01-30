@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchOperationFirestoreModel
@@ -16,18 +17,57 @@ import kotlin.coroutines.cancellation.CancellationException
  */
 class MatchOperationFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
+    private val firebaseAuth: FirebaseAuth,
 ) : MatchOperationDataSource {
 
     companion object {
         private const val TAG = "MatchOperationFirestoreDS"
         private const val OPERATIONS_COLLECTION = "matchOperations"
+        private const val TEAMS_COLLECTION = "teams"
+    }
+
+    /**
+     * Gets the team's Firestore document ID for the current authenticated user.
+     */
+    private suspend fun getTeamDocumentId(): String? {
+        val currentUserId = firebaseAuth.currentUser?.uid
+        if (currentUserId == null) {
+            Log.w(TAG, "getTeamDocumentId: No authenticated user")
+            return null
+        }
+
+        return try {
+            val snapshot = firestore.collection(TEAMS_COLLECTION)
+                .whereEqualTo("assignedCoachId", currentUserId)
+                .limit(1)
+                .get()
+                .await()
+
+            val teamDocId = snapshot.documents.firstOrNull()?.id
+            Log.d(TAG, "getTeamDocumentId: Found teamDocId=$teamDocId")
+            teamDocId
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "getTeamDocumentId: Error getting team document ID", e)
+            null
+        }
     }
 
     override suspend fun createOperation(operation: MatchOperation): String {
         Log.d(TAG, "createOperation: type=${operation.type}, matchId=${operation.matchId}")
 
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.e(TAG, "createOperation: No team found, cannot create operation")
+            throw IllegalStateException("Team must exist to create operation")
+        }
+
         val docRef = firestore.collection(OPERATIONS_COLLECTION).document()
-        val firestoreModel = operation.toFirestoreModel().copy(id = docRef.id)
+        val firestoreModel = operation.toFirestoreModel().copy(
+            id = docRef.id,
+            teamId = teamDocId
+        )
 
         return try {
             docRef.set(firestoreModel).await()
@@ -49,7 +89,13 @@ class MatchOperationFirestoreDataSourceImpl(
             throw IllegalArgumentException("Operation ID cannot be empty")
         }
 
-        val firestoreModel = operation.toFirestoreModel()
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.e(TAG, "updateOperation: No team found, cannot update operation")
+            throw IllegalStateException("Team must exist to update operation")
+        }
+
+        val firestoreModel = operation.toFirestoreModel().copy(teamId = teamDocId)
 
         try {
             firestore.collection(OPERATIONS_COLLECTION)

@@ -158,6 +158,17 @@ service cloud.firestore {
     // MATCH-RELATED TOP-LEVEL COLLECTIONS
     // =======================================================================
     
+    // Match operations collection - for atomic operations tracking
+    match /matchOperations/{operationId} {
+      // Allow read if authenticated
+      allow read: if isAuthenticated();
+      
+      // Allow create/update if user owns the team in the operation
+      // teamId in the operation is the Firestore team document ID
+      allow create, update: if isAuthenticated() && 
+        userIsTeamOwner(request.resource.data.teamId);
+    }
+    
     // Goals collection
     match /goals/{docId} {
       allow read: if isAuthenticated();
