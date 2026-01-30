@@ -35,6 +35,7 @@ import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -105,6 +106,13 @@ internal val ktorfitModule =
         // Configure Ktor HttpClient
         single {
             HttpClient(OkHttp) {
+                // Timeout configuration
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 30_000 // 30 seconds total request timeout
+                    connectTimeoutMillis = 10_000 // 10 seconds to establish connection
+                    socketTimeoutMillis = 30_000   // 30 seconds for socket read/write
+                }
+
                 // Content negotiation for JSON serialization
                 install(ContentNegotiation) {
                     json(get())
