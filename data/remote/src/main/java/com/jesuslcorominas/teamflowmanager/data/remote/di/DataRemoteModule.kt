@@ -16,6 +16,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSo
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
+import com.jesuslcorominas.teamflowmanager.data.remote.api.createShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
@@ -106,7 +107,7 @@ internal val ktorfitModule =
         // Configure Ktor HttpClient
         single {
             HttpClient(OkHttp) {
-                // Timeout configuration  
+                // Timeout configuration
                 install(HttpTimeout) {
                     requestTimeoutMillis = 5_000  // 5 seconds total request timeout
                     connectTimeoutMillis = 3_000  // 3 seconds to establish connection
