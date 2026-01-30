@@ -55,6 +55,8 @@ Firebase project configuration that references the firestore.rules file:
 }
 ```
 
+**Note**: The previous `firebase-functions/firebase.json` has been replaced by this root-level configuration. The old file has been archived as `firebase-functions/DEPRECATED_firebase.json.md` for reference.
+
 ## Security Justification
 
 ### Why is it safe to allow all authenticated users to read clubs?

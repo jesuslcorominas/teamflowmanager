@@ -92,7 +92,7 @@ service cloud.firestore {
 
       // Allow update/delete only by club owner
       allow update, delete: if isAuthenticated() && 
-        isClubOwner(request.resource.data.clubId);
+        isClubOwner(resource.data.clubId);
     }	
     
     // =======================================================================
