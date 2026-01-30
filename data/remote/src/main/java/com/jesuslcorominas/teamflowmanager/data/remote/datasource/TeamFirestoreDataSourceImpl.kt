@@ -281,8 +281,8 @@ class TeamFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun updateTeamClubId(teamCoachId: String, clubId: Long, clubFirestoreId: String) {
-        require(teamCoachId.isNotBlank()) { "Team coach ID cannot be blank" }
+    override suspend fun updateTeamClubId(teamFirestoreId: String, clubId: Long, clubFirestoreId: String) {
+        require(teamFirestoreId.isNotBlank()) { "Team Firestore ID cannot be blank" }
         require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
 
         try {
@@ -293,11 +293,11 @@ class TeamFirestoreDataSourceImpl(
             // Use set with merge to ensure the operation succeeds even if the document
             // doesn't have all fields yet
             firestore.collection(TEAMS_COLLECTION)
-                .document(teamCoachId)
+                .document(teamFirestoreId)
                 .set(updates, com.google.firebase.firestore.SetOptions.merge())
                 .await()
 
-            Log.d(TAG, "Team $teamCoachId linked to club $clubFirestoreId")
+            Log.d(TAG, "Team $teamFirestoreId linked to club $clubFirestoreId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

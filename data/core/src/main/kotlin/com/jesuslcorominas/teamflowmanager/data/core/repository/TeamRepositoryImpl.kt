@@ -30,8 +30,8 @@ internal class TeamRepositoryImpl(
         return teamDataSource.getOrphanTeams(ownerId)
     }
 
-    override suspend fun updateTeamClubId(teamCoachId: String, clubId: Long, clubFirestoreId: String) {
-        teamDataSource.updateTeamClubId(teamCoachId, clubId, clubFirestoreId)
+    override suspend fun updateTeamClubId(teamFirestoreId: String, clubId: Long, clubFirestoreId: String) {
+        teamDataSource.updateTeamClubId(teamFirestoreId, clubId, clubFirestoreId)
     }
 
     override suspend fun getTeamByFirestoreId(teamFirestoreId: String): Team? {
