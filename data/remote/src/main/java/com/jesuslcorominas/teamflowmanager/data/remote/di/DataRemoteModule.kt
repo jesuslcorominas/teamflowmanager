@@ -141,8 +141,9 @@ internal val ktorfitModule =
         }
 
         // API interfaces
+        // Use the generated extension function instead of deprecated create()
         single<ShortLinkApi> {
-            get<Ktorfit>().create()
+            get<Ktorfit>().createShortLinkApi()
         }
     }
 
