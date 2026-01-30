@@ -4,7 +4,7 @@
   },
   "functions": {
     "source": "firebase-functions",
-    "runtime": "nodejs18"
+    "runtime": "nodejs20"
   },
   "hosting": {
     "public": "firebase-functions/public",
