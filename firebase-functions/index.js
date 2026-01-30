@@ -1,6 +1,6 @@
 /**
  * Firebase Cloud Functions for Team Flow Manager
- * 
+ *
  * Provides short link generation and redirection for team invitations.
  * This replaces deprecated Firebase Dynamic Links with a custom solution
  * using Firebase Hosting + Cloud Functions.
@@ -13,71 +13,82 @@ admin.initializeApp();
 
 /**
  * Generate a short link for team invitation.
- * 
+ *
  * This function stores the team invitation data in Firestore and returns
  * a short link that can be shared via WhatsApp, Email, SMS, etc.
- * 
+ *
  * POST /api/createShortLink
  * Body: { teamId: string, teamName: string }
  * Response: { shortLink: string, linkId: string }
  */
-exports.createShortLink = functions.https.onRequest(async (req, res) => {
-  // Enable CORS for your domain
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
+exports.createShortLink = functions
+  .runWith({ timeoutSeconds: 30 })
+  .https.onRequest(async (req, res) => {
+    // CORS
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
-
-  if (req.method !== 'POST') {
-    res.status(405).send('Method Not Allowed');
-    return;
-  }
-
-  try {
-    const { teamId, teamName } = req.body;
-
-    if (!teamId || !teamName) {
-      res.status(400).json({ error: 'teamId and teamName are required' });
-      return;
+    // Preflight
+    if (req.method === 'OPTIONS') {
+      return res.status(204).send('');
     }
 
-    // Generate a unique short ID (6 characters, URL-safe)
-    const shortId = generateShortId();
+    // Only POST allowed
+    if (req.method !== 'POST') {
+      return res.status(405).send('Method Not Allowed');
+    }
 
-    // Store link data in Firestore
-    await admin.firestore().collection('shortLinks').doc(shortId).set({
-      teamId,
-      teamName,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      clicks: 0,
-    });
+    try {
+      const { teamId, teamName } = req.body;
 
-    // Return the short link
-    const shortLink = `https://teamflowmanager.web.app/l/${shortId}`;
-    
-    res.json({ 
-      shortLink,
-      linkId: shortId
-    });
+      if (!teamId || !teamName) {
+        return res.status(400).json({
+          error: 'teamId and teamName are required'
+        });
+      }
 
-  } catch (error) {
-    console.error('Error creating short link:', error);
-    res.status(500).json({ error: 'Failed to create short link' });
-  }
-});
+      // Generate short ID
+      const shortId = generateShortId();
+
+      // Persist in Firestore
+      await admin.firestore().collection('shortLinks').doc(shortId).set({
+        teamId,
+        teamName,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        clicks: 0,
+      });
+
+      const shortLink = `https://teamflowmanager.web.app/l/${shortId}`;
+
+      console.log('[createShortLink] Sending response', {
+        shortId,
+        teamId,
+        teamName
+      });
+
+      // IMPORTANT: return the response
+      return res.status(200).json({
+        shortLink,
+        linkId: shortId
+      });
+
+    } catch (error) {
+      console.error('[createShortLink] Error creating short link:', error);
+
+      return res.status(500).json({
+        error: 'Failed to create short link'
+      });
+    }
+  });
 
 /**
  * Redirect short link to app or Play Store.
- * 
+ *
  * This function handles the redirection logic:
  * - On Android: Opens app with deep link
  * - On other platforms or if app not installed: Redirects to Play Store
- * 
+ *
  * GET /l/:linkId
  */
 exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
@@ -125,12 +136,12 @@ exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Únete a ${escapeHtml(teamName)} - Team Flow Manager</title>
   <meta name="description" content="Has sido invitado a ser el entrenador de ${escapeHtml(teamName)}">
-  
+
   <!-- Open Graph meta tags for rich sharing -->
   <meta property="og:title" content="Únete a ${escapeHtml(teamName)}">
   <meta property="og:description" content="Has sido invitado a ser el entrenador de ${escapeHtml(teamName)} en Team Flow Manager">
   <meta property="og:type" content="website">
-  
+
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -188,15 +199,15 @@ exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
     // Try to open the app with deep link
     const deepLink = ${JSON.stringify(deepLink)};
     const playStore = ${JSON.stringify(playStoreLink)};
-    
+
     // Attempt app launch
     window.location.href = deepLink;
-    
+
     // If still on page after 2 seconds, app is not installed
     setTimeout(() => {
       document.getElementById('loadingText').textContent = 'La aplicación no está instalada. Haz clic para descargarla.';
     }, 2000);
-    
+
     // Also set a timeout to redirect to Play Store
     setTimeout(() => {
       window.location.href = playStore;
