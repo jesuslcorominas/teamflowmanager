@@ -22,6 +22,7 @@ sealed class Route(
                 Players,
                 Team,
                 TeamList,
+                ClubMembers,
                 Matches,
                 ArchivedMatches,
                 CreateMatch,
@@ -29,6 +30,7 @@ sealed class Route(
                 Match,
                 Analysis,
                 Settings,
+                AcceptTeamInvitation,
             )
         }
 
@@ -120,9 +122,16 @@ sealed class Route(
     data object TeamList : Route(
         path = "team_list",
         showTopBar = true,
-        showBottomBar = false,
+        showBottomBar = true,
         showFab = true,
         hasSearchBar = false,
+        showSettingsButton = true
+    )
+
+    data object ClubMembers : Route(
+        path = "club_members",
+        showTopBar = true,
+        showBottomBar = true,
         showSettingsButton = true
     )
 
@@ -150,4 +159,13 @@ sealed class Route(
     }
 
     data object Analysis : Route(path = "analysis", showBottomBar = true, showSettingsButton = true)
+
+    data object AcceptTeamInvitation : Route(path = "accept_team_invitation", showTopBar = false) {
+        const val ARG_TEAM_ID = "teamId"
+        private const val PATH = "accept_team_invitation"
+
+        const val FULL_ROUTE = "$PATH?$ARG_TEAM_ID={$ARG_TEAM_ID}"
+
+        fun createRoute(teamId: String): String = "$PATH?$ARG_TEAM_ID=$teamId"
+    }
 }

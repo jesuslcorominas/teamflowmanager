@@ -6,6 +6,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
@@ -14,9 +15,12 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstituti
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
+import com.jesuslcorominas.teamflowmanager.data.remote.api.createShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseDynamicLinkDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseStorageDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirestoreTimeProvider
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreDataSourceImpl
@@ -30,11 +34,14 @@ import com.jesuslcorominas.teamflowmanager.data.remote.transaction.FirestoreTran
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import de.jensklingenberg.ktorfit.Ktorfit
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -56,6 +63,11 @@ internal val firebaseModule =
         single { FirebaseStorage.getInstance() }
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
+        single<DynamicLinkDataSource> {
+            FirebaseDynamicLinkDataSourceImpl(
+                shortLinkApi = get()
+            )
+        }
         singleOf(::FirestoreTimeProvider) bind TimeProvider::class
         singleOf(::FirestoreTransactionRunner) bind TransactionRunner::class
     }
@@ -95,12 +107,21 @@ internal val ktorfitModule =
         // Configure Ktor HttpClient
         single {
             HttpClient(OkHttp) {
+                // Timeout configuration
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 5_000  // 5 seconds total request timeout
+                    connectTimeoutMillis = 3_000  // 3 seconds to establish connection
+                    socketTimeoutMillis = 5_000   // 5 seconds for socket read/write
+                }
+
                 // Content negotiation for JSON serialization
                 install(ContentNegotiation) {
                     json(get())
                 }
 
-                // Logging for debugging
+                // Logging for debugging (disabled in production to avoid performance issues)
+                // The LogLevel.BODY setting can cause timeouts by blocking the response handling
+                // Use LogLevel.INFO or HEADERS for production, or disable entirely
                 install(Logging) {
                     logger =
                         object : Logger {
@@ -108,7 +129,7 @@ internal val ktorfitModule =
                                 println("Ktor HTTP Client: $message")
                             }
                         }
-                    level = LogLevel.BODY // Log request/response bodies
+                    level = LogLevel.INFO // Use INFO instead of BODY to avoid blocking
                 }
             }
         }
@@ -118,13 +139,15 @@ internal val ktorfitModule =
             Ktorfit
                 .Builder()
                 .httpClient(get<HttpClient>()) // Use the configured HttpClient
-                .baseUrl("https://api.example.com/") // Replace with your actual base URL
+                .baseUrl("https://us-central1-teamflow-manager-dev.cloudfunctions.net/") // Direct Cloud Functions URL
                 .build()
         }
 
-        // Add your API interfaces here
-        // Example:
-        // single<SampleApi> { get<Ktorfit>().create() }
+        // API interfaces
+        // Use the generated extension function instead of deprecated create()
+        single<ShortLinkApi> {
+            get<Ktorfit>().createShortLinkApi()
+        }
     }
 
 val dataRemoteModule =
