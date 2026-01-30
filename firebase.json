@@ -1,0 +1,27 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": {
+    "source": "firebase-functions",
+    "runtime": "nodejs18"
+  },
+  "hosting": {
+    "public": "firebase-functions/public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/l/**",
+        "function": "redirectShortLink"
+      },
+      {
+        "source": "/api/createShortLink",
+        "function": "createShortLink"
+      }
+    ]
+  }
+}
