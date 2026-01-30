@@ -21,7 +21,7 @@ internal interface ShortLinkApi {
      * @return Response with the generated short link URL
      */
     @OptIn(InternalSerializationApi::class)
-    @POST("api/createShortLink")
+    @POST("createShortLink")
     @Headers("Content-Type: application/json")
     suspend fun createShortLink(@Body request: CreateShortLinkRequest): CreateShortLinkResponse
 }

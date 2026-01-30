@@ -136,7 +136,7 @@ internal val ktorfitModule =
             Ktorfit
                 .Builder()
                 .httpClient(get<HttpClient>()) // Use the configured HttpClient
-                .baseUrl("https://teamflowmanager.web.app/") // Firebase Hosting base URL
+                .baseUrl("https://us-central1-teamflow-manager-dev.cloudfunctions.net/") // Direct Cloud Functions URL
                 .build()
         }
 
