@@ -47,6 +47,7 @@ fun TeamListScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val shareEvent by viewModel.shareEvent.collectAsState()
+    val sharingTeamId by viewModel.sharingTeamId.collectAsState()
     val context = LocalContext.current
 
     // Handle share event
@@ -74,7 +75,8 @@ fun TeamListScreen(
                     teams = state.teams,
                     modifier = Modifier.fillMaxSize(),
                     onTeamClick = onTeamClick,
-                    onShareTeam = { team -> viewModel.shareTeam(team) }
+                    onShareTeam = { team -> viewModel.shareTeam(team) },
+                    sharingTeamId = sharingTeamId
                 )
             }
         }
@@ -117,7 +119,8 @@ private fun TeamsListContent(
     teams: List<Team>,
     modifier: Modifier = Modifier,
     onTeamClick: (Team) -> Unit,
-    onShareTeam: (Team) -> Unit
+    onShareTeam: (Team) -> Unit,
+    sharingTeamId: String?
 ) {
     LazyColumn(
         modifier = modifier.padding(16.dp),
@@ -127,7 +130,8 @@ private fun TeamsListContent(
             TeamCard(
                 team = team,
                 onClick = { onTeamClick(team) },
-                onShare = { onShareTeam(team) }
+                onShare = { onShareTeam(team) },
+                isSharing = team.firestoreId == sharingTeamId
             )
         }
     }
@@ -137,7 +141,8 @@ private fun TeamsListContent(
 private fun TeamCard(
     team: Team,
     onClick: () -> Unit,
-    onShare: () -> Unit
+    onShare: () -> Unit,
+    isSharing: Boolean = false
 ) {
     AppCard(
         modifier = Modifier.clickable(onClick = onClick)
@@ -161,10 +166,18 @@ private fun TeamCard(
                 
                 // Show share icon button only if team has no coach assigned
                 if (team.coachId == null) {
-                    IconButton(onClick = onShare) {
+                    IconButton(
+                        onClick = onShare,
+                        enabled = !isSharing
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Share,
-                            contentDescription = stringResource(R.string.share_team_button)
+                            contentDescription = stringResource(R.string.share_team_button),
+                            tint = if (isSharing) {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
                         )
                     }
                 }

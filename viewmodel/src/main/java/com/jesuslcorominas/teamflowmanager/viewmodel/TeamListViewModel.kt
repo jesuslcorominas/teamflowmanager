@@ -24,6 +24,9 @@ class TeamListViewModel(
     private val _shareEvent = MutableStateFlow<ShareEvent?>(null)
     val shareEvent: StateFlow<ShareEvent?> = _shareEvent.asStateFlow()
 
+    private val _sharingTeamId = MutableStateFlow<String?>(null)
+    val sharingTeamId: StateFlow<String?> = _sharingTeamId.asStateFlow()
+
     sealed interface UiState {
         data object Loading : UiState
         data class Success(val teams: List<Team>, val clubName: String) : UiState
@@ -60,13 +63,26 @@ class TeamListViewModel(
     }
 
     fun shareTeam(team: Team) {
+        // Prevent multiple concurrent share operations for the same team
+        if (_sharingTeamId.value == team.firestoreId) {
+            return
+        }
+
         viewModelScope.launch {
+            val teamFirestoreId = team.firestoreId ?: return@launch
+            
+            _sharingTeamId.value = teamFirestoreId
+            
             try {
-                val teamFirestoreId = team.firestoreId ?: return@launch
+                android.util.Log.d("TeamListViewModel", "Starting share for team: ${team.name} (ID: $teamFirestoreId)")
                 val invitationLink = generateTeamInvitation(teamFirestoreId, team.name)
+                android.util.Log.d("TeamListViewModel", "Generated invitation link: $invitationLink")
                 _shareEvent.value = ShareEvent(invitationLink, team.name)
             } catch (e: Exception) {
-                // Handle error silently or show a message
+                android.util.Log.e("TeamListViewModel", "Error generating invitation link for team: ${team.name}", e)
+                // TODO: Show error to user
+            } finally {
+                _sharingTeamId.value = null
             }
         }
     }
