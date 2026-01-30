@@ -46,42 +46,19 @@ internal class FirebaseDynamicLinkDataSourceImpl(
                 teamName = teamName
             )
 
-            Log.d(TAG, "Calling Cloud Function to create short link for team: $teamName")
-            Log.d(TAG, "Request: teamId=$teamFirestoreId, teamName=$teamName")
+            Log.d(TAG, "Creating short link for team: $teamName (ID: $teamFirestoreId)")
             
             // Make the API call with explicit timeout
-            val response = try {
-                Log.d(TAG, "About to call shortLinkApi.createShortLink...")
-                withTimeout(API_TIMEOUT_MS) {
-                    Log.d(TAG, "Inside withTimeout block, calling API...")
-                    val result = shortLinkApi.createShortLink(request)
-                    Log.d(TAG, "API call completed, got result")
-                    result
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "!!! EXCEPTION CAUGHT !!!")
-                Log.e(TAG, "Exception while calling shortLinkApi.createShortLink", e)
-                Log.e(TAG, "Exception type: ${e.javaClass.name}")
-                Log.e(TAG, "Exception message: ${e.message}")
-                Log.e(TAG, "Exception cause: ${e.cause}")
-                Log.e(TAG, "Stack trace:")
-                e.printStackTrace()
-                throw e
+            val response = withTimeout(API_TIMEOUT_MS) {
+                shortLinkApi.createShortLink(request)
             }
             
-            Log.d(TAG, "Received response from Cloud Function")
-            Log.d(TAG, "Response shortLink: ${response.shortLink}")
-            Log.d(TAG, "Response linkId: ${response.linkId}")
             Log.d(TAG, "Successfully created short link: ${response.shortLink}")
             response.shortLink
         } catch (e: Exception) {
             // If any error occurs, fall back to custom scheme
-            Log.e(TAG, "!!! OUTER EXCEPTION CAUGHT !!!")
-            Log.e(TAG, "Error creating short link via Cloud Function", e)
-            Log.e(TAG, "Error details: ${e.message}")
-            Log.e(TAG, "Error type: ${e.javaClass.name}")
-            Log.e(TAG, "Error cause: ${e.cause?.javaClass?.name}")
-            Log.w(TAG, "Falling back to custom scheme (not clickable in WhatsApp)")
+            Log.w(TAG, "Failed to create short link via Cloud Function: ${e.message}")
+            Log.w(TAG, "Falling back to custom scheme")
             
             createFallbackLink(teamFirestoreId, teamName)
         }

@@ -118,7 +118,9 @@ internal val ktorfitModule =
                     json(get())
                 }
 
-                // Logging for debugging
+                // Logging for debugging (disabled in production to avoid performance issues)
+                // The LogLevel.BODY setting can cause timeouts by blocking the response handling
+                // Use LogLevel.INFO or HEADERS for production, or disable entirely
                 install(Logging) {
                     logger =
                         object : Logger {
@@ -126,7 +128,7 @@ internal val ktorfitModule =
                                 println("Ktor HTTP Client: $message")
                             }
                         }
-                    level = LogLevel.BODY // Log request/response bodies
+                    level = LogLevel.INFO // Use INFO instead of BODY to avoid blocking
                 }
             }
         }

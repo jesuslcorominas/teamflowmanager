@@ -98,16 +98,16 @@ exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
     const linkId = pathParts[pathParts.length - 1];
 
     if (!linkId) {
-      res.status(404).send('Link not found');
-      return;
+      console.log('[redirectShortLink] No linkId provided');
+      return res.status(404).send('Link not found');
     }
 
     // Retrieve link data from Firestore
     const linkDoc = await admin.firestore().collection('shortLinks').doc(linkId).get();
 
     if (!linkDoc.exists) {
-      res.status(404).send('Link not found');
-      return;
+      console.log('[redirectShortLink] Link not found:', linkId);
+      return res.status(404).send('Link not found');
     }
 
     const linkData = linkDoc.data();
@@ -119,6 +119,8 @@ exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
       lastClickedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    console.log('[redirectShortLink] Redirecting to team:', { linkId, teamId, teamName });
+
     // Build deep link
     const deepLink = `teamflowmanager://team/accept?teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}`;
     const playStoreLink = 'https://play.google.com/store/apps/details?id=com.jesuslcorominas.teamflowmanager';
@@ -128,7 +130,7 @@ exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
     const isAndroid = /android/i.test(userAgent);
 
     // Serve an HTML page that attempts app launch and falls back to Play Store
-    res.send(`
+    return res.send(`
 <!DOCTYPE html>
 <html>
 <head>
