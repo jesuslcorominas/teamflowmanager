@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.api
 import com.jesuslcorominas.teamflowmanager.data.remote.api.model.CreateShortLinkRequest
 import com.jesuslcorominas.teamflowmanager.data.remote.api.model.CreateShortLinkResponse
 import de.jensklingenberg.ktorfit.http.Body
+import de.jensklingenberg.ktorfit.http.Headers
 import de.jensklingenberg.ktorfit.http.POST
 import kotlinx.serialization.InternalSerializationApi
 
@@ -21,5 +22,6 @@ internal interface ShortLinkApi {
      */
     @OptIn(InternalSerializationApi::class)
     @POST("api/createShortLink")
+    @Headers("Content-Type: application/json")
     suspend fun createShortLink(@Body request: CreateShortLinkRequest): CreateShortLinkResponse
 }
