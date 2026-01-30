@@ -5,7 +5,6 @@ import com.jesuslcorominas.teamflowmanager.data.remote.api.model.CreateShortLink
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.Headers
 import de.jensklingenberg.ktorfit.http.POST
-import kotlinx.serialization.InternalSerializationApi
 
 /**
  * API interface for generating short links using Firebase Cloud Functions.
@@ -20,7 +19,6 @@ internal interface ShortLinkApi {
      * @param request The request containing team details
      * @return Response with the generated short link URL
      */
-    @OptIn(InternalSerializationApi::class)
     @POST("createShortLink")
     @Headers("Content-Type: application/json")
     suspend fun createShortLink(@Body request: CreateShortLinkRequest): CreateShortLinkResponse

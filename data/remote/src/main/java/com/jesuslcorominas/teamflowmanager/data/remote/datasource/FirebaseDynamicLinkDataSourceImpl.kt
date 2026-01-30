@@ -4,7 +4,6 @@ import android.util.Log
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.model.CreateShortLinkRequest
-import kotlinx.serialization.InternalSerializationApi
 import java.net.URLEncoder
 
 /**
@@ -30,7 +29,6 @@ internal class FirebaseDynamicLinkDataSourceImpl(
         private const val FALLBACK_SCHEME = "teamflowmanager://team/accept"
     }
 
-    @OptIn(InternalSerializationApi::class)
     override suspend fun generateTeamInvitationLink(
         teamFirestoreId: String,
         teamName: String

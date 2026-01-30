@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.api.model
 
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,7 +9,6 @@ import kotlinx.serialization.Serializable
  * outside of it.
  */
 @Serializable
-@InternalSerializationApi
 internal data class CreateShortLinkRequest(
     val teamId: String,
     val teamName: String
