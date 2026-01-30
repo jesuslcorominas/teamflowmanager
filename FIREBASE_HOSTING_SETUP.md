@@ -49,7 +49,7 @@ Firebase Dynamic Links está **deprecated** (dejará de funcionar en agosto 2025
                      │ { teamId, teamName }
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│           Firebase Cloud Function (Node.js 18)              │
+│           Firebase Cloud Function (Node.js 20)              │
 │  • Genera ID único (6 caracteres)                          │
 │  • Guarda en Firestore: shortLinks/{id}                    │
 │  • Retorna: https://teamflowmanager.web.app/l/{id}         │
@@ -104,7 +104,7 @@ Usuario hace clic: https://teamflowmanager.web.app/l/abc123
 Antes de empezar, asegúrate de tener:
 
 - ✅ **Proyecto de Firebase** activo (ya lo tienes)
-- ✅ **Node.js 18+** instalado en tu máquina
+- ✅ **Node.js 20+** instalado en tu máquina
 - ✅ **npm** o **yarn**
 - ✅ **Cuenta de Google** con permisos de editor en Firebase Console
 

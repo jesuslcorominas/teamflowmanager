@@ -6,7 +6,7 @@ This directory contains Firebase Cloud Functions and Hosting configuration for g
 ## What's This?
 
 This replaces the deprecated **Firebase Dynamic Links** with a custom solution using:
-- **Firebase Cloud Functions** (Node.js 18)
+- **Firebase Cloud Functions** (Node.js 20)
 - **Firebase Hosting**  
 - **Firestore** for link storage
 
