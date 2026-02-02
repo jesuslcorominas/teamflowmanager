@@ -555,7 +555,19 @@ class MatchViewModel(
                     else -> {
                         // Only include players that are in the squad call-up
                         val squadPlayers = players.filter { it.id in match.squadCallUpIds }
-                        val playerTimeItems = squadPlayers.toPlayerItems(playerTimes, currentTime, match.captainId)
+                        
+                        // Filter player times to only show those with completed operations
+                        val filteredPlayerTimes = if (match.lastCompletedOperationId != null) {
+                            playerTimes.filter { playerTime ->
+                                playerTime.lastOperationId == match.lastCompletedOperationId ||
+                                    playerTime.lastOperationId == null
+                            }
+                        } else {
+                            // If no operations yet, show all player times
+                            playerTimes
+                        }
+                        
+                        val playerTimeItems = squadPlayers.toPlayerItems(filteredPlayerTimes, currentTime, match.captainId)
 
                         MatchUiState.Success(
                             match = match,

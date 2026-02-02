@@ -7,4 +7,5 @@ data class PlayerSubstitution(
     val playerInId: Long,
     val substitutionTimeMillis: Long,
     val matchElapsedTimeMillis: Long,
+    val operationId: String? = null,
 )
