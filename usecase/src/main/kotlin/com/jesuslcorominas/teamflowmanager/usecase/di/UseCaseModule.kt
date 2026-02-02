@@ -49,6 +49,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
@@ -109,6 +110,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUse
 import com.jesuslcorominas.teamflowmanager.usecase.RemovePlayerAsCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SelfAssignAsCoachUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetShouldShowInvalidSubstitutionAlertUseCaseImpl
@@ -141,6 +143,7 @@ internal val useCaseInternalModule =
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
         singleOf(::AssignCoachToTeamUseCaseImpl) bind AssignCoachToTeamUseCase::class
+        singleOf(::SelfAssignAsCoachUseCaseImpl) bind SelfAssignAsCoachUseCase::class
         singleOf(::GenerateTeamInvitationUseCaseImpl) bind GenerateTeamInvitationUseCase::class
         singleOf(::AcceptTeamInvitationUseCaseImpl) bind AcceptTeamInvitationUseCase::class
         singleOf(::GetUserClubMembershipUseCaseImpl) bind GetUserClubMembershipUseCase::class
