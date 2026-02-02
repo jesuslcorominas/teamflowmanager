@@ -557,8 +557,11 @@ class MatchViewModel(
                         val squadPlayers = players.filter { it.id in match.squadCallUpIds }
                         
                         // Filter player times to only show those with completed operations
+                        // This ensures atomic operations are only visible after completion
                         val filteredPlayerTimes = if (match.lastCompletedOperationId != null) {
                             playerTimes.filter { playerTime ->
+                                // Show player times that match the last completed operation
+                                // or have null operationId (backward compatibility for data created before operation tracking)
                                 playerTime.lastOperationId == match.lastCompletedOperationId ||
                                     playerTime.lastOperationId == null
                             }

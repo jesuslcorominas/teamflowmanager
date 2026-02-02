@@ -53,6 +53,8 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         val operationId = matchOperationRepository.createOperation(operation)
 
         // Step 2: Update player timers with the operation ID for atomicity
+        // Using batch operations even for single players for consistency and
+        // to leverage the atomic batch write capabilities of the underlying data store
         // Pause timer for player going out with operation ID
         playerTimeRepository.pauseTimersBatchWithOperationId(
             playerIds = listOf(playerOutId),
