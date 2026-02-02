@@ -120,25 +120,6 @@ fun TeamListScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            
-            // Show self-assign button for Presidents when team has no coach
-            if (isPresident && team.coachId == null) {
-                Button(
-                    onClick = onSelfAssignAsCoach,
-                    enabled = !isAssigning,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PersonAdd,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = stringResource(R.string.self_assign_as_coach_button))
-                }
-            }
         }
     }
 }
@@ -267,6 +248,25 @@ private fun TeamCard(
                         text = team.delegateName,
                         style = MaterialTheme.typography.bodyMedium
                     )
+                }
+            }
+            
+            // Show self-assign button for Presidents when team has no coach
+            if (isPresident && team.coachId == null) {
+                Button(
+                    onClick = onSelfAssignAsCoach,
+                    enabled = !isAssigning,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PersonAdd,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(R.string.self_assign_as_coach_button))
                 }
             }
         }

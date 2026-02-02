@@ -86,12 +86,9 @@ class TeamListViewModel(
             _sharingTeamId.value = teamFirestoreId
 
             try {
-                android.util.Log.d("TeamListViewModel", "Starting share for team: ${team.name} (ID: $teamFirestoreId)")
                 val invitationLink = generateTeamInvitation(teamFirestoreId, team.name)
-                android.util.Log.d("TeamListViewModel", "Generated invitation link: $invitationLink")
                 _shareEvent.value = ShareEvent(invitationLink, team.name)
             } catch (e: Exception) {
-                android.util.Log.e("TeamListViewModel", "Error generating invitation link for team: ${team.name}", e)
                 // TODO: Show error to user
             } finally {
                 _sharingTeamId.value = null
@@ -115,12 +112,9 @@ class TeamListViewModel(
             _assigningCoachToTeamId.value = teamFirestoreId
 
             try {
-                android.util.Log.d("TeamListViewModel", "Self-assigning as coach to team: ${team.name} (ID: $teamFirestoreId)")
                 selfAssignAsCoach(teamFirestoreId)
-                android.util.Log.d("TeamListViewModel", "Successfully self-assigned as coach to team: ${team.name}")
                 // The UI will automatically update through the teams flow
             } catch (e: Exception) {
-                android.util.Log.e("TeamListViewModel", "Error self-assigning as coach to team: ${team.name}", e)
                 // TODO: Show error to user
             } finally {
                 _assigningCoachToTeamId.value = null
