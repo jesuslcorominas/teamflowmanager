@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.AuthRepositoryIm
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubMemberRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.GoalRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchOperationRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerSubstitutionRepositoryImpl
@@ -15,6 +16,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
@@ -37,6 +39,8 @@ internal val repositoryModule =
         singleOf(::ClubMemberRepositoryImpl) bind ClubMemberRepository::class
 
         singleOf(::MatchRepositoryImpl) bind MatchRepository::class
+
+        singleOf(::MatchOperationRepositoryImpl) bind MatchOperationRepository::class
 
         singleOf(::PlayerTimeRepositoryImpl) bind PlayerTimeRepository::class
 

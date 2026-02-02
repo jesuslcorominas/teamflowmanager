@@ -70,9 +70,9 @@ class TeamListViewModel(
 
         viewModelScope.launch {
             val teamFirestoreId = team.firestoreId ?: return@launch
-            
+
             _sharingTeamId.value = teamFirestoreId
-            
+
             try {
                 android.util.Log.d("TeamListViewModel", "Starting share for team: ${team.name} (ID: $teamFirestoreId)")
                 val invitationLink = generateTeamInvitation(teamFirestoreId, team.name)

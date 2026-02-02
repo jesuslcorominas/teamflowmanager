@@ -31,4 +31,9 @@ interface MatchRepository {
     suspend fun archiveMatch(matchId: Long)
 
     suspend fun unarchiveMatch(matchId: Long)
+
+    /**
+     * Updates the match with a specific operation ID to track atomic operations
+     */
+    suspend fun updateMatchWithOperationId(match: Match, operationId: String)
 }

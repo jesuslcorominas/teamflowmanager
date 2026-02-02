@@ -129,4 +129,9 @@ internal class MatchRepositoryImpl(
             matchDataSource.updateMatch(match.copy(archived = false))
         }
     }
+
+    override suspend fun updateMatchWithOperationId(match: Match, operationId: String) {
+        val updatedMatch = match.copy(lastCompletedOperationId = operationId)
+        matchDataSource.updateMatch(updatedMatch)
+    }
 }

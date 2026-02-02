@@ -45,5 +45,29 @@ interface PlayerTimeRepository {
         currentTimeMillis: Long,
     )
 
+    /**
+     * Start timers for multiple players with an operation ID for atomic operations
+     * @param playerIds List of player IDs to start timers for
+     * @param currentTimeMillis The current time in milliseconds
+     * @param operationId The operation ID to track atomic operations
+     */
+    suspend fun startTimersBatchWithOperationId(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+        operationId: String,
+    )
+
+    /**
+     * Pause timers for multiple players with an operation ID for atomic operations
+     * @param playerIds List of player IDs to pause timers for
+     * @param currentTimeMillis The current time in milliseconds
+     * @param operationId The operation ID to track atomic operations
+     */
+    suspend fun pauseTimersBatchWithOperationId(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+        operationId: String,
+    )
+
     suspend fun resetAllPlayerTimes()
 }

@@ -25,6 +25,7 @@ data class Match(
             periodDuration = PeriodType.fromNumberOfPeriods(periodType.numberOfPeriods).duration
         )
     },
+    val lastCompletedOperationId: String? = null,
 ) {
     fun canPause(): Boolean {
         return pauseCount < periodType.numberOfPeriods - 1

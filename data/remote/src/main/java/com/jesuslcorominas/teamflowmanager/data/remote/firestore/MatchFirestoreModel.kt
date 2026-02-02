@@ -33,6 +33,7 @@ data class MatchFirestoreModel(
     val opponentGoals: Int = 0,
     val timeoutStartTimeMillis: Long = 0L,
     val periods: List<MatchPeriodFirestoreModel> = emptyList(),
+    val lastCompletedOperationId: String? = null,
 ) {
     // No-arg constructor required by Firestore
     constructor() : this(
@@ -53,6 +54,7 @@ data class MatchFirestoreModel(
         opponentGoals = 0,
         timeoutStartTimeMillis = 0L,
         periods = emptyList(),
+        lastCompletedOperationId = null,
     )
 }
 
@@ -108,6 +110,7 @@ fun MatchFirestoreModel.toDomain(): Match {
                 )
             }
         },
+        lastCompletedOperationId = lastCompletedOperationId,
     )
 }
 
@@ -130,6 +133,7 @@ fun Match.toFirestoreModel(): MatchFirestoreModel =
         opponentGoals = opponentGoals,
         timeoutStartTimeMillis = timeoutStartTimeMillis,
         periods = periods.map { it.toFirestoreModel() },
+        lastCompletedOperationId = lastCompletedOperationId,
     )
 
 fun MatchPeriodFirestoreModel.toDomain(): MatchPeriod =
