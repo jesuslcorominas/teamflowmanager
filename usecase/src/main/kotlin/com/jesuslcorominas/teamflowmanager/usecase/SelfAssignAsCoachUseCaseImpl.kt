@@ -1,16 +1,17 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
-import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import kotlinx.coroutines.flow.first
 
 internal class SelfAssignAsCoachUseCaseImpl(
-    private val assignCoachToTeam: AssignCoachToTeamUseCase,
-    private val getCurrentUser: GetCurrentUserUseCase,
     private val teamRepository: TeamRepository,
+    private val clubMemberRepository: ClubMemberRepository,
+    private val getCurrentUser: GetCurrentUserUseCase,
 ) : SelfAssignAsCoachUseCase {
 
     override suspend fun invoke(teamFirestoreId: String): Team {
@@ -27,13 +28,43 @@ internal class SelfAssignAsCoachUseCaseImpl(
         val team = teamRepository.getTeamByFirestoreId(teamFirestoreId)
             ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
 
+        // Verify team belongs to a club
+        require(team.clubFirestoreId != null) {
+            "Team must belong to a club to assign a coach"
+        }
+
         // Verify team doesn't already have a coach
         require(team.coachId == null) {
             "Team already has a coach assigned. Cannot self-assign."
         }
 
-        // Use existing AssignCoachToTeamUseCase which handles all validations
-        // (President role check, club membership, atomic updates, etc.)
-        return assignCoachToTeam(teamFirestoreId, currentUser.id)
+        // Get current user's club membership
+        val currentUserMembership = clubMemberRepository.getClubMemberByUserId(currentUser.id).first()
+            ?: throw IllegalStateException("User must be a club member to self-assign as coach")
+
+        // Verify current user is a President
+        require(currentUserMembership.role == ClubRole.PRESIDENT.roleName) {
+            "Only club Presidents can self-assign as coach"
+        }
+
+        // Verify they are in the same club
+        require(currentUserMembership.clubFirestoreId == team.clubFirestoreId) {
+            "User and team must be in the same club"
+        }
+
+        try {
+            // Update only the team's coachId
+            // Important: We do NOT update the President's role to Coach
+            // Presidents should maintain their President role even when coaching a team
+            teamRepository.updateTeamCoachId(
+                teamFirestoreId = teamFirestoreId,
+                coachId = currentUser.id
+            )
+
+            // Return updated team
+            return team.copy(coachId = currentUser.id)
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to self-assign as coach: ${e.message}", e)
+        }
     }
 }

@@ -28,7 +28,7 @@ interface SelfAssignAsCoachUseCase {
 
 **Purpose**: Provides a clean interface for Presidents to self-assign as coach to a team.
 
-**Key Design Decision**: This use case delegates to the existing `AssignCoachToTeamUseCase` to ensure all validations and atomic operations are handled consistently.
+**Key Design Decision**: This use case implements its own validation logic instead of delegating to `AssignCoachToTeamUseCase` because self-assignment has a critical difference: **Presidents must maintain their "Presidente" role** when coaching. The general `AssignCoachToTeamUseCase` changes the assignee's role to "Coach", which would strip Presidents of their administrative privileges.
 
 ### Use Case Layer
 
@@ -38,18 +38,21 @@ interface SelfAssignAsCoachUseCase {
 **Key Features**:
 - Validates team exists and has no coach
 - Gets current authenticated user
-- Delegates to `AssignCoachToTeamUseCase` with current user's ID
-- Leverages existing atomic update logic from C2-S5
+- Verifies user is a President
+- Updates **only** team.coachId (NOT the clubMember role)
+- **Important**: Presidents maintain their "Presidente" role even when coaching
 
 **Validation Flow**:
 1. Validates teamFirestoreId is not blank
 2. Ensures user is authenticated
-3. Verifies team exists
+3. Verifies team exists and belongs to a club
 4. Confirms team.coachId is null
-5. Calls AssignCoachToTeamUseCase which:
-   - Verifies user is a President
-   - Verifies user and team are in same club
-   - Updates team.coachId and clubMember.role atomically
+5. Verifies user is a President in the same club
+6. Updates team.coachId with President's user ID
+7. **Does NOT change the President's role** - they remain "Presidente"
+
+**Design Rationale**: 
+When a President self-assigns as coach, they should maintain their President privileges while also coaching the team. The role field in clubMembers remains "Presidente" to preserve their administrative capabilities.
 
 ### ViewModel Layer
 
@@ -126,12 +129,12 @@ The implementation follows the established clean architecture:
 UI Layer (Compose) → ViewModel → Use Case → Repository → Data Source
 ```
 
-### Composition over Duplication
-Instead of duplicating the assignment logic, `SelfAssignAsCoachUseCaseImpl` composes the existing `AssignCoachToTeamUseCase`, ensuring:
-- Single source of truth for validation logic
-- Consistent atomic operations
-- Easier maintenance
-- No code duplication
+### Role Preservation Pattern
+`SelfAssignAsCoachUseCaseImpl` implements a specialized pattern for President self-assignment:
+- Presidents maintain their "Presidente" role when self-assigning as coach
+- Only updates team.coachId, not clubMember.role
+- Preserves administrative privileges while enabling coaching duties
+- Different from general coach assignment (which changes role to "Coach")
 
 ### Reactive UI
 - Uses Kotlin Flow for reactive data
@@ -141,18 +144,24 @@ Instead of duplicating the assignment logic, `SelfAssignAsCoachUseCaseImpl` comp
 ## Security Considerations
 
 ### Implemented
-- ✅ Role validation through existing `AssignCoachToTeamUseCase`
+- ✅ Role validation (President check)
 - ✅ Authentication checks
 - ✅ Team ownership verification
-- ✅ Atomic operations (via AssignCoachToTeamUseCase)
+- ✅ Club membership verification
+- ✅ Single operation (team.coachId only)
 
-### Note on Atomic Operations
-The implementation delegates to `AssignCoachToTeamUseCase` which currently has a known issue (documented in C2-S5):
-- Updates are not in a Firestore transaction
-- Could lead to inconsistency if one operation fails
-- Should be refactored to use Firestore batch writes
+### Role Preservation Security
+When a President self-assigns as coach:
+- Their clubMember.role remains "Presidente"
+- They retain all President permissions
+- team.coachId references their userId
+- This allows them to coach the team while maintaining administrative control
 
-This is a known limitation that exists in the base implementation and should be addressed separately.
+### Note on Simplified Operations
+Unlike the general `AssignCoachToTeamUseCase`, self-assignment only updates team.coachId:
+- No clubMember.role update needed (President role is preserved)
+- Single Firestore operation reduces complexity
+- No atomic transaction required for this specific case
 
 ## Testing Strategy
 
@@ -204,7 +213,7 @@ This is a known limitation that exists in the base implementation and should be 
 
 1. **String-based Role Comparison**: Uses String comparison instead of enum, but this is consistent with the existing `ClubMember.role` field type
 2. **No Error Toast**: Errors are logged but not displayed to user (TODO in ViewModel)
-3. **Inherits Atomic Operation Issue**: See C2-S5 documentation
+3. **Single Role Support**: The clubMember data model supports only one role. Presidents who self-assign as coach maintain "Presidente" role only (not dual roles)
 
 ## Integration Points
 
