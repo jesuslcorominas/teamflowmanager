@@ -37,20 +37,22 @@ This document provides a security analysis of the C2-S6 implementation for Presi
 
 ### Data Integrity
 
-#### ✅ Simplified Single-Operation Update
+#### ⚠️ Known Issue: Non-Transactional Updates
 
-1. **Single Firestore Operation**
-   - The implementation updates **only** `team.coachId`
-   - Does NOT update `clubMember.role` (Presidents maintain their role)
-   - Single operation eliminates transaction complexity
-   - **Impact**: None - simpler and safer than multi-step operations
-   - **Location**: `usecase/src/main/kotlin/.../SelfAssignAsCoachUseCaseImpl.kt:56-60`
+1. **Two-Step Operation**
+   - The implementation performs two separate Firestore operations:
+     1. Update `team.coachId`
+     2. Add "Coach" to `clubMember.roles` list
+   - These operations are NOT in a transaction
+   - If the second operation fails, data will be inconsistent
+   - **Impact**: Medium - Could result in team having coach assigned but member not having Coach role
+   - **Mitigation**: Should be refactored to use Firestore batch writes
+   - **Location**: `usecase/src/main/kotlin/.../SelfAssignAsCoachUseCaseImpl.kt:56-69`
 
-2. **Role Preservation**
-   - President's clubMember.role remains "Presidente"
-   - Maintains administrative privileges
-   - No risk of inconsistent role state
-   - Clear separation between self-assignment and general coach assignment
+2. **Role Addition Logic**
+   - New `addClubMemberRole()` method adds role to existing roles list
+   - Checks if role already exists before adding
+   - Prevents duplicate roles in the list
 
 #### ✅ Correct State Validation
 
@@ -136,9 +138,9 @@ This perfectly matches the self-assignment implementation.
    - UI hides button when coach exists
    - Backend validates team.coachId is null
 
-4. **Race Condition** - ✅ MITIGATED
+4. **Race Condition** - ⚠️ PARTIALLY MITIGATED
    - UI prevents duplicate clicks
-   - Single Firestore operation (atomic at document level)
+   - Two-step operation (not atomic)
    - Could result in inconsistent state if concurrent operations occur
 
 5. **Privilege Escalation** - ✅ MITIGATED
@@ -169,8 +171,20 @@ None - All critical security controls are in place.
 
 ### High Priority
 
-1. **Verify Firestore Security Rules**
+1. **Implement Firestore Transactions**
+   - Use Firestore batch writes for atomic operations
+   - This affects both general coach assignment and self-assignment
+   - Recommended fix:
+   ```kotlin
+   val batch = firestore.batch()
+   batch.update(teamRef, "coachId", coachUserId)
+   batch.update(memberRef, "roles", FieldValue.arrayUnion(ClubRole.COACH.roleName))
+   batch.commit().await()
+   ```
+
+2. **Verify Firestore Security Rules**
    - Confirm team update security rules are deployed
+   - Update rules to work with `roles` array field instead of `role` string
    - Test rules validate President role correctly
    - Add integration tests for rule validation
 
@@ -243,22 +257,27 @@ None - All critical security controls are in place.
 
 ## Conclusion
 
-### Overall Security Rating: **EXCELLENT**
+### Overall Security Rating: **ACCEPTABLE**
 
 The implementation has appropriate security controls for production use:
 
 **Strengths:**
 - ✅ Strong authentication and authorization
 - ✅ Comprehensive input validation
-- ✅ Role-based access control
+- ✅ Role-based access control with multiple roles support
 - ✅ Defense in depth (UI + backend)
 - ✅ No security vulnerabilities detected
-- ✅ Single operation (no transaction complexity)
-- ✅ Role preservation (Presidents maintain privileges)
+- ✅ Role addition (Presidents maintain privileges while gaining Coach role)
 
-**No Critical Issues**
+**Known Issues:**
+- ⚠️ Non-transactional updates (two-step operation)
+- ⚠️ Firestore security rules need update for `roles` array
 
 **Recommendation:** **APPROVED FOR DEPLOYMENT** with the following conditions:
+1. Update Firestore security rules to work with `roles` array instead of `role` string
+2. Verify security rules correctly check for "Presidente" in roles array
+3. Plan to implement Firestore batch writes in future sprint
+4. Monitor for any inconsistencies in production
 1. Verify Firestore security rules for team updates are active
 2. Monitor for any issues in production
 
