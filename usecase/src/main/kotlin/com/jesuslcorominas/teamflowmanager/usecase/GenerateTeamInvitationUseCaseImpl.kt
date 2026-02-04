@@ -37,7 +37,7 @@ internal class GenerateTeamInvitationUseCaseImpl(
             ?: throw IllegalStateException("User must be a club member to generate team invitation")
 
         // Verify current user is a President
-        require(currentUserMembership.role == ClubRole.PRESIDENT.roleName) {
+        require(currentUserMembership.hasRole(ClubRole.PRESIDENT)) {
             "Only club Presidents can generate team invitations"
         }
 

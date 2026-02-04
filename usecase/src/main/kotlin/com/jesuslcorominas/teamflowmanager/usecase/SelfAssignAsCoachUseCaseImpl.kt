@@ -43,7 +43,7 @@ internal class SelfAssignAsCoachUseCaseImpl(
             ?: throw IllegalStateException("User must be a club member to self-assign as coach")
 
         // Verify current user is a President
-        require(currentUserMembership.role == ClubRole.PRESIDENT.roleName) {
+        require(currentUserMembership.hasRole(ClubRole.PRESIDENT)) {
             "Only club Presidents can self-assign as coach"
         }
 
@@ -53,13 +53,20 @@ internal class SelfAssignAsCoachUseCaseImpl(
         }
 
         try {
-            // Update only the team's coachId
-            // Important: We do NOT update the President's role to Coach
-            // Presidents should maintain their President role even when coaching a team
+            // Update the team's coachId
             teamRepository.updateTeamCoachId(
                 teamFirestoreId = teamFirestoreId,
                 coachId = currentUser.id
             )
+
+            // Add Coach role to the President's roles (if not already present)
+            if (!currentUserMembership.hasRole(ClubRole.COACH)) {
+                clubMemberRepository.addClubMemberRole(
+                    userId = currentUser.id,
+                    clubFirestoreId = team.clubFirestoreId,
+                    role = ClubRole.COACH.roleName
+                )
+            }
 
             // Return updated team
             return team.copy(coachId = currentUser.id)

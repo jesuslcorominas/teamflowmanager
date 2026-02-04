@@ -61,8 +61,13 @@ class TeamListViewModel(
                     return@launch
                 }
 
-                // Store user's role
-                _currentUserRole.value = clubMember.role
+                // Store user's primary role (first role in the list)
+                // For display purposes, we use the first role or "President" if available
+                _currentUserRole.value = if (clubMember.hasRole(ClubRole.PRESIDENT)) {
+                    ClubRole.PRESIDENT.roleName
+                } else {
+                    clubMember.roles.firstOrNull() ?: ""
+                }
 
                 // Load teams for the club
                 getTeamsByClub(clubFirestoreId).collect { teams ->

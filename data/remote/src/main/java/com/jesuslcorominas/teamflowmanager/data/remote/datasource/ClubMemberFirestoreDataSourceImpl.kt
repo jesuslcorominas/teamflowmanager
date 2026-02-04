@@ -124,13 +124,13 @@ class ClubMemberFirestoreDataSourceImpl(
         email: String,
         clubId: Long,
         clubFirestoreId: String,
-        role: String
+        roles: List<String>
     ): ClubMember {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
         require(name.isNotBlank()) { "Name cannot be blank" }
         require(email.isNotBlank()) { "Email cannot be blank" }
         require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
-        require(role.isNotBlank()) { "Role cannot be blank" }
+        require(roles.isNotEmpty()) { "Roles cannot be empty" }
 
         try {
             // Use predictable ID format: userId_clubFirestoreId
@@ -145,12 +145,12 @@ class ClubMemberFirestoreDataSourceImpl(
                 name = name,
                 email = email,
                 clubId = clubFirestoreId,
-                role = role
+                roles = roles
             )
 
             // Create or update the club member document
             clubMemberDocRef.set(clubMemberModel).await()
-            Log.d(TAG, "ClubMember created/updated for userId: $userId with role: $role in club: $clubFirestoreId")
+            Log.d(TAG, "ClubMember created/updated for userId: $userId with roles: $roles in club: $clubFirestoreId")
 
             return clubMemberModel.toDomain()
         } catch (e: Exception) {
@@ -159,7 +159,35 @@ class ClubMemberFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun updateClubMemberRole(
+    override suspend fun updateClubMemberRoles(
+        userId: String,
+        clubFirestoreId: String,
+        roles: List<String>
+    ) {
+        require(userId.isNotBlank()) { "User ID cannot be blank" }
+        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+        require(roles.isNotEmpty()) { "Roles cannot be empty" }
+
+        try {
+            // Use predictable ID format: userId_clubFirestoreId
+            val clubMemberId = "${userId}_${clubFirestoreId}"
+            val updates = mapOf(
+                "roles" to roles
+            )
+
+            firestore.collection(CLUB_MEMBERS_COLLECTION)
+                .document(clubMemberId)
+                .update(updates)
+                .await()
+
+            Log.d(TAG, "ClubMember roles updated for userId: $userId in club: $clubFirestoreId to roles: $roles")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating club member roles in Firestore", e)
+            throw e
+        }
+    }
+
+    override suspend fun addClubMemberRole(
         userId: String,
         clubFirestoreId: String,
         role: String
@@ -171,18 +199,41 @@ class ClubMemberFirestoreDataSourceImpl(
         try {
             // Use predictable ID format: userId_clubFirestoreId
             val clubMemberId = "${userId}_${clubFirestoreId}"
-            val updates = mapOf(
-                "role" to role
-            )
-
-            firestore.collection(CLUB_MEMBERS_COLLECTION)
+            
+            // Get current club member
+            val document = firestore.collection(CLUB_MEMBERS_COLLECTION)
                 .document(clubMemberId)
-                .update(updates)
+                .get()
                 .await()
 
-            Log.d(TAG, "ClubMember role updated for userId: $userId in club: $clubFirestoreId to role: $role")
+            if (!document.exists()) {
+                throw IllegalStateException("ClubMember not found for userId: $userId in club: $clubFirestoreId")
+            }
+
+            val firestoreModel = document.toObject(ClubMemberFirestoreModel::class.java)
+                ?: throw IllegalStateException("Failed to parse ClubMember document")
+
+            // Add role if not already present
+            val currentRoles = firestoreModel.roles.toMutableList()
+            if (!currentRoles.contains(role)) {
+                currentRoles.add(role)
+
+                // Update the document
+                val updates = mapOf(
+                    "roles" to currentRoles
+                )
+
+                firestore.collection(CLUB_MEMBERS_COLLECTION)
+                    .document(clubMemberId)
+                    .update(updates)
+                    .await()
+
+                Log.d(TAG, "Added role $role to ClubMember for userId: $userId in club: $clubFirestoreId")
+            } else {
+                Log.d(TAG, "Role $role already exists for userId: $userId in club: $clubFirestoreId")
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating club member role in Firestore", e)
+            Log.e(TAG, "Error adding role to club member in Firestore", e)
             throw e
         }
     }

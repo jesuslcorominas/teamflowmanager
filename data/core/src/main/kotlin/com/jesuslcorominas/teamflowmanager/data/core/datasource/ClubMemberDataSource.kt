@@ -25,7 +25,7 @@ interface ClubMemberDataSource {
      * @param email The user's email
      * @param clubId The club's numeric ID
      * @param clubFirestoreId The club's Firestore document ID
-     * @param role The member's role in the club
+     * @param roles The member's roles in the club
      * @return The created or updated ClubMember
      */
     suspend fun createOrUpdateClubMember(
@@ -34,16 +34,28 @@ interface ClubMemberDataSource {
         email: String,
         clubId: Long,
         clubFirestoreId: String,
-        role: String
+        roles: List<String>
     ): ClubMember
 
     /**
-     * Update the role of a club member.
+     * Update the roles of a club member (replaces existing roles).
      * @param userId The Firebase user ID
      * @param clubFirestoreId The club's Firestore document ID
-     * @param role The new role for the member
+     * @param roles The new roles for the member
      */
-    suspend fun updateClubMemberRole(
+    suspend fun updateClubMemberRoles(
+        userId: String,
+        clubFirestoreId: String,
+        roles: List<String>
+    )
+
+    /**
+     * Add a role to a club member's existing roles.
+     * @param userId The Firebase user ID
+     * @param clubFirestoreId The club's Firestore document ID
+     * @param role The role to add
+     */
+    suspend fun addClubMemberRole(
         userId: String,
         clubFirestoreId: String,
         role: String

@@ -41,7 +41,7 @@ internal class AssignCoachToTeamUseCaseImpl(
             ?: throw IllegalStateException("User must be a club member to assign a coach")
 
         // Verify current user is a President
-        require(currentUserMembership.role == ClubRole.PRESIDENT.roleName) {
+        require(currentUserMembership.hasRole(ClubRole.PRESIDENT)) {
             "Only club Presidents can assign coaches to teams"
         }
 
@@ -68,12 +68,14 @@ internal class AssignCoachToTeamUseCaseImpl(
                 coachId = coachUserId
             )
 
-            // Step 2: Update club member's role to Coach
-            clubMemberRepository.updateClubMemberRole(
-                userId = coachUserId,
-                clubFirestoreId = team.clubFirestoreId!!,
-                role = ClubRole.COACH.roleName
-            )
+            // Step 2: Add Coach role to club member (if not already present)
+            if (!coachMembership.hasRole(ClubRole.COACH)) {
+                clubMemberRepository.addClubMemberRole(
+                    userId = coachUserId,
+                    clubFirestoreId = team.clubFirestoreId!!,
+                    role = ClubRole.COACH.roleName
+                )
+            }
 
             // Return updated team
             return team.copy(coachId = coachUserId)
