@@ -4,14 +4,12 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Team
 
 /**
  * Use case for a President to self-assign as coach to a team.
- * This operation updates the team's coachId field with the current user's ID.
+ * This operation updates the team's coachId field with the current user's ID
+ * and adds "Coach" to their roles list.
  * 
- * **Important**: When a President self-assigns as coach, their clubMember.role 
- * remains "Presidente" (they do NOT become "Coach"). This preserves their 
- * administrative privileges while allowing them to coach the team.
- * 
- * This differs from general coach assignment (AssignCoachToTeamUseCase) which 
- * changes the assignee's role to "Coach".
+ * **Important**: When a President self-assigns as coach, their clubMember.roles 
+ * gains "Coach" while maintaining "Presidente" (roles become ["Presidente", "Coach"]). 
+ * This preserves their administrative privileges while allowing them to coach the team.
  * 
  * Only club Presidents can perform this operation, and only on teams without a coach.
  */

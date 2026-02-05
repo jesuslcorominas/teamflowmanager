@@ -232,7 +232,7 @@ class TeamViewModelTest {
                 name = "John Doe",
                 email = "john@example.com",
                 clubId = 100,
-                role = "Presidente",
+                roles = listOf("Presidente"),
                 firestoreId = "clubmember_doc_123",
                 clubFirestoreId = "club_firestore_123"
             )

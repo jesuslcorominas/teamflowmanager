@@ -128,7 +128,7 @@ class SplashViewModelTest {
             name = "Test User",
             email = "test@example.com",
             clubId = 100,
-            role = "Coach",
+            roles = listOf("Coach"),
             firestoreId = "clubmember_doc_123",
             clubFirestoreId = "club123"
         )
@@ -229,7 +229,7 @@ class SplashViewModelTest {
             name = "Test User",
             email = "test@example.com",
             clubId = 100,
-            role = "Coach",
+            roles = listOf("Coach"),
             firestoreId = "clubmember_doc_123",
             clubFirestoreId = "club123"
         )
@@ -269,7 +269,7 @@ class SplashViewModelTest {
             name = "Test User",
             email = "test@example.com",
             clubId = 100,
-            role = "Coach",
+            roles = listOf("Coach"),
             firestoreId = "clubmember_doc_123",
             clubFirestoreId = "club123"
         )
