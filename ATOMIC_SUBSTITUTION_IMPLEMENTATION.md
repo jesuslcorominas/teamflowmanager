@@ -105,44 +105,71 @@ override suspend fun invoke(matchId: Long, playerOutId: Long, playerInId: Long, 
 }
 ```
 
-#### 4. ViewModel Filtering
-The ViewModel filters player times to only show completed operations:
+#### 4. UI Layer - No Filtering Needed
+The ViewModel **does not filter by operationId**. Instead, it shows all players based on their `PlayerTimeStatus`:
 
 ```kotlin
-val filteredPlayerTimes = if (match.lastCompletedOperationId != null) {
-    playerTimes.filter { playerTime ->
-        // Show only player times matching the last completed operation
-        // or with null operationId (backward compatibility)
-        playerTime.lastOperationId == match.lastCompletedOperationId ||
-            playerTime.lastOperationId == null
-    }
-} else {
-    // No operations yet, show all player times
-    playerTimes
-}
+// Only include players that are in the squad call-up
+val squadPlayers = players.filter { it.id in match.squadCallUpIds }
+val playerTimeItems = squadPlayers.toPlayerItems(playerTimes, currentTime, match.captainId)
 ```
+
+**Why no filtering?**
+- Atomicity is guaranteed at the **repository/database level** through batch writes
+- The `lastOperationId` on PlayerTime is for audit trail, not for UI filtering
+- All active players should remain visible regardless of which operation last modified them
+- Filtering by operationId would incorrectly hide players not involved in the most recent operation
 
 ## Benefits
 
-### 1. Atomicity
-- The substitution appears as a single instantaneous action
-- No intermediate states are visible to users
-- Player counts are always correct
+### 1. Atomicity at Write Level
+- The substitution writes happen atomically through batch operations
+- Batch writes with shared operationId ensure data consistency
+- No race conditions during write operations
 
-### 2. Consistency
-- All related updates share the same operationId
-- Changes are only visible after the operation completes
-- The UI state is always valid
+### 2. Correct UI Behavior
+- All active players remain visible at all times
+- Player counts are always accurate
+- UI shows the actual player state, not filtered state
 
-### 3. Offline Support
+### 3. Audit Trail
+- Each player's `lastOperationId` tracks which operation last modified them
+- Enables debugging and audit of player state changes
+- Maintains operation history for analysis
+
+### 4. Offline Support
 - The pattern works even in offline mode
 - Local changes sync correctly when online
-- No race conditions or temporary inconsistencies
+- Batch writes ensure consistency across all data stores
 
 ### 4. Reusability
 - The pattern can be applied to any complex multi-entity operation
 - Already used for START, PAUSE, RESUME, and FINISH operations
 - Easy to extend for future features
+
+## Common Misconceptions
+
+### ❌ Incorrect: Filter UI by operationId
+```kotlin
+// DON'T DO THIS - This would hide players!
+playerTimes.filter { it.lastOperationId == match.lastCompletedOperationId }
+```
+This approach would hide all players except those involved in the most recent operation.
+
+### ✅ Correct: Show all players based on their status
+```kotlin
+// DO THIS - Show all active players
+val squadPlayers = players.filter { it.id in match.squadCallUpIds }
+val playerTimeItems = squadPlayers.toPlayerItems(playerTimes, currentTime, match.captainId)
+```
+Let the `PlayerTimeStatus` (PLAYING, ON_BENCH, etc.) determine visibility, not the operationId.
+
+## How It Works
+
+The atomicity comes from:
+1. **Batch writes** - Both player updates happen in a single atomic batch with shared operationId
+2. **Repository-level atomicity** - Firestore batch writes guarantee all-or-nothing semantics
+3. **Operation tracking** - The operationId provides an audit trail, not a visibility filter
 
 ## Backward Compatibility
 
@@ -170,10 +197,10 @@ CodeQL security scan completed with no vulnerabilities found.
 ## Files Modified
 
 1. **domain/MatchOperationType.kt** - Added SUBSTITUTION enum
-2. **domain/PlayerSubstitution.kt** - Added operationId field
-3. **usecase/RegisterPlayerSubstitutionUseCaseImpl.kt** - Implemented atomic pattern
+2. **domain/PlayerSubstitution.kt** - Added operationId field for audit trail
+3. **usecase/RegisterPlayerSubstitutionUseCaseImpl.kt** - Implemented atomic batch writes
 4. **usecase/RegisterPlayerSubstitutionUseCaseTest.kt** - Updated tests
-5. **viewmodel/MatchViewModel.kt** - Added operation-based filtering
+5. ~~**viewmodel/MatchViewModel.kt**~~ - **No changes** (atomicity is at database level, not UI filtering)
 
 ## Future Enhancements
 
