@@ -52,22 +52,37 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         )
         val operationId = matchOperationRepository.createOperation(operation)
 
-        // Step 2: Update player timers with the operation ID for atomicity
-        // Using batch operations even for single players for consistency and
-        // to leverage the atomic batch write capabilities of the underlying data store
-        // Pause timer for player going out with operation ID
-        playerTimeRepository.pauseTimersBatchWithOperationId(
+        // Step 2: Update ALL currently playing players' operationId for atomicity
+        // This ensures that the UI filter (lastOperationId == match.lastCompletedOperationId)
+        // will show all active players consistently after the substitution completes
+        val playingPlayerIds = playerTimes
+            .filter { it.status == PlayerTimeStatus.PLAYING }
+            .map { it.playerId }
+        
+        // Substitute out the leaving player - sets ON_BENCH status
+        playerTimeRepository.substituteOutPlayersBatchWithOperationId(
             playerIds = listOf(playerOutId),
             currentTimeMillis = currentTimeMillis,
             operationId = operationId,
         )
 
-        // Step 3: Start timer for player coming in with operation ID
+        // Start timer for player coming in with operation ID
         playerTimeRepository.startTimersBatchWithOperationId(
             playerIds = listOf(playerInId),
             currentTimeMillis = currentTimeMillis,
             operationId = operationId,
         )
+        
+        // Update all OTHER currently playing players (excluding playerOut who was just benched)
+        // with the new operationId to maintain consistency
+        val otherPlayingPlayers = playingPlayerIds.filter { it != playerOutId }
+        if (otherPlayingPlayers.isNotEmpty()) {
+            playerTimeRepository.startTimersBatchWithOperationId(
+                playerIds = otherPlayingPlayers,
+                currentTimeMillis = currentTimeMillis,
+                operationId = operationId,
+            )
+        }
 
         // Step 4: Record the substitution with operation ID
         val substitution = PlayerSubstitution(

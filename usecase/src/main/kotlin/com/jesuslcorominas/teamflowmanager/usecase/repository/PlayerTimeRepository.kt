@@ -69,5 +69,18 @@ interface PlayerTimeRepository {
         operationId: String,
     )
 
+    /**
+     * Stop timers for players being substituted out with an operation ID for atomic operations.
+     * Sets player status to ON_BENCH (not PAUSED) so they won't restart when match resumes.
+     * @param playerIds List of player IDs being substituted out
+     * @param currentTimeMillis The current time in milliseconds
+     * @param operationId The operation ID to track atomic operations
+     */
+    suspend fun substituteOutPlayersBatchWithOperationId(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+        operationId: String,
+    )
+
     suspend fun resetAllPlayerTimes()
 }
