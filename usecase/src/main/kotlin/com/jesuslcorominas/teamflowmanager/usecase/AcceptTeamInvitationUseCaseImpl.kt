@@ -65,7 +65,7 @@ internal class AcceptTeamInvitationUseCaseImpl(
                 email = currentUser.email!!,
                 clubId = team.clubId!!,
                 clubFirestoreId = team.clubFirestoreId!!,
-                role = ClubRole.COACH.roleName
+                roles = listOf(ClubRole.COACH.roleName)
             )
 
             // Return updated team

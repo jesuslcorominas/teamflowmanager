@@ -61,11 +61,13 @@ internal class SelfAssignAsCoachUseCaseImpl(
 
             // Add Coach role to the President's roles (if not already present)
             if (!currentUserMembership.hasRole(ClubRole.COACH)) {
-                clubMemberRepository.addClubMemberRole(
-                    userId = currentUser.id,
-                    clubFirestoreId = team.clubFirestoreId,
-                    role = ClubRole.COACH.roleName
-                )
+                team.clubFirestoreId?.let { clubFirestoreId ->
+                    clubMemberRepository.addClubMemberRole(
+                        userId = currentUser.id,
+                        clubFirestoreId = clubFirestoreId,
+                        role = ClubRole.COACH.roleName
+                    )
+                }
             }
 
             // Return updated team
