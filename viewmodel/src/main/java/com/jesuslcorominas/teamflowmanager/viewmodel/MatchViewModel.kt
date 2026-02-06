@@ -95,6 +95,9 @@ class MatchViewModel(
     private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
     val exportState: StateFlow<ExportState> = _exportState.asStateFlow()
 
+    private val _isSubstitutionInProgress = MutableStateFlow(false)
+    val isSubstitutionInProgress: StateFlow<Boolean> = _isSubstitutionInProgress.asStateFlow()
+
     private val matchId: Long
 
     init {
@@ -427,6 +430,9 @@ class MatchViewModel(
                 if (currentState is MatchUiState.Success) {
                     crashReporter.log(analyticsMessage)
 
+                    // Show blocking loading indicator during substitution
+                    _isSubstitutionInProgress.value = true
+
                     registerPlayerSubstitutionUseCase(
                         matchId = currentState.match.id,
                         playerOutId = playerOut,
@@ -447,8 +453,13 @@ class MatchViewModel(
 
                     // Clear any existing selection
                     _selectedPlayerOut.value = null
+
+                    // Hide loading indicator after substitution completes
+                    _isSubstitutionInProgress.value = false
                 }
             } catch (e: Exception) {
+                // Ensure loading indicator is hidden even on error
+                _isSubstitutionInProgress.value = false
                 crashReporter.recordException(e)
                 crashReporter.log("Error in $method substitution: ${e.message}")
                 throw e
@@ -555,7 +566,22 @@ class MatchViewModel(
                     else -> {
                         // Only include players that are in the squad call-up
                         val squadPlayers = players.filter { it.id in match.squadCallUpIds }
-                        val playerTimeItems = squadPlayers.toPlayerItems(playerTimes, currentTime, match.captainId)
+                        
+                        // Filter player times to show only those from completed operations
+                        // This prevents UI flicker during multi-step atomic operations
+                        val filteredPlayerTimes = if (match.lastCompletedOperationId != null) {
+                            playerTimes.filter { playerTime ->
+                                // Show players whose lastOperationId matches the match's last completed operation
+                                // OR has null operationId (backward compatibility for pre-operation-tracking data)
+                                playerTime.lastOperationId == match.lastCompletedOperationId ||
+                                    playerTime.lastOperationId == null
+                            }
+                        } else {
+                            // No operations completed yet, show all player times
+                            playerTimes
+                        }
+                        
+                        val playerTimeItems = squadPlayers.toPlayerItems(filteredPlayerTimes, currentTime, match.captainId)
 
                         MatchUiState.Success(
                             match = match,

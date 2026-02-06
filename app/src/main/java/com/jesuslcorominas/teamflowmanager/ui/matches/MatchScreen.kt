@@ -3,6 +3,8 @@ package com.jesuslcorominas.teamflowmanager.ui.matches
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
@@ -45,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -96,6 +100,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
 
     val uiState by viewModel.uiState.collectAsState()
     val exportState by viewModel.exportState.collectAsState()
+    val isSubstitutionInProgress by viewModel.isSubstitutionInProgress.collectAsState()
 
     // TODO try to extract this from viewmodel
     val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
@@ -131,33 +136,34 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        when (val state = uiState) {
-            is MatchUiState.Loading -> Loading()
-            is MatchUiState.NoMatch -> NoMatchState()
-            is MatchUiState.Success -> SuccessState(
-                state = state,
-                selectedPlayerOut = selectedPlayerOut,
-                currentSortOrder = currentSortOrder,
-                onSaveMatch = { viewModel.saveMatch() },
-                onPauseMatch = { viewModel.pauseMatch() },
-                onResumeMatch = { viewModel.resumeMatch(state.match.id) },
-                onStartTimeout = { viewModel.startTimeout() },
-                onEndTimeout = { viewModel.endTimeout() },
-                onPlayerClick = { playerId ->
-                    when (selectedPlayerOut) {
-                        null -> viewModel.selectPlayerOut(playerId)
-                        playerId -> viewModel.clearPlayerOutSelection()
-                        else -> viewModel.substitutePlayer(playerId)
-                    }
-                },
-                onDragDropSubstitute = { playerInId, playerOutId ->
-                    viewModel.substitutePlayerDirect(playerInId, playerOutId)
-                },
-                onSortOrderChange = { currentSortOrder = it },
+    Box(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            when (val state = uiState) {
+                is MatchUiState.Loading -> Loading()
+                is MatchUiState.NoMatch -> NoMatchState()
+                is MatchUiState.Success -> SuccessState(
+                    state = state,
+                    selectedPlayerOut = selectedPlayerOut,
+                    currentSortOrder = currentSortOrder,
+                    onSaveMatch = { viewModel.saveMatch() },
+                    onPauseMatch = { viewModel.pauseMatch() },
+                    onResumeMatch = { viewModel.resumeMatch(state.match.id) },
+                    onStartTimeout = { viewModel.startTimeout() },
+                    onEndTimeout = { viewModel.endTimeout() },
+                    onPlayerClick = { playerId ->
+                        when (selectedPlayerOut) {
+                            null -> viewModel.selectPlayerOut(playerId)
+                            playerId -> viewModel.clearPlayerOutSelection()
+                            else -> viewModel.substitutePlayer(playerId)
+                        }
+                    },
+                    onDragDropSubstitute = { playerInId, playerOutId ->
+                        viewModel.substitutePlayerDirect(playerInId, playerOutId)
+                    },
+                    onSortOrderChange = { currentSortOrder = it },
                 onAddGoal = { viewModel.showGoalScorerDialog() },
                 onAddOpponentGoal = { viewModel.showOpponentGoalDialog() },
                 onBeginMatch = { viewModel.beginMatch(state.match.id) },
@@ -177,6 +183,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
                     onTitleChange = onTitleChange
                 )
             }
+        }
         }
 
         // Show alert if trying to select an inactive player
@@ -223,6 +230,25 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
                 onConfirm = { viewModel.registerOpponentGoal() },
                 onDismiss = { viewModel.dismissOpponentGoalDialog() }
             )
+        }
+
+        // Show blocking loading overlay during substitution
+        if (isSubstitutionInProgress) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                    .pointerInput(Unit) {
+                        // Consume all pointer events to block interaction with underlying UI
+                        detectTapGestures { }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(64.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
