@@ -95,6 +95,9 @@ class MatchViewModel(
     private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
     val exportState: StateFlow<ExportState> = _exportState.asStateFlow()
 
+    private val _isSubstitutionInProgress = MutableStateFlow(false)
+    val isSubstitutionInProgress: StateFlow<Boolean> = _isSubstitutionInProgress.asStateFlow()
+
     private val matchId: Long
 
     init {
@@ -427,6 +430,9 @@ class MatchViewModel(
                 if (currentState is MatchUiState.Success) {
                     crashReporter.log(analyticsMessage)
 
+                    // Show blocking loading indicator during substitution
+                    _isSubstitutionInProgress.value = true
+
                     registerPlayerSubstitutionUseCase(
                         matchId = currentState.match.id,
                         playerOutId = playerOut,
@@ -447,8 +453,13 @@ class MatchViewModel(
 
                     // Clear any existing selection
                     _selectedPlayerOut.value = null
+
+                    // Hide loading indicator after substitution completes
+                    _isSubstitutionInProgress.value = false
                 }
             } catch (e: Exception) {
+                // Ensure loading indicator is hidden even on error
+                _isSubstitutionInProgress.value = false
                 crashReporter.recordException(e)
                 crashReporter.log("Error in $method substitution: ${e.message}")
                 throw e
