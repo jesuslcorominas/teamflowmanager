@@ -182,6 +182,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
                 )
             }
         }
+        }
 
         // Show alert if trying to select an inactive player
         if (showInvalidSubstitutionAlert) {
