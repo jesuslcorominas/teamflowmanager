@@ -1,9 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
+import com.jesuslcorominas.teamflowmanager.domain.model.*
 
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.User
-import com.jesuslcorominas.teamflowmanager.usecase.HasLocalDataWithoutUserIdUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.justRun
@@ -26,7 +26,6 @@ import org.junit.Test
 class LoginViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var signInWithGoogleUseCase: SignInWithGoogleUseCase
-    private lateinit var hasLocalDataWithoutUserIdUseCase: HasLocalDataWithoutUserIdUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
     private lateinit var viewModel: LoginViewModel
 
@@ -34,9 +33,8 @@ class LoginViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         signInWithGoogleUseCase = mockk()
-        hasLocalDataWithoutUserIdUseCase = mockk()
         analyticsTracker = mockk(relaxed = true)
-        viewModel = LoginViewModel(signInWithGoogleUseCase, hasLocalDataWithoutUserIdUseCase, analyticsTracker)
+        viewModel = LoginViewModel(signInWithGoogleUseCase, analyticsTracker)
     }
 
     @After
@@ -51,7 +49,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `signInWithGoogle should update state to Success when no local data exists`() =
+    fun `signInWithGoogle should update state to Success`() =
         runTest {
             // Given
             val idToken = "google_id_token"
@@ -62,7 +60,6 @@ class LoginViewModelTest {
                 photoUrl = "https://example.com/photo.jpg"
             )
             coEvery { signInWithGoogleUseCase(idToken) } returns Result.success(user)
-            coEvery { hasLocalDataWithoutUserIdUseCase() } returns false
 
             // When
             viewModel.signInWithGoogle(idToken)
@@ -71,60 +68,8 @@ class LoginViewModelTest {
             // Then
             assertTrue(viewModel.uiState.value is LoginViewModel.UiState.Success)
             coVerify { signInWithGoogleUseCase(idToken) }
-            coVerify { hasLocalDataWithoutUserIdUseCase() }
             verify { analyticsTracker.setUserId(user.id) }
             verify { analyticsTracker.logEvent("login", any()) }
-        }
-
-    @Test
-    fun `signInWithGoogle should update state to NeedsMigration when local data exists`() =
-        runTest {
-            // Given
-            val idToken = "google_id_token"
-            val user = User(
-                id = "user123",
-                email = "test@example.com",
-                displayName = "Test User",
-                photoUrl = null
-            )
-            coEvery { signInWithGoogleUseCase(idToken) } returns Result.success(user)
-            coEvery { hasLocalDataWithoutUserIdUseCase() } returns true
-
-            // When
-            viewModel.signInWithGoogle(idToken)
-            advanceUntilIdle()
-
-            // Then
-            assertTrue(viewModel.uiState.value is LoginViewModel.UiState.NeedsMigration)
-            coVerify { signInWithGoogleUseCase(idToken) }
-            coVerify { hasLocalDataWithoutUserIdUseCase() }
-            verify { analyticsTracker.setUserId(user.id) }
-            verify { analyticsTracker.logEvent("login", any()) }
-        }
-
-    @Test
-    fun `signInWithGoogle should update state to Success if local data check fails`() =
-        runTest {
-            // Given
-            val idToken = "google_id_token"
-            val user = User(
-                id = "user123",
-                email = "test@example.com",
-                displayName = "Test User",
-                photoUrl = null
-            )
-            coEvery { signInWithGoogleUseCase(idToken) } returns Result.success(user)
-            coEvery { hasLocalDataWithoutUserIdUseCase() } throws Exception("Check failed")
-
-            // When
-            viewModel.signInWithGoogle(idToken)
-            advanceUntilIdle()
-
-            // Then
-            // Should proceed with Success even if check fails
-            assertTrue(viewModel.uiState.value is LoginViewModel.UiState.Success)
-            coVerify { signInWithGoogleUseCase(idToken) }
-            coVerify { hasLocalDataWithoutUserIdUseCase() }
         }
 
     @Test
@@ -159,7 +104,6 @@ class LoginViewModelTest {
             photoUrl = null
         )
         coEvery { signInWithGoogleUseCase(idToken) } returns Result.success(user)
-        coEvery { hasLocalDataWithoutUserIdUseCase() } returns false
         viewModel.signInWithGoogle(idToken)
         advanceUntilIdle()
 

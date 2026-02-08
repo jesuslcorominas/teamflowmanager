@@ -1,18 +1,19 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
+import com.jesuslcorominas.teamflowmanager.domain.model.*
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
-import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.RemovePlayerAsCaptainUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateScheduledMatchesCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -55,14 +56,17 @@ class PlayerViewModelTest {
         getPlayersUseCase = mockk()
         addPlayerUseCase = mockk(relaxed = true)
         deletePlayerUseCase = mockk()
-        updatePlayerUseCase = mockk()
-        getCaptainPlayerUseCase = mockk()
+        updatePlayerUseCase = mockk(relaxed = true)
+        getCaptainPlayerUseCase = mockk(relaxed = true)
         updateScheduledMatchesCaptainUseCase = mockk(relaxed = true)
         setPlayerAsCaptainUseCase = mockk(relaxed = true)
         removePlayerAsCaptainUseCase = mockk(relaxed = true)
-        getScheduledMatchesUseCase = mockk()
+        getScheduledMatchesUseCase = mockk(relaxed = true)
         analyticsTracker = mockk(relaxed = true)
         crashReporter = mockk(relaxed = true)
+
+        coEvery { getCaptainPlayerUseCase.invoke() } returns null
+        coEvery { getScheduledMatchesUseCase.invoke() } returns emptyList()
     }
 
     @After
@@ -98,8 +102,8 @@ class PlayerViewModelTest {
     fun `uiState should be Success when players are loaded`() = runTest(testDispatcher) {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", 10, listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder))
+            Player(1, "John", "Doe", 10, listOf(Position.Forward), 1L, false),
+            Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder), 1L, false)
         )
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
@@ -157,7 +161,9 @@ class PlayerViewModelTest {
             firstName = "John",
             lastName = "Doe",
             number = 2,
-            positions = listOf(Position.Forward)
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         viewModel = PlayerViewModel(
@@ -185,7 +191,7 @@ class PlayerViewModelTest {
     @Test
     fun `showDeleteConfirmation should update deleteConfirmationState`() = runTest(testDispatcher) {
         // Given
-        val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
+        val player = Player(1, "John", "Doe", 10, listOf(Position.Forward), 1L, false)
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         viewModel = PlayerViewModel(
             getPlayersUseCase = getPlayersUseCase,
@@ -211,7 +217,7 @@ class PlayerViewModelTest {
     @Test
     fun `dismissDeleteConfirmation should reset deleteConfirmationState`() = runTest(testDispatcher) {
         // Given
-        val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
+        val player = Player(1, "John", "Doe", 10, listOf(Position.Forward), 1L, false)
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         viewModel = PlayerViewModel(
             getPlayersUseCase = getPlayersUseCase,
@@ -272,7 +278,9 @@ class PlayerViewModelTest {
             firstName = "John",
             lastName = "Doe",
             number = 2,
-            positions = listOf(Position.Forward)
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { updatePlayerUseCase.invoke(player) } just runs

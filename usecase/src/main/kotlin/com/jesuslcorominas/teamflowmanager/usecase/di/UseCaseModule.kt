@@ -1,9 +1,14 @@
 package com.jesuslcorominas.teamflowmanager.usecase.di
 
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AcceptTeamInvitationUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ArchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
@@ -15,6 +20,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubMembersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetExportDataUseCase
@@ -30,6 +36,8 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
@@ -55,9 +63,14 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.AcceptTeamInvitationUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.AssignCoachToTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.CreateClubUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GenerateTeamInvitationUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.JoinClubByCodeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
@@ -69,6 +82,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetClubMembersUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetExportDataUseCaseImpl
@@ -84,6 +98,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetTeamsByClubUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetUserClubMembershipUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
@@ -121,8 +137,16 @@ internal val useCaseInternalModule =
         singleOf(::UpdatePlayerUseCaseImpl) bind UpdatePlayerUseCase::class
 
         singleOf(::GetTeamUseCaseImpl) bind GetTeamUseCase::class
+        singleOf(::GetTeamsByClubUseCaseImpl) bind GetTeamsByClubUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
+        singleOf(::AssignCoachToTeamUseCaseImpl) bind AssignCoachToTeamUseCase::class
+        singleOf(::GenerateTeamInvitationUseCaseImpl) bind GenerateTeamInvitationUseCase::class
+        singleOf(::AcceptTeamInvitationUseCaseImpl) bind AcceptTeamInvitationUseCase::class
+        singleOf(::GetUserClubMembershipUseCaseImpl) bind GetUserClubMembershipUseCase::class
+        singleOf(::GetClubMembersUseCaseImpl) bind GetClubMembersUseCase::class
+        singleOf(::CreateClubUseCaseImpl) bind CreateClubUseCase::class
+        singleOf(::JoinClubByCodeUseCaseImpl) bind JoinClubByCodeUseCase::class
 
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class

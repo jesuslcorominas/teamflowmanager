@@ -1,0 +1,56 @@
+
+> Configure project :app
+WARNING: The option setting 'android.defaults.buildfeatures.buildconfig=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 9.0 of the Android Gradle plugin.
+To keep using this feature, add the following to your module-level build.gradle files:
+    android.buildFeatures.buildConfig = true
+or from Android Studio, click: `Refactor` > `Migrate BuildConfig to Gradle Build Files`.
+WARNING: We recommend using a newer Android Gradle plugin to use compileSdk = 36
+
+This Android Gradle plugin (8.6.1) was tested up to compileSdk = 35.
+
+You are strongly encouraged to update your project to use a newer
+Android Gradle plugin that has been tested with compileSdk = 36.
+
+If you are already using the latest version of the Android Gradle plugin,
+you may need to wait until a newer version with support for compileSdk = 36 is available.
+
+For more information refer to the compatibility table:
+https://d.android.com/r/tools/api-level-support
+
+To suppress this warning, add/update
+    android.suppressUnsupportedCompileSdk=36
+to this project's gradle.properties.
+
+> Task :viewmodel:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :viewmodel:preBuild UP-TO-DATE
+> Task :viewmodel:preDebugBuild UP-TO-DATE
+> Task :viewmodel:generateDebugBuildConfig UP-TO-DATE
+> Task :viewmodel:generateDebugResources UP-TO-DATE
+> Task :viewmodel:packageDebugResources UP-TO-DATE
+> Task :viewmodel:parseDebugLocalResources UP-TO-DATE
+> Task :viewmodel:generateDebugRFile UP-TO-DATE
+> Task :viewmodel:javaPreCompileDebug UP-TO-DATE
+> Task :viewmodel:preDebugUnitTestBuild UP-TO-DATE
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :viewmodel:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :viewmodel:compileDebugKotlin UP-TO-DATE
+> Task :viewmodel:compileDebugJavaWithJavac UP-TO-DATE
+> Task :viewmodel:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :viewmodel:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :viewmodel:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :viewmodel:processDebugJavaRes UP-TO-DATE
+> Task :viewmodel:compileDebugUnitTestKotlin
+> Task :viewmodel:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :viewmodel:processDebugUnitTestJavaRes UP-TO-DATE
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+> Task :viewmodel:testDebugUnitTest
+
+BUILD SUCCESSFUL in 11s
+18 actionable tasks: 2 executed, 16 up-to-date

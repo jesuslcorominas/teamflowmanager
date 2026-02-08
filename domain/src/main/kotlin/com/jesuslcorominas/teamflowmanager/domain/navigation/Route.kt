@@ -6,7 +6,8 @@ sealed class Route(
     val showBottomBar: Boolean = false,
     val canGoBack: Boolean = false,
     val showFab: Boolean = false,
-    val hasSearchBar: Boolean = false
+    val hasSearchBar: Boolean = false,
+    val showSettingsButton: Boolean = false
 ) {
 
     companion object {
@@ -15,8 +16,13 @@ sealed class Route(
                 Splash,
                 Login,
                 Migration,
+                ClubSelection,
+                CreateClub,
+                JoinClub,
                 Players,
                 Team,
+                TeamList,
+                ClubMembers,
                 Matches,
                 ArchivedMatches,
                 CreateMatch,
@@ -24,6 +30,7 @@ sealed class Route(
                 Match,
                 Analysis,
                 Settings,
+                AcceptTeamInvitation,
             )
         }
 
@@ -45,6 +52,7 @@ sealed class Route(
         val canGoBack: Boolean,
         val showFab: Boolean,
         val hasSearchBar: Boolean,
+        val showSettingsButton: Boolean,
     )
 
     open fun uiConfig(arguments: Map<String, Any?>?): UiConfig =
@@ -54,13 +62,15 @@ sealed class Route(
             canGoBack = canGoBack,
             showFab = showFab,
             hasSearchBar = hasSearchBar,
+            showSettingsButton = showSettingsButton,
         )
 
     data object Matches : Route(
         path = "matches",
         showBottomBar = true,
         showFab = true,
-        hasSearchBar = true
+        hasSearchBar = true,
+        showSettingsButton = true
     )
 
     data object Match : Route(path = "match", canGoBack = true) {
@@ -77,6 +87,12 @@ sealed class Route(
     data object Login : Route(path = "login", showTopBar = false)
 
     data object Migration : Route(path = "migration", showTopBar = false)
+
+    data object ClubSelection : Route(path = "club_selection", showTopBar = false)
+
+    data object CreateClub : Route(path = "create_club", showTopBar = false)
+
+    data object JoinClub : Route(path = "join_club", showTopBar = false)
 
     data object Team : Route(
         path = "team",
@@ -98,11 +114,28 @@ sealed class Route(
                 canGoBack = mode == MODE_EDIT,
                 showFab = mode == MODE_VIEW,
                 hasSearchBar = false,
+                showSettingsButton = mode == MODE_EDIT || mode == MODE_VIEW,
             )
         }
     }
 
-    data object Players : Route(path = "players", showBottomBar = true)
+    data object TeamList : Route(
+        path = "team_list",
+        showTopBar = true,
+        showBottomBar = true,
+        showFab = true,
+        hasSearchBar = false,
+        showSettingsButton = true
+    )
+
+    data object ClubMembers : Route(
+        path = "club_members",
+        showTopBar = true,
+        showBottomBar = true,
+        showSettingsButton = true
+    )
+
+    data object Players : Route(path = "players", showBottomBar = true, showSettingsButton = true)
 
     data object PlayerWizard : Route(path = "player_wizard", showTopBar = false) {
         const val ARG_PLAYER_ID = "playerId"
@@ -114,6 +147,7 @@ sealed class Route(
         path = "archived_matches",
         showBottomBar = true,
         canGoBack = true,
+        showSettingsButton = true
     )
 
     data object CreateMatch : Route(path = "create_match", showTopBar = false) {
@@ -124,5 +158,14 @@ sealed class Route(
         const val FULL_ROUTE = "$PATH/{$ARG_MATCH_ID}"
     }
 
-    data object Analysis : Route(path = "analysis", showBottomBar = true)
+    data object Analysis : Route(path = "analysis", showBottomBar = true, showSettingsButton = true)
+
+    data object AcceptTeamInvitation : Route(path = "accept_team_invitation", showTopBar = false) {
+        const val ARG_TEAM_ID = "teamId"
+        private const val PATH = "accept_team_invitation"
+
+        const val FULL_ROUTE = "$PATH?$ARG_TEAM_ID={$ARG_TEAM_ID}"
+
+        fun createRoute(teamId: String): String = "$PATH?$ARG_TEAM_ID=$teamId"
+    }
 }

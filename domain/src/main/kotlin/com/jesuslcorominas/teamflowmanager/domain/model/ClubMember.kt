@@ -8,4 +8,5 @@ data class ClubMember(
     val clubId: Long,
     val role: String,
     val firestoreId: String? = null,
+    val clubFirestoreId: String? = null,
 )

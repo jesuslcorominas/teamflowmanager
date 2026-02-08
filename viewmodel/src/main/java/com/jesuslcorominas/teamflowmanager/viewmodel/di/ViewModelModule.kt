@@ -1,7 +1,11 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
+import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
@@ -11,6 +15,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.RealTimeTicker
@@ -23,7 +28,8 @@ val viewModelModule =
         viewModel {
             MainViewModel(
                 hasNotificationPermissionBeenRequestedUseCase = get(),
-                setNotificationPermissionRequestedUseCase = get()
+                setNotificationPermissionRequestedUseCase = get(),
+                getUserClubMembership = get()
             )
         }
 
@@ -31,6 +37,7 @@ val viewModelModule =
             SplashViewModel(
                 getTeam = get(),
                 getCurrentUser = get(),
+                getUserClubMembership = get(),
                 synchronizeTimeUseCase = get()
             )
         }
@@ -38,6 +45,20 @@ val viewModelModule =
         viewModel {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
+                analyticsTracker = get()
+            )
+        }
+
+        viewModel {
+            CreateClubViewModel(
+                createClubUseCase = get(),
+                analyticsTracker = get()
+            )
+        }
+
+        viewModel {
+            JoinClubViewModel(
+                joinClubByCodeUseCase = get(),
                 analyticsTracker = get()
             )
         }
@@ -82,8 +103,22 @@ val viewModelModule =
                 hasScheduledMatches = get(),
                 setPlayerAsCaptainUseCase = get(),
                 removePlayerAsCaptainUseCase = get(),
+                getUserClubMembership = get(),
                 analyticsTracker = get(),
                 savedStateHandle = get()
+            )
+        }
+        viewModel {
+            TeamListViewModel(
+                getTeamsByClub = get(),
+                getUserClubMembership = get(),
+                generateTeamInvitation = get()
+            )
+        }
+        viewModel {
+            ClubMembersViewModel(
+                getClubMembers = get(),
+                getUserClubMembership = get()
             )
         }
         viewModel {
@@ -165,6 +200,14 @@ val viewModelModule =
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
                 analyticsTracker = get()
+            )
+        }
+
+        viewModel {
+            AcceptTeamInvitationViewModel(
+                savedStateHandle = get(),
+                acceptTeamInvitation = get(),
+                getCurrentUser = get()
             )
         }
 

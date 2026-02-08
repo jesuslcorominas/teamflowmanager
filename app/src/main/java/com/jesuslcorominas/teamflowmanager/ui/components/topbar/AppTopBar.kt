@@ -174,7 +174,7 @@ fun DefaultTopBar(
                     )
                 }
             }
-            if (uiConfig.showBottomBar) {
+            if (uiConfig.showSettingsButton) {
                 IconButton(
                     onClick = { navController.navigate(Route.Settings.createRoute()) }
                 ) {

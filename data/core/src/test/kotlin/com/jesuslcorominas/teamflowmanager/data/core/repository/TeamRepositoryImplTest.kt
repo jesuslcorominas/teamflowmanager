@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
@@ -20,12 +21,14 @@ import org.junit.Test
 
 class TeamRepositoryImplTest {
     private lateinit var teamDataSource: TeamDataSource
+    private lateinit var dynamicLinkDataSource: DynamicLinkDataSource
     private lateinit var repository: TeamRepositoryImpl
 
     @Before
     fun setup() {
         teamDataSource = mockk(relaxed = true)
-        repository = TeamRepositoryImpl(teamDataSource)
+        dynamicLinkDataSource = mockk(relaxed = true)
+        repository = TeamRepositoryImpl(teamDataSource, dynamicLinkDataSource)
     }
 
     @Test

@@ -1,14 +1,19 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
+import com.jesuslcorominas.teamflowmanager.domain.model.*
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
-import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ArchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UnarchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -30,29 +35,26 @@ import org.junit.Test
 class MatchListViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getAllMatchesUseCase: GetAllMatchesUseCase
-    private lateinit var getArchivedMatchesUseCase: GetArchivedMatchesUseCase
     private lateinit var deleteMatchUseCase: DeleteMatchUseCase
-    private lateinit var createMatchUseCase: CreateMatchUseCase
-    private lateinit var updateMatchUseCase: UpdateMatchUseCase
     private lateinit var resumeMatchUseCase: ResumeMatchUseCase
     private lateinit var archiveMatchUseCase: ArchiveMatchUseCase
-    private lateinit var unarchiveMatchUseCase: UnarchiveMatchUseCase
+    private lateinit var synchronizeTimeUseCase: SynchronizeTimeUseCase
+    private lateinit var timeProvider: TimeProvider
+    private lateinit var analyticsTracker: AnalyticsTracker
+    private lateinit var crashReporter: CrashReporter
     private lateinit var viewModel: MatchListViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getAllMatchesUseCase = mockk()
-        getArchivedMatchesUseCase = mockk()
-        getMatchUseCase = mockk()
         deleteMatchUseCase = mockk(relaxed = true)
-        createMatchUseCase = mockk(relaxed = true)
-        updateMatchUseCase = mockk(relaxed = true)
-        startMatchUseCase = mockk(relaxed = true)
         resumeMatchUseCase = mockk(relaxed = true)
         archiveMatchUseCase = mockk(relaxed = true)
-        unarchiveMatchUseCase = mockk(relaxed = true)
-        setCurrentMatchUseCase = mockk(relaxed = true)
+        synchronizeTimeUseCase = mockk(relaxed = true)
+        timeProvider = mockk(relaxed = true)
+        analyticsTracker = mockk(relaxed = true)
+        crashReporter = mockk(relaxed = true)
     }
 
     @After
@@ -64,21 +66,18 @@ class MatchListViewModelTest {
     fun `initial state should be Loading`() {
         // Given
         every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
-        every { getMatchUseCase.invoke() } returns flowOf(null)
 
         // When
         viewModel =
             MatchListViewModel(
                 getAllMatchesUseCase,
-                getMatchUseCase,
                 deleteMatchUseCase,
-                createMatchUseCase,
-                updateMatchUseCase,
-                startMatchUseCase,
-                setCurrentMatchUseCase,
                 resumeMatchUseCase,
                 archiveMatchUseCase,
-                unarchiveMatchUseCase,
+                synchronizeTimeUseCase,
+                timeProvider,
+                analyticsTracker,
+                crashReporter
             )
 
         // Then
@@ -90,21 +89,18 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
-            every { getMatchUseCase.invoke() } returns flowOf(null)
 
             // When
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getMatchUseCase,
                     deleteMatchUseCase,
-                    createMatchUseCase,
-                    updateMatchUseCase,
-                    startMatchUseCase,
-                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
-                    unarchiveMatchUseCase,
+                    synchronizeTimeUseCase,
+                    timeProvider,
+                    analyticsTracker,
+                    crashReporter
                 )
             advanceUntilIdle()
 
@@ -124,7 +120,9 @@ class MatchListViewModelTest {
                         opponent = "Rival FC",
                         teamName = "My Team",
                         location = "Stadium",
-                        date = System.currentTimeMillis(),
+                        dateTime = System.currentTimeMillis(),
+                        periodType = PeriodType.HALF_TIME,
+                        captainId = 1L,
                     ),
                     Match(
                         id = 2L,
@@ -132,25 +130,24 @@ class MatchListViewModelTest {
                         opponent = "Team B",
                         teamName = "My Team",
                         location = "Stadium 2",
-                        date = System.currentTimeMillis(),
+                        dateTime = System.currentTimeMillis(),
+                        periodType = PeriodType.HALF_TIME,
+                        captainId = 1L,
                     ),
                 )
             every { getAllMatchesUseCase.invoke() } returns flowOf(matches)
-            every { getMatchUseCase.invoke() } returns flowOf(null)
 
             // When
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getMatchUseCase,
                     deleteMatchUseCase,
-                    createMatchUseCase,
-                    updateMatchUseCase,
-                    startMatchUseCase,
-                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
-                    unarchiveMatchUseCase,
+                    synchronizeTimeUseCase,
+                    timeProvider,
+                    analyticsTracker,
+                    crashReporter
                 )
             advanceUntilIdle()
 
@@ -161,60 +158,20 @@ class MatchListViewModelTest {
         }
 
     @Test
-    fun `updateMatch should invoke updateMatchUseCase`() =
-        runTest {
-            // Given
-            every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
-            every { getMatchUseCase.invoke() } returns flowOf(null)
-            viewModel =
-                MatchListViewModel(
-                    getAllMatchesUseCase,
-                    getMatchUseCase,
-                    deleteMatchUseCase,
-                    createMatchUseCase,
-                    updateMatchUseCase,
-                    startMatchUseCase,
-                    setCurrentMatchUseCase,
-                    resumeMatchUseCase,
-                    archiveMatchUseCase,
-                    unarchiveMatchUseCase,
-                )
-            val match =
-                Match(
-                    id = 1L,
-                    teamId = 1L,
-                    teamName = "My Team",
-                    opponent = "Updated Rival",
-                    location = "Updated Stadium",
-                    date = System.currentTimeMillis(),
-                )
-
-            // When
-            viewModel.updateMatch(match)
-            advanceUntilIdle()
-
-            // Then
-            coVerify { updateMatchUseCase.invoke(match) }
-        }
-
-    @Test
     fun `requestDeleteMatch should update deleteConfirmationState to Requested`() =
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
-            every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getMatchUseCase,
                     deleteMatchUseCase,
-                    createMatchUseCase,
-                    updateMatchUseCase,
-                    startMatchUseCase,
-                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
-                    unarchiveMatchUseCase,
+                    synchronizeTimeUseCase,
+                    timeProvider,
+                    analyticsTracker,
+                    crashReporter
                 )
             val match =
                 Match(
@@ -223,7 +180,9 @@ class MatchListViewModelTest {
                     teamName = "My Team",
                     opponent = "Rival FC",
                     location = "Stadium",
-                    date = System.currentTimeMillis(),
+                    dateTime = System.currentTimeMillis(),
+                    periodType = PeriodType.HALF_TIME,
+                    captainId = 1L,
                 )
 
             // When
@@ -241,19 +200,16 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
-            every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getMatchUseCase,
                     deleteMatchUseCase,
-                    createMatchUseCase,
-                    updateMatchUseCase,
-                    startMatchUseCase,
-                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
-                    unarchiveMatchUseCase,
+                    synchronizeTimeUseCase,
+                    timeProvider,
+                    analyticsTracker,
+                    crashReporter
                 )
             val match =
                 Match(
@@ -262,7 +218,9 @@ class MatchListViewModelTest {
                     teamName = "My Team",
                     opponent = "Rival FC",
                     location = "Stadium",
-                    date = System.currentTimeMillis(),
+                    dateTime = System.currentTimeMillis(),
+                    periodType = PeriodType.HALF_TIME,
+                    captainId = 1L,
                 )
             viewModel.requestDeleteMatch(match)
 
@@ -280,19 +238,16 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
-            every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getMatchUseCase,
                     deleteMatchUseCase,
-                    createMatchUseCase,
-                    updateMatchUseCase,
-                    startMatchUseCase,
-                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
-                    unarchiveMatchUseCase,
+                    synchronizeTimeUseCase,
+                    timeProvider,
+                    analyticsTracker,
+                    crashReporter
                 )
             val match =
                 Match(
@@ -301,7 +256,9 @@ class MatchListViewModelTest {
                     opponent = "Rival FC",
                     teamName = "My Team",
                     location = "Stadium",
-                    date = System.currentTimeMillis(),
+                    dateTime = System.currentTimeMillis(),
+                    periodType = PeriodType.HALF_TIME,
+                    captainId = 1L,
                 )
             viewModel.requestDeleteMatch(match)
 
@@ -317,19 +274,16 @@ class MatchListViewModelTest {
         runTest {
             // Given
             every { getAllMatchesUseCase.invoke() } returns flowOf(emptyList())
-            every { getMatchUseCase.invoke() } returns flowOf(null)
             viewModel =
                 MatchListViewModel(
                     getAllMatchesUseCase,
-                    getMatchUseCase,
                     deleteMatchUseCase,
-                    createMatchUseCase,
-                    updateMatchUseCase,
-                    startMatchUseCase,
-                    setCurrentMatchUseCase,
                     resumeMatchUseCase,
                     archiveMatchUseCase,
-                    unarchiveMatchUseCase,
+                    synchronizeTimeUseCase,
+                    timeProvider,
+                    analyticsTracker,
+                    crashReporter
                 )
             val matchId = 1L
 

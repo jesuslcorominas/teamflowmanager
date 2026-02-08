@@ -3,9 +3,12 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,11 +18,21 @@ import kotlinx.coroutines.launch
 class SplashViewModel(
     private val getTeam: GetTeamUseCase,
     private val getCurrentUser: GetCurrentUserUseCase,
-    private val synchronizeTimeUseCase: SynchronizeTimeUseCase
+    private val getUserClubMembership: GetUserClubMembershipUseCase,
+    private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "SplashViewModel"
+        // Kept for backward compatibility, but use ClubRole enum instead
+        @Deprecated("Use ClubRole.PRESIDENT instead", ReplaceWith("ClubRole.PRESIDENT.roleName"))
+        private const val ROLE_PRESIDENT = "Presidente"
+    }
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    private var startupJob: Job? = null
 
     sealed interface UiState {
         data object Loading : UiState
@@ -28,17 +41,28 @@ class SplashViewModel(
 
         data object LocalDataNeedsAuth : UiState
 
+        data object NoClub : UiState
+
         data object NoTeam : UiState
 
         data object TeamExists : UiState
+
+        data object ClubPresident : UiState
     }
 
     init {
         performStartupTasks()
     }
 
+    fun refresh() {
+        Log.d(TAG, "Refresh called - cancelling previous job and restarting")
+        startupJob?.cancel()
+        _uiState.value = UiState.Loading
+        performStartupTasks()
+    }
+
     private fun performStartupTasks() {
-        viewModelScope.launch {
+        startupJob = viewModelScope.launch {
             // Synchronize time with server on app startup
             try {
                 synchronizeTimeUseCase()
@@ -58,21 +82,51 @@ class SplashViewModel(
         if (user == null) {
             _uiState.value = UiState.NotAuthenticated
         } else {
+            Log.d(TAG, "User authenticated, loading team...")
             loadTeam()
         }
     }
 
     private suspend fun loadTeam() {
-        getTeam().collect { team ->
-            if (team == null) {
-                _uiState.value = UiState.NoTeam
-            } else {
-                _uiState.value = UiState.TeamExists
+        Log.d(TAG, "Loading team...")
+
+        // First, check if user is a President - Presidents should always see team list
+        val clubMember = getUserClubMembership().first()
+        if (clubMember != null) {
+            val userRole = ClubRole.fromString(clubMember.role)
+            if (userRole == ClubRole.PRESIDENT) {
+                Log.d(TAG, "User is President - navigating to team list")
+                _uiState.value = UiState.ClubPresident
+                return
             }
         }
-    }
 
-    companion object {
-        private const val TAG = "SplashViewModel"
+        // For non-Presidents, check if they have their own team
+        val team = getTeam().first()
+
+        if (team == null) {
+            Log.d(TAG, "NO TEAM found - checking club membership")
+
+            if (clubMember != null) {
+                Log.d(TAG, "User is club member with role: ${clubMember.role} - navigating to club selection")
+                _uiState.value = UiState.NoClub
+            } else {
+                Log.d(TAG, "User is not a club member - navigating to club selection")
+                _uiState.value = UiState.NoClub
+            }
+        } else {
+            Log.d(TAG, "TEAM found (id: ${team.id}, name: ${team.name}, clubId: ${team.clubId}, clubFirestoreId: ${team.clubFirestoreId})")
+
+            // Check if team has a club
+            val hasClub = team.clubId != null || team.clubFirestoreId != null
+
+            if (hasClub) {
+                Log.d(TAG, "Team HAS club - navigating to matches")
+                _uiState.value = UiState.TeamExists
+            } else {
+                Log.d(TAG, "Team DOES NOT have club - navigating to club selection")
+                _uiState.value = UiState.NoClub
+            }
+        }
     }
 }

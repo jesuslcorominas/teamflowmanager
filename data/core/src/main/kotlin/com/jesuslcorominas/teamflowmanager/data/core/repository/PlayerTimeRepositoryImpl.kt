@@ -143,4 +143,74 @@ internal class PlayerTimeRepositoryImpl(
     override suspend fun resetAllPlayerTimes() {
         playerTimeDataSource.deleteAllPlayerTimes()
     }
+
+    override suspend fun startTimersBatchWithOperationId(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+        operationId: String,
+    ) {
+        if (playerIds.isEmpty()) return
+
+        // Get current player times for all players
+        val allCurrentTimes = playerTimeDataSource.getAllPlayerTimes().first()
+        val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
+
+        // Create player times for batch upsert with operation ID
+        val playerTimesToUpsert = playerIds.map { playerId ->
+            val currentPlayerTime = currentTimesMap[playerId]
+            currentPlayerTime?.copy(
+                isRunning = true,
+                lastStartTimeMillis = currentTimeMillis,
+                status = PlayerTimeStatus.PLAYING,
+                lastOperationId = operationId,
+            )
+                ?: PlayerTime(
+                    playerId = playerId,
+                    elapsedTimeMillis = 0L,
+                    isRunning = true,
+                    lastStartTimeMillis = currentTimeMillis,
+                    status = PlayerTimeStatus.PLAYING,
+                    lastOperationId = operationId,
+                )
+        }
+
+        // Batch upsert all player times at once
+        playerTimeDataSource.batchUpsertPlayerTimes(playerTimesToUpsert)
+    }
+
+    override suspend fun pauseTimersBatchWithOperationId(
+        playerIds: List<Long>,
+        currentTimeMillis: Long,
+        operationId: String,
+    ) {
+        if (playerIds.isEmpty()) return
+
+        // Get current player times for all players
+        val allCurrentTimes = playerTimeDataSource.getAllPlayerTimes().first()
+        val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
+
+        // Create updated player times for batch upsert with operation ID
+        // Only pause player timers that are currently running - players on the bench don't need to be paused
+        val playerTimesToUpsert = playerIds.mapNotNull { playerId ->
+            val currentPlayerTime = currentTimesMap[playerId]
+            if (currentPlayerTime != null && currentPlayerTime.isRunning) {
+                val lastStartTime = currentPlayerTime.lastStartTimeMillis ?: currentTimeMillis
+                val additionalTime = currentTimeMillis - lastStartTime
+                currentPlayerTime.copy(
+                    elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
+                    isRunning = false,
+                    lastStartTimeMillis = lastStartTime,
+                    status = PlayerTimeStatus.PAUSED,
+                    lastOperationId = operationId,
+                )
+            } else {
+                null // Skip players that aren't running - they don't need to be paused
+            }
+        }
+
+        // Batch upsert all player times at once
+        if (playerTimesToUpsert.isNotEmpty()) {
+            playerTimeDataSource.batchUpsertPlayerTimes(playerTimesToUpsert)
+        }
+    }
 }

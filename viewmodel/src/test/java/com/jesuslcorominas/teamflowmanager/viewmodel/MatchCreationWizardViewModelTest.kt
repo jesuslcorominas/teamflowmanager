@@ -1,13 +1,23 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
+import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SaveDefaultCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateMatchUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -35,19 +45,28 @@ class MatchCreationWizardViewModelTest {
     private lateinit var getDefaultCaptainUseCase: GetDefaultCaptainUseCase
     private lateinit var saveDefaultCaptainUseCase: SaveDefaultCaptainUseCase
     private lateinit var getCaptainPlayerUseCase: GetCaptainPlayerUseCase
+    private lateinit var getTeamUseCase: GetTeamUseCase
+    private lateinit var createMatch: CreateMatchUseCase
+    private lateinit var getMatchByIdUseCase: GetMatchByIdUseCase
+    private lateinit var updateMatchUseCase: UpdateMatchUseCase
+    private lateinit var analyticsTracker: AnalyticsTracker
+    private lateinit var crashReporter: CrashReporter
+    private lateinit var savedStateHandle: SavedStateHandle
 
     private lateinit var viewModel: MatchCreationWizardViewModel
 
     private val testDispatcher = StandardTestDispatcher()
 
     private val testPlayers = listOf(
-        Player(1L, "John", "Doe", 1, listOf(Position.Goalkeeper)),
-        Player(2L, "Jane", "Smith", 2, listOf(Position.Defender)),
-        Player(3L, "Bob", "Johnson", 3, listOf(Position.Midfielder)),
-        Player(4L, "Alice", "Brown", 4, listOf(Position.Forward)),
-        Player(5L, "Charlie", "Wilson", 5, listOf(Position.Defender)),
-        Player(6L, "David", "Lee", 6, listOf(Position.Midfielder)),
+        Player(1L, "John", "Doe", 1, listOf(Position.Goalkeeper), 1L, false),
+        Player(2L, "Jane", "Smith", 2, listOf(Position.Defender), 1L, false),
+        Player(3L, "Bob", "Johnson", 3, listOf(Position.Midfielder), 1L, false),
+        Player(4L, "Alice", "Brown", 4, listOf(Position.Forward), 1L, false),
+        Player(5L, "Charlie", "Wilson", 5, listOf(Position.Defender), 1L, false),
+        Player(6L, "David", "Lee", 6, listOf(Position.Midfielder), 1L, false),
     )
+
+    private val testTeam = Team(1L, "Test Team", "Coach", "Delegate", null, TeamType.FOOTBALL_5)
 
     @Before
     fun setup() {
@@ -56,8 +75,18 @@ class MatchCreationWizardViewModelTest {
         getPreviousCaptainsUseCase = mockk()
         getDefaultCaptainUseCase = mockk()
         saveDefaultCaptainUseCase = mockk()
+        getCaptainPlayerUseCase = mockk()
+        getTeamUseCase = mockk()
+        createMatch = mockk()
+        getMatchByIdUseCase = mockk()
+        updateMatchUseCase = mockk()
+        analyticsTracker = mockk(relaxed = true)
+        crashReporter = mockk(relaxed = true)
+        savedStateHandle = mockk()
 
         every { getPlayersUseCase.invoke() } returns flowOf(testPlayers)
+        every { getTeamUseCase.invoke() } returns flowOf(testTeam)
+        every { savedStateHandle.get<Long>(Route.CreateMatch.ARG_MATCH_ID) } returns null
     }
 
     @After
@@ -72,6 +101,13 @@ class MatchCreationWizardViewModelTest {
             getDefaultCaptainUseCase = getDefaultCaptainUseCase,
             saveDefaultCaptainUseCase = saveDefaultCaptainUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+            getTeamUseCase = getTeamUseCase,
+            createMatch = createMatch,
+            getMatchByIdUseCase = getMatchByIdUseCase,
+            updateMatchUseCase = updateMatchUseCase,
+            analyticsTracker = analyticsTracker,
+            crashReporter = crashReporter,
+            savedStateHandle = savedStateHandle
         )
     }
 
@@ -103,18 +139,22 @@ class MatchCreationWizardViewModelTest {
     fun `goToNextStep should advance through steps`() = runTest {
         // Given
         viewModel = createViewModel()
+        coEvery { getCaptainPlayerUseCase.invoke() } returns null
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When & Then
         assertEquals(WizardStep.GENERAL_DATA, viewModel.currentStep.value)
 
         viewModel.goToNextStep()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(WizardStep.SQUAD_CALLUP, viewModel.currentStep.value)
 
         viewModel.goToNextStep()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(WizardStep.CAPTAIN, viewModel.currentStep.value)
 
         viewModel.goToNextStep()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(WizardStep.STARTING_LINEUP, viewModel.currentStep.value)
     }
 
@@ -122,20 +162,27 @@ class MatchCreationWizardViewModelTest {
     fun `goToPreviousStep should go back through steps`() = runTest {
         // Given
         viewModel = createViewModel()
+        coEvery { getCaptainPlayerUseCase.invoke() } returns null
         testDispatcher.scheduler.advanceUntilIdle()
         viewModel.goToNextStep()
+        testDispatcher.scheduler.advanceUntilIdle()
         viewModel.goToNextStep()
+        testDispatcher.scheduler.advanceUntilIdle()
         viewModel.goToNextStep()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(WizardStep.STARTING_LINEUP, viewModel.currentStep.value)
 
         // When & Then
         viewModel.goToPreviousStep()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(WizardStep.CAPTAIN, viewModel.currentStep.value)
 
         viewModel.goToPreviousStep()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(WizardStep.SQUAD_CALLUP, viewModel.currentStep.value)
 
         viewModel.goToPreviousStep()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(WizardStep.GENERAL_DATA, viewModel.currentStep.value)
     }
 
@@ -173,7 +220,7 @@ class MatchCreationWizardViewModelTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
         viewModel.setCaptain(2L)
-        every { getDefaultCaptainUseCase.invoke() } returns null
+        coEvery { getDefaultCaptainUseCase.invoke() } returns null
         coEvery { getPreviousCaptainsUseCase.invoke(2) } returns listOf(2L, 2L)
 
         // When
@@ -190,7 +237,7 @@ class MatchCreationWizardViewModelTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
         viewModel.setCaptain(2L)
-        every { getDefaultCaptainUseCase.invoke() } returns null
+        coEvery { getDefaultCaptainUseCase.invoke() } returns null
         coEvery { getPreviousCaptainsUseCase.invoke(2) } returns listOf(3L, 4L)
 
         // When
@@ -230,12 +277,10 @@ class MatchCreationWizardViewModelTest {
         // Then
         assertEquals("Opponent", match.opponent)
         assertEquals("Location", match.location)
-        assertEquals(1000L, match.date)
-        assertEquals(3600000L, match.time)
+        assertEquals(3601000L, match.dateTime)
         assertEquals(6, match.squadCallUpIds.size)
         assertEquals(2L, match.captainId)
         assertEquals(5, match.startingLineupIds.size)
-        assertEquals(1, match.substituteIds.size) // 6 - 5 = 1 substitute
     }
 
     @Test
@@ -271,11 +316,9 @@ class MatchCreationWizardViewModelTest {
         // Then
         assertEquals("Opponent", match.opponent)
         assertEquals("Location", match.location)
-        assertEquals(1000L, match.date)
-        assertEquals(0L, match.time) // 00:00 should be 0L, not null
+        assertEquals(1000L, match.dateTime)
         assertEquals(6, match.squadCallUpIds.size)
         assertEquals(2L, match.captainId)
         assertEquals(5, match.startingLineupIds.size)
-        assertEquals(1, match.substituteIds.size)
     }
 }

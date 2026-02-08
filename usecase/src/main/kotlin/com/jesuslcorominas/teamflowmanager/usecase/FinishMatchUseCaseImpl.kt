@@ -1,8 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationType
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
@@ -12,6 +16,7 @@ import kotlinx.coroutines.flow.first
 
 internal class FinishMatchUseCaseImpl(
     private val matchRepository: MatchRepository,
+    private val matchOperationRepository: MatchOperationRepository,
     private val playerTimeRepository: PlayerTimeRepository,
     private val playerTimeHistoryRepository: PlayerTimeHistoryRepository,
 ) : FinishMatchUseCase {
@@ -27,6 +32,16 @@ internal class FinishMatchUseCaseImpl(
                 return
             }
 
+            // Step 1: Create operation with IN_PROGRESS status
+            val operation = MatchOperation(
+                matchId = matchId,
+                teamId = match.teamId,
+                type = MatchOperationType.FINISH,
+                status = MatchOperationStatus.IN_PROGRESS,
+                createdAt = currentTime
+            )
+            val operationId = matchOperationRepository.createOperation(operation)
+
             val periods = match.periods.toMutableList()
             // If the match is in progress, we need to close the current period
             if (match.status == MatchStatus.IN_PROGRESS) {
@@ -40,25 +55,21 @@ internal class FinishMatchUseCaseImpl(
                 }
             }
 
-            // Update match to mark it as finished
+            // Step 2: Update match to mark it as finished (without operation ID yet)
             val finishedMatch = match.copy(
                 periods = periods,
                 status = MatchStatus.FINISHED,
             )
+            matchRepository.updateMatch(finishedMatch)
 
-            // Get player times from Firestore (not local DB)
-            // This ensures we have the latest data that was written via batch operations
+            // Step 3: Get player times and save history
             val playerTimes = try {
                 playerTimeRepository.getAllPlayerTimes().first()
             } catch (e: Exception) {
-                // If we can't get player times, log error and continue with empty list
                 println("FinishMatchUseCase: Error getting player times: ${e.message}")
                 e.printStackTrace()
                 emptyList()
             }
-
-            // Update match
-            matchRepository.updateMatch(finishedMatch)
 
             // Save player time history
             playerTimes.forEach { playerTime ->
@@ -81,26 +92,31 @@ internal class FinishMatchUseCaseImpl(
                         playerTimeHistoryRepository.insertPlayerTimeHistory(history)
                     }
                 } catch (e: Exception) {
-                    // Log error but continue with other players
                     println("FinishMatchUseCase: Error saving player time history for player ${playerTime.playerId}: ${e.message}")
                     e.printStackTrace()
                 }
             }
 
-            // Reset player times in Firestore
-            // This must be done separately because Firestore operations don't participate in Room transactions
+            // Step 4: Reset player times in Firestore
             try {
                 playerTimeRepository.resetAllPlayerTimes()
                 println("FinishMatchUseCase: Successfully reset all player times")
             } catch (e: Exception) {
-                // Log error but don't fail the finish operation
                 println("FinishMatchUseCase: Error resetting player times: ${e.message}")
                 e.printStackTrace()
-                // Re-throw to make the error more visible
                 throw IllegalStateException("Failed to reset player times after finishing match", e)
             }
+
+            // Step 5: Mark operation as COMPLETED
+            val completedOperation = operation.copy(
+                id = operationId,
+                status = MatchOperationStatus.COMPLETED
+            )
+            matchOperationRepository.updateOperation(completedOperation)
+
+            // Step 6: Update match with lastCompletedOperationId
+            matchRepository.updateMatchWithOperationId(finishedMatch, operationId)
         } catch (e: Exception) {
-            // Catch any unexpected errors to prevent app crash
             println("FinishMatchUseCase: Unexpected error finishing match: ${e.message}")
             e.printStackTrace()
             throw e

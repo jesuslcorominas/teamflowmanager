@@ -1,7 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
-import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.*
 import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -25,95 +25,127 @@ class MatchRepositoryImplTest {
     }
 
     @Test
-    fun `getMatch should return match from local data source`() =
+    fun `getMatchById should return match from data source`() =
         runTest {
             // Given
-            val match = Match(id = 1L, elapsedTimeMillis = 5000L, teamName = "Team A")
-            every { matchDataSource.getRunningMatch() } returns flowOf(match)
+            val match = Match(id = 1L, teamName = "Team A", opponent = "Opponent", location = "Location", periodType = PeriodType.HALF_TIME, captainId = 1L)
+            every { matchDataSource.getMatchById(1L) } returns flowOf(match)
 
             // When
-            val result = repository.getMatch().first()
+            val result = repository.getMatchById(1L).first()
 
             // Then
             assertEquals(match, result)
         }
 
     @Test
-    fun `startTimer should not do anything when when none exists`() =
+    fun `startTimer should not do anything when match does not exist`() =
         runTest {
             // Given
             val currentTime = 1000L
-            every { matchDataSource.getRunningMatch() } returns flowOf(null)
+            every { matchDataSource.getMatchById(1L) } returns flowOf(null)
 
             // When
             repository.startTimer(1L, currentTime)
 
             // Then
-            coVerify { matchDataSource wasNot Called }
+            coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
         }
 
     @Test
-    fun `startTimer should update existing match to running state`() =
+    fun `startTimer should update existing match to in progress and set start time of first not started period`() =
         runTest {
             // Given
             val currentTime = 2000L
-            val existingMatch = Match(id = 1L, elapsedTimeMillis = 5000L, teamName = "Team A")
-            every { matchDataSource.getRunningMatch() } returns flowOf(existingMatch)
-            coEvery { matchDataSource.upsertMatch(any()) } returns Unit
+            val existingMatch = Match(
+                id = 1L,
+                teamName = "Team A",
+                opponent = "Opponent",
+                location = "Location",
+                periodType = PeriodType.HALF_TIME,
+                captainId = 1L,
+                periods = listOf(
+                    MatchPeriod(1, 1000L, 0L, 0L),
+                    MatchPeriod(2, 1000L, 0L, 0L)
+                )
+            )
+            every { matchDataSource.getMatchById(1L) } returns flowOf(existingMatch)
+            coEvery { matchDataSource.updateMatch(any()) } returns Unit
 
             // When
             repository.startTimer(existingMatch.id, currentTime)
 
             // Then
             coVerify {
-                matchDataSource.upsertMatch(
+                matchDataSource.updateMatch(
                     match {
                         it.id == 1L &&
-                            it.elapsedTimeMillis == 5000L &&
-                            it.lastStartTimeMillis == currentTime
+                            it.status == MatchStatus.IN_PROGRESS &&
+                            it.periods[0].startTimeMillis == currentTime
                     },
                 )
             }
         }
 
     @Test
-    fun `pauseTimer should update elapsed time and set running to false`() =
+    fun `pauseTimer should update end time of first not finished period and set status to paused`() =
         runTest {
             // Given
             val startTime = 1000L
             val pauseTime = 3000L
-            val existingMatch = Match(id = 1L, elapsedTimeMillis = 2000L, lastStartTimeMillis = startTime, teamName = "Team A")
-            every { matchDataSource.getRunningMatch() } returns flowOf(existingMatch)
-            coEvery { matchDataSource.upsertMatch(any()) } returns Unit
+            val existingMatch = Match(
+                id = 1L,
+                teamName = "Team A",
+                opponent = "Opponent",
+                location = "Location",
+                periodType = PeriodType.HALF_TIME,
+                captainId = 1L,
+                status = MatchStatus.IN_PROGRESS,
+                periods = listOf(
+                    MatchPeriod(1, 1000L, startTime, 0L),
+                    MatchPeriod(2, 1000L, 0L, 0L)
+                )
+            )
+            every { matchDataSource.getMatchById(1L) } returns flowOf(existingMatch)
+            coEvery { matchDataSource.updateMatch(any()) } returns Unit
 
             // When
-            repository.pauseTimer(pauseTime)
+            repository.pauseTimer(1L, pauseTime)
 
             // Then
             coVerify {
-                matchDataSource.upsertMatch(
+                matchDataSource.updateMatch(
                     match {
                         it.id == 1L &&
-                            it.elapsedTimeMillis == 4000L &&
-                            it.lastStartTimeMillis == null
+                            it.status == MatchStatus.PAUSED &&
+                            it.periods[0].endTimeMillis == pauseTime &&
+                            it.pauseCount == 1
                     },
                 )
             }
         }
 
     @Test
-    fun `pauseTimer should do nothing when match is not running`() =
+    fun `pauseTimer should do nothing when match is not in progress`() =
         runTest {
             // Given
             val pauseTime = 3000L
-            val existingMatch = Match(id = 1L, elapsedTimeMillis = 2000L, teamName = "Team A")
-            every { matchDataSource.getRunningMatch() } returns flowOf(existingMatch)
+            val existingMatch = Match(
+                id = 1L,
+                teamName = "Team A",
+                opponent = "Opponent",
+                location = "Location",
+                periodType = PeriodType.HALF_TIME,
+                captainId = 1L,
+                status = MatchStatus.PAUSED
+            )
+            every { matchDataSource.getMatchById(1L) } returns flowOf(existingMatch)
 
             // When
-            repository.pauseTimer(pauseTime)
+            repository.pauseTimer(1L, pauseTime)
 
             // Then
-            coVerify(exactly = 0) { matchDataSource.upsertMatch(any()) }
+            coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
         }
 
     @Test
@@ -121,12 +153,12 @@ class MatchRepositoryImplTest {
         runTest {
             // Given
             val pauseTime = 3000L
-            every { matchDataSource.getRunningMatch() } returns flowOf(null)
+            every { matchDataSource.getMatchById(1L) } returns flowOf(null)
 
             // When
-            repository.pauseTimer(pauseTime)
+            repository.pauseTimer(1L, pauseTime)
 
             // Then
-            coVerify(exactly = 0) { matchDataSource.upsertMatch(any()) }
+            coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
         }
 }

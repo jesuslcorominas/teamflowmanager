@@ -14,6 +14,11 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
@@ -24,6 +29,7 @@ import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
+import com.jesuslcorominas.teamflowmanager.ui.team.TeamListScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 
 @Composable
@@ -45,8 +51,18 @@ fun Navigation(
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
+                onNavigateToClubSelection = {
+                    navController.navigate(Route.ClubSelection.createRoute()) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
                 onNavigateToCreateTeam = {
                     navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeamList = {
+                    navController.navigate(Route.TeamList.createRoute()) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
@@ -63,6 +79,37 @@ fun Navigation(
                 onLoginSuccess = {
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.Login.createRoute()) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Route.ClubSelection.createRoute()) {
+            ClubSelectionScreen(
+                onCreateClub = {
+                    navController.navigate(Route.CreateClub.createRoute())
+                },
+                onJoinClub = {
+                    navController.navigate(Route.JoinClub.createRoute())
+                }
+            )
+        }
+
+        composable(Route.CreateClub.createRoute()) {
+            CreateClubScreen(
+                onClubCreated = {
+                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
+                        popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Route.JoinClub.createRoute()) {
+            JoinClubScreen(
+                onClubJoined = {
+                    navController.navigate(Route.Splash.createRoute()) {
+                        popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
                     }
                 }
             )
@@ -85,8 +132,21 @@ fun Navigation(
                     }
                 },
                 onNavigateBackRequest = { navController.popBackStack() },
+                onNavigateToTeamList = {
+                    navController.navigate(Route.TeamList.createRoute()) {
+                        popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
+                    }
+                },
                 currentBackHandler = if (mode == Route.Team.MODE_EDIT) currentBackHandler else null,
             )
+        }
+
+        composable(Route.TeamList.createRoute()) {
+            TeamListScreen()
+        }
+
+        composable(Route.ClubMembers.createRoute()) {
+            ClubMembersScreen()
         }
 
         composable(Route.Players.createRoute()) {
@@ -177,6 +237,48 @@ fun Navigation(
                 }
             )
         }
+
+        composable(
+            route = Route.AcceptTeamInvitation.FULL_ROUTE,
+            arguments = listOf(
+                navArgument(Route.AcceptTeamInvitation.ARG_TEAM_ID) {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            ),
+            deepLinks = listOf(
+                // Custom scheme deep link - always works
+                navDeepLink {
+                    uriPattern = "teamflowmanager://team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                },
+                // HTTPS deep link - requires server configuration
+                navDeepLink {
+                    uriPattern = "https://teamflowmanager.app/team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                }
+            )
+        ) {
+            AcceptTeamInvitationScreen(
+                onNavigateToLogin = { teamId ->
+                    // TODO: Implement proper state saving mechanism
+                    // Current limitation: teamId will be lost after login
+                    // Consider using SavedStateHandle or SharedPreferences to persist the teamId
+                    // so it can be retrieved after login is complete
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeam = {
+                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_VIEW)) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeams = {
+                    navController.navigate(Route.TeamList.createRoute()) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 
     val activity = LocalActivity.current
@@ -191,6 +293,11 @@ fun Navigation(
         when (route) {
             Route.Login -> activity?.finish()
             Route.Migration -> activity?.finish()
+            Route.ClubSelection -> activity?.finish()
+            Route.TeamList -> activity?.finish()
+            Route.CreateClub -> navController.navigate(Route.ClubSelection.createRoute()) {
+                popUpTo(Route.CreateClub.createRoute()) { inclusive = true }
+            }
             Route.Matches -> if (searchState.isActive) {
                 searchState.clear()
                 searchState.isActive = false

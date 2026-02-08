@@ -1,0 +1,156 @@
+
+> Configure project :app
+WARNING: The option setting 'android.defaults.buildfeatures.buildconfig=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 9.0 of the Android Gradle plugin.
+To keep using this feature, add the following to your module-level build.gradle files:
+    android.buildFeatures.buildConfig = true
+or from Android Studio, click: `Refactor` > `Migrate BuildConfig to Gradle Build Files`.
+WARNING: We recommend using a newer Android Gradle plugin to use compileSdk = 36
+
+This Android Gradle plugin (8.6.1) was tested up to compileSdk = 35.
+
+You are strongly encouraged to update your project to use a newer
+Android Gradle plugin that has been tested with compileSdk = 36.
+
+If you are already using the latest version of the Android Gradle plugin,
+you may need to wait until a newer version with support for compileSdk = 36 is available.
+
+For more information refer to the compatibility table:
+https://d.android.com/r/tools/api-level-support
+
+To suppress this warning, add/update
+    android.suppressUnsupportedCompileSdk=36
+to this project's gradle.properties.
+
+> Task :di:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :data:core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :usecase:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :di:preBuild UP-TO-DATE
+> Task :di:preDebugBuild UP-TO-DATE
+> Task :data:core:processResources NO-SOURCE
+> Task :usecase:processResources NO-SOURCE
+> Task :service:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :service:preBuild UP-TO-DATE
+> Task :viewmodel:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :service:preDebugBuild UP-TO-DATE
+> Task :viewmodel:preBuild UP-TO-DATE
+> Task :viewmodel:preDebugBuild UP-TO-DATE
+> Task :viewmodel:generateDebugBuildConfig UP-TO-DATE
+> Task :viewmodel:generateDebugResources UP-TO-DATE
+> Task :viewmodel:packageDebugResources UP-TO-DATE
+> Task :viewmodel:parseDebugLocalResources UP-TO-DATE
+> Task :di:generateDebugBuildConfig
+> Task :viewmodel:generateDebugRFile UP-TO-DATE
+> Task :service:generateDebugBuildConfig
+> Task :viewmodel:javaPreCompileDebug UP-TO-DATE
+> Task :data:local:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :data:local:preBuild UP-TO-DATE
+> Task :data:local:preDebugBuild UP-TO-DATE
+> Task :data:local:generateDebugBuildConfig UP-TO-DATE
+> Task :data:local:generateDebugResources UP-TO-DATE
+> Task :di:generateDebugResources FROM-CACHE
+> Task :service:generateDebugResources FROM-CACHE
+> Task :data:local:packageDebugResources UP-TO-DATE
+> Task :data:local:parseDebugLocalResources UP-TO-DATE
+> Task :data:local:generateDebugRFile UP-TO-DATE
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :di:packageDebugResources
+> Task :service:packageDebugResources
+> Task :di:parseDebugLocalResources FROM-CACHE
+> Task :service:parseDebugLocalResources FROM-CACHE
+> Task :usecase:compileKotlin UP-TO-DATE
+> Task :usecase:compileJava NO-SOURCE
+> Task :usecase:classes UP-TO-DATE
+> Task :data:local:javaPreCompileDebug UP-TO-DATE
+> Task :usecase:jar UP-TO-DATE
+> Task :service:javaPreCompileDebug FROM-CACHE
+> Task :di:generateDebugRFile
+> Task :service:generateDebugRFile
+> Task :data:remote:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :data:core:compileKotlin UP-TO-DATE
+> Task :data:remote:preBuild UP-TO-DATE
+> Task :data:remote:preDebugBuild UP-TO-DATE
+> Task :data:core:compileJava NO-SOURCE
+> Task :data:core:classes UP-TO-DATE
+> Task :data:core:jar UP-TO-DATE
+> Task :data:remote:generateDebugBuildConfig UP-TO-DATE
+> Task :data:remote:generateDebugResources UP-TO-DATE
+> Task :data:remote:packageDebugResources UP-TO-DATE
+> Task :data:remote:parseDebugLocalResources UP-TO-DATE
+> Task :data:remote:generateDebugRFile UP-TO-DATE
+> Task :viewmodel:compileDebugKotlin UP-TO-DATE
+> Task :data:local:kspDebugKotlin UP-TO-DATE
+> Task :viewmodel:compileDebugJavaWithJavac UP-TO-DATE
+> Task :viewmodel:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:remote:kspDebugKotlin UP-TO-DATE
+> Task :di:javaPreCompileDebug FROM-CACHE
+> Task :di:preDebugUnitTestBuild UP-TO-DATE
+> Task :data:local:compileDebugKotlin UP-TO-DATE
+> Task :data:local:compileDebugJavaWithJavac UP-TO-DATE
+> Task :data:local:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :viewmodel:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :viewmodel:processDebugJavaRes UP-TO-DATE
+> Task :data:local:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :data:remote:compileDebugKotlin UP-TO-DATE
+> Task :data:local:processDebugJavaRes UP-TO-DATE
+> Task :data:remote:javaPreCompileDebug UP-TO-DATE
+> Task :service:preDebugUnitTestBuild UP-TO-DATE
+> Task :data:remote:compileDebugJavaWithJavac UP-TO-DATE
+> Task :data:remote:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:remote:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :data:remote:processDebugJavaRes UP-TO-DATE
+> Task :viewmodel:preDebugUnitTestBuild UP-TO-DATE
+> Task :viewmodel:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :viewmodel:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :di:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :service:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :viewmodel:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :viewmodel:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :viewmodel:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :service:generateDebugUnitTestStubRFile
+> Task :data:local:preDebugUnitTestBuild UP-TO-DATE
+> Task :di:generateDebugUnitTestStubRFile
+> Task :data:remote:preDebugUnitTestBuild UP-TO-DATE
+> Task :data:local:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :viewmodel:testDebugUnitTest UP-TO-DATE
+> Task :data:local:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :data:remote:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:local:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :data:local:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :data:local:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:local:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :data:remote:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :data:remote:kspDebugUnitTestKotlin
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+> Task :service:compileDebugKotlin
+> Task :data:remote:compileDebugUnitTestKotlin
+> Task :data:remote:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:remote:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :service:compileDebugJavaWithJavac
+> Task :service:bundleLibRuntimeToJarDebug
+> Task :service:bundleLibCompileToJarDebug
+> Task :service:processDebugJavaRes
+> Task :service:compileDebugUnitTestKotlin NO-SOURCE
+> Task :service:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :service:processDebugUnitTestJavaRes NO-SOURCE
+> Task :service:testDebugUnitTest NO-SOURCE
+> Task :data:local:testDebugUnitTest
+> Task :di:compileDebugKotlin
+> Task :data:remote:testDebugUnitTest
+> Task :di:compileDebugJavaWithJavac
+> Task :di:bundleLibRuntimeToJarDebug
+> Task :di:bundleLibCompileToJarDebug
+> Task :di:processDebugJavaRes
+> Task :di:compileDebugUnitTestKotlin NO-SOURCE
+> Task :di:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :di:processDebugUnitTestJavaRes NO-SOURCE
+> Task :di:testDebugUnitTest NO-SOURCE
+
+BUILD SUCCESSFUL in 46s
+84 actionable tasks: 22 executed, 8 from cache, 54 up-to-date

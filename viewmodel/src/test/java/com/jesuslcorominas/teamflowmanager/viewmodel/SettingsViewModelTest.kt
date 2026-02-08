@@ -1,61 +1,47 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.User
-import com.jesuslcorominas.teamflowmanager.usecase.ExportDatabaseUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ImportDatabaseUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
-    private val testDispatcher = StandardTestDispatcher()
-    private lateinit var exportDatabaseUseCase: ExportDatabaseUseCase
-    private lateinit var importDatabaseUseCase: ImportDatabaseUseCase
+
     private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
     private lateinit var signOutUseCase: SignOutUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
+
     private lateinit var viewModel: SettingsViewModel
+
+    private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        exportDatabaseUseCase = mockk()
-        importDatabaseUseCase = mockk()
         getCurrentUserUseCase = mockk()
         signOutUseCase = mockk()
         analyticsTracker = mockk(relaxed = true)
-        
-        every { getCurrentUserUseCase() } returns flowOf(null)
-        
-        viewModel = SettingsViewModel(
-            exportDatabaseUseCase,
-            importDatabaseUseCase,
-            getCurrentUserUseCase,
-            signOutUseCase,
-            analyticsTracker
-        )
+
+        every { getCurrentUserUseCase() } returns flowOf(User("1", "test@test.com", "Test User", null))
     }
 
     @After
@@ -63,192 +49,54 @@ class SettingsViewModelTest {
         Dispatchers.resetMain()
     }
 
-    @Test
-    fun `initial export result should be null`() {
-        // Then
-        assertNull(viewModel.exportResult.value)
+    private fun createViewModel() {
+        viewModel = SettingsViewModel(
+            getCurrentUserUseCase,
+            signOutUseCase,
+            analyticsTracker
+        )
     }
 
     @Test
-    fun `initial import result should be null`() {
-        // Then
-        assertNull(viewModel.importResult.value)
-    }
-
-    @Test
-    fun `exportData should call use case and update result on success`() = runTest {
+    fun `currentUser should expose flow from use case`() = runTest {
         // Given
-        val fileUri = "content://com.example.provider/file.tfm"
-        coEvery { exportDatabaseUseCase() } returns fileUri
+        val user = User("1", "test@test.com", "Test User", null)
+        every { getCurrentUserUseCase() } returns flowOf(user)
 
         // When
-        viewModel.exportData()
-        advanceUntilIdle()
+        createViewModel()
 
         // Then
-        coVerify(exactly = 1) { exportDatabaseUseCase() }
-        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
-        assertNotNull(viewModel.exportResult.value)
-        assertTrue(viewModel.exportResult.value!!.isSuccess)
-        assertEquals(fileUri, viewModel.exportResult.value!!.getOrNull())
+        viewModel.currentUser.test {
+            assertEquals(null, awaitItem())
+            assertEquals(user, awaitItem())
+        }
     }
 
     @Test
-    fun `exportData should update result on failure when use case returns null`() = runTest {
-        // Given
-        coEvery { exportDatabaseUseCase() } returns null
-
-        // When
-        viewModel.exportData()
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 1) { exportDatabaseUseCase() }
-        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
-        assertNotNull(viewModel.exportResult.value)
-        assertTrue(viewModel.exportResult.value!!.isFailure)
-    }
-
-    @Test
-    fun `exportData should update result on exception`() = runTest {
-        // Given
-        val exception = Exception("Export failed")
-        coEvery { exportDatabaseUseCase() } throws exception
-
-        // When
-        viewModel.exportData()
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 1) { exportDatabaseUseCase() }
-        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
-        assertNotNull(viewModel.exportResult.value)
-        assertTrue(viewModel.exportResult.value!!.isFailure)
-        assertEquals(exception, viewModel.exportResult.value!!.exceptionOrNull())
-    }
-
-    @Test
-    fun `importData should call use case and update result on success`() = runTest {
-        // Given
-        val fileUri = "content://com.example.provider/file.tfm"
-        val source = "deep_link"
-        coEvery { importDatabaseUseCase(fileUri) } returns true
-
-        // When
-        viewModel.importData(fileUri, source)
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 1) { importDatabaseUseCase(fileUri) }
-        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
-        assertNotNull(viewModel.importResult.value)
-        assertTrue(viewModel.importResult.value!!.isSuccess)
-        assertTrue(viewModel.importResult.value!!.getOrNull() == true)
-    }
-
-    @Test
-    fun `importData should update result on failure when use case returns false`() = runTest {
-        // Given
-        val fileUri = "content://com.example.provider/file.tfm"
-        val source = "settings_screen"
-        coEvery { importDatabaseUseCase(fileUri) } returns false
-
-        // When
-        viewModel.importData(fileUri, source)
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 1) { importDatabaseUseCase(fileUri) }
-        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
-        assertNotNull(viewModel.importResult.value)
-        assertTrue(viewModel.importResult.value!!.isFailure)
-    }
-
-    @Test
-    fun `importData should update result on exception`() = runTest {
-        // Given
-        val fileUri = "content://com.example.provider/file.tfm"
-        val source = "deep_link"
-        val exception = Exception("Import failed")
-        coEvery { importDatabaseUseCase(fileUri) } throws exception
-
-        // When
-        viewModel.importData(fileUri, source)
-        advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 1) { importDatabaseUseCase(fileUri) }
-        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
-        assertNotNull(viewModel.importResult.value)
-        assertTrue(viewModel.importResult.value!!.isFailure)
-        assertEquals(exception, viewModel.importResult.value!!.exceptionOrNull())
-    }
-
-    @Test
-    fun `trackImportCancelled should log analytics event`() {
-        // Given
-        val source = "settings_screen"
-
-        // When
-        viewModel.trackImportCancelled(source)
-
-        // Then
-        verify(exactly = 1) { analyticsTracker.logEvent(any(), any()) }
-    }
-
-    @Test
-    fun `clearExportResult should set export result to null`() = runTest {
-        // Given
-        val fileUri = "content://com.example.provider/file.tfm"
-        coEvery { exportDatabaseUseCase() } returns fileUri
-        viewModel.exportData()
-        advanceUntilIdle()
-
-        // When
-        viewModel.clearExportResult()
-
-        // Then
-        assertNull(viewModel.exportResult.value)
-    }
-
-    @Test
-    fun `clearImportResult should set import result to null`() = runTest {
-        // Given
-        val fileUri = "content://com.example.provider/file.tfm"
-        val source = "deep_link"
-        coEvery { importDatabaseUseCase(fileUri) } returns true
-        viewModel.importData(fileUri, source)
-        advanceUntilIdle()
-
-        // When
-        viewModel.clearImportResult()
-
-        // Then
-        assertNull(viewModel.importResult.value)
-    }
-
-    @Test
-    fun `signOut should call sign out use case and set signOutComplete`() = runTest {
+    fun `signOut should call use case and update state`() = runTest {
         // Given
         coEvery { signOutUseCase() } returns Unit
+        createViewModel()
 
         // When
         viewModel.signOut()
-        advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 1) { signOutUseCase() }
-        verify { analyticsTracker.logEvent("logout", any()) }
-        verify { analyticsTracker.setUserId(null) }
         assertTrue(viewModel.signOutComplete.value)
+        coVerify { signOutUseCase() }
+        coVerify { analyticsTracker.logEvent("logout", any()) }
+        coVerify { analyticsTracker.setUserId(null) }
     }
 
     @Test
-    fun `clearSignOutComplete should reset signOutComplete to false`() = runTest {
+    fun `clearSignOutComplete should reset state`() = runTest {
         // Given
         coEvery { signOutUseCase() } returns Unit
+        createViewModel()
         viewModel.signOut()
-        advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertTrue(viewModel.signOutComplete.value)
 
         // When
