@@ -19,7 +19,7 @@ class MainViewModel(
 
     val isPresident: StateFlow<Boolean> = getUserClubMembership()
         .map { clubMember ->
-            clubMember?.role == ClubRole.PRESIDENT.roleName
+            clubMember?.hasRole(ClubRole.PRESIDENT) ?: false
         }
         .stateIn(
             scope = viewModelScope,

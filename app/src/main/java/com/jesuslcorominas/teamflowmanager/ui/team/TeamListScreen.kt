@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
@@ -51,6 +54,8 @@ fun TeamListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val shareEvent by viewModel.shareEvent.collectAsState()
     val sharingTeamId by viewModel.sharingTeamId.collectAsState()
+    val assigningCoachToTeamId by viewModel.assigningCoachToTeamId.collectAsState()
+    val currentUserRole by viewModel.currentUserRole.collectAsState()
     val context = LocalContext.current
 
     // Handle share event
@@ -80,7 +85,10 @@ fun TeamListScreen(
                         modifier = Modifier.fillMaxSize(),
                         onTeamClick = onTeamClick,
                         onShareTeam = { team -> viewModel.shareTeam(team) },
-                        sharingTeamId = sharingTeamId
+                        onSelfAssignAsCoach = { team -> viewModel.selfAssignAsCoachToTeam(team) },
+                        sharingTeamId = sharingTeamId,
+                        assigningCoachToTeamId = assigningCoachToTeamId,
+                        isPresident = currentUserRole == ClubRole.PRESIDENT.roleName
                     )
                 }
             }
@@ -98,8 +106,8 @@ fun TeamListScreen(
             }
         }
         
-        // Show full-screen loading overlay while sharing
-        if (sharingTeamId != null) {
+        // Show full-screen loading overlay while sharing or assigning
+        if (sharingTeamId != null || assigningCoachToTeamId != null) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -141,7 +149,10 @@ private fun TeamsListContent(
     modifier: Modifier = Modifier,
     onTeamClick: (Team) -> Unit,
     onShareTeam: (Team) -> Unit,
-    sharingTeamId: String?
+    onSelfAssignAsCoach: (Team) -> Unit,
+    sharingTeamId: String?,
+    assigningCoachToTeamId: String?,
+    isPresident: Boolean
 ) {
     LazyColumn(
         modifier = modifier.padding(16.dp),
@@ -152,7 +163,10 @@ private fun TeamsListContent(
                 team = team,
                 onClick = { onTeamClick(team) },
                 onShare = { onShareTeam(team) },
-                isSharing = team.firestoreId == sharingTeamId
+                onSelfAssignAsCoach = { onSelfAssignAsCoach(team) },
+                isSharing = team.firestoreId == sharingTeamId,
+                isAssigning = team.firestoreId == assigningCoachToTeamId,
+                isPresident = isPresident
             )
         }
     }
@@ -163,7 +177,10 @@ private fun TeamCard(
     team: Team,
     onClick: () -> Unit,
     onShare: () -> Unit,
-    isSharing: Boolean = false
+    onSelfAssignAsCoach: () -> Unit,
+    isSharing: Boolean = false,
+    isAssigning: Boolean = false,
+    isPresident: Boolean = false
 ) {
     AppCard(
         modifier = Modifier.clickable(onClick = onClick)
@@ -231,6 +248,25 @@ private fun TeamCard(
                         text = team.delegateName,
                         style = MaterialTheme.typography.bodyMedium
                     )
+                }
+            }
+            
+            // Show self-assign button for Presidents when team has no coach
+            if (isPresident && team.coachId == null) {
+                Button(
+                    onClick = onSelfAssignAsCoach,
+                    enabled = !isAssigning,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PersonAdd,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(R.string.self_assign_as_coach_button))
                 }
             }
         }

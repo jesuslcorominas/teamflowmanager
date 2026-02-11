@@ -20,19 +20,27 @@ internal class ClubMemberRepositoryImpl(
         email: String,
         clubId: Long,
         clubFirestoreId: String,
-        role: String
+        roles: List<String>
     ): ClubMember {
         return clubMemberDataSource.createOrUpdateClubMember(
-            userId, name, email, clubId, clubFirestoreId, role
+            userId, name, email, clubId, clubFirestoreId, roles
         )
     }
 
-    override suspend fun updateClubMemberRole(
+    override suspend fun updateClubMemberRoles(
+        userId: String,
+        clubFirestoreId: String,
+        roles: List<String>
+    ) {
+        clubMemberDataSource.updateClubMemberRoles(userId, clubFirestoreId, roles)
+    }
+
+    override suspend fun addClubMemberRole(
         userId: String,
         clubFirestoreId: String,
         role: String
     ) {
-        clubMemberDataSource.updateClubMemberRole(userId, clubFirestoreId, role)
+        clubMemberDataSource.addClubMemberRole(userId, clubFirestoreId, role)
     }
 
     override suspend fun getClubMemberByUserIdAndClub(

@@ -143,7 +143,7 @@ private fun MemberCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = member.role,
+                    text = member.roles.joinToString(", "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )

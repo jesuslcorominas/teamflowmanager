@@ -350,4 +350,9 @@
     <string name="match_notification_channel_name">Match Countdown</string>
     <string name="match_notification_channel_description">Shows remaining time during active matches</string>
 
+    <!-- Self-Assign as Coach Strings -->
+    <string name="self_assign_as_coach_button">Asignarme como Coach</string>
+    <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
+    <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
+
 </resources>

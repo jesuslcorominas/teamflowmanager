@@ -17,7 +17,7 @@ data class ClubMemberFirestoreModel(
     val name: String = "",
     val email: String = "",
     val clubId: String = "",
-    val role: String = "",
+    val roles: List<String> = emptyList(),
 ) {
     // No-arg constructor required by Firestore
     constructor() : this(
@@ -26,7 +26,7 @@ data class ClubMemberFirestoreModel(
         name = "",
         email = "",
         clubId = "",
-        role = "",
+        roles = emptyList(),
     )
 }
 
@@ -37,7 +37,7 @@ fun ClubMemberFirestoreModel.toDomain(): ClubMember =
         name = name,
         email = email,
         clubId = clubId.toStableId(),
-        role = role,
+        roles = roles,
         firestoreId = id,
         clubFirestoreId = clubId,
     )
@@ -49,5 +49,5 @@ fun ClubMember.toFirestoreModel(): ClubMemberFirestoreModel =
         name = name,
         email = email,
         clubId = "", // Will be set by the data source
-        role = role,
+        roles = roles,
     )

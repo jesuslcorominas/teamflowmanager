@@ -77,12 +77,12 @@ class ClubFirestoreDataSourceImpl(
                 name = currentUserName,
                 email = currentUserEmail,
                 clubId = clubId,
-                role = ROLE_PRESIDENTE
+                roles = listOf(ROLE_PRESIDENTE)
             )
 
             // Then create the clubMember document (now the club exists and security rules can verify ownership)
             clubMemberDocRef.set(clubMemberModel).await()
-            Log.d(TAG, "ClubMember created for userId: $currentUserId with role: $ROLE_PRESIDENTE")
+            Log.d(TAG, "ClubMember created for userId: $currentUserId with roles: [$ ROLE_PRESIDENTE]")
 
             return clubModel.toDomain()
         } catch (e: CancellationException) {

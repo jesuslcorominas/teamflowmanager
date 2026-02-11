@@ -51,7 +51,7 @@ internal class JoinClubByCodeUseCaseImpl(
         val orphanTeam = orphanTeams.firstOrNull()
 
         // Determine role based on whether user has an orphan team
-        val role = if (orphanTeam != null) ROLE_COACH else ROLE_STAFF
+        val roles = if (orphanTeam != null) listOf(ROLE_COACH) else listOf(ROLE_STAFF)
 
         try {
             // Step 1: Link orphan team to club if exists
@@ -73,7 +73,7 @@ internal class JoinClubByCodeUseCaseImpl(
                 email = currentUser.email!!,
                 clubId = club.id,
                 clubFirestoreId = club.firestoreId!!,
-                role = role
+                roles = roles
             )
 
             return JoinClubResult(

@@ -2,10 +2,12 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +18,7 @@ class TeamListViewModel(
     private val getTeamsByClub: GetTeamsByClubUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
     private val generateTeamInvitation: GenerateTeamInvitationUseCase,
+    private val selfAssignAsCoach: SelfAssignAsCoachUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
@@ -26,6 +29,12 @@ class TeamListViewModel(
 
     private val _sharingTeamId = MutableStateFlow<String?>(null)
     val sharingTeamId: StateFlow<String?> = _sharingTeamId.asStateFlow()
+
+    private val _assigningCoachToTeamId = MutableStateFlow<String?>(null)
+    val assigningCoachToTeamId: StateFlow<String?> = _assigningCoachToTeamId.asStateFlow()
+
+    private val _currentUserRole = MutableStateFlow<String?>(null)
+    val currentUserRole: StateFlow<String?> = _currentUserRole.asStateFlow()
 
     sealed interface UiState {
         data object Loading : UiState
@@ -52,6 +61,14 @@ class TeamListViewModel(
                     return@launch
                 }
 
+                // Store user's primary role (first role in the list)
+                // For display purposes, we use the first role or "President" if available
+                _currentUserRole.value = if (clubMember.hasRole(ClubRole.PRESIDENT)) {
+                    ClubRole.PRESIDENT.roleName
+                } else {
+                    clubMember.roles.firstOrNull() ?: ""
+                }
+
                 // Load teams for the club
                 getTeamsByClub(clubFirestoreId).collect { teams ->
                     _uiState.value = UiState.Success(teams, clubMember.name)
@@ -74,12 +91,9 @@ class TeamListViewModel(
             _sharingTeamId.value = teamFirestoreId
 
             try {
-                android.util.Log.d("TeamListViewModel", "Starting share for team: ${team.name} (ID: $teamFirestoreId)")
                 val invitationLink = generateTeamInvitation(teamFirestoreId, team.name)
-                android.util.Log.d("TeamListViewModel", "Generated invitation link: $invitationLink")
                 _shareEvent.value = ShareEvent(invitationLink, team.name)
             } catch (e: Exception) {
-                android.util.Log.e("TeamListViewModel", "Error generating invitation link for team: ${team.name}", e)
                 // TODO: Show error to user
             } finally {
                 _sharingTeamId.value = null
@@ -89,5 +103,27 @@ class TeamListViewModel(
 
     fun onShareEventConsumed() {
         _shareEvent.value = null
+    }
+
+    fun selfAssignAsCoachToTeam(team: Team) {
+        // Prevent multiple concurrent operations for the same team
+        if (_assigningCoachToTeamId.value == team.firestoreId) {
+            return
+        }
+
+        viewModelScope.launch {
+            val teamFirestoreId = team.firestoreId ?: return@launch
+
+            _assigningCoachToTeamId.value = teamFirestoreId
+
+            try {
+                selfAssignAsCoach(teamFirestoreId)
+                // The UI will automatically update through the teams flow
+            } catch (e: Exception) {
+                // TODO: Show error to user
+            } finally {
+                _assigningCoachToTeamId.value = null
+            }
+        }
     }
 }
