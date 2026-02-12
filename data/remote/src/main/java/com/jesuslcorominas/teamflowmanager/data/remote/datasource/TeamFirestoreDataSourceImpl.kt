@@ -249,13 +249,13 @@ class TeamFirestoreDataSourceImpl(
             // Filter to only include teams without a clubId field (orphan teams)
             val teams = querySnapshot.documents.mapNotNull { document ->
                 val documentId = document.id
-                
+
                 // Check if document has clubId field and skip if it does
                 val hasClubId = document.contains("clubId") && document.getString("clubId") != null
                 if (hasClubId) {
                     return@mapNotNull null
                 }
-                
+
                 val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
 
                 if (firestoreModel != null) {
@@ -346,7 +346,7 @@ class TeamFirestoreDataSourceImpl(
 
         try {
             val updates = mapOf(
-                "coachId" to coachId
+                "assignedCoachId" to coachId
             )
 
             firestore.collection(TEAMS_COLLECTION)
