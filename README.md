@@ -11,31 +11,30 @@
 
 ## Features
 
-- **Control de minutos** — Cronómetro individual por jugador, acumulando tiempo real de juego
-- **Gestión de cambios** — Registro de sustituciones con control automático de tiempos
-- **Temporizador de partido** — Cronómetro global con soporte de pausa y reanudación
-- **Gestión del equipo** — Alta, edición y baja de jugadores y equipos
-- **Estadísticas en tiempo real** — Visualización de tiempos y participación durante el partido
-- **Soporte multiusuario** — Autenticación con Google Sign-In y datos sincronizados via Firestore
-- **Deep linking** — Acceso directo a partido activo (`teamflowmanager://match`) e invitación de equipo (`teamflowmanager://team/accept`)
+- **Minute tracking** — Individual player stopwatch accumulating real playing time
+- **Substitution management** — Substitution recording with automatic time control
+- **Match timer** — Global stopwatch with pause and resume support
+- **Team management** — Add, edit and remove players and teams
+- **Real-time statistics** — Playing time and participation visualization during the match
+- **Multi-user support** — Google Sign-In authentication with data synced via Firestore
+- **Deep linking** — Direct access to active match (`teamflowmanager://match`) and team invitation (`teamflowmanager://team/accept`)
 
 ---
 
 ## Tech Stack
 
-| Capa | Tecnología |
-|------|-----------|
-| **Lenguaje** | Kotlin 2.1.0 |
+| Layer | Technology |
+|-------|-----------|
+| **Language** | Kotlin 2.1.0 |
 | **UI** | Jetpack Compose + Material 3 |
-| **Arquitectura** | Clean Architecture + MVVM |
+| **Architecture** | Clean Architecture + MVVM |
 | **DI** | Koin 4.0.0 |
-| **Base de datos local** | Room 2.8.3 |
-| **Red** | Ktor Client 3.0.1 + KtorFit 2.6.0 |
+| **Networking** | Ktor Client 3.0.1 + KtorFit 2.6.0 |
 | **Backend** | Firebase (Auth, Firestore, Storage, Crashlytics, Analytics) |
-| **Autenticación** | Google Sign-In (Credential Manager) |
+| **Authentication** | Google Sign-In (Credential Manager) |
 | **Async** | Kotlin Coroutines + Flow |
-| **Imágenes** | Coil |
-| **Animaciones** | Lottie |
+| **Images** | Coil |
+| **Animations** | Lottie |
 | **Code style** | ktlint |
 | **Testing** | JUnit 4, Mockk, Turbine, Coroutines Test |
 
@@ -43,7 +42,7 @@
 
 ## Architecture
 
-El proyecto sigue **Clean Architecture** con separación estricta por capas y el siguiente flujo de dependencias:
+The project follows **Clean Architecture** with strict layer separation and the following dependency flow:
 
 ```
 ┌─────────────────────────────────────┐
@@ -64,31 +63,31 @@ El proyecto sigue **Clean Architecture** con separación estricta por capas y el
 ┌──────────────▼──────────────────────┐
 │     :data:core  (Data Layer)        │
 │     Repository implementations      │
-└──────────┬──────────────┬───────────┘
-           │              │
-┌──────────▼─────┐  ┌─────▼──────────┐
-│  :data:local   │  │  :data:remote  │
-│  Room Database │  │  Ktor + KtorFit│
-└────────────────┘  └────────────────┘
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│         :data:remote                │
+│   Ktor + KtorFit — Firebase/API     │
+└─────────────────────────────────────┘
 
 ┌─────────────────────────────────────┐
 │        :domain  (Domain Models)     │
-│  Pure Kotlin — sin dependencias     │
-│  Todas las capas dependen de él     │
+│  Pure Kotlin — no dependencies      │
+│  All modules depend on this layer   │
 └─────────────────────────────────────┘
 
 ┌─────────────────────────────────────┐
 │        :di  (Koin DI wiring)        │
-│  Agrega todos los módulos Koin      │
+│  Aggregates all Koin modules        │
 └─────────────────────────────────────┘
 
 ┌─────────────────────────────────────┐
 │        :service                     │
-│  Servicios en segundo plano         │
+│  Background services                │
 └─────────────────────────────────────┘
 ```
 
-> Las interfaces de repositorio se definen en `:usecase`; sus implementaciones viven en `:data:core`. Las implementaciones son `internal` a su módulo.
+> Repository interfaces are defined in `:usecase`; their implementations live in `:data:core`. Implementations are `internal` to their module.
 
 ---
 
@@ -97,47 +96,46 @@ El proyecto sigue **Clean Architecture** con separación estricta por capas y el
 ```
 TeamFlowManager/
 ├── app/                    # UI layer — Composables, Activities
-├── viewmodel/              # ViewModels y estados de UI (StateFlow)
-├── usecase/                # Casos de uso + interfaces de repositorio
-├── domain/                 # Modelos de dominio (pure Kotlin, sin deps)
+├── viewmodel/              # ViewModels and UI state (StateFlow)
+├── usecase/                # Use cases + repository interfaces
+├── domain/                 # Domain models (pure Kotlin, no dependencies)
 ├── data/
-│   ├── core/               # Implementaciones de repositorios
-│   ├── local/              # Room DAOs, entities y database
-│   └── remote/             # Ktor client + KtorFit API services
-├── di/                     # Configuración Koin (AppModule + submódulos)
-├── service/                # Servicios en background
+│   ├── core/               # Repository implementations
+│   └── remote/             # Ktor client + KtorFit + Firebase services
+├── di/                     # Koin configuration (AppModule + submodules)
+├── service/                # Background services
 ├── gradle/
-│   └── libs.versions.toml  # Version catalog centralizado
+│   └── libs.versions.toml  # Centralized version catalog
 ├── .github/
 │   └── workflows/
 │       └── pr-checks.yml   # CI — build, tests, ktlint
-├── firestore.rules         # Reglas de seguridad Firestore
-└── firebase.json           # Configuración Firebase
+├── firestore.rules         # Firestore security rules
+└── firebase.json           # Firebase configuration
 ```
 
 ---
 
 ## Prerequisites
 
-- **Android Studio** Ladybug (2024.2.1) o superior
-- **JDK 17** (recomendado: Eclipse Temurin)
-- **Android SDK** con API 29+ instalado
-- Cuenta de Firebase con proyecto configurado y `google-services.json` en `app/`
+- **Android Studio** Ladybug (2024.2.1) or higher
+- **JDK 17** (recommended: Eclipse Temurin)
+- **Android SDK** with API 29+ installed
+- Firebase project configured with `google-services.json` placed in `app/`
 
 ---
 
 ## Installation
 
 ```bash
-# 1. Clonar el repositorio
+# 1. Clone the repository
 git clone https://github.com/jesuslcorominas/teamflowmanager.git
 cd teamflowmanager
 
-# 2. Añadir el fichero de configuración Firebase
-#    Descárgalo desde Firebase Console y colócalo en:
+# 2. Add the Firebase configuration file
+#    Download it from Firebase Console and place it at:
 cp google-services.json app/
 
-# 3. Abrir en Android Studio o construir desde línea de comandos
+# 3. Open in Android Studio or build from the command line
 ./gradlew assembleDevDebug
 ```
 
@@ -145,24 +143,24 @@ cp google-services.json app/
 
 ## Build
 
-El proyecto tiene dos **product flavors**:
+The project has two **product flavors**:
 
-| Flavor | App ID suffix | Descripción |
+| Flavor | App ID suffix | Description |
 |--------|--------------|-------------|
-| `dev`  | `.dev`       | Entorno de desarrollo |
-| `prod` | —            | Entorno de producción |
+| `dev`  | `.dev`       | Development environment |
+| `prod` | —            | Production environment |
 
 ```bash
-# Debug (flavor dev)
+# Debug (dev flavor)
 ./gradlew assembleDevDebug
 
-# Debug (flavor prod)
+# Debug (prod flavor)
 ./gradlew assembleProdDebug
 
-# Release (requiere keystore configurado)
+# Release (requires keystore configured)
 ./gradlew assembleProdRelease
 
-# Build completo (todos los variants)
+# Full build (all variants)
 ./gradlew build
 ```
 
@@ -171,73 +169,50 @@ El proyecto tiene dos **product flavors**:
 ## Testing
 
 ```bash
-# Todos los tests unitarios
+# All unit tests
 ./gradlew test
 
-# Tests de un módulo concreto
+# Tests for a specific module
 ./gradlew :usecase:test
 ./gradlew :viewmodel:test
 ./gradlew :data:core:test
 
-# Una clase de test específica
+# A specific test class
 ./gradlew :usecase:test --tests "*.DeletePlayerUseCaseTest"
 
-# Tests con informe detallado
+# Tests with detailed report
 ./gradlew test --continue
 ```
 
-Los tests usan **JUnit 4**, **Mockk** para mocking, **Turbine** para testing de Flows y **Coroutines Test** para código asíncrono.
+Tests use **JUnit 4**, **Mockk** for mocking, **Turbine** for Flow testing and **Coroutines Test** for async code.
 
 ---
 
 ## Code Style
 
 ```bash
-# Comprobar estilo
+# Check style
 ./gradlew ktlintCheck
 
-# Formatear automáticamente
+# Auto-format
 ./gradlew ktlintFormat
 ```
 
-ktlint se aplica automáticamente a todos los subproyectos vía el plugin raíz.
+ktlint is automatically applied to all subprojects via the root plugin.
 
 ---
 
 ## Continuous Integration
 
-GitHub Actions ejecuta las siguientes comprobaciones en cada Pull Request a `main`:
+GitHub Actions runs the following checks on every Pull Request to `main`:
 
-| Check | Comando |
+| Check | Command |
 |-------|---------|
 | Build | `./gradlew build --no-daemon` |
 | Unit Tests | `./gradlew test --no-daemon` |
 | Code Style | `./gradlew ktlintCheck --no-daemon` |
 
-Los resultados de tests y reportes de build se publican como artefactos en cada ejecución. El workflow se ejecuta en un runner self-hosted con JDK 17.
-
----
-
-## Kotlin Multiplatform (KMM) Readiness
-
-El proyecto está preparado para una futura migración a KMP:
-
-### ✅ Componentes ya multiplatform-ready
-- **DI**: Koin 4.0.0 (totalmente multiplataforma)
-- **Red**: Ktor Client 3.0.1 + KtorFit 2.6.0 (compatible con KMP)
-- **Lógica de negocio**: módulos pure Kotlin (`:usecase`, `:domain`, `:data:core`, `:data:remote`)
-- **UI Framework**: Compose Multiplatform 1.7.3 configurado
-
-### 🔄 Componentes platform-specific (Android)
-- **UI**: Jetpack Compose (Android-only actualmente)
-- **Almacenamiento local**: Room → necesitaría SQLDelight para KMP
-- **ViewModel**: implementación Android
-
-### 🎯 Ruta de migración futura
-1. Crear estructura de módulos KMP (`commonMain`, `androidMain`, `iosMain`)
-2. Migrar componentes de UI compartidos a Compose Multiplatform
-3. Reemplazar Room con SQLDelight para base de datos multiplataforma
-4. Compartir lógica de negocio, capa de datos y UI entre plataformas
+Test results and build reports are published as artifacts on each run. The workflow runs on a self-hosted runner with JDK 17.
 
 ---
 
