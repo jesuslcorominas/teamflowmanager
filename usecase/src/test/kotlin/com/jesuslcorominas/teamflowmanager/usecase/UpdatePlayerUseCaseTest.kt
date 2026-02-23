@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,7 +32,9 @@ class UpdatePlayerUseCaseTest {
             firstName = "John",
             lastName = "Doe",
             number = 10,
-            positions = listOf(Position.Forward)
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false,
         )
         coEvery { playerRepository.updatePlayer(player) } just runs
 
@@ -50,7 +53,9 @@ class UpdatePlayerUseCaseTest {
             firstName = "Jane",
             lastName = "Smith",
             number = 8,
-            positions = listOf(Position.Midfielder, Position.Defender)
+            positions = listOf(Position.Midfielder, Position.Defender),
+            teamId = 1L,
+            isCaptain = false,
         )
         coEvery { playerRepository.updatePlayer(player) } just runs
 

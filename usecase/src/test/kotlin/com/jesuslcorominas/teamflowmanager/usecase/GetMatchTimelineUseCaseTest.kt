@@ -9,6 +9,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
@@ -111,12 +112,12 @@ class GetMatchTimelineUseCaseTest {
         val goalEvents = result?.events?.filterIsInstance<TimelineEvent.GoalScored>()
         assertEquals(3, goalEvents?.size)
 
-        // Events are sorted descending by time, so the last goal comes first
-        val lastGoal = goalEvents?.get(0)
-        assertEquals(900000L, lastGoal?.matchElapsedTimeMillis)
-        assertEquals(2, lastGoal?.teamScore) // After all 3 goals: 2 team goals
-        assertEquals(1, lastGoal?.opponentScore) // 1 opponent goal
-        assertEquals(false, lastGoal?.isOpponentGoal)
+        // Events are sorted ascending by time
+        val firstGoal = goalEvents?.get(0)
+        assertEquals(300000L, firstGoal?.matchElapsedTimeMillis)
+        assertEquals(1, firstGoal?.teamScore)
+        assertEquals(0, firstGoal?.opponentScore)
+        assertEquals(false, firstGoal?.isOpponentGoal)
 
         val secondGoal = goalEvents?.get(1)
         assertEquals(600000L, secondGoal?.matchElapsedTimeMillis)
@@ -124,11 +125,11 @@ class GetMatchTimelineUseCaseTest {
         assertEquals(1, secondGoal?.opponentScore)
         assertEquals(true, secondGoal?.isOpponentGoal)
 
-        val firstGoal = goalEvents?.get(2)
-        assertEquals(300000L, firstGoal?.matchElapsedTimeMillis)
-        assertEquals(1, firstGoal?.teamScore)
-        assertEquals(0, firstGoal?.opponentScore)
-        assertEquals(false, firstGoal?.isOpponentGoal)
+        val lastGoal = goalEvents?.get(2)
+        assertEquals(900000L, lastGoal?.matchElapsedTimeMillis)
+        assertEquals(2, lastGoal?.teamScore) // After all 3 goals: 2 team goals
+        assertEquals(1, lastGoal?.opponentScore) // 1 opponent goal
+        assertEquals(false, lastGoal?.isOpponentGoal)
     }
 
     @Test
@@ -285,28 +286,28 @@ class GetMatchTimelineUseCaseTest {
 
         // Then
         val scoreEvolution = result?.scoreEvolution
-        // Should have: start (0-0), 3 goals, and final point
-        assertTrue(scoreEvolution!!.size >= 4)
+        // Should have: 2 start points (0-0), 3 goals, and 2 final points
+        assertTrue(scoreEvolution!!.size >= 5)
 
-        // Start point
+        // Start points (impl adds two 0-0 points — one per team perspective)
         assertEquals(0L, scoreEvolution[0].timeMillis)
         assertEquals(0, scoreEvolution[0].teamScore)
         assertEquals(0, scoreEvolution[0].opponentScore)
 
-        // First goal
-        assertEquals(300000L, scoreEvolution[1].timeMillis)
-        assertEquals(1, scoreEvolution[1].teamScore)
-        assertEquals(0, scoreEvolution[1].opponentScore)
-
-        // Second goal
-        assertEquals(600000L, scoreEvolution[2].timeMillis)
+        // First goal at index 2 (after the two 0-0 start points)
+        assertEquals(300000L, scoreEvolution[2].timeMillis)
         assertEquals(1, scoreEvolution[2].teamScore)
-        assertEquals(1, scoreEvolution[2].opponentScore)
+        assertEquals(0, scoreEvolution[2].opponentScore)
 
-        // Third goal
-        assertEquals(2000000L, scoreEvolution[3].timeMillis)
-        assertEquals(2, scoreEvolution[3].teamScore)
+        // Second goal at index 3
+        assertEquals(600000L, scoreEvolution[3].timeMillis)
+        assertEquals(1, scoreEvolution[3].teamScore)
         assertEquals(1, scoreEvolution[3].opponentScore)
+
+        // Third goal at index 4
+        assertEquals(2000000L, scoreEvolution[4].timeMillis)
+        assertEquals(2, scoreEvolution[4].teamScore)
+        assertEquals(1, scoreEvolution[4].opponentScore)
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -28,7 +29,9 @@ class AddPlayerUseCaseTest {
             firstName = "John",
             lastName = "Doe",
             number = 10,
-            positions = listOf(Position.Forward)
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false,
         )
 
         // When

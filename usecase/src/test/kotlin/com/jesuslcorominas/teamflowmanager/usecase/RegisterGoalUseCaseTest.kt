@@ -2,6 +2,9 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.coEvery
@@ -37,15 +40,21 @@ class RegisterGoalUseCaseTest {
             val matchId = 1L
             val scorerId = 2L
             val currentTimeMillis = System.currentTimeMillis()
-            val match =
-                Match(
-                    id = matchId,
-                    teamId = 1L,
-                    elapsedTimeMillis = 900000L,
-                    isRunning = true,
-                    lastStartTimeMillis = currentTimeMillis - 60000L,
-                    teamName = "Team B"
-                )
+            // Period 1 finished: 900000ms played. Period 2 running: started 60000ms ago.
+            // Total elapsed = 900000 + 60000 = 960000ms
+            val match = Match(
+                id = matchId,
+                teamId = 1L,
+                teamName = "Team B",
+                opponent = "Opponent",
+                location = "Stadium",
+                periodType = PeriodType.HALF_TIME,
+                captainId = 1L,
+                periods = listOf(
+                    MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 1000L, endTimeMillis = 901000L),
+                    MatchPeriod(periodNumber = 2, periodDuration = 1500000L, startTimeMillis = currentTimeMillis - 60000L, endTimeMillis = 0L),
+                ),
+            )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
@@ -72,15 +81,20 @@ class RegisterGoalUseCaseTest {
             val matchId = 1L
             val scorerId = 2L
             val currentTimeMillis = System.currentTimeMillis()
-            val match =
-                Match(
-                    id = matchId,
-                    teamId = 1L,
-                    elapsedTimeMillis = 600000L,
-                    isRunning = false,
-                    lastStartTimeMillis = null,
-                    teamName = "Team B"
-                )
+            // One finished period: 600000ms played
+            val match = Match(
+                id = matchId,
+                teamId = 1L,
+                teamName = "Team B",
+                opponent = "Opponent",
+                location = "Stadium",
+                periodType = PeriodType.HALF_TIME,
+                captainId = 1L,
+                periods = listOf(
+                    MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 1000L, endTimeMillis = 601000L),
+                    MatchPeriod(periodNumber = 2, periodDuration = 1500000L, startTimeMillis = 0L, endTimeMillis = 0L),
+                ),
+            )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
@@ -101,16 +115,21 @@ class RegisterGoalUseCaseTest {
             val matchId = 1L
             val scorerId = 2L
             val currentTimeMillis = System.currentTimeMillis()
-            val lastStartTimeMillis = currentTimeMillis - 120000L
-            val match =
-                Match(
-                    id = matchId,
-                    teamId = 1L,
-                    elapsedTimeMillis = 300000L,
-                    isRunning = true,
-                    lastStartTimeMillis = lastStartTimeMillis,
-                    teamName = "Team B"
-                )
+            // Period 1 finished: 300000ms. Period 2 running: 120000ms ago.
+            // Total = 300000 + 120000 = 420000ms
+            val match = Match(
+                id = matchId,
+                teamId = 1L,
+                teamName = "Team B",
+                opponent = "Opponent",
+                location = "Stadium",
+                periodType = PeriodType.HALF_TIME,
+                captainId = 1L,
+                periods = listOf(
+                    MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 1000L, endTimeMillis = 301000L),
+                    MatchPeriod(periodNumber = 2, periodDuration = 1500000L, startTimeMillis = currentTimeMillis - 120000L, endTimeMillis = 0L),
+                ),
+            )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
@@ -144,17 +163,23 @@ class RegisterGoalUseCaseTest {
         runTest {
             // Given
             val matchId = 1L
-            val scorerId = null // Null scorer ID for opponent goals
+            val scorerId = null
             val currentTimeMillis = System.currentTimeMillis()
-            val match =
-                Match(
-                    id = matchId,
-                    teamId = 1L,
-                    elapsedTimeMillis = 500000L,
-                    isRunning = true,
-                    lastStartTimeMillis = currentTimeMillis - 30000L,
-                    teamName = "Team B"
-                )
+            // Period 1 finished: 500000ms. Period 2 running: 30000ms ago.
+            // Total = 500000 + 30000 = 530000ms
+            val match = Match(
+                id = matchId,
+                teamId = 1L,
+                teamName = "Team B",
+                opponent = "Opponent",
+                location = "Stadium",
+                periodType = PeriodType.HALF_TIME,
+                captainId = 1L,
+                periods = listOf(
+                    MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 1000L, endTimeMillis = 501000L),
+                    MatchPeriod(periodNumber = 2, periodDuration = 1500000L, startTimeMillis = currentTimeMillis - 30000L, endTimeMillis = 0L),
+                ),
+            )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
@@ -180,17 +205,23 @@ class RegisterGoalUseCaseTest {
         runTest {
             // Given
             val matchId = 1L
-            val scorerId = null // Null scorer ID for own goals (scored by rival in their own net)
+            val scorerId = null
             val currentTimeMillis = System.currentTimeMillis()
-            val match =
-                Match(
-                    id = matchId,
-                    teamId = 1L,
-                    elapsedTimeMillis = 700000L,
-                    isRunning = true,
-                    lastStartTimeMillis = currentTimeMillis - 45000L,
-                    teamName = "Team B"
-                )
+            // Period 1 finished: 700000ms. Period 2 running: 45000ms ago.
+            // Total = 700000 + 45000 = 745000ms
+            val match = Match(
+                id = matchId,
+                teamId = 1L,
+                teamName = "Team B",
+                opponent = "Opponent",
+                location = "Stadium",
+                periodType = PeriodType.HALF_TIME,
+                captainId = 1L,
+                periods = listOf(
+                    MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 1000L, endTimeMillis = 701000L),
+                    MatchPeriod(periodNumber = 2, periodDuration = 1500000L, startTimeMillis = currentTimeMillis - 45000L, endTimeMillis = 0L),
+                ),
+            )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val goalSlot = slot<Goal>()
@@ -202,7 +233,7 @@ class RegisterGoalUseCaseTest {
                 scorerId = scorerId,
                 currentTimeMillis = currentTimeMillis,
                 isOpponentGoal = false,
-                isOwnGoal = true
+                isOwnGoal = true,
             )
 
             // Then
@@ -210,10 +241,10 @@ class RegisterGoalUseCaseTest {
 
             val goal = goalSlot.captured
             assertEquals(matchId, goal.matchId)
-            assertEquals(null, goal.scorerId) // No scorer - it's an own goal by rival
+            assertEquals(null, goal.scorerId)
             assertEquals(currentTimeMillis, goal.goalTimeMillis)
             assertEquals(745000L, goal.matchElapsedTimeMillis) // 700000 + 45000
-            assertEquals(false, goal.isOpponentGoal) // Counts for OUR team
+            assertEquals(false, goal.isOpponentGoal)
             assertEquals(true, goal.isOwnGoal)
             assertEquals(1L, result)
         }

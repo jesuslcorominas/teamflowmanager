@@ -1,8 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
+import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
@@ -17,6 +21,7 @@ import org.junit.Test
 
 class FinishMatchUseCaseTest {
     private lateinit var matchRepository: MatchRepository
+    private lateinit var matchOperationRepository: MatchOperationRepository
     private lateinit var playerTimeRepository: PlayerTimeRepository
     private lateinit var playerTimeHistoryRepository: PlayerTimeHistoryRepository
     private lateinit var finishMatchUseCase: FinishMatchUseCase
@@ -24,188 +29,306 @@ class FinishMatchUseCaseTest {
     @Before
     fun setup() {
         matchRepository = mockk(relaxed = true)
+        matchOperationRepository = mockk(relaxed = true)
         playerTimeRepository = mockk(relaxed = true)
         playerTimeHistoryRepository = mockk(relaxed = true)
         finishMatchUseCase = FinishMatchUseCaseImpl(
             matchRepository = matchRepository,
+            matchOperationRepository = matchOperationRepository,
             playerTimeRepository = playerTimeRepository,
             playerTimeHistoryRepository = playerTimeHistoryRepository,
         )
+        coEvery { matchOperationRepository.createOperation(any()) } returns "op1"
     }
 
     @Test
-    fun `invoke should do nothing when no match exists`() =
+    fun `givenMatchNotFound_whenInvoke_thenDoNothing`() =
         runTest {
             // Given
-            every { matchRepository.getMatch() } returns flowOf(null)
+            val matchId = 1L
+            every { matchRepository.getMatchById(matchId) } returns flowOf(null)
 
             // When
-            finishMatchUseCase.invoke()
+            finishMatchUseCase.invoke(matchId, System.currentTimeMillis())
 
             // Then
             coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
-            coVerify(exactly = 0) { playerTimeRepository.getAllPlayerTimes() }
-            coVerify(exactly = 0) { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) }
             coVerify(exactly = 0) { playerTimeRepository.resetAllPlayerTimes() }
         }
 
     @Test
-    fun `invoke should save player times to history and reset`() =
+    fun `givenMatchNotInCorrectStatus_whenInvoke_thenDoNothing`() =
         runTest {
             // Given
             val matchId = 1L
-            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false, teamName = "Team A")
-            val playerTimes =
-                listOf(
-                    PlayerTime(playerId = 1L, elapsedTimeMillis = 3000L, isRunning = false),
-                    PlayerTime(playerId = 2L, elapsedTimeMillis = 2000L, isRunning = false),
-                )
-            every { matchRepository.getMatch() } returns flowOf(match)
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
-            coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
-            coEvery { playerTimeRepository.resetAllPlayerTimes() } returns Unit
+            val currentTime = System.currentTimeMillis()
+            val match = createMatch(matchId, MatchStatus.SCHEDULED, currentTime)
+            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             // When
-            finishMatchUseCase.invoke()
+            finishMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify {
-                matchRepository.updateMatch(
-                    match.copy(
-                        isRunning = false,
-                        elapsedTimeMillis = 5000L,
-                        lastStartTimeMillis = null,
-                        status = MatchStatus.FINISHED,
-                    ),
-                )
-            }
-            coVerify {
-                playerTimeHistoryRepository.insertPlayerTimeHistory(
-                    match {
-                        it.playerId == 1L &&
-                            it.matchId == matchId &&
-                            it.elapsedTimeMillis == 3000L
-                    },
-                )
-            }
-            coVerify {
-                playerTimeHistoryRepository.insertPlayerTimeHistory(
-                    match {
-                        it.playerId == 2L &&
-                            it.matchId == matchId &&
-                            it.elapsedTimeMillis == 2000L
-                    },
-                )
-            }
-            coVerify { playerTimeRepository.resetAllPlayerTimes() }
+            coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
+            coVerify(exactly = 0) { playerTimeRepository.resetAllPlayerTimes() }
         }
 
     @Test
-    fun `invoke should calculate final elapsed time for running players`() =
+    fun `givenMatchInProgress_whenInvoke_thenFinishMatchAndSaveHistoryAndReset`() =
         runTest {
             // Given
             val matchId = 1L
-            val startTime = 1000L
-            val match = Match(
-                id = matchId,
-                elapsedTimeMillis = 5000L,
-                isRunning = true,
-                lastStartTimeMillis = startTime,
-                teamName = "Team A"
+            val currentTime = System.currentTimeMillis()
+            val match = createMatch(matchId, MatchStatus.IN_PROGRESS, currentTime)
+            val playerTimes = listOf(
+                PlayerTime(playerId = 1L, elapsedTimeMillis = 3000L, isRunning = false),
+                PlayerTime(playerId = 2L, elapsedTimeMillis = 2000L, isRunning = false),
             )
-            val playerTimes =
-                listOf(
-                    PlayerTime(
-                        playerId = 1L,
-                        elapsedTimeMillis = 3000L,
-                        isRunning = true,
-                        lastStartTimeMillis = startTime,
-                    ),
-                )
-            every { matchRepository.getMatch() } returns flowOf(match)
+            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
             every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
             coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
-            coEvery { playerTimeRepository.resetAllPlayerTimes() } returns Unit
 
             // When
-            finishMatchUseCase.invoke()
+            finishMatchUseCase.invoke(matchId, currentTime)
 
             // Then
             coVerify {
                 matchRepository.updateMatch(
-                    match {
-                        it.id == matchId &&
-                            it.isRunning == false &&
-                            it.elapsedTimeMillis > 5000L && // Should be 5000L + current time - startTime
-                            it.lastStartTimeMillis == null &&
-                            it.status == MatchStatus.FINISHED
-                    },
+                    match { it.status == MatchStatus.FINISHED }
                 )
             }
             coVerify {
                 playerTimeHistoryRepository.insertPlayerTimeHistory(
-                    match {
-                        it.playerId == 1L &&
-                            it.matchId == matchId &&
-                            it.elapsedTimeMillis > 3000L // Should be 3000L + current time - startTime
-                    },
+                    match { it.playerId == 1L && it.matchId == matchId && it.elapsedTimeMillis == 3000L }
+                )
+            }
+            coVerify {
+                playerTimeHistoryRepository.insertPlayerTimeHistory(
+                    match { it.playerId == 2L && it.matchId == matchId && it.elapsedTimeMillis == 2000L }
                 )
             }
             coVerify { playerTimeRepository.resetAllPlayerTimes() }
         }
 
     @Test
-    fun `invoke should not save player times with zero elapsed time`() =
+    fun `givenMatchPaused_whenInvoke_thenFinishMatch`() =
         runTest {
             // Given
             val matchId = 1L
-            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false, teamName = "Team A")
-            val playerTimes =
-                listOf(
-                    PlayerTime(playerId = 1L, elapsedTimeMillis = 0L, isRunning = false),
-                    PlayerTime(playerId = 2L, elapsedTimeMillis = 2000L, isRunning = false),
-                )
-            every { matchRepository.getMatch() } returns flowOf(match)
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
-            coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
-            coEvery { playerTimeRepository.resetAllPlayerTimes() } returns Unit
+            val currentTime = System.currentTimeMillis()
+            val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
+            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
 
             // When
-            finishMatchUseCase.invoke()
+            finishMatchUseCase.invoke(matchId, currentTime)
 
             // Then
+            coVerify {
+                matchRepository.updateMatch(
+                    match { it.status == MatchStatus.FINISHED }
+                )
+            }
+            coVerify { playerTimeRepository.resetAllPlayerTimes() }
+        }
+
+    @Test
+    fun `givenPlayerWithZeroElapsedTime_whenInvoke_thenSkipHistory`() =
+        runTest {
+            // Given
+            val matchId = 1L
+            val currentTime = System.currentTimeMillis()
+            val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
+            val playerTimes = listOf(
+                PlayerTime(playerId = 1L, elapsedTimeMillis = 0L, isRunning = false),
+                PlayerTime(playerId = 2L, elapsedTimeMillis = 2000L, isRunning = false),
+            )
+            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
+            coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
+
+            // When
+            finishMatchUseCase.invoke(matchId, currentTime)
+
+            // Then - player 1 (zero time) should NOT be saved
             coVerify(exactly = 0) {
                 playerTimeHistoryRepository.insertPlayerTimeHistory(
-                    match {
-                        it.playerId == 1L
-                    },
+                    match { it.playerId == 1L }
                 )
             }
+            // Player 2 (2000ms) should be saved
             coVerify(exactly = 1) {
                 playerTimeHistoryRepository.insertPlayerTimeHistory(
-                    match {
-                        it.playerId == 2L
-                    },
+                    match { it.playerId == 2L }
                 )
             }
             coVerify { playerTimeRepository.resetAllPlayerTimes() }
         }
 
     @Test
-    fun `invoke should save empty list when no player times exist`() =
+    fun `givenRunningPlayerTime_whenInvoke_thenCalculateFinalElapsedTime`() =
         runTest {
             // Given
             val matchId = 1L
-            val match = Match(id = matchId, elapsedTimeMillis = 5000L, isRunning = false, teamName = "Team A")
-            every { matchRepository.getMatch() } returns flowOf(match)
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
-            coEvery { playerTimeRepository.resetAllPlayerTimes() } returns Unit
+            val currentTime = System.currentTimeMillis()
+            val lastStart = currentTime - 1000L
+            val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
+            val playerTimes = listOf(
+                PlayerTime(
+                    playerId = 1L,
+                    elapsedTimeMillis = 3000L,
+                    isRunning = true,
+                    lastStartTimeMillis = lastStart,
+                ),
+            )
+            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
+            coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
 
             // When
-            finishMatchUseCase.invoke()
+            finishMatchUseCase.invoke(matchId, currentTime)
+
+            // Then - elapsed should be > 3000L (accumulated + running time)
+            coVerify {
+                playerTimeHistoryRepository.insertPlayerTimeHistory(
+                    match { it.playerId == 1L && it.elapsedTimeMillis > 3000L }
+                )
+            }
+        }
+
+    @Test
+    fun `givenNoPlayerTimes_whenInvoke_thenSaveNoHistory`() =
+        runTest {
+            // Given
+            val matchId = 1L
+            val currentTime = System.currentTimeMillis()
+            val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
+            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
+
+            // When
+            finishMatchUseCase.invoke(matchId, currentTime)
 
             // Then
             coVerify(exactly = 0) { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) }
             coVerify { playerTimeRepository.resetAllPlayerTimes() }
         }
+
+    @Test
+    fun `givenMatchInTimeoutStatus_whenInvoke_thenDoNothing`() = runTest {
+        // Given
+        val matchId = 1L
+        val currentTime = System.currentTimeMillis()
+        val match = createMatch(matchId, MatchStatus.TIMEOUT, currentTime)
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+
+        // When
+        finishMatchUseCase.invoke(matchId, currentTime)
+
+        // Then
+        coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
+        coVerify(exactly = 0) { playerTimeRepository.resetAllPlayerTimes() }
+    }
+
+    @Test
+    fun `givenMatchAlreadyFinished_whenInvoke_thenDoNothing`() = runTest {
+        // Given
+        val matchId = 1L
+        val currentTime = System.currentTimeMillis()
+        val match = createMatch(matchId, MatchStatus.FINISHED, currentTime)
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+
+        // When
+        finishMatchUseCase.invoke(matchId, currentTime)
+
+        // Then
+        coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
+        coVerify(exactly = 0) { playerTimeRepository.resetAllPlayerTimes() }
+    }
+
+    @Test
+    fun `givenMatchInProgressWithNoStartedPeriod_whenInvoke_thenFinishMatchWithoutClosingActivePeriod`() = runTest {
+        // Given
+        val matchId = 1L
+        val currentTime = System.currentTimeMillis()
+        val match = Match(
+            id = matchId,
+            teamId = 1L,
+            teamName = "Team A",
+            opponent = "Opponent",
+            location = "Stadium",
+            periodType = PeriodType.HALF_TIME,
+            captainId = 1L,
+            status = MatchStatus.IN_PROGRESS,
+            periods = listOf(
+                MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 0L, endTimeMillis = 0L),
+                MatchPeriod(periodNumber = 2, periodDuration = 1500000L, startTimeMillis = 0L, endTimeMillis = 0L),
+            ),
+        )
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
+
+        // When
+        finishMatchUseCase.invoke(matchId, currentTime)
+
+        // Then - match finishes even without any started period
+        coVerify { matchRepository.updateMatch(match { it.status == MatchStatus.FINISHED }) }
+        coVerify { playerTimeRepository.resetAllPlayerTimes() }
+    }
+
+    @Test
+    fun `givenRunningPlayerWithNullLastStartTime_whenInvoke_thenUseAccumulatedElapsedTime`() = runTest {
+        // Given
+        val matchId = 1L
+        val currentTime = System.currentTimeMillis()
+        val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
+        val playerTimes = listOf(
+            PlayerTime(playerId = 1L, elapsedTimeMillis = 5000L, isRunning = true, lastStartTimeMillis = null),
+        )
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
+        coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
+
+        // When
+        finishMatchUseCase.invoke(matchId, currentTime)
+
+        // Then - isRunning=true but lastStartTimeMillis=null → condition is false, uses elapsedTimeMillis as-is
+        coVerify {
+            playerTimeHistoryRepository.insertPlayerTimeHistory(
+                match { it.playerId == 1L && it.elapsedTimeMillis == 5000L }
+            )
+        }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `givenResetPlayerTimesThrows_whenInvoke_thenThrowIllegalStateException`() = runTest {
+        // Given
+        val matchId = 1L
+        val currentTime = System.currentTimeMillis()
+        val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
+        coEvery { playerTimeRepository.resetAllPlayerTimes() } throws RuntimeException("DB error")
+
+        // When - expects IllegalStateException wrapping the original exception
+        finishMatchUseCase.invoke(matchId, currentTime)
+    }
+
+    private fun createMatch(id: Long, status: MatchStatus, currentTime: Long): Match {
+        val startTime = currentTime - 1500000L
+        return Match(
+            id = id,
+            teamId = 1L,
+            teamName = "Team A",
+            opponent = "Opponent",
+            location = "Stadium",
+            periodType = PeriodType.HALF_TIME,
+            captainId = 1L,
+            status = status,
+            periods = listOf(
+                MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = startTime, endTimeMillis = currentTime),
+                MatchPeriod(periodNumber = 2, periodDuration = 1500000L, startTimeMillis = 0L, endTimeMillis = 0L),
+            ),
+        )
+    }
 }

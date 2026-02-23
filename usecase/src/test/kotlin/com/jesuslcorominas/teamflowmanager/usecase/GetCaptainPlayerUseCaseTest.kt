@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -30,7 +31,8 @@ class GetCaptainPlayerUseCaseTest {
             lastName = "Doe",
             number = 10,
             positions = listOf(Position.Forward),
-            isCaptain = true
+            teamId = 1L,
+            isCaptain = true,
         )
         coEvery { playerRepository.getCaptainPlayer() } returns captain
 

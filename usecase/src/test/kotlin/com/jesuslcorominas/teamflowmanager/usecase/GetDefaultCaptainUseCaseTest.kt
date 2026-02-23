@@ -1,9 +1,11 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -20,7 +22,7 @@ class GetDefaultCaptainUseCaseTest {
     }
 
     @Test
-    fun `invoke should return captain ID when set`() {
+    fun `invoke should return captain ID when set`() = runTest {
         // Given
         val captainId = 42L
         every { preferencesRepository.getDefaultCaptainId() } returns captainId
@@ -34,7 +36,7 @@ class GetDefaultCaptainUseCaseTest {
     }
 
     @Test
-    fun `invoke should return null when no captain is set`() {
+    fun `invoke should return null when no captain is set`() = runTest {
         // Given
         every { preferencesRepository.getDefaultCaptainId() } returns null
 
