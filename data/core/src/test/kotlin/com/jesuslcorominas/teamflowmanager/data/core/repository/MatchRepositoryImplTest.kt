@@ -275,6 +275,33 @@ class MatchRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `givenMatchInProgressWithFirstPeriodAlreadyFinished_whenPauseTimer_thenEndsSecondPeriodAndIncrementsPauseCount`() = runTest {
+        val pauseTime = 7000L
+        val match = createMatch(
+            status = MatchStatus.IN_PROGRESS,
+            pauseCount = 1,
+            periods = listOf(
+                MatchPeriod(periodNumber = 1, startTimeMillis = 1000L, endTimeMillis = 4000L),
+                MatchPeriod(periodNumber = 2, startTimeMillis = 5000L, endTimeMillis = 0L),
+            ),
+        )
+        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+
+        repository.pauseTimer(1L, pauseTime)
+
+        coVerify {
+            matchDataSource.updateMatch(
+                match {
+                    it.status == MatchStatus.PAUSED &&
+                        it.pauseCount == 2 &&
+                        it.periods[0].endTimeMillis == 4000L &&
+                        it.periods[1].endTimeMillis == pauseTime
+                },
+            )
+        }
+    }
+
     // --- startTimeout ---
 
     @Test
@@ -387,6 +414,34 @@ class MatchRepositoryImplTest {
                     it.status == MatchStatus.IN_PROGRESS &&
                         it.timeoutStartTimeMillis == 0L &&
                         it.periods[0].startTimeMillis == 0L &&
+                        it.periods[1].startTimeMillis == 0L
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `givenMatchInTimeoutWithFirstPeriodFinishedAndSecondUnstarted_whenEndTimeout_thenResumesWithoutAdjustingPeriods`() = runTest {
+        val timeoutStartTime = 5000L
+        val endTime = 7000L
+        val match = createMatch(
+            status = MatchStatus.TIMEOUT,
+            timeoutStartTimeMillis = timeoutStartTime,
+            periods = listOf(
+                MatchPeriod(periodNumber = 1, startTimeMillis = 1000L, endTimeMillis = 4000L),
+                MatchPeriod(periodNumber = 2, startTimeMillis = 0L, endTimeMillis = 0L),
+            ),
+        )
+        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+
+        repository.endTimeout(1L, endTime)
+
+        coVerify {
+            matchDataSource.updateMatch(
+                match {
+                    it.status == MatchStatus.IN_PROGRESS &&
+                        it.timeoutStartTimeMillis == 0L &&
+                        it.periods[0].startTimeMillis == 1000L &&
                         it.periods[1].startTimeMillis == 0L
                 },
             )

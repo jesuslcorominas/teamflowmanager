@@ -230,6 +230,33 @@ class PlayerTimeRepositoryImplTest {
             coVerify { playerTimeDataSource.deleteAllPlayerTimes() }
         }
 
+    @Test
+    fun `givenRunningPlayerTimeWithNullLastStartTime_whenPauseTimer_thenUsesCurrentTimeAsStartReference`() = runTest {
+        val playerId = 1L
+        val currentTime = 3000L
+        val existingPlayerTime = PlayerTime(
+            playerId = playerId,
+            elapsedTimeMillis = 2000L,
+            isRunning = true,
+            lastStartTimeMillis = null,
+        )
+        every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(existingPlayerTime)
+
+        repository.pauseTimer(playerId, currentTime)
+
+        coVerify {
+            playerTimeDataSource.upsertPlayerTime(
+                match {
+                    it.playerId == playerId &&
+                        it.elapsedTimeMillis == 2000L && // 2000 + (3000 - 3000) = 2000
+                        !it.isRunning &&
+                        it.lastStartTimeMillis == null &&
+                        it.status == PlayerTimeStatus.ON_BENCH
+                },
+            )
+        }
+    }
+
     // --- pauseTimerForMatchPause ---
 
     @Test
@@ -254,6 +281,33 @@ class PlayerTimeRepositoryImplTest {
                         it.elapsedTimeMillis == 5000L &&
                         !it.isRunning &&
                         it.lastStartTimeMillis == startTime &&
+                        it.status == PlayerTimeStatus.PAUSED
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `givenRunningPlayerTimeWithNullLastStartTime_whenPauseTimerForMatchPause_thenUsesCurrentTimeAsStartReference`() = runTest {
+        val playerId = 1L
+        val currentTime = 4000L
+        val existingPlayerTime = PlayerTime(
+            playerId = playerId,
+            elapsedTimeMillis = 1000L,
+            isRunning = true,
+            lastStartTimeMillis = null,
+        )
+        every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(existingPlayerTime)
+
+        repository.pauseTimerForMatchPause(playerId, currentTime)
+
+        coVerify {
+            playerTimeDataSource.upsertPlayerTime(
+                match {
+                    it.playerId == playerId &&
+                        it.elapsedTimeMillis == 1000L && // 1000 + (4000 - 4000) = 1000
+                        !it.isRunning &&
+                        it.lastStartTimeMillis == currentTime &&
                         it.status == PlayerTimeStatus.PAUSED
                 },
             )
@@ -370,6 +424,28 @@ class PlayerTimeRepositoryImplTest {
     }
 
     @Test
+    fun `givenRunningPlayerWithNullLastStartTime_whenPauseTimersBatch_thenUsesCurrentTimeAsStartReference`() = runTest {
+        val currentTime = 6000L
+        val allTimes = listOf(
+            PlayerTime(playerId = 1L, elapsedTimeMillis = 500L, isRunning = true, lastStartTimeMillis = null),
+        )
+        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+
+        repository.pauseTimersBatch(listOf(1L), currentTime)
+
+        coVerify {
+            playerTimeDataSource.batchUpsertPlayerTimes(
+                match { list ->
+                    list.size == 1 &&
+                        list[0].elapsedTimeMillis == 500L && // 500 + (6000 - 6000) = 500
+                        !list[0].isRunning &&
+                        list[0].status == PlayerTimeStatus.PAUSED
+                },
+            )
+        }
+    }
+
+    @Test
     fun `givenAllNonRunningPlayers_whenPauseTimersBatch_thenDoesNotCallBatchUpsert`() = runTest {
         val allTimes = listOf(
             PlayerTime(playerId = 1L, elapsedTimeMillis = 2000L, isRunning = false),
@@ -467,6 +543,30 @@ class PlayerTimeRepositoryImplTest {
     }
 
     @Test
+    fun `givenRunningPlayerWithNullLastStartTime_whenPauseTimersBatchWithOperationId_thenUsesCurrentTimeAsStartReference`() = runTest {
+        val currentTime = 6000L
+        val operationId = "op-pause-null"
+        val allTimes = listOf(
+            PlayerTime(playerId = 1L, elapsedTimeMillis = 500L, isRunning = true, lastStartTimeMillis = null),
+        )
+        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+
+        repository.pauseTimersBatchWithOperationId(listOf(1L), currentTime, operationId)
+
+        coVerify {
+            playerTimeDataSource.batchUpsertPlayerTimes(
+                match { list ->
+                    list.size == 1 &&
+                        list[0].elapsedTimeMillis == 500L && // 500 + (6000 - 6000) = 500
+                        !list[0].isRunning &&
+                        list[0].status == PlayerTimeStatus.PAUSED &&
+                        list[0].lastOperationId == operationId
+                },
+            )
+        }
+    }
+
+    @Test
     fun `givenNonRunningPlayers_whenPauseTimersBatchWithOperationId_thenDoesNotCallBatchUpsert`() = runTest {
         val allTimes = listOf(
             PlayerTime(playerId = 1L, elapsedTimeMillis = 2000L, isRunning = false),
@@ -506,6 +606,31 @@ class PlayerTimeRepositoryImplTest {
                         list[0].status == PlayerTimeStatus.ON_BENCH &&
                         list[0].lastStartTimeMillis == null &&
                         list[0].elapsedTimeMillis == 5000L && // 0 + (6000 - 1000)
+                        list[0].lastOperationId == operationId
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `givenRunningPlayerWithNullLastStartTime_whenSubstituteOutPlayersBatchWithOperationId_thenUsesCurrentTimeAsStartReference`() = runTest {
+        val currentTime = 6000L
+        val operationId = "op-sub-null"
+        val allTimes = listOf(
+            PlayerTime(playerId = 1L, elapsedTimeMillis = 500L, isRunning = true, lastStartTimeMillis = null),
+        )
+        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+
+        repository.substituteOutPlayersBatchWithOperationId(listOf(1L), currentTime, operationId)
+
+        coVerify {
+            playerTimeDataSource.batchUpsertPlayerTimes(
+                match { list ->
+                    list.size == 1 &&
+                        list[0].elapsedTimeMillis == 500L && // 500 + (6000 - 6000) = 500
+                        !list[0].isRunning &&
+                        list[0].status == PlayerTimeStatus.ON_BENCH &&
+                        list[0].lastStartTimeMillis == null &&
                         list[0].lastOperationId == operationId
                 },
             )
