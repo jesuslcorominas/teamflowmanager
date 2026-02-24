@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
@@ -9,7 +10,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
-import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -19,219 +19,224 @@ import org.junit.Before
 import org.junit.Test
 
 class TeamRepositoryImplTest {
+
     private lateinit var teamDataSource: TeamDataSource
+    private lateinit var dynamicLinkDataSource: DynamicLinkDataSource
     private lateinit var repository: TeamRepositoryImpl
 
     @Before
     fun setup() {
         teamDataSource = mockk(relaxed = true)
-        repository = TeamRepositoryImpl(teamDataSource)
+        dynamicLinkDataSource = mockk(relaxed = true)
+        repository = TeamRepositoryImpl(teamDataSource, dynamicLinkDataSource)
+    }
+
+    private fun createTeam(
+        id: Long = 1L,
+        name: String = "Test Team",
+        coachId: String? = null,
+        clubId: Long? = null,
+        clubFirestoreId: String? = null,
+        firestoreId: String? = null,
+    ) = Team(
+        id = id,
+        name = name,
+        coachName = "Coach Name",
+        delegateName = "Delegate Name",
+        teamType = TeamType.FOOTBALL_5,
+        coachId = coachId,
+        clubId = clubId,
+        clubFirestoreId = clubFirestoreId,
+        firestoreId = firestoreId,
+    )
+
+    // --- getTeam ---
+
+    @Test
+    fun `givenExistingTeam_whenGetTeam_thenDelegatesToDataSource`() = runTest {
+        val team = createTeam()
+        every { teamDataSource.getTeam() } returns flowOf(team)
+
+        val result = repository.getTeam().first()
+
+        assertEquals(team, result)
     }
 
     @Test
-    fun `getTeam should return team from local data source`() =
-        runTest {
-            // Given
-            val team = Team(1, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
-            every { teamDataSource.getTeam() } returns flowOf(team)
+    fun `givenNoTeam_whenGetTeam_thenReturnsNull`() = runTest {
+        every { teamDataSource.getTeam() } returns flowOf(null)
 
-            // When
-            val result = repository.getTeam().first()
+        val result = repository.getTeam().first()
 
-            // Then
-            assertEquals(team, result)
-            verify { teamDataSource.getTeam() }
-        }
+        assertNull(result)
+    }
+
+    // --- createTeam ---
 
     @Test
-    fun `getTeam should return null when no team exists`() =
-        runTest {
-            // Given
-            every { teamDataSource.getTeam() } returns flowOf(null)
+    fun `givenTeam_whenCreateTeam_thenDelegatesToDataSource`() = runTest {
+        val team = createTeam(id = 0L)
+        coEvery { teamDataSource.insertTeam(team) } just runs
 
-            // When
-            val result = repository.getTeam().first()
+        repository.createTeam(team)
 
-            // Then
-            assertNull(result)
-            verify { teamDataSource.getTeam() }
-        }
+        coVerify { teamDataSource.insertTeam(team) }
+    }
 
     @Test
-    fun `createTeam should call insertTeam on local data source`() =
-        runTest {
-            // Given
-            val team = Team(0, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
-            coEvery { teamDataSource.insertTeam(team) } just runs
+    fun `givenTeamWithClubId_whenCreateTeam_thenDelegatesToDataSource`() = runTest {
+        val team = createTeam(id = 0L, clubId = 123L, clubFirestoreId = "club-abc")
+        coEvery { teamDataSource.insertTeam(team) } just runs
 
-            // When
-            repository.createTeam(team)
+        repository.createTeam(team)
 
-            // Then
-            coVerify { teamDataSource.insertTeam(team) }
-        }
+        coVerify { teamDataSource.insertTeam(team) }
+    }
 
     @Test
-    fun `updateTeam should call updateTeam on local data source`() =
-        runTest {
-            // Given
-            val team = Team(1, "Updated Team", "New Coach", "New Delegate", teamType = TeamType.FOOTBALL_5)
-            coEvery { teamDataSource.updateTeam(team) } just runs
+    fun `givenOrphanTeamWithNullClubId_whenCreateTeam_thenDelegatesToDataSource`() = runTest {
+        val team = createTeam(id = 0L, clubId = null, clubFirestoreId = null)
+        coEvery { teamDataSource.insertTeam(team) } just runs
 
-            // When
-            repository.updateTeam(team)
+        repository.createTeam(team)
 
-            // Then
-            coVerify { teamDataSource.updateTeam(team) }
-        }
+        coVerify { teamDataSource.insertTeam(team) }
+    }
+
+    // --- updateTeam ---
 
     @Test
-    fun `getTeamByCoachId should return team from local data source`() =
-        runTest {
-            // Given
-            val coachId = "test-coach-id"
-            val team = Team(1, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5, coachId = coachId)
-            every { teamDataSource.getTeamByCoachId(coachId) } returns flowOf(team)
+    fun `givenTeam_whenUpdateTeam_thenDelegatesToDataSource`() = runTest {
+        val team = createTeam(id = 1L, name = "Updated Team")
+        coEvery { teamDataSource.updateTeam(team) } just runs
 
-            // When
-            val result = repository.getTeamByCoachId(coachId).first()
+        repository.updateTeam(team)
 
-            // Then
-            assertEquals(team, result)
-            verify { teamDataSource.getTeamByCoachId(coachId) }
-        }
+        coVerify { teamDataSource.updateTeam(team) }
+    }
+
+    // --- getTeamByCoachId ---
 
     @Test
-    fun `getTeamByCoachId should return null when no team exists for coach`() =
-        runTest {
-            // Given
-            val coachId = "non-existent-coach-id"
-            every { teamDataSource.getTeamByCoachId(coachId) } returns flowOf(null)
+    fun `givenCoachId_whenGetTeamByCoachId_thenReturnsTeam`() = runTest {
+        val coachId = "coach-123"
+        val team = createTeam(coachId = coachId)
+        every { teamDataSource.getTeamByCoachId(coachId) } returns flowOf(team)
 
-            // When
-            val result = repository.getTeamByCoachId(coachId).first()
+        val result = repository.getTeamByCoachId(coachId).first()
 
-            // Then
-            assertNull(result)
-            verify { teamDataSource.getTeamByCoachId(coachId) }
-        }
+        assertEquals(team, result)
+    }
 
     @Test
-    fun `hasLocalTeamWithoutUserId should return true when team without coachId exists`() =
-        runTest {
-            // Given
-            coEvery { teamDataSource.hasLocalTeamWithoutUserId() } returns true
+    fun `givenUnknownCoachId_whenGetTeamByCoachId_thenReturnsNull`() = runTest {
+        val coachId = "unknown-coach"
+        every { teamDataSource.getTeamByCoachId(coachId) } returns flowOf(null)
 
-            // When
-            val result = repository.hasLocalTeamWithoutUserId()
+        val result = repository.getTeamByCoachId(coachId).first()
 
-            // Then
-            assertEquals(true, result)
-            coVerify { teamDataSource.hasLocalTeamWithoutUserId() }
-        }
+        assertNull(result)
+    }
+
+    // --- getTeamsByClub ---
 
     @Test
-    fun `hasLocalTeamWithoutUserId should return false when no team without coachId exists`() =
-        runTest {
-            // Given
-            coEvery { teamDataSource.hasLocalTeamWithoutUserId() } returns false
+    fun `givenClubFirestoreId_whenGetTeamsByClub_thenReturnsTeams`() = runTest {
+        val clubFirestoreId = "club-123"
+        val teams = listOf(createTeam(id = 1L), createTeam(id = 2L))
+        every { teamDataSource.getTeamsByClub(clubFirestoreId) } returns flowOf(teams)
 
-            // When
-            val result = repository.hasLocalTeamWithoutUserId()
+        val result = repository.getTeamsByClub(clubFirestoreId).first()
 
-            // Then
-            assertEquals(false, result)
-            coVerify { teamDataSource.hasLocalTeamWithoutUserId() }
-        }
+        assertEquals(teams, result)
+    }
 
     @Test
-    fun `createTeam should handle team with clubId`() =
-        runTest {
-            // Given
-            val team = Team(
-                id = 0,
-                name = "Test Team",
-                coachName = "Coach Name",
-                delegateName = "Delegate Name",
-                teamType = TeamType.FOOTBALL_5,
-                clubId = 123L,
-                clubFirestoreId = "club_abc123xyz",
-            )
-            coEvery { teamDataSource.insertTeam(team) } just runs
+    fun `givenClubWithNoTeams_whenGetTeamsByClub_thenReturnsEmptyList`() = runTest {
+        val clubFirestoreId = "empty-club"
+        every { teamDataSource.getTeamsByClub(clubFirestoreId) } returns flowOf(emptyList())
 
-            // When
-            repository.createTeam(team)
+        val result = repository.getTeamsByClub(clubFirestoreId).first()
 
-            // Then
-            coVerify { teamDataSource.insertTeam(team) }
-        }
+        assertEquals(emptyList<Team>(), result)
+    }
+
+    // --- getOrphanTeams ---
 
     @Test
-    fun `createTeam should handle orphaned team with null clubId`() =
-        runTest {
-            // Given
-            val team = Team(
-                id = 0,
-                name = "Orphaned Team",
-                coachName = "Coach Name",
-                delegateName = "Delegate Name",
-                teamType = TeamType.FOOTBALL_5,
-                clubId = null,
-                clubFirestoreId = null,
-            )
-            coEvery { teamDataSource.insertTeam(team) } just runs
+    fun `givenOwnerIdWithOrphanTeams_whenGetOrphanTeams_thenReturnsOrphanTeams`() = runTest {
+        val ownerId = "owner-123"
+        val orphanTeams = listOf(createTeam(id = 1L, clubId = null))
+        coEvery { teamDataSource.getOrphanTeams(ownerId) } returns orphanTeams
 
-            // When
-            repository.createTeam(team)
+        val result = repository.getOrphanTeams(ownerId)
 
-            // Then
-            coVerify { teamDataSource.insertTeam(team) }
-        }
+        assertEquals(orphanTeams, result)
+        coVerify { teamDataSource.getOrphanTeams(ownerId) }
+    }
 
     @Test
-    fun `updateTeam should handle team with clubId`() =
-        runTest {
-            // Given
-            val team = Team(
-                id = 1,
-                name = "Updated Team",
-                coachName = "New Coach",
-                delegateName = "New Delegate",
-                teamType = TeamType.FOOTBALL_5,
-                clubId = 456L,
-                clubFirestoreId = "club_def456uvw",
-            )
-            coEvery { teamDataSource.updateTeam(team) } just runs
+    fun `givenOwnerIdWithNoOrphanTeams_whenGetOrphanTeams_thenReturnsEmptyList`() = runTest {
+        val ownerId = "owner-456"
+        coEvery { teamDataSource.getOrphanTeams(ownerId) } returns emptyList()
 
-            // When
-            repository.updateTeam(team)
+        val result = repository.getOrphanTeams(ownerId)
 
-            // Then
-            coVerify { teamDataSource.updateTeam(team) }
-        }
+        assertEquals(emptyList<Team>(), result)
+    }
+
+    // --- updateTeamClubId ---
 
     @Test
-    fun `getTeam should return team with clubId`() =
-        runTest {
-            // Given
-            val team = Team(
-                id = 1,
-                name = "Test Team",
-                coachName = "Coach Name",
-                delegateName = "Delegate Name",
-                teamType = TeamType.FOOTBALL_5,
-                clubId = 789L,
-                clubFirestoreId = "club_ghi789rst",
-            )
-            every { teamDataSource.getTeam() } returns flowOf(team)
+    fun `givenTeamAndClubIds_whenUpdateTeamClubId_thenDelegatesToDataSource`() = runTest {
+        repository.updateTeamClubId("firestore-team-id", 123L, "firestore-club-id")
 
-            // When
-            val result = repository.getTeam().first()
+        coVerify { teamDataSource.updateTeamClubId("firestore-team-id", 123L, "firestore-club-id") }
+    }
 
-            // Then
-            assertEquals(team, result)
-            assertEquals(789L, result?.clubId)
-            assertEquals("club_ghi789rst", result?.clubFirestoreId)
-            verify { teamDataSource.getTeam() }
-        }
+    // --- getTeamByFirestoreId ---
+
+    @Test
+    fun `givenTeamFirestoreId_whenGetTeamByFirestoreId_thenReturnsTeam`() = runTest {
+        val firestoreId = "firestore-team-123"
+        val team = createTeam(firestoreId = firestoreId)
+        coEvery { teamDataSource.getTeamByFirestoreId(firestoreId) } returns team
+
+        val result = repository.getTeamByFirestoreId(firestoreId)
+
+        assertEquals(team, result)
+    }
+
+    @Test
+    fun `givenUnknownFirestoreId_whenGetTeamByFirestoreId_thenReturnsNull`() = runTest {
+        coEvery { teamDataSource.getTeamByFirestoreId("unknown") } returns null
+
+        val result = repository.getTeamByFirestoreId("unknown")
+
+        assertNull(result)
+    }
+
+    // --- updateTeamCoachId ---
+
+    @Test
+    fun `givenTeamFirestoreIdAndCoachId_whenUpdateTeamCoachId_thenDelegatesToDataSource`() = runTest {
+        repository.updateTeamCoachId("firestore-team-id", "new-coach-id")
+
+        coVerify { teamDataSource.updateTeamCoachId("firestore-team-id", "new-coach-id") }
+    }
+
+    // --- generateTeamInvitationLink ---
+
+    @Test
+    fun `givenTeamFirestoreIdAndName_whenGenerateTeamInvitationLink_thenReturnsDynamicLink`() = runTest {
+        val teamFirestoreId = "team-123"
+        val teamName = "Test Team"
+        val expectedLink = "https://example.page.link/team123"
+        coEvery { dynamicLinkDataSource.generateTeamInvitationLink(teamFirestoreId, teamName) } returns expectedLink
+
+        val result = repository.generateTeamInvitationLink(teamFirestoreId, teamName)
+
+        assertEquals(expectedLink, result)
+        coVerify { dynamicLinkDataSource.generateTeamInvitationLink(teamFirestoreId, teamName) }
+    }
 }
