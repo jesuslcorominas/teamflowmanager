@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.coVerify
 import io.mockk.mockk

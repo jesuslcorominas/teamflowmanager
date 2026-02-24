@@ -3,6 +3,8 @@ package com.jesuslcorominas.teamflowmanager.usecase
 import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -31,16 +33,22 @@ class GetArchivedMatchesUseCaseTest {
                     Match(
                         id = 1L,
                         opponent = "Team A",
+                        location = "Stadium",
                         status = MatchStatus.FINISHED,
                         archived = true,
-                        teamName = "Team A"
+                        teamName = "Team A",
+                        periodType = PeriodType.HALF_TIME,
+                        captainId = 1L,
                     ),
                     Match(
                         id = 2L,
                         opponent = "Team B",
+                        location = "Stadium",
                         status = MatchStatus.FINISHED,
                         archived = true,
-                        teamName = "Team A"
+                        teamName = "Team A",
+                        periodType = PeriodType.HALF_TIME,
+                        captainId = 1L,
                     ),
                 )
             every { matchRepository.getArchivedMatches() } returns flowOf(archivedMatches)

@@ -1,6 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -33,8 +35,9 @@ class GetMatchByIdUseCaseTest {
                     teamId = 1L,
                     opponent = "Rival FC",
                     location = "Stadium",
-                    date = System.currentTimeMillis(),
-                    teamName = "Team B"
+                    teamName = "Team B",
+                    periodType = PeriodType.HALF_TIME,
+                    captainId = 1L,
                 )
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
