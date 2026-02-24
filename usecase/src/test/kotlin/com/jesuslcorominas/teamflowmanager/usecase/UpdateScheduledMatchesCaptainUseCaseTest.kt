@@ -2,6 +2,8 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -28,18 +30,22 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
             Match(
                 id = 1L,
                 opponent = "Team A",
+                location = "Stadium",
                 squadCallUpIds = listOf(1L, 2L, 3L),
                 captainId = 1L,
                 status = MatchStatus.SCHEDULED,
-                teamName = "Team B"
+                teamName = "Team B",
+                periodType = PeriodType.HALF_TIME,
             ),
             Match(
                 id = 2L,
                 opponent = "Team B",
+                location = "Stadium",
                 squadCallUpIds = listOf(1L, 2L, 3L),
                 captainId = 1L,
                 status = MatchStatus.SCHEDULED,
-                teamName = "Team B"
+                teamName = "Team B",
+                periodType = PeriodType.HALF_TIME,
             )
         )
         coEvery { matchRepository.getScheduledMatches() } returns scheduledMatches
@@ -59,10 +65,12 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
             Match(
                 id = 1L,
                 opponent = "Team A",
+                location = "Stadium",
                 squadCallUpIds = listOf(1L, 2L, 3L),
                 captainId = 42L,
                 status = MatchStatus.SCHEDULED,
-                teamName = "Team B"
+                teamName = "Team B",
+                periodType = PeriodType.HALF_TIME,
             )
         )
         coEvery { matchRepository.getScheduledMatches() } returns scheduledMatches

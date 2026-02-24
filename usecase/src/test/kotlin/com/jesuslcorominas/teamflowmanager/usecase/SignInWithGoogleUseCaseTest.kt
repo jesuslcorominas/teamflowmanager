@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.User
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -41,6 +42,18 @@ class SignInWithGoogleUseCaseTest {
         assertEquals(user, result.getOrNull())
         coVerify { authRepository.signInWithGoogle(idToken) }
         coVerify { authRepository.saveUserToFirestore(user) }
+    }
+
+    @Test(expected = RuntimeException::class)
+    fun `givenSaveUserToFirestoreThrows_whenInvoke_thenExceptionPropagates`() = runTest {
+        // Given
+        val idToken = "google_id_token"
+        val user = User(id = "user123", email = "test@example.com", displayName = "Test User", photoUrl = null)
+        coEvery { authRepository.signInWithGoogle(idToken) } returns Result.success(user)
+        coEvery { authRepository.saveUserToFirestore(user) } throws RuntimeException("Firestore error")
+
+        // When - exception from saveUserToFirestore should propagate
+        signInWithGoogleUseCase.invoke(idToken)
     }
 
     @Test

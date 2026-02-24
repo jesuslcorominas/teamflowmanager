@@ -10,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
@@ -347,6 +348,148 @@ class GetMatchReportDataUseCaseTest {
         assertNotNull(player3Activity)
         assertEquals(1500000L, player3Activity!!.startTimeMillis)
         assertEquals(3000000L, player3Activity.endTimeMillis)
+    }
+
+    @Test
+    fun `givenMultiPeriodMatchWithCompletedPeriods_whenInvoke_thenIncludePeriodBreakEventsInTimeline`() = runTest {
+        // Given
+        val matchId = 1L
+        val match = createFinishedMatch(
+            id = matchId,
+            periodType = PeriodType.HALF_TIME,
+            periods = listOf(
+                MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 100L, endTimeMillis = 1500100L),
+                MatchPeriod(periodNumber = 2, periodDuration = 1500000L, startTimeMillis = 1600000L, endTimeMillis = 3100000L),
+            ),
+        )
+
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
+        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
+        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+
+        // When
+        val result = getMatchReportDataUseCase(matchId).first()
+
+        // Then
+        assertNotNull(result)
+        val periodBreaks = result!!.timelineEvents.filterIsInstance<TimelineEvent.PeriodBreak>()
+        assertEquals(1, periodBreaks.size)
+        assertEquals(1, periodBreaks[0].periodNumber)
+        assertEquals(PeriodType.HALF_TIME, periodBreaks[0].periodType)
+    }
+
+    @Test
+    fun `givenSubstitutionWithUnknownPlayer_whenInvoke_thenSkipSubstitutionTimelineEvent`() = runTest {
+        // Given
+        val matchId = 1L
+        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val player2 = createPlayer(2L, "Jane", "Smith", 7)
+        val match = createFinishedMatch(
+            id = matchId,
+            startingLineupIds = listOf(1L, 2L),
+            squadCallUpIds = listOf(1L, 2L),
+        )
+        val substitutions = listOf(
+            PlayerSubstitution(
+                id = 1L,
+                matchId = matchId,
+                playerOutId = 1L,
+                playerInId = 99L, // unknown player
+                substitutionTimeMillis = 1000L,
+                matchElapsedTimeMillis = 1000L,
+            ),
+        )
+
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
+        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
+        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+
+        // When
+        val result = getMatchReportDataUseCase(matchId).first()
+
+        // Then
+        assertNotNull(result)
+        val substitutionEvents = result!!.timelineEvents.filterIsInstance<TimelineEvent.Substitution>()
+        assertTrue(substitutionEvents.isEmpty())
+    }
+
+    @Test
+    fun `givenLastGoalAtExactMatchEndTime_whenInvoke_thenScoreEvolutionHasNoDuplicateFinalPoint`() = runTest {
+        // Given
+        val matchId = 1L
+        val totalElapsed = 1500000L
+        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val match = createFinishedMatch(
+            id = matchId,
+            squadCallUpIds = listOf(1L),
+            periods = listOf(
+                MatchPeriod(periodNumber = 1, periodDuration = totalElapsed, startTimeMillis = 1000L, endTimeMillis = 1000L + totalElapsed),
+            ),
+        )
+        val goals = listOf(
+            Goal(id = 1L, matchId = matchId, scorerId = 1L, goalTimeMillis = totalElapsed, matchElapsedTimeMillis = totalElapsed, isOpponentGoal = false),
+        )
+
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1))
+        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
+        every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+
+        // When
+        val result = getMatchReportDataUseCase(matchId).first()
+
+        // Then
+        assertNotNull(result)
+        // start (0-0) + 1 goal exactly at match end = 2 points, no duplicate final point appended
+        assertEquals(2, result!!.scoreEvolution.size)
+        assertEquals(totalElapsed, result.scoreEvolution[1].timeMillis)
+    }
+
+    @Test
+    fun `givenSubstitutedOutPlayerNotInStartingLineup_whenInvoke_thenNoActivityIntervalForThatPlayer`() = runTest {
+        // Given
+        val matchId = 1L
+        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val player2 = createPlayer(2L, "Jane", "Smith", 7)
+        val player3 = createPlayer(3L, "Mike", "Jones", 9)
+        val match = createFinishedMatch(
+            id = matchId,
+            startingLineupIds = listOf(1L, 2L), // player3 NOT in starting lineup
+            squadCallUpIds = listOf(1L, 2L, 3L),
+            periods = listOf(
+                MatchPeriod(periodNumber = 1, periodDuration = 3000000L, startTimeMillis = 1000L, endTimeMillis = 3001000L),
+            ),
+        )
+        val substitutions = listOf(
+            PlayerSubstitution(
+                id = 1L,
+                matchId = matchId,
+                playerOutId = 3L, // not in starting lineup
+                playerInId = 2L,
+                substitutionTimeMillis = 1500000L,
+                matchElapsedTimeMillis = 1500000L,
+            ),
+        )
+
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2, player3))
+        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
+        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+
+        // When
+        val result = getMatchReportDataUseCase(matchId).first()
+
+        // Then
+        assertNotNull(result)
+        // player3 was not active (not in starting lineup), so no OUT interval is created for them
+        val player3Activity = result!!.playerActivity.find { it.player.id == 3L }
+        assertNull(player3Activity)
     }
 
     private fun createPlayer(

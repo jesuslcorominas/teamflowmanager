@@ -10,6 +10,8 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
@@ -111,7 +113,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             ) }
 
             // 2. Player timers updated with operation ID
-            coVerify { playerTimeRepository.pauseTimersBatchWithOperationId(listOf(playerOutId), currentTimeMillis, operationId) }
+            coVerify { playerTimeRepository.substituteOutPlayersBatchWithOperationId(listOf(playerOutId), currentTimeMillis, operationId) }
             coVerify { playerTimeRepository.startTimersBatchWithOperationId(listOf(playerInId), currentTimeMillis, operationId) }
 
             // 3. Substitution recorded with operation ID
@@ -235,6 +237,87 @@ class RegisterPlayerSubstitutionUseCaseTest {
         }
 
     @Test
+    fun `givenPlayerOutNotFoundInPlayerTimes_whenInvoke_thenDoNothing`() = runTest {
+        // Given
+        val matchId = 1L
+        val playerOutId = 99L // not present in player times
+        val playerInId = 3L
+        val currentTimeMillis = System.currentTimeMillis()
+        val match = Match(
+            id = matchId,
+            teamId = 1L,
+            teamName = "Team B",
+            opponent = "Team A",
+            location = "Stadium",
+            periodType = PeriodType.HALF_TIME,
+            captainId = 1L,
+            status = MatchStatus.IN_PROGRESS,
+            periods = listOf(
+                MatchPeriod(
+                    periodNumber = 1,
+                    periodDuration = 25 * 60 * 1000L,
+                    startTimeMillis = currentTimeMillis - 60000L,
+                    endTimeMillis = 0L,
+                ),
+            ),
+        )
+        coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        coEvery { getAllPlayerTimesUseCase() } returns flowOf(
+            listOf(PlayerTime(playerId = 2L, status = PlayerTimeStatus.PLAYING)), // player 99 is absent
+        )
+
+        // When
+        registerPlayerSubstitutionUseCase(matchId, playerOutId, playerInId, currentTimeMillis)
+
+        // Then - playerOutTime is null, so no operation is started
+        coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
+        coVerify(exactly = 0) { playerTimeRepository.substituteOutPlayersBatchWithOperationId(any(), any(), any()) }
+        coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
+    }
+
+    @Test
+    fun `givenOnlyPlayerOutIsPlaying_whenInvoke_thenDoNotCallStartTimersForOtherPlayers`() = runTest {
+        // Given
+        val matchId = 1L
+        val playerOutId = 2L
+        val playerInId = 3L
+        val currentTimeMillis = System.currentTimeMillis()
+        val operationId = "op789"
+        val match = Match(
+            id = matchId,
+            teamId = 1L,
+            teamName = "Team B",
+            opponent = "Team A",
+            location = "Stadium",
+            periodType = PeriodType.HALF_TIME,
+            captainId = 1L,
+            status = MatchStatus.IN_PROGRESS,
+            periods = listOf(
+                MatchPeriod(
+                    periodNumber = 1,
+                    periodDuration = 25 * 60 * 1000L,
+                    startTimeMillis = currentTimeMillis - 60000L,
+                    endTimeMillis = 0L,
+                ),
+            ),
+        )
+        coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        coEvery { getAllPlayerTimesUseCase() } returns flowOf(
+            listOf(PlayerTime(playerId = playerOutId, status = PlayerTimeStatus.PLAYING)), // only playerOut is playing
+        )
+        coEvery { matchOperationRepository.createOperation(any()) } returns operationId
+        coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns 1L
+
+        // When
+        registerPlayerSubstitutionUseCase(matchId, playerOutId, playerInId, currentTimeMillis)
+
+        // Then - startTimersBatchWithOperationId called only once (for playerIn), NOT for other players
+        coVerify { playerTimeRepository.substituteOutPlayersBatchWithOperationId(listOf(playerOutId), currentTimeMillis, operationId) }
+        coVerify(exactly = 1) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any()) }
+        coVerify { playerTimeRepository.startTimersBatchWithOperationId(listOf(playerInId), currentTimeMillis, operationId) }
+    }
+
+    @Test
     fun `invoke should not substitute if player out is not running`() =
         runTest {
             // Given
@@ -276,7 +359,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
 
             // Then - no operations should be called
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
-            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.substituteOutPlayersBatchWithOperationId(any(), any(), any()) }
             coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any()) }
             coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
         }

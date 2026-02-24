@@ -97,7 +97,7 @@ class CreateClubUseCaseTest {
             name = "Test Team",
             coachName = "Test User",
             delegateName = "Delegate",
-            teamType = TeamType.MALE,
+            teamType = TeamType.FOOTBALL_7,
             coachId = "user123",
             clubId = null,
             clubFirestoreId = null

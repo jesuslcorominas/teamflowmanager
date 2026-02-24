@@ -5,123 +5,128 @@ import org.junit.Test
 
 class MatchTest {
 
+    private fun createMatch(
+        periodType: PeriodType = PeriodType.HALF_TIME,
+        pauseCount: Int = 0,
+        periods: List<MatchPeriod>? = null,
+    ) = Match(
+        teamName = "Team A",
+        opponent = "Opponent",
+        location = "Stadium",
+        periodType = periodType,
+        captainId = 0L,
+        pauseCount = pauseCount,
+        periods = periods ?: (1..periodType.numberOfPeriods).map {
+            MatchPeriod(periodNumber = it, periodDuration = periodType.duration)
+        },
+    )
+
     @Test
-    fun `getPeriodDurationMillis returns 25 minutes for 2 periods`() {
-        // Given
-        val match = Match(numberOfPeriods = 2, teamName = "Team A")
-
-        // When
-        val duration = match.getPeriodDurationMillis()
-
-        // Then
-        assertEquals(25 * 60 * 1000L, duration)
+    fun `canPause returns true when pauseCount is less than max pauses for HALF_TIME`() {
+        val match = createMatch(periodType = PeriodType.HALF_TIME, pauseCount = 0)
+        assertTrue(match.canPause())
     }
 
     @Test
-    fun `getPeriodDurationMillis returns 12 minutes 30 seconds for 4 periods`() {
-        // Given
-        val match = Match(numberOfPeriods = 4, teamName = "Team A")
-
-        // When
-        val duration = match.getPeriodDurationMillis()
-
-        // Then
-        assertEquals((12 * 60 + 30) * 1000L, duration)
+    fun `canPause returns false when pauseCount equals max pauses for HALF_TIME`() {
+        val match = createMatch(periodType = PeriodType.HALF_TIME, pauseCount = 1)
+        assertFalse(match.canPause())
     }
 
     @Test
-    fun `getMaxPauses returns 1 for 2 periods`() {
-        // Given
-        val match = Match(numberOfPeriods = 2, teamName = "Team A")
-
-        // When
-        val maxPauses = match.getMaxPauses()
-
-        // Then
-        assertEquals(1, maxPauses)
+    fun `canPause returns false when pauseCount exceeds max pauses for HALF_TIME`() {
+        val match = createMatch(periodType = PeriodType.HALF_TIME, pauseCount = 2)
+        assertFalse(match.canPause())
     }
 
     @Test
-    fun `getMaxPauses returns 3 for 4 periods`() {
-        // Given
-        val match = Match(numberOfPeriods = 4, teamName = "Team A")
-
-        // When
-        val maxPauses = match.getMaxPauses()
-
-        // Then
-        assertEquals(3, maxPauses)
+    fun `canPause returns true when pauseCount is less than max pauses for QUARTER_TIME`() {
+        val match = createMatch(periodType = PeriodType.QUARTER_TIME, pauseCount = 2)
+        assertTrue(match.canPause())
     }
 
     @Test
-    fun `canPause returns true when pause count is less than max`() {
-        // Given
-        val match = Match(numberOfPeriods = 2, pauseCount = 0, teamName = "Team A")
-
-        // When
-        val canPause = match.canPause()
-
-        // Then
-        assertTrue(canPause)
+    fun `canPause returns false when pauseCount equals max pauses for QUARTER_TIME`() {
+        val match = createMatch(periodType = PeriodType.QUARTER_TIME, pauseCount = 3)
+        assertFalse(match.canPause())
     }
 
     @Test
-    fun `canPause returns false when pause count equals max`() {
-        // Given
-        val match = Match(numberOfPeriods = 2, pauseCount = 1, teamName = "Team A")
-
-        // When
-        val canPause = match.canPause()
-
-        // Then
-        assertFalse(canPause)
+    fun `isLastPeriod returns false when last period has not started`() {
+        val periods = listOf(
+            MatchPeriod(periodNumber = 1, startTimeMillis = 0L, endTimeMillis = 0L),
+            MatchPeriod(periodNumber = 2, startTimeMillis = 0L, endTimeMillis = 0L),
+        )
+        val match = createMatch(periods = periods)
+        assertFalse(match.isLastPeriod())
     }
 
     @Test
-    fun `canPause returns false when pause count exceeds max`() {
-        // Given
-        val match = Match(numberOfPeriods = 2, pauseCount = 2, teamName = "Team A")
-
-        // When
-        val canPause = match.canPause()
-
-        // Then
-        assertFalse(canPause)
+    fun `isLastPeriod returns true when last period has started but not ended`() {
+        val periods = listOf(
+            MatchPeriod(periodNumber = 1, startTimeMillis = 1000L, endTimeMillis = 2000L),
+            MatchPeriod(periodNumber = 2, startTimeMillis = 3000L, endTimeMillis = 0L),
+        )
+        val match = createMatch(periods = periods)
+        assertTrue(match.isLastPeriod())
     }
 
     @Test
-    fun `isLastPeriod returns false when current period is less than total`() {
-        // Given
-        val match = Match(numberOfPeriods = 2, currentPeriod = 1, teamName = "Team A")
-
-        // When
-        val isLast = match.isLastPeriod()
-
-        // Then
-        assertFalse(isLast)
+    fun `isLastPeriod returns false when last period has already ended`() {
+        val periods = listOf(
+            MatchPeriod(periodNumber = 1, startTimeMillis = 1000L, endTimeMillis = 2000L),
+            MatchPeriod(periodNumber = 2, startTimeMillis = 3000L, endTimeMillis = 4000L),
+        )
+        val match = createMatch(periods = periods)
+        assertFalse(match.isLastPeriod())
     }
 
     @Test
-    fun `isLastPeriod returns true when current period equals total`() {
-        // Given
-        val match = Match(numberOfPeriods = 2, currentPeriod = 2, teamName = "Team A")
-
-        // When
-        val isLast = match.isLastPeriod()
-
-        // Then
-        assertTrue(isLast)
+    fun `getTotalElapsed returns sum of elapsed time for completed periods`() {
+        val currentTime = 5000L
+        val periods = listOf(
+            MatchPeriod(periodNumber = 1, periodDuration = 3000L, startTimeMillis = 1000L, endTimeMillis = 2000L),
+            MatchPeriod(periodNumber = 2, periodDuration = 3000L, startTimeMillis = 3000L, endTimeMillis = 0L),
+        )
+        val match = createMatch(periods = periods)
+        // Period 1: ended, elapsed = 2000 - 1000 = 1000
+        // Period 2: ongoing, elapsed = 5000 - 3000 = 2000
+        assertEquals(3000L, match.getTotalElapsed(currentTime))
     }
 
     @Test
-    fun `isLastPeriod returns true when current period exceeds total`() {
-        // Given
-        val match = Match(numberOfPeriods = 2, currentPeriod = 3, teamName = "Team A")
+    fun `isInProgress returns true when status is IN_PROGRESS`() {
+        val match = createMatch().copy(status = MatchStatus.IN_PROGRESS)
+        assertTrue(match.isInProgress)
+    }
 
-        // When
-        val isLast = match.isLastPeriod()
+    @Test
+    fun `isInProgress returns false when status is not IN_PROGRESS`() {
+        val match = createMatch().copy(status = MatchStatus.SCHEDULED)
+        assertFalse(match.isInProgress)
+    }
 
-        // Then
-        assertTrue(isLast)
+    @Test
+    fun `isStarted returns true when status is IN_PROGRESS`() {
+        val match = createMatch().copy(status = MatchStatus.IN_PROGRESS)
+        assertTrue(match.isStarted)
+    }
+
+    @Test
+    fun `isStarted returns true when status is PAUSED`() {
+        val match = createMatch().copy(status = MatchStatus.PAUSED)
+        assertTrue(match.isStarted)
+    }
+
+    @Test
+    fun `isStarted returns true when status is TIMEOUT`() {
+        val match = createMatch().copy(status = MatchStatus.TIMEOUT)
+        assertTrue(match.isStarted)
+    }
+
+    @Test
+    fun `isStarted returns false when status is SCHEDULED`() {
+        val match = createMatch().copy(status = MatchStatus.SCHEDULED)
+        assertFalse(match.isStarted)
     }
 }
