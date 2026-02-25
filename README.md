@@ -188,6 +188,66 @@ Tests use **JUnit 4**, **Mockk** for mocking, **Turbine** for Flow testing and *
 
 ---
 
+## Code Coverage
+
+JaCoCo is configured to generate a **unified report** across all modules with a single task.
+
+```bash
+# Generate coverage report for all modules
+./gradlew testDebugUnitTestCoverage
+
+# Report output:
+#   HTML → build/reports/jacoco/testDebugUnitTestCoverage/html/index.html
+#   XML  → build/reports/jacoco/testDebugUnitTestCoverage/coverage.xml
+```
+
+Coverage is configured via three script plugins at the root:
+
+| File | Purpose |
+|------|---------|
+| `jacoco.gradle.kts` | Applied to Android library/app modules |
+| `jacoco-nonandroid.gradle.kts` | Applied to pure JVM/Kotlin modules |
+| `jacoco-aggregate.gradle.kts` | Registers the unified `testDebugUnitTestCoverage` task at root |
+
+### Adding a new module to coverage
+
+**Step 1 — Apply the JaCoCo plugin** in the module's `build.gradle.kts`:
+
+```kotlin
+// Android module (com.android.library / com.android.application)
+apply(from = "$rootDir/jacoco.gradle.kts")
+
+// Pure JVM/Kotlin module
+apply(from = "$rootDir/jacoco-nonandroid.gradle.kts")
+```
+
+**Step 2 — Add the module** to `jacoco-aggregate.gradle.kts`:
+
+```kotlin
+// Android library modules (no build flavors):
+val androidModules = listOf(
+    ":viewmodel",
+    ":data:local",
+    ":data:remote",
+    ":your-new-module",   // ← add here
+)
+
+// Pure JVM/Kotlin modules:
+val jvmModules = listOf(
+    ":usecase",
+    ":data:core",
+    ":your-new-module",   // ← or here
+)
+
+// Android app modules with build flavors — specify the test task explicitly:
+val androidAppModules = listOf(
+    ":app" to "testDevDebugUnitTest",
+    ":your-new-app" to "testDevDebugUnitTest",   // ← or here
+)
+```
+
+---
+
 ## Code Style
 
 ```bash
