@@ -1,6 +1,7 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("jacoco")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktorfit)
@@ -69,4 +70,24 @@ dependencies {
     implementation(libs.firebase.storage.ktx)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+}
+
+tasks.register<JacocoReport>("remoteCoverage") {
+    dependsOn("testDebugUnitTest")
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+    }
+    val buildDir = project.layout.buildDirectory.asFile.get()
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    classDirectories.setFrom(
+        fileTree("$buildDir/tmp/kotlin-classes/debug") {
+            include("**/datasource/**")
+            exclude("**/*\$*")
+        }
+    )
+    executionData.setFrom(fileTree(buildDir) { include("**/*.exec") })
 }

@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
@@ -29,7 +28,6 @@ class MatchFirestoreDataSourceImpl(
 ) : MatchDataSource {
 
     companion object {
-        private const val TAG = "MatchFirestoreDS"
         private const val MATCHES_COLLECTION = "matches"
         private const val TEAMS_COLLECTION = "teams"
     }
@@ -57,15 +55,12 @@ class MatchFirestoreDataSourceImpl(
      */
     private suspend fun getTeamDocumentId(): String? {
         val currentUserId = firebaseAuth.currentUser?.uid
-        Log.d(TAG, "getTeamDocumentId: currentUserId=$currentUserId")
 
         if (currentUserId == null) {
-            Log.w(TAG, "getTeamDocumentId: No authenticated user")
             return null
         }
 
         return try {
-            Log.d(TAG, "getTeamDocumentId: Querying Firestore for team with ownerId=$currentUserId")
             val snapshot = firestore.collection(TEAMS_COLLECTION)
                 .whereEqualTo("ownerId", currentUserId)
                 .limit(1)
@@ -73,13 +68,10 @@ class MatchFirestoreDataSourceImpl(
                 .await()
 
             val teamDocId = snapshot.documents.firstOrNull()?.id
-            Log.d(TAG, "getTeamDocumentId: Found teamDocId=$teamDocId (${snapshot.documents.size} documents)")
             teamDocId
         } catch (e: CancellationException) {
-            Log.w(TAG, "getTeamDocumentId: Query was cancelled")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "getTeamDocumentId: Error getting team document ID", e)
             null
         }
     }
@@ -90,7 +82,6 @@ class MatchFirestoreDataSourceImpl(
     override fun getMatchById(matchId: Long): Flow<Match?> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.w(TAG, "getMatchById: No authenticated user, cannot get match (matchId=$matchId)")
             trySend(null)
             awaitClose { }
             return@callbackFlow
@@ -98,19 +89,15 @@ class MatchFirestoreDataSourceImpl(
 
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "getMatchById: No team found for user (matchId=$matchId)")
             trySend(null)
             awaitClose { }
             return@callbackFlow
         }
 
-        Log.d(TAG, "getMatchById: teamDocId=$teamDocId, matchId=$matchId")
-
         val listenerRegistration = firestore.collection(MATCHES_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "getMatchById: Error from Firestore", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
@@ -120,7 +107,6 @@ class MatchFirestoreDataSourceImpl(
                 } ?: emptyList()
 
                 val match = allMatches.find { it.id == matchId }
-                Log.d(TAG, "getMatchById: Found ${allMatches.size} matches, target matchId=$matchId found=${match != null}")
 
                 trySend(match)
             }
@@ -136,7 +122,6 @@ class MatchFirestoreDataSourceImpl(
     override fun getAllMatches(): Flow<List<Match>> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.w(TAG, "No authenticated user, cannot get matches")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
@@ -144,7 +129,6 @@ class MatchFirestoreDataSourceImpl(
 
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "No team found for user, cannot get matches")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
@@ -155,7 +139,6 @@ class MatchFirestoreDataSourceImpl(
             .whereEqualTo("archived", false)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Error getting matches from Firestore", error)
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
@@ -168,7 +151,6 @@ class MatchFirestoreDataSourceImpl(
                     )
                 } ?: emptyList()
 
-                Log.d(TAG, "Loaded ${matches.size} matches for team: $teamDocId")
                 trySend(matches)
             }
 
@@ -183,7 +165,6 @@ class MatchFirestoreDataSourceImpl(
     override fun getArchivedMatches(): Flow<List<Match>> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.w(TAG, "No authenticated user, cannot get archived matches")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
@@ -191,7 +172,6 @@ class MatchFirestoreDataSourceImpl(
 
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "No team found for user, cannot get archived matches")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
@@ -202,7 +182,6 @@ class MatchFirestoreDataSourceImpl(
             .whereEqualTo("archived", true)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Error getting archived matches from Firestore", error)
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
@@ -215,7 +194,6 @@ class MatchFirestoreDataSourceImpl(
                     )
                 } ?: emptyList()
 
-                Log.d(TAG, "Loaded ${matches.size} archived matches for team: $teamDocId")
                 trySend(matches)
             }
 
@@ -230,7 +208,6 @@ class MatchFirestoreDataSourceImpl(
     override suspend fun getScheduledMatches(): List<Match> {
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "No team found, cannot get scheduled matches")
             return emptyList()
         }
 
@@ -252,7 +229,6 @@ class MatchFirestoreDataSourceImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting scheduled matches from Firestore", e)
             emptyList()
         }
     }
@@ -263,13 +239,11 @@ class MatchFirestoreDataSourceImpl(
     override suspend fun updateMatchCaptain(matchId: Long, captainId: Long?) {
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "No team found, cannot update match captain - user may not be authenticated")
             return
         }
 
         val documentId = findDocumentIdByMatchId(teamDocId, matchId)
         if (documentId == null) {
-            Log.w(TAG, "Cannot find match with id: $matchId to update captain")
             return
         }
 
@@ -278,12 +252,9 @@ class MatchFirestoreDataSourceImpl(
                 .document(documentId)
                 .update("captainId", captainId ?: 0L)
                 .await()
-            Log.d(TAG, "Match captain updated: $documentId")
         } catch (e: CancellationException) {
-            Log.w(TAG, "Match captain update was cancelled for id: $documentId")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating match captain: ${e.message}", e)
             // Don't rethrow - log the error but don't crash the app
         }
     }
@@ -293,18 +264,13 @@ class MatchFirestoreDataSourceImpl(
      * Returns a stable Long ID derived from the Firestore document ID.
      */
     override suspend fun insertMatch(match: Match): Long {
-        Log.d(TAG, "insertMatch: Starting insert for match opponent=${match.opponent}")
-
         val teamDocId = getTeamDocumentId()
-        Log.d(TAG, "insertMatch: Got teamDocId=$teamDocId")
 
         if (teamDocId == null) {
-            Log.e(TAG, "insertMatch: No team found, cannot insert match - user may not be authenticated")
             throw IllegalStateException("Team must exist to create a match")
         }
 
         val docRef = firestore.collection(MATCHES_COLLECTION).document()
-        Log.d(TAG, "insertMatch: Created document reference with id=${docRef.id}")
 
         val firestoreModel = match.toFirestoreModel()
         val modelWithTeam = firestoreModel.copy(
@@ -312,18 +278,14 @@ class MatchFirestoreDataSourceImpl(
             teamId = teamDocId,
         )
 
-        Log.d(TAG, "insertMatch: Setting document in Firestore...")
         try {
             docRef.set(modelWithTeam).await()
-            Log.d(TAG, "insertMatch: Match inserted successfully with id: ${docRef.id}, teamId: $teamDocId")
             return docRef.id.toStableId()
         } catch (e: CancellationException) {
             throw e
         } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
-            Log.e(TAG, "Firestore PERMISSION_DENIED or ERROR: ${e.code} - ${e.message}", e)
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "General error inserting match: ${e.message}", e)
             throw e
         }
     }
@@ -334,13 +296,11 @@ class MatchFirestoreDataSourceImpl(
     override suspend fun updateMatch(match: Match) {
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot update match - user may not be authenticated")
             throw IllegalStateException("Team must exist to update a match")
         }
 
         val documentId = findDocumentIdByMatchId(teamDocId, match.id)
         if (documentId == null) {
-            Log.w(TAG, "Cannot find match with id: ${match.id} to update")
             throw IllegalStateException("Cannot update match without document ID")
         }
 
@@ -355,12 +315,9 @@ class MatchFirestoreDataSourceImpl(
                 .document(documentId)
                 .set(modelWithTeam)
                 .await()
-            Log.d(TAG, "Match updated successfully: $documentId")
         } catch (e: CancellationException) {
-            Log.w(TAG, "Match update was cancelled for id: $documentId")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating match in Firestore: ${e.message}", e)
             throw e
         }
     }
@@ -371,14 +328,12 @@ class MatchFirestoreDataSourceImpl(
     override suspend fun deleteMatch(matchId: Long) {
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "No team found, cannot delete match - user may not be authenticated")
             return
         }
 
         try {
             val documentId = findDocumentIdByMatchId(teamDocId, matchId)
             if (documentId == null) {
-                Log.w(TAG, "Cannot find match with id: $matchId to delete")
                 return
             }
 
@@ -386,11 +341,9 @@ class MatchFirestoreDataSourceImpl(
                 .document(documentId)
                 .delete()
                 .await()
-            Log.d(TAG, "Match deleted successfully: $documentId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error deleting match from Firestore", e)
             // Don't rethrow - log the error but don't crash the app
         }
     }

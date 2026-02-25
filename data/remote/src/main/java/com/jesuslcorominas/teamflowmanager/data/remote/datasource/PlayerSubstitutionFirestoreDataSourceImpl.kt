@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
@@ -28,7 +27,6 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
 ) : PlayerSubstitutionDataSource {
 
     companion object {
-        private const val TAG = "SubstitutionFirestoreDS"
         private const val SUBSTITUTIONS_COLLECTION = "substitutions"
         private const val TEAMS_COLLECTION = "teams"
         private const val MATCHES_COLLECTION = "matches"
@@ -40,15 +38,12 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
      */
     private suspend fun getTeamDocumentId(): String? {
         val currentUserId = firebaseAuth.currentUser?.uid
-        Log.d(TAG, "getTeamDocumentId: currentUserId=$currentUserId")
 
         if (currentUserId == null) {
-            Log.w(TAG, "getTeamDocumentId: No authenticated user")
             return null
         }
 
         return try {
-            Log.d(TAG, "getTeamDocumentId: Querying Firestore for team with ownerId=$currentUserId")
             val snapshot = firestore.collection(TEAMS_COLLECTION)
                 .whereEqualTo("ownerId", currentUserId)
                 .limit(1)
@@ -56,13 +51,10 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 .await()
 
             val teamDocId = snapshot.documents.firstOrNull()?.id
-            Log.d(TAG, "getTeamDocumentId: Found teamDocId=$teamDocId")
             teamDocId
         } catch (e: CancellationException) {
-            Log.w(TAG, "getTeamDocumentId: Query was cancelled")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "getTeamDocumentId: Error getting team document ID", e)
             null
         }
     }
@@ -81,16 +73,13 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 // Check if this match's stable ID matches
                 val docId = document.id
                 if (docId.toStableId() == matchId) {
-                    Log.d(TAG, "findMatchDocumentId: Found match document ID: $docId for matchId: $matchId")
                     return docId
                 }
             }
-            Log.w(TAG, "findMatchDocumentId: No match found for matchId: $matchId")
             null
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "findMatchDocumentId: Error finding match document ID", e)
             null
         }
     }
@@ -101,7 +90,6 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
     override fun getMatchSubstitutions(matchId: Long): Flow<List<PlayerSubstitution>> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.w(TAG, "getMatchSubstitutions: No authenticated user (matchId=$matchId)")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
@@ -109,20 +97,16 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
 
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "getMatchSubstitutions: No team found for user (matchId=$matchId)")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
         }
-
-        Log.d(TAG, "getMatchSubstitutions: teamDocId=$teamDocId, matchId=$matchId")
 
         val listenerRegistration = firestore.collection(SUBSTITUTIONS_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
             .whereEqualTo("matchId", matchId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "getMatchSubstitutions: Error from Firestore", error)
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
@@ -131,7 +115,6 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                     document.toObject(PlayerSubstitutionFirestoreModel::class.java)?.toDomain()
                 } ?: emptyList()
 
-                Log.d(TAG, "getMatchSubstitutions: Loaded ${substitutions.size} substitutions for match $matchId")
                 trySend(substitutions)
             }
 
@@ -145,25 +128,17 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
      * Returns a stable Long ID derived from the Firestore document ID.
      */
     override suspend fun insertSubstitution(substitution: PlayerSubstitution): Long {
-        Log.d(TAG, "insertSubstitution: Starting insert for substitution matchId=${substitution.matchId}")
-
         val teamDocId = getTeamDocumentId()
-        Log.d(TAG, "insertSubstitution: Got teamDocId=$teamDocId")
 
         if (teamDocId == null) {
-            Log.e(TAG, "insertSubstitution: No team found, cannot insert substitution - user may not be authenticated")
             throw IllegalStateException("Team must exist to create a substitution")
         }
 
         // Find the match document ID for security rules
         // If we can't find it, use empty string and rely on teamId validation in security rules
         val matchDocId = findMatchDocumentId(teamDocId, substitution.matchId)
-        if (matchDocId == null) {
-            Log.w(TAG, "insertSubstitution: No match document found for matchId=${substitution.matchId}, continuing with empty matchDocId")
-        }
 
         val docRef = firestore.collection(SUBSTITUTIONS_COLLECTION).document()
-        Log.d(TAG, "insertSubstitution: Created document reference with id=${docRef.id}")
 
         val firestoreModel = substitution.toFirestoreModel()
         val modelWithTeam = firestoreModel.copy(
@@ -172,18 +147,14 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
             matchDocId = matchDocId ?: "",
         )
 
-        Log.d(TAG, "insertSubstitution: Setting document in Firestore...")
         try {
             docRef.set(modelWithTeam).await()
-            Log.d(TAG, "insertSubstitution: Substitution inserted successfully with id: ${docRef.id}, teamId: $teamDocId, matchDocId: ${matchDocId ?: "empty"}")
             return docRef.id.toStableId()
         } catch (e: CancellationException) {
             throw e
         } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
-            Log.e(TAG, "Firestore PERMISSION_DENIED or ERROR: ${e.code} - ${e.message}", e)
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "General error inserting substitution: ${e.message}", e)
             throw e
         }
     }
