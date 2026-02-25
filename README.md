@@ -63,12 +63,12 @@ The project follows **Clean Architecture** with strict layer separation and the 
 ┌──────────────▼──────────────────────┐
 │     :data:core  (Data Layer)        │
 │     Repository implementations      │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│         :data:remote                │
-│   Ktor + KtorFit — Firebase/API     │
-└─────────────────────────────────────┘
+└──────────┬───────────┬──────────────┘
+           │           │
+┌──────────▼───────┐ ┌─▼────────────────────┐
+│   :data:local    │ │     :data:remote     │
+│  Room database   │ │  Ktor + Firebase/API │
+└──────────────────┘ └──────────────────────┘
 
 ┌─────────────────────────────────────┐
 │        :domain  (Domain Models)     │
@@ -87,7 +87,32 @@ The project follows **Clean Architecture** with strict layer separation and the 
 └─────────────────────────────────────┘
 ```
 
-> Repository interfaces are defined in `:usecase`; their implementations live in `:data:core`. Implementations are `internal` to their module.
+> Repository interfaces are defined in `:usecase`; their implementations live in `:data:core`. Implementations are `internal` to their module. `:data:core` delegates persistence to `:data:local` (Room) and remote operations to `:data:remote` (Ktor + Firebase).
+
+---
+
+## Dependency Injection
+
+The project uses **Koin 4.0** with a module structure designed to enforce layer boundaries at the dependency graph level.
+
+`:di` is the composition root: it declares a dependency on every other module and is the only place where all Koin module definitions are assembled into the application graph. No other module has visibility into implementation details outside its own layer.
+
+`:app` declares compile-time dependencies exclusively on `:viewmodel` and `:di`. This constraint prevents the UI layer from referencing use cases, repositories, or data sources directly — access to lower layers is only possible through the ViewModels and the injected graph.
+
+```
+         ┌──────────────────────────────────────────────┐
+         │                    :di                       │
+         │  (composition root — depends on all modules) │
+         └───┬──────┬──────┬──────┬──────┬──────┬───────┘
+             │      │      │      │      │      │
+           :app  :view  :use  :data  :data  :data
+                  model  case  :core  :local :remote
+             │
+         (also depends on :viewmodel for ViewModels
+          and :di to load the Koin graph at startup)
+```
+
+Each module exposes its own Koin module definition (e.g., `UseCaseModule`, `DataCoreModule`) which `:di` collects and starts. Adding a new module requires only declaring its Koin module and registering it in `:di` — no changes are needed elsewhere.
 
 ---
 
@@ -100,8 +125,9 @@ TeamFlowManager/
 ├── usecase/                # Use cases + repository interfaces
 ├── domain/                 # Domain models (pure Kotlin, no dependencies)
 ├── data/
-│   ├── core/               # Repository implementations
-│   └── remote/             # Ktor client + KtorFit + Firebase services
+│   ├── core/               # Repository implementations (DataSource interfaces)
+│   ├── local/              # Room database — DAOs and local DataSource implementations
+│   └── remote/             # Ktor client + KtorFit + Firebase DataSource implementations
 ├── di/                     # Koin configuration (AppModule + submodules)
 ├── service/                # Background services
 ├── gradle/
@@ -185,6 +211,66 @@ The project has two **product flavors**:
 ```
 
 Tests use **JUnit 4**, **Mockk** for mocking, **Turbine** for Flow testing and **Coroutines Test** for async code.
+
+---
+
+## Code Coverage
+
+JaCoCo is configured to generate a **unified report** across all modules with a single task.
+
+```bash
+# Generate coverage report for all modules
+./gradlew testDebugUnitTestCoverage
+
+# Report output:
+#   HTML → build/reports/jacoco/testDebugUnitTestCoverage/html/index.html
+#   XML  → build/reports/jacoco/testDebugUnitTestCoverage/coverage.xml
+```
+
+Coverage is configured via three script plugins at the root:
+
+| File | Purpose |
+|------|---------|
+| `jacoco.gradle.kts` | Applied to Android library/app modules |
+| `jacoco-nonandroid.gradle.kts` | Applied to pure JVM/Kotlin modules |
+| `jacoco-aggregate.gradle.kts` | Registers the unified `testDebugUnitTestCoverage` task at root |
+
+### Adding a new module to coverage
+
+**Step 1 — Apply the JaCoCo plugin** in the module's `build.gradle.kts`:
+
+```kotlin
+// Android module (com.android.library / com.android.application)
+apply(from = "$rootDir/jacoco.gradle.kts")
+
+// Pure JVM/Kotlin module
+apply(from = "$rootDir/jacoco-nonandroid.gradle.kts")
+```
+
+**Step 2 — Add the module** to `jacoco-aggregate.gradle.kts`:
+
+```kotlin
+// Android library modules (no build flavors):
+val androidModules = listOf(
+    ":viewmodel",
+    ":data:local",
+    ":data:remote",
+    ":your-new-module",   // ← add here
+)
+
+// Pure JVM/Kotlin modules:
+val jvmModules = listOf(
+    ":usecase",
+    ":data:core",
+    ":your-new-module",   // ← or here
+)
+
+// Android app modules with build flavors — specify the test task explicitly:
+val androidAppModules = listOf(
+    ":app" to "testDevDebugUnitTest",
+    ":your-new-app" to "testDevDebugUnitTest",   // ← or here
+)
+```
 
 ---
 

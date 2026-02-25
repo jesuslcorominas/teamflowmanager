@@ -1,780 +1,472 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import app.cash.turbine.test
+import androidx.lifecycle.SavedStateHandle
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
+import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
+import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartPlayerTimersBatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
-
-//@ExperimentalCoroutinesApi
-//class MatchViewModelTest {
-//
-//    private val testDispatcher = StandardTestDispatcher()
-//    private lateinit var getMatchUseCase: GetMatchUseCase
-//    private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
-//    private lateinit var getPlayersUseCase: GetPlayersUseCase
-//    private lateinit var finishMatchUseCase: FinishMatchUseCase
-//    private lateinit var pauseMatchUseCase: PauseMatchUseCase
-//    private lateinit var resumeMatchUseCase: ResumeMatchUseCase
-//    private lateinit var registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase
-//
-//    private lateinit var preferencesRepository: PreferencesRepository
-//    private lateinit var viewModel: MatchViewModel
-//
-//    @Before
-//    fun setup() {
-//        Dispatchers.setMain(testDispatcher)
-//        getMatchUseCase = mockk()
-//        getAllPlayerTimesUseCase = mockk()
-//        getPlayersUseCase = mockk()
-//        finishMatchUseCase = mockk(relaxed = true)
-//        pauseMatchUseCase = mockk(relaxed = true)
-//        resumeMatchUseCase = mockk(relaxed = true)
-//        registerPlayerSubstitutionUseCase = mockk(relaxed = true)
-//        preferencesRepository = mockk(relaxed = true)
-//    }
-//
-//    @After
-//    fun tearDown() {
-//        Dispatchers.resetMain()
-//    }
-//
-//    @Test
-//    fun `initial state should be Loading`() = runTest(testDispatcher) {
-//        // Given
-//        every { getMatchUseCase.invoke() } returns flowOf(null)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
-//        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-//
-//        // When
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // Then
-//        viewModel.uiState.test(timeout = 2.seconds) {
-//            assertEquals(MatchUiState.Loading, awaitItem())
-//            cancelAndIgnoreRemainingEvents()
-//        }
-//    }
-//
-//    @Test
-//    fun `pauseMatch should call pauseMatchUseCase with current time`() = runTest(testDispatcher) {
-//        // Given
-//        every { getMatchUseCase.invoke() } returns flowOf(null)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
-//        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-//
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // When
-//        viewModel.pauseMatch()
-//
-//        // Then
-//        coVerify { pauseMatchUseCase(any()) }
-//    }
-//
-//    @Test
-//    fun `resumeMatch should call resumeMatchUseCase with current time`() = runTest(testDispatcher) {
-//        // Given
-//        every { getMatchUseCase.invoke() } returns flowOf(null)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
-//        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-//
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // When
-//        viewModel.resumeMatch()
-//
-//        // Then
-//        coVerify { resumeMatchUseCase(any()) }
-//    }
-//
-//    @Test
-//    fun `selectPlayerOut should update selected player out state`() = runTest(testDispatcher) {
-//        // Given
-//        val match = Match(
-//            id = 1L,
-//            elapsedTimeMillis = 300000L,
-//            isRunning = true,
-//            lastStartTimeMillis = System.currentTimeMillis(),
-//        )
-//        val player = Player(5L, "John", "Doe", 10, listOf(Position.Forward))
-//        val playerTime = PlayerTime(5L, 150000L, true, System.currentTimeMillis())
-//
-//        every { getMatchUseCase.invoke() } returns flowOf(match)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(listOf(playerTime))
-//        every { getPlayersUseCase.invoke() } returns flowOf(listOf(player))
-//
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // When
-//        viewModel.selectedPlayerOut.test(timeout = 2.seconds) {
-//            assertEquals(null, awaitItem())
-//            viewModel.selectPlayerOut(5L)
-//            assertEquals(5L, awaitItem())
-//            cancelAndIgnoreRemainingEvents()
-//        }
-//    }
-//
-//    @Test
-//    fun `clearPlayerOutSelection should clear selected player out state`() = runTest(testDispatcher) {
-//        // Given
-//        val match = Match(
-//            id = 1L,
-//            elapsedTimeMillis = 300000L,
-//            isRunning = true,
-//            lastStartTimeMillis = System.currentTimeMillis(),
-//        )
-//        val player = Player(5L, "John", "Doe", 10, listOf(Position.Forward))
-//        val playerTime = PlayerTime(5L, 150000L, true, System.currentTimeMillis())
-//
-//        every { getMatchUseCase.invoke() } returns flowOf(match)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(listOf(playerTime))
-//        every { getPlayersUseCase.invoke() } returns flowOf(listOf(player))
-//
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // When/Then
-//        viewModel.selectedPlayerOut.test(timeout = 2.seconds) {
-//            assertEquals(null, awaitItem())
-//            viewModel.selectPlayerOut(5L)
-//            assertEquals(5L, awaitItem())
-//            viewModel.clearPlayerOutSelection()
-//            assertEquals(null, awaitItem())
-//            cancelAndIgnoreRemainingEvents()
-//        }
-//    }
-//
-//    @Test
-//    fun `substitutePlayer should call registerPlayerSubstitutionUseCase and clear selection`() =
-//        runTest(testDispatcher) {
-//            // Given
-//            val match = Match(
-//                id = 1L,
-//                elapsedTimeMillis = 300000L,
-//                isRunning = true,
-//                lastStartTimeMillis = System.currentTimeMillis(),
-//            )
-//            val player2 = Player(2L, "Jane", "Smith", 7, listOf(Position.Midfielder))
-//            val player3 = Player(3L, "Bob", "Johnson", 5, listOf(Position.Defender))
-//            val playerTime2 = PlayerTime(2L, 150000L, true, System.currentTimeMillis())
-//
-//            every { getMatchUseCase.invoke() } returns flowOf(match)
-//            every { getAllPlayerTimesUseCase.invoke() } returns flowOf(listOf(playerTime2))
-//            every { getPlayersUseCase.invoke() } returns flowOf(listOf(player2, player3))
-//
-//            viewModel = MatchViewModel(
-//                getMatchUseCase = getMatchUseCase,
-//                getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//                getPlayersUseCase = getPlayersUseCase,
-//                saveMatchUseCase = finishMatchUseCase,
-//                pauseMatchUseCase = pauseMatchUseCase,
-//                resumeMatchUseCase = resumeMatchUseCase,
-//                registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//                preferencesRepository = preferencesRepository
-//            )
-//
-//            // When/Then
-//            viewModel.selectedPlayerOut.test(timeout = 2.seconds) {
-//                assertEquals(null, awaitItem())
-//                viewModel.selectPlayerOut(2L)
-//                assertEquals(2L, awaitItem())
-//                viewModel.substitutePlayer(3L)
-//                assertEquals(null, awaitItem())
-//                cancelAndIgnoreRemainingEvents()
-//            }
-//
-//            // Then
-//            coVerify { registerPlayerSubstitutionUseCase(1L, 2L, 3L, any()) }
-//        }
-//
-//    @Test
-//    fun `uiState should be NoMatch when match is null`() = runTest(testDispatcher) {
-//        // Given
-//        every { getMatchUseCase.invoke() } returns flowOf(null)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(emptyList())
-//        every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-//
-//        // When
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // Then
-//        viewModel.uiState.test(timeout = 2.seconds) {
-//            assertEquals(MatchUiState.Loading, awaitItem())
-//            assertEquals(MatchUiState.NoMatch, awaitItem())
-//            cancelAndIgnoreRemainingEvents()
-//        }
-//    }
-//
-//    @Test
-//    fun `uiState should be Success when match exists`() = runTest(testDispatcher) {
-//        // Given
-//        val match = Match(
-//            id = 1L,
-//            elapsedTimeMillis = 300000L,
-//            isRunning = false,
-//            lastStartTimeMillis = null,
-//        )
-//        val players = listOf(
-//            Player(1, "John", "Doe", 10, listOf(Position.Forward), 1),
-//            Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder), 1),
-//        )
-//        val playerTimes = listOf(
-//            PlayerTime(1, 150000L, false, null),
-//            PlayerTime(2, 100000L, false, null),
-//        )
-//
-//        every { getMatchUseCase.invoke() } returns flowOf(match)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(playerTimes)
-//        every { getPlayersUseCase.invoke() } returns flowOf(players)
-//
-//        // When
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // Then
-//        viewModel.uiState.test(timeout = 2.seconds) {
-//            assertEquals(MatchUiState.Loading, awaitItem())
-//            val state = awaitItem()
-//            assertTrue(state is MatchUiState.Success)
-//            val successState = state as MatchUiState.Success
-//            assertEquals(300000L, successState.matchTimeMillis)
-//            assertEquals(false, successState.matchIsRunning)
-//            assertEquals(2, successState.playerTimes.size)
-//            assertEquals(150000L, successState.playerTimes[0].timeMillis)
-//            assertEquals(100000L, successState.playerTimes[1].timeMillis)
-//            cancelAndIgnoreRemainingEvents()
-//        }
-//    }
-//
-//    @Test
-//    fun `success state should include players without timer`() = runTest(testDispatcher) {
-//        // Given
-//        val match = Match(1L, 0L, isRunning = false, lastStartTimeMillis = null)
-//        val players = listOf(
-//            Player(1, "John", "Doe", 10, listOf(Position.Forward), 1),
-//            Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder), 1),
-//        )
-//        val playerTimes = listOf(
-//            PlayerTime(1, 50000L, false, null),
-//        )
-//
-//        every { getMatchUseCase.invoke() } returns flowOf(match)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(playerTimes)
-//        every { getPlayersUseCase.invoke() } returns flowOf(players)
-//
-//        // When
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // Then
-//        viewModel.uiState.test(timeout = 2.seconds) {
-//            assertEquals(MatchUiState.Loading, awaitItem())
-//            val state = awaitItem() as MatchUiState.Success
-//            assertEquals(2, state.playerTimes.size)
-//            assertEquals(50000L, state.playerTimes[0].timeMillis)
-//            assertEquals(0L, state.playerTimes[1].timeMillis)
-//            cancelAndIgnoreRemainingEvents()
-//        }
-//    }
-//
-//    @Test
-//    fun `running match time should be calculated correctly`() = runTest(testDispatcher) {
-//        // Given
-//        val currentTime = System.currentTimeMillis()
-//        val match = Match(
-//            id = 1L,
-//            elapsedTimeMillis = 300000L,
-//            isRunning = true,
-//            lastStartTimeMillis = currentTime - 60000L,
-//        )
-//        val players = emptyList<Player>()
-//        val playerTimes = emptyList<PlayerTime>()
-//
-//        every { getMatchUseCase.invoke() } returns flowOf(match)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(playerTimes)
-//        every { getPlayersUseCase.invoke() } returns flowOf(players)
-//
-//        // When
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // Then
-//        viewModel.uiState.test(timeout = 2.seconds) {
-//            assertEquals(MatchUiState.Loading, awaitItem())
-//            val state = awaitItem() as MatchUiState.Success
-//            assertTrue(state.matchIsRunning)
-//            assertTrue(state.matchTimeMillis >= 360000L)
-//            cancelAndIgnoreRemainingEvents()
-//        }
-//    }
-//
-//    @Test
-//    fun `running player time should be calculated correctly`() = runTest(testDispatcher) {
-//        // Given
-//        val currentTime = System.currentTimeMillis()
-//        val match = Match(1L, 0L, isRunning = false, lastStartTimeMillis = null)
-//        val players = listOf(
-//            Player(1, "John", "Doe", 10, listOf(Position.Forward), 1),
-//        )
-//        val playerTimes = listOf(
-//            PlayerTime(
-//                playerId = 1,
-//                elapsedTimeMillis = 100000L,
-//                isRunning = true,
-//                lastStartTimeMillis = currentTime - 30000L,
-//            ),
-//        )
-//
-//        every { getMatchUseCase.invoke() } returns flowOf(match)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(playerTimes)
-//        every { getPlayersUseCase.invoke() } returns flowOf(players)
-//
-//        // When
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // Then
-//        viewModel.uiState.test(timeout = 2.seconds) {
-//            assertEquals(MatchUiState.Loading, awaitItem())
-//            val state = awaitItem() as MatchUiState.Success
-//            assertTrue(state.playerTimes[0].isRunning)
-//            assertTrue(state.playerTimes[0].timeMillis >= 130000L)
-//            cancelAndIgnoreRemainingEvents()
-//        }
-//    }
-//
-//    @Test
-//    fun `time should update every second`() = runTest(testDispatcher) {
-//        // Given
-//        val currentTime = System.currentTimeMillis()
-//        val match = Match(
-//            id = 1L,
-//            elapsedTimeMillis = 100000L,
-//            isRunning = true,
-//            lastStartTimeMillis = currentTime,
-//        )
-//        val players = emptyList<Player>()
-//        val playerTimes = emptyList<PlayerTime>()
-//
-//        every { getMatchUseCase.invoke() } returns flowOf(match)
-//        every { getAllPlayerTimesUseCase.invoke() } returns flowOf(playerTimes)
-//        every { getPlayersUseCase.invoke() } returns flowOf(players)
-//
-//        // When
-//        viewModel = MatchViewModel(
-//            getMatchUseCase = getMatchUseCase,
-//            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-//            getPlayersUseCase = getPlayersUseCase,
-//            saveMatchUseCase = finishMatchUseCase,
-//            pauseMatchUseCase = pauseMatchUseCase,
-//            resumeMatchUseCase = resumeMatchUseCase,
-//            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-//            preferencesRepository = preferencesRepository
-//        )
-//
-//        // Then
-//        viewModel.uiState.test(timeout = 3.seconds) {
-//            assertEquals(MatchUiState.Loading, awaitItem())
-//            val initialState = awaitItem() as MatchUiState.Success
-//            val initialTime = initialState.matchTimeMillis
-//
-//            // Wait for at least one update
-//            val updatedState = awaitItem() as MatchUiState.Success
-//            assertTrue(updatedState.matchTimeMillis > initialTime)
-//            cancelAndIgnoreRemainingEvents()
-//        }
-//    }
-//}
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MainDispatcherRule(
-    val testDispatcher: TestDispatcher = StandardTestDispatcher(),
-) : TestWatcher() {
-
-    override fun starting(description: Description) {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    override fun finished(description: Description) {
-        Dispatchers.resetMain()
-    }
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(JUnit4::class)
 class MatchViewModelTest {
 
-    private val getMatchUseCase: GetMatchUseCase = mockk()
-    private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase = mockk()
-    private val getPlayersUseCase: GetPlayersUseCase = mockk()
-    private val finishMatchUseCase: FinishMatchUseCase = mockk()
-    private val pauseMatchUseCase: PauseMatchUseCase = mockk()
-    private val resumeMatchUseCase: ResumeMatchUseCase = mockk()
-    private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase = mockk()
-    private val getMatchSummaryUseCase: GetMatchSummaryUseCase = mockk()
-    private val preferencesRepository: PreferencesRepository = mockk()
-
+    private val testDispatcher = StandardTestDispatcher()
+    private lateinit var getMatchByIdUseCase: GetMatchByIdUseCase
+    private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
+    private lateinit var getPlayersUseCase: GetPlayersUseCase
+    private lateinit var finishMatchUseCase: FinishMatchUseCase
+    private lateinit var pauseMatchUseCase: PauseMatchUseCase
+    private lateinit var resumeMatchUseCase: ResumeMatchUseCase
+    private lateinit var startMatchTimerUseCase: StartMatchTimerUseCase
+    private lateinit var registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase
+    private lateinit var getMatchSummaryUseCase: GetMatchSummaryUseCase
+    private lateinit var getMatchTimelineUseCase: GetMatchTimelineUseCase
+    private lateinit var registerGoalUseCase: RegisterGoalUseCase
+    private lateinit var startTimeoutUseCase: StartTimeoutUseCase
+    private lateinit var endTimeoutUseCase: EndTimeoutUseCase
+    private lateinit var getMatchReportDataUseCase: GetMatchReportDataUseCase
+    private lateinit var exportMatchReportToPdfUseCase: ExportMatchReportToPdfUseCase
+    private lateinit var synchronizeTimeUseCase: SynchronizeTimeUseCase
+    private lateinit var startPlayerTimersBatchUseCase: StartPlayerTimersBatchUseCase
+    private lateinit var shouldShowInvalidSubstitutionAlertUseCase: ShouldShowInvalidSubstitutionAlertUseCase
+    private lateinit var setShouldShowInvalidSubstitutionAlertUseCase: SetShouldShowInvalidSubstitutionAlertUseCase
+    private lateinit var analyticsTracker: AnalyticsTracker
+    private lateinit var crashReporter: CrashReporter
     private lateinit var fakeTicker: FakeTimeTicker
-    private lateinit var viewModel: MatchViewModel
 
-    @get:Rule
-    val coroutineRule = MainDispatcherRule()
-
-    private val fakeMatch = Match(
-        id = 1L,
+    private val testMatch = Match(
+        id = MATCH_ID,
         teamName = "My Team",
-        elapsedTimeMillis = 10_000L,
-        isRunning = true,
-        lastStartTimeMillis = 1_000L,
+        opponent = "Rival FC",
+        location = "Stadium",
+        periodType = PeriodType.HALF_TIME,
+        captainId = 1L,
+        squadCallUpIds = listOf(1L, 2L),
+        status = MatchStatus.IN_PROGRESS,
     )
 
-    private val fakePlayers = listOf(
-        Player(1L, "John", "Doe", 10, listOf(Position.Forward)),
-        Player(2L, "John", "Doe", 11, listOf(Position.Forward))
+    private val players = listOf(
+        Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L, isCaptain = false),
+        Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = 1L, isCaptain = false),
     )
 
-    private val fakePlayerTimes = listOf(
-        PlayerTime(playerId = 1L, elapsedTimeMillis = 5_000L, isRunning = true, lastStartTimeMillis = 1_000L),
-        PlayerTime(playerId = 2L, elapsedTimeMillis = 0L, isRunning = false, lastStartTimeMillis = null)
+    private val playerTimes = listOf(
+        PlayerTime(playerId = 1L, elapsedTimeMillis = 5000L, isRunning = true),
+        PlayerTime(playerId = 2L, elapsedTimeMillis = 0L, isRunning = false),
     )
 
     @Before
     fun setup() {
-        every { getMatchUseCase() } returns flowOf(fakeMatch)
-        every { getAllPlayerTimesUseCase() } returns flowOf(fakePlayerTimes)
-        every { getPlayersUseCase() } returns flowOf(fakePlayers)
-        every { preferencesRepository.shouldShowInvalidSubstitutionAlert() } returns true
-        coEvery { preferencesRepository.setShouldShowInvalidSubstitutionAlert(any()) } just runs
-        coEvery { finishMatchUseCase() } just runs
-        coEvery { pauseMatchUseCase(any()) } just runs
-        coEvery { resumeMatchUseCase(any(), any()) } just runs
-        coEvery { registerPlayerSubstitutionUseCase(any(), any(), any(), any()) } just runs
-
+        Dispatchers.setMain(testDispatcher)
+        getMatchByIdUseCase = mockk()
+        getAllPlayerTimesUseCase = mockk()
+        getPlayersUseCase = mockk()
+        finishMatchUseCase = mockk(relaxed = true)
+        pauseMatchUseCase = mockk(relaxed = true)
+        resumeMatchUseCase = mockk(relaxed = true)
+        startMatchTimerUseCase = mockk(relaxed = true)
+        registerPlayerSubstitutionUseCase = mockk(relaxed = true)
+        getMatchSummaryUseCase = mockk(relaxed = true)
+        getMatchTimelineUseCase = mockk(relaxed = true)
+        registerGoalUseCase = mockk(relaxed = true)
+        startTimeoutUseCase = mockk(relaxed = true)
+        endTimeoutUseCase = mockk(relaxed = true)
+        getMatchReportDataUseCase = mockk(relaxed = true)
+        exportMatchReportToPdfUseCase = mockk(relaxed = true)
+        synchronizeTimeUseCase = mockk(relaxed = true)
+        startPlayerTimersBatchUseCase = mockk(relaxed = true)
+        shouldShowInvalidSubstitutionAlertUseCase = mockk()
+        setShouldShowInvalidSubstitutionAlertUseCase = mockk(relaxed = true)
+        analyticsTracker = mockk(relaxed = true)
+        crashReporter = mockk(relaxed = true)
         fakeTicker = FakeTimeTicker()
 
-        viewModel = MatchViewModel(
-            getMatchById = getMatchUseCase,
-            getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-            getPlayersUseCase = getPlayersUseCase,
-            finishMatch = finishMatchUseCase,
-            pauseMatch = pauseMatchUseCase,
-            resumeMatchUseCase = resumeMatchUseCase,
-            registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-            getMatchSummaryUseCase = getMatchSummaryUseCase,
-            preferencesRepository = preferencesRepository,
-            timeTicker = fakeTicker,
-            startMatchTimerUseCase = ,
-            startPlayerTimerUseCase = ,
-            registerGoal = ,
-            getGoalsForMatchUseCase = ,
-        )
+        every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(testMatch)
+        every { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
+        every { getPlayersUseCase() } returns flowOf(players)
+        every { shouldShowInvalidSubstitutionAlertUseCase() } returns true
     }
 
-    // ----------- TESTS -----------
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    private fun createViewModel() = MatchViewModel(
+        getMatchById = getMatchByIdUseCase,
+        getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
+        getPlayersUseCase = getPlayersUseCase,
+        finishMatch = finishMatchUseCase,
+        pauseMatch = pauseMatchUseCase,
+        resumeMatchUseCase = resumeMatchUseCase,
+        startMatchTimerUseCase = startMatchTimerUseCase,
+        registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
+        getMatchSummaryUseCase = getMatchSummaryUseCase,
+        getMatchTimelineUseCase = getMatchTimelineUseCase,
+        registerGoal = registerGoalUseCase,
+        startTimeoutUseCase = startTimeoutUseCase,
+        endTimeoutUseCase = endTimeoutUseCase,
+        getMatchReportData = getMatchReportDataUseCase,
+        exportMatchReportToPdf = exportMatchReportToPdfUseCase,
+        synchronizeTimeUseCase = synchronizeTimeUseCase,
+        startPlayerTimersBatchUseCase = startPlayerTimersBatchUseCase,
+        shouldShowInvalidSubstitutionAlertUseCase = shouldShowInvalidSubstitutionAlertUseCase,
+        setShouldShowInvalidSubstitutionAlertUseCase = setShouldShowInvalidSubstitutionAlertUseCase,
+        timeTicker = fakeTicker,
+        analyticsTracker = analyticsTracker,
+        crashReporter = crashReporter,
+        savedStateHandle = SavedStateHandle(mapOf(Route.Match.ARG_MATCH_ID to MATCH_ID)),
+    )
 
     @Test
-    fun `loadMatchData - emits Success when data available`() = runTest {
-        fakeTicker.emit(System.currentTimeMillis())
-
-        viewModel.uiState.test {
-            skipItems(1) // salta el estado Loading inicial
-            val state = awaitItem()
-            assertTrue(state is MatchUiState.Success)
-            cancelAndIgnoreRemainingEvents()
-        }
+    fun `initial state should be Loading`() {
+        val viewModel = createViewModel()
+        assertEquals(MatchUiState.Loading, viewModel.uiState.value)
     }
 
     @Test
-    fun `saveMatch - calls FinishMatchUseCase`() = runTest {
-        val successState = MatchUiState.Success(
-            matchId = 1L,
-            teamName = "My Team",
-            opponent = "Other team",
-            matchTimeMillis = 0L,
-            matchIsRunning = true,
-            playerTimes = emptyList(),
-        )
-        val uiStateField = MatchViewModel::class.java.getDeclaredField("_uiState").apply { isAccessible = true }
-        (uiStateField.get(viewModel) as MutableStateFlow<MatchUiState>).value = successState
-
-        viewModel.saveMatch()
+    fun `uiState should be NoMatch when match does not exist`() = runTest(testDispatcher) {
+        every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(null)
+        val viewModel = createViewModel()
         advanceUntilIdle()
-
-        coVerify { finishMatchUseCase() }
+        assertEquals(MatchUiState.NoMatch, viewModel.uiState.value)
     }
 
     @Test
-    fun `pauseMatch - calls PauseMatchUseCase with current time`() = runTest {
-        // Forzamos un estado Success válido
-        val successState = MatchUiState.Success(
-            matchId = 1L,
-            teamName = "My Team",
-            opponent = "Other team",
-            matchTimeMillis = 0L,
-            matchIsRunning = true,
-            playerTimes = emptyList()
-        )
-        val uiStateField = MatchViewModel::class.java.getDeclaredField("_uiState").apply { isAccessible = true }
-        (uiStateField.get(viewModel) as MutableStateFlow<MatchUiState>).value = successState
+    fun `uiState should be Success when match exists and is in progress`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        val state = viewModel.uiState.value
+        assertTrue(state is MatchUiState.Success)
+        assertEquals(testMatch, (state as MatchUiState.Success).match)
+    }
 
-        val before = System.currentTimeMillis()
+    @Test
+    fun `Success state should contain only squad call-up players`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        val state = viewModel.uiState.value as MatchUiState.Success
+        assertEquals(2, state.playerTimes.size)
+    }
+
+    @Test
+    fun `pauseMatch should call PauseMatchUseCase when match has no active period`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
         viewModel.pauseMatch()
         advanceUntilIdle()
-
-        coVerify { pauseMatchUseCase(withArg { assertTrue(it >= before) }) }
+        coVerify { pauseMatchUseCase(MATCH_ID, any()) }
     }
 
+    @Test
+    fun `dismissPauseConfirmation should clear pause confirmation state`() {
+        val viewModel = createViewModel()
+        viewModel.dismissPauseConfirmation()
+        assertNull(viewModel.showPauseConfirmation.value)
+    }
 
     @Test
-    fun `resumeMatch - calls ResumeMatchUseCase with current time`() = runTest {
-        val successState = MatchUiState.Success(
-            matchId = 1L,
-            teamName = "My Team",
-            opponent = "Other team",
-            matchTimeMillis = 0L,
-            matchIsRunning = true,
-            playerTimes = emptyList()
-        )
-        val uiStateField = MatchViewModel::class.java.getDeclaredField("_uiState").apply { isAccessible = true }
-        (uiStateField.get(viewModel) as MutableStateFlow<MatchUiState>).value = successState
+    fun `dismissStopConfirmation should hide stop confirmation`() {
+        val viewModel = createViewModel()
+        viewModel.dismissStopConfirmation()
+        assertFalse(viewModel.showStopConfirmation.value)
+    }
 
-        val before = System.currentTimeMillis()
-        viewModel.resumeMatch()
+    @Test
+    fun `selectPlayerOut should select running player`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
         advanceUntilIdle()
-
-        coVerify { resumeMatchUseCase(any(), withArg { it -> assertTrue(it >= before) }) }
-    }
-
-    @Test
-    fun `selectPlayerOut - selects running player`() = runTest {
-        val successState = MatchUiState.Success(
-            matchId = 1L,
-            teamName = "My Team",
-            opponent = "Other team",
-            matchTimeMillis = 0L,
-            matchIsRunning = true,
-            playerTimes = listOf(
-                PlayerTimeItem(player = fakePlayers[0], timeMillis = 1000L, isRunning = true)
-            )
-        )
-        val uiStateField = MatchViewModel::class.java.getDeclaredField("_uiState").apply { isAccessible = true }
-        (uiStateField.get(viewModel) as MutableStateFlow<MatchUiState>).value = successState
-
         viewModel.selectPlayerOut(1L)
-
-        viewModel.selectedPlayerOut.test {
-            assertEquals(1L, awaitItem())
-        }
+        assertEquals(1L, viewModel.selectedPlayerOut.value)
     }
 
     @Test
-    fun `selectPlayerOut - shows invalid substitution alert when player not running`() = runTest {
-        val successState = MatchUiState.Success(
-            matchId = 1L,
-            teamName = "My Team",
-            opponent = "Other team",
-            matchTimeMillis = 0L,
-            matchIsRunning = true,
-            playerTimes = listOf(
-                PlayerTimeItem(player = fakePlayers[0], timeMillis = 1000L, isRunning = false)
-            )
-        )
-        val uiStateField = MatchViewModel::class.java.getDeclaredField("_uiState").apply { isAccessible = true }
-        (uiStateField.get(viewModel) as MutableStateFlow<MatchUiState>).value = successState
+    fun `selectPlayerOut should show invalid substitution alert when player is not running`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.selectPlayerOut(2L)
+        assertTrue(viewModel.showInvalidSubstitutionAlert.value)
+        assertNull(viewModel.selectedPlayerOut.value)
+    }
 
+    @Test
+    fun `clearPlayerOutSelection should clear the selected player`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
         viewModel.selectPlayerOut(1L)
-
-        viewModel.showInvalidSubstitutionAlert.test {
-            assertEquals(true, awaitItem())
-        }
+        assertEquals(1L, viewModel.selectedPlayerOut.value)
+        viewModel.clearPlayerOutSelection()
+        assertNull(viewModel.selectedPlayerOut.value)
     }
 
     @Test
-    fun `dismissInvalidSubstitutionAlert - hides alert and disables future alerts`() = runTest {
-        viewModel.dismissInvalidSubstitutionAlert(dontShowAgain = true)
-
-        coVerify { preferencesRepository.setShouldShowInvalidSubstitutionAlert(false) }
-
-        viewModel.showInvalidSubstitutionAlert.test {
-            assertEquals(false, awaitItem())
-        }
-    }
-
-    @Test
-    fun `substitutePlayer - calls RegisterPlayerSubstitutionUseCase and clears selection`() = runTest {
-        val successState = MatchUiState.Success(
-            matchId = 1L,
-            teamName = "My Team",
-            opponent = "Other team",
-            matchTimeMillis = 0L,
-            matchIsRunning = true,
-            playerTimes = listOf(
-                PlayerTimeItem(player = fakePlayers[0], timeMillis = 1000L, isRunning = true)
-            )
-        )
-
-        val uiStateField = MatchViewModel::class.java.getDeclaredField("_uiState").apply { isAccessible = true }
-        val selectedField =
-            MatchViewModel::class.java.getDeclaredField("_selectedPlayerOut").apply { isAccessible = true }
-
-        (uiStateField.get(viewModel) as MutableStateFlow<MatchUiState>).value = successState
-        (selectedField.get(viewModel) as MutableStateFlow<Long?>).value = 1L
+    fun `substitutePlayer should call RegisterPlayerSubstitutionUseCase and clear selection`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.selectPlayerOut(1L)
 
         viewModel.substitutePlayer(2L)
         advanceUntilIdle()
 
         coVerify {
             registerPlayerSubstitutionUseCase(
-                matchId = 1L,
+                matchId = MATCH_ID,
                 playerOutId = 1L,
                 playerInId = 2L,
-                any()
+                currentTimeMillis = any(),
             )
         }
-
-        assertNull((selectedField.get(viewModel) as MutableStateFlow<Long?>).value)
+        assertNull(viewModel.selectedPlayerOut.value)
     }
-
 
     @Test
-    fun `currentTime updates when ticker emits`() = runTest {
-        val now = 1000L
-        val later = 2000L
+    fun `substitutePlayerDirect should call RegisterPlayerSubstitutionUseCase`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
 
-        fakeTicker.emit(now)
-        fakeTicker.emit(later)
+        viewModel.substitutePlayerDirect(playerInId = 2L, playerOutId = 1L)
+        advanceUntilIdle()
 
-        val currentTimeField = MatchViewModel::class.java.getDeclaredField("_currentTime").apply { isAccessible = true }
-        val flow = currentTimeField.get(viewModel) as MutableStateFlow<Long>
+        coVerify {
+            registerPlayerSubstitutionUseCase(
+                matchId = MATCH_ID,
+                playerOutId = 1L,
+                playerInId = 2L,
+                currentTimeMillis = any(),
+            )
+        }
+    }
 
-        assertTrue(flow.value >= now)
+    @Test
+    fun `dismissInvalidSubstitutionAlert should hide the alert`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.selectPlayerOut(2L)
+        assertTrue(viewModel.showInvalidSubstitutionAlert.value)
+
+        viewModel.dismissInvalidSubstitutionAlert()
+
+        assertFalse(viewModel.showInvalidSubstitutionAlert.value)
+    }
+
+    @Test
+    fun `dismissInvalidSubstitutionAlert with dontShowAgain true should call SetShouldShowInvalidSubstitutionAlertUseCase`() {
+        val viewModel = createViewModel()
+        viewModel.dismissInvalidSubstitutionAlert(dontShowAgain = true)
+        verify { setShouldShowInvalidSubstitutionAlertUseCase(false) }
+    }
+
+    @Test
+    fun `exportCompleted should reset exportState to Idle`() {
+        val viewModel = createViewModel()
+        viewModel.exportCompleted()
+        assertEquals(ExportState.Idle, viewModel.exportState.value)
+    }
+
+    @Test
+    fun `isSubstitutionInProgress initial value should be false`() {
+        val viewModel = createViewModel()
+        assertFalse(viewModel.isSubstitutionInProgress.value)
+    }
+
+    @Test
+    fun `beginMatch should call startMatchTimerUseCase when match is not yet started`() =
+        runTest(testDispatcher) {
+            val scheduledMatch = testMatch.copy(status = MatchStatus.SCHEDULED)
+            every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(scheduledMatch)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.beginMatch(MATCH_ID)
+            advanceUntilIdle()
+
+            coVerify { startMatchTimerUseCase(MATCH_ID, any()) }
+        }
+
+    @Test
+    fun `beginMatch should call startPlayerTimersBatchUseCase when lineup is not empty`() =
+        runTest(testDispatcher) {
+            val scheduledMatch = testMatch.copy(
+                status = MatchStatus.SCHEDULED,
+                startingLineupIds = listOf(1L, 2L),
+            )
+            every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(scheduledMatch)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.beginMatch(MATCH_ID)
+            advanceUntilIdle()
+
+            coVerify { startPlayerTimersBatchUseCase(listOf(1L, 2L), any()) }
+        }
+
+    @Test
+    fun `saveMatch should show stop confirmation when match is not in last period`() =
+        runTest(testDispatcher) {
+            // testMatch has HALF_TIME with default periods (startTimeMillis=0), so isLastPeriod()=false
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.saveMatch()
+            advanceUntilIdle()
+
+            assertTrue(viewModel.showStopConfirmation.value)
+        }
+
+    @Test
+    fun `confirmStopMatch should call finishMatchUseCase`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.confirmStopMatch()
+        advanceUntilIdle()
+
+        coVerify { finishMatchUseCase(MATCH_ID, any()) }
+    }
+
+    @Test
+    fun `resumeMatch should call resumeMatchUseCase`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.resumeMatch(MATCH_ID)
+        advanceUntilIdle()
+
+        coVerify { resumeMatchUseCase(MATCH_ID, any()) }
+    }
+
+    @Test
+    fun `startTimeout should call startTimeoutUseCase when match is in progress`() =
+        runTest(testDispatcher) {
+            // testMatch.status = IN_PROGRESS, so isInProgress = true
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.startTimeout()
+            advanceUntilIdle()
+
+            coVerify { startTimeoutUseCase(MATCH_ID, any()) }
+        }
+
+    @Test
+    fun `endTimeout should call endTimeoutUseCase when match is in timeout`() =
+        runTest(testDispatcher) {
+            val timeoutMatch = testMatch.copy(status = MatchStatus.TIMEOUT)
+            every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(timeoutMatch)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.endTimeout()
+            advanceUntilIdle()
+
+            coVerify { endTimeoutUseCase(MATCH_ID, any()) }
+        }
+
+    @Test
+    fun `requestExport should set exportState to Ready when export succeeds`() =
+        runTest(testDispatcher) {
+            val matchReportData = mockk<com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData>()
+            every { getMatchReportDataUseCase(MATCH_ID) } returns flowOf(matchReportData)
+            coEvery { exportMatchReportToPdfUseCase(matchReportData) } returns "file://report.pdf"
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.requestExport()
+            advanceUntilIdle()
+
+            assertEquals(ExportState.Ready("file://report.pdf"), viewModel.exportState.value)
+        }
+
+    @Test
+    fun `requestExport should set exportState to Error when pdf export returns null`() =
+        runTest(testDispatcher) {
+            val matchReportData = mockk<com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData>()
+            every { getMatchReportDataUseCase(MATCH_ID) } returns flowOf(matchReportData)
+            coEvery { exportMatchReportToPdfUseCase(matchReportData) } returns null
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.requestExport()
+            advanceUntilIdle()
+
+            assertEquals(ExportState.Error, viewModel.exportState.value)
+        }
+
+    @Test
+    fun `SubstitutionItem holds correct player and time data`() {
+        val playerOut = mockk<Player>()
+        val playerIn = mockk<Player>()
+        val item = SubstitutionItem(playerOut, playerIn, 60_000L)
+        assertEquals(playerOut, item.playerOut)
+        assertEquals(playerIn, item.playerIn)
+        assertEquals(60_000L, item.matchElapsedTimeMillis)
+        // data class equals / copy
+        val copy = item.copy(matchElapsedTimeMillis = 90_000L)
+        assertEquals(90_000L, copy.matchElapsedTimeMillis)
+        assertEquals(playerOut, copy.playerOut)
+    }
+
+    @Test
+    fun `EndPeriodState holds correct isBreak value`() {
+        val breakState = EndPeriodState(isBreak = true)
+        val lastPeriodState = EndPeriodState(isBreak = false)
+        assertTrue(breakState.isBreak)
+        assertFalse(lastPeriodState.isBreak)
+        // data class copy
+        val copy = breakState.copy(isBreak = false)
+        assertFalse(copy.isBreak)
+    }
+
+    companion object {
+        private const val MATCH_ID = 1L
     }
 }
-
 
 class FakeTimeTicker : TimeTicker {
     private val _flow = MutableSharedFlow<Long>(replay = 1)

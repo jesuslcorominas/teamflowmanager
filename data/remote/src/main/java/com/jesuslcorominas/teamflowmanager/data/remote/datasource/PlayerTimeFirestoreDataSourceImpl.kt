@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
@@ -27,7 +26,6 @@ class PlayerTimeFirestoreDataSourceImpl(
 ) : PlayerTimeDataSource {
 
     companion object {
-        private const val TAG = "PlayerTimeFirestoreDS"
         private const val PLAYER_TIMES_COLLECTION = "playerTimes"
         private const val TEAMS_COLLECTION = "teams"
     }
@@ -38,15 +36,12 @@ class PlayerTimeFirestoreDataSourceImpl(
      */
     private suspend fun getTeamDocumentId(): String? {
         val currentUserId = firebaseAuth.currentUser?.uid
-        Log.d(TAG, "getTeamDocumentId: currentUserId=$currentUserId")
 
         if (currentUserId == null) {
-            Log.w(TAG, "getTeamDocumentId: No authenticated user")
             return null
         }
 
         return try {
-            Log.d(TAG, "getTeamDocumentId: Querying Firestore for team with ownerId=$currentUserId")
             val snapshot = firestore.collection(TEAMS_COLLECTION)
                 .whereEqualTo("ownerId", currentUserId)
                 .limit(1)
@@ -54,13 +49,10 @@ class PlayerTimeFirestoreDataSourceImpl(
                 .await()
 
             val teamDocId = snapshot.documents.firstOrNull()?.id
-            Log.d(TAG, "getTeamDocumentId: Found teamDocId=$teamDocId")
             teamDocId
         } catch (e: CancellationException) {
-            Log.w(TAG, "getTeamDocumentId: Query was cancelled")
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "getTeamDocumentId: Error getting team document ID", e)
             null
         }
     }
@@ -71,7 +63,6 @@ class PlayerTimeFirestoreDataSourceImpl(
     override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.w(TAG, "getPlayerTime: No authenticated user (playerId=$playerId)")
             trySend(null)
             awaitClose { }
             return@callbackFlow
@@ -79,13 +70,10 @@ class PlayerTimeFirestoreDataSourceImpl(
 
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "getPlayerTime: No team found for user (playerId=$playerId)")
             trySend(null)
             awaitClose { }
             return@callbackFlow
         }
-
-        Log.d(TAG, "getPlayerTime: Setting up listener for teamDocId=$teamDocId, playerId=$playerId")
 
         // Use playerId as document ID for easy retrieval
         val docId = "player_$playerId"
@@ -93,13 +81,11 @@ class PlayerTimeFirestoreDataSourceImpl(
             .document(docId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "getPlayerTime: Error from Firestore for docId=$docId", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
 
                 if (snapshot == null || !snapshot.exists()) {
-                    Log.d(TAG, "getPlayerTime: Document $docId does not exist")
                     trySend(null)
                     return@addSnapshotListener
                 }
@@ -107,28 +93,23 @@ class PlayerTimeFirestoreDataSourceImpl(
                 try {
                     val model = snapshot.toObject(PlayerTimeFirestoreModel::class.java)
                     if (model == null) {
-                        Log.w(TAG, "getPlayerTime: Failed to deserialize document $docId")
                         trySend(null)
                         return@addSnapshotListener
                     }
 
                     // Verify this belongs to the user's team
                     if (model.teamId != teamDocId) {
-                        Log.w(TAG, "getPlayerTime: PlayerTime teamId mismatch (expected=$teamDocId, got=${model.teamId})")
                         trySend(null)
                         return@addSnapshotListener
                     }
 
-                    Log.d(TAG, "getPlayerTime: Found playerTime for playerId=$playerId: status=${model.status}, isRunning=${model.isRunning}, elapsed=${model.elapsedTimeMillis}ms")
                     trySend(model.toDomain())
                 } catch (e: Exception) {
-                    Log.e(TAG, "getPlayerTime: Error deserializing document $docId", e)
                     trySend(null)
                 }
             }
 
         awaitClose {
-            Log.d(TAG, "getPlayerTime: Removing listener for playerId=$playerId")
             listenerRegistration.remove()
         }
     }
@@ -139,7 +120,6 @@ class PlayerTimeFirestoreDataSourceImpl(
     override fun getAllPlayerTimes(): Flow<List<PlayerTime>> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.w(TAG, "getAllPlayerTimes: No authenticated user")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
@@ -147,53 +127,41 @@ class PlayerTimeFirestoreDataSourceImpl(
 
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "getAllPlayerTimes: No team found for user")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
         }
 
-        Log.d(TAG, "getAllPlayerTimes: Setting up listener for teamDocId=$teamDocId")
-
         val listenerRegistration = firestore.collection(PLAYER_TIMES_COLLECTION)
             .whereEqualTo("teamId", teamDocId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "getAllPlayerTimes: Error from Firestore", error)
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
 
                 if (snapshot == null) {
-                    Log.w(TAG, "getAllPlayerTimes: Snapshot is null")
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
-
-                Log.d(TAG, "getAllPlayerTimes: Received snapshot with ${snapshot.documents.size} documents")
 
                 val playerTimes = snapshot.documents.mapNotNull { document ->
                     try {
                         val model = document.toObject(PlayerTimeFirestoreModel::class.java)
                         if (model == null) {
-                            Log.w(TAG, "getAllPlayerTimes: Failed to deserialize document ${document.id}")
                             null
                         } else {
-                            Log.d(TAG, "getAllPlayerTimes: Document ${document.id}: playerId=${model.playerId}, status=${model.status}, isRunning=${model.isRunning}, teamId=${model.teamId}")
                             model.toDomain()
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "getAllPlayerTimes: Error deserializing document ${document.id}", e)
                         null
                     }
                 }
 
-                Log.d(TAG, "getAllPlayerTimes: Returning ${playerTimes.size} player times for team $teamDocId")
                 trySend(playerTimes)
             }
 
         awaitClose {
-            Log.d(TAG, "getAllPlayerTimes: Removing listener for teamDocId=$teamDocId")
             listenerRegistration.remove()
         }
     }
@@ -202,19 +170,14 @@ class PlayerTimeFirestoreDataSourceImpl(
      * Upserts (updates or inserts) a player time in Firestore.
      */
     override suspend fun upsertPlayerTime(playerTime: PlayerTime) {
-        Log.d(TAG, "upsertPlayerTime: Starting upsert for playerId=${playerTime.playerId}")
-
         val teamDocId = getTeamDocumentId()
-        Log.d(TAG, "upsertPlayerTime: Got teamDocId=$teamDocId")
 
         if (teamDocId == null) {
-            Log.e(TAG, "upsertPlayerTime: No team found, cannot upsert player time - user may not be authenticated")
             throw IllegalStateException("Team must exist to upsert player time")
         }
 
         // Use playerId as document ID
         val docId = "player_${playerTime.playerId}"
-        Log.d(TAG, "upsertPlayerTime: Using document ID: $docId")
 
         val firestoreModel = playerTime.toFirestoreModel()
         val modelWithTeam = firestoreModel.copy(
@@ -222,20 +185,16 @@ class PlayerTimeFirestoreDataSourceImpl(
             teamId = teamDocId,
         )
 
-        Log.d(TAG, "upsertPlayerTime: Setting document in Firestore...")
         try {
             firestore.collection(PLAYER_TIMES_COLLECTION)
                 .document(docId)
                 .set(modelWithTeam)
                 .await()
-            Log.d(TAG, "upsertPlayerTime: PlayerTime upserted successfully with id: $docId, teamId: $teamDocId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
-            Log.e(TAG, "Firestore PERMISSION_DENIED or ERROR: ${e.code} - ${e.message}", e)
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "General error upserting player time: ${e.message}", e)
             throw e
         }
     }
@@ -246,15 +205,11 @@ class PlayerTimeFirestoreDataSourceImpl(
      */
     override suspend fun batchUpsertPlayerTimes(playerTimes: List<PlayerTime>) {
         if (playerTimes.isEmpty()) {
-            Log.d(TAG, "batchUpsertPlayerTimes: Empty list, nothing to upsert")
             return
         }
 
-        Log.d(TAG, "batchUpsertPlayerTimes: Starting batch upsert for ${playerTimes.size} player times")
-
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.e(TAG, "batchUpsertPlayerTimes: No team found, cannot upsert player times")
             throw IllegalStateException("Team must exist to upsert player times")
         }
 
@@ -271,15 +226,12 @@ class PlayerTimeFirestoreDataSourceImpl(
 
                 val docRef = firestore.collection(PLAYER_TIMES_COLLECTION).document(docId)
                 batch.set(docRef, modelWithTeam)
-                Log.d(TAG, "batchUpsertPlayerTimes: Added playerId=${playerTime.playerId} to batch")
             }
 
             batch.commit().await()
-            Log.d(TAG, "batchUpsertPlayerTimes: Batch commit successful for ${playerTimes.size} player times")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "batchUpsertPlayerTimes: Error performing batch upsert", e)
             throw e
         }
     }
@@ -289,11 +241,8 @@ class PlayerTimeFirestoreDataSourceImpl(
      * This is typically called when finishing a match.
      */
     override suspend fun deleteAllPlayerTimes() {
-        Log.d(TAG, "deleteAllPlayerTimes: Starting delete all")
-
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "deleteAllPlayerTimes: No team found, cannot delete player times - user may not be authenticated")
             return
         }
 
@@ -307,14 +256,10 @@ class PlayerTimeFirestoreDataSourceImpl(
             // Delete each document
             for (document in snapshot.documents) {
                 document.reference.delete().await()
-                Log.d(TAG, "deleteAllPlayerTimes: Deleted document ${document.id}")
             }
-
-            Log.d(TAG, "deleteAllPlayerTimes: Deleted ${snapshot.documents.size} player times for team $teamDocId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "deleteAllPlayerTimes: Error deleting player times from Firestore", e)
             throw e
         }
     }

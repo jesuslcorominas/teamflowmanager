@@ -7,15 +7,15 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.RemovePlayerAsCaptainUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -260,7 +260,7 @@ class TeamViewModelTest {
             val state = viewModel.uiState.value
             assert(state is TeamUiState.NoTeam)
             val noTeamState = state as TeamUiState.NoTeam
-            assertEquals(100, noTeamState.clubId)
+            assertEquals(100L, noTeamState.clubId)
             assertEquals("club_firestore_123", noTeamState.clubFirestoreId)
             assertEquals(true, noTeamState.isPresident)
             assertEquals(ClubRole.PRESIDENT, noTeamState.userRole)
@@ -276,7 +276,7 @@ class TeamViewModelTest {
                 name = "John Doe",
                 email = "john@example.com",
                 clubId = 100,
-                role = "Coach",
+                roles = listOf("Coach"),
                 firestoreId = "clubmember_doc_123",
                 clubFirestoreId = "club_firestore_123"
             )
@@ -304,9 +304,261 @@ class TeamViewModelTest {
             val state = viewModel.uiState.value
             assert(state is TeamUiState.NoTeam)
             val noTeamState = state as TeamUiState.NoTeam
-            assertEquals(100, noTeamState.clubId)
+            assertEquals(100L, noTeamState.clubId)
             assertEquals("club_firestore_123", noTeamState.clubFirestoreId)
             assertEquals(false, noTeamState.isPresident)
             assertEquals(ClubRole.COACH, noTeamState.userRole)
         }
+
+    private fun createViewModelWithTeam(team: Team? = null): TeamViewModel {
+        every { getTeamUseCase.invoke() } returns flowOf(team)
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+        return TeamViewModel(
+            getTeam = getTeamUseCase,
+            getPlayers = getPlayersUseCase,
+            createTeam = createTeamUseCase,
+            updateTeam = updateTeamUseCase,
+            getCaptainPlayer = getCaptainPlayerUseCase,
+            hasScheduledMatches = hasScheduledMatchesUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getUserClubMembership = getUserClubMembershipUseCase,
+            analyticsTracker = analyticsTracker,
+            savedStateHandle = savedStateHandle,
+        )
+    }
+
+    @Test
+    fun `showTeamTypeChangeError should set showTeamTypeChangeError to true`() =
+        runTest(testDispatcher) {
+            viewModel = createViewModelWithTeam()
+            advanceUntilIdle()
+
+            viewModel.showTeamTypeChangeError()
+
+            assert(viewModel.showTeamTypeChangeError.value)
+        }
+
+    @Test
+    fun `dismissTeamTypeChangeError should set showTeamTypeChangeError to false`() =
+        runTest(testDispatcher) {
+            viewModel = createViewModelWithTeam()
+            advanceUntilIdle()
+            viewModel.showTeamTypeChangeError()
+
+            viewModel.dismissTeamTypeChangeError()
+
+            assert(!viewModel.showTeamTypeChangeError.value)
+        }
+
+    @Test
+    fun `dismissSaveError should set showSaveError to false`() = runTest(testDispatcher) {
+        viewModel = createViewModelWithTeam()
+        advanceUntilIdle()
+        coEvery { createTeamUseCase.invoke(any()) } throws Exception("Save failed")
+        val team = Team(0, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+        viewModel.createTeam(team) {}
+        advanceUntilIdle()
+
+        viewModel.dismissSaveError()
+
+        assert(!viewModel.showSaveError.value)
+    }
+
+    @Test
+    fun `createTeam should set showSaveError on exception`() = runTest(testDispatcher) {
+        viewModel = createViewModelWithTeam()
+        advanceUntilIdle()
+        coEvery { createTeamUseCase.invoke(any()) } throws Exception("Error")
+        val team = Team(0, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+
+        viewModel.createTeam(team) {}
+        advanceUntilIdle()
+
+        assert(viewModel.showSaveError.value)
+    }
+
+    @Test
+    fun `requestBack in non-edit mode should navigate back without dialog`() =
+        runTest(testDispatcher) {
+            every { savedStateHandle.get<String>("mode") } returns null
+            viewModel = createViewModelWithTeam()
+            advanceUntilIdle()
+            var navigatedBack = false
+
+            viewModel.requestBack { navigatedBack = true }
+
+            assert(navigatedBack)
+            assert(!viewModel.showExitDialog.value)
+        }
+
+    @Test
+    fun `requestBack in edit mode should show exit dialog`() = runTest(testDispatcher) {
+        every { savedStateHandle.get<String>("mode") } returns "edit"
+        viewModel = createViewModelWithTeam()
+        advanceUntilIdle()
+        var navigatedBack = false
+
+        viewModel.requestBack { navigatedBack = true }
+
+        assert(!navigatedBack)
+        assert(viewModel.showExitDialog.value)
+    }
+
+    @Test
+    fun `discardChanges should hide dialog and navigate back`() = runTest(testDispatcher) {
+        every { savedStateHandle.get<String>("mode") } returns "edit"
+        viewModel = createViewModelWithTeam()
+        advanceUntilIdle()
+        viewModel.requestBack { }
+        var navigatedBack = false
+
+        viewModel.discardChanges { navigatedBack = true }
+
+        assert(navigatedBack)
+        assert(!viewModel.showExitDialog.value)
+    }
+
+    @Test
+    fun `dismissExitDialog should set showExitDialog to false`() = runTest(testDispatcher) {
+        every { savedStateHandle.get<String>("mode") } returns "edit"
+        viewModel = createViewModelWithTeam()
+        advanceUntilIdle()
+        viewModel.requestBack { }
+
+        viewModel.dismissExitDialog()
+
+        assert(!viewModel.showExitDialog.value)
+    }
+
+    @Test
+    fun `updateTeam should show error when team type changed and scheduled matches exist`() =
+        runTest(testDispatcher) {
+            val originalTeam = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+            val updatedTeam = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_7)
+            every { getTeamUseCase.invoke() } returns flowOf(originalTeam)
+            every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
+            every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+            coEvery { hasScheduledMatchesUseCase.invoke() } returns true
+            viewModel = TeamViewModel(
+                getTeam = getTeamUseCase,
+                getPlayers = getPlayersUseCase,
+                createTeam = createTeamUseCase,
+                updateTeam = updateTeamUseCase,
+                getCaptainPlayer = getCaptainPlayerUseCase,
+                hasScheduledMatches = hasScheduledMatchesUseCase,
+                setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+                removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+                getUserClubMembership = getUserClubMembershipUseCase,
+                analyticsTracker = analyticsTracker,
+                savedStateHandle = savedStateHandle,
+            )
+            advanceUntilIdle()
+
+            viewModel.updateTeam(updatedTeam, null) {}
+            advanceUntilIdle()
+
+            assert(viewModel.showTeamTypeChangeError.value)
+        }
+
+    @Test
+    fun `updateTeam should set captain when captainId provided and no current captain`() =
+        runTest(testDispatcher) {
+            val team = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+            every { getTeamUseCase.invoke() } returns flowOf(team)
+            every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
+            every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+            coEvery { hasScheduledMatchesUseCase.invoke() } returns false
+            coEvery { getCaptainPlayerUseCase.invoke() } returns null
+            coEvery { updateTeamUseCase.invoke(any()) } just runs
+            viewModel = TeamViewModel(
+                getTeam = getTeamUseCase,
+                getPlayers = getPlayersUseCase,
+                createTeam = createTeamUseCase,
+                updateTeam = updateTeamUseCase,
+                getCaptainPlayer = getCaptainPlayerUseCase,
+                hasScheduledMatches = hasScheduledMatchesUseCase,
+                setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+                removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+                getUserClubMembership = getUserClubMembershipUseCase,
+                analyticsTracker = analyticsTracker,
+                savedStateHandle = savedStateHandle,
+            )
+            advanceUntilIdle()
+
+            viewModel.updateTeam(team, 5L) {}
+            advanceUntilIdle()
+
+            coVerify { setPlayerAsCaptainUseCase.invoke(5L) }
+        }
+
+    @Test
+    fun `updateTeam should remove captain when captainId is null and captain exists`() =
+        runTest(testDispatcher) {
+            val team = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+            val existingCaptain = Player(
+                id = 3L,
+                firstName = "Cap",
+                lastName = "Tain",
+                number = 1,
+                positions = emptyList(),
+                teamId = 1L,
+                isCaptain = true,
+            )
+            every { getTeamUseCase.invoke() } returns flowOf(team)
+            every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
+            every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+            coEvery { hasScheduledMatchesUseCase.invoke() } returns false
+            coEvery { getCaptainPlayerUseCase.invoke() } returns existingCaptain
+            coEvery { updateTeamUseCase.invoke(any()) } just runs
+            viewModel = TeamViewModel(
+                getTeam = getTeamUseCase,
+                getPlayers = getPlayersUseCase,
+                createTeam = createTeamUseCase,
+                updateTeam = updateTeamUseCase,
+                getCaptainPlayer = getCaptainPlayerUseCase,
+                hasScheduledMatches = hasScheduledMatchesUseCase,
+                setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+                removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+                getUserClubMembership = getUserClubMembershipUseCase,
+                analyticsTracker = analyticsTracker,
+                savedStateHandle = savedStateHandle,
+            )
+            advanceUntilIdle()
+
+            viewModel.updateTeam(team, null) {}
+            advanceUntilIdle()
+
+            coVerify { removePlayerAsCaptainUseCase.invoke(3L) }
+        }
+
+    @Test
+    fun `updateTeam should set showSaveError on exception`() = runTest(testDispatcher) {
+        val team = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+        every { getTeamUseCase.invoke() } returns flowOf(team)
+        every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+        coEvery { hasScheduledMatchesUseCase.invoke() } returns false
+        coEvery { getCaptainPlayerUseCase.invoke() } throws Exception("Error")
+        viewModel = TeamViewModel(
+            getTeam = getTeamUseCase,
+            getPlayers = getPlayersUseCase,
+            createTeam = createTeamUseCase,
+            updateTeam = updateTeamUseCase,
+            getCaptainPlayer = getCaptainPlayerUseCase,
+            hasScheduledMatches = hasScheduledMatchesUseCase,
+            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+            getUserClubMembership = getUserClubMembershipUseCase,
+            analyticsTracker = analyticsTracker,
+            savedStateHandle = savedStateHandle,
+        )
+        advanceUntilIdle()
+
+        viewModel.updateTeam(team, null) {}
+        advanceUntilIdle()
+
+        assert(viewModel.showSaveError.value)
+    }
 }

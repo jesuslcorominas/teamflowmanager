@@ -38,3 +38,5 @@ tasks.register("ktlintCheckAll") {
     description = "Runs ktlintCheck on all modules"
     dependsOn(subprojects.mapNotNull { it.tasks.findByName("ktlintCheck") })
 }
+
+apply(from = "$rootDir/jacoco-aggregate.gradle.kts")

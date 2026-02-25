@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
@@ -27,7 +26,6 @@ class TeamFirestoreDataSourceImpl(
 ) : TeamDataSource {
 
     companion object {
-        private const val TAG = "TeamFirestoreDataSource"
         private const val TEAMS_COLLECTION = "teams"
     }
 
@@ -37,7 +35,6 @@ class TeamFirestoreDataSourceImpl(
     override fun getTeam(): Flow<Team?> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.w(TAG, "No authenticated user, cannot get team")
             trySend(null)
             awaitClose { }
             return@callbackFlow
@@ -48,7 +45,6 @@ class TeamFirestoreDataSourceImpl(
             .limit(1)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Error getting team from Firestore", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
@@ -71,7 +67,6 @@ class TeamFirestoreDataSourceImpl(
                         firestoreModel
                     }
                     val team = modelWithId.toDomain()
-                    Log.d(TAG, "Team loaded with documentId: $documentId, assignedCoachId: ${team.coachId}")
                     trySend(team)
                 } else {
                     trySend(null)
@@ -86,7 +81,6 @@ class TeamFirestoreDataSourceImpl(
     override suspend fun insertTeam(team: Team) {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.e(TAG, "No authenticated user, cannot insert team")
             throw IllegalStateException("User must be authenticated to create a team")
         }
 
@@ -97,11 +91,9 @@ class TeamFirestoreDataSourceImpl(
             // Set the document id
             val modelWithId = firestoreModel.copy(id = docRef.id)
             docRef.set(modelWithId).await()
-            Log.d(TAG, "Team inserted successfully with id: ${docRef.id}")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error inserting team to Firestore", e)
             throw e
         }
     }
@@ -109,14 +101,12 @@ class TeamFirestoreDataSourceImpl(
     override suspend fun updateTeam(team: Team) {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.e(TAG, "No authenticated user, cannot update team")
             throw IllegalStateException("User must be authenticated to update a team")
         }
 
         try {
             val documentId = team.firestoreId
             if (documentId.isNullOrEmpty()) {
-                Log.w(TAG, "Cannot update team without Firestore document ID")
                 throw IllegalStateException("Cannot update team without Firestore document ID")
             }
 
@@ -125,11 +115,9 @@ class TeamFirestoreDataSourceImpl(
                 .document(documentId)
                 .set(firestoreModel)
                 .await()
-            Log.d(TAG, "Team updated successfully with id: $documentId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating team in Firestore", e)
             throw e
         }
     }
@@ -139,7 +127,6 @@ class TeamFirestoreDataSourceImpl(
             .document(coachId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Error getting team by coachId from Firestore", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
@@ -161,7 +148,6 @@ class TeamFirestoreDataSourceImpl(
                         firestoreModel
                     }
                     val team = modelWithId.toDomain()
-                    Log.d(TAG, "Team loaded by coachId with documentId: $documentId, coachId: ${team.coachId}")
                     trySend(team)
                 } else {
                     trySend(null)
@@ -180,13 +166,11 @@ class TeamFirestoreDataSourceImpl(
             .whereEqualTo("clubId", clubFirestoreId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Error getting teams by club from Firestore", error)
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
 
                 if (snapshot == null || snapshot.isEmpty) {
-                    Log.d(TAG, "No teams found for club: $clubFirestoreId")
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
@@ -206,7 +190,6 @@ class TeamFirestoreDataSourceImpl(
                     }
                 }
 
-                Log.d(TAG, "Loaded ${teams.size} teams for club: $clubFirestoreId")
                 trySend(teams)
             }
 
@@ -271,12 +254,10 @@ class TeamFirestoreDataSourceImpl(
                 }
             }
 
-            Log.d(TAG, "Found ${teams.size} orphan teams")
             return teams
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting orphan teams from Firestore", e)
             throw e
         }
     }
@@ -296,12 +277,9 @@ class TeamFirestoreDataSourceImpl(
                 .document(teamFirestoreId)
                 .set(updates, com.google.firebase.firestore.SetOptions.merge())
                 .await()
-
-            Log.d(TAG, "Team $teamFirestoreId linked to club $clubFirestoreId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating team club ID in Firestore", e)
             throw e
         }
     }
@@ -316,7 +294,6 @@ class TeamFirestoreDataSourceImpl(
                 .await()
 
             if (!document.exists()) {
-                Log.d(TAG, "Team not found with Firestore ID: $teamFirestoreId")
                 return null
             }
 
@@ -335,7 +312,6 @@ class TeamFirestoreDataSourceImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting team by Firestore ID from Firestore", e)
             throw e
         }
     }
@@ -353,12 +329,9 @@ class TeamFirestoreDataSourceImpl(
                 .document(teamFirestoreId)
                 .update(updates)
                 .await()
-
-            Log.d(TAG, "Team $teamFirestoreId coach updated to $coachId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating team coach ID in Firestore", e)
             throw e
         }
     }

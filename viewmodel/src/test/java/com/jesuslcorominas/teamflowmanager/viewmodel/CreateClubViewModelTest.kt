@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
@@ -74,7 +75,7 @@ class CreateClubViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertEquals(com.jesuslcorominas.teamflowmanager.R.string.club_name_error_empty, viewModel.clubNameError.value)
+        assertEquals(ClubNameError.EMPTY_NAME, viewModel.clubNameError.value)
         assertEquals(CreateClubViewModel.UiState.Idle, viewModel.uiState.value)
         coVerify(exactly = 0) { createClubUseCase(any()) }
     }
@@ -89,7 +90,7 @@ class CreateClubViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertEquals(com.jesuslcorominas.teamflowmanager.R.string.club_name_error_too_short, viewModel.clubNameError.value)
+        assertEquals(ClubNameError.NAME_TOO_SHORT, viewModel.clubNameError.value)
         assertEquals(CreateClubViewModel.UiState.Idle, viewModel.uiState.value)
         coVerify(exactly = 0) { createClubUseCase(any()) }
     }
@@ -105,7 +106,7 @@ class CreateClubViewModelTest {
         advanceUntilIdle()
 
         // Then
-        assertEquals(com.jesuslcorominas.teamflowmanager.R.string.club_name_error_too_long, viewModel.clubNameError.value)
+        assertEquals(ClubNameError.NAME_TOO_LONG, viewModel.clubNameError.value)
         assertEquals(CreateClubViewModel.UiState.Idle, viewModel.uiState.value)
         coVerify(exactly = 0) { createClubUseCase(any()) }
     }
@@ -143,7 +144,7 @@ class CreateClubViewModelTest {
     }
 
     @Test
-    fun `createClub should emit Loading state while creating`() = runTest {
+    fun `createClub should emit Loading state while creating`() = runTest(testDispatcher) {
         // Given
         val clubName = "Test Club"
         val expectedClub = Club(
@@ -155,22 +156,18 @@ class CreateClubViewModelTest {
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase(clubName) } coAnswers {
-            // Simulate delay
             kotlinx.coroutines.delay(100)
             expectedClub
         }
 
-        // When
-        viewModel.createClub()
-        
-        // Then - should be loading before completion
-        assertEquals(CreateClubViewModel.UiState.Loading, viewModel.uiState.value)
-        
-        // Wait for completion
-        advanceUntilIdle()
-        
-        // Then - should be success after completion
-        assertEquals(CreateClubViewModel.UiState.Success(expectedClub), viewModel.uiState.value)
+        // Then - observe the full Loading → Success transition
+        viewModel.uiState.test {
+            assertEquals(CreateClubViewModel.UiState.Idle, awaitItem())
+            viewModel.createClub()
+            assertEquals(CreateClubViewModel.UiState.Loading, awaitItem())
+            assertEquals(CreateClubViewModel.UiState.Success(expectedClub), awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test

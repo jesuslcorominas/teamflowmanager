@@ -4,15 +4,15 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
-import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.RemovePlayerAsCaptainUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UpdateScheduledMatchesCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -70,25 +70,27 @@ class PlayerViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun createViewModel() = PlayerViewModel(
+        getPlayersUseCase = getPlayersUseCase,
+        addPlayerUseCase = addPlayerUseCase,
+        updatePlayerUseCase = updatePlayerUseCase,
+        deletePlayerUseCase = deletePlayerUseCase,
+        getCaptainPlayerUseCase = getCaptainPlayerUseCase,
+        updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
+        setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
+        removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
+        getScheduledMatchesUseCase = getScheduledMatchesUseCase,
+        analyticsTracker = analyticsTracker,
+        crashReporter = crashReporter,
+    )
+
     @Test
     fun `initial state should be Loading`() {
         // Given
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            addPlayerUseCase = addPlayerUseCase,
-            updatePlayerUseCase = updatePlayerUseCase,
-            deletePlayerUseCase = deletePlayerUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
-            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
-            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
-            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter
-        )
+        viewModel = createViewModel()
 
         // Then
         assertEquals(PlayerUiState.Loading, viewModel.uiState.value)
@@ -98,25 +100,13 @@ class PlayerViewModelTest {
     fun `uiState should be Success when players are loaded`() = runTest(testDispatcher) {
         // Given
         val players = listOf(
-            Player(1, "John", "Doe", 10, listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder))
+            Player(1L, "John", "Doe", 10, listOf(Position.Forward), teamId = 1L, isCaptain = false),
+            Player(2L, "Jane", "Smith", 8, listOf(Position.Midfielder), teamId = 1L, isCaptain = false),
         )
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
         // When
-        viewModel = PlayerViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            addPlayerUseCase = addPlayerUseCase,
-            updatePlayerUseCase = updatePlayerUseCase,
-            deletePlayerUseCase = deletePlayerUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
-            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
-            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
-            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then
@@ -130,19 +120,7 @@ class PlayerViewModelTest {
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel = PlayerViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            addPlayerUseCase = addPlayerUseCase,
-            updatePlayerUseCase = updatePlayerUseCase,
-            deletePlayerUseCase = deletePlayerUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
-            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
-            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
-            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Then
@@ -153,26 +131,17 @@ class PlayerViewModelTest {
     fun `addPlayer should call addPlayerUseCase`() = runTest(testDispatcher) {
         // Given
         val player = Player(
-            id = 0,
+            id = 0L,
             firstName = "John",
             lastName = "Doe",
             number = 2,
-            positions = listOf(Position.Forward)
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false,
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            addPlayerUseCase = addPlayerUseCase,
-            updatePlayerUseCase = updatePlayerUseCase,
-            deletePlayerUseCase = deletePlayerUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
-            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
-            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
-            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter
-        )
+        coEvery { getCaptainPlayerUseCase.invoke() } returns null
+        viewModel = createViewModel()
 
         // When
         viewModel.addPlayer(player)
@@ -185,21 +154,9 @@ class PlayerViewModelTest {
     @Test
     fun `showDeleteConfirmation should update deleteConfirmationState`() = runTest(testDispatcher) {
         // Given
-        val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
+        val player = Player(1L, "John", "Doe", 10, listOf(Position.Forward), teamId = 1L, isCaptain = false)
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            addPlayerUseCase = addPlayerUseCase,
-            updatePlayerUseCase = updatePlayerUseCase,
-            deletePlayerUseCase = deletePlayerUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
-            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
-            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
-            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter
-        )
+        viewModel = createViewModel()
 
         // When
         viewModel.showDeleteConfirmation(player)
@@ -211,21 +168,9 @@ class PlayerViewModelTest {
     @Test
     fun `dismissDeleteConfirmation should reset deleteConfirmationState`() = runTest(testDispatcher) {
         // Given
-        val player = Player(1, "John", "Doe", 10, listOf(Position.Forward))
+        val player = Player(1L, "John", "Doe", 10, listOf(Position.Forward), teamId = 1L, isCaptain = false)
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
-        viewModel = PlayerViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            addPlayerUseCase = addPlayerUseCase,
-            updatePlayerUseCase = updatePlayerUseCase,
-            deletePlayerUseCase = deletePlayerUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
-            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
-            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
-            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter
-        )
+        viewModel = createViewModel()
         viewModel.showDeleteConfirmation(player)
 
         // When
@@ -241,19 +186,7 @@ class PlayerViewModelTest {
         val playerId = 1L
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { deletePlayerUseCase(playerId) } just runs
-        viewModel = PlayerViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            addPlayerUseCase = addPlayerUseCase,
-            updatePlayerUseCase = updatePlayerUseCase,
-            deletePlayerUseCase = deletePlayerUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
-            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
-            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
-            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter
-        )
+        viewModel = createViewModel()
 
         // When
         viewModel.deletePlayer(playerId)
@@ -268,28 +201,18 @@ class PlayerViewModelTest {
     fun `updatePlayer should call updatePlayerUseCase`() = runTest(testDispatcher) {
         // Given
         val player = Player(
-            id = 1,
+            id = 1L,
             firstName = "John",
             lastName = "Doe",
             number = 2,
-            positions = listOf(Position.Forward)
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false,
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
+        coEvery { getCaptainPlayerUseCase.invoke() } returns null
         coEvery { updatePlayerUseCase.invoke(player) } just runs
-
-        viewModel = PlayerViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            addPlayerUseCase = addPlayerUseCase,
-            updatePlayerUseCase = updatePlayerUseCase,
-            deletePlayerUseCase = deletePlayerUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            updateScheduledMatchesCaptainUseCase = updateScheduledMatchesCaptainUseCase,
-            setPlayerAsCaptainUseCase = setPlayerAsCaptainUseCase,
-            removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
-            getScheduledMatchesUseCase = getScheduledMatchesUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // When

@@ -1,9 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
-import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UnarchiveMatchUseCase
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -26,6 +29,8 @@ class ArchivedMatchesViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getArchivedMatchesUseCase: GetArchivedMatchesUseCase
     private lateinit var unarchiveMatchUseCase: UnarchiveMatchUseCase
+    private lateinit var analyticsTracker: AnalyticsTracker
+    private lateinit var crashReporter: CrashReporter
     private lateinit var viewModel: ArchivedMatchesViewModel
 
     @Before
@@ -33,6 +38,8 @@ class ArchivedMatchesViewModelTest {
         Dispatchers.setMain(testDispatcher)
         getArchivedMatchesUseCase = mockk()
         unarchiveMatchUseCase = mockk(relaxed = true)
+        analyticsTracker = mockk(relaxed = true)
+        crashReporter = mockk(relaxed = true)
     }
 
     @After
@@ -40,17 +47,20 @@ class ArchivedMatchesViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun createViewModel() = ArchivedMatchesViewModel(
+        getArchivedMatchesUseCase,
+        unarchiveMatchUseCase,
+        analyticsTracker,
+        crashReporter,
+    )
+
     @Test
     fun `initial state should be Loading`() {
         // Given
         every { getArchivedMatchesUseCase.invoke() } returns flowOf(emptyList())
 
         // When
-        viewModel =
-            ArchivedMatchesViewModel(
-                getArchivedMatchesUseCase,
-                unarchiveMatchUseCase,
-            )
+        viewModel = createViewModel()
 
         // Then
         assertEquals(ArchivedMatchesUiState.Loading, viewModel.uiState.value)
@@ -58,16 +68,12 @@ class ArchivedMatchesViewModelTest {
 
     @Test
     fun `should emit Empty state when no archived matches available`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             every { getArchivedMatchesUseCase.invoke() } returns flowOf(emptyList())
 
             // When
-            viewModel =
-                ArchivedMatchesViewModel(
-                    getArchivedMatchesUseCase,
-                    unarchiveMatchUseCase,
-                )
+            viewModel = createViewModel()
             advanceUntilIdle()
 
             // Then
@@ -76,33 +82,35 @@ class ArchivedMatchesViewModelTest {
 
     @Test
     fun `should emit Success state with archived matches when available`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             val archivedMatches =
                 listOf(
                     Match(
                         id = 1L,
-                        opponent = "Team A",
-                        status = MatchStatus.FINISHED,
                         teamName = "Home Team",
+                        opponent = "Team A",
+                        location = "Stadium A",
+                        periodType = PeriodType.HALF_TIME,
+                        captainId = 1L,
+                        status = MatchStatus.FINISHED,
                         archived = true,
                     ),
                     Match(
                         id = 2L,
-                        opponent = "Team B",
-                        status = MatchStatus.FINISHED,
                         teamName = "Home Team",
+                        opponent = "Team B",
+                        location = "Stadium B",
+                        periodType = PeriodType.HALF_TIME,
+                        captainId = 1L,
+                        status = MatchStatus.FINISHED,
                         archived = true,
                     ),
                 )
             every { getArchivedMatchesUseCase.invoke() } returns flowOf(archivedMatches)
 
             // When
-            viewModel =
-                ArchivedMatchesViewModel(
-                    getArchivedMatchesUseCase,
-                    unarchiveMatchUseCase,
-                )
+            viewModel = createViewModel()
             advanceUntilIdle()
 
             // Then
@@ -113,14 +121,10 @@ class ArchivedMatchesViewModelTest {
 
     @Test
     fun `unarchiveMatch should call unarchiveMatchUseCase`() =
-        runTest {
+        runTest(testDispatcher) {
             // Given
             every { getArchivedMatchesUseCase.invoke() } returns flowOf(emptyList())
-            viewModel =
-                ArchivedMatchesViewModel(
-                    getArchivedMatchesUseCase,
-                    unarchiveMatchUseCase,
-                )
+            viewModel = createViewModel()
             val matchId = 1L
 
             // When
