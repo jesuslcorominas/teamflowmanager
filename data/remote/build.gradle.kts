@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.ktorfit)
 }
 
+apply(from = "$rootDir/jacoco.gradle.kts")
+
 android {
     namespace = "com.jesuslcorominas.teamflowmanager.data.remote"
     compileSdk = 36
@@ -69,4 +71,7 @@ dependencies {
     implementation(libs.firebase.storage.ktx)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
 }

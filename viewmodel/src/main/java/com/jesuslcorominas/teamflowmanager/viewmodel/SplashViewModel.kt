@@ -31,7 +31,7 @@ class SplashViewModel(
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
-    
+
     private var startupJob: Job? = null
 
     sealed interface UiState {
@@ -55,7 +55,6 @@ class SplashViewModel(
     }
 
     fun refresh() {
-        Log.d(TAG, "Refresh called - cancelling previous job and restarting")
         startupJob?.cancel()
         _uiState.value = UiState.Loading
         performStartupTasks()
@@ -66,9 +65,7 @@ class SplashViewModel(
             // Synchronize time with server on app startup
             try {
                 synchronizeTimeUseCase()
-                Log.d(TAG, "Time synchronized successfully on splash")
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to synchronize time on splash", e)
+            } catch (_: Exception) {
                 // Continue anyway - time sync will be attempted again when starting matches
             }
 
@@ -82,48 +79,36 @@ class SplashViewModel(
         if (user == null) {
             _uiState.value = UiState.NotAuthenticated
         } else {
-            Log.d(TAG, "User authenticated, loading team...")
             loadTeam()
         }
     }
 
     private suspend fun loadTeam() {
-        Log.d(TAG, "Loading team...")
-        
         // First, check if user is a President - Presidents should always see team list
         val clubMember = getUserClubMembership().first()
         if (clubMember != null) {
             if (clubMember.hasRole(ClubRole.PRESIDENT)) {
-                Log.d(TAG, "User is President - navigating to team list")
                 _uiState.value = UiState.ClubPresident
                 return
             }
         }
-        
+
         // For non-Presidents, check if they have their own team
         val team = getTeam().first()
-        
+
         if (team == null) {
-            Log.d(TAG, "NO TEAM found - checking club membership")
-            
             if (clubMember != null) {
-                Log.d(TAG, "User is club member with roles: ${clubMember.roles.joinToString(", ")} - navigating to club selection")
                 _uiState.value = UiState.NoClub
             } else {
-                Log.d(TAG, "User is not a club member - navigating to club selection")
                 _uiState.value = UiState.NoClub
             }
         } else {
-            Log.d(TAG, "TEAM found (id: ${team.id}, name: ${team.name}, clubId: ${team.clubId}, clubFirestoreId: ${team.clubFirestoreId})")
-            
             // Check if team has a club
             val hasClub = team.clubId != null || team.clubFirestoreId != null
-            
+
             if (hasClub) {
-                Log.d(TAG, "Team HAS club - navigating to matches")
                 _uiState.value = UiState.TeamExists
             } else {
-                Log.d(TAG, "Team DOES NOT have club - navigating to club selection")
                 _uiState.value = UiState.NoClub
             }
         }

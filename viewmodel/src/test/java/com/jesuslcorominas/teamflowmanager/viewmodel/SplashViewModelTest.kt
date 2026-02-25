@@ -97,7 +97,7 @@ class SplashViewModelTest {
             name = "Test User",
             email = "test@example.com",
             clubId = 100,
-            role = "Presidente",
+            roles = listOf("Presidente"),
             firestoreId = "clubmember_doc_123",
             clubFirestoreId = "club123"
         )
@@ -159,7 +159,7 @@ class SplashViewModelTest {
             name = "Test User",
             email = "test@example.com",
             clubId = 100,
-            role = "Presidente",
+            roles = listOf("Presidente"),
             firestoreId = "clubmember_doc_123",
             clubFirestoreId = "club123"
         )
@@ -320,5 +320,24 @@ class SplashViewModelTest {
         // Then
         assertEquals(SplashViewModel.UiState.NotAuthenticated, viewModel.uiState.value)
         coVerify { synchronizeTimeUseCase() }
+    }
+
+    @Test
+    fun `refresh should reset to Loading and re-run startup tasks`() = runTest {
+        // Given
+        every { getCurrentUserUseCase() } returns flowOf(null)
+        val viewModel = SplashViewModel(getTeamUseCase, getCurrentUserUseCase, getUserClubMembershipUseCase, synchronizeTimeUseCase)
+        advanceUntilIdle()
+        assertEquals(SplashViewModel.UiState.NotAuthenticated, viewModel.uiState.value)
+
+        // When
+        viewModel.refresh()
+
+        // Then - immediately after refresh(), state resets to Loading
+        assertEquals(SplashViewModel.UiState.Loading, viewModel.uiState.value)
+
+        advanceUntilIdle()
+        // After coroutines complete, resolves again to NotAuthenticated
+        assertEquals(SplashViewModel.UiState.NotAuthenticated, viewModel.uiState.value)
     }
 }

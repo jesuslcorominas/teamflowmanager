@@ -363,4 +363,63 @@ class RegisterPlayerSubstitutionUseCaseTest {
             coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any()) }
             coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
         }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `givenMatchNotFound_whenInvoke_thenThrowsIllegalArgumentException`() = runTest {
+        // Given
+        val matchId = 99L
+        coEvery { matchRepository.getMatchById(matchId) } returns flowOf(null)
+
+        // When - requireNotNull throws because match is null
+        registerPlayerSubstitutionUseCase(matchId, 1L, 2L, System.currentTimeMillis())
+    }
+
+    @Test
+    fun `givenMultiplePlayersPlaying_whenInvoke_thenUpdatesAllOtherPlayingPlayersOperationId`() = runTest {
+        // Given: playerOut is playing, plus two other players also playing
+        val matchId = 1L
+        val playerOutId = 2L
+        val playerInId = 3L
+        val otherPlayerId1 = 4L
+        val otherPlayerId2 = 5L
+        val currentTimeMillis = System.currentTimeMillis()
+        val operationId = "op-multi"
+        val match = Match(
+            id = matchId,
+            teamId = 1L,
+            teamName = "Team B",
+            opponent = "Team A",
+            location = "Stadium",
+            periodType = PeriodType.HALF_TIME,
+            captainId = 1L,
+            status = MatchStatus.IN_PROGRESS,
+            periods = listOf(
+                MatchPeriod(
+                    periodNumber = 1,
+                    periodDuration = 25 * 60 * 1000L,
+                    startTimeMillis = currentTimeMillis - 60000L,
+                    endTimeMillis = 0L,
+                ),
+            ),
+        )
+        coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+
+        val playerTimes = listOf(
+            PlayerTime(playerId = playerOutId, status = PlayerTimeStatus.PLAYING),
+            PlayerTime(playerId = otherPlayerId1, status = PlayerTimeStatus.PLAYING),
+            PlayerTime(playerId = otherPlayerId2, status = PlayerTimeStatus.PLAYING),
+            PlayerTime(playerId = playerInId, status = PlayerTimeStatus.ON_BENCH),
+        )
+        coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
+        coEvery { matchOperationRepository.createOperation(any()) } returns operationId
+        coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns 1L
+
+        // When
+        registerPlayerSubstitutionUseCase(matchId, playerOutId, playerInId, currentTimeMillis)
+
+        // Then - startTimersBatch called twice: once for playerIn, once for the other playing players
+        coVerify { playerTimeRepository.substituteOutPlayersBatchWithOperationId(listOf(playerOutId), currentTimeMillis, operationId) }
+        coVerify { playerTimeRepository.startTimersBatchWithOperationId(listOf(playerInId), currentTimeMillis, operationId) }
+        coVerify { playerTimeRepository.startTimersBatchWithOperationId(listOf(otherPlayerId1, otherPlayerId2), currentTimeMillis, operationId) }
+    }
 }

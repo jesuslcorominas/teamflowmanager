@@ -9,11 +9,11 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
-import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
@@ -28,83 +28,141 @@ class PlayerRepositoryImplTest {
         repository = PlayerRepositoryImpl(playerDataSource)
     }
 
+    private fun createPlayer(
+        id: Long = 1L,
+        firstName: String = "John",
+        lastName: String = "Doe",
+        number: Int = 10,
+        positions: List<Position> = listOf(Position.Forward),
+        teamId: Long = 1L,
+        isCaptain: Boolean = false,
+    ) = Player(
+        id = id,
+        firstName = firstName,
+        lastName = lastName,
+        number = number,
+        positions = positions,
+        teamId = teamId,
+        isCaptain = isCaptain,
+    )
+
+    // --- getAllPlayers ---
+
     @Test
-    fun `getAllPlayers should return players from local data source`() = runTest {
-        // Given
+    fun `givenPlayers_whenGetAllPlayers_thenDelegatesToDataSource`() = runTest {
         val players = listOf(
-            Player(1, "John", "Doe", 10, listOf(Position.Forward)),
-            Player(2, "Jane", "Smith", 8, listOf(Position.Midfielder))
+            createPlayer(id = 1L, firstName = "John"),
+            createPlayer(id = 2L, firstName = "Jane", positions = listOf(Position.Midfielder)),
         )
         every { playerDataSource.getAllPlayers() } returns flowOf(players)
 
-        // When
         val result = repository.getAllPlayers().first()
 
-        // Then
         assertEquals(players, result)
-        verify { playerDataSource.getAllPlayers() }
     }
 
     @Test
-    fun `getAllPlayers should return empty list when no players exist`() = runTest {
-        // Given
+    fun `givenNoPlayers_whenGetAllPlayers_thenReturnsEmptyList`() = runTest {
         every { playerDataSource.getAllPlayers() } returns flowOf(emptyList())
 
-        // When
         val result = repository.getAllPlayers().first()
 
-        // Then
         assertEquals(emptyList<Player>(), result)
-        verify { playerDataSource.getAllPlayers() }
+    }
+
+    // --- getPlayerById ---
+
+    @Test
+    fun `givenExistingPlayerId_whenGetPlayerById_thenReturnsPlayer`() = runTest {
+        val player = createPlayer(id = 1L)
+        coEvery { playerDataSource.getPlayerById(1L) } returns player
+
+        val result = repository.getPlayerById(1L)
+
+        assertEquals(player, result)
     }
 
     @Test
-    fun `addPlayer should call insertPlayer on local data source`() = runTest {
-        // Given
-        val player = Player(
-            id = 0,
-            firstName = "John",
-            lastName = "Doe",
-            number = 10,
-            positions = listOf(Position.Forward)
-        )
+    fun `givenUnknownPlayerId_whenGetPlayerById_thenReturnsNull`() = runTest {
+        coEvery { playerDataSource.getPlayerById(99L) } returns null
 
-        // When
-        repository.addPlayer(player)
+        val result = repository.getPlayerById(99L)
 
-        // Then
+        assertNull(result)
+    }
+
+    // --- getCaptainPlayer ---
+
+    @Test
+    fun `givenCaptainExists_whenGetCaptainPlayer_thenReturnsCaptain`() = runTest {
+        val captain = createPlayer(id = 3L, isCaptain = true)
+        coEvery { playerDataSource.getCaptainPlayer() } returns captain
+
+        val result = repository.getCaptainPlayer()
+
+        assertEquals(captain, result)
+    }
+
+    @Test
+    fun `givenNoCaptainAssigned_whenGetCaptainPlayer_thenReturnsNull`() = runTest {
+        coEvery { playerDataSource.getCaptainPlayer() } returns null
+
+        val result = repository.getCaptainPlayer()
+
+        assertNull(result)
+    }
+
+    // --- addPlayer ---
+
+    @Test
+    fun `givenNewPlayer_whenAddPlayer_thenReturnsInsertedId`() = runTest {
+        val player = createPlayer(id = 0L)
+        coEvery { playerDataSource.insertPlayer(player) } returns 1L
+
+        val result = repository.addPlayer(player)
+
+        assertEquals(1L, result)
         coVerify { playerDataSource.insertPlayer(player) }
     }
 
+    // --- deletePlayer ---
+
     @Test
-    fun `deletePlayer should delete player from local data source`() = runTest {
-        // Given
-        val playerId = 1L
-        coEvery { playerDataSource.deletePlayer(playerId) } just runs
+    fun `givenPlayerId_whenDeletePlayer_thenDelegatesToDataSource`() = runTest {
+        coEvery { playerDataSource.deletePlayer(1L) } just runs
 
-        // When
-        repository.deletePlayer(playerId)
+        repository.deletePlayer(1L)
 
-        // Then
-        coVerify { playerDataSource.deletePlayer(playerId) }
+        coVerify { playerDataSource.deletePlayer(1L) }
     }
 
+    // --- updatePlayer ---
+
     @Test
-    fun `updatePlayer should call local data source updatePlayer`() = runTest {
-        // Given
-        val player = Player(
-            id = 1,
-            firstName = "John",
-            lastName = "Doe",
-            number = 10,
-            positions = listOf(Position.Forward)
-        )
+    fun `givenPlayer_whenUpdatePlayer_thenDelegatesToDataSource`() = runTest {
+        val player = createPlayer(id = 1L, firstName = "Updated")
         coEvery { playerDataSource.updatePlayer(player) } just runs
 
-        // When
         repository.updatePlayer(player)
 
-        // Then
         coVerify { playerDataSource.updatePlayer(player) }
+    }
+
+    // --- setPlayerAsCaptain ---
+
+    @Test
+    fun `givenPlayerId_whenSetPlayerAsCaptain_thenDelegatesToDataSource`() = runTest {
+        repository.setPlayerAsCaptain(1L)
+
+        coVerify { playerDataSource.setPlayerAsCaptain(1L) }
+    }
+
+    // --- removePlayerAsCaptain ---
+
+    @Test
+    fun `givenPlayerId_whenRemovePlayerAsCaptain_thenDelegatesToDataSource`() = runTest {
+        repository.removePlayerAsCaptain(1L)
+
+        coVerify { playerDataSource.removePlayerAsCaptain(1L) }
     }
 }

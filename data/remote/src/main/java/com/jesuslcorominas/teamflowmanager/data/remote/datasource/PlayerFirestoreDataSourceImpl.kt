@@ -55,7 +55,6 @@ class PlayerFirestoreDataSourceImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting team document ID", e)
             null
         }
     }
@@ -66,7 +65,6 @@ class PlayerFirestoreDataSourceImpl(
     override fun getAllPlayers(): Flow<List<Player>> = callbackFlow {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
-            Log.w(TAG, "No authenticated user, cannot get players")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
@@ -75,7 +73,6 @@ class PlayerFirestoreDataSourceImpl(
         // First, get the team document ID
         val teamDocId = getTeamDocumentId()
         if (teamDocId == null) {
-            Log.w(TAG, "No team found for user, cannot get players")
             trySend(emptyList())
             awaitClose { }
             return@callbackFlow
@@ -85,7 +82,6 @@ class PlayerFirestoreDataSourceImpl(
             .whereEqualTo("teamId", teamDocId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Error getting players from Firestore", error)
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
@@ -103,7 +99,6 @@ class PlayerFirestoreDataSourceImpl(
                     }
                 }?.filter { !it.deleted } ?: emptyList()
 
-                Log.d(TAG, "Loaded ${players.size} players for team: $teamDocId")
                 trySend(players)
             }
 
@@ -118,11 +113,7 @@ class PlayerFirestoreDataSourceImpl(
      * We need to query all players and filter by the stable ID.
      */
     override suspend fun getPlayerById(playerId: Long): Player? {
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            Log.w(TAG, "No team found, cannot get player")
-            return null
-        }
+        val teamDocId = getTeamDocumentId() ?: return null
 
         return try {
             val snapshot = firestore.collection(PLAYERS_COLLECTION)
@@ -144,8 +135,7 @@ class PlayerFirestoreDataSourceImpl(
             }.filter { !it.deleted }.find { it.id == playerId }
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting player by id from Firestore", e)
+        } catch (_: Exception) {
             null
         }
     }
@@ -154,11 +144,7 @@ class PlayerFirestoreDataSourceImpl(
      * Gets the captain player.
      */
     override suspend fun getCaptainPlayer(): Player? {
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            Log.w(TAG, "No team found, cannot get captain")
-            return null
-        }
+        val teamDocId = getTeamDocumentId() ?: return null
 
         return try {
             val snapshot = firestore.collection(PLAYERS_COLLECTION)
@@ -168,10 +154,7 @@ class PlayerFirestoreDataSourceImpl(
                 .get()
                 .await()
 
-            val document = snapshot.documents.firstOrNull()
-            if (document == null) {
-                return null
-            }
+            val document = snapshot.documents.firstOrNull() ?: return null
 
             val documentId = document.id
             val firestoreModel = document.toObject(PlayerFirestoreModel::class.java)
@@ -187,8 +170,7 @@ class PlayerFirestoreDataSourceImpl(
             }
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting captain from Firestore", e)
+        } catch (_: Exception) {
             null
         }
     }
@@ -197,33 +179,23 @@ class PlayerFirestoreDataSourceImpl(
      * Sets a player as captain by their Long ID.
      */
     override suspend fun setPlayerAsCaptain(playerId: Long) {
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot set captain")
-            throw IllegalStateException("Team must exist to set captain")
-        }
+        val teamDocId = getTeamDocumentId() ?: throw IllegalStateException("Team must exist to set captain")
 
         try {
             // First, clear all existing captains
             clearAllCaptains(teamDocId)
 
             // Then, find the document ID for this player
-            val documentId = findDocumentIdByPlayerId(teamDocId, playerId)
-            if (documentId == null) {
-                Log.w(TAG, "Cannot find player with id: $playerId")
-                return
-            }
+            val documentId = findDocumentIdByPlayerId(teamDocId, playerId) ?: return
 
             // Update the player as captain
             firestore.collection(PLAYERS_COLLECTION)
                 .document(documentId)
                 .update("isCaptain", true)
                 .await()
-            Log.d(TAG, "Player set as captain: $documentId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error setting player as captain", e)
             throw e
         }
     }
@@ -232,30 +204,20 @@ class PlayerFirestoreDataSourceImpl(
      * Removes captain status from a player.
      */
     override suspend fun removePlayerAsCaptain(playerId: Long) {
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot remove captain")
-            throw IllegalStateException("Team must exist to remove captain")
-        }
+        val teamDocId = getTeamDocumentId() ?: throw IllegalStateException("Team must exist to remove captain")
 
         try {
             // First, find the document ID for this player
-            val documentId = findDocumentIdByPlayerId(teamDocId, playerId)
-            if (documentId == null) {
-                Log.w(TAG, "Cannot find player with id: $playerId")
-                return
-            }
+            val documentId = findDocumentIdByPlayerId(teamDocId, playerId) ?: return
 
             // Update the player to remove captain status
             firestore.collection(PLAYERS_COLLECTION)
                 .document(documentId)
                 .update("isCaptain", false)
                 .await()
-            Log.d(TAG, "Captain status removed from player: $documentId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error removing captain status", e)
             throw e
         }
     }
@@ -266,11 +228,7 @@ class PlayerFirestoreDataSourceImpl(
      * and the download URL will be stored in Firestore.
      */
     override suspend fun insertPlayer(player: Player): Long {
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot insert player")
-            throw IllegalStateException("Team must exist to create a player")
-        }
+        val teamDocId = getTeamDocumentId() ?: throw IllegalStateException("Team must exist to create a player")
 
         try {
             // Use auto-generated document ID for new players
@@ -287,15 +245,13 @@ class PlayerFirestoreDataSourceImpl(
                 imageUri = imageUrl
             )
             docRef.set(modelWithTeam).await()
-            
+
             // Convert Firestore document ID to stable Long ID
             val newPlayerId = docRef.id.toStableId()
-            Log.d(TAG, "Player inserted successfully with id: ${docRef.id} (Long: $newPlayerId), teamId: $teamDocId, imageUrl: $imageUrl")
             return newPlayerId
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error inserting player to Firestore", e)
             throw e
         }
     }
@@ -308,30 +264,20 @@ class PlayerFirestoreDataSourceImpl(
      * a separate maintenance task to remove orphaned images.
      */
     override suspend fun deletePlayer(playerId: Long) {
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot delete player")
-            throw IllegalStateException("Team must exist to delete a player")
-        }
+        val teamDocId = getTeamDocumentId() ?: throw IllegalStateException("Team must exist to delete a player")
 
         try {
             // First, find the document ID
-            val documentId = findDocumentIdByPlayerId(teamDocId, playerId)
-            if (documentId == null) {
-                Log.w(TAG, "Cannot find player with id: $playerId to delete")
-                return
-            }
+            val documentId = findDocumentIdByPlayerId(teamDocId, playerId) ?: return
 
             // Perform logical deletion by setting deleted flag to true
             firestore.collection(PLAYERS_COLLECTION)
                 .document(documentId)
                 .update("deleted", true)
                 .await()
-            Log.d(TAG, "Player logically deleted successfully: $documentId")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error deleting player from Firestore", e)
             throw e
         }
     }
@@ -341,19 +287,12 @@ class PlayerFirestoreDataSourceImpl(
      * If the player's image has changed, the old image will be deleted and the new one uploaded.
      */
     override suspend fun updatePlayer(player: Player) {
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            Log.e(TAG, "No team found, cannot update player")
-            throw IllegalStateException("Team must exist to update a player")
-        }
+        val teamDocId = getTeamDocumentId() ?: throw IllegalStateException("Team must exist to update a player")
 
         try {
             // First, find the document ID for this player
             val documentId = findDocumentIdByPlayerId(teamDocId, player.id)
-            if (documentId == null) {
-                Log.w(TAG, "Cannot find player with id: ${player.id} to update")
-                throw IllegalStateException("Cannot update player without document ID")
-            }
+                ?: throw IllegalStateException("Cannot update player without document ID")
 
             // Get current player to check if image changed
             val currentPlayer = getPlayerById(player.id)
@@ -399,11 +338,9 @@ class PlayerFirestoreDataSourceImpl(
                 .document(documentId)
                 .set(modelWithTeam)
                 .await()
-            Log.d(TAG, "Player updated successfully: $documentId, imageUrl: $newImageUrl")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating player in Firestore", e)
             throw e
         }
     }
@@ -496,7 +433,7 @@ class PlayerFirestoreDataSourceImpl(
                 clearedCount++
             }
         }
-        Log.d(TAG, "Cleared captain status from $clearedCount player(s)")
+
     }
 
     /**

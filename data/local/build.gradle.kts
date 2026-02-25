@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+apply(from = "$rootDir/jacoco.gradle.kts")
+
 android {
     namespace = "com.jesuslcorominas.teamflowmanager.data.local"
     compileSdk = 36
@@ -55,4 +57,5 @@ dependencies {
     ksp(libs.moshi.kotlin.codegen)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
 }
