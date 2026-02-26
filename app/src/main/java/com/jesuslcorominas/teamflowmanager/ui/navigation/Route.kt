@@ -1,4 +1,4 @@
-package com.jesuslcorominas.teamflowmanager.domain.navigation
+package com.jesuslcorominas.teamflowmanager.ui.navigation
 
 sealed class Route(
     protected val path: String,
