@@ -37,7 +37,6 @@ android {
 dependencies {
     implementation(project(":viewmodel"))
     implementation(project(":usecase"))
-    implementation(project(":service"))
     implementation(project(":data:core"))
     implementation(project(":data:local"))
     implementation(project(":data:remote"))

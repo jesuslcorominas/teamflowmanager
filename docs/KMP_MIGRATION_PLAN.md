@@ -1,7 +1,7 @@
 # KMP Migration Plan — TeamFlowManager
 
 > **Fecha de análisis**: 2026-02-26
-> **Última actualización**: 2026-02-26
+> **Última actualización**: 2026-02-26 (eliminación completa del módulo `:service` y sistema de notificaciones de partido)
 > **Rama de análisis**: `kmp-migration-analysis`
 > **Arquitecto**: Senior KMP/Android Architect (Claude Code)
 
@@ -19,27 +19,30 @@ usecase     → Pure Kotlin. Implementaciones de use cases.
 data/core   → Implementaciones de repositorio. Puente entre usecase e interfaces DataSource.
 data/local  → Preferencias locales (SharedPreferences). Sin Room ni base de datos.
 data/remote → KtorFit + Firebase (Firestore, Storage, Auth) datasource implementations.
-service     → Android service (MatchNotificationControllerImpl).
 viewmodel   → Jetpack ViewModel + StateFlow.
 di          → Koin DI composition root.
 app         → Compose UI + MainActivity + Route.kt (navegación).
 ```
 
+> **Nota**: El módulo `:service` fue eliminado completamente (ver sección 4.1). El sistema de notificaciones de partido (`MatchNotificationController`, `MatchCountdownService`, `MatchNotificationServiceManager`, `GetActiveMatchUseCase`) fue descartado en su totalidad durante el refactor previo a la migración KMP.
+
 ### 1.2 Inventario de archivos por módulo
 
 | Módulo | Archivos Kotlin | Tipo actual | Estado KMP |
 |--------|----------------|-------------|------------|
-| `:domain` | ~38 | `kotlin.jvm` | ✅ Listo |
-| `:usecase` | ~76 | `kotlin.jvm` | ✅ Listo |
+| `:domain` | ~35 | `kotlin.jvm` | ✅ Listo |
+| `:usecase` | ~74 | `kotlin.jvm` | ✅ Listo |
 | `:data:core` | ~30 | `kotlin.jvm` | ✅ Listo |
 | `:data:local` | 2 | `android.library` | ⚠️ Requiere refactor (SharedPreferences) |
 | `:data:remote` | ~40 | `android.library` | ⚠️ Bloqueado (Firebase) |
-| `:service` | 2 | `android.library` | ❌ Candidato a eliminación |
+| ~~`:service`~~ | ~~2~~ | ~~`android.library`~~ | ✅ **Eliminado** |
 | `:viewmodel` | 19 | `android.library` | ⚠️ Requiere refactor (SavedStateHandle) |
-| `:di` | ~10 | `android.library` | ⚠️ Requiere restructuración |
-| `:app` | ~80 | `android.application` | ❌ Android-only |
+| `:di` | ~9 | `android.library` | ⚠️ Requiere restructuración |
+| `:app` | ~78 | `android.application` | ❌ Android-only |
 
-> **Nota**: `Route.kt` ya fue movido de `:domain` a `:app/ui/navigation/` (refactor completado). `:domain` está libre de acoplamiento con navegación UI.
+> **Notas sobre refactors completados**:
+> - `Route.kt` ya fue movido de `:domain` a `:app/ui/navigation/`. `:domain` está libre de acoplamiento con navegación UI.
+> - El módulo `:service` fue eliminado. Con él: `MatchNotificationControllerImpl`, `ServiceModule`, `MatchNotificationController` (interfaz de dominio), `MatchCountdownService`, `MatchNotificationServiceManager` y `GetActiveMatchUseCase` (+ su test). `TeamFlowManagerApplication` ya no inicializa ningún servicio de notificaciones.
 
 ### 1.3 Nivel de acoplamiento Android por módulo
 
@@ -50,7 +53,7 @@ app         → Compose UI + MainActivity + Route.kt (navegación).
 | `:data:core` | Ninguna | **Ninguno — KMP ready** |
 | `:data:local` | `SharedPreferences` (Android API) | Bajo (expect/actual con `NSUserDefaults` en iOS) |
 | `:data:remote` | Firebase BOM 33.6.0, `play-services-auth` | Alto (Firebase Android-only) |
-| `:service` | `MatchNotificationControllerImpl` usa use cases | Android-only |
+| ~~`:service`~~ | ~~Android-only~~ | ✅ **Eliminado** |
 | `:viewmodel` | `SavedStateHandle` en 17/19 ViewModels, `lifecycle-viewmodel 2.8.6` | Medio (ViewModel KMP desde 2.8.0; `SavedStateHandle` solo Android) |
 | `:app` | Compose, Coil, Lottie, Google Fonts, Firebase Crashlytics | Android-only |
 
@@ -102,6 +105,8 @@ app         → Compose UI + MainActivity + Route.kt (navegación).
 :iosApp         → (nuevo) Xcode project o KMP iOS entry point
 ```
 
+> El módulo `:service` ya no existe — fue eliminado antes de iniciar la migración KMP. No hay ningún módulo candidato a confinamiento en `androidMain` por esta causa.
+
 ### 2.2 Qué va a commonMain
 
 **`:domain` commonMain (ya KMP-ready):**
@@ -141,7 +146,6 @@ app         → Compose UI + MainActivity + Route.kt (navegación).
 |----------|--------------------|-----------------------|------------------|
 | Firebase Auth | `AuthDataSource` interface | Firebase Auth Android | GitLive SDK o stub |
 | Firebase Firestore | `RemoteDataSource` interface | Firestore Android | GitLive SDK o stub |
-| MatchNotificationController | `interface MatchNotificationController` | `MatchNotificationControllerImpl` | No-op o local notifications |
 | PDF Export | `interface PdfExporter` | `android.graphics.pdf` impl | PDFKit (iOS) |
 | `Dispatchers.IO` | Usar `Dispatchers.Default` | OK | OK |
 | `SavedStateHandle` args | `fun initFromArgs(id: Long?)` en base | `SavedStateHandle.get<>()` → llama `initFromArgs` | NavigationArgs propio |
@@ -405,21 +409,27 @@ Tener un conjunto de módulos Koin en `commonMain` y extensiones en `androidMain
 
 ## 4. Componentes Candidatos a Eliminación
 
-### 4.1 `:service` — Candidato principal
+### 4.1 `:service` — ✅ YA ELIMINADO
 
-**Motivo**: El módulo `:service` contiene exactamente 2 archivos:
-- `MatchNotificationControllerImpl.kt` — implementación Android de `MatchNotificationController` del dominio
-- `ServiceModule.kt` — módulo Koin que registra la implementación
+El módulo fue **completamente descartado** junto con toda la funcionalidad de notificaciones de partido. No se realizó una reubicación parcial: la funcionalidad entera fue removida del proyecto.
 
-La implementación Android de `MatchNotificationController` puede vivir directamente en `:app` (androidMain) o en `:di` (androidMain). No justifica tener un módulo separado de 2 archivos.
+Archivos eliminados:
+- `service/src/.../MatchNotificationControllerImpl.kt`
+- `service/src/.../di/ServiceModule.kt`
+- `service/build.gradle.kts` + `service/src/main/AndroidManifest.xml`
+- `domain/notification/MatchNotificationController.kt` (interfaz de dominio)
+- `domain/usecase/GetActiveMatchUseCase.kt` (interfaz de dominio)
+- `usecase/.../GetActiveMatchUseCase.kt` + su test
+- `app/.../service/MatchCountdownService.kt`
+- `app/.../service/MatchNotificationServiceManager.kt`
 
-**Acción propuesta**: Mover `MatchNotificationControllerImpl` a `:app/androidMain/` o `:di/androidMain/` y eliminar el módulo `:service`.
+`TeamFlowManagerApplication` fue simplificado: ya no inicializa ningún gestor de notificaciones ni observa partidos activos. `:di/TeamFlowManagerModule` ya no incluye `serviceModule`.
 
-**Issue asociada**: Ver KMP-10.
+**Issue asociada**: KMP-10 — **COMPLETADO**.
 
-### 4.2 `domain/notification/MatchNotificationController.kt` — Mantener en commonMain
+### 4.2 `domain/notification/MatchNotificationController.kt` — ✅ Eliminada (no migrada)
 
-La interfaz define el contrato de negocio (la app necesita notificar eventos de partido). Debe permanecer en `commonMain` de `:domain`. En iOS se implementa como no-op o local notifications nativas.
+La interfaz fue eliminada junto con toda la funcionalidad de notificaciones. No existe en el proyecto. En una futura reimplementación para KMP, debería definirse en `commonMain` con implementaciones `actual` por plataforma (local notifications en iOS, `ForegroundService` en Android).
 
 ### 4.3 Librería `moshi` — ✅ YA ELIMINADA
 
@@ -433,31 +443,18 @@ Moshi estaba registrado en Koin en `DataLocalModule.kt` pero nunca era inyectado
 
 ---
 
-### KMP-10: Eliminar módulo `:service` y reubicar su contenido
+### ~~KMP-10~~: ✅ Eliminar módulo `:service` — **COMPLETADO**
 
-**Tipo**: `refactor` `kmp` `cleanup`
-**Módulo**: `:service`
-**Dependencias**: KMP-9
-**Estimación**: 2h
+El módulo `:service` fue eliminado **con toda la funcionalidad de notificaciones de partido**. La eliminación fue más profunda que lo previsto originalmente: en lugar de reubicar `MatchNotificationControllerImpl`, se decidió descartar por completo el sistema de notificaciones en esta fase de la migración.
 
-**Descripción**
-El módulo `:service` tiene exactamente 2 archivos (19 líneas de lógica real). No justifica existir como módulo independiente una vez que se complete la restructuración KMP.
+Cambios realizados:
+- Directorio `service/` eliminado del proyecto
+- `:service` eliminado de `settings.gradle.kts`
+- `serviceModule` eliminado de `TeamFlowManagerModule.kt` en `:di`
+- `MatchNotificationController` (interfaz), `GetActiveMatchUseCase` y todos los archivos Android relacionados eliminados
+- `TeamFlowManagerApplication` simplificado: sin `CoroutineScope`, sin `MatchNotificationServiceManager`
 
-**Objetivo**
-Eliminar el módulo `:service` para reducir la complejidad del grafo de módulos.
-
-**Pasos técnicos**
-1. Mover `MatchNotificationControllerImpl.kt` a `:app/src/main/kotlin/.../service/` (o a `:di/androidMain/`)
-2. Integrar `ServiceModule.kt` en el módulo Koin de Android en `:di`
-3. Eliminar `:service` de `settings.gradle.kts`
-4. Eliminar la carpeta `service/`
-5. Actualizar las dependencias que apuntan a `:service` en otros módulos
-
-**Criterios de aceptación**
-- [ ] El directorio `service/` no existe en el proyecto
-- [ ] `settings.gradle.kts` no menciona `:service`
-- [ ] `./gradlew :app:assembleDevDebug` compila sin errores
-- [ ] Las notificaciones de partido siguen funcionando en Android
+> Si se reimplementan notificaciones de partido en el futuro, deberán diseñarse directamente como KMP desde el inicio: `expect/actual` con `ForegroundService` en Android y local notifications en iOS.
 
 ---
 
@@ -550,8 +547,8 @@ Este plugin **no está aplicado a ningún módulo** actualmente. La UI es 100% J
 ## Resumen de dependencias entre issues
 
 ```
-✅ KMP-2 (Route.kt → :app)     ✅ KMP-5 (Moshi eliminado)
-         ↓                                ↓ (ya hecho)
+✅ KMP-2 (Route.kt → :app)     ✅ KMP-5 (Moshi eliminado)     ✅ KMP-10 (:service eliminado)
+         ↓                                ↓ (ya hecho)                    ↓ (ya hecho)
 KMP-1 (domain KMP)
     ↓
 KMP-3 (usecase KMP)
@@ -561,13 +558,12 @@ KMP-4 (data:core KMP)
 KMP-6 (data:local KMP)    KMP-7 (Firebase boundary)    KMP-8 (viewmodel KMP)
     ↓                           ↓                             ↓
     └───────────────── KMP-9 (di restructuring) ─────────────┘
-                               ↓
-                         KMP-10 (:service elimination)
 ```
 
 **Issues completadas** (no requieren trabajo):
 - ✅ **KMP-2**: `Route.kt` movido a `:app/ui/navigation/`
 - ✅ **KMP-5**: Moshi eliminado de todo el proyecto
+- ✅ **KMP-10**: Módulo `:service` y sistema de notificaciones de partido eliminados por completo
 
 **Issues independientes** (pueden empezar en paralelo desde el día 1):
 - **KMP-1**: Solo requiere cambiar el build script de `:domain`
@@ -577,3 +573,14 @@ KMP-6 (data:local KMP)    KMP-7 (Firebase boundary)    KMP-8 (viewmodel KMP)
 
 *Documento generado por análisis arquitectónico del proyecto en rama `kmp-migration-analysis`.*
 *Versiones analizadas: Kotlin 2.1.0 · AGP 8.6.1 · Compose Multiplatform 1.7.3 · Koin 4.0.0 · Ktor 3.0.1 · Firebase BOM 33.6.0*
+
+---
+
+## Registro de cambios
+
+| Fecha | Cambio |
+|-------|--------|
+| 2026-02-26 | Documento inicial con análisis KMP completo |
+| 2026-02-26 | KMP-2: `Route.kt` movido a `:app/ui/navigation/` |
+| 2026-02-26 | KMP-5: Moshi eliminado del proyecto |
+| 2026-02-26 | KMP-10 (adelantado): `:service` eliminado. Sistema de notificaciones de partido (`MatchNotificationController`, `GetActiveMatchUseCase`, `MatchCountdownService`, `MatchNotificationServiceManager`) descartado en su totalidad |
