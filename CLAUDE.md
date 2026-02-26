@@ -112,3 +112,14 @@ Min SDK: 29. Target SDK: 36. Kotlin: 2.1.0. Java: 17.
 
 ## Documentation
 - Add md files with detailed explanations of complex features (e.g., Match state management, invitation flow) in the `docs/` directory.
+
+# Claude Agent Rules
+
+- You have full autonomy to create, modify, and delete files in the project.
+- You can execute commands, install dependencies, refactor code, and run tests without asking for permission.
+- You can make any changes you judge necessary to complete tasks, including rewriting code for optimization or maintainability.
+- Only ask for my confirmation if you intend to delete a Git branch.
+- Always prioritize completing the task fully without incremental approval steps.
+- If something fails, attempt to fix it automatically without asking for instructions.
+- Assume you have permission for all changes unless explicitly stated otherwise.
+- Notify me of major actions only if they affect production, credentials, or Git branches.
