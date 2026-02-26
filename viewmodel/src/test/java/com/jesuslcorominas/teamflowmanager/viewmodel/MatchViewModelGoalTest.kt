@@ -8,7 +8,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
@@ -121,7 +120,7 @@ class MatchViewModelGoalTest {
         timeTicker = fakeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
-        savedStateHandle = SavedStateHandle(mapOf(Route.Match.ARG_MATCH_ID to MATCH_ID)),
+        savedStateHandle = SavedStateHandle(mapOf(MatchViewModel.ARG_MATCH_ID to MATCH_ID)),
     )
 
     @Test

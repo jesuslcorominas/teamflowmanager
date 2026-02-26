@@ -9,7 +9,6 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
@@ -41,6 +40,11 @@ class TeamViewModel(
 ) : ViewModel() {
 
     companion object {
+        const val ARG_MODE = "mode"
+        const val MODE_CREATE = "create"
+        const val MODE_VIEW = "view"
+        const val MODE_EDIT = "edit"
+
         // Kept for backward compatibility, but use ClubRole enum instead
         @Deprecated("Use ClubRole.PRESIDENT instead", ReplaceWith("ClubRole.PRESIDENT.roleName"))
         private const val ROLE_PRESIDENT = "Presidente"
@@ -60,7 +64,7 @@ class TeamViewModel(
 
     private var originalTeam: Team? = null
 
-    val isEditMode: Boolean = (savedStateHandle[Route.Team.ARG_MODE] as? String) == Route.Team.MODE_EDIT
+    val isEditMode: Boolean = (savedStateHandle[ARG_MODE] as? String) == MODE_EDIT
 
     init {
         loadTeam()

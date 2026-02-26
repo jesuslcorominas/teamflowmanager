@@ -15,7 +15,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
@@ -102,7 +101,7 @@ class MatchViewModel(
 
     init {
         matchId =
-            savedStateHandle[Route.Match.ARG_MATCH_ID]
+            savedStateHandle[ARG_MATCH_ID]
                 ?: throw IllegalArgumentException("matchId is required")
 
         loadMatchData(matchId)
@@ -722,6 +721,10 @@ class MatchViewModel(
 
     fun exportCompleted() {
         _exportState.value = ExportState.Idle
+    }
+
+    companion object {
+        const val ARG_MATCH_ID = "matchId"
     }
 }
 

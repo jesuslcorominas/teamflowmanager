@@ -31,7 +31,7 @@ app         → Compose UI + MainActivity.
 | `:domain` | ~38 | `kotlin.jvm` | ✅ Listo (con excepciones*) |
 | `:usecase` | ~76 | `kotlin.jvm` | ✅ Listo |
 | `:data:core` | ~30 | `kotlin.jvm` | ✅ Listo |
-| `:data:local` | ~25 | `android.library` | ⚠️ Requiere refactor (Room) |
+| `:data:local` | ~2 | `android.library` | ⚠️ Requiere refactor (SharedPreferences) |
 | `:data:remote` | ~40 | `android.library` | ⚠️ Bloqueado (Firebase) |
 | `:service` | 2 | `android.library` | ❌ Candidato a eliminación |
 | `:viewmodel` | 19 | `android.library` | ⚠️ Requiere refactor (SavedStateHandle) |
@@ -50,7 +50,7 @@ app         → Compose UI + MainActivity.
 | `:domain` | Ninguna en código (`Route.kt` tiene UI concerns) | Bajo |
 | `:usecase` | Ninguna | Ninguno |
 | `:data:core` | Ninguna | Ninguno |
-| `:data:local` | Room 2.8.3, `kotlinx-coroutines-android` | Medio (Room KMP disponible en 2.7+) |
+| `:data:local` | `SharedPreferences` (Android API), Moshi | Bajo (reemplazar con `DataStore` KMP o `NSUserDefaults` via expect/actual) |
 | `:data:remote` | Firebase BOM 33.6.0, `play-services-auth` | Alto (Firebase Android-only) |
 | `:service` | `MatchNotificationControllerImpl` referencia use cases; ServiceModule Koin | Android-only |
 | `:viewmodel` | `SavedStateHandle` en 17/19 ViewModels, `lifecycle-viewmodel 2.8.6` | Medio (ViewModel KMP desde 2.8.0; SavedStateHandle solo Android) |
@@ -67,7 +67,7 @@ app         → Compose UI + MainActivity.
 | `kotlinx-serialization-json` | 1.7.3 | ✅ | Full KMP | Ya en catálogo, usarlo en commonMain |
 | `lifecycle-viewmodel-ktx` | 2.8.6 | ✅ | Partial KMP | ViewModel → commonMain; `SavedStateHandle` → androidMain |
 | `compose-multiplatform` | 1.7.3 | ✅ (en catálogo, no aplicado) | Full KMP | Fase 2 |
-| `room-runtime` | 2.8.3 | ❌ | Partial KMP | Room KMP disponible desde 2.7+; alternativa: SQLDelight |
+| `SharedPreferences` | Android API | ❌ | Android-only | Reemplazar con `DataStore` KMP o expect/actual (`NSUserDefaults` en iOS) |
 | `firebase-bom` | 33.6.0 | ❌ | Android-only | Boundary `expect/actual`; alternativa: GitLive Firebase SDK |
 | `moshi` | 1.15.2 | ❌ | Android/JVM-only | Reemplazar con `kotlinx-serialization` |
 | `coil-compose` | 2.5.0 | ❌ | Android-only | Coil 3.x tiene soporte KMP; Fase 2 |
@@ -81,7 +81,7 @@ app         → Compose UI + MainActivity.
 | Interfaces de use cases | ~100% |
 | Implementaciones de use cases | ~100% |
 | Repositorios (`:data:core`) | ~100% |
-| DataSource local (`:data:local`) | ~80% (Room KMP) |
+| DataSource local (`:data:local`) | ~50% (interfaz commonMain; implementación por plataforma) |
 | DataSource remoto (`:data:remote`) | ~60% (excluye Firebase) |
 | ViewModels | ~75% (excluye `SavedStateHandle`) |
 | **Total estimado** | **~82% del negocio reutilizable** |
@@ -123,8 +123,14 @@ app         → Compose UI + MainActivity.
 - Todas las implementaciones de repositorios sin cambios
 
 **`:data:local` commonMain:**
-- DAOs e implementaciones Room (con `room-runtime-ktx` KMP)
-- Entidades anotadas con `@Entity` (compatibles KMP)
+- Interfaz `PreferencesDataSource` (ya en `:data:core`)
+- Lógica de preferencias sin plataforma
+
+**`:data:local` androidMain:**
+- `PreferencesLocalDataSourceImpl` usando `SharedPreferences`
+
+**`:data:local` iosMain:**
+- Implementación equivalente usando `NSUserDefaults` o `DataStore` KMP
 
 **`:data:remote` commonMain:**
 - Interfaces Ktorfit, modelos de red, lógica de negocio de red
@@ -307,35 +313,30 @@ Eliminar todas las dependencias de Moshi del proyecto y migrar a kotlinx.seriali
 
 ---
 
-### KMP-6: Migrar `:data:local` a Kotlin Multiplatform con Room KMP
+### KMP-6: Migrar `:data:local` a Kotlin Multiplatform (SharedPreferences → expect/actual)
 
 **Tipo**: `enhancement` `kmp`
 **Módulo**: `:data:local`
 **Dependencias**: KMP-4, KMP-5
-**Estimación**: 8h
+**Estimación**: 4h
 
 **Descripción**
-Room tiene soporte KMP desde la versión 2.7. La versión actual es 2.8.3, suficientemente moderna. La migración requiere configurar el driver de base de datos por plataforma (`BundledSQLiteDriver` para Android/iOS).
+`:data:local` contiene únicamente la implementación de preferencias locales usando `SharedPreferences` de Android (2 archivos). No usa Room ni base de datos alguna. Para KMP, la interfaz `PreferencesDataSource` (ya en `:data:core`) se implementa por plataforma: `SharedPreferences` en Android y `NSUserDefaults` en iOS.
 
 **Objetivo**
-Hacer que el módulo de persistencia local compile para Android e iOS.
+Hacer que la capa de persistencia de preferencias compile para Android e iOS.
 
 **Pasos técnicos**
-1. Actualizar `build.gradle.kts` de `:data:local`:
-   - Cambiar de `android.library` a `kotlin("multiplatform")` con `androidTarget()` + iOS targets
-   - Agregar `room-runtime` con KMP support (verificar que `2.8.3` incluye KMP o actualizar)
-   - Configurar KSP para múltiples targets: `add("kspAndroid", ...)`, `add("kspIosArm64", ...)`
-2. Agregar en `commonMain`: `implementation(libs.androidx.room.runtime)`
-3. En `androidMain`: usar `Room.databaseBuilder()` con `AndroidSQLiteDriver`
-4. En `iosMain`: crear `actual fun createDatabase()` con `BundledSQLiteDriver`
-5. Marcar `@Database` con `@ConstructedBy` para factory multiplataforma
-6. Verificar que todos los DAOs usan `suspend` / `Flow` (no callbacks Android)
+1. Cambiar `build.gradle.kts` de `:data:local` a `kotlin("multiplatform")` con `androidTarget()` + iOS targets
+2. Mantener `PreferencesLocalDataSourceImpl` en `androidMain` (usa `SharedPreferences`)
+3. Crear `PreferencesLocalDataSourceImpl` en `iosMain` usando `NSUserDefaults`
+4. Registrar la implementación correcta en Koin desde cada plataforma en `:di`
+5. Eliminar Moshi del módulo (no se usa en ningún archivo fuente) — ver KMP-5
 
 **Criterios de aceptación**
 - [ ] `./gradlew :data:local:compileKotlinAndroid` pasa
 - [ ] `./gradlew :data:local:compileKotlinIosArm64` pasa
-- [ ] `./gradlew :data:local:testDebugUnitTest` pasa
-- [ ] Base de datos funciona correctamente en Android (smoke test manual)
+- [ ] Las preferencias (capitán por defecto, alerta de sustitución) funcionan en Android
 
 ---
 

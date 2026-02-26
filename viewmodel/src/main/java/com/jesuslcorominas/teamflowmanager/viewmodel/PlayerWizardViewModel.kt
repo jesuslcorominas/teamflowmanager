@@ -9,7 +9,6 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerByIdUseCase
@@ -67,7 +66,7 @@ class PlayerWizardViewModel(
     private var originalPositions: List<Position> = emptyList()
 
     init {
-        val playerIdFromArgs: Long = savedStateHandle[Route.PlayerWizard.ARG_PLAYER_ID] ?: 0L
+        val playerIdFromArgs: Long = savedStateHandle[ARG_PLAYER_ID] ?: 0L
 
         if (playerIdFromArgs > 0L) {
             initializeForEdit(playerIdFromArgs)
@@ -324,6 +323,10 @@ class PlayerWizardViewModel(
                 throw e
             }
         }
+    }
+
+    companion object {
+        const val ARG_PLAYER_ID = "playerId"
     }
 }
 

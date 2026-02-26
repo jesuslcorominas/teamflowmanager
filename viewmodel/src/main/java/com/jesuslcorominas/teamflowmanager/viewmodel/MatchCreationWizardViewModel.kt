@@ -12,7 +12,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
@@ -85,7 +84,7 @@ class MatchCreationWizardViewModel(
 
     init {
         // Check if we have a matchId in savedStateHandle for edit mode
-        val matchIdFromState = savedStateHandle.get<Long>(Route.CreateMatch.ARG_MATCH_ID)
+        val matchIdFromState = savedStateHandle.get<Long>(ARG_MATCH_ID)
         if (matchIdFromState != null && matchIdFromState != 0L) {
             pendingMatchIdForEdit = matchIdFromState
             isEditMode = true
@@ -407,6 +406,7 @@ class MatchCreationWizardViewModel(
     fun isEditMode() = isEditMode
 
     companion object {
+        const val ARG_MATCH_ID = "matchId"
         private const val MILLIS_PER_DAY = 24 * 60 * 60 * 1000L
     }
 }
