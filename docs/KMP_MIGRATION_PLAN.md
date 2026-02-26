@@ -1,7 +1,7 @@
 # KMP Migration Plan — TeamFlowManager
 
 > **Fecha de análisis**: 2026-02-26
-> **Última actualización**: 2026-02-26 (`:viewmodel` sin ningún import Android-específico — listo para migrar a `kotlin("multiplatform")`)
+> **Última actualización**: 2026-02-26 (`lottie-compose` eliminado del proyecto)
 > **Rama de análisis**: `kmp-migration-analysis`
 > **Arquitecto**: Senior KMP/Android Architect (Claude Code)
 
@@ -56,7 +56,7 @@ app         → Compose UI + MainActivity + Route.kt (navegación).
 | `:data:remote` | Firebase BOM 33.6.0, `play-services-auth` | Alto (Firebase Android-only) |
 | ~~`:service`~~ | ~~Android-only~~ | ✅ **Eliminado** |
 | `:viewmodel` | Ninguna — `lifecycle-viewmodel 2.8.6` ya KMP-compatible | **Ninguno — pendiente solo cambio de `build.gradle.kts`** |
-| `:app` | Compose, Coil, Lottie, Google Fonts, Firebase Crashlytics | Android-only |
+| `:app` | Compose, Coil, Google Fonts, Firebase Crashlytics | Android-only |
 
 ### 1.4 Dependencias críticas y su estado KMP
 
@@ -471,11 +471,11 @@ Este plugin **no está aplicado a ningún módulo** actualmente. La UI es 100% J
 | Material3 | ✅ Estable | Uso extensivo — directamente portable |
 | `LazyColumn`, `LazyRow` | ✅ Estable | Listas de equipos, partidos — portable |
 | `Canvas` / gráficas | ✅ Estable | `compose-charts` requiere fork KMP o alternativa |
-| Animaciones | ✅ Estable | Lottie → alternativa KMP necesaria |
+| Animaciones | ✅ Estable | Sin bloqueo — Lottie eliminado del proyecto |
 | Navegación | ✅ Stable (Compose Navigation CMP 2.8+) | `Route.kt` ya en `:app` — migración directa |
 | `coil-compose` | ⚠️ Coil 3.x KMP | Actualizar a Coil 3.x con KMP support |
 | Google Fonts | ❌ Android-only | Bundlear fuentes o usar fuentes del sistema |
-| Lottie | ❌ Android-only | Reemplazar con animaciones Compose nativas |
+| ~~`lottie-compose`~~ | ~~❌ Android-only~~ | **Ya eliminado del proyecto** |
 | Firebase Crashlytics UI | ❌ Android-only | Mantener solo en androidMain |
 
 ### 5.3 Composables candidatos a compartir en commonMain
@@ -501,7 +501,7 @@ Este plugin **no está aplicado a ningún módulo** actualmente. La UI es 100% J
 
 1. **`compose-charts` (v0.2.0)**: No es KMP. Alternativas: `koalaplot` (KMP) o Canvas de CMP.
 
-2. **`lottie-compose` (v6.6.10)**: Android-only. Alternativas: animaciones Compose nativas con `rememberInfiniteTransition`, o `Rive` (runtime KMP experimental).
+~~2. **`lottie-compose` (v6.6.10)**: Android-only.~~ **Ya eliminado del proyecto** — la animación de confetti en `MatchTimeCard` fue descartada.
 
 3. **`coil-compose` (v2.5.0)**: Actualizar a Coil 3.x que tiene soporte KMP.
 
@@ -530,7 +530,7 @@ Este plugin **no está aplicado a ningún módulo** actualmente. La UI es 100% J
 | % código UI reutilizable | 100% Android | ~70-80% en commonMain |
 | Riesgo de regresión Android | Bajo | Medio (requiere testing exhaustivo) |
 | Valor: soporte iOS sin reescribir | N/A | Alto |
-| Dependencias a reemplazar | — | compose-charts, lottie, coil upgrade |
+| Dependencias a reemplazar | — | compose-charts, coil upgrade |
 
 **Recomendación**: Fase 2 es viable y rentable si el objetivo es lanzar en iOS. El riesgo de regresión en Android es gestionable con la cobertura de tests actual (~85% en lógica de negocio).
 
@@ -578,3 +578,4 @@ KMP-6 (data:local KMP)    KMP-7 (Firebase boundary)    KMP-8 (viewmodel KMP)
 | 2026-02-26 | KMP-5: Moshi eliminado del proyecto |
 | 2026-02-26 | KMP-10 (adelantado): `:service` eliminado. Sistema de notificaciones de partido (`MatchNotificationController`, `GetActiveMatchUseCase`, `MatchCountdownService`, `MatchNotificationServiceManager`) descartado en su totalidad |
 | 2026-02-26 | KMP-8 (código listo): `SavedStateHandle` eliminado de 5 ViewModels; `android.util.Log` eliminado de `SplashViewModel` (era import sin uso). `:viewmodel` no tiene ningún import Android-específico. Código 100% KMP; pendiente solo cambio del build script |
+| 2026-02-26 | `lottie-compose` (v6.6.10) eliminado del proyecto: animación de confetti en `MatchTimeCard` descartada. Eliminados: imports en `MatchTimeCard.kt`, `libs.versions.toml`, `app/build.gradle.kts` y asset `animations/confetti.json`. Ya no es un bloqueador para Fase 2 (CMP) |

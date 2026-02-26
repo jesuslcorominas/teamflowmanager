@@ -11,7 +11,6 @@ ktlint = "12.1.1"
 core-ktx = "1.13.1"
 junit = "4.13.2"
 ktlintVersion = "0.4.27"
-lottieCompose = "6.6.10"
 mockk = "1.13.12"
 androidx-test-ext-junit = "1.2.1"
 espresso-core = "3.6.1"
@@ -48,7 +47,6 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
 ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "ktlintVersion" }
-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 # Compose
