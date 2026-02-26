@@ -26,14 +26,16 @@ import com.jesuslcorominas.teamflowmanager.ui.team.components.TeamForm
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun TeamScreen(
+    mode: String,
     onNavigateToMatches: (String) -> Unit,
     onNavigateBackRequest: () -> Unit,
     onNavigateToTeamList: (() -> Unit)? = null,
     currentBackHandler: BackHandlerController?,
-    viewModel: TeamViewModel = koinViewModel(),
+    viewModel: TeamViewModel = koinViewModel(parameters = { parametersOf(mode) }),
 ) {
     TrackScreenView(screenName = ScreenName.TEAM, screenClass = "TeamScreen")
     

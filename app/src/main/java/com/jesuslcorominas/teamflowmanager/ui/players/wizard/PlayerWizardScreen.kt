@@ -22,11 +22,13 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardStep
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun PlayerWizardScreen(
+    playerId: Long,
     onNavigateBack: () -> Unit,
-    wizardViewModel: PlayerWizardViewModel = koinViewModel()
+    wizardViewModel: PlayerWizardViewModel = koinViewModel(parameters = { parametersOf(playerId) }),
 ) {
     TrackScreenView(screenName = ScreenName.PLAYER_WIZARD, screenClass = "PlayerWizardScreen")
     

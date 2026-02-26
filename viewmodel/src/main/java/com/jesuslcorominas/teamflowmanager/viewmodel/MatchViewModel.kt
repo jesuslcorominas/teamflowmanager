@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
@@ -15,7 +14,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
@@ -45,6 +43,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class MatchViewModel(
+    private val matchId: Long,
     private val getMatchById: GetMatchByIdUseCase,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
     private val getPlayersUseCase: GetPlayersUseCase,
@@ -67,7 +66,6 @@ class MatchViewModel(
     private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
-    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
@@ -98,13 +96,7 @@ class MatchViewModel(
     private val _isSubstitutionInProgress = MutableStateFlow(false)
     val isSubstitutionInProgress: StateFlow<Boolean> = _isSubstitutionInProgress.asStateFlow()
 
-    private val matchId: Long
-
     init {
-        matchId =
-            savedStateHandle[Route.Match.ARG_MATCH_ID]
-                ?: throw IllegalArgumentException("matchId is required")
-
         loadMatchData(matchId)
         observeTime()
     }
@@ -723,6 +715,8 @@ class MatchViewModel(
     fun exportCompleted() {
         _exportState.value = ExportState.Idle
     }
+
+    companion object
 }
 
 data class PlayerTimeItem(

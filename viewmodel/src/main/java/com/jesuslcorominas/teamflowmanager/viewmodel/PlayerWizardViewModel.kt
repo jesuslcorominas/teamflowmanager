@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
@@ -9,7 +8,6 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerByIdUseCase
@@ -24,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class PlayerWizardViewModel(
+    private val playerId: Long,
     private val getPlayerByIdUseCase: GetPlayerByIdUseCase,
     private val addPlayerUseCase: AddPlayerUseCase,
     private val updatePlayerUseCase: UpdatePlayerUseCase,
@@ -34,7 +33,6 @@ class PlayerWizardViewModel(
     private val getScheduledMatchesUseCase: GetScheduledMatchesUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
-    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PlayerWizardUiState>(PlayerWizardUiState.Loading)
@@ -50,7 +48,6 @@ class PlayerWizardViewModel(
     val showExitDialog: StateFlow<Boolean> = _showExitDialog.asStateFlow()
 
     // Player data being built/edited
-    private var playerId: Long = 0L
     private var firstName: String = ""
     private var lastName: String = ""
     private var number: String = ""
@@ -67,10 +64,8 @@ class PlayerWizardViewModel(
     private var originalPositions: List<Position> = emptyList()
 
     init {
-        val playerIdFromArgs: Long = savedStateHandle[Route.PlayerWizard.ARG_PLAYER_ID] ?: 0L
-
-        if (playerIdFromArgs > 0L) {
-            initializeForEdit(playerIdFromArgs)
+        if (playerId > 0L) {
+            initializeForEdit(playerId)
         } else {
             initializeForCreate()
         }
@@ -80,7 +75,6 @@ class PlayerWizardViewModel(
         viewModelScope.launch {
             val player = getPlayerByIdUseCase.invoke(playerId)
             if (player != null) {
-                this@PlayerWizardViewModel.playerId = player.id
                 firstName = player.firstName
                 lastName = player.lastName
                 number = player.number.toString()
@@ -104,7 +98,6 @@ class PlayerWizardViewModel(
     }
 
     private fun initializeForCreate() {
-        playerId = 0L
         firstName = ""
         lastName = ""
         number = ""
@@ -325,6 +318,8 @@ class PlayerWizardViewModel(
             }
         }
     }
+
+    companion object
 }
 
 sealed class PlayerWizardUiState {

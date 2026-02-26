@@ -78,8 +78,9 @@ val viewModelModule =
                 crashReporter = get()
             )
         }
-        viewModel {
+        viewModel { params ->
             PlayerWizardViewModel(
+                playerId = params.get(),
                 getPlayerByIdUseCase = get(),
                 addPlayerUseCase = get(),
                 updatePlayerUseCase = get(),
@@ -90,11 +91,11 @@ val viewModelModule =
                 getScheduledMatchesUseCase = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
-                savedStateHandle = get(),
             )
         }
-        viewModel {
+        viewModel { params ->
             TeamViewModel(
+                mode = params.get(),
                 getTeam = get(),
                 getPlayers = get(),
                 createTeam = get(),
@@ -105,7 +106,6 @@ val viewModelModule =
                 removePlayerAsCaptainUseCase = get(),
                 getUserClubMembership = get(),
                 analyticsTracker = get(),
-                savedStateHandle = get()
             )
         }
         viewModel {
@@ -122,8 +122,9 @@ val viewModelModule =
                 getUserClubMembership = get()
             )
         }
-        viewModel {
+        viewModel { params ->
             MatchViewModel(
+                matchId = params.get(),
                 getMatchById = get(),
                 getAllPlayerTimesUseCase = get(),
                 getPlayersUseCase = get(),
@@ -146,7 +147,6 @@ val viewModelModule =
                 timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
-                savedStateHandle = get()
             )
         }
         viewModel {
@@ -169,8 +169,9 @@ val viewModelModule =
                 crashReporter = get()
             )
         }
-        viewModel {
+        viewModel { params ->
             MatchCreationWizardViewModel(
+                matchId = params.get(),
                 getPlayersUseCase = get(),
                 getPreviousCaptainsUseCase = get(),
                 getDefaultCaptainUseCase = get(),
@@ -182,7 +183,6 @@ val viewModelModule =
                 updateMatchUseCase = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
-                savedStateHandle = get()
             )
         }
         viewModel {
@@ -204,11 +204,11 @@ val viewModelModule =
             )
         }
 
-        viewModel {
+        viewModel { params ->
             AcceptTeamInvitationViewModel(
-                savedStateHandle = get(),
+                teamId = params.get(),
                 acceptTeamInvitation = get(),
-                getCurrentUser = get()
+                getCurrentUser = get(),
             )
         }
 

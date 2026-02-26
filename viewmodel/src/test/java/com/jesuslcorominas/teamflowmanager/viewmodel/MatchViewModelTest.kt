@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -9,7 +8,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
@@ -139,6 +137,7 @@ class MatchViewModelTest {
     }
 
     private fun createViewModel() = MatchViewModel(
+        matchId = MATCH_ID,
         getMatchById = getMatchByIdUseCase,
         getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
         getPlayersUseCase = getPlayersUseCase,
@@ -161,7 +160,6 @@ class MatchViewModelTest {
         timeTicker = fakeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
-        savedStateHandle = SavedStateHandle(mapOf(Route.Match.ARG_MATCH_ID to MATCH_ID)),
     )
 
     @Test

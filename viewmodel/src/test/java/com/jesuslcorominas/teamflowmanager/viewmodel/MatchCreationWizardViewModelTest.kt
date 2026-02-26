@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
@@ -91,8 +90,9 @@ class MatchCreationWizardViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): MatchCreationWizardViewModel {
+    private fun createViewModel(matchId: Long = 0L): MatchCreationWizardViewModel {
         return MatchCreationWizardViewModel(
+            matchId = matchId,
             getPlayersUseCase = getPlayersUseCase,
             getPreviousCaptainsUseCase = getPreviousCaptainsUseCase,
             getDefaultCaptainUseCase = getDefaultCaptainUseCase,
@@ -104,7 +104,6 @@ class MatchCreationWizardViewModelTest {
             updateMatchUseCase = updateMatchUseCase,
             analyticsTracker = analyticsTracker,
             crashReporter = crashReporter,
-            savedStateHandle = SavedStateHandle(),
         )
     }
 
@@ -368,20 +367,7 @@ class MatchCreationWizardViewModelTest {
             captainId = 1L,
         )
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(existingMatch)
-        viewModel = MatchCreationWizardViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            getPreviousCaptainsUseCase = getPreviousCaptainsUseCase,
-            getDefaultCaptainUseCase = getDefaultCaptainUseCase,
-            saveDefaultCaptainUseCase = saveDefaultCaptainUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            getTeamUseCase = getTeamUseCase,
-            createMatch = createMatchUseCase,
-            getMatchByIdUseCase = getMatchByIdUseCase,
-            updateMatchUseCase = updateMatchUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter,
-            savedStateHandle = SavedStateHandle(mapOf("matchId" to matchId)),
-        )
+        viewModel = createViewModel(matchId)
         advanceUntilIdle()
         val onComplete = mockk<() -> Unit>(relaxed = true)
 
@@ -408,20 +394,7 @@ class MatchCreationWizardViewModelTest {
         )
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(existingMatch)
         coEvery { updateMatchUseCase.invoke(any()) } throws RuntimeException("error")
-        viewModel = MatchCreationWizardViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            getPreviousCaptainsUseCase = getPreviousCaptainsUseCase,
-            getDefaultCaptainUseCase = getDefaultCaptainUseCase,
-            saveDefaultCaptainUseCase = saveDefaultCaptainUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            getTeamUseCase = getTeamUseCase,
-            createMatch = createMatchUseCase,
-            getMatchByIdUseCase = getMatchByIdUseCase,
-            updateMatchUseCase = updateMatchUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter,
-            savedStateHandle = SavedStateHandle(mapOf("matchId" to matchId)),
-        )
+        viewModel = createViewModel(matchId)
         advanceUntilIdle()
         val onComplete = mockk<() -> Unit>(relaxed = true)
 
@@ -454,20 +427,7 @@ class MatchCreationWizardViewModelTest {
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(match)
 
         // When
-        viewModel = MatchCreationWizardViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            getPreviousCaptainsUseCase = getPreviousCaptainsUseCase,
-            getDefaultCaptainUseCase = getDefaultCaptainUseCase,
-            saveDefaultCaptainUseCase = saveDefaultCaptainUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            getTeamUseCase = getTeamUseCase,
-            createMatch = createMatchUseCase,
-            getMatchByIdUseCase = getMatchByIdUseCase,
-            updateMatchUseCase = updateMatchUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter,
-            savedStateHandle = SavedStateHandle(mapOf("matchId" to matchId)),
-        )
+        viewModel = createViewModel(matchId)
         advanceUntilIdle()
 
         // Then
@@ -515,20 +475,7 @@ class MatchCreationWizardViewModelTest {
             captainId = 1L,
         )
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(match)
-        viewModel = MatchCreationWizardViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            getPreviousCaptainsUseCase = getPreviousCaptainsUseCase,
-            getDefaultCaptainUseCase = getDefaultCaptainUseCase,
-            saveDefaultCaptainUseCase = saveDefaultCaptainUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            getTeamUseCase = getTeamUseCase,
-            createMatch = createMatchUseCase,
-            getMatchByIdUseCase = getMatchByIdUseCase,
-            updateMatchUseCase = updateMatchUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter,
-            savedStateHandle = SavedStateHandle(mapOf("matchId" to matchId)),
-        )
+        viewModel = createViewModel(matchId)
         advanceUntilIdle()
 
         // Then
@@ -548,20 +495,7 @@ class MatchCreationWizardViewModelTest {
             captainId = 1L,
         )
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(match)
-        viewModel = MatchCreationWizardViewModel(
-            getPlayersUseCase = getPlayersUseCase,
-            getPreviousCaptainsUseCase = getPreviousCaptainsUseCase,
-            getDefaultCaptainUseCase = getDefaultCaptainUseCase,
-            saveDefaultCaptainUseCase = saveDefaultCaptainUseCase,
-            getCaptainPlayerUseCase = getCaptainPlayerUseCase,
-            getTeamUseCase = getTeamUseCase,
-            createMatch = createMatchUseCase,
-            getMatchByIdUseCase = getMatchByIdUseCase,
-            updateMatchUseCase = updateMatchUseCase,
-            analyticsTracker = analyticsTracker,
-            crashReporter = crashReporter,
-            savedStateHandle = SavedStateHandle(mapOf("matchId" to matchId)),
-        )
+        viewModel = createViewModel(matchId)
         advanceUntilIdle()
 
         // When

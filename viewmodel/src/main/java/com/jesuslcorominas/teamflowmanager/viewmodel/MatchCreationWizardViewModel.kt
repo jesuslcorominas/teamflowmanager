@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
@@ -12,7 +11,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
@@ -30,6 +28,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class MatchCreationWizardViewModel(
+    private val matchId: Long,
     private val getPlayersUseCase: GetPlayersUseCase,
     private val getPreviousCaptainsUseCase: GetPreviousCaptainsUseCase,
     private val getDefaultCaptainUseCase: GetDefaultCaptainUseCase,
@@ -41,7 +40,6 @@ class MatchCreationWizardViewModel(
     private val updateMatchUseCase: UpdateMatchUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
-    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MatchCreationWizardUiState>(MatchCreationWizardUiState.Loading)
@@ -54,7 +52,6 @@ class MatchCreationWizardViewModel(
     val showExitDialog: StateFlow<Boolean> = _showExitDialog.asStateFlow()
 
     // Match data being built
-    private var matchId: Long? = null
     private var opponent: String = ""
     private var location: String = ""
     private var date: Long? = null
@@ -75,23 +72,15 @@ class MatchCreationWizardViewModel(
     private var originalStartingLineupIds: Set<Long> = emptySet()
 
     private var allPlayers: List<Player> = emptyList()
-    private var isEditMode = false
+    private var isEditMode = matchId != 0L
     private var teamTypeValue: Int = 5 // Default to Football 5
 
     // Flag to track if match data is loaded for edit mode
     private var matchDataLoaded = false
     private var playersLoaded = false
-    private var pendingMatchIdForEdit: Long? = null
+    private var pendingMatchIdForEdit: Long? = if (matchId != 0L) matchId else null
 
     init {
-        // Check if we have a matchId in savedStateHandle for edit mode
-        val matchIdFromState = savedStateHandle.get<Long>(Route.CreateMatch.ARG_MATCH_ID)
-        if (matchIdFromState != null && matchIdFromState != 0L) {
-            pendingMatchIdForEdit = matchIdFromState
-            isEditMode = true
-            this.matchId = matchIdFromState
-        }
-
         loadPlayers()
         loadTeam()
 
@@ -328,7 +317,7 @@ class MatchCreationWizardViewModel(
         _uiState.value = MatchCreationWizardUiState.Saving
         viewModelScope.launch {
             try {
-                matchId?.let { id ->
+                matchId.takeIf { it != 0L }?.let { id ->
                     crashReporter.log("Updating match via wizard: $id")
                     val existingMatch = getMatchByIdUseCase.invoke(id).firstOrNull()
                     existingMatch?.let { match ->

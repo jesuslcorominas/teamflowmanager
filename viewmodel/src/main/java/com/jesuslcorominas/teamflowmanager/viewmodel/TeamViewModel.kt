@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
@@ -9,7 +8,6 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
@@ -27,6 +25,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class TeamViewModel(
+    mode: String,
     private val getTeam: GetTeamUseCase,
     private val getPlayers: GetPlayersUseCase,
     private val createTeam: CreateTeamUseCase,
@@ -37,10 +36,13 @@ class TeamViewModel(
     private val removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
     private val analyticsTracker: AnalyticsTracker,
-    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     companion object {
+        const val MODE_CREATE = "create"
+        const val MODE_VIEW = "view"
+        const val MODE_EDIT = "edit"
+
         // Kept for backward compatibility, but use ClubRole enum instead
         @Deprecated("Use ClubRole.PRESIDENT instead", ReplaceWith("ClubRole.PRESIDENT.roleName"))
         private const val ROLE_PRESIDENT = "Presidente"
@@ -60,7 +62,7 @@ class TeamViewModel(
 
     private var originalTeam: Team? = null
 
-    val isEditMode: Boolean = (savedStateHandle[Route.Team.ARG_MODE] as? String) == Route.Team.MODE_EDIT
+    val isEditMode: Boolean = mode == MODE_EDIT
 
     init {
         loadTeam()
