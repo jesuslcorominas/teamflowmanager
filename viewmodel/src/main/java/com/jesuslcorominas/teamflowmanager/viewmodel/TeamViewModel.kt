@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
@@ -26,6 +25,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class TeamViewModel(
+    mode: String,
     private val getTeam: GetTeamUseCase,
     private val getPlayers: GetPlayersUseCase,
     private val createTeam: CreateTeamUseCase,
@@ -36,11 +36,9 @@ class TeamViewModel(
     private val removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
     private val analyticsTracker: AnalyticsTracker,
-    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     companion object {
-        const val ARG_MODE = "mode"
         const val MODE_CREATE = "create"
         const val MODE_VIEW = "view"
         const val MODE_EDIT = "edit"
@@ -64,7 +62,7 @@ class TeamViewModel(
 
     private var originalTeam: Team? = null
 
-    val isEditMode: Boolean = (savedStateHandle[ARG_MODE] as? String) == MODE_EDIT
+    val isEditMode: Boolean = mode == MODE_EDIT
 
     init {
         loadTeam()

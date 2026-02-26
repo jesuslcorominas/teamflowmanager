@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
@@ -43,11 +42,7 @@ class AcceptTeamInvitationViewModelTest {
     }
 
     private fun createViewModel(teamId: String? = "team123") = AcceptTeamInvitationViewModel(
-        savedStateHandle = if (teamId != null) {
-            SavedStateHandle(mapOf("teamId" to teamId))
-        } else {
-            SavedStateHandle()
-        },
+        teamId = teamId,
         acceptTeamInvitation = acceptTeamInvitationUseCase,
         getCurrentUser = getCurrentUserUseCase,
     )

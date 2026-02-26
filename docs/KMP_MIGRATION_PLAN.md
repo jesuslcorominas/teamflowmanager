@@ -1,7 +1,7 @@
 # KMP Migration Plan — TeamFlowManager
 
 > **Fecha de análisis**: 2026-02-26
-> **Última actualización**: 2026-02-26 (eliminación completa del módulo `:service` y sistema de notificaciones de partido)
+> **Última actualización**: 2026-02-26 (`:viewmodel` sin ningún import Android-específico — listo para migrar a `kotlin("multiplatform")`)
 > **Rama de análisis**: `kmp-migration-analysis`
 > **Arquitecto**: Senior KMP/Android Architect (Claude Code)
 
@@ -36,13 +36,14 @@ app         → Compose UI + MainActivity + Route.kt (navegación).
 | `:data:local` | 2 | `android.library` | ⚠️ Requiere refactor (SharedPreferences) |
 | `:data:remote` | ~40 | `android.library` | ⚠️ Bloqueado (Firebase) |
 | ~~`:service`~~ | ~~2~~ | ~~`android.library`~~ | ✅ **Eliminado** |
-| `:viewmodel` | 19 | `android.library` | ⚠️ Requiere refactor (SavedStateHandle) |
+| `:viewmodel` | 19 | `android.library` | ⚠️ Listo para migrar (solo cambio de `build.gradle.kts`) |
 | `:di` | ~9 | `android.library` | ⚠️ Requiere restructuración |
 | `:app` | ~78 | `android.application` | ❌ Android-only |
 
 > **Notas sobre refactors completados**:
 > - `Route.kt` ya fue movido de `:domain` a `:app/ui/navigation/`. `:domain` está libre de acoplamiento con navegación UI.
 > - El módulo `:service` fue eliminado. Con él: `MatchNotificationControllerImpl`, `ServiceModule`, `MatchNotificationController` (interfaz de dominio), `MatchCountdownService`, `MatchNotificationServiceManager` y `GetActiveMatchUseCase` (+ su test). `TeamFlowManagerApplication` ya no inicializa ningún servicio de notificaciones.
+> - `SavedStateHandle` fue **eliminado completamente** de los 5 ViewModels que lo usaban (`MatchViewModel`, `AcceptTeamInvitationViewModel`, `MatchCreationWizardViewModel`, `PlayerWizardViewModel`, `TeamViewModel`). Ahora reciben sus argumentos de navegación directamente por constructor. Navigation extrae → Screen pasa via `parametersOf` → Koin inyecta con `params.get()`.
 
 ### 1.3 Nivel de acoplamiento Android por módulo
 
@@ -54,7 +55,7 @@ app         → Compose UI + MainActivity + Route.kt (navegación).
 | `:data:local` | `SharedPreferences` (Android API) | Bajo (expect/actual con `NSUserDefaults` en iOS) |
 | `:data:remote` | Firebase BOM 33.6.0, `play-services-auth` | Alto (Firebase Android-only) |
 | ~~`:service`~~ | ~~Android-only~~ | ✅ **Eliminado** |
-| `:viewmodel` | `SavedStateHandle` en 17/19 ViewModels, `lifecycle-viewmodel 2.8.6` | Medio (ViewModel KMP desde 2.8.0; `SavedStateHandle` solo Android) |
+| `:viewmodel` | Ninguna — `lifecycle-viewmodel 2.8.6` ya KMP-compatible | **Ninguno — pendiente solo cambio de `build.gradle.kts`** |
 | `:app` | Compose, Coil, Lottie, Google Fonts, Firebase Crashlytics | Android-only |
 
 ### 1.4 Dependencias críticas y su estado KMP
@@ -84,8 +85,8 @@ app         → Compose UI + MainActivity + Route.kt (navegación).
 | Repositorios (`:data:core`) | ~100% |
 | DataSource local (`:data:local`) | ~50% (interfaz commonMain; implementación por plataforma) |
 | DataSource remoto (`:data:remote`) | ~60% (excluye Firebase) |
-| ViewModels | ~75% (excluye `SavedStateHandle`) |
-| **Total estimado** | **~82% del negocio reutilizable** |
+| ViewModels | ~100% (sin imports Android; `lifecycle-viewmodel` ya KMP) |
+| **Total estimado** | **~86% del negocio reutilizable** |
 
 ---
 
@@ -136,9 +137,9 @@ app         → Compose UI + MainActivity + Route.kt (navegación).
 - `FirestoreTransactionRunner` → `expect/actual`
 
 **`:viewmodel` commonMain:**
-- 17/19 ViewModels completos (los que usan `SavedStateHandle` solo para leer args)
-- Cada ViewModel expone sus arg keys como `companion object const val` (ya hecho)
-- Los argumentos de navegación se inyectan a través de `SavedStateHandle` en androidMain
+- 19/19 ViewModels completos — ninguno usa `SavedStateHandle` ni ningún import Android-específico
+- Los argumentos de navegación se reciben directamente por constructor (`matchId: Long`, `teamId: String?`, etc.)
+- `androidx.lifecycle.ViewModel` y `viewModelScope` son KMP-compatibles (lifecycle 2.8.6)
 
 ### 2.3 Patrón `expect/actual` necesario
 
@@ -148,7 +149,7 @@ app         → Compose UI + MainActivity + Route.kt (navegación).
 | Firebase Firestore | `RemoteDataSource` interface | Firestore Android | GitLive SDK o stub |
 | PDF Export | `interface PdfExporter` | `android.graphics.pdf` impl | PDFKit (iOS) |
 | `Dispatchers.IO` | Usar `Dispatchers.Default` | OK | OK |
-| `SavedStateHandle` args | `fun initFromArgs(id: Long?)` en base | `SavedStateHandle.get<>()` → llama `initFromArgs` | NavigationArgs propio |
+| `Dispatchers.IO` | Usar `Dispatchers.Default` | OK | OK |
 | `TransactionRunner` | `interface TransactionRunner` | implementación con coroutines | implementación con coroutines |
 | `SharedPreferences` | `interface PreferencesDataSource` (en `:data:core`) | `SharedPreferences` impl | `NSUserDefaults` impl |
 
@@ -343,36 +344,27 @@ Desacoplar `:data:remote` del SDK Firebase Android para que `commonMain` compile
 **Tipo**: `enhancement` `kmp`
 **Módulo**: `:viewmodel`
 **Dependencias**: KMP-3, KMP-4
-**Estimación**: 6h *(reducida — arg constants ya en companion objects)*
+**Estimación**: 1h *(mínima — el código ya está listo, solo falta el build script)*
 
 **Descripción**
-`lifecycle-viewmodel` tiene soporte KMP desde la versión 2.8.0. La versión actual (`2.8.6`) ya lo soporta. Los 17 ViewModels que usan `SavedStateHandle` ya definen sus arg keys en `companion object` y no importan `Route`. El único cambio estructural es separar el constructor que recibe `SavedStateHandle` a `androidMain`.
+`lifecycle-viewmodel` tiene soporte KMP desde la versión 2.8.0. La versión actual (`2.8.6`) ya lo soporta. `SavedStateHandle` fue **eliminado completamente** de todos los ViewModels. `android.util.Log` fue eliminado de `SplashViewModel` (no se usaba). El módulo `:viewmodel` no contiene ningún import Android-específico. El único paso pendiente es cambiar el plugin en `build.gradle.kts`.
+
+**Estado previo al refactor (ya completado)**:
+- 5 ViewModels tenían `SavedStateHandle`: `MatchViewModel`, `AcceptTeamInvitationViewModel`, `MatchCreationWizardViewModel`, `PlayerWizardViewModel`, `TeamViewModel`
+- Todos refactorizados: constructor directo + Koin `viewModel { params -> VM(params.get(), ...) }`
 
 **Objetivo**
 Hacer que los 19 ViewModels compilen para Android e iOS.
 
 **Pasos técnicos**
 1. Cambiar `build.gradle.kts` de `:viewmodel` a `kotlin("multiplatform")`
-2. En `commonMain`: `implementation(libs.androidx.lifecycle.viewmodel.ktx)` (ya KMP)
-3. Para ViewModels con `SavedStateHandle`, extraer la inicialización de args a método protegido:
-   ```kotlin
-   // commonMain
-   class MatchViewModel(...) : ViewModel() {
-       protected fun initArgs(matchId: Long) { this.matchId = matchId; loadMatchData(matchId) }
-       companion object { const val ARG_MATCH_ID = "matchId" }
-   }
-   // androidMain
-   class MatchViewModelAndroid(ssh: SavedStateHandle, ...) : MatchViewModel(...) {
-       init { initArgs(ssh[ARG_MATCH_ID] ?: error("matchId required")) }
-   }
-   ```
-4. Registrar `MatchViewModelAndroid` (en lugar de `MatchViewModel`) en Koin dentro de `:di/androidMain`
-5. Mantener `koin-androidx-compose` en `androidMain`
+2. En `commonMain`: `implementation(libs.androidx.lifecycle.viewmodel.ktx)` (ya KMP desde 2.8.0)
+3. Mantener `koin-androidx-compose` en `androidMain` de `:di`
 
 **Criterios de aceptación**
 - [ ] `./gradlew :viewmodel:compileKotlinAndroid` pasa
 - [ ] `./gradlew :viewmodel:compileKotlinIosArm64` pasa
-- [ ] `./gradlew :viewmodel:testDebugUnitTest` — todos los tests existentes pasan
+- [ ] `./gradlew :viewmodel:test` — todos los tests existentes pasan (ya verificado en Android)
 - [ ] Los ViewModels se instancian correctamente en Android con argumentos de navegación
 
 ---
@@ -564,6 +556,7 @@ KMP-6 (data:local KMP)    KMP-7 (Firebase boundary)    KMP-8 (viewmodel KMP)
 - ✅ **KMP-2**: `Route.kt` movido a `:app/ui/navigation/`
 - ✅ **KMP-5**: Moshi eliminado de todo el proyecto
 - ✅ **KMP-10**: Módulo `:service` y sistema de notificaciones de partido eliminados por completo
+- ✅ **KMP-8 (código listo)**: `SavedStateHandle` eliminado de los 5 ViewModels. `android.util.Log` eliminado de `SplashViewModel` (no se usaba). `:viewmodel` no contiene ningún import Android-específico — el código ya es 100% KMP. Solo falta cambiar `build.gradle.kts` de `android.library` a `kotlin("multiplatform")`.
 
 **Issues independientes** (pueden empezar en paralelo desde el día 1):
 - **KMP-1**: Solo requiere cambiar el build script de `:domain`
@@ -584,3 +577,4 @@ KMP-6 (data:local KMP)    KMP-7 (Firebase boundary)    KMP-8 (viewmodel KMP)
 | 2026-02-26 | KMP-2: `Route.kt` movido a `:app/ui/navigation/` |
 | 2026-02-26 | KMP-5: Moshi eliminado del proyecto |
 | 2026-02-26 | KMP-10 (adelantado): `:service` eliminado. Sistema de notificaciones de partido (`MatchNotificationController`, `GetActiveMatchUseCase`, `MatchCountdownService`, `MatchNotificationServiceManager`) descartado en su totalidad |
+| 2026-02-26 | KMP-8 (código listo): `SavedStateHandle` eliminado de 5 ViewModels; `android.util.Log` eliminado de `SplashViewModel` (era import sin uso). `:viewmodel` no tiene ningún import Android-específico. Código 100% KMP; pendiente solo cambio del build script |

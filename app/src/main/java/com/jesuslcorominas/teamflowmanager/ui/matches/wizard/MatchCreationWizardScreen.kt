@@ -28,12 +28,14 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewMode
 import com.jesuslcorominas.teamflowmanager.viewmodel.WizardStep
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun MatchCreationWizardScreen(
+    matchId: Long,
     onNavigateBack: () -> Unit,
     currentBackHandler: BackHandlerController? = null,
-    wizardViewModel: MatchCreationWizardViewModel = koinViewModel()
+    wizardViewModel: MatchCreationWizardViewModel = koinViewModel(parameters = { parametersOf(matchId) }),
 ) {
     TrackScreenView(screenName = ScreenName.MATCH_WIZARD, screenClass = "MatchCreationWizardScreen")
     

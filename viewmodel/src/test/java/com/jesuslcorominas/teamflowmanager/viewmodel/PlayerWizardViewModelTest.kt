@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -70,6 +69,7 @@ class PlayerWizardViewModelTest {
     }
 
     private fun createViewModelForCreate() = PlayerWizardViewModel(
+        playerId = 0L,
         getPlayerByIdUseCase = getPlayerByIdUseCase,
         addPlayerUseCase = addPlayerUseCase,
         updatePlayerUseCase = updatePlayerUseCase,
@@ -80,10 +80,10 @@ class PlayerWizardViewModelTest {
         getScheduledMatchesUseCase = getScheduledMatchesUseCase,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
-        savedStateHandle = SavedStateHandle(),
     )
 
     private fun createViewModelForEdit(playerId: Long) = PlayerWizardViewModel(
+        playerId = playerId,
         getPlayerByIdUseCase = getPlayerByIdUseCase,
         addPlayerUseCase = addPlayerUseCase,
         updatePlayerUseCase = updatePlayerUseCase,
@@ -94,7 +94,6 @@ class PlayerWizardViewModelTest {
         getScheduledMatchesUseCase = getScheduledMatchesUseCase,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
-        savedStateHandle = SavedStateHandle(mapOf("playerId" to playerId)),
     )
 
     private fun makePlayer(

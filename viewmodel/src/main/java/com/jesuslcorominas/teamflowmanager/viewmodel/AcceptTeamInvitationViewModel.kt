@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
@@ -13,12 +12,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class AcceptTeamInvitationViewModel(
-    savedStateHandle: SavedStateHandle,
+    private val teamId: String?,
     private val acceptTeamInvitation: AcceptTeamInvitationUseCase,
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : ViewModel() {
-
-    private val teamId: String? = savedStateHandle[ARG_TEAM_ID]
 
     private val _state = MutableStateFlow<AcceptTeamInvitationState>(AcceptTeamInvitationState.Loading)
     val state: StateFlow<AcceptTeamInvitationState> = _state.asStateFlow()
@@ -58,9 +55,7 @@ class AcceptTeamInvitationViewModel(
         processInvitation()
     }
 
-    companion object {
-        const val ARG_TEAM_ID = "teamId"
-    }
+    companion object
 }
 
 sealed class AcceptTeamInvitationState {

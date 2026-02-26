@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -98,6 +97,7 @@ class MatchViewModelGoalTest {
     }
 
     private fun createViewModel() = MatchViewModel(
+        matchId = MATCH_ID,
         getMatchById = getMatchByIdUseCase,
         getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
         getPlayersUseCase = getPlayersUseCase,
@@ -120,7 +120,6 @@ class MatchViewModelGoalTest {
         timeTicker = fakeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
-        savedStateHandle = SavedStateHandle(mapOf(MatchViewModel.ARG_MATCH_ID to MATCH_ID)),
     )
 
     @Test
