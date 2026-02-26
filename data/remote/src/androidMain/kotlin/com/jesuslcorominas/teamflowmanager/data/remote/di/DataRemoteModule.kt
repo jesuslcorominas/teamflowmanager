@@ -45,18 +45,10 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
-
-/**
- * DI module for remote data sources including Firebase and KtorFit configuration.
- *
- * This module provides:
- * - Firebase Auth, Firestore, and Storage instances
- * - Firebase-based data source implementations
- * - Ktor HttpClient and Ktorfit for REST API calls
- */
 
 internal val firebaseModule =
     module {
@@ -66,9 +58,7 @@ internal val firebaseModule =
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
         single<DynamicLinkDataSource> {
-            FirebaseDynamicLinkDataSourceImpl(
-                shortLinkApi = get()
-            )
+            FirebaseDynamicLinkDataSourceImpl(shortLinkApi = get())
         }
         singleOf(::FirestoreTimeProvider) bind TimeProvider::class
         singleOf(::FirestoreTransactionRunner) bind TransactionRunner::class
@@ -77,84 +67,59 @@ internal val firebaseModule =
 internal val firestoreDataSourceModule =
     module {
         singleOf(::PlayerFirestoreDataSourceImpl) bind PlayerDataSource::class
-
         singleOf(::TeamFirestoreDataSourceImpl) bind TeamDataSource::class
-
         singleOf(::ClubFirestoreDataSourceImpl) bind ClubDataSource::class
-
         singleOf(::ClubMemberFirestoreDataSourceImpl) bind ClubMemberDataSource::class
-
         singleOf(::MatchFirestoreDataSourceImpl) bind MatchDataSource::class
-
         singleOf(::MatchOperationFirestoreDataSourceImpl) bind MatchOperationDataSource::class
-
         singleOf(::GoalFirestoreDataSourceImpl) bind GoalDataSource::class
-
         singleOf(::PlayerSubstitutionFirestoreDataSourceImpl) bind PlayerSubstitutionDataSource::class
-
         singleOf(::PlayerTimeFirestoreDataSourceImpl) bind PlayerTimeDataSource::class
-
         singleOf(::PlayerTimeHistoryFirestoreDataSourceImpl) bind PlayerTimeHistoryDataSource::class
     }
 
 internal val ktorfitModule =
     module {
-        // Configure JSON serialization
         single {
             Json {
-                ignoreUnknownKeys = true // Ignore unknown properties in JSON responses
-                isLenient = true // Be lenient with malformed JSON
-                prettyPrint = true // Pretty print JSON for debugging
+                ignoreUnknownKeys = true
+                isLenient = true
+                prettyPrint = true
             }
         }
-
-        // Configure Ktor HttpClient
         single {
             HttpClient(OkHttp) {
-                // Timeout configuration
                 install(HttpTimeout) {
-                    requestTimeoutMillis = 5_000  // 5 seconds total request timeout
-                    connectTimeoutMillis = 3_000  // 3 seconds to establish connection
-                    socketTimeoutMillis = 5_000   // 5 seconds for socket read/write
+                    requestTimeoutMillis = 5_000
+                    connectTimeoutMillis = 3_000
+                    socketTimeoutMillis = 5_000
                 }
-
-                // Content negotiation for JSON serialization
                 install(ContentNegotiation) {
                     json(get())
                 }
-
-                // Logging for debugging (disabled in production to avoid performance issues)
-                // The LogLevel.BODY setting can cause timeouts by blocking the response handling
-                // Use LogLevel.INFO or HEADERS for production, or disable entirely
                 install(Logging) {
-                    logger =
-                        object : Logger {
-                            override fun log(message: String) {
-                                println("Ktor HTTP Client: $message")
-                            }
+                    logger = object : Logger {
+                        override fun log(message: String) {
+                            println("Ktor HTTP Client: $message")
                         }
-                    level = LogLevel.INFO // Use INFO instead of BODY to avoid blocking
+                    }
+                    level = LogLevel.INFO
                 }
             }
         }
-
-        // Configure Ktorfit
         single {
             Ktorfit
                 .Builder()
-                .httpClient(get<HttpClient>()) // Use the configured HttpClient
-                .baseUrl("https://us-central1-teamflow-manager-dev.cloudfunctions.net/") // Direct Cloud Functions URL
+                .httpClient(get<HttpClient>())
+                .baseUrl("https://us-central1-teamflow-manager-dev.cloudfunctions.net/")
                 .build()
         }
-
-        // API interfaces
-        // Use the generated extension function instead of deprecated create()
         single<ShortLinkApi> {
             get<Ktorfit>().createShortLinkApi()
         }
     }
 
-val dataRemoteModule =
+actual val dataRemoteModule: Module =
     module {
         includes(firebaseModule, firestoreDataSourceModule, ktorfitModule)
     }
