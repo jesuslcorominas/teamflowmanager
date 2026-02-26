@@ -18,13 +18,15 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun AcceptTeamInvitationScreen(
+    teamId: String?,
     onNavigateToLogin: (String) -> Unit,
     onNavigateToTeam: () -> Unit,
     onNavigateToTeams: () -> Unit,
-    viewModel: AcceptTeamInvitationViewModel = koinViewModel()
+    viewModel: AcceptTeamInvitationViewModel = koinViewModel(parameters = { parametersOf(teamId) }),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 

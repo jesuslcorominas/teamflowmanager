@@ -15,7 +15,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
@@ -78,7 +77,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetActiveMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCaseImpl
@@ -206,8 +204,6 @@ internal val useCaseInternalModule =
 
         // Time synchronization
         singleOf(::SynchronizeTimeUseCaseImpl) bind SynchronizeTimeUseCase::class
-
-        singleOf(::GetActiveMatchUseCaseImpl) bind GetActiveMatchUseCase::class
     }
 
 val useCaseModule =

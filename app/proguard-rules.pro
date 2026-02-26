@@ -20,7 +20,6 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 -dontwarn com.google.devtools.ksp.**
--dontwarn com.squareup.moshi.kotlin.codegen.ksp.**
 
 # === Firestore & Firebase ===
 -keep class com.google.firebase.firestore.** { *; }

@@ -2,7 +2,6 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
-import androidx.lifecycle.SavedStateHandle
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
@@ -48,7 +47,6 @@ class TeamViewModelTest {
     private lateinit var removePlayerAsCaptainUseCase: RemovePlayerAsCaptainUseCase
     private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
-    private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: TeamViewModel
 
     @Before
@@ -64,7 +62,6 @@ class TeamViewModelTest {
         removePlayerAsCaptainUseCase = mockk(relaxed = true)
         getUserClubMembershipUseCase = mockk()
         analyticsTracker = mockk(relaxed = true)
-        savedStateHandle = mockk(relaxed = true)
     }
 
     @After
@@ -91,7 +88,7 @@ class TeamViewModelTest {
             removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
             analyticsTracker = analyticsTracker,
-            savedStateHandle = savedStateHandle
+            mode = ""
         )
 
         // Then
@@ -118,7 +115,7 @@ class TeamViewModelTest {
                 removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
                 getUserClubMembership = getUserClubMembershipUseCase,
                 analyticsTracker = analyticsTracker,
-                savedStateHandle = savedStateHandle
+                mode = ""
             )
             advanceUntilIdle()
 
@@ -147,7 +144,7 @@ class TeamViewModelTest {
                 removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
                 getUserClubMembership = getUserClubMembershipUseCase,
                 analyticsTracker = analyticsTracker,
-                savedStateHandle = savedStateHandle
+                mode = ""
             )
             advanceUntilIdle()
 
@@ -176,7 +173,7 @@ class TeamViewModelTest {
                 removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
                 getUserClubMembership = getUserClubMembershipUseCase,
                 analyticsTracker = analyticsTracker,
-                savedStateHandle = savedStateHandle
+                mode = ""
             )
             val onSuccess: () -> Unit = mockk(relaxed = true)
 
@@ -210,7 +207,7 @@ class TeamViewModelTest {
                 removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
                 getUserClubMembership = getUserClubMembershipUseCase,
                 analyticsTracker = analyticsTracker,
-                savedStateHandle = savedStateHandle
+                mode = ""
             )
             val onSuccess: () -> Unit = mockk(relaxed = true)
 
@@ -252,7 +249,7 @@ class TeamViewModelTest {
                 removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
                 getUserClubMembership = getUserClubMembershipUseCase,
                 analyticsTracker = analyticsTracker,
-                savedStateHandle = savedStateHandle
+                mode = ""
             )
             advanceUntilIdle()
 
@@ -296,7 +293,7 @@ class TeamViewModelTest {
                 removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
                 getUserClubMembership = getUserClubMembershipUseCase,
                 analyticsTracker = analyticsTracker,
-                savedStateHandle = savedStateHandle
+                mode = ""
             )
             advanceUntilIdle()
 
@@ -310,11 +307,12 @@ class TeamViewModelTest {
             assertEquals(ClubRole.COACH, noTeamState.userRole)
         }
 
-    private fun createViewModelWithTeam(team: Team? = null): TeamViewModel {
+    private fun createViewModelWithTeam(team: Team? = null, mode: String = ""): TeamViewModel {
         every { getTeamUseCase.invoke() } returns flowOf(team)
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
         every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
         return TeamViewModel(
+            mode = mode,
             getTeam = getTeamUseCase,
             getPlayers = getPlayersUseCase,
             createTeam = createTeamUseCase,
@@ -325,7 +323,6 @@ class TeamViewModelTest {
             removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
             analyticsTracker = analyticsTracker,
-            savedStateHandle = savedStateHandle,
         )
     }
 
@@ -382,8 +379,7 @@ class TeamViewModelTest {
     @Test
     fun `requestBack in non-edit mode should navigate back without dialog`() =
         runTest(testDispatcher) {
-            every { savedStateHandle.get<String>("mode") } returns null
-            viewModel = createViewModelWithTeam()
+            viewModel = createViewModelWithTeam(mode = "")
             advanceUntilIdle()
             var navigatedBack = false
 
@@ -395,8 +391,7 @@ class TeamViewModelTest {
 
     @Test
     fun `requestBack in edit mode should show exit dialog`() = runTest(testDispatcher) {
-        every { savedStateHandle.get<String>("mode") } returns "edit"
-        viewModel = createViewModelWithTeam()
+        viewModel = createViewModelWithTeam(mode = TeamViewModel.MODE_EDIT)
         advanceUntilIdle()
         var navigatedBack = false
 
@@ -408,8 +403,7 @@ class TeamViewModelTest {
 
     @Test
     fun `discardChanges should hide dialog and navigate back`() = runTest(testDispatcher) {
-        every { savedStateHandle.get<String>("mode") } returns "edit"
-        viewModel = createViewModelWithTeam()
+        viewModel = createViewModelWithTeam(mode = TeamViewModel.MODE_EDIT)
         advanceUntilIdle()
         viewModel.requestBack { }
         var navigatedBack = false
@@ -422,8 +416,7 @@ class TeamViewModelTest {
 
     @Test
     fun `dismissExitDialog should set showExitDialog to false`() = runTest(testDispatcher) {
-        every { savedStateHandle.get<String>("mode") } returns "edit"
-        viewModel = createViewModelWithTeam()
+        viewModel = createViewModelWithTeam(mode = TeamViewModel.MODE_EDIT)
         advanceUntilIdle()
         viewModel.requestBack { }
 
@@ -452,7 +445,7 @@ class TeamViewModelTest {
                 removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
                 getUserClubMembership = getUserClubMembershipUseCase,
                 analyticsTracker = analyticsTracker,
-                savedStateHandle = savedStateHandle,
+                mode = "",
             )
             advanceUntilIdle()
 
@@ -483,7 +476,7 @@ class TeamViewModelTest {
                 removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
                 getUserClubMembership = getUserClubMembershipUseCase,
                 analyticsTracker = analyticsTracker,
-                savedStateHandle = savedStateHandle,
+                mode = "",
             )
             advanceUntilIdle()
 
@@ -523,7 +516,7 @@ class TeamViewModelTest {
                 removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
                 getUserClubMembership = getUserClubMembershipUseCase,
                 analyticsTracker = analyticsTracker,
-                savedStateHandle = savedStateHandle,
+                mode = "",
             )
             advanceUntilIdle()
 
@@ -552,7 +545,7 @@ class TeamViewModelTest {
             removePlayerAsCaptainUseCase = removePlayerAsCaptainUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
             analyticsTracker = analyticsTracker,
-            savedStateHandle = savedStateHandle,
+            mode = "",
         )
         advanceUntilIdle()
 

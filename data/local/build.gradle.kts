@@ -1,7 +1,6 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    alias(libs.plugins.ksp)
 }
 
 apply(from = "$rootDir/jacoco.gradle.kts")
@@ -45,16 +44,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
-
     implementation(libs.koin.android)
-
-    implementation(libs.moshi)
-    implementation(libs.moshi.kotlin)
-    implementation(libs.moshi.kotlin.codegen)
-    ksp(libs.moshi.kotlin.codegen)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

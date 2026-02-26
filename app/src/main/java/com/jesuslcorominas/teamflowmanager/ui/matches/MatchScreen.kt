@@ -87,6 +87,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import androidx.core.net.toUri
 
 private const val TAB_SUMMARY = 0
@@ -95,7 +96,11 @@ private const val TAB_TIMELINE = 1
 private const val TAB_STATISTICS = 2
 
 @Composable
-fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (String?) -> Unit) {
+fun MatchScreen(
+    matchId: Long,
+    onTitleChange: (String?) -> Unit,
+    viewModel: MatchViewModel = koinViewModel(parameters = { parametersOf(matchId) }),
+) {
     TrackScreenView(screenName = ScreenName.MATCH_DETAIL, screenClass = "MatchScreen")
 
     val uiState by viewModel.uiState.collectAsState()

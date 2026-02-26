@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
@@ -21,13 +20,6 @@ class SplashViewModel(
     private val getUserClubMembership: GetUserClubMembershipUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
 ) : ViewModel() {
-
-    companion object {
-        private const val TAG = "SplashViewModel"
-        // Kept for backward compatibility, but use ClubRole enum instead
-        @Deprecated("Use ClubRole.PRESIDENT instead", ReplaceWith("ClubRole.PRESIDENT.roleName"))
-        private const val ROLE_PRESIDENT = "Presidente"
-    }
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
