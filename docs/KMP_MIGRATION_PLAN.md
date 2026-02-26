@@ -1,6 +1,7 @@
 # KMP Migration Plan — TeamFlowManager
 
 > **Fecha de análisis**: 2026-02-26
+> **Última actualización**: 2026-02-26
 > **Rama de análisis**: `kmp-migration-analysis`
 > **Arquitecto**: Senior KMP/Android Architect (Claude Code)
 
@@ -16,62 +17,59 @@ El proyecto sigue una arquitectura Clean Architecture estricta de 8 módulos con
 domain      → Pure Kotlin. Modelos, interfaces de repositorio, interfaces de use case.
 usecase     → Pure Kotlin. Implementaciones de use cases.
 data/core   → Implementaciones de repositorio. Puente entre usecase e interfaces DataSource.
-data/local  → Room DAOs e implementaciones DataSource locales.
+data/local  → Preferencias locales (SharedPreferences). Sin Room ni base de datos.
 data/remote → KtorFit + Firebase (Firestore, Storage, Auth) datasource implementations.
 service     → Android service (MatchNotificationControllerImpl).
 viewmodel   → Jetpack ViewModel + StateFlow.
 di          → Koin DI composition root.
-app         → Compose UI + MainActivity.
+app         → Compose UI + MainActivity + Route.kt (navegación).
 ```
 
 ### 1.2 Inventario de archivos por módulo
 
 | Módulo | Archivos Kotlin | Tipo actual | Estado KMP |
 |--------|----------------|-------------|------------|
-| `:domain` | ~38 | `kotlin.jvm` | ✅ Listo (con excepciones*) |
+| `:domain` | ~38 | `kotlin.jvm` | ✅ Listo |
 | `:usecase` | ~76 | `kotlin.jvm` | ✅ Listo |
 | `:data:core` | ~30 | `kotlin.jvm` | ✅ Listo |
-| `:data:local` | ~2 | `android.library` | ⚠️ Requiere refactor (SharedPreferences) |
+| `:data:local` | 2 | `android.library` | ⚠️ Requiere refactor (SharedPreferences) |
 | `:data:remote` | ~40 | `android.library` | ⚠️ Bloqueado (Firebase) |
 | `:service` | 2 | `android.library` | ❌ Candidato a eliminación |
 | `:viewmodel` | 19 | `android.library` | ⚠️ Requiere refactor (SavedStateHandle) |
 | `:di` | ~10 | `android.library` | ⚠️ Requiere restructuración |
 | `:app` | ~80 | `android.application` | ❌ Android-only |
 
-**Excepciones en `:domain`*:
-- `navigation/Route.kt` — contiene `showTopBar`, `showBottomBar`, `showFab`, etc. Conceptos de navegación UI acoplados al dominio.
-- `utils/PdfExporter.kt` y `utils/MatchReportPdfExporter.kt` — interfaces cuyos usos dependen de `android.graphics.pdf`.
-- `notification/MatchNotificationController.kt` — concepto Android-specific (notifications).
+> **Nota**: `Route.kt` ya fue movido de `:domain` a `:app/ui/navigation/` (refactor completado). `:domain` está libre de acoplamiento con navegación UI.
 
 ### 1.3 Nivel de acoplamiento Android por módulo
 
 | Módulo | Dependencias Android directas | Nivel de bloqueo |
 |--------|------------------------------|-----------------|
-| `:domain` | Ninguna en código (`Route.kt` tiene UI concerns) | Bajo |
-| `:usecase` | Ninguna | Ninguno |
-| `:data:core` | Ninguna | Ninguno |
-| `:data:local` | `SharedPreferences` (Android API), Moshi | Bajo (reemplazar con `DataStore` KMP o `NSUserDefaults` via expect/actual) |
+| `:domain` | Ninguna | **Ninguno — KMP ready** |
+| `:usecase` | Ninguna | **Ninguno — KMP ready** |
+| `:data:core` | Ninguna | **Ninguno — KMP ready** |
+| `:data:local` | `SharedPreferences` (Android API) | Bajo (expect/actual con `NSUserDefaults` en iOS) |
 | `:data:remote` | Firebase BOM 33.6.0, `play-services-auth` | Alto (Firebase Android-only) |
-| `:service` | `MatchNotificationControllerImpl` referencia use cases; ServiceModule Koin | Android-only |
-| `:viewmodel` | `SavedStateHandle` en 17/19 ViewModels, `lifecycle-viewmodel 2.8.6` | Medio (ViewModel KMP desde 2.8.0; SavedStateHandle solo Android) |
+| `:service` | `MatchNotificationControllerImpl` usa use cases | Android-only |
+| `:viewmodel` | `SavedStateHandle` en 17/19 ViewModels, `lifecycle-viewmodel 2.8.6` | Medio (ViewModel KMP desde 2.8.0; `SavedStateHandle` solo Android) |
 | `:app` | Compose, Coil, Lottie, Google Fonts, Firebase Crashlytics | Android-only |
 
 ### 1.4 Dependencias críticas y su estado KMP
 
-| Librería | Versión actual | KMP en catálogo | Estado KMP | Estrategia |
-|----------|---------------|-----------------|------------|------------|
-| `koin-core` | 4.0.0 | ✅ | Full KMP | `koin-core` → commonMain; `koin-android` → androidMain |
-| `ktor-client-core` | 3.0.1 | ✅ | Full KMP | Core → commonMain; OkHttp/Darwin por plataforma |
-| `ktorfit-lib` | 2.6.0 | ✅ | Full KMP | Migrar a targets KMP con KSP por target |
-| `kotlinx-coroutines-core` | 1.9.0 | ✅ | Full KMP | `Dispatchers.IO` → `Dispatchers.Default` en commonMain |
-| `kotlinx-serialization-json` | 1.7.3 | ✅ | Full KMP | Ya en catálogo, usarlo en commonMain |
-| `lifecycle-viewmodel-ktx` | 2.8.6 | ✅ | Partial KMP | ViewModel → commonMain; `SavedStateHandle` → androidMain |
-| `compose-multiplatform` | 1.7.3 | ✅ (en catálogo, no aplicado) | Full KMP | Fase 2 |
-| `SharedPreferences` | Android API | ❌ | Android-only | Reemplazar con `DataStore` KMP o expect/actual (`NSUserDefaults` en iOS) |
-| `firebase-bom` | 33.6.0 | ❌ | Android-only | Boundary `expect/actual`; alternativa: GitLive Firebase SDK |
-| `moshi` | 1.15.2 | ❌ | Android/JVM-only | Reemplazar con `kotlinx-serialization` |
-| `coil-compose` | 2.5.0 | ❌ | Android-only | Coil 3.x tiene soporte KMP; Fase 2 |
-| `navigation-compose` | 2.9.5 | ❌ | Android-only | Mover `Route.kt` a `:app`; Fase 2 usar Compose Navigation CMP |
+| Librería | Versión actual | Estado KMP | Estrategia |
+|----------|---------------|------------|------------|
+| `koin-core` | 4.0.0 | ✅ Full KMP | `koin-core` → commonMain; `koin-android` → androidMain |
+| `ktor-client-core` | 3.0.1 | ✅ Full KMP | Core → commonMain; OkHttp/Darwin por plataforma |
+| `ktorfit-lib` | 2.6.0 | ✅ Full KMP | Migrar a targets KMP con KSP por target |
+| `kotlinx-coroutines-core` | 1.9.0 | ✅ Full KMP | Evitar `Dispatchers.IO` en commonMain → usar `Dispatchers.Default` |
+| `kotlinx-serialization-json` | 1.7.3 | ✅ Full KMP | Ya en catálogo |
+| `lifecycle-viewmodel-ktx` | 2.8.6 | ✅ Partial KMP | ViewModel → commonMain; `SavedStateHandle` → androidMain |
+| `compose-multiplatform` | 1.7.3 | ✅ Full KMP | En catálogo, no aplicado — Fase 2 |
+| `SharedPreferences` | Android API | ❌ Android-only | expect/actual: `NSUserDefaults` en iOS |
+| `firebase-bom` | 33.6.0 | ❌ Android-only | Boundary `expect/actual`; alternativa: GitLive Firebase SDK |
+| `moshi` | — | ~~❌ Eliminado~~ | **Ya eliminado del proyecto** |
+| `coil-compose` | 2.5.0 | ❌ Android-only | Coil 3.x tiene soporte KMP; Fase 2 |
+| `navigation-compose` | 2.9.5 | ❌ Android-only | `Route.kt` ya en `:app`; Fase 2 usar Compose Navigation CMP |
 
 ### 1.5 Porcentaje estimado reutilizable en commonMain
 
@@ -96,25 +94,22 @@ app         → Compose UI + MainActivity.
 :domain         → kotlin("multiplatform") — commonMain puro
 :usecase        → kotlin("multiplatform") — commonMain puro
 :data:core      → kotlin("multiplatform") — commonMain puro
-:data:local     → kotlin("multiplatform") — commonMain + androidMain (Room) + iosMain (SQLDelight o Room KMP)
+:data:local     → kotlin("multiplatform") — androidMain (SharedPreferences) + iosMain (NSUserDefaults)
 :data:remote    → kotlin("multiplatform") — commonMain (Ktorfit/Ktor) + androidMain/iosMain (Firebase expect/actual)
 :viewmodel      → kotlin("multiplatform") — commonMain (ViewModel KMP) + androidMain (SavedStateHandle)
 :di             → por plataforma — androidMain + iosMain (Koin multiplatform modules)
-:app            → android.application — solo Android (MainActivity, Compose UI)
+:app            → android.application — solo Android (MainActivity, Compose UI, Route.kt)
 :iosApp         → (nuevo) Xcode project o KMP iOS entry point
 ```
 
 ### 2.2 Qué va a commonMain
 
-**`:domain` commonMain:**
+**`:domain` commonMain (ya KMP-ready):**
 - Todo `model/` (33 modelos de dominio)
 - Todo `usecase/` (interfaces)
 - `utils/TimeProvider.kt`, `utils/TransactionRunner.kt`, `utils/FileHandler.kt`
-- Interfaces `PdfExporter`, `MatchReportPdfExporter` (las implementaciones son platform-specific)
-- `MatchNotificationController.kt` (como interfaz; la implementación es androidMain)
-
-**`:domain` — mover a `:app`:**
-- `navigation/Route.kt` — conceptos UI (`showTopBar`, `showBottomBar`, etc.) no pertenecen al dominio
+- Interfaces `PdfExporter`, `MatchReportPdfExporter` (implementaciones son platform-specific)
+- `notification/MatchNotificationController.kt` (como interfaz; implementación en androidMain)
 
 **`:usecase` commonMain:**
 - Todas las implementaciones (~76 archivos) sin cambios
@@ -123,22 +118,22 @@ app         → Compose UI + MainActivity.
 - Todas las implementaciones de repositorios sin cambios
 
 **`:data:local` commonMain:**
-- Interfaz `PreferencesDataSource` (ya en `:data:core`)
-- Lógica de preferencias sin plataforma
+- Sin lógica propia en commonMain; la interfaz `PreferencesDataSource` ya está en `:data:core`
 
 **`:data:local` androidMain:**
 - `PreferencesLocalDataSourceImpl` usando `SharedPreferences`
 
 **`:data:local` iosMain:**
-- Implementación equivalente usando `NSUserDefaults` o `DataStore` KMP
+- Implementación equivalente usando `NSUserDefaults`
 
 **`:data:remote` commonMain:**
 - Interfaces Ktorfit, modelos de red, lógica de negocio de red
-- `FirestoreTransactionRunner` → expect/actual
+- `FirestoreTransactionRunner` → `expect/actual`
 
 **`:viewmodel` commonMain:**
-- 17/19 ViewModels completos (los que no usan `SavedStateHandle` directamente)
-- Los que usan `SavedStateHandle`: extraer a función `initFromArgs(matchId: Long?)` que se llama desde androidMain
+- 17/19 ViewModels completos (los que usan `SavedStateHandle` solo para leer args)
+- Cada ViewModel expone sus arg keys como `companion object const val` (ya hecho)
+- Los argumentos de navegación se inyectan a través de `SavedStateHandle` en androidMain
 
 ### 2.3 Patrón `expect/actual` necesario
 
@@ -149,8 +144,9 @@ app         → Compose UI + MainActivity.
 | MatchNotificationController | `interface MatchNotificationController` | `MatchNotificationControllerImpl` | No-op o local notifications |
 | PDF Export | `interface PdfExporter` | `android.graphics.pdf` impl | PDFKit (iOS) |
 | `Dispatchers.IO` | Usar `Dispatchers.Default` | OK | OK |
-| `SavedStateHandle` args | `fun initFromArgs(id: Long?)` en base | `SavedStateHandle.get<>()` → llama initFromArgs | NavigationArgs propio |
-| `TransactionRunner` | `interface TransactionRunner` | Room `withTransaction` | SQLite transaction |
+| `SavedStateHandle` args | `fun initFromArgs(id: Long?)` en base | `SavedStateHandle.get<>()` → llama `initFromArgs` | NavigationArgs propio |
+| `TransactionRunner` | `interface TransactionRunner` | implementación con coroutines | implementación con coroutines |
+| `SharedPreferences` | `interface PreferencesDataSource` (en `:data:core`) | `SharedPreferences` impl | `NSUserDefaults` impl |
 
 ### 2.4 Componentes a eliminar
 
@@ -159,17 +155,36 @@ Ver Sección 4.
 ### 2.5 Cambios de build system
 
 1. Agregar `kotlin("multiplatform")` plugin a `:domain`, `:usecase`, `:data:core`
-2. Reemplazar `kotlin("multiplatform")` por `kotlin("android")` donde aplique
-3. Agregar `ios()` o `iosArm64()` + `iosSimulatorArm64()` targets
-4. Configurar KSP para múltiples targets (Room, Ktorfit)
-5. Reemplazar `moshi` por `kotlinx-serialization` en `:data:local`
+2. Migrar `:data:local`, `:data:remote`, `:viewmodel`, `:di` de `android.library` a `kotlin("multiplatform")`
+3. Agregar `iosArm64()` + `iosSimulatorArm64()` targets donde aplique
+4. Configurar KSP para múltiples targets (Ktorfit)
+5. Migrar engine Ktor de `ktor-client-okhttp` (solo Android) a por plataforma
 
 ---
 
 ## 3. Plan de Migración — Fase 1: Infraestructura
 
-> Las tareas están formateadas como GitHub Issues. Cada una es independiente o tiene dependencias explícitas.
-> **Orden recomendado**: seguir numeración. Las tareas de infraestructura (KMP-1 a KMP-5) son prerequisitos para el resto.
+> Las tareas están formateadas como GitHub Issues.
+> **Orden recomendado**: seguir numeración. KMP-1 a KMP-4 son prerequisitos en cadena.
+
+---
+
+### ~~KMP-2~~: ✅ Mover `Route.kt` de `:domain` a `:app` — **COMPLETADO**
+
+`Route.kt` ya fue movido a `app/src/main/java/.../ui/navigation/Route.kt`.
+`:domain` no tiene ningún acoplamiento con navegación UI.
+`:viewmodel` tampoco importa `Route` — cada ViewModel define sus propias constantes de argumentos de navegación en su `companion object`.
+
+---
+
+### ~~KMP-5~~: ✅ Eliminar Moshi del proyecto — **COMPLETADO**
+
+Moshi estaba registrado en el módulo Koin de `:data:local` pero nunca era inyectado en ningún sitio del proyecto. Se ha eliminado:
+- `DataLocalModule.kt` limpiado de `Moshi` y `KotlinJsonAdapterFactory`
+- `data/local/build.gradle.kts` sin dependencias `moshi`, `moshi-kotlin`, ni `ksp`
+- No hay ningún `@Json`, `@JsonClass` ni `JsonAdapter` en el proyecto
+
+Las entradas `moshi`, `moshi-kotlin`, `moshi-kotlin-codegen` y sus versiones pueden eliminarse del catálogo `libs.versions.toml`.
 
 ---
 
@@ -177,55 +192,26 @@ Ver Sección 4.
 
 **Tipo**: `enhancement` `kmp` `no-breaking`
 **Módulo**: `:domain`
-**Estimación**: 4h
+**Estimación**: 2h *(reducida — ya sin Route.kt)*
 
 **Descripción**
-El módulo `:domain` es Pure Kotlin sin dependencias Android y puede convertirse en un módulo KMP inmediatamente. Este es el paso fundacional de toda la migración.
+`:domain` es Pure Kotlin sin dependencias Android y con `Route.kt` ya fuera del módulo. Puede convertirse en KMP cambiando únicamente el `build.gradle.kts`. No requiere cambios en la lógica.
 
 **Objetivo**
-Hacer que `:domain` compile para targets Android y iOS sin cambios en el código de negocio.
+Hacer que `:domain` compile para targets Android e iOS sin cambios en el código de negocio.
 
 **Pasos técnicos**
 1. Cambiar `build.gradle.kts` de `:domain`:
    - Reemplazar `id("org.jetbrains.kotlin.jvm")` por `kotlin("multiplatform")`
    - Configurar targets: `androidTarget()`, `iosArm64()`, `iosSimulatorArm64()`
    - Mover todas las dependencias a `commonMain`
-2. Mover `navigation/Route.kt` a `:app` (ver KMP-2)
-3. Actualizar `settings.gradle.kts` si aplica
-4. Verificar que todos los módulos dependientes compilan
+2. Actualizar `settings.gradle.kts` si aplica
+3. Verificar que todos los módulos dependientes compilan
 
 **Criterios de aceptación**
 - [ ] `./gradlew :domain:compileKotlinAndroid` pasa sin errores
 - [ ] `./gradlew :domain:compileKotlinIosArm64` pasa sin errores
-- [ ] Todos los tests de módulos dependientes siguen pasando: `./gradlew :usecase:test`
-
----
-
-### KMP-2: Mover `Route.kt` de `:domain` a `:app`
-
-**Tipo**: `refactor` `kmp`
-**Módulo**: `:domain` → `:app`
-**Dependencias**: ninguna (puede hacerse antes que KMP-1)
-**Estimación**: 2h
-
-**Descripción**
-`domain/navigation/Route.kt` contiene propiedades de UI (`showTopBar`, `showBottomBar`, `showFab`, `canGoBack`, `hasSearchBar`, `showSettingsButton`). Estas son responsabilidades de la capa de presentación y no del dominio. Su presencia en `:domain` es un acoplamiento UI-domain que bloquea la portabilidad KMP.
-
-**Objetivo**
-Limpiar `:domain` de conceptos de navegación UI. El dominio no debe conocer nada sobre cómo se presenta la navegación.
-
-**Pasos técnicos**
-1. Crear `app/src/main/kotlin/.../navigation/Route.kt` con el contenido actual
-2. Actualizar todos los imports en `:app` (MainViewModel, NavGraph, etc.)
-3. Verificar que `:viewmodel` no importa directamente `Route` (si lo hace, evaluar si ese import también debe moverse)
-4. Eliminar `domain/src/main/kotlin/.../navigation/Route.kt`
-5. Eliminar el package `navigation` de `:domain`
-
-**Criterios de aceptación**
-- [ ] `:domain` no tiene ningún archivo en el package `navigation`
-- [ ] `:domain` no tiene dependencias implícitas a frameworks de navegación
-- [ ] `./gradlew :app:assembleDevDebug` compila sin errores
-- [ ] La navegación funciona correctamente en runtime
+- [ ] `./gradlew :usecase:test` pasa (todos los tests dependientes)
 
 ---
 
@@ -237,7 +223,7 @@ Limpiar `:domain` de conceptos de navegación UI. El dominio no debe conocer nad
 **Estimación**: 2h
 
 **Descripción**
-El módulo `:usecase` es Pure Kotlin con dependencia única en `:domain`. Una vez que `:domain` es KMP, `:usecase` puede convertirse en KMP sin cambios en la lógica.
+Pure Kotlin con dependencia única en `:domain`. Una vez que `:domain` es KMP, `:usecase` puede convertirse en KMP sin cambios en la lógica.
 
 **Objetivo**
 Hacer que las ~76 implementaciones de use case compilen para Android e iOS.
@@ -247,8 +233,7 @@ Hacer que las ~76 implementaciones de use case compilen para Android e iOS.
    - `id("org.jetbrains.kotlin.jvm")` → `kotlin("multiplatform")`
    - Configurar mismos targets que `:domain`
    - Dependencia `implementation(project(":domain"))` en `commonMain`
-2. Verificar que `kotlinx-coroutines-core` en `commonMain` (ya lo está)
-3. Asegurarse de que no se usa `Dispatchers.IO` directamente (usar `Dispatchers.Default` o inyectar dispatcher)
+2. Verificar que no se usa `Dispatchers.IO` directamente (usar `Dispatchers.Default` o inyectar dispatcher)
 
 **Criterios de aceptación**
 - [ ] `./gradlew :usecase:compileKotlinAndroid` pasa
@@ -265,7 +250,7 @@ Hacer que las ~76 implementaciones de use case compilen para Android e iOS.
 **Estimación**: 3h
 
 **Descripción**
-`:data:core` implementa las interfaces de repositorio definidas en `:usecase` y delega a DataSources abstractos. No tiene dependencias Android directas y puede migrar a KMP sin cambios de lógica.
+`:data:core` implementa las interfaces de repositorio definidas en `:usecase` y delega a interfaces DataSource abstractas. No tiene dependencias Android directas.
 
 **Objetivo**
 Hacer que las implementaciones de repositorio compilen para todas las plataformas.
@@ -275,7 +260,6 @@ Hacer que las implementaciones de repositorio compilen para todas las plataforma
    - `id("org.jetbrains.kotlin.jvm")` → `kotlin("multiplatform")`
    - Mover dependencias a `commonMain`
 2. Verificar que las interfaces `DataSource` que define no usan tipos Android
-3. Revisar `kotlinx-coroutines-core` ya en `commonMain`
 
 **Criterios de aceptación**
 - [ ] `./gradlew :data:core:compileKotlinAndroid` pasa
@@ -284,54 +268,31 @@ Hacer que las implementaciones de repositorio compilen para todas las plataforma
 
 ---
 
-### KMP-5: Reemplazar Moshi por kotlinx.serialization en `:data:local`
-
-**Tipo**: `refactor` `kmp`
-**Módulo**: `:data:local`
-**Dependencias**: ninguna (blocker para KMP-6)
-**Estimación**: 4h
-
-**Descripción**
-`moshi` y `moshi-kotlin-codegen` son bibliotecas JVM/Android-only. Se usan en `:data:local` para serializar preferencias locales. `kotlinx-serialization-json` (ya en el catálogo a versión 1.7.3) es su reemplazo KMP-compatible directo.
-
-**Objetivo**
-Eliminar todas las dependencias de Moshi del proyecto y migrar a kotlinx.serialization.
-
-**Pasos técnicos**
-1. Identificar todos los usos de `@Json`, `@JsonClass`, `Moshi`, `JsonAdapter` en `:data:local`
-2. Reemplazar `@JsonClass(generateAdapter = true)` por `@Serializable`
-3. Reemplazar `@Json(name = "...")` por `@SerialName("...")`
-4. Reemplazar instancias de `Moshi` por `Json { ... }` de kotlinx.serialization
-5. Eliminar de `build.gradle.kts`: `moshi`, `moshi-kotlin`, `moshi-kotlin-codegen`, `ksp(libs.moshi.kotlin.codegen)`
-6. Agregar `implementation(libs.kotlinx.serialization.json)` y `id("org.jetbrains.kotlin.plugin.serialization")` plugin
-7. Eliminar `moshi*` del catálogo `libs.versions.toml` si ya no se usa en ningún módulo
-
-**Criterios de aceptación**
-- [ ] Ningún archivo en el proyecto importa `com.squareup.moshi`
-- [ ] `./gradlew :data:local:testDebugUnitTest` pasa
-- [ ] `./gradlew :app:assembleDevDebug` compila sin errores
-
----
-
-### KMP-6: Migrar `:data:local` a Kotlin Multiplatform (SharedPreferences → expect/actual)
+### KMP-6: Migrar `:data:local` a Kotlin Multiplatform
 
 **Tipo**: `enhancement` `kmp`
 **Módulo**: `:data:local`
-**Dependencias**: KMP-4, KMP-5
-**Estimación**: 4h
+**Dependencias**: KMP-4
+**Estimación**: 3h
 
 **Descripción**
-`:data:local` contiene únicamente la implementación de preferencias locales usando `SharedPreferences` de Android (2 archivos). No usa Room ni base de datos alguna. Para KMP, la interfaz `PreferencesDataSource` (ya en `:data:core`) se implementa por plataforma: `SharedPreferences` en Android y `NSUserDefaults` en iOS.
+`:data:local` contiene únicamente la implementación de preferencias locales usando `SharedPreferences` (2 archivos). Para KMP, la interfaz `PreferencesDataSource` (ya en `:data:core`) se implementa por plataforma: `SharedPreferences` en Android y `NSUserDefaults` en iOS.
 
 **Objetivo**
-Hacer que la capa de persistencia de preferencias compile para Android e iOS.
+Hacer que la capa de preferencias locales compile para Android e iOS.
 
 **Pasos técnicos**
 1. Cambiar `build.gradle.kts` de `:data:local` a `kotlin("multiplatform")` con `androidTarget()` + iOS targets
 2. Mantener `PreferencesLocalDataSourceImpl` en `androidMain` (usa `SharedPreferences`)
-3. Crear `PreferencesLocalDataSourceImpl` en `iosMain` usando `NSUserDefaults`
-4. Registrar la implementación correcta en Koin desde cada plataforma en `:di`
-5. Eliminar Moshi del módulo (no se usa en ningún archivo fuente) — ver KMP-5
+3. Crear `PreferencesLocalDataSourceImpl` en `iosMain` usando `NSUserDefaults`:
+   ```kotlin
+   // iosMain
+   actual class PreferencesLocalDataSourceImpl : PreferencesDataSource {
+       private val defaults = NSUserDefaults.standardUserDefaults
+       actual override fun getDefaultCaptainId(): Long? = ...
+   }
+   ```
+4. Registrar la implementación correcta en Koin desde `:di` por plataforma
 
 **Criterios de aceptación**
 - [ ] `./gradlew :data:local:compileKotlinAndroid` pasa
@@ -360,15 +321,15 @@ Desacoplar `:data:remote` del SDK Firebase Android para que `commonMain` compile
 4. En `androidMain`: `actual class FirestoreDataSource` con Firebase Android SDK
 5. En `iosMain`: `actual class FirestoreDataSource` con GitLive SDK (`dev.gitlive:firebase-firestore:2.1.0`) o stub
 6. Mismo patrón para `FirebaseAuthDataSource` y `FirebaseStorageDataSource`
-7. `FirestoreTransactionRunner` → `expect/actual` (ya en exclusiones JaCoCo)
-8. Migrar cliente Ktor de `ktor-client-okhttp` (Android) a engine por plataforma:
+7. `FirestoreTransactionRunner` → `expect/actual`
+8. Migrar engine Ktor por plataforma:
    - `androidMain`: `ktor-client-okhttp`
    - `iosMain`: `ktor-client-darwin`
 
 **Criterios de aceptación**
 - [ ] `./gradlew :data:remote:compileKotlinAndroid` pasa
-- [ ] `./gradlew :data:remote:compileKotlinIosArm64` pasa sin Firebase real (stub OK)
-- [ ] `./gradlew :data:remote:testDebugUnitTest` pasa (tests existentes no rotos)
+- [ ] `./gradlew :data:remote:compileKotlinIosArm64` pasa (stub OK)
+- [ ] `./gradlew :data:remote:testDebugUnitTest` pasa
 - [ ] Login con Google funciona en Android tras la migración
 
 ---
@@ -378,24 +339,31 @@ Desacoplar `:data:remote` del SDK Firebase Android para que `commonMain` compile
 **Tipo**: `enhancement` `kmp`
 **Módulo**: `:viewmodel`
 **Dependencias**: KMP-3, KMP-4
-**Estimación**: 8h
+**Estimación**: 6h *(reducida — arg constants ya en companion objects)*
 
 **Descripción**
-`lifecycle-viewmodel` tiene soporte KMP desde la versión 2.8.0. La versión actual (`2.8.6`) ya lo soporta. El único bloqueador son los 17 ViewModels que usan `SavedStateHandle` para recibir argumentos de navegación. La estrategia es extraer la inicialización a métodos `open`/`protected` que en Android se llaman desde el constructor con `SavedStateHandle`, y en iOS se llaman desde la capa de navegación.
+`lifecycle-viewmodel` tiene soporte KMP desde la versión 2.8.0. La versión actual (`2.8.6`) ya lo soporta. Los 17 ViewModels que usan `SavedStateHandle` ya definen sus arg keys en `companion object` y no importan `Route`. El único cambio estructural es separar el constructor que recibe `SavedStateHandle` a `androidMain`.
 
 **Objetivo**
-Hacer que los 19 ViewModels compilen para Android e iOS con mínimos cambios de lógica.
+Hacer que los 19 ViewModels compilen para Android e iOS.
 
 **Pasos técnicos**
 1. Cambiar `build.gradle.kts` de `:viewmodel` a `kotlin("multiplatform")`
 2. En `commonMain`: `implementation(libs.androidx.lifecycle.viewmodel.ktx)` (ya KMP)
-3. Para ViewModels con `SavedStateHandle`:
-   - Ejemplo: `MatchViewModel(savedStateHandle: SavedStateHandle)` →
-     - `MatchViewModel()` en commonMain con `protected open fun initArgs(matchId: Long?) {}`
-     - `MatchViewModelAndroid(savedStateHandle: SavedStateHandle) : MatchViewModel()` en androidMain que llama `initArgs(savedStateHandle.get("matchId"))`
-   - O alternativamente: extraer factory en androidMain
-4. Asegurarse de que `viewModelScope` funciona en KMP (usa `Dispatchers.Main`)
-5. Verificar que `koin-androidx-compose` permanece en androidMain
+3. Para ViewModels con `SavedStateHandle`, extraer la inicialización de args a método protegido:
+   ```kotlin
+   // commonMain
+   class MatchViewModel(...) : ViewModel() {
+       protected fun initArgs(matchId: Long) { this.matchId = matchId; loadMatchData(matchId) }
+       companion object { const val ARG_MATCH_ID = "matchId" }
+   }
+   // androidMain
+   class MatchViewModelAndroid(ssh: SavedStateHandle, ...) : MatchViewModel(...) {
+       init { initArgs(ssh[ARG_MATCH_ID] ?: error("matchId required")) }
+   }
+   ```
+4. Registrar `MatchViewModelAndroid` (en lugar de `MatchViewModel`) en Koin dentro de `:di/androidMain`
+5. Mantener `koin-androidx-compose` en `androidMain`
 
 **Criterios de aceptación**
 - [ ] `./gradlew :viewmodel:compileKotlinAndroid` pasa
@@ -413,19 +381,19 @@ Hacer que los 19 ViewModels compilen para Android e iOS con mínimos cambios de 
 **Estimación**: 6h
 
 **Descripción**
-El módulo `:di` es el composition root de Koin. Koin 4.0 tiene soporte KMP completo: `koin-core` es KMP, `koin-android` es androidMain. La restructuración implica separar los módulos Koin comunes (use cases, repositorios, ViewModels sin Android-specific) de los módulos Android-specific (Firebase, Room Android driver, `koin-android` initializer).
+Koin 4.0 tiene soporte KMP completo: `koin-core` es KMP, `koin-android` es androidMain. La restructuración implica separar los módulos Koin comunes de los Android-specific.
 
 **Objetivo**
 Tener un conjunto de módulos Koin en `commonMain` y extensiones en `androidMain`/`iosMain`.
 
 **Pasos técnicos**
 1. Cambiar `:di` a `kotlin("multiplatform")`
-2. `commonMain`: módulos Koin para `:usecase`, `:data:core`, `:viewmodel` (lo que no es platform-specific)
-3. `androidMain`: módulos para Firebase implementations, Room Android, `koin-android` setup
-4. `iosMain`: módulos para Firebase iOS (GitLive) o stubs, Room iOS driver
-5. Exponer función `fun initKoin(additionalModules: List<Module> = emptyList())` en commonMain
-6. En `:app` (Android): llamar `startKoin { androidContext(this); modules(androidModules()) }`
-7. En iOS entry point: llamar `initKoin()`
+2. `commonMain`: módulos Koin para `:usecase`, `:data:core`, `:viewmodel` (commonMain ViewModels)
+3. `androidMain`: módulos para Firebase implementations, `SharedPreferences`, ViewModels Android, `koin-android` setup
+4. `iosMain`: módulos para Firebase iOS (GitLive) o stubs, `NSUserDefaults`
+5. Exponer `fun initKoin(additionalModules: List<Module> = emptyList())` en `commonMain`
+6. En `:app` (Android): `startKoin { androidContext(this); modules(androidModules()) }`
+7. En iOS entry point: `initKoin()`
 
 **Criterios de aceptación**
 - [ ] `./gradlew :di:compileKotlinAndroid` pasa
@@ -440,31 +408,23 @@ Tener un conjunto de módulos Koin en `commonMain` y extensiones en `androidMain
 ### 4.1 `:service` — Candidato principal
 
 **Motivo**: El módulo `:service` contiene exactamente 2 archivos:
-- `MatchNotificationControllerImpl.kt` — implementación Android del interface `MatchNotificationController` del dominio
+- `MatchNotificationControllerImpl.kt` — implementación Android de `MatchNotificationController` del dominio
 - `ServiceModule.kt` — módulo Koin que registra la implementación
 
-La interfaz `MatchNotificationController` ya vive en `:domain`. La implementación usa servicios de notificación Android que no tienen equivalente en iOS. En una arquitectura KMP:
-
-- La implementación Android de `MatchNotificationController` puede vivir directamente en `:app` (androidMain) o en `:di` (androidMain)
-- No justifica tener un módulo separado de 2 archivos
-- El `ServiceModule.kt` se integraría en el módulo Koin de `:di`
+La implementación Android de `MatchNotificationController` puede vivir directamente en `:app` (androidMain) o en `:di` (androidMain). No justifica tener un módulo separado de 2 archivos.
 
 **Acción propuesta**: Mover `MatchNotificationControllerImpl` a `:app/androidMain/` o `:di/androidMain/` y eliminar el módulo `:service`.
 
 **Issue asociada**: Ver KMP-10.
 
-### 4.2 `domain/notification/MatchNotificationController.kt` — Evaluar reubicación
+### 4.2 `domain/notification/MatchNotificationController.kt` — Mantener en commonMain
 
-**Motivo**: La interfaz `MatchNotificationController` define contratos de notificación. En KMP, las notificaciones son platform-specific. La interfaz puede permanecer en commonMain de `:domain` si se considera parte del dominio de negocio (la app necesita notificar eventos de partido), o puede moverse a androidMain si se decide que las notificaciones no son cross-platform.
+La interfaz define el contrato de negocio (la app necesita notificar eventos de partido). Debe permanecer en `commonMain` de `:domain`. En iOS se implementa como no-op o local notifications nativas.
 
-**Recomendación**: Mantener en commonMain como interfaz; crear `expect/actual` si se implementa en iOS.
+### 4.3 Librería `moshi` — ✅ YA ELIMINADA
 
-### 4.3 Librería `moshi` — Eliminación total
-
-**Motivo**: Moshi (v1.15.2) es JVM/Android-only. No tiene soporte KMP. Se usa exclusivamente en `:data:local` para serializar preferencias.
-**Reemplazar por**: `kotlinx-serialization-json` (ya en catálogo a v1.7.3).
-**Acción**: KMP-5 cubre esta eliminación.
-**Eliminar del catálogo**: `moshi`, `moshi-kotlin`, `moshi-kotlin-codegen` y sus versiones.
+Moshi estaba registrado en Koin en `DataLocalModule.kt` pero nunca era inyectado en ningún sitio del proyecto. Eliminado completamente. Entradas pendientes de borrar del catálogo `libs.versions.toml`:
+- `moshi`, `moshi-kotlin`, `moshi-kotlin-codegen` (versiones y referencias de librería)
 
 ### 4.4 `ktor-client-okhttp` — Confinado a androidMain
 
@@ -491,7 +451,7 @@ Eliminar el módulo `:service` para reducir la complejidad del grafo de módulos
 2. Integrar `ServiceModule.kt` en el módulo Koin de Android en `:di`
 3. Eliminar `:service` de `settings.gradle.kts`
 4. Eliminar la carpeta `service/`
-5. Actualizar todas las dependencias a `:service` en otros módulos
+5. Actualizar las dependencias que apuntan a `:service` en otros módulos
 
 **Criterios de aceptación**
 - [ ] El directorio `service/` no existe en el proyecto
@@ -523,9 +483,9 @@ Este plugin **no está aplicado a ningún módulo** actualmente. La UI es 100% J
 | `LazyColumn`, `LazyRow` | ✅ Estable | Listas de equipos, partidos — portable |
 | `Canvas` / gráficas | ✅ Estable | `compose-charts` requiere fork KMP o alternativa |
 | Animaciones | ✅ Estable | Lottie → alternativa KMP necesaria |
-| Navegación | ✅ Stable (Compose Navigation CMP 2.8+) | Route.kt migrado en KMP-2 |
+| Navegación | ✅ Stable (Compose Navigation CMP 2.8+) | `Route.kt` ya en `:app` — migración directa |
 | `coil-compose` | ⚠️ Coil 3.x KMP | Actualizar a Coil 3.x con KMP support |
-| Google Fonts | ❌ Android-only | Bundlear fuentes o usar sistema |
+| Google Fonts | ❌ Android-only | Bundlear fuentes o usar fuentes del sistema |
 | Lottie | ❌ Android-only | Reemplazar con animaciones Compose nativas |
 | Firebase Crashlytics UI | ❌ Android-only | Mantener solo en androidMain |
 
@@ -550,17 +510,13 @@ Este plugin **no está aplicado a ningún módulo** actualmente. La UI es 100% J
 
 ### 5.4 Qué bloquea la migración UI
 
-1. **`compose-charts` (v0.2.0)**: No es KMP. Para la pantalla de análisis, evaluar:
-   - `koalaplot` (KMP) como alternativa
-   - Implementar gráficas básicas con Canvas de CMP
+1. **`compose-charts` (v0.2.0)**: No es KMP. Alternativas: `koalaplot` (KMP) o Canvas de CMP.
 
-2. **`lottie-compose` (v6.6.10)**: Android-only. Alternativas KMP:
-   - Animaciones Compose nativas con `rememberInfiniteTransition`
-   - `Rive` (tiene runtime KMP experimental)
+2. **`lottie-compose` (v6.6.10)**: Android-only. Alternativas: animaciones Compose nativas con `rememberInfiniteTransition`, o `Rive` (runtime KMP experimental).
 
 3. **`coil-compose` (v2.5.0)**: Actualizar a Coil 3.x que tiene soporte KMP.
 
-4. **`navigation-compose` (v2.9.5)**: Compose Navigation tiene soporte CMP desde 2.8.x. La migración de `Route.kt` (KMP-2) es prerequisito.
+4. **`navigation-compose` (v2.9.5)**: Compose Navigation tiene soporte CMP desde 2.8.x. `Route.kt` ya está en `:app` — migración directa sin refactors adicionales.
 
 5. **Google Fonts**: No disponible en iOS. Opciones: fuentes del sistema, o bundlear en ambas plataformas.
 
@@ -575,7 +531,7 @@ Este plugin **no está aplicado a ningún módulo** actualmente. La UI es 100% J
 5. `:app` (Android) importa `:shared-ui` + sus especificidades Android
 6. `iosApp` importa `:shared-ui` + sus especificidades iOS
 
-**No crear `iosApp` hasta que Fase 1 esté completa.** La inversión en UI multiplataforma solo tiene sentido cuando la infraestructura (datos, lógica de negocio, ViewModels) ya funciona en ambas plataformas.
+**No crear `iosApp` hasta que Fase 1 esté completa.** La inversión en UI multiplataforma solo tiene sentido cuando la infraestructura ya funciona en ambas plataformas.
 
 ### 5.6 Análisis coste/beneficio Fase 2
 
@@ -594,28 +550,30 @@ Este plugin **no está aplicado a ningún módulo** actualmente. La UI es 100% J
 ## Resumen de dependencias entre issues
 
 ```
-KMP-2 (Route.kt)
-    ↓
+✅ KMP-2 (Route.kt → :app)     ✅ KMP-5 (Moshi eliminado)
+         ↓                                ↓ (ya hecho)
 KMP-1 (domain KMP)
     ↓
 KMP-3 (usecase KMP)
     ↓
 KMP-4 (data:core KMP)
     ↓ (paralelo)
-KMP-5 (Moshi → kotlinx.serialization)   KMP-7 (Firebase boundary)   KMP-8 (viewmodel KMP)
-    ↓                                        ↓                            ↓
-KMP-6 (data:local KMP)                       └──────────────────────────────┘
-    ↓                                                    ↓
-    └──────────────────────── KMP-9 (di restructuring) ──┘
-                                    ↓
-                              KMP-10 (:service elimination)
+KMP-6 (data:local KMP)    KMP-7 (Firebase boundary)    KMP-8 (viewmodel KMP)
+    ↓                           ↓                             ↓
+    └───────────────── KMP-9 (di restructuring) ─────────────┘
+                               ↓
+                         KMP-10 (:service elimination)
 ```
 
+**Issues completadas** (no requieren trabajo):
+- ✅ **KMP-2**: `Route.kt` movido a `:app/ui/navigation/`
+- ✅ **KMP-5**: Moshi eliminado de todo el proyecto
+
 **Issues independientes** (pueden empezar en paralelo desde el día 1):
-- **KMP-2**: No requiere ningún otro issue
-- **KMP-5**: No requiere KMP completado, solo edición en `:data:local`
+- **KMP-1**: Solo requiere cambiar el build script de `:domain`
+- **KMP-6**: Puede arrancar en paralelo con KMP-7 y KMP-8 una vez KMP-4 completado
 
 ---
 
 *Documento generado por análisis arquitectónico del proyecto en rama `kmp-migration-analysis`.*
-*Versiones analizadas: Kotlin 2.1.0 · AGP 8.6.1 · Compose Multiplatform 1.7.3 · Koin 4.0.0 · Ktor 3.0.1 · Room 2.8.3 · Firebase BOM 33.6.0*
+*Versiones analizadas: Kotlin 2.1.0 · AGP 8.6.1 · Compose Multiplatform 1.7.3 · Koin 4.0.0 · Ktor 3.0.1 · Firebase BOM 33.6.0*
