@@ -197,7 +197,7 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
-					iosApp,
+					shared,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jesuslcorominas.teamflowmanager.ios";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -237,7 +237,7 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
-					iosApp,
+					shared,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jesuslcorominas.teamflowmanager.ios";
 				PRODUCT_NAME = "$(TARGET_NAME)";
