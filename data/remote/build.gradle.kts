@@ -42,6 +42,18 @@ kotlin {
                 implementation(libs.firebase.storage.ktx)
             }
         }
+        val iosMain by creating {
+            dependsOn(getByName("commonMain"))
+            dependencies {
+                implementation(libs.gitlive.firebase.auth)
+                implementation(libs.gitlive.firebase.firestore)
+                implementation(libs.ktor.client.darwin)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
+            }
+        }
+        val iosArm64Main by getting { dependsOn(iosMain) }
+        val iosSimulatorArm64Main by getting { dependsOn(iosMain) }
         val androidUnitTest by getting {
             dependencies {
                 implementation(libs.junit)

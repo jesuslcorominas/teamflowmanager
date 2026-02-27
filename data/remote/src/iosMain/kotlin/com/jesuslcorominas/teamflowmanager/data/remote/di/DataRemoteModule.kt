@@ -1,13 +1,23 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.di
 
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.transaction.FirestoreTransactionRunner
+import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
+import dev.gitlive.firebase.firestore.firestore
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
-/**
- * Phase 1: iOS remote data sources are not yet implemented.
- * Firebase SDK and Ktor Darwin engine will be wired in Phase 2
- * using the GitLive Firebase KMP SDK (dev.gitlive:firebase-*).
- */
 actual val dataRemoteModule: Module = module {
-    // TODO Phase 2: add GitLive Firebase + Darwin Ktor engine
+    single { Firebase.auth }
+    single { Firebase.firestore }
+    singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
+    singleOf(::MatchFirestoreDataSourceImpl) bind MatchDataSource::class
+    singleOf(::FirestoreTransactionRunner) bind TransactionRunner::class
 }
