@@ -10,10 +10,20 @@ kotlin {
     iosSimulatorArm64()
 
     sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(libs.koin.core)
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        val iosMain by creating {
+            dependsOn(getByName("commonMain"))
+        }
+        val iosArm64Main by getting { dependsOn(iosMain) }
+        val iosSimulatorArm64Main by getting { dependsOn(iosMain) }
         val androidMain by getting {
             dependencies {
                 implementation(libs.androidx.core.ktx)
-                implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.androidx.room.runtime)
                 implementation(libs.koin.android)
@@ -28,11 +38,13 @@ kotlin {
 }
 
 dependencies {
-    add("androidMainImplementation", project(":viewmodel"))
-    add("androidMainImplementation", project(":usecase"))
-    add("androidMainImplementation", project(":data:core"))
-    add("androidMainImplementation", project(":data:local"))
-    add("androidMainImplementation", project(":data:remote"))
+    // Business-logic modules — all are KMP-compatible (commonMain or expect/actual)
+    add("commonMainImplementation", project(":domain"))
+    add("commonMainImplementation", project(":usecase"))
+    add("commonMainImplementation", project(":data:core"))
+    add("commonMainImplementation", project(":data:local"))
+    add("commonMainImplementation", project(":data:remote"))
+    add("commonMainImplementation", project(":viewmodel"))
 }
 
 android {
