@@ -35,6 +35,7 @@ material3 = "1.4.0"
 firebaseBom = "33.6.0"
 googleServices = "4.4.2"
 firebaseCrashlyticsGradle = "3.0.2"
+gitliveFirebase = "2.1.0"
 
 [libraries]
 androidx-compose-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }
@@ -102,6 +103,13 @@ firebase-crashlytics-ktx = { group = "com.google.firebase", name = "firebase-cra
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx" }
+
+# GitLive Firebase KMP SDK (iOS)
+gitlive-firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "gitliveFirebase" }
+gitlive-firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "gitliveFirebase" }
+
+# Ktor Darwin engine (iOS)
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 
 # Google Play Services
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version = "21.2.0" }
