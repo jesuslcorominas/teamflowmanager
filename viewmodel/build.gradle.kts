@@ -12,12 +12,18 @@ kotlin {
     iosSimulatorArm64()
 
     sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(libs.androidx.lifecycle.viewmodel)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.koin.core)
+            }
+        }
         val androidMain by getting {
             dependencies {
                 implementation(libs.androidx.core.ktx)
                 implementation(libs.androidx.lifecycle.viewmodel.ktx)
                 implementation(libs.androidx.lifecycle.livedata.ktx)
-                implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.koin.android)
             }
@@ -34,7 +40,7 @@ kotlin {
 }
 
 dependencies {
-    add("androidMainImplementation", project(":domain"))
+    add("commonMainImplementation", project(":domain"))
 }
 
 android {
