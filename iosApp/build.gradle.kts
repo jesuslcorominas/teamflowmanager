@@ -6,8 +6,16 @@ plugins {
 
 kotlin {
     jvmToolchain(17)
-    iosArm64()
-    iosSimulatorArm64()
+
+    listOf(
+        iosArm64(),
+        iosSimulatorArm64(),
+    ).forEach { target ->
+        target.binaries.framework {
+            baseName = "iosApp"
+            isStatic = true
+        }
+    }
 
     sourceSets {
         val commonMain by getting {
