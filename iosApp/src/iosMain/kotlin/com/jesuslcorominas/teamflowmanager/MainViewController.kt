@@ -39,4 +39,5 @@ import platform.UIKit.UIViewController
  */
 fun initKoinIos() = diInitKoinIos()
 
-fun MainViewController(): UIViewController = ComposeUIViewController { App() }
+fun MainViewController(): UIViewController =
+    ComposeUIViewController(configure = { enforceStrictPlistSanityCheck = false }) { App() }
