@@ -37,3 +37,5 @@ google-services.json
 # Android Profiling
 *.hprof
 /app/google-services.json
+iosApp/Pods/
+iosApp/iosApp.xcworkspace/xcshareddata/swiftpm/
