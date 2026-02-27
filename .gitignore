@@ -34,6 +34,11 @@ render.experimental.xml
 google-services.json
 !app/google-services.json
 
+# iOS Firebase config — never commit, distribute via CI secrets
+GoogleService-Info.plist
+GoogleService-Info*.plist
+docs/GoogleService-Info*.plist
+
 # Android Profiling
 *.hprof
 /app/google-services.json
