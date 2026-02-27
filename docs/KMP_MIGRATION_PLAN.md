@@ -1,7 +1,7 @@
 # KMP Migration Plan — TeamFlowManager
 
 > **Fecha de análisis inicial**: 2026-02-26
-> **Última actualización**: 2026-02-26 (Fase 1 completada; Fase 2 y 3 planificadas)
+> **Última actualización**: 2026-02-27 (Fase 1 y Fase 2 completadas; Fase 3 planificada)
 > **Rama base de migración**: `migration/kmp-migration`
 > **Arquitecto**: Senior KMP/Android Architect (Claude Code)
 
@@ -12,7 +12,7 @@
 | Fase | Descripción | Estado |
 |------|-------------|--------|
 | **Fase 1** | Infraestructura KMP — todos los módulos convertidos a multiplatform | ✅ **COMPLETADA** |
-| **Fase 2** | iOS MVP — login Firebase + listado de partidos (Text simple) | 🔲 Planificada |
+| **Fase 2** | iOS MVP — login Firebase + listado de partidos (Text simple) | ✅ **COMPLETADA** |
 | **Fase 3** | iOS con UI completa igual a la de Android (Compose Multiplatform) | 🔲 Planificada |
 
 ---
@@ -28,9 +28,10 @@
 | `:data:core` | `kotlin.multiplatform` | ✓ | — | — | ✓ | ✅ Completo |
 | `:data:local` | `kotlin.multiplatform` | ✓ | ✓ | ✓ | ✓ | ✅ Completo |
 | `:data:remote` | `kotlin.multiplatform` | ✓ | ✓ | ✓ stub | ✓ | ✅ Completo (iOS = stub) |
-| `:viewmodel` | `kotlin.multiplatform` | — | ✓ | — | ✓ | ✅ Completo (Android-only) |
-| `:di` | `kotlin.multiplatform` | — | ✓ | — | — | ✅ Completo (Android-only) |
+| `:viewmodel` | `kotlin.multiplatform` | ✓ (3 VMs) | ✓ | — | ✓ | ✅ Completo (3 VMs en commonMain) |
+| `:di` | `kotlin.multiplatform` | ✓ | ✓ | ✓ | — | ✅ Completo (initKoinIos en iosMain) |
 | `:app` | `android.application` | — | ✓ | — | ✓ | ✅ Android-only (por diseño) |
+| `:iosApp` | `kotlin.multiplatform` | ✓ | — | ✓ | — | ✅ Nuevo (CMP MVP) |
 | ~~`:service`~~ | — | — | — | — | — | ✅ Eliminado |
 
 ### 1.2 Boundaries `expect/actual` establecidas
@@ -576,6 +577,11 @@ Fase 3 (UI completa):
 | 2026-02-26 | KMP-8 (:viewmodel) completado — PR #249 |
 | 2026-02-26 | KMP-9 (:di) completado — PR #250 |
 | 2026-02-26 | **Fase 1 completada.** Documento actualizado con plan Fase 2 (iOS MVP) y Fase 3 (UI completa) |
+| 2026-02-27 | KMP-11 (:data:remote iosMain GitLive Firebase) completado — PR #255 |
+| 2026-02-27 | KMP-12 (3 ViewModels → commonMain) completado — PR #256 |
+| 2026-02-27 | KMP-13 (:di iOS bootstrapping — initKoinIos) completado — PR #257 |
+| 2026-02-27 | KMP-14 (:iosApp CMP MVP — SplashScreen, LoginScreen, MatchListScreen) completado — PR #258 |
+| 2026-02-27 | **Fase 2 completada.** Arquitectura KMP end-to-end iOS validada. |
 
 ---
 
