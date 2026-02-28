@@ -12,7 +12,7 @@ import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 private enum class Screen { SPLASH, LOGIN, MATCHES }
 
 @Composable
-fun App() {
+fun App(onSignInWithGoogle: suspend () -> String = { throw NotImplementedError("KMP-17") }) {
     var screen by remember { mutableStateOf(Screen.SPLASH) }
 
     when (screen) {
@@ -22,7 +22,7 @@ fun App() {
         )
 
         Screen.LOGIN -> LoginScreen(
-            onSignInWithGoogle = { /* KMP-17: Google Sign-In for iOS */ },
+            onSignInWithGoogle = onSignInWithGoogle,
             onLoginSuccess = { screen = Screen.SPLASH },
         )
 

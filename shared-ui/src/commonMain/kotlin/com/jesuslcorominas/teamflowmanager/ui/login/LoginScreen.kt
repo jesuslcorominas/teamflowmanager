@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -28,21 +29,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel.UiState
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.app_name
 import teamflowmanager.shared_ui.generated.resources.login_subtitle
 import teamflowmanager.shared_ui.generated.resources.sign_in_with_google
-import org.jetbrains.compose.resources.stringResource
 
+/**
+ * CMP LoginScreen — platform-agnostic.
+ *
+ * [onSignInWithGoogle] is a suspend lambda that performs the platform-specific
+ * sign-in flow (CredentialManager on Android, GIDSignIn on iOS) and returns
+ * the Google ID token. The screen calls viewModel.signInWithGoogle(idToken)
+ * once the token is obtained.
+ */
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = koinViewModel(),
-    onSignInWithGoogle: () -> Unit,
+    onSignInWithGoogle: suspend () -> String,
     onLoginSuccess: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -91,7 +102,18 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(48.dp))
 
                 OutlinedButton(
-                    onClick = onSignInWithGoogle,
+                    onClick = {
+                        scope.launch {
+                            try {
+                                val idToken = onSignInWithGoogle()
+                                viewModel.signInWithGoogle(idToken)
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar(
+                                    e.message ?: "Error al iniciar sesión"
+                                )
+                            }
+                        }
+                    },
                     enabled = uiState !is UiState.Loading,
                     modifier = Modifier
                         .fillMaxWidth()

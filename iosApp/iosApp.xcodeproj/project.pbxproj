@@ -12,6 +12,7 @@
 		AA000000000000000000022A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000012A /* Assets.xcassets */; };
 		AA000000000000000000023A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000014A /* Preview Assets.xcassets */; };
 		AA000000000000000000024A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000016A /* GoogleService-Info.plist */; };
+		AA000000000000000000026A /* GoogleSignInHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017A /* GoogleSignInHandler.swift */; };
 		CA5521B7758F5F55B1EF0F32 /* Pods_iosApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22721E3F55F5E1B35B6A785A /* Pods_iosApp.framework */; };
 /* End PBXBuildFile section */
 
@@ -22,6 +23,7 @@
 		AA000000000000000000011A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA000000000000000000015A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA000000000000000000016A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		AA000000000000000000017A /* GoogleSignInHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleSignInHandler.swift; sourceTree = "<group>"; };
 		AA000000000000000000012A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA000000000000000000013A /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000000000000000000014A /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -57,6 +59,7 @@
 				AA000000000000000000016A /* GoogleService-Info.plist */,
 				AA000000000000000000010A /* iOSApp.swift */,
 				AA000000000000000000011A /* ContentView.swift */,
+				AA000000000000000000017A /* GoogleSignInHandler.swift */,
 				AA000000000000000000012A /* Assets.xcassets */,
 				AA000000000000000000005A /* Preview Content */,
 			);
@@ -233,6 +236,7 @@
 			files = (
 				AA000000000000000000021A /* ContentView.swift in Sources */,
 				AA000000000000000000020A /* iOSApp.swift in Sources */,
+				AA000000000000000000026A /* GoogleSignInHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
