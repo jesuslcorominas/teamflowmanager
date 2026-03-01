@@ -236,7 +236,6 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/iosApp/GoogleService-Info.plist",
 			);
 			name = "Inject Google Sign-In URL Scheme";
 			outputFileListPaths = (
@@ -245,7 +244,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# KMP-17: Inject REVERSED_CLIENT_ID from GitIgnored GoogleService-Info.plist\n# into the built app bundle's Info.plist as a CFBundleURLSchemes entry.\n# The source Info.plist (tracked in git) stays clean — no secrets committed.\nGOOGLE_PLIST=\"${SRCROOT}/iosApp/GoogleService-Info.plist\"\nif [ ! -f \"$GOOGLE_PLIST\" ]; then\n  echo \"warning: GoogleService-Info.plist not found — Google Sign-In URL scheme not configured.\"\n  exit 0\nfi\nREVERSED_CLIENT_ID=$(/usr/libexec/PlistBuddy -c \"Print :REVERSED_CLIENT_ID\" \"$GOOGLE_PLIST\" 2>/dev/null)\nif [ -z \"$REVERSED_CLIENT_ID\" ]; then\n  echo \"warning: REVERSED_CLIENT_ID not found in GoogleService-Info.plist\"\n  exit 0\nfi\nBUILT_PLIST=\"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes array\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0 dict\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleTypeRole string Editor\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleURLName string Google\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes array\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string ${REVERSED_CLIENT_ID}\" \"$BUILT_PLIST\"\necho \"Injected REVERSED_CLIENT_ID into built Info.plist\"\n";
+			shellScript = "# KMP-17: Inject REVERSED_CLIENT_ID from gitignored GoogleService-Info.plist\n# into the built app bundle's Info.plist as a CFBundleURLSchemes entry.\n# Selects DEV or PROD plist based on build configuration.\n# The source Info.plist (tracked in git) stays clean — no secrets committed.\nif [ \"$CONFIGURATION\" = \"Release\" ]; then\n  GOOGLE_PLIST=\"${SRCROOT}/iosApp/GoogleService-Info-Prod.plist\"\n  if [ ! -f \"$GOOGLE_PLIST\" ]; then\n    echo \"warning: GoogleService-Info-Prod.plist not found — falling back to dev plist\"\n    GOOGLE_PLIST=\"${SRCROOT}/iosApp/GoogleService-Info.plist\"\n  fi\nelse\n  GOOGLE_PLIST=\"${SRCROOT}/iosApp/GoogleService-Info.plist\"\nfi\nif [ ! -f \"$GOOGLE_PLIST\" ]; then\n  echo \"warning: GoogleService-Info.plist not found — Google Sign-In URL scheme not configured.\"\n  exit 0\nfi\nREVERSED_CLIENT_ID=$(/usr/libexec/PlistBuddy -c \"Print :REVERSED_CLIENT_ID\" \"$GOOGLE_PLIST\" 2>/dev/null)\nif [ -z \"$REVERSED_CLIENT_ID\" ]; then\n  echo \"warning: REVERSED_CLIENT_ID not found in GoogleService-Info.plist\"\n  exit 0\nfi\nBUILT_PLIST=\"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes array\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0 dict\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleTypeRole string Editor\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleURLName string Google\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes array\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string ${REVERSED_CLIENT_ID}\" \"$BUILT_PLIST\"\necho \"Injected REVERSED_CLIENT_ID ($CONFIGURATION) into built Info.plist\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -293,7 +292,7 @@
 					"-framework",
 					shared,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jesuslcorominas.teamflowmanager.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jesuslcorominas.teamflowmanager.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -330,7 +329,7 @@
 					"-framework",
 					shared,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jesuslcorominas.teamflowmanager.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jesuslcorominas.teamflowmanager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
