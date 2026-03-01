@@ -113,6 +113,7 @@
 				AA000000000000000000031A /* Frameworks */,
 				AA000000000000000000032A /* Resources */,
 				C00EC273AD728CB3C943762C /* [CP] Embed Pods Frameworks */,
+				AA000000000000000000034A /* Inject Google Sign-In URL Scheme */,
 			);
 			buildRules = (
 			);
@@ -225,6 +226,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		AA000000000000000000034A /* Inject Google Sign-In URL Scheme */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/iosApp/GoogleService-Info.plist",
+			);
+			name = "Inject Google Sign-In URL Scheme";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# KMP-17: Inject REVERSED_CLIENT_ID from GitIgnored GoogleService-Info.plist\n# into the built app bundle's Info.plist as a CFBundleURLSchemes entry.\n# The source Info.plist (tracked in git) stays clean — no secrets committed.\nGOOGLE_PLIST=\"${SRCROOT}/iosApp/GoogleService-Info.plist\"\nif [ ! -f \"$GOOGLE_PLIST\" ]; then\n  echo \"warning: GoogleService-Info.plist not found — Google Sign-In URL scheme not configured.\"\n  exit 0\nfi\nREVERSED_CLIENT_ID=$(/usr/libexec/PlistBuddy -c \"Print :REVERSED_CLIENT_ID\" \"$GOOGLE_PLIST\" 2>/dev/null)\nif [ -z \"$REVERSED_CLIENT_ID\" ]; then\n  echo \"warning: REVERSED_CLIENT_ID not found in GoogleService-Info.plist\"\n  exit 0\nfi\nBUILT_PLIST=\"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes array\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0 dict\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleTypeRole string Editor\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleURLName string Google\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes array\" \"$BUILT_PLIST\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string ${REVERSED_CLIENT_ID}\" \"$BUILT_PLIST\"\necho \"Injected REVERSED_CLIENT_ID into built Info.plist\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
