@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import dev.gitlive.firebase.auth.FirebaseAuth
+import dev.gitlive.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -21,9 +22,27 @@ class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthD
         }
 
     override suspend fun signInWithGoogle(idToken: String): Result<User> {
-        // Google Sign-In on iOS requires the native GoogleSignIn iOS SDK (KMP-17).
-        // For the Phase 2 MVP, authentication is done via email/password.
-        throw NotImplementedError("Google Sign-In for iOS will be implemented in KMP-17")
+        return try {
+            // idToken is encoded as "idToken\naccessToken" by GoogleSignInBridge.
+            // Both tokens are required by the native Firebase iOS SDK.
+            val parts = idToken.split("\n")
+            val actualIdToken = parts[0]
+            val accessToken = parts.getOrElse(1) { "" }
+            val credential = GoogleAuthProvider.credential(idToken = actualIdToken, accessToken = accessToken)
+            val authResult = firebaseAuth.signInWithCredential(credential)
+            val firebaseUser = authResult.user
+                ?: return Result.failure(Exception("Firebase user is null after sign in"))
+            Result.success(
+                User(
+                    id = firebaseUser.uid,
+                    email = firebaseUser.email,
+                    displayName = firebaseUser.displayName,
+                    photoUrl = firebaseUser.photoURL,
+                )
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun signOut() {
@@ -31,6 +50,6 @@ class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthD
     }
 
     override suspend fun saveUserToFirestore(user: User) {
-        // No-op for iOS Phase 2 MVP — Firestore user saving is handled on Android
+        // No-op for iOS — user data is managed server-side via Firebase Auth
     }
 }

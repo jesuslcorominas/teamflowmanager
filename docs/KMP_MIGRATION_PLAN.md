@@ -1,7 +1,7 @@
 # KMP Migration Plan — TeamFlowManager
 
 > **Fecha de análisis inicial**: 2026-02-26
-> **Última actualización**: 2026-02-27 (Fase 1 y Fase 2 completadas; Fase 3 planificada)
+> **Última actualización**: 2026-03-02 (Fase 2 funcional; Fase 3 en curso)
 > **Rama base de migración**: `migration/kmp-migration`
 > **Arquitecto**: Senior KMP/Android Architect (Claude Code)
 
@@ -12,26 +12,59 @@
 | Fase | Descripción | Estado |
 |------|-------------|--------|
 | **Fase 1** | Infraestructura KMP — todos los módulos convertidos a multiplatform | ✅ **COMPLETADA** |
-| **Fase 2** | iOS MVP — login Firebase + listado de partidos (Text simple) | ✅ **COMPLETADA** |
-| **Fase 3** | iOS con UI completa igual a la de Android (Compose Multiplatform) | 🔲 Planificada |
+| **Fase 2** | iOS MVP — login Firebase (Google Sign-In nativo) + listado de partidos | ✅ **COMPLETADA** |
+| **Fase 3** | iOS con UI completa igual a la de Android (Compose Multiplatform) | 🚧 En curso |
+
+### PRs pendientes de merge (Fase 2 → `migration/kmp-migration`)
+
+Estas PRs están **completadas y verificadas** pero pendientes de aprobación y merge humano:
+
+| PR | Branch | Contenido | Issue | Nota |
+|----|--------|-----------|-------|------|
+| #266 | `migration/kmp-xcode-project` | Proyecto Xcode completo + CocoaPods Firebase + todos los datasources iOS | — | ✅ Infraestructura completa |
+| #267 | `migration/kmp-16b-screens` | SplashScreen, LoginScreen, MatchListScreen migradas a `:shared-ui` | #265 | ⚠️ Ver nota MVP abajo |
+| #268 | `migration/kmp-17-google-signin` | Google Sign-In nativo iOS (GIDSignIn ↔ KMP bridge) | #261 | ⚠️ Ver nota estética abajo |
+
+> **Acción requerida**: revisar y mergear las 3 PRs en orden (#266 → #267 → #268) para cerrar Fase 2 formalmente.
+
+#### ⚠️ Nota sobre PR #267 — Pantallas MVP, no producción
+
+Las 3 pantallas migradas a `:shared-ui` son **funcionales a nivel de MVP** pero **no tienen el mismo acabado visual que Android**:
+
+- **SplashScreen**: muestra solo un spinner. Sin logo ni branding. El `Loading()` composable es un placeholder — falta `TeamFlowManagerIcon` y el diseño de splash definitivo.
+- **LoginScreen**: botón "Sign in with Google" funcional pero con estilo mínimo (`OutlinedButton`). Falta ajustar tipografía, colores, logo y composición visual para que sea equivalente a Android.
+- **MatchListScreen**: lista plana de texto (`Text` por partido). Falta el diseño de tarjeta (`MatchCard`) con resultado, rival, fecha, estadísticas visuales, etc.
+
+Estas mejoras se abordan en **KMP-19+** cuando se migren los componentes atómicos compartidos (`AppCard`, sistema de diseño) y los strings/recursos CMP.
+
+#### ⚠️ Nota sobre PR #268 — Google Sign-In funcional, estética pendiente
+
+El flujo de autenticación Google funciona end-to-end en iOS (GIDSignIn → Firebase Auth → navegación a MatchList). Sin embargo:
+
+- El botón de login es un `OutlinedButton` genérico, sin el estilo oficial de Google Sign-In.
+- **Decisión pendiente**: ¿botón nativo iOS (Google Sign-In branded button del SDK) o botón custom con el estilo de la app?
+  - **Opción A — Nativo iOS**: Usar `GIDSignInButton` de GoogleSignIn SDK via `UIViewRepresentable`. Experiencia auténtica pero platform-specific (Android tiene su propio `SignInWithGoogleButton`). Tiene sentido: Google no tiene una librería CMP, y la experiencia nativa es la correcta en cada plataforma.
+  - **Opción B — Botón custom**: Un único Composable CMP en `:shared-ui` con el logo de Google y estilo propio de la app. Menos "oficial" pero 100% compartido.
+  - **Recomendación**: Opción A (nativo por plataforma) — planificar como subtarea de **KMP-19** o issue separada.
 
 ---
 
 ## 1. Estado actual del proyecto — Fase 1 COMPLETADA
 
-### 1.1 Inventario de módulos
+### 1.1 Inventario de módulos (estado actual)
 
 | Módulo | Plugin | commonMain | androidMain | iosMain | Tests | Estado |
 |--------|--------|:----------:|:-----------:|:-------:|:-----:|--------|
 | `:domain` | `kotlin.multiplatform` | ✓ | ✓ | ✓ | ✓ | ✅ Completo |
 | `:usecase` | `kotlin.multiplatform` | ✓ | — | — | ✓ | ✅ Completo |
 | `:data:core` | `kotlin.multiplatform` | ✓ | — | — | ✓ | ✅ Completo |
-| `:data:local` | `kotlin.multiplatform` | ✓ | ✓ | ✓ | ✓ | ✅ Completo |
-| `:data:remote` | `kotlin.multiplatform` | ✓ | ✓ | ✓ stub | ✓ | ✅ Completo (iOS = stub) |
-| `:viewmodel` | `kotlin.multiplatform` | ✓ (3 VMs) | ✓ | — | ✓ | ✅ Completo (3 VMs en commonMain) |
-| `:di` | `kotlin.multiplatform` | ✓ | ✓ | ✓ | — | ✅ Completo (initKoinIos en iosMain) |
+| `:data:local` | `kotlin.multiplatform` | ✓ | ✓ (Room) | ✓ (NSUserDefaults) | ✓ | ✅ Completo |
+| `:data:remote` | `kotlin.multiplatform` | ✓ | ✓ (Firebase+Ktor) | ✓ (GitLive Firebase) | ✓ | ✅ Completo |
+| `:viewmodel` | `kotlin.multiplatform` | ✓ (14 VMs) | ✓ (Koin Android) | — | ✓ | ✅ Completo (todos los VMs en commonMain) |
+| `:di` | `kotlin.multiplatform` | ✓ | ✓ | ✓ (initKoinIos) | — | ✅ Completo |
+| `:shared-ui` | `kotlin.multiplatform` | ✓ (3 pantallas) | — | — | — | 🚧 En curso (Fase 3) |
 | `:app` | `android.application` | — | ✓ | — | ✓ | ✅ Android-only (por diseño) |
-| `:iosApp` | `kotlin.multiplatform` | ✓ | — | ✓ | — | ✅ Nuevo (CMP MVP) |
+| `:iosApp` | `kotlin.multiplatform` | ✓ (App.kt) | — | ✓ (bridge, MainVC) | — | ✅ Funcional (Google Sign-In + MatchList) |
 | ~~`:service`~~ | — | — | — | — | — | ✅ Eliminado |
 
 ### 1.2 Boundaries `expect/actual` establecidas
@@ -382,9 +415,9 @@ KMP-14 (iosApp + pantallas MVP)
 
 ### 3.1 Objetivo
 
-Tener la app iOS con exactamente las mismas pantallas y funcionalidad que la app Android, implementadas con Compose Multiplatform compartido.
+Tener la app iOS con exactamente las mismas pantallas y funcionalidad que la app Android, implementadas con Compose Multiplatform compartido en `:shared-ui`.
 
-### 3.2 Estrategia: módulo `:shared-ui`
+### 3.2 Arquitectura objetivo (ya establecida en Fase 2)
 
 ```
 :app (Android)          iosApp (iOS)
@@ -397,88 +430,177 @@ Tener la app iOS con exactamente las mismas pantallas y funcionalidad que la app
               :usecase, :data:*
 ```
 
-Crear un nuevo módulo `:shared-ui` con todo el código Compose Multiplatform compartido. Tanto `:app` como `iosApp` lo importan y añaden solo lo que es platform-specific.
+El módulo `:shared-ui` ya existe (PR #267). Tiene 3 pantallas. Fase 3 completa las restantes.
 
-### 3.3 Plan de tareas Fase 3
+### 3.3 Inventario de pantallas
+
+#### Ya en `:shared-ui/commonMain` ✅
+| Pantalla | Estado |
+|----------|--------|
+| `SplashScreen` | ✅ En shared-ui |
+| `LoginScreen` | ✅ En shared-ui |
+| `MatchListScreen` | ✅ En shared-ui |
+
+#### Pendientes de migrar a `:shared-ui` — 15 pantallas
+| Pantalla | Complejidad | Bloqueantes | Issue |
+|----------|-------------|-------------|-------|
+| `ClubSelectionScreen` | Baja | `R.string` → CMP, `TrackScreenView` | KMP-19 |
+| `CreateClubScreen` | Baja-Media | `R.string`, `AppTextField`, `TrackScreenView` | KMP-19 |
+| `JoinClubScreen` | Baja-Media | `R.string`, `AppTextField`, `TrackScreenView` | KMP-19 |
+| `ClubMembersScreen` | Media | `R.string`, `AppCard`, `TrackScreenView` | KMP-19 |
+| `TeamListScreen` | Media | `R.string`, Coil (imágenes) | KMP-20 |
+| `TeamScreen` | Media | `R.string`, `AppTopBar`, Coil | KMP-20 |
+| `PlayersScreen` | Media | `R.string`, Coil | KMP-20 |
+| `PlayerWizardScreen` | Media | `R.string`, `AppTextField` | KMP-20 |
+| `SettingsScreen` | Baja | `R.string`, `TrackScreenView` | KMP-21 |
+| `ArchivedMatchesScreen` | Media | `R.string`, `AppCard` | KMP-21 |
+| `AcceptTeamInvitationScreen` | Media | `R.string`, deep link | KMP-21 |
+| `MatchCreationWizardScreen` | Media-Alta | `R.string`, `AppTextField`, wizard state | KMP-22 |
+| `MainScreen` | Media | Bottom nav, `R.string` | KMP-22 |
+| `MatchScreen` | Alta | TimeTicker, Canvas timer, drag-drop | KMP-23 |
+| `AnalysisScreen` | Alta | `compose-charts` → reemplazar por Canvas/koalaplot | KMP-24 |
+
+### 3.4 Bloqueantes técnicos transversales
+
+Antes de empezar cada tanda de pantallas, resolver:
+
+| Bloqueante | Afecta a | Solución |
+|------------|----------|----------|
+| `androidx.compose.ui.res.stringResource` | Todas | → `org.jetbrains.compose.resources.stringResource` + strings en `composeResources/` |
+| `org.koin.androidx.compose.koinViewModel` | Todas | → `org.koin.compose.viewmodel.koinViewModel` (ya resuelto en las 3 existentes) |
+| `TrackScreenView` / Analytics | 10+ pantallas | Crear `expect fun TrackScreenView(screenName, screenClass)` — no-op en iOS, Firebase en Android |
+| `TeamFlowManagerIcon` | 3 pantallas | Mover a `:shared-ui` como recurso CMP (vector drawable o `painterResource`) |
+| `AppTextField`, `AppCard`, `AppTopBar` | 10+ pantallas | Migrar componentes atómicos a `:shared-ui/commonMain/components/` |
+| `coil-compose` (imágenes) | 5 pantallas | Actualizar a Coil 3.x (KMP-compatible) |
+| `compose-charts` (AnalysisScreen) | 1 pantalla | Reemplazar por `koalaplot-core` o Canvas CMP |
+| `compose-google-fonts` | Theme | Bundlear fuente o usar fuentes del sistema en iOS |
+
+### 3.5 Plan de tareas Fase 3
 
 ---
 
-#### KMP-15: Configurar módulo `:shared-ui` con Compose Multiplatform
+#### KMP-19: Migrar pantallas de club a `:shared-ui`
+
+**Pantallas**: `ClubSelectionScreen`, `CreateClubScreen`, `JoinClubScreen`, `ClubMembersScreen`
+
+**Pasos previos** (bloqueantes compartidos para TODAS las pantallas):
+1. Mover `AppTextField`, `AppCard`, componentes básicos a `:shared-ui/commonMain/components/`
+2. Crear `expect fun TrackScreenView(screenName: ScreenName, screenClass: String)` en `:shared-ui`
+   - `androidMain actual`: llama a Firebase Analytics
+   - `iosMain actual`: no-op (analytics iOS se añade en iteración futura)
+3. Migrar `TeamFlowManagerIcon` a `:shared-ui` como `painterResource` CMP
+4. Añadir strings de club a `shared-ui/src/commonMain/composeResources/values/strings.xml`
+
+**Criterios de aceptación**:
+- [ ] Las 4 pantallas en `shared-ui/commonMain`
+- [ ] `:app` las importa desde `:shared-ui` (sin duplicados)
+- [ ] `./gradlew :shared-ui:compileDebugKotlin` pasa
+- [ ] `./gradlew :iosApp:compileKotlinIosSimulatorArm64` pasa
+- [ ] Android sigue funcionando
+
+---
+
+#### KMP-20: Migrar pantallas de equipo y jugadores
+
+**Pantallas**: `TeamListScreen`, `TeamScreen`, `PlayersScreen`, `PlayerWizardScreen`
+
+**Pasos previos**:
+1. Actualizar `coil-compose` → Coil 3.x en `:shared-ui` (KMP-compatible)
+2. Migrar `AppTopBar` a `:shared-ui`
+
+**Criterios de aceptación**:
+- [ ] Las 4 pantallas en `shared-ui/commonMain`
+- [ ] Imágenes de equipo/jugador cargan en iOS con Coil 3.x
+
+---
+
+#### KMP-21: Migrar pantallas secundarias
+
+**Pantallas**: `SettingsScreen`, `ArchivedMatchesScreen`, `AcceptTeamInvitationScreen`
+
+**Nota sobre `AcceptTeamInvitationScreen`**: usa deep links (Android Intent). Crear `expect fun openDeepLink(url: String)` con `actual` Android + iOS.
+
+---
+
+#### KMP-22: Migrar wizard y navegación principal
+
+**Pantallas**: `MatchCreationWizardScreen`, `MainScreen` (bottom nav)
+
+**Nota sobre navegación**: `MainScreen` usa Jetpack Navigation. Para iOS usar la navegación CMP ya establecida en `App.kt`.
+
+---
+
+#### KMP-23: Migrar `MatchScreen`
+
+La pantalla más compleja. Contiene:
+- Timer canvas animado (TimeTicker)
+- Drag & drop de jugadores (`DragDropContainer`, `DraggablePlayerItem`)
+- Sustituciones, goles, control de tiempo por jugador
 
 **Pasos**:
-1. Crear `shared-ui/build.gradle.kts` con `kotlin.multiplatform` + `compose.multiplatform`
-2. Mover a `commonMain`: componentes atómicos (buttons, cards, typography system)
-3. Actualizar `libs.versions.toml`: añadir dependencias CMP que faltan
-4. Resolver bloqueantes:
-   - `compose-charts`: reemplazar por `koalaplot-core` (KMP) o implementación Canvas CMP
-   - `coil-compose`: actualizar a Coil 3.x (soporta KMP)
-   - `compose-google-fonts`: bundlear fuentes o usar fuentes del sistema en iOS
+1. Verificar compatibilidad de drag & drop con CMP en iOS
+2. Migrar `MatchTimeCard`, `SubstitutionCard`, componentes de partido a `:shared-ui`
+3. `TimeTicker` ya está en `viewmodel/commonMain` — sin cambios
 
 ---
 
-#### KMP-16: Migrar pantallas por orden de complejidad
+#### KMP-24: Migrar `AnalysisScreen`
 
-**Orden recomendado** (de menor a mayor complejidad):
+**Bloqueante**: `compose-charts 0.2.0` es Android-only.
 
-| Prioridad | Pantalla | Complejidad | Bloqueantes |
-|-----------|----------|-------------|-------------|
-| 1 | `SplashScreen` | Baja | — |
-| 2 | `LoginScreen` | Baja-Media | Google Sign-In iOS |
-| 3 | `CreateClubScreen`, `JoinClubScreen` | Baja | — |
-| 4 | `MatchListScreen` | Media | — |
-| 5 | `TeamListScreen`, `PlayerScreen` | Media | Coil (imágenes) |
-| 6 | `MatchCreationWizardScreen` | Media | — |
-| 7 | `MatchScreen` | Alta | TimeTicker, Canvas timer |
-| 8 | `AnalysisScreen` | Alta | compose-charts → alternativa KMP |
+**Opciones**:
+- Reemplazar por `koalaplot-core` (KMP nativo, gráficas básicas)
+- Implementar gráficas con Canvas CMP (control total, sin dependencia externa)
 
-**Para cada pantalla**:
-1. Mover el Composable de `:app` a `:shared-ui/commonMain`
-2. Eliminar imports Android-specific (`LocalContext`, `Intent`, etc.)
-3. Usar `expect/actual` para lo que sea genuinamente platform-specific
-4. Verificar en Android Simulator + iOS Simulator
+**Recomendación**: Canvas CMP — las gráficas de análisis son simples (barras, líneas) y el canvas de CMP es estable.
 
 ---
 
-#### KMP-17: Google Sign-In nativo en iOS
+#### KMP-25: Navegación iOS completa
 
-**Pasos**:
-1. Añadir `GoogleSignIn` iOS SDK via Swift Package Manager en `iosApp`
-2. Crear `expect interface GoogleSignInHandler` en `:domain` o `:data:remote`
-3. `androidMain`: implementación existente con `play-services-auth`
-4. `iosMain`: implementación con GoogleSignIn iOS SDK via Swift interop
-5. Actualizar `FirebaseAuthDataSourceImpl` iOS para usar el handler
+Una vez todas las pantallas están en `:shared-ui`, actualizar `App.kt` (iosApp) con navegación completa equivalente a la Android (`Navigation.kt`).
+
+**Actualmente** `App.kt` solo navega: SPLASH → LOGIN → MATCHES.
+**Objetivo**: añadir todas las rutas.
 
 ---
 
-#### KMP-18: Notificaciones de partido (reimplementación KMP)
+#### KMP-18: Notificaciones (opcional)
 
-> **Contexto**: El sistema de notificaciones fue eliminado en pre-migración. Si se quiere reimplementar para Fase 3:
-
-- `expect/actual` en `:domain` para `MatchNotificationController`
-- `androidMain`: `ForegroundService` + `NotificationManager`
-- `iosMain`: `UNUserNotificationCenter` (iOS local notifications)
+> Descartado en pre-migración. Reimplementar si se requiere:
+- `expect/actual` para `MatchNotificationController`
+- `androidMain`: ForegroundService + NotificationManager
+- `iosMain`: UNUserNotificationCenter
 
 ---
 
-### 3.4 Dependencias entre tareas Fase 3
+### 3.6 Dependencias entre tareas Fase 3
 
 ```
-KMP-15 (shared-ui module)
+KMP-19 (club screens + bloqueantes transversales)
     ↓
-KMP-16 (migrate screens — en paralelo por pantalla)
+KMP-20 (team/players — necesita Coil 3.x)
+KMP-21 (screens secundarias — paralelo con KMP-20)
     ↓
-KMP-17 (Google Sign-In iOS)   KMP-18 (notifications — opcional)
+KMP-22 (wizard + nav principal)
+KMP-23 (MatchScreen — la más compleja)
+KMP-24 (AnalysisScreen — compose-charts reemplazar)
+    ↓
+KMP-25 (navegación iOS completa)
+KMP-18 (notificaciones — opcional, paralelo)
 ```
 
-### 3.5 Componentes Android-only que permanecen en `:app`
+### 3.7 Componentes que permanecen Android-only en `:app`
 
-Independientemente de la migración UI, estos elementos permanecen en `:app` Android-only:
-
-- `MainActivity.kt`
-- `AndroidManifest.xml`
-- Firebase Crashlytics setup
-- `google-services.json` config
-- Deep links / Android app links
+| Componente | Motivo |
+|------------|--------|
+| `MainActivity.kt` | Entry point Android |
+| `AndroidManifest.xml` | Sistema Android |
+| `google-services.json` | Firebase Android config |
+| `R.string` (Android) | Se mantiene en paralelo; iOS usa CMP `composeResources` |
+| Deep links / Android App Links | Platform-specific |
+| Firebase Crashlytics setup | SDK Android-only |
+| Koin `viewModel {}` registration | Android lifecycle; iOS usa `factory {}` |
 
 ---
 
@@ -523,39 +645,66 @@ Independientemente de la migración UI, estos elementos permanecen en `:app` And
 ✅ Fase 1 COMPLETADA
    KMP-1→3→4→6→7→8→9 (PRs #244–#250)
 
-Fase 2 (iOS MVP):
-   KMP-11 (Firebase iOS en data:remote)
-       ↓
-   KMP-12 (ViewModels → commonMain)
-       ↓
-   KMP-13 (DI iOS bootstrapping)
-       ↓
-   KMP-14 (iosApp + Login + MatchList como Text simple)
+✅ Fase 2 COMPLETADA (PRs pendientes de merge)
+   KMP-11 (Firebase iOS)    → PR #255 ✅ merged
+   KMP-12 (VMs commonMain)  → PR #256 ✅ merged
+   KMP-13 (DI iOS)          → PR #257 ✅ merged
+   KMP-14 (iosApp CMP MVP)  → PR #258 ✅ merged
+   KMP-Xcode (proyecto Xcode + CocoaPods) → PR #266 ⏳ merge pendiente
+   KMP-15 (:shared-ui)      → PR #263 ✅ merged
+   KMP-16 (todos los VMs)   → PR #264 ✅ merged
+   KMP-16b (3 pantallas → shared-ui) → PR #267 ⏳ merge pendiente
+   KMP-17 (Google Sign-In iOS)       → PR #268 ⏳ merge pendiente
 
-Fase 3 (UI completa):
-   KMP-14 completado
+🚧 Fase 3 (UI completa — iniciar tras merge de PRs pendientes):
+   KMP-19 (club screens + bloqueantes transversales)
        ↓
-   KMP-15 (módulo :shared-ui con CMP)
+   KMP-20 (team/players + Coil 3.x)   KMP-21 (screens secundarias)
        ↓
-   KMP-16 (migrar pantallas — paralelo por pantalla)
-   KMP-17 (Google Sign-In iOS)
+   KMP-22 (wizard + MainScreen)
+       ↓
+   KMP-23 (MatchScreen)   KMP-24 (AnalysisScreen)
+       ↓
+   KMP-25 (navegación iOS completa)
    KMP-18 (notificaciones — opcional)
 ```
 
 ---
 
-## 6. Porcentaje de reutilización de código por fase
+## 6. Porcentaje de reutilización de código — estado real alcanzado
 
-| Capa | Fase 1 (actual) | Fase 2 (tras KMP-12) | Fase 3 (con :shared-ui) |
-|------|:---------------:|:---------------------:|:------------------------:|
-| `:domain` | 100% compartido | 100% | 100% |
-| `:usecase` | 100% compartido | 100% | 100% |
-| `:data:core` | 100% compartido | 100% | 100% |
-| `:data:local` | 100% (Android real, iOS real) | 100% | 100% |
-| `:data:remote` | Android real, iOS stub | Android real, iOS real | 100% |
-| `:viewmodel` | 0% iOS (androidMain) | ~20% iOS (3 VMs) | 100% |
-| UI (screens) | 0% iOS | 0% iOS (SwiftUI/CMP básico) | ~75% |
-| **Total** | **~70% en commonMain** | **~80%** | **~90%** |
+### 6.1 Por capa (estado actual, post-Fase 2)
+
+| Capa | Archivos compartidos | Archivos platform-specific | % compartido | Notas |
+|------|:--------------------:|:---------------------------:|:------------:|-------|
+| `:domain` | Models, interfaces, use case interfaces | `Platform.kt` (expect/actual) | **~99%** | |
+| `:usecase` | Todas las implementaciones | — | **100%** | Pure Kotlin |
+| `:data:core` | Repositories, DataSource interfaces | — | **100%** | Pure Kotlin |
+| `:data:local` | Room entities, DAOs (commonMain) | Android: `AppDatabase` actual · iOS: NSUserDefaults actual | **~85%** | Schema compartido |
+| `:data:remote` | Interfaces, modelos Firestore (commonMain) | Android: Firebase/Ktor actual · iOS: GitLive actual | **~60%** | APIs similares, implementaciones distintas |
+| `:viewmodel` | 14 ViewModels + TimeTicker (commonMain) | Android: Koin `viewModel {}` · iOS: Koin `factory {}` | **~95%** | Solo el módulo DI difiere |
+| `:di` | `InitKoin.kt` (commonMain) | `TeamFlowManagerModule` (Android) · `IosModule` (iOS) | **~50%** | Por diseño: cada plataforma registra sus propios datasources |
+| UI — pantallas | SplashScreen, LoginScreen, MatchListScreen (`:shared-ui`) | 15 pantallas restantes solo en `:app` | **~15%** | Fase 3 lo llevará a ~90% |
+| **Total proyecto** | | | **~75%** | Sube a ~90% al completar Fase 3 |
+
+### 6.2 Dónde vive el código compartido
+
+```
+commonMain (compartido Android + iOS):
+  ├── :domain          → 100% — modelos, interfaces use cases
+  ├── :usecase         → 100% — lógica de negocio
+  ├── :data:core       → 100% — repositorios, interfaces datasource
+  ├── :data:local      → ~85% — schema Room/SQLDelight + lógica
+  ├── :data:remote     → ~60% — interfaces + modelos Firestore
+  ├── :viewmodel       → ~95% — 14 ViewModels + TimeTicker
+  ├── :di              → ~50% — punto de entrada Koin
+  └── :shared-ui       → ~15% UI — 3 pantallas de ~18
+
+platform-specific:
+  Android (:app)       → MainActivity, Navigation, 15 pantallas, R.string
+  iOS (:iosApp)        → App.kt nav shell, GoogleSignInBridge, MainViewController.swift
+  iOS (Swift)          → iOSApp.swift, GoogleSignInHandler.swift, ContentView.swift
+```
 
 ---
 
@@ -576,13 +725,19 @@ Fase 3 (UI completa):
 | 2026-02-26 | KMP-7 (:data:remote boundary) completado — PR #248 |
 | 2026-02-26 | KMP-8 (:viewmodel) completado — PR #249 |
 | 2026-02-26 | KMP-9 (:di) completado — PR #250 |
-| 2026-02-26 | **Fase 1 completada.** Documento actualizado con plan Fase 2 (iOS MVP) y Fase 3 (UI completa) |
+| 2026-02-26 | **Fase 1 completada.** |
 | 2026-02-27 | KMP-11 (:data:remote iosMain GitLive Firebase) completado — PR #255 |
-| 2026-02-27 | KMP-12 (3 ViewModels → commonMain) completado — PR #256 |
+| 2026-02-27 | KMP-12 (todos los ViewModels + TimeTicker → commonMain) completado — PR #256 |
 | 2026-02-27 | KMP-13 (:di iOS bootstrapping — initKoinIos) completado — PR #257 |
-| 2026-02-27 | KMP-14 (:iosApp CMP MVP — SplashScreen, LoginScreen, MatchListScreen) completado — PR #258 |
-| 2026-02-27 | **Fase 2 completada.** Arquitectura KMP end-to-end iOS validada. |
+| 2026-02-27 | KMP-14 (:iosApp CMP MVP — Splash/Login/MatchList como Text) completado — PR #258 |
+| 2026-02-27 | KMP-Xcode: Proyecto Xcode + CocoaPods Firebase + todos los datasources iOS — PR #266 |
+| 2026-02-27 | KMP-15: módulo `:shared-ui` con CMP — PR #263 |
+| 2026-02-27 | KMP-16 (14 VMs → commonMain, todos los VMs) — PR #264 |
+| 2026-02-27 | KMP-16b: SplashScreen, LoginScreen, MatchListScreen → `:shared-ui` — PR #267 |
+| 2026-03-01 | KMP-17: Google Sign-In nativo iOS (GIDSignIn ↔ KMP bridge) — PR #268 |
+| 2026-03-02 | **Fase 2 completada.** App iOS funcional: Google Sign-In + listado de partidos. PRs #266/#267/#268 pendientes de merge humano. |
+| 2026-03-02 | Documento actualizado con estado real de código compartido y plan Fase 3 |
 
 ---
 
-*Versiones de referencia: Kotlin 2.1.0 · AGP 8.6.1 · Compose Multiplatform 1.7.3 · Koin 4.0.0 · Ktor 3.0.1 · Firebase BOM 33.6.0 · lifecycle-viewmodel 2.8.6 · GitLive Firebase ~2.1.0 (Fase 2)*
+*Versiones de referencia: Kotlin 2.1.0 · AGP 8.6.1 · Compose Multiplatform 1.7.3 · Koin 4.0.0 · Ktor 3.0.1 · Firebase BOM 33.6.0 · lifecycle-viewmodel 2.8.6 · GitLive Firebase ~2.1.0*
