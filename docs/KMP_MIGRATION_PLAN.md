@@ -1,7 +1,7 @@
 # KMP Migration Plan — TeamFlowManager
 
 > **Fecha de análisis inicial**: 2026-02-26
-> **Última actualización**: 2026-02-27 (Fase 1 y Fase 2 completadas; Fase 3 planificada)
+> **Última actualización**: 2026-03-02 (Fase 2 funcional; Fase 3 en curso)
 > **Rama base de migración**: `migration/kmp-migration`
 > **Arquitecto**: Senior KMP/Android Architect (Claude Code)
 
@@ -19,13 +19,33 @@
 
 Estas PRs están **completadas y verificadas** pero pendientes de aprobación y merge humano:
 
-| PR | Branch | Contenido | Issue |
-|----|--------|-----------|-------|
-| #266 | `migration/kmp-xcode-project` | Proyecto Xcode completo + CocoaPods Firebase + todos los datasources iOS | — |
-| #267 | `migration/kmp-16b-screens` | SplashScreen, LoginScreen, MatchListScreen migradas a `:shared-ui` | #265 |
-| #268 | `migration/kmp-17-google-signin` | Google Sign-In nativo iOS (GIDSignIn ↔ KMP bridge) | #261 |
+| PR | Branch | Contenido | Issue | Nota |
+|----|--------|-----------|-------|------|
+| #266 | `migration/kmp-xcode-project` | Proyecto Xcode completo + CocoaPods Firebase + todos los datasources iOS | — | ✅ Infraestructura completa |
+| #267 | `migration/kmp-16b-screens` | SplashScreen, LoginScreen, MatchListScreen migradas a `:shared-ui` | #265 | ⚠️ Ver nota MVP abajo |
+| #268 | `migration/kmp-17-google-signin` | Google Sign-In nativo iOS (GIDSignIn ↔ KMP bridge) | #261 | ⚠️ Ver nota estética abajo |
 
 > **Acción requerida**: revisar y mergear las 3 PRs en orden (#266 → #267 → #268) para cerrar Fase 2 formalmente.
+
+#### ⚠️ Nota sobre PR #267 — Pantallas MVP, no producción
+
+Las 3 pantallas migradas a `:shared-ui` son **funcionales a nivel de MVP** pero **no tienen el mismo acabado visual que Android**:
+
+- **SplashScreen**: muestra solo un spinner. Sin logo ni branding. El `Loading()` composable es un placeholder — falta `TeamFlowManagerIcon` y el diseño de splash definitivo.
+- **LoginScreen**: botón "Sign in with Google" funcional pero con estilo mínimo (`OutlinedButton`). Falta ajustar tipografía, colores, logo y composición visual para que sea equivalente a Android.
+- **MatchListScreen**: lista plana de texto (`Text` por partido). Falta el diseño de tarjeta (`MatchCard`) con resultado, rival, fecha, estadísticas visuales, etc.
+
+Estas mejoras se abordan en **KMP-19+** cuando se migren los componentes atómicos compartidos (`AppCard`, sistema de diseño) y los strings/recursos CMP.
+
+#### ⚠️ Nota sobre PR #268 — Google Sign-In funcional, estética pendiente
+
+El flujo de autenticación Google funciona end-to-end en iOS (GIDSignIn → Firebase Auth → navegación a MatchList). Sin embargo:
+
+- El botón de login es un `OutlinedButton` genérico, sin el estilo oficial de Google Sign-In.
+- **Decisión pendiente**: ¿botón nativo iOS (Google Sign-In branded button del SDK) o botón custom con el estilo de la app?
+  - **Opción A — Nativo iOS**: Usar `GIDSignInButton` de GoogleSignIn SDK via `UIViewRepresentable`. Experiencia auténtica pero platform-specific (Android tiene su propio `SignInWithGoogleButton`). Tiene sentido: Google no tiene una librería CMP, y la experiencia nativa es la correcta en cada plataforma.
+  - **Opción B — Botón custom**: Un único Composable CMP en `:shared-ui` con el logo de Google y estilo propio de la app. Menos "oficial" pero 100% compartido.
+  - **Recomendación**: Opción A (nativo por plataforma) — planificar como subtarea de **KMP-19** o issue separada.
 
 ---
 
