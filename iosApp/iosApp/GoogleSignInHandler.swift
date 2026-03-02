@@ -23,7 +23,8 @@ class GoogleSignInCallbackImpl: NSObject, GoogleSignInCallback {
                 GoogleSignInBridge.shared.onError(message: "No ID token received from Google Sign-In")
                 return
             }
-            GoogleSignInBridge.shared.onSuccess(idToken: idToken)
+            let accessToken = result?.user.accessToken.tokenString ?? ""
+            GoogleSignInBridge.shared.onSuccess(idToken: idToken, accessToken: accessToken)
         }
     }
 

@@ -23,7 +23,12 @@ class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthD
 
     override suspend fun signInWithGoogle(idToken: String): Result<User> {
         return try {
-            val credential = GoogleAuthProvider.credential(idToken = idToken, accessToken = null)
+            // idToken is encoded as "idToken\naccessToken" by GoogleSignInBridge.
+            // Both tokens are required by the native Firebase iOS SDK.
+            val parts = idToken.split("\n")
+            val actualIdToken = parts[0]
+            val accessToken = parts.getOrElse(1) { "" }
+            val credential = GoogleAuthProvider.credential(idToken = actualIdToken, accessToken = accessToken)
             val authResult = firebaseAuth.signInWithCredential(credential)
             val firebaseUser = authResult.user
                 ?: return Result.failure(Exception("Firebase user is null after sign in"))

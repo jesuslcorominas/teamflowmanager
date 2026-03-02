@@ -23,7 +23,7 @@ fun App(onSignInWithGoogle: suspend () -> String = { throw NotImplementedError("
 
         Screen.LOGIN -> LoginScreen(
             onSignInWithGoogle = onSignInWithGoogle,
-            onLoginSuccess = { screen = Screen.SPLASH },
+            onLoginSuccess = { screen = Screen.MATCHES },
         )
 
         Screen.MATCHES -> MatchListScreen()

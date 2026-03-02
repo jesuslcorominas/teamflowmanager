@@ -42,9 +42,13 @@ object GoogleSignInBridge {
         return d.await()
     }
 
-    /** Called from Swift after a successful Google Sign-In with the user's ID token. */
-    fun onSuccess(idToken: String) {
-        deferred?.complete(idToken)
+    /**
+     * Called from Swift after a successful Google Sign-In.
+     * Both tokens are encoded as "idToken\naccessToken" so that the iOS
+     * FirebaseAuthDataSourceImpl can extract them without changing any shared interface.
+     */
+    fun onSuccess(idToken: String, accessToken: String) {
+        deferred?.complete("$idToken\n$accessToken")
         deferred = null
     }
 
