@@ -1,0 +1,33 @@
+package com.jesuslcorominas.teamflowmanager.data.remote.firestore
+
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
+import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class TeamFirestoreModel(
+    val id: String = "",
+    val name: String = "",
+    val coachName: String = "",
+    val delegateName: String = "",
+    val captainId: Long? = null,
+    val teamType: Int = TeamType.FOOTBALL_5.players,
+    val assignedCoachId: String? = null,
+    val clubId: String? = null,
+)
+
+fun TeamFirestoreModel.toDomain(): Team =
+    Team(
+        id = id.toStableId(),
+        name = name,
+        coachName = coachName,
+        delegateName = delegateName,
+        captainId = captainId,
+        teamType = TeamType.fromPlayers(teamType),
+        coachId = assignedCoachId,
+        clubId = clubId?.takeIf { it.isNotEmpty() }?.toStableId(),
+        clubFirestoreId = clubId?.takeIf { it.isNotEmpty() },
+        firestoreId = id,
+    )
