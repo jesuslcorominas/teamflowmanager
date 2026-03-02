@@ -41,4 +41,5 @@ dependencies {
     add("commonMainImplementation", project(":di"))
     add("commonMainImplementation", project(":viewmodel"))
     add("commonMainImplementation", project(":domain"))
+    add("commonMainImplementation", project(":shared-ui"))
 }

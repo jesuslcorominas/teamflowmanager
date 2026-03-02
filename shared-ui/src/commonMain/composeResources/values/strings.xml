@@ -1,0 +1,339 @@
+<resources>
+    <string name="app_name">TeamFlow Manager</string>
+
+    <!-- Login -->
+    <string name="login_subtitle">Manage your team in an easy way</string>
+    <string name="sign_in_with_google">Continue with Google</string>
+
+    <!-- Club Selection -->
+    <string name="club_selection_title">Welcome!</string>
+    <string name="club_selection_subtitle">Choose how you want to get started</string>
+    <string name="create_club">Create a Club</string>
+    <string name="join_club">Join a Club</string>
+
+    <!-- Create Club -->
+    <string name="create_club_title">Create Your Club</string>
+    <string name="create_club_subtitle">Give your club a name to get started</string>
+    <string name="club_name_label">Club Name</string>
+    <string name="club_name_placeholder">Enter club name</string>
+    <string name="club_name_error_empty">Club name cannot be empty</string>
+    <string name="club_name_error_too_short">Club name must be at least 3 characters</string>
+    <string name="club_name_error_too_long">Club name must be less than 50 characters</string>
+    <string name="create_club_button">Create Club</string>
+    <string name="create_club_loading">Creating your club…</string>
+    <string name="create_club_error">Failed to create club. Please try again.</string>
+    <string name="create_club_success">Club created successfully!</string>
+    <string name="create_club_success_title">Club Created Successfully!</string>
+    <string name="create_club_success_message">Your club has been created successfully and you can now start managing your teams.</string>
+    <string name="create_club_redirecting">You will be redirected automatically in a few seconds…</string>
+    <string name="create_club_continue">Continue</string>
+
+    <!-- Join Club -->
+    <string name="join_club_title">Join a Club</string>
+    <string name="join_club_subtitle">Enter the invitation code to join a club</string>
+    <string name="invitation_code_label">Invitation Code</string>
+    <string name="invitation_code_placeholder">Enter invitation code</string>
+    <string name="invitation_code_error_empty">Invitation code cannot be empty</string>
+    <string name="invitation_code_error_too_short">Invitation code must be at least 6 characters</string>
+    <string name="invitation_code_error_too_long">Invitation code must be less than 10 characters</string>
+    <string name="invitation_code_error_invalid_format">Invitation code must contain only letters and numbers</string>
+    <string name="join_club_button">Join Club</string>
+    <string name="join_club_loading">Joining club…</string>
+    <string name="join_club_error">Failed to join club. Please try again.</string>
+    <string name="join_club_success_title">Welcome to the Club!</string>
+    <string name="join_club_success_message">You have successfully joined %1$s</string>
+    <string name="join_club_success_role">Your role: %1$s</string>
+    <string name="join_club_success_team_linked">Your existing team has been linked to this club</string>
+    <string name="join_club_redirecting">You will be redirected automatically in a few seconds…</string>
+    <string name="join_club_continue">Continue</string>
+
+    <!-- Account -->
+    <string name="settings_account_section">Account</string>
+    <string name="sign_out">Logout</string>
+    <string name="sign_out_title">Logout</string>
+    <string name="sign_out_message">Are you sure you want to close session?</string>
+    <string name="user_name_unknown">User</string>
+
+    <!-- Common -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="add">Add</string>
+    <string name="expand">Expand</string>
+    <string name="collapse">Collapse</string>
+    <string name="discard">Discard</string>
+    <string name="clear">Clear</string>
+    <string name="close_search">Close search</string>
+    <string name="search">Search</string>
+    <string name="no_results">No results found for your search</string>
+    <string name="edit">Edit</string>
+    <string name="close">Close</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="retry">Reintentar</string>
+
+    <!-- Players -->
+    <string name="players_title">Team Roster</string>
+    <string name="no_players_message">No players registered yet</string>
+    <string name="add_player_title">Add Player</string>
+    <string name="edit_player_title">Edit Player</string>
+    <string name="delete_player_title">Delete Player</string>
+    <string name="delete_player_message">Are you sure you want to delete %1$s %2$s from the roster?</string>
+    <string name="first_name">First Name</string>
+    <string name="first_name_required">First name is required</string>
+    <string name="last_name">Last Name</string>
+    <string name="last_name_required">Last name is required</string>
+    <string name="number">Number</string>
+    <string name="number_required">Number is required</string>
+    <string name="is_captain">Team Captain</string>
+    <string name="team_captain">Captain</string>
+    <string name="captain_confirm_title">Change Team Captain?</string>
+    <string name="captain_confirm_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. Continue?</string>
+    <string name="captain_replace_with_matches_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. There are %5$d scheduled matches. Do you want to update them with the new captain?</string>
+    <string name="update_captain_in_matches">Update captain in matches</string>
+    <string name="keep_current_captain_in_matches">Keep current captain in matches</string>
+    <string name="captain_remove_title">Remove Team Captain?</string>
+    <string name="captain_remove_message">By unchecking this, %1$s %2$s will no longer be the team captain. The captain will be selected for each match. Continue?</string>
+    <string name="captain_remove_with_matches_message">By unchecking this, %1$s %2$s will no longer be the team captain. There are %3$d scheduled matches. What do you want to do?</string>
+    <string name="keep_captain_for_matches">Keep as captain in scheduled matches</string>
+    <string name="remove_captain_from_matches">Remove from scheduled matches</string>
+
+    <!-- Positions -->
+    <string name="position_goalkeeper">Goalkeeper</string>
+    <string name="position_defender">Defender</string>
+    <string name="position_right_back">Right Back</string>
+    <string name="position_left_back">Left Back</string>
+    <string name="position_center_back">Center Back</string>
+    <string name="position_midfielder">Midfielder</string>
+    <string name="position_defensive_midfielder">Defensive Midfielder</string>
+    <string name="position_central_midfielder">Central Midfielder</string>
+    <string name="position_attacking_midfielder">Attacking Midfielder</string>
+    <string name="position_forward">Forward</string>
+    <string name="position_winger">Winger</string>
+    <string name="position_striker">Striker</string>
+
+    <!-- Team -->
+    <string name="team_title">Team</string>
+    <string name="team_list_title">Club Teams</string>
+    <string name="no_teams_message">No teams yet. Create your first team!</string>
+    <string name="error_loading_teams">Unable to load teams. Please check your internet connection and try again.</string>
+    <string name="no_club_membership_teams_error">You need to join or create a club first to view teams.</string>
+    <string name="no_members_message">No staff members in your club yet. Invite members to join!</string>
+    <string name="error_loading_members">Unable to load staff members. Please check your internet connection and try again.</string>
+    <string name="no_club_membership_error">You need to join or create a club first to view staff members.</string>
+    <string name="share_team_button">Compartir</string>
+    <string name="share_team_title">Compartir Invitación de Equipo</string>
+    <string name="share_team_subject">Únete a %1$s como Entrenador</string>
+    <string name="share_team_message">¡Has sido invitado a ser el entrenador de %1$s! Haz clic en el enlace para aceptar: %2$s</string>
+    <string name="create_team_title">Create Team</string>
+    <string name="team_name">Team Name</string>
+    <string name="team_name_required">Team name is required</string>
+    <string name="coach_name">Coach Name</string>
+    <string name="delegate_name">Delegate Name</string>
+    <string name="delegate_name_required">Delegate name is required</string>
+    <string name="team_type">Team Type</string>
+    <string name="team_type_football">Football %d</string>
+    <string name="team_type_change_not_allowed">Cannot change team type</string>
+    <string name="team_type_change_blocked_message">The team type cannot be changed because there are scheduled matches. Please delete or archive all scheduled matches first.</string>
+    <string name="edit_team_title">Edit Team</string>
+    <string name="save_error_title">Error saving data</string>
+    <string name="save_error_message">An error occurred while saving. Please check your internet connection and try again.</string>
+    <string name="team_creation_permission_error_title">Permission Denied</string>
+    <string name="team_creation_permission_error_message">Only club Presidents can create teams. Please contact your club President to create a team.</string>
+
+    <!-- Team Invitation -->
+    <string name="accepting_team_invitation">Procesando invitación…</string>
+    <string name="redirecting_to_login">Por favor inicia sesión para aceptar la invitación…</string>
+    <string name="team_invitation_accepted">¡Invitación Aceptada!</string>
+    <string name="team_invitation_success_message">Ahora eres el entrenador de %1$s</string>
+    <string name="team_invitation_error">Error al Aceptar Invitación</string>
+    <string name="go_to_team">Ir al Equipo</string>
+    <string name="go_to_teams">Ir a Equipos</string>
+    <string name="self_assign_as_coach_button">Asignarme como Coach</string>
+    <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
+    <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
+
+    <!-- Matches -->
+    <string name="matches_title">Matches</string>
+    <string name="no_matches_message">No matches registered yet</string>
+    <string name="add_match_title">Register Match</string>
+    <string name="delete_match_title">Delete Match</string>
+    <string name="delete_match_message">Are you sure you want to delete this match?</string>
+    <string name="opponent">Opponent</string>
+    <string name="opponent_required">Opponent name is required</string>
+    <string name="location">Location</string>
+    <string name="location_required">Location is required</string>
+    <string name="match_date">Match Date</string>
+    <string name="match_date_required">Match date is required</string>
+    <string name="match_time">Match Time</string>
+    <string name="match_time_required">Match time is required</string>
+    <string name="number_of_periods">Number of Periods</string>
+    <string name="two_halves">2 Halves</string>
+    <string name="four_quarters">4 Quarters</string>
+    <string name="search_match_placeholder">Search matches by opponent or place</string>
+
+    <!-- Match Status -->
+    <string name="pending_matches">Pending Matches</string>
+    <string name="paused_match_half_time">Half Time</string>
+    <string name="paused_match_quarter_break">Quarter Break</string>
+    <string name="played_matches">Played Matches</string>
+    <string name="archived_matches">Archived</string>
+    <string name="start_match">Start</string>
+    <string name="view_match">View Detail</string>
+    <string name="match_score">%1$d - %2$d</string>
+    <string name="archive_match">Archive</string>
+    <string name="unarchive_match">Unarchive</string>
+    <string name="no_archived_matches">No matches archived yet</string>
+
+    <!-- Match Controls -->
+    <string name="current_match_title">Current Match</string>
+    <string name="no_match_message">No active match</string>
+    <string name="player_time_title">Active time</string>
+    <string name="pause_match_button">Half Time</string>
+    <string name="resume_match_button">Resume</string>
+    <string name="finish_match_button">Finish match</string>
+    <string name="add_goal_button">Goal</string>
+    <string name="add_opponent_goal_title">Add Opponent Goal</string>
+    <string name="add_opponent_goal_message">Do you want to add a goal for the opponent team?</string>
+    <string name="select_goal_scorer_title">Select Goal Scorer</string>
+    <string name="own_goal_option">Own Goal (Autogol)</string>
+    <string name="timeout_button">Timeout</string>
+    <string name="end_timeout_button">End Timeout</string>
+    <string name="match_timeout">Timeout</string>
+    <string name="begin_match">Begin Match</string>
+    <string name="match_finished">Match Finished</string>
+    <string name="match_next">Upcoming Match</string>
+    <string name="stop_match_early_title">Stop Match Early?</string>
+    <string name="stop_match_early_period_message">The match is not in the final period. Are you sure you want to end match now?</string>
+    <string name="stop_match_early_message">There is more than 1 minute remaining. Are you sure you want to end match now?</string>
+    <string name="pause_match_early_title">Go to break early?</string>
+    <string name="pause_match_early_message">There is more than 1 minute remaining. Are you sure you want to go to the break now?</string>
+
+    <!-- Match Periods -->
+    <string name="period_label">Period %1$d/%2$d</string>
+    <string name="first_quarter">1st Quarter</string>
+    <string name="second_quarter">2nd Quarter</string>
+    <string name="third_quarter">3rd Quarter</string>
+    <string name="fourth_quarter">4th Quarter</string>
+    <string name="first_half">1st Half</string>
+    <string name="second_half">2nd Half</string>
+
+    <!-- Player Substitution -->
+    <string name="invalid_substitution_title">Invalid Substitution</string>
+    <string name="invalid_substitution_message">Invalid substitution: the player going out must be on the field, and the player coming in must be on the bench.</string>
+    <string name="dont_show_again">Don\'t show this again</string>
+
+    <!-- Match Sort -->
+    <string name="sort_players">Sort Players By</string>
+    <string name="sort_by_number">Shirt number</string>
+    <string name="sort_by_time_desc">Most Time First</string>
+    <string name="sort_by_time_asc">Least Time First</string>
+    <string name="sort_by_active">Active First</string>
+    <string name="goalkeeper_badge">G</string>
+    <string name="captain_badge">C</string>
+
+    <!-- Match Summary Tabs -->
+    <string name="timeline_tab">Timeline</string>
+    <string name="summary_tab">Summary</string>
+    <string name="statistics_tab">Statistics</string>
+    <string name="timeline_starting_lineup">Starting Lineup</string>
+    <string name="timeline_goal">Goal</string>
+    <string name="timeline_opponent_goal">Opponent Goal</string>
+    <string name="timeline_substitution">Substitution</string>
+    <string name="timeline_timeout">Timeout</string>
+    <string name="timeline_halftime">Half Time</string>
+    <string name="timeline_quarter_break">Quarter Break</string>
+    <string name="score_evolution_title">Score Evolution</string>
+    <string name="player_activity_title">Score &amp; Player Activity</string>
+    <string name="score_lines_label">Score Lines</string>
+    <string name="player_activity_lines_label">Player Activity</string>
+
+    <!-- Match Creation Wizard -->
+    <string name="wizard_step_general_data">General Data</string>
+    <string name="squad_callup_title">Select Squad Call-Up</string>
+    <string name="squad_callup_subtitle">Select players for this match (minimum %d)</string>
+    <string name="squad_callup_count">Selected: %d players</string>
+    <string name="squad_callup_select_all">Select All</string>
+    <string name="squad_callup_no_goalkeeper_warning">No goalkeeper selected</string>
+    <string name="squad_callup_no_goalkeeper_message">You haven\'t selected any goalkeeper for the squad. Do you want to continue anyway?</string>
+    <string name="captain_selection_title">Select Captain</string>
+    <string name="captain_selection_subtitle">Choose the captain for this match</string>
+    <string name="make_default_captain_title">Make Default Captain?</string>
+    <string name="make_default_captain_message">%s has been captain for the last 2 matches. Would you like to make them the default captain? This will auto-select them for future matches.</string>
+    <string name="starting_lineup_title">Select Initial Lineup</string>
+    <string name="starting_lineup_subtitle">Select exactly %d players to start</string>
+    <string name="starting_lineup_count">Selected: %d/%d players</string>
+    <string name="starting_lineup_max_error">You can only select up to %d players</string>
+    <string name="starting_lineup_no_goalkeeper_warning">No goalkeeper in starting lineup</string>
+    <string name="starting_lineup_no_goalkeeper_message">You haven\'t selected a goalkeeper in the starting lineup. Do you want to continue anyway?</string>
+
+    <!-- Unsaved changes -->
+    <string name="list_single">%1$s</string>
+    <string name="list_multiple">%1$s and %2$d more</string>
+    <string name="unsaved_changes_title">Unsaved changes</string>
+    <string name="discard_message">You have unsaved changes. Are you sure you want to exit?</string>
+
+    <!-- Navigation -->
+    <string name="nav_players">Team Roster</string>
+    <string name="nav_team">Team</string>
+    <string name="nav_teams">Teams</string>
+    <string name="nav_staff">Staff</string>
+    <string name="nav_matches">Matches</string>
+    <string name="nav_analysis">Analysis</string>
+
+    <!-- Analysis -->
+    <string name="analysis_title">Analysis</string>
+    <string name="analysis_times_tab">TIMES</string>
+    <string name="analysis_goals_tab">SCORERS</string>
+    <string name="analysis_no_data">No playing time data available</string>
+    <string name="analysis_no_goals_data">No goals data available</string>
+    <string name="analysis_goals_label">Goals</string>
+    <string name="export_button_description">Export statistics</string>
+    <string name="export_share_title">Share statistics</string>
+
+    <!-- PDF Export -->
+    <string name="pdf_team_stats_title">Team Statistics</string>
+    <string name="pdf_date_label">Date: %s</string>
+    <string name="pdf_player_stats_section">Player Statistics</string>
+    <string name="pdf_no_player_data">No player data available</string>
+    <string name="pdf_header_player">PLAYER</string>
+    <string name="pdf_header_called_up">CALLED</string>
+    <string name="pdf_header_played">PLAYED</string>
+    <string name="pdf_header_total_time">T.TOTAL</string>
+    <string name="pdf_header_avg_time">T.AVG</string>
+    <string name="pdf_header_goals">GOALS</string>
+    <string name="pdf_scorers_section">Top Scorers</string>
+    <string name="pdf_no_goals">No goals recorded</string>
+    <string name="pdf_scorer_format">%1$d. %2$s - %3$d goal(s)</string>
+    <string name="pdf_match_results_section">Match Results</string>
+    <string name="pdf_no_matches">No finished matches</string>
+    <string name="match_report_title">Match Report</string>
+    <string name="match_info_section">Match Information</string>
+    <string name="date_label">Date</string>
+    <string name="result_label">Result</string>
+    <string name="players_section">Players</string>
+    <string name="number_short">No.</string>
+    <string name="player_name">Player</string>
+    <string name="goalkeeper_short">GK</string>
+    <string name="captain_short">C</string>
+    <string name="starter_short">ST</string>
+    <string name="time_short">Time</string>
+    <string name="goals_short">Goals</string>
+    <string name="export_match_report_description">Export match report</string>
+
+    <!-- Player Wizard -->
+    <string name="player_data_step_title">Player Data</string>
+    <string name="player_positions_step_title">Player Positions</string>
+    <string name="player_positions_step_subtitle">Select the positions this player can play</string>
+    <string name="player_image">Player image</string>
+    <string name="tap_to_add_photo">Tap to add photo</string>
+    <string name="select_image_source">Select image source</string>
+    <string name="camera">Camera</string>
+    <string name="gallery">Gallery</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings">Settings</string>
+</resources>
