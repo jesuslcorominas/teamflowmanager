@@ -31,6 +31,10 @@ kotlin {
                 implementation(libs.androidx.material.icons.extended)
                 implementation(libs.androidx.compose.animation)
                 implementation(libs.androidx.compose.ui.tooling.preview)
+                implementation(libs.androidx.activity.compose)
+                implementation(libs.coil.compose)
+                implementation(libs.compose.google.fonts)
+                implementation(libs.firebase.storage.ktx)
             }
         }
         val iosMain by creating {
@@ -44,6 +48,7 @@ kotlin {
 dependencies {
     add("commonMainImplementation", project(":viewmodel"))
     add("commonMainImplementation", project(":domain"))
+    add("androidMainImplementation", platform(libs.firebase.bom))
 }
 
 android {
