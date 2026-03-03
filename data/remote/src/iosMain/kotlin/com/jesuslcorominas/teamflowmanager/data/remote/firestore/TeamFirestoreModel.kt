@@ -31,3 +31,15 @@ fun TeamFirestoreModel.toDomain(): Team =
         clubFirestoreId = clubId?.takeIf { it.isNotEmpty() },
         firestoreId = id,
     )
+
+fun Team.toFirestoreModel(): TeamFirestoreModel =
+    TeamFirestoreModel(
+        id = firestoreId.orEmpty(),
+        name = name,
+        coachName = coachName,
+        delegateName = delegateName,
+        captainId = captainId,
+        teamType = teamType.players,
+        assignedCoachId = coachId,
+        clubId = clubFirestoreId,
+    )

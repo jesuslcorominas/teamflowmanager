@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.TeamFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -107,12 +108,31 @@ class TeamFirestoreDataSourceImpl(
     override suspend fun getTeamDirect(): Team? = null
     override suspend fun clearLocalData() = Unit
 
+    private suspend fun findTeamDocumentId(): String? {
+        val userId = currentUserId() ?: return null
+        return try {
+            firestore.collection(TEAMS_COLLECTION)
+                .where { "assignedCoachId" equalTo userId }
+                .limit(1)
+                .get()
+                .documents
+                .firstOrNull()
+                ?.id
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     // Write operations — not implemented for iOS Phase 2 MVP
     override suspend fun insertTeam(team: Team) =
         throw NotImplementedError("insertTeam not implemented for iOS Phase 2")
 
-    override suspend fun updateTeam(team: Team) =
-        throw NotImplementedError("updateTeam not implemented for iOS Phase 2")
+    override suspend fun updateTeam(team: Team) {
+        val docId = team.firestoreId ?: findTeamDocumentId()
+            ?: throw IllegalStateException("Cannot find team document to update")
+        val model = team.toFirestoreModel()
+        firestore.collection(TEAMS_COLLECTION).document(docId).set(model)
+    }
 
     override suspend fun updateTeamClubId(teamFirestoreId: String, clubId: Long, clubFirestoreId: String) =
         throw NotImplementedError("updateTeamClubId not implemented for iOS Phase 2")

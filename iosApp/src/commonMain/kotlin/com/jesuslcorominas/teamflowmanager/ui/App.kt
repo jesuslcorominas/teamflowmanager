@@ -106,7 +106,7 @@ fun App(onSignInWithGoogle: suspend () -> String = { throw NotImplementedError("
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues),
+                        .padding(top = paddingValues.calculateTopPadding()),
                 ) {
                     when (dest) {
                         is IosDestination.Matches -> MatchListScreen(
