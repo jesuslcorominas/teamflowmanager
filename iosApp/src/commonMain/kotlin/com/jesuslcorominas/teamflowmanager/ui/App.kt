@@ -45,7 +45,7 @@ fun App(onSignInWithGoogle: suspend () -> String = { throw NotImplementedError("
 
         is IosDestination.Login -> LoginScreen(
             onSignInWithGoogle = onSignInWithGoogle,
-            onLoginSuccess = { navController.navigateClearing(IosDestination.Splash) },
+            onLoginSuccess = { navController.navigateClearing(IosDestination.Matches) },
         )
 
         is IosDestination.ClubSelection -> ClubSelectionScreen(
@@ -91,8 +91,15 @@ fun App(onSignInWithGoogle: suspend () -> String = { throw NotImplementedError("
                 onBackNavigate = { navController.popBackStack() },
                 onSettingsNavigate = { navController.navigate(IosDestination.Settings) },
                 onFabClick = {
-                    // KMP-26: MatchCreationWizardScreen not yet available
-                    // TODO: navController.navigate(IosDestination.CreateMatch(0L))
+                    when (dest) {
+                        is IosDestination.Team ->
+                            navController.navigate(IosDestination.Team(Route.Team.MODE_EDIT))
+                        is IosDestination.TeamList ->
+                            navController.navigate(IosDestination.Team(Route.Team.MODE_CREATE))
+                        is IosDestination.Players ->
+                            navController.navigate(IosDestination.PlayerWizard(0L))
+                        else -> { /* Matches FAB: KMP-26 MatchCreationWizard not yet available */ }
+                    }
                 },
                 onBottomNavNavigate = { route -> navController.navigateToBottomNav(route) },
             ) { paddingValues ->
