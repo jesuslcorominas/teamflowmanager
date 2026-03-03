@@ -144,13 +144,13 @@
     <string name="team_creation_permission_error_message">Only club Presidents can create teams. Please contact your club President to create a team.</string>
 
     <!-- Team Invitation -->
-    <string name="accepting_team_invitation">Procesando invitación…</string>
-    <string name="redirecting_to_login">Por favor inicia sesión para aceptar la invitación…</string>
-    <string name="team_invitation_accepted">¡Invitación Aceptada!</string>
-    <string name="team_invitation_success_message">Ahora eres el entrenador de %1$s</string>
-    <string name="team_invitation_error">Error al Aceptar Invitación</string>
-    <string name="go_to_team">Ir al Equipo</string>
-    <string name="go_to_teams">Ir a Equipos</string>
+    <string name="accepting_team_invitation">Processing invitation…</string>
+    <string name="redirecting_to_login">Please sign in to accept the invitation…</string>
+    <string name="team_invitation_accepted">Invitation Accepted!</string>
+    <string name="team_invitation_success_message">You are now the coach of %1$s</string>
+    <string name="team_invitation_error">Error Accepting Invitation</string>
+    <string name="go_to_team">Go to Team</string>
+    <string name="go_to_teams">Go to Teams</string>
     <string name="self_assign_as_coach_button">Assign me as Coach</string>
     <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
     <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
