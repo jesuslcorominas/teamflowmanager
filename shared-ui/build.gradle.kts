@@ -17,6 +17,7 @@ kotlin {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
+                implementation(compose.materialIconsExtended)
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(libs.kotlinx.coroutines.core)
@@ -28,7 +29,6 @@ kotlin {
             dependencies {
                 implementation(libs.androidx.lifecycle.runtime.ktx)
                 implementation(libs.kotlinx.coroutines.android)
-                implementation(libs.androidx.material.icons.extended)
                 implementation(libs.androidx.compose.animation)
                 implementation(libs.androidx.compose.ui.tooling.preview)
                 implementation(libs.androidx.activity.compose)
