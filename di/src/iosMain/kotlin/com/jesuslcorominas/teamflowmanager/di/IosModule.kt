@@ -2,6 +2,8 @@ package com.jesuslcorominas.teamflowmanager.di
 
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
+import com.jesuslcorominas.teamflowmanager.domain.utils.MatchReportPdfExporter
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
 import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
@@ -38,6 +40,7 @@ val iosModule = module {
     single<AnalyticsTracker> { NoOpAnalyticsTracker() }
     single<CrashReporter> { NoOpCrashReporter() }
     single<TimeProvider> { IosTimeProvider() }
+    single<MatchReportPdfExporter> { NoOpMatchReportPdfExporter() }
     factory { createTimeTicker(get()) } bind TimeTicker::class
 
     // ── ViewModels (no-param) ────────────────────────────────────────────────
@@ -259,4 +262,8 @@ private class NoOpCrashReporter : CrashReporter {
     override fun setCustomKey(key: String, value: String) = Unit
     override fun setCustomKey(key: String, value: Int) = Unit
     override fun setCustomKey(key: String, value: Boolean) = Unit
+}
+
+private class NoOpMatchReportPdfExporter : MatchReportPdfExporter {
+    override fun exportMatchReportToPdf(matchReportData: MatchReportData): String? = null
 }

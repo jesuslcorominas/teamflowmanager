@@ -86,3 +86,33 @@ fun MatchPeriodFirestoreModel.toDomain(): MatchPeriod =
         startTimeMillis = startTimeMillis,
         endTimeMillis = endTimeMillis,
     )
+
+fun Match.toFirestoreModel(): MatchFirestoreModel =
+    MatchFirestoreModel(
+        id = "",       // set by data source from document ID
+        teamId = "",   // set by data source
+        teamName = teamName,
+        opponent = opponent,
+        location = location,
+        dateTime = dateTime,
+        numberOfPeriods = periodType.numberOfPeriods,
+        squadCallUpIds = squadCallUpIds,
+        captainId = captainId,
+        startingLineupIds = startingLineupIds,
+        status = status.name,
+        archived = archived,
+        pauseCount = pauseCount,
+        goals = goals,
+        opponentGoals = opponentGoals,
+        timeoutStartTimeMillis = timeoutStartTimeMillis,
+        periods = periods.map { it.toFirestoreModel() },
+        lastCompletedOperationId = lastCompletedOperationId,
+    )
+
+fun MatchPeriod.toFirestoreModel(): MatchPeriodFirestoreModel =
+    MatchPeriodFirestoreModel(
+        periodNumber = periodNumber,
+        periodDuration = periodDuration,
+        startTimeMillis = startTimeMillis,
+        endTimeMillis = endTimeMillis,
+    )

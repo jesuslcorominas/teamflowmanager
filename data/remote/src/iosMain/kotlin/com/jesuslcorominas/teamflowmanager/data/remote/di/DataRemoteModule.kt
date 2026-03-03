@@ -52,9 +52,11 @@ actual val dataRemoteModule: Module = module {
     singleOf(::MatchFirestoreDataSourceImpl) bind MatchDataSource::class
     singleOf(::ClubMemberFirestoreDataSourceImpl) bind ClubMemberDataSource::class
 
+    // Real player datasource
+    single<PlayerDataSource> { PlayerFirestoreDataSourceImpl(get(), get()) }
+
     // Phase 2 stubs — read operations return empty/null, writes throw NotImplementedError
     single<ClubDataSource> { ClubFirestoreDataSourceImpl() }
-    single<PlayerDataSource> { PlayerFirestoreDataSourceImpl() }
     single<GoalDataSource> { GoalFirestoreDataSourceImpl() }
     single<PlayerSubstitutionDataSource> { PlayerSubstitutionFirestoreDataSourceImpl() }
     single<PlayerTimeDataSource> { PlayerTimeFirestoreDataSourceImpl() }
