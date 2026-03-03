@@ -5,14 +5,12 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataS
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Club
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
-import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
@@ -33,23 +31,6 @@ class ClubFirestoreDataSourceImpl : ClubDataSource {
     override suspend fun getClubByInvitationCode(invitationCode: String): Club? = null
 }
 
-class PlayerFirestoreDataSourceImpl : PlayerDataSource {
-    override fun getAllPlayers(): Flow<List<Player>> = flowOf(emptyList())
-    override suspend fun getPlayerById(playerId: Long): Player? = null
-    override suspend fun getCaptainPlayer(): Player? = null
-    override suspend fun setPlayerAsCaptain(playerId: Long) =
-        throw NotImplementedError("setPlayerAsCaptain not implemented for iOS Phase 2")
-    override suspend fun removePlayerAsCaptain(playerId: Long) =
-        throw NotImplementedError("removePlayerAsCaptain not implemented for iOS Phase 2")
-    override suspend fun updatePlayer(player: Player) =
-        throw NotImplementedError("updatePlayer not implemented for iOS Phase 2")
-    override suspend fun insertPlayer(player: Player): Long =
-        throw NotImplementedError("insertPlayer not implemented for iOS Phase 2")
-    override suspend fun deletePlayer(playerId: Long) =
-        throw NotImplementedError("deletePlayer not implemented for iOS Phase 2")
-    override suspend fun getAllPlayersDirect(): List<Player> = emptyList()
-    override suspend fun clearLocalData() = Unit
-}
 
 class GoalFirestoreDataSourceImpl : GoalDataSource {
     override fun getMatchGoals(matchId: Long): Flow<List<Goal>> = flowOf(emptyList())

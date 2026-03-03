@@ -6,8 +6,10 @@ import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import dev.gitlive.firebase.firestore.FirebaseFirestoreException
 import dev.gitlive.firebase.firestore.where
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -43,6 +45,8 @@ class TeamFirestoreDataSourceImpl(
                         null
                     }
                 }
+            }.catch { e ->
+                if (e is FirebaseFirestoreException) emit(null) else throw e
             }
         )
     }
@@ -61,6 +65,8 @@ class TeamFirestoreDataSourceImpl(
                         null
                     }
                 }
+            }.catch { e ->
+                if (e is FirebaseFirestoreException) emit(null) else throw e
             }
         )
     }
@@ -78,6 +84,8 @@ class TeamFirestoreDataSourceImpl(
                         null
                     }
                 }
+            }.catch { e ->
+                if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
             }
         )
     }
