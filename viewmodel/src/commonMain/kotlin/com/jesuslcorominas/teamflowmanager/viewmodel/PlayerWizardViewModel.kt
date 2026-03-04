@@ -168,6 +168,10 @@ class PlayerWizardViewModel(
         onNavigateBack()
     }
 
+    fun resetStep() {
+        _currentStep.value = PlayerWizardStep.PLAYER_DATA
+    }
+
     fun goToNextStep() {
         _currentStep.value = when (_currentStep.value) {
             PlayerWizardStep.PLAYER_DATA -> PlayerWizardStep.POSITIONS
