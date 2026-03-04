@@ -31,7 +31,7 @@ class PlayerFirestoreDataSourceImpl(
         val currentUserId = firebaseAuth.currentUser?.uid ?: return null
         return try {
             val snapshot = firestore.collection(TEAMS_COLLECTION)
-                .where { "ownerId" equalTo currentUserId }
+                .where { "assignedCoachId" equalTo currentUserId }
                 .limit(1)
                 .get()
             snapshot.documents.firstOrNull()?.id

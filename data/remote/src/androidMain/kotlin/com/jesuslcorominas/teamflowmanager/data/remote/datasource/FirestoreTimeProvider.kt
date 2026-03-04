@@ -45,7 +45,7 @@ class FirestoreTimeProvider(
 
             // Find the user's team document
             val teamQuery = firestore.collection(TEAMS_COLLECTION)
-                .whereEqualTo("ownerId", currentUserId)
+                .whereEqualTo("assignedCoachId", currentUserId)
                 .limit(1)
                 .get()
                 .await()

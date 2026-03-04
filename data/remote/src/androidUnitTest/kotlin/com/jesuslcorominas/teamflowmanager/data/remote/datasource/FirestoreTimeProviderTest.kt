@@ -82,7 +82,7 @@ class FirestoreTimeProviderTest {
         val teamQuery = mockk<Query>()
         val teamSnapshot = mockk<QuerySnapshot>()
         every { mockFirestore.collection("teams") } returns teamsCollection
-        every { teamsCollection.whereEqualTo("ownerId", "user-123") } returns teamQuery
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
         every { teamQuery.limit(1) } returns teamQuery
         val teamTask = mockk<Task<QuerySnapshot>>()
         every { teamQuery.get() } returns teamTask
@@ -103,7 +103,7 @@ class FirestoreTimeProviderTest {
         val teamsCollection = mockk<CollectionReference>()
         val teamQuery = mockk<Query>()
         every { mockFirestore.collection("teams") } returns teamsCollection
-        every { teamsCollection.whereEqualTo("ownerId", "user-123") } returns teamQuery
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
         every { teamQuery.limit(1) } returns teamQuery
         val failingTask = mockk<Task<QuerySnapshot>>()
         every { teamQuery.get() } returns failingTask
@@ -128,7 +128,7 @@ class FirestoreTimeProviderTest {
         val docRef = mockk<DocumentReference>()
 
         every { mockFirestore.collection("teams") } returns teamsCollection
-        every { teamsCollection.whereEqualTo("ownerId", "user-123") } returns teamQuery
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
         every { teamQuery.limit(1) } returns teamQuery
         val teamTask = mockk<Task<QuerySnapshot>>()
         every { teamQuery.get() } returns teamTask
@@ -176,7 +176,7 @@ class FirestoreTimeProviderTest {
         val docRef = mockk<DocumentReference>()
 
         every { mockFirestore.collection("teams") } returns teamsCollection
-        every { teamsCollection.whereEqualTo("ownerId", "user-123") } returns teamQuery
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
         every { teamQuery.limit(1) } returns teamQuery
         val teamTask = mockk<Task<QuerySnapshot>>()
         every { teamQuery.get() } returns teamTask

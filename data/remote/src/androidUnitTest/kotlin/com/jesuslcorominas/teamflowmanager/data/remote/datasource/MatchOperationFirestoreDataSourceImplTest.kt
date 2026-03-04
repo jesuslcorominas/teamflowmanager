@@ -51,7 +51,7 @@ class MatchOperationFirestoreDataSourceImplTest {
         dataSource = MatchOperationFirestoreDataSourceImpl(mockFirestore, mockAuth)
     }
 
-    // NOTE: MatchOperationFirestoreDataSourceImpl uses "assignedCoachId" (not "ownerId") to find team
+    // NOTE: MatchOperationFirestoreDataSourceImpl uses "assignedCoachId" (not "assignedCoachId") to find team
     private fun setupUserWithTeam(userId: String = "user-123", teamDocId: String = "team-doc-id") {
         mockkStatic("kotlinx.coroutines.tasks.TasksKt")
         every { mockAuth.currentUser } returns mockUser
