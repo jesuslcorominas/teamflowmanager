@@ -159,6 +159,18 @@ internal class PlayerTimeRepositoryImpl(
         val playerTimesToUpsert = playerIds.map { playerId ->
             val currentPlayerTime = currentTimesMap[playerId]
             currentPlayerTime?.copy(
+                // If the player was already running, accumulate the delta before resetting
+                // lastStartTimeMillis. Without this, re-stamping the timer for "other playing
+                // players" during a substitution would lose all time accumulated since the
+                // last start.
+                elapsedTimeMillis = run {
+                    val startTime = currentPlayerTime.lastStartTimeMillis
+                    if (currentPlayerTime.isRunning && startTime != null) {
+                        currentPlayerTime.elapsedTimeMillis + (currentTimeMillis - startTime)
+                    } else {
+                        currentPlayerTime.elapsedTimeMillis
+                    }
+                },
                 isRunning = true,
                 lastStartTimeMillis = currentTimeMillis,
                 status = PlayerTimeStatus.PLAYING,

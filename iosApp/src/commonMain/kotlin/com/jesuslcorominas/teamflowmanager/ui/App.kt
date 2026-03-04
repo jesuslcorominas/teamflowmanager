@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,143 +29,152 @@ import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamListScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
+import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 
 @Composable
-fun App(onSignInWithGoogle: suspend () -> String = { throw NotImplementedError("KMP-17") }) {
-    val navController = remember { IosNavController() }
-    var matchTitle: String? by remember { mutableStateOf(null) }
+fun App(
+    onSignInWithGoogle: suspend () -> String = { throw NotImplementedError("KMP-17") },
+    onShareFile: (String) -> Unit = {},
+) {
+    MaterialTheme(colorScheme = LightColorScheme) {
+        val navController = remember { IosNavController() }
+        var matchTitle: String? by remember { mutableStateOf(null) }
 
-    when (val dest = navController.current) {
+        when (val dest = navController.current) {
 
-        // ── Full-screen routes (no MainScreen shell) ──────────────────────
+            // ── Full-screen routes (no MainScreen shell) ──────────────────────
 
-        is IosDestination.Splash -> SplashScreen(
-            onNavigateToLogin = { navController.navigateClearing(IosDestination.Login) },
-            onNavigateToMatches = { navController.navigateClearing(IosDestination.Matches) },
-        )
+            is IosDestination.Splash -> SplashScreen(
+                onNavigateToLogin = { navController.navigateClearing(IosDestination.Login) },
+                onNavigateToMatches = { navController.navigateClearing(IosDestination.Matches) },
+            )
 
-        is IosDestination.Login -> LoginScreen(
-            onSignInWithGoogle = onSignInWithGoogle,
-            onLoginSuccess = { navController.navigateClearing(IosDestination.Matches) },
-        )
+            is IosDestination.Login -> LoginScreen(
+                onSignInWithGoogle = onSignInWithGoogle,
+                onLoginSuccess = { navController.navigateClearing(IosDestination.Matches) },
+            )
 
-        is IosDestination.ClubSelection -> ClubSelectionScreen(
-            onCreateClub = { navController.navigate(IosDestination.CreateClub) },
-            onJoinClub = { navController.navigate(IosDestination.JoinClub) },
-        )
+            is IosDestination.ClubSelection -> ClubSelectionScreen(
+                onCreateClub = { navController.navigate(IosDestination.CreateClub) },
+                onJoinClub = { navController.navigate(IosDestination.JoinClub) },
+            )
 
-        is IosDestination.CreateClub -> CreateClubScreen(
-            onClubCreated = {
-                navController.navigateClearing(IosDestination.Team(Route.Team.MODE_CREATE))
-            },
-        )
-
-        is IosDestination.JoinClub -> JoinClubScreen(
-            onClubJoined = { navController.navigateClearing(IosDestination.Splash) },
-        )
-
-        is IosDestination.PlayerWizard -> PlayerWizardScreen(
-            playerId = dest.playerId,
-            onNavigateBack = { navController.popBackStack() },
-        )
-
-        is IosDestination.AcceptTeamInvitation -> AcceptTeamInvitationScreen(
-            teamId = dest.teamId,
-            onNavigateToLogin = { navController.navigateClearing(IosDestination.Login) },
-            onNavigateToTeam = {
-                navController.navigateClearing(IosDestination.Team(Route.Team.MODE_VIEW))
-            },
-            onNavigateToTeams = { navController.navigateClearing(IosDestination.TeamList) },
-        )
-
-        // ── Routes wrapped in MainScreen shell ────────────────────────────
-
-        else -> {
-            val routeString = dest.toRouteString()
-            val teamMode = if (dest is IosDestination.Team) dest.mode else null
-            val dynamicTitle = if (dest is IosDestination.Match) matchTitle else null
-
-            MainScreen(
-                currentRoute = routeString,
-                teamMode = teamMode,
-                dynamicTitle = dynamicTitle,
-                onBackNavigate = { navController.popBackStack() },
-                onSettingsNavigate = { navController.navigate(IosDestination.Settings) },
-                onFabClick = {
-                    when (dest) {
-                        is IosDestination.Team ->
-                            navController.navigate(IosDestination.Team(Route.Team.MODE_EDIT))
-                        is IosDestination.TeamList ->
-                            navController.navigate(IosDestination.Team(Route.Team.MODE_CREATE))
-                        is IosDestination.Players ->
-                            navController.navigate(IosDestination.PlayerWizard(0L))
-                        else -> { /* Matches FAB: KMP-26 MatchCreationWizard not yet available */ }
-                    }
+            is IosDestination.CreateClub -> CreateClubScreen(
+                onClubCreated = {
+                    navController.navigateClearing(IosDestination.Team(Route.Team.MODE_CREATE))
                 },
-                onBottomNavNavigate = { route -> navController.navigateToBottomNav(route) },
-            ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = paddingValues.calculateTopPadding()),
-                ) {
-                    when (dest) {
-                        is IosDestination.Matches -> MatchListScreen(
-                            onNavigateToMatch = { match ->
-                                navController.navigate(IosDestination.Match(match.id))
-                            },
-                            onNavigateToEditMatch = {
-                                // KMP-26: MatchCreationWizardScreen not yet available
-                            },
-                            onNavigateToArchivedMatches = {
-                                navController.navigate(IosDestination.ArchivedMatches)
-                            },
-                        )
+            )
 
-                        is IosDestination.Match -> MatchScreen(
-                            matchId = dest.matchId,
-                            onTitleChange = { matchTitle = it },
-                            onExportReady = { /* iOS share sheet: implement in KMP-29 */ },
-                        )
+            is IosDestination.JoinClub -> JoinClubScreen(
+                onClubJoined = { navController.navigateClearing(IosDestination.Splash) },
+            )
 
-                        is IosDestination.ArchivedMatches -> ArchivedMatchesScreen(
-                            onNavigateToMatchSummary = { match ->
-                                navController.navigate(IosDestination.Match(match.id))
-                            },
-                        )
+            is IosDestination.PlayerWizard -> PlayerWizardScreen(
+                playerId = dest.playerId,
+                onNavigateBack = { navController.popBackStack() },
+            )
 
-                        is IosDestination.Settings -> SettingsScreen(
-                            onSignOut = { navController.navigateClearing(IosDestination.Login) },
-                        )
+            is IosDestination.AcceptTeamInvitation -> AcceptTeamInvitationScreen(
+                teamId = dest.teamId,
+                onNavigateToLogin = { navController.navigateClearing(IosDestination.Login) },
+                onNavigateToTeam = {
+                    navController.navigateClearing(IosDestination.Team(Route.Team.MODE_VIEW))
+                },
+                onNavigateToTeams = { navController.navigateClearing(IosDestination.TeamList) },
+            )
 
-                        is IosDestination.TeamList -> TeamListScreen(
-                            onTeamClick = {
-                                navController.navigate(IosDestination.Team(Route.Team.MODE_VIEW))
-                            },
-                            onShareTeam = { _, _ -> /* iOS share sheet: implement in KMP-29 */ },
-                        )
+            // ── Routes wrapped in MainScreen shell ────────────────────────────
 
-                        is IosDestination.Team -> TeamScreen(
-                            mode = dest.mode,
-                            onNavigateToMatches = { navController.navigateToMatches() },
-                            onNavigateBackRequest = { navController.popBackStack() },
-                            onNavigateToTeamList = {
-                                navController.navigateClearing(IosDestination.TeamList)
-                            },
-                        )
+            else -> {
+                val routeString = dest.toRouteString()
+                val teamMode = if (dest is IosDestination.Team) dest.mode else null
+                val dynamicTitle = if (dest is IosDestination.Match) matchTitle else null
 
-                        is IosDestination.ClubMembers -> ClubMembersScreen()
-
-                        is IosDestination.Players -> PlayersScreen(
-                            onNavigateToCreatePlayer = {
+                MainScreen(
+                    currentRoute = routeString,
+                    teamMode = teamMode,
+                    dynamicTitle = dynamicTitle,
+                    onBackNavigate = { navController.popBackStack() },
+                    onSettingsNavigate = { navController.navigate(IosDestination.Settings) },
+                    onFabClick = {
+                        when (dest) {
+                            is IosDestination.Team ->
+                                navController.navigate(IosDestination.Team(Route.Team.MODE_EDIT))
+                            is IosDestination.TeamList ->
+                                navController.navigate(IosDestination.Team(Route.Team.MODE_CREATE))
+                            is IosDestination.Players ->
                                 navController.navigate(IosDestination.PlayerWizard(0L))
-                            },
-                            onNavigateToEditPlayer = { playerId ->
-                                navController.navigate(IosDestination.PlayerWizard(playerId))
-                            },
-                        )
+                            else -> { /* Matches FAB: KMP-26 MatchCreationWizard not yet available */ }
+                        }
+                    },
+                    onBottomNavNavigate = { route -> navController.navigateToBottomNav(route) },
+                ) { paddingValues ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                top = paddingValues.calculateTopPadding(),
+                                bottom = paddingValues.calculateBottomPadding(),
+                            ),
+                    ) {
+                        when (dest) {
+                            is IosDestination.Matches -> MatchListScreen(
+                                onNavigateToMatch = { match ->
+                                    navController.navigate(IosDestination.Match(match.id))
+                                },
+                                onNavigateToEditMatch = {
+                                    // KMP-26: MatchCreationWizardScreen not yet available
+                                },
+                                onNavigateToArchivedMatches = {
+                                    navController.navigate(IosDestination.ArchivedMatches)
+                                },
+                            )
 
-                        else -> Unit // safety fallback — unreachable in practice
+                            is IosDestination.Match -> MatchScreen(
+                                matchId = dest.matchId,
+                                onTitleChange = { matchTitle = it },
+                                onExportReady = { filePath -> onShareFile(filePath) },
+                            )
+
+                            is IosDestination.ArchivedMatches -> ArchivedMatchesScreen(
+                                onNavigateToMatchSummary = { match ->
+                                    navController.navigate(IosDestination.Match(match.id))
+                                },
+                            )
+
+                            is IosDestination.Settings -> SettingsScreen(
+                                onSignOut = { navController.navigateClearing(IosDestination.Login) },
+                            )
+
+                            is IosDestination.TeamList -> TeamListScreen(
+                                onTeamClick = {
+                                    navController.navigate(IosDestination.Team(Route.Team.MODE_VIEW))
+                                },
+                                onShareTeam = { _, _ -> /* iOS share sheet: implement in KMP-29 */ },
+                            )
+
+                            is IosDestination.Team -> TeamScreen(
+                                mode = dest.mode,
+                                onNavigateToMatches = { navController.navigateToMatches() },
+                                onNavigateBackRequest = { navController.popBackStack() },
+                                onNavigateToTeamList = {
+                                    navController.navigateClearing(IosDestination.TeamList)
+                                },
+                            )
+
+                            is IosDestination.ClubMembers -> ClubMembersScreen()
+
+                            is IosDestination.Players -> PlayersScreen(
+                                onNavigateToCreatePlayer = {
+                                    navController.navigate(IosDestination.PlayerWizard(0L))
+                                },
+                                onNavigateToEditPlayer = { playerId ->
+                                    navController.navigate(IosDestination.PlayerWizard(playerId))
+                                },
+                            )
+
+                            else -> Unit // safety fallback — unreachable in practice
+                        }
                     }
                 }
             }

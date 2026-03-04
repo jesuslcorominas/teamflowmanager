@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.theme
 
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 val Primary = Color(0xFF003366)
@@ -27,3 +28,23 @@ val GoalKeeperBadge = Color(0xFF960615)
 
 val ChartTeamColor = Color(0xFF003366)
 val ChartOpponentColor = Color(0xFFFF6B35)
+
+val LightColorScheme =
+    lightColorScheme(
+        primary = Primary,
+        onPrimary = White,
+        primaryContainer = PrimaryLight,
+        onPrimaryContainer = ContentMain,
+        secondary = AccentEmphasis,
+        onSecondary = White,
+        secondaryContainer = Color(0xFFFBECEA),
+        onSecondaryContainer = ContentMain,
+        tertiary = AccentAffirmative,
+        onTertiary = White,
+        error = AccentDanger,
+        onError = White,
+        background = BackgroundMain,
+        onBackground = ContentMain,
+        surface = White,
+        onSurface = ContentMain,
+    )

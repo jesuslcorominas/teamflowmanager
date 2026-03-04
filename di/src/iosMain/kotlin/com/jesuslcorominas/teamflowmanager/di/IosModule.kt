@@ -40,7 +40,7 @@ val iosModule = module {
     single<AnalyticsTracker> { NoOpAnalyticsTracker() }
     single<CrashReporter> { NoOpCrashReporter() }
     single<TimeProvider> { IosTimeProvider() }
-    single<MatchReportPdfExporter> { NoOpMatchReportPdfExporter() }
+    single<MatchReportPdfExporter> { IosMatchReportPdfExporterImpl() }
     factory { createTimeTicker(get()) } bind TimeTicker::class
 
     // ── ViewModels (no-param) ────────────────────────────────────────────────

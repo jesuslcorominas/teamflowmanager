@@ -565,8 +565,11 @@ class MatchViewModel(
                             playerTimes.filter { playerTime ->
                                 // Show players whose lastOperationId matches the match's last completed operation
                                 // OR has null operationId (backward compatibility for pre-operation-tracking data)
+                                // OR is ON_BENCH — bench players are not updated during substitutions involving
+                                // other players, so their lastOperationId may be stale; always show them.
                                 playerTime.lastOperationId == match.lastCompletedOperationId ||
-                                    playerTime.lastOperationId == null
+                                    playerTime.lastOperationId == null ||
+                                    playerTime.status == PlayerTimeStatus.ON_BENCH
                             }
                         } else {
                             // No operations completed yet, show all player times
