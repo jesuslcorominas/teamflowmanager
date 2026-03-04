@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * iOS Firestore model for Match — uses @Serializable (kotlinx.serialization) instead
@@ -14,7 +15,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class MatchFirestoreModel(
-    val id: String = "",
+    @Transient val id: String = "",
     val teamId: String = "",
     val teamName: String = "",
     val opponent: String = "",

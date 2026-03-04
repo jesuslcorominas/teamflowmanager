@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * iOS Firestore model for Player — uses @Serializable (kotlinx.serialization).
@@ -12,7 +13,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class PlayerFirestoreModel(
-    val id: String = "",
+    @Transient val id: String = "",
     val firstName: String = "",
     val lastName: String = "",
     val number: Int = 0,
