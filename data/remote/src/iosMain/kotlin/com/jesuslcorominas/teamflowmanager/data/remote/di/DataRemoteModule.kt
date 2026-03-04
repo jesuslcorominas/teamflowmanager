@@ -55,13 +55,15 @@ actual val dataRemoteModule: Module = module {
     // Real player datasource
     single<PlayerDataSource> { PlayerFirestoreDataSourceImpl(get(), get()) }
 
+    // Real Firestore implementations
+    singleOf(::GoalFirestoreDataSourceImpl) bind GoalDataSource::class
+    singleOf(::PlayerSubstitutionFirestoreDataSourceImpl) bind PlayerSubstitutionDataSource::class
+    singleOf(::PlayerTimeHistoryFirestoreDataSourceImpl) bind PlayerTimeHistoryDataSource::class
+
     // Phase 2 stubs — read operations return empty/null, writes throw NotImplementedError
     single<ClubDataSource> { ClubFirestoreDataSourceImpl() }
-    single<GoalDataSource> { GoalFirestoreDataSourceImpl() }
-    single<PlayerSubstitutionDataSource> { PlayerSubstitutionFirestoreDataSourceImpl() }
-    single<PlayerTimeDataSource> { PlayerTimeFirestoreDataSourceImpl() }
-    single<PlayerTimeHistoryDataSource> { PlayerTimeHistoryFirestoreDataSourceImpl() }
-    single<MatchOperationDataSource> { MatchOperationFirestoreDataSourceImpl() }
+    singleOf(::PlayerTimeFirestoreDataSourceImpl) bind PlayerTimeDataSource::class
+    singleOf(::MatchOperationFirestoreDataSourceImpl) bind MatchOperationDataSource::class
     single<ImageStorageDataSource> { NoOpImageStorageDataSource() }
     single<DynamicLinkDataSource> { NoOpDynamicLinkDataSource() }
 }
