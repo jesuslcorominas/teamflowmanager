@@ -67,7 +67,7 @@ class MatchFirestoreDataSourceImplTest {
         val teamSnapshot = mockk<QuerySnapshot>()
         val teamDoc = mockk<DocumentSnapshot>()
         every { mockFirestore.collection("teams") } returns teamsCollection
-        every { teamsCollection.whereEqualTo("ownerId", userId) } returns teamQuery
+        every { teamsCollection.whereEqualTo("assignedCoachId", userId) } returns teamQuery
         every { teamQuery.limit(1) } returns teamQuery
         val teamTask = mockk<Task<QuerySnapshot>>()
         every { teamQuery.get() } returns teamTask
@@ -84,7 +84,7 @@ class MatchFirestoreDataSourceImplTest {
         val teamQuery = mockk<Query>()
         val teamSnapshot = mockk<QuerySnapshot>()
         every { mockFirestore.collection("teams") } returns teamsCollection
-        every { teamsCollection.whereEqualTo("ownerId", userId) } returns teamQuery
+        every { teamsCollection.whereEqualTo("assignedCoachId", userId) } returns teamQuery
         every { teamQuery.limit(1) } returns teamQuery
         val teamTask = mockk<Task<QuerySnapshot>>()
         every { teamQuery.get() } returns teamTask

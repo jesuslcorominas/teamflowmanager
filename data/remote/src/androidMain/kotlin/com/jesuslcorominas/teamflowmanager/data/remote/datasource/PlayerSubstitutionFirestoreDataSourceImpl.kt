@@ -45,7 +45,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
 
         return try {
             val snapshot = firestore.collection(TEAMS_COLLECTION)
-                .whereEqualTo("ownerId", currentUserId)
+                .whereEqualTo("assignedCoachId", currentUserId)
                 .limit(1)
                 .get()
                 .await()
