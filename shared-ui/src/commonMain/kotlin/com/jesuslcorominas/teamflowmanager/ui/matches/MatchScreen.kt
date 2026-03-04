@@ -119,7 +119,7 @@ fun MatchScreen(
     matchId: Long,
     onTitleChange: (String?) -> Unit = {},
     onExportReady: (uri: String) -> Unit = {},
-    viewModel: MatchViewModel = koinViewModel(parameters = { parametersOf(matchId) }),
+    viewModel: MatchViewModel = koinViewModel(key = matchId.toString(), parameters = { parametersOf(matchId) }),
 ) {
     TrackScreenView(screenName = ScreenName.MATCH_DETAIL, screenClass = "MatchScreen")
 

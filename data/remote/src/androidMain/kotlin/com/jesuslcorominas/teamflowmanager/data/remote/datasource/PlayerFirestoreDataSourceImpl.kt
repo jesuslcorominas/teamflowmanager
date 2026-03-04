@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
@@ -60,6 +61,19 @@ class PlayerFirestoreDataSourceImpl(
     }
 
     /**
+     * Safely deserializes a DocumentSnapshot to a Player, catching RuntimeException thrown
+     * when a document has a stored 'id' field that conflicts with @DocumentId.
+     */
+    private fun documentToPlayer(document: DocumentSnapshot): Player? {
+        return try {
+            val model = document.toObject(PlayerFirestoreModel::class.java) ?: return null
+            model.copy(id = document.id).toDomain()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
      * Gets all players for the current user's team from Firestore as a real-time Flow.
      */
     override fun getAllPlayers(): Flow<List<Player>> = callbackFlow {
@@ -86,18 +100,10 @@ class PlayerFirestoreDataSourceImpl(
                     return@addSnapshotListener
                 }
 
-                val players = snapshot?.documents?.mapNotNull { document ->
-                    val documentId = document.id
-                    val firestoreModel = document.toObject(PlayerFirestoreModel::class.java)
-                    firestoreModel?.let {
-                        val modelWithId = if (it.id.isEmpty()) {
-                            it.copy(id = documentId)
-                        } else {
-                            it
-                        }
-                        modelWithId.toDomain()
-                    }
-                }?.filter { !it.deleted } ?: emptyList()
+                val players = snapshot?.documents
+                    ?.mapNotNull { documentToPlayer(it) }
+                    ?.filter { !it.deleted }
+                    ?: emptyList()
 
                 trySend(players)
             }
@@ -121,18 +127,10 @@ class PlayerFirestoreDataSourceImpl(
                 .get()
                 .await()
 
-            snapshot.documents.mapNotNull { document ->
-                val documentId = document.id
-                val firestoreModel = document.toObject(PlayerFirestoreModel::class.java)
-                firestoreModel?.let {
-                    val modelWithId = if (it.id.isEmpty()) {
-                        it.copy(id = documentId)
-                    } else {
-                        it
-                    }
-                    modelWithId.toDomain()
-                }
-            }.filter { !it.deleted }.find { it.id == playerId }
+            snapshot.documents
+                .mapNotNull { documentToPlayer(it) }
+                .filter { !it.deleted }
+                .find { it.id == playerId }
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
@@ -155,19 +153,8 @@ class PlayerFirestoreDataSourceImpl(
                 .await()
 
             val document = snapshot.documents.firstOrNull() ?: return null
-
-            val documentId = document.id
-            val firestoreModel = document.toObject(PlayerFirestoreModel::class.java)
-            firestoreModel?.let {
-                val modelWithId = if (it.id.isEmpty()) {
-                    it.copy(id = documentId)
-                } else {
-                    it
-                }
-                val player = modelWithId.toDomain()
-                // Filter out deleted players
-                if (player.deleted) null else player
-            }
+            val player = documentToPlayer(document) ?: return null
+            if (player.deleted) null else player
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
@@ -394,19 +381,8 @@ class PlayerFirestoreDataSourceImpl(
             .await()
 
         for (document in snapshot.documents) {
-            val documentId = document.id
-            val firestoreModel = document.toObject(PlayerFirestoreModel::class.java)
-            firestoreModel?.let {
-                val modelWithId = if (it.id.isEmpty()) {
-                    it.copy(id = documentId)
-                } else {
-                    it
-                }
-                val player = modelWithId.toDomain()
-                if (player.id == playerId && !player.deleted) {
-                    return documentId
-                }
-            }
+            val player = documentToPlayer(document) ?: continue
+            if (player.id == playerId && !player.deleted) return document.id
         }
         return null
     }
@@ -421,19 +397,15 @@ class PlayerFirestoreDataSourceImpl(
             .get()
             .await()
 
-        var clearedCount = 0
         for (document in snapshot.documents) {
-            // Only clear captain status for non-deleted players
-            val firestoreModel = document.toObject(PlayerFirestoreModel::class.java)
-            if (firestoreModel != null && !firestoreModel.deleted) {
+            val player = documentToPlayer(document) ?: continue
+            if (!player.deleted) {
                 firestore.collection(PLAYERS_COLLECTION)
                     .document(document.id)
                     .update("isCaptain", false)
                     .await()
-                clearedCount++
             }
         }
-
     }
 
     /**

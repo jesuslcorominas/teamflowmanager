@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.TeamFirestoreModel
@@ -29,6 +30,15 @@ class TeamFirestoreDataSourceImpl(
         private const val TEAMS_COLLECTION = "teams"
     }
 
+    private fun documentToTeam(document: DocumentSnapshot): Team? {
+        return try {
+            val model = document.toObject(TeamFirestoreModel::class.java) ?: return null
+            model.copy(id = document.id).toDomain()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     /**
      * Gets the first team assigned to the current user (as coach) from Firestore.
      */
@@ -50,27 +60,7 @@ class TeamFirestoreDataSourceImpl(
                 }
 
                 val document = snapshot?.documents?.firstOrNull()
-                if (document == null) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
-
-                // Get the document ID explicitly to ensure it's available
-                val documentId = document.id
-                val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
-
-                if (firestoreModel != null) {
-                    // Ensure the id field is set from the document ID
-                    val modelWithId = if (firestoreModel.id.isEmpty()) {
-                        firestoreModel.copy(id = documentId)
-                    } else {
-                        firestoreModel
-                    }
-                    val team = modelWithId.toDomain()
-                    trySend(team)
-                } else {
-                    trySend(null)
-                }
+                trySend(document?.let { documentToTeam(it) })
             }
 
         awaitClose {
@@ -136,22 +126,7 @@ class TeamFirestoreDataSourceImpl(
                     return@addSnapshotListener
                 }
 
-                // Get the document ID explicitly to ensure it's available
-                val documentId = snapshot.id
-                val firestoreModel = snapshot.toObject(TeamFirestoreModel::class.java)
-
-                if (firestoreModel != null) {
-                    // Ensure the id field is set from the document ID
-                    val modelWithId = if (firestoreModel.id.isEmpty()) {
-                        firestoreModel.copy(id = documentId)
-                    } else {
-                        firestoreModel
-                    }
-                    val team = modelWithId.toDomain()
-                    trySend(team)
-                } else {
-                    trySend(null)
-                }
+                trySend(documentToTeam(snapshot))
             }
 
         awaitClose {
@@ -175,20 +150,7 @@ class TeamFirestoreDataSourceImpl(
                     return@addSnapshotListener
                 }
 
-                val teams = snapshot.documents.mapNotNull { document ->
-                    val documentId = document.id
-                    val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
-
-                    firestoreModel?.let {
-                        // Ensure the id field is set from the document ID
-                        val modelWithId = if (it.id.isEmpty()) {
-                            it.copy(id = documentId)
-                        } else {
-                            it
-                        }
-                        modelWithId.toDomain()
-                    }
-                }
+                val teams = snapshot.documents.mapNotNull { documentToTeam(it) }
 
                 trySend(teams)
             }
@@ -231,27 +193,9 @@ class TeamFirestoreDataSourceImpl(
 
             // Filter to only include teams without a clubId field (orphan teams)
             val teams = querySnapshot.documents.mapNotNull { document ->
-                val documentId = document.id
-
-                // Check if document has clubId field and skip if it does
                 val hasClubId = document.contains("clubId") && document.getString("clubId") != null
-                if (hasClubId) {
-                    return@mapNotNull null
-                }
-
-                val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
-
-                if (firestoreModel != null) {
-                    // Ensure the id field is set from the document ID
-                    val modelWithId = if (firestoreModel.id.isEmpty()) {
-                        firestoreModel.copy(id = documentId)
-                    } else {
-                        firestoreModel
-                    }
-                    modelWithId.toDomain()
-                } else {
-                    null
-                }
+                if (hasClubId) return@mapNotNull null
+                documentToTeam(document)
             }
 
             return teams
@@ -297,18 +241,7 @@ class TeamFirestoreDataSourceImpl(
                 return null
             }
 
-            val documentId = document.id
-            val firestoreModel = document.toObject(TeamFirestoreModel::class.java)
-
-            return firestoreModel?.let {
-                // Ensure the id field is set from the document ID
-                val modelWithId = if (it.id.isEmpty()) {
-                    it.copy(id = documentId)
-                } else {
-                    it
-                }
-                modelWithId.toDomain()
-            }
+            return documentToTeam(document)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

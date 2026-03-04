@@ -134,7 +134,7 @@
     <string name="delegate_name">Delegate Name</string>
     <string name="delegate_name_required">Delegate name is required</string>
     <string name="team_type">Team Type</string>
-    <string name="team_type_football">Football %d</string>
+    <string name="team_type_football">Football</string>
     <string name="team_type_change_not_allowed">Cannot change team type</string>
     <string name="team_type_change_blocked_message">The team type cannot be changed because there are scheduled matches. Please delete or archive all scheduled matches first.</string>
     <string name="edit_team_title">Edit Team</string>

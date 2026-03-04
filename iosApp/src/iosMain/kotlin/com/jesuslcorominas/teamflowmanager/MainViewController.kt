@@ -3,6 +3,8 @@ package com.jesuslcorominas.teamflowmanager
 import androidx.compose.ui.window.ComposeUIViewController
 import com.jesuslcorominas.teamflowmanager.di.initKoinIos as diInitKoinIos
 import com.jesuslcorominas.teamflowmanager.ui.App
+import platform.Foundation.NSURL
+import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIViewController
 
 /**
@@ -39,7 +41,21 @@ import platform.UIKit.UIViewController
  */
 fun initKoinIos() = diInitKoinIos()
 
-fun MainViewController(): UIViewController =
-    ComposeUIViewController(configure = { enforceStrictPlistSanityCheck = false }) {
-        App(onSignInWithGoogle = { GoogleSignInBridge.signIn() })
+fun MainViewController(): UIViewController {
+    var vc: UIViewController? = null
+    val result = ComposeUIViewController(configure = { enforceStrictPlistSanityCheck = false }) {
+        App(
+            onSignInWithGoogle = { GoogleSignInBridge.signIn() },
+            onShareFile = { filePath ->
+                val fileUrl = NSURL.fileURLWithPath(filePath)
+                val activityVC = UIActivityViewController(
+                    activityItems = listOf(fileUrl),
+                    applicationActivities = null,
+                )
+                vc?.presentViewController(activityVC, animated = true, completion = null)
+            },
+        )
     }
+    vc = result
+    return result
+}

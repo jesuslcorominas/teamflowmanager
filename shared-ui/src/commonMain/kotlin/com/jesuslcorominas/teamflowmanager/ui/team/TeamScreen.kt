@@ -40,7 +40,7 @@ fun TeamScreen(
     onNavigateToMatches: (String) -> Unit,
     onNavigateBackRequest: () -> Unit,
     onNavigateToTeamList: (() -> Unit)? = null,
-    viewModel: TeamViewModel = koinViewModel(parameters = { parametersOf(mode) }),
+    viewModel: TeamViewModel = koinViewModel(key = mode, parameters = { parametersOf(mode) }),
 ) {
     TrackScreenView(screenName = ScreenName.TEAM, screenClass = "TeamScreen")
 

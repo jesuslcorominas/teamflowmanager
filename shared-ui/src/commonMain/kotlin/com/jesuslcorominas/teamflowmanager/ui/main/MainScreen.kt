@@ -1,7 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
@@ -13,7 +12,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
@@ -82,7 +80,7 @@ fun MainScreen(
         Scaffold(
             topBar = {
                 AppTopBar(
-                    modifier = Modifier.padding(top = 16.dp),
+                    modifier = Modifier,
                     uiConfig = uiConfig,
                     title = title,
                     searchPlaceholder = searchPlaceholder,

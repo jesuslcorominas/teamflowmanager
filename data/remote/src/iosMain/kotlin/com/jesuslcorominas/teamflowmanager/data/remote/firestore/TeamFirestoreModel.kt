@@ -3,12 +3,12 @@ package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 data class TeamFirestoreModel(
-    val id: String = "",
+    @Transient val id: String = "",
     val name: String = "",
     val coachName: String = "",
     val delegateName: String = "",
@@ -30,4 +30,16 @@ fun TeamFirestoreModel.toDomain(): Team =
         clubId = clubId?.takeIf { it.isNotEmpty() }?.toStableId(),
         clubFirestoreId = clubId?.takeIf { it.isNotEmpty() },
         firestoreId = id,
+    )
+
+fun Team.toFirestoreModel(): TeamFirestoreModel =
+    TeamFirestoreModel(
+        id = firestoreId.orEmpty(),
+        name = name,
+        coachName = coachName,
+        delegateName = delegateName,
+        captainId = captainId,
+        teamType = teamType.players,
+        assignedCoachId = coachId,
+        clubId = clubFirestoreId,
     )

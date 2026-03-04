@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * iOS Firestore model for Match — uses @Serializable (kotlinx.serialization) instead
@@ -14,7 +15,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class MatchFirestoreModel(
-    val id: String = "",
+    @Transient val id: String = "",
     val teamId: String = "",
     val teamName: String = "",
     val opponent: String = "",
@@ -81,6 +82,36 @@ fun MatchFirestoreModel.toDomain(): Match {
 
 fun MatchPeriodFirestoreModel.toDomain(): MatchPeriod =
     MatchPeriod(
+        periodNumber = periodNumber,
+        periodDuration = periodDuration,
+        startTimeMillis = startTimeMillis,
+        endTimeMillis = endTimeMillis,
+    )
+
+fun Match.toFirestoreModel(): MatchFirestoreModel =
+    MatchFirestoreModel(
+        id = "",       // set by data source from document ID
+        teamId = "",   // set by data source
+        teamName = teamName,
+        opponent = opponent,
+        location = location,
+        dateTime = dateTime,
+        numberOfPeriods = periodType.numberOfPeriods,
+        squadCallUpIds = squadCallUpIds,
+        captainId = captainId,
+        startingLineupIds = startingLineupIds,
+        status = status.name,
+        archived = archived,
+        pauseCount = pauseCount,
+        goals = goals,
+        opponentGoals = opponentGoals,
+        timeoutStartTimeMillis = timeoutStartTimeMillis,
+        periods = periods.map { it.toFirestoreModel() },
+        lastCompletedOperationId = lastCompletedOperationId,
+    )
+
+fun MatchPeriod.toFirestoreModel(): MatchPeriodFirestoreModel =
+    MatchPeriodFirestoreModel(
         periodNumber = periodNumber,
         periodDuration = periodDuration,
         startTimeMillis = startTimeMillis,

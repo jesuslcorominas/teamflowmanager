@@ -46,7 +46,7 @@ fun AcceptTeamInvitationScreen(
     onNavigateToLogin: (String) -> Unit,
     onNavigateToTeam: () -> Unit,
     onNavigateToTeams: () -> Unit,
-    viewModel: AcceptTeamInvitationViewModel = koinViewModel(parameters = { parametersOf(teamId) }),
+    viewModel: AcceptTeamInvitationViewModel = koinViewModel(key = teamId.orEmpty(), parameters = { parametersOf(teamId) }),
 ) {
     val state by viewModel.state.collectAsState()
 

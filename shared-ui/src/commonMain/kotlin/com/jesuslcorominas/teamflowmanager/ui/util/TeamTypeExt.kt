@@ -7,4 +7,4 @@ import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.team_type_football
 
 @Composable
-fun TeamType.localizedName(): String = stringResource(Res.string.team_type_football, players)
+fun TeamType.localizedName(): String = "${stringResource(Res.string.team_type_football)} $players"
