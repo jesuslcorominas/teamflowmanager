@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.jesuslcorominas.teamflowmanager.IosDestination
 import com.jesuslcorominas.teamflowmanager.IosNavController
+import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
@@ -162,6 +163,10 @@ fun App(
                                 },
                             )
 
+                            is IosDestination.Analysis -> AnalysisScreen(
+                                onShareFile = onShareFile,
+                            )
+
                             is IosDestination.ClubMembers -> ClubMembersScreen()
 
                             is IosDestination.Players -> PlayersScreen(
@@ -191,6 +196,7 @@ private fun IosDestination.toRouteString(): String = when (this) {
     is IosDestination.TeamList -> Route.TeamList.createRoute()
     is IosDestination.ClubMembers -> Route.ClubMembers.createRoute()
     is IosDestination.Players -> Route.Players.createRoute()
+    is IosDestination.Analysis -> Route.Analysis.createRoute()
     else -> ""
 }
 
@@ -201,7 +207,7 @@ private fun IosNavController.navigateToBottomNav(route: String) {
         Route.TeamList -> IosDestination.TeamList
         Route.ClubMembers -> IosDestination.ClubMembers
         Route.Players -> IosDestination.Players
-        Route.Analysis -> return // KMP-28: AnalysisScreen not yet available
+        Route.Analysis -> IosDestination.Analysis
         else -> return
     }
     navigateClearing(dest)
