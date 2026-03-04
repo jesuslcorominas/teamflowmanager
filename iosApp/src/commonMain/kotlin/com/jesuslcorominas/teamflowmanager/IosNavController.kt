@@ -22,6 +22,7 @@ sealed class IosDestination {
     data object Players : IosDestination()
     data class PlayerWizard(val playerId: Long) : IosDestination()
     data class AcceptTeamInvitation(val teamId: String?) : IosDestination()
+    data object Analysis : IosDestination()
 }
 
 /**
