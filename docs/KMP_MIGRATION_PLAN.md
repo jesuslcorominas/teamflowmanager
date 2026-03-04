@@ -1,7 +1,7 @@
 # KMP Migration Plan — TeamFlowManager
 
 > **Fecha de análisis inicial**: 2026-02-26
-> **Última actualización**: 2026-03-04 (Fase 3 parcialmente completada — iOS funcional; KMP-26 y KMP-28 diferidos)
+> **Última actualización**: 2026-03-05 (Fase 3 completada — KMP-26 y KMP-28 implementados; 18/18 pantallas en :shared-ui)
 > **Rama base de migración**: `migration/kmp-migration`
 > **Arquitecto**: Senior KMP/Android Architect (Claude Code)
 
@@ -13,12 +13,10 @@
 |------|-------------|--------|
 | **Fase 1** | Infraestructura KMP — todos los módulos convertidos a multiplatform | ✅ **COMPLETADA** |
 | **Fase 2** | iOS MVP — login Firebase (Google Sign-In nativo) + listado de partidos | ✅ **COMPLETADA** |
-| **Fase 3** | iOS con UI completa igual a la de Android (Compose Multiplatform) | ⚠️ **PARCIALMENTE COMPLETADA** — ver nota |
+| **Fase 3** | iOS con UI completa igual a la de Android (Compose Multiplatform) | ✅ **COMPLETADA** — 18/18 pantallas; ver nota KMP-27 |
 
-> **Nota Fase 3**: 16 de 18 pantallas migradas a `:shared-ui`. Pendientes por complejidad técnica (diferidas):
-> - **KMP-26** — `MatchCreationWizardScreen`: **funcionalidad crítica** — sin esta pantalla no es posible crear partidos en iOS.
-> - **KMP-27** — Drag & drop en `MatchScreen`: la pantalla existe pero los jugadores no se pueden reorganizar arrastrando.
-> - **KMP-28** — `AnalysisScreen`: **funcionalidad importante** — la pantalla de analítica no está disponible en iOS porque `compose-charts` (v0.2.0) es Android-only y requiere ser reemplazada por `koalaplot` o Canvas CMP.
+> **Nota Fase 3**: 18/18 pantallas migradas a `:shared-ui`. Pendiente opcional:
+> - **KMP-27** — Drag & drop en `MatchScreen`: la pantalla existe y funciona, pero los jugadores no se pueden reorganizar arrastrando (funcionalidad de confort, no crítica).
 
 ### No hay PRs pendientes de merge
 
@@ -37,9 +35,9 @@
 | `:data:remote` | `kotlin.multiplatform` | ✓ | ✓ (Firebase+Ktor) | ✓ (GitLive Firebase) | ✓ | ✅ Completo |
 | `:viewmodel` | `kotlin.multiplatform` | ✓ (14 VMs) | ✓ (Koin Android) | — | ✓ | ✅ Completo (todos los VMs en commonMain) |
 | `:di` | `kotlin.multiplatform` | ✓ | ✓ | ✓ (initKoinIos + PDF exporter) | — | ✅ Completo |
-| `:shared-ui` | `kotlin.multiplatform` | ✓ (16 pantallas) | — | — | — | ⚠️ Parcial — KMP-26 y KMP-28 diferidos |
+| `:shared-ui` | `kotlin.multiplatform` | ✓ (18 pantallas) | — | — | — | ✅ Completo — todas las pantallas migradas |
 | `:app` | `android.application` | — | ✓ | — | ✓ | ✅ Android-only (por diseño) |
-| `:iosApp` | `kotlin.multiplatform` | ✓ (App.kt — nav completa) | — | ✓ (bridge, MainVC, PDF share) | — | ⚠️ Funcional — sin creación de partidos ni analítica |
+| `:iosApp` | `kotlin.multiplatform` | ✓ (App.kt — nav completa) | — | ✓ (bridge, MainVC, PDF share) | — | ✅ Funcional — UI completa incluyendo wizard y analítica |
 | ~~`:service`~~ | — | — | — | — | — | ✅ Eliminado |
 
 ### 1.2 Boundaries `expect/actual` establecidas
@@ -75,7 +73,7 @@
 - **Google Sign-In en iOS**: `play-services-auth` es Android-only. iOS requiere Google Sign-In iOS SDK (nativo Swift) + adaptador KMP. Requiere diseño específico.
 - **`ktor-client-darwin`**: No está en `libs.versions.toml`. Necesario para Ktor en iOS.
 - **GitLive Firebase SDK**: No está en `libs.versions.toml`. Necesario para Firebase en iOS (`dev.gitlive:firebase-auth`, `dev.gitlive:firebase-firestore`).
-- **`compose-charts` (v0.2.0)**: No es KMP. Bloqueante para Fase 3 (`AnalysisScreen`). Alternativa: `koalaplot` o Canvas nativo CMP.
+- ~~**`compose-charts` (v0.2.0)**~~: Eliminado de shared-ui. `AnalysisScreen` (KMP-28) usa barras horizontales nativas CMP (LazyColumn + Box animado). Android sigue usando compose-charts en `app/`.
 - **`coil-compose` (v2.5.0)**: Solo Android. Para Fase 3 actualizar a Coil 3.x (KMP).
 - **`compose-google-fonts`**: Android-only. Para Fase 3 bundlear fuentes o usar fuentes del sistema.
 
@@ -409,7 +407,7 @@ El módulo `:shared-ui` ya existe (PR #267). Tiene 3 pantallas. Fase 3 completa 
 
 ### 3.3 Inventario de pantallas
 
-#### Estado de pantallas en `:shared-ui/commonMain` — 16/18 migradas
+#### Estado de pantallas en `:shared-ui/commonMain` — 18/18 migradas
 
 | Pantalla | Issue | Estado |
 |----------|-------|--------|
@@ -429,8 +427,8 @@ El módulo `:shared-ui` ya existe (PR #267). Tiene 3 pantallas. Fase 3 completa 
 | `AcceptTeamInvitationScreen` | KMP-21 | ✅ |
 | `MainScreen` (bottom nav shell) | KMP-22 | ✅ |
 | `MatchScreen` (sin drag & drop) | KMP-23 | ✅ |
-| `MatchCreationWizardScreen` | KMP-26 | ❌ **Diferida** — sin esta pantalla no se pueden crear partidos en iOS |
-| `AnalysisScreen` | KMP-28 | ❌ **Diferida** — `compose-charts` es Android-only; requiere reemplazar por `koalaplot` o Canvas CMP |
+| `MatchCreationWizardScreen` | KMP-26 | ✅ **Migrada** — DatePickerDialog/TimePicker disponibles en CMP 1.7.3 |
+| `AnalysisScreen` | KMP-28 | ✅ **Migrada** — barras horizontales nativas CMP (sin compose-charts) |
 
 ### 3.4 Bloqueantes técnicos transversales
 
@@ -444,7 +442,7 @@ Antes de empezar cada tanda de pantallas, resolver:
 | `TeamFlowManagerIcon` | 3 pantallas | Mover a `:shared-ui` como recurso CMP (vector drawable o `painterResource`) |
 | `AppTextField`, `AppCard`, `AppTopBar` | 10+ pantallas | Migrar componentes atómicos a `:shared-ui/commonMain/components/` |
 | `coil-compose` (imágenes) | 5 pantallas | Actualizar a Coil 3.x (KMP-compatible) |
-| `compose-charts` (AnalysisScreen) | 1 pantalla | Reemplazar por `koalaplot-core` o Canvas CMP |
+| ~~`compose-charts` (AnalysisScreen)~~ | ~~1 pantalla~~ | ✅ Resuelto — barras CMP nativas en KMP-28 |
 | `compose-google-fonts` | Theme | Bundlear fuente o usar fuentes del sistema en iOS |
 
 ### 3.5 Plan de tareas Fase 3
@@ -636,9 +634,9 @@ KMP-18 (notificaciones — opcional, paralelo)
    KMP-23 (MatchScreen sin drag & drop) ✅
    KMP-25 (navegación iOS completa) → PR #282 ✅ merged
 
-   ❌ KMP-26 (MatchCreationWizardScreen — CRÍTICO: sin esta pantalla no se pueden crear partidos en iOS)
+   ✅ KMP-26 (MatchCreationWizardScreen — migrada, DatePickerDialog/TimePicker nativos en CMP 1.7.3)
    ❌ KMP-27 (drag & drop en MatchScreen — deferred)
-   ❌ KMP-28 (AnalysisScreen — IMPORTANTE: analítica no disponible en iOS hasta reemplazar compose-charts)
+   ✅ KMP-28 (AnalysisScreen — migrada, compose-charts reemplazado por barras CMP nativas)
    KMP-18 (notificaciones — descartado/opcional)
 ```
 
@@ -657,8 +655,8 @@ KMP-18 (notificaciones — opcional, paralelo)
 | `:data:remote` | Interfaces, modelos Firestore (commonMain) | Android: Firebase/Ktor actual · iOS: GitLive + full datasources actual | **~75%** | Datasources iOS completos: Auth, Match, Team, Player, PlayerTime, Goal, Substitution, MatchOp |
 | `:viewmodel` | 14 ViewModels + TimeTicker (commonMain) | Android: Koin `viewModel {}` · iOS: Koin `factory {}` | **~95%** | Solo el módulo DI difiere |
 | `:di` | `InitKoin.kt` (commonMain) | `TeamFlowManagerModule` (Android) · `IosModule` + `IosMatchReportPdfExporterImpl` (iOS) | **~60%** | iOS PDF exporter es plataforma-específico por diseño |
-| UI — pantallas | 16/18 pantallas en `:shared-ui` | Android: `MainActivity`, `Navigation.kt`, `R.string` · iOS: `App.kt` nav shell, `MainViewController.swift`, `GoogleSignInBridge` | **~82%** | Faltan `MatchCreationWizardScreen` (KMP-26) y `AnalysisScreen` (KMP-28) |
-| **Total proyecto** | | | **~85%** | Meta ~90% alcanzable tras KMP-26 y KMP-28 |
+| UI — pantallas | 18/18 pantallas en `:shared-ui` | Android: `MainActivity`, `Navigation.kt`, `R.string` · iOS: `App.kt` nav shell, `MainViewController.swift`, `GoogleSignInBridge` | **~90%** | Solo drag & drop (KMP-27) pendiente como mejora opcional |
+| **Total proyecto** | | | **~90%** | Meta ~90% alcanzada |
 
 ### 6.2 Dónde vive el código compartido
 
@@ -671,7 +669,7 @@ commonMain (compartido Android + iOS):
   ├── :data:remote     → ~75% — interfaces + modelos + datasources iOS completos
   ├── :viewmodel       → ~95% — 14 ViewModels + TimeTicker
   ├── :di              → ~60% — punto de entrada Koin
-  └── :shared-ui       → ~82% — 16/18 pantallas en commonMain (faltan KMP-26 y KMP-28)
+  └── :shared-ui       → ~90% — 18/18 pantallas en commonMain (solo KMP-27 drag&drop pendiente)
 
 platform-specific (código propio de cada plataforma):
   Android (:app)       → MainActivity, Navigation.kt, R.string, google-services.json
@@ -719,6 +717,7 @@ platform-specific (código propio de cada plataforma):
 | 2026-03-04 | iOS PDF share: `IosMatchReportPdfExporterImpl` (UIKit/CoreGraphics) + `UIActivityViewController` |
 | 2026-03-04 | iOS datasources completos: PlayerTime, Goal, Substitution, MatchOperation, PlayerTimeHistory (Firestore real) |
 | 2026-03-04 | **Fase 3 parcialmente completada.** 16/18 pantallas en shared-ui (~85% código compartido). Diferidas: KMP-26 (MatchCreationWizardScreen — creación de partidos en iOS no disponible) y KMP-28 (AnalysisScreen — analítica en iOS no disponible hasta reemplazar compose-charts). |
+| 2026-03-05 | **Fase 3 completada.** KMP-26 (MatchCreationWizardScreen): DatePickerDialog/TimePicker disponibles en CMP 1.7.3 — no requirió expect/actual. KMP-28 (AnalysisScreen): compose-charts reemplazado por barras CMP nativas animadas. 18/18 pantallas en :shared-ui. ~90% código compartido. |
 
 ---
 
