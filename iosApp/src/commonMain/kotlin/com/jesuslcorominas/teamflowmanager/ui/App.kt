@@ -23,6 +23,7 @@ import com.jesuslcorominas.teamflowmanager.ui.main.MainScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
+import com.jesuslcorominas.teamflowmanager.ui.matches.wizard.MatchCreationWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
@@ -75,6 +76,11 @@ fun App(
                 onNavigateBack = { navController.popBackStack() },
             )
 
+            is IosDestination.MatchWizard -> MatchCreationWizardScreen(
+                matchId = dest.matchId,
+                onNavigateBack = { navController.popBackStack() },
+            )
+
             is IosDestination.AcceptTeamInvitation -> AcceptTeamInvitationScreen(
                 teamId = dest.teamId,
                 onNavigateToLogin = { navController.navigateClearing(IosDestination.Login) },
@@ -105,7 +111,9 @@ fun App(
                                 navController.navigate(IosDestination.Team(Route.Team.MODE_CREATE))
                             is IosDestination.Players ->
                                 navController.navigate(IosDestination.PlayerWizard(0L))
-                            else -> { /* Matches FAB: KMP-26 MatchCreationWizard not yet available */ }
+                            is IosDestination.Matches ->
+                                navController.navigate(IosDestination.MatchWizard(0L))
+                            else -> {}
                         }
                     },
                     onBottomNavNavigate = { route -> navController.navigateToBottomNav(route) },
@@ -123,8 +131,8 @@ fun App(
                                 onNavigateToMatch = { match ->
                                     navController.navigate(IosDestination.Match(match.id))
                                 },
-                                onNavigateToEditMatch = {
-                                    // KMP-26: MatchCreationWizardScreen not yet available
+                                onNavigateToEditMatch = { matchId ->
+                                    navController.navigate(IosDestination.MatchWizard(matchId))
                                 },
                                 onNavigateToArchivedMatches = {
                                     navController.navigate(IosDestination.ArchivedMatches)

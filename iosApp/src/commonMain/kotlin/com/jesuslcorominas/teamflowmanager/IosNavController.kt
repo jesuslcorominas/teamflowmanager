@@ -21,6 +21,7 @@ sealed class IosDestination {
     data object ClubMembers : IosDestination()
     data object Players : IosDestination()
     data class PlayerWizard(val playerId: Long) : IosDestination()
+    data class MatchWizard(val matchId: Long) : IosDestination()
     data class AcceptTeamInvitation(val teamId: String?) : IosDestination()
     data object Analysis : IosDestination()
 }
