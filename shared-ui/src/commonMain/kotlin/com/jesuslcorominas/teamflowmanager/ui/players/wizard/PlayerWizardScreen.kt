@@ -41,6 +41,13 @@ fun PlayerWizardScreen(
     val captainConfirmationState by wizardViewModel.captainConfirmationState.collectAsState()
     val showExitDialog by wizardViewModel.showExitDialog.collectAsState()
 
+    // Reset to first step on every entry — on iOS the ViewModel is cached in the root
+    // ViewModelStore (no NavBackStackEntry lifecycle), so _currentStep can retain
+    // POSITIONS from the previous edit session.
+    LaunchedEffect(Unit) {
+        wizardViewModel.resetStep()
+    }
+
     AppBackHandler {
         wizardViewModel.requestBack(onNavigateBack)
     }
