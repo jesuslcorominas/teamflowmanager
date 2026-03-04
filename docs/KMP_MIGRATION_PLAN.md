@@ -33,7 +33,7 @@
 | `:domain` | `kotlin.multiplatform` | ✓ | ✓ | ✓ | ✓ | ✅ Completo |
 | `:usecase` | `kotlin.multiplatform` | ✓ | — | — | ✓ | ✅ Completo |
 | `:data:core` | `kotlin.multiplatform` | ✓ | — | — | ✓ | ✅ Completo |
-| `:data:local` | `kotlin.multiplatform` | ✓ | ✓ (Room) | ✓ (NSUserDefaults) | ✓ | ✅ Completo |
+| `:data:local` | `kotlin.multiplatform` | ✓ | ✓ (SharedPreferences) | ✓ (NSUserDefaults) | ✓ | ✅ Completo |
 | `:data:remote` | `kotlin.multiplatform` | ✓ | ✓ (Firebase+Ktor) | ✓ (GitLive Firebase) | ✓ | ✅ Completo |
 | `:viewmodel` | `kotlin.multiplatform` | ✓ (14 VMs) | ✓ (Koin Android) | — | ✓ | ✅ Completo (todos los VMs en commonMain) |
 | `:di` | `kotlin.multiplatform` | ✓ | ✓ | ✓ (initKoinIos + PDF exporter) | — | ✅ Completo |
@@ -104,7 +104,7 @@ iosApp (Xcode / Compose Multiplatform iOS)
 :data:core (commonMain) — AuthRepository, MatchRepository
     ↓
 :data:remote (iosMain) — GitLive Firebase Auth + Firestore
-:data:local (iosMain)  — NSUserDefaults (ya implementado)
+:data:local (iosMain)  — NSUserDefaults Preferences (ya implementado)
 ```
 
 ### 2.3 Google Sign-In en iOS
@@ -653,7 +653,7 @@ KMP-18 (notificaciones — opcional, paralelo)
 | `:domain` | Models, interfaces, use case interfaces | `Platform.kt` (expect/actual) | **~99%** | |
 | `:usecase` | Todas las implementaciones | — | **100%** | Pure Kotlin |
 | `:data:core` | Repositories, DataSource interfaces | — | **100%** | Pure Kotlin |
-| `:data:local` | Room entities, DAOs (commonMain) | Android: `AppDatabase` actual · iOS: NSUserDefaults actual | **~85%** | Schema compartido |
+| `:data:local` | `PreferencesLocalDataSource` (commonMain) | Android: SharedPreferences actual · iOS: NSUserDefaults actual | **~85%** | Solo el mecanismo de almacenamiento difiere |
 | `:data:remote` | Interfaces, modelos Firestore (commonMain) | Android: Firebase/Ktor actual · iOS: GitLive + full datasources actual | **~75%** | Datasources iOS completos: Auth, Match, Team, Player, PlayerTime, Goal, Substitution, MatchOp |
 | `:viewmodel` | 14 ViewModels + TimeTicker (commonMain) | Android: Koin `viewModel {}` · iOS: Koin `factory {}` | **~95%** | Solo el módulo DI difiere |
 | `:di` | `InitKoin.kt` (commonMain) | `TeamFlowManagerModule` (Android) · `IosModule` + `IosMatchReportPdfExporterImpl` (iOS) | **~60%** | iOS PDF exporter es plataforma-específico por diseño |
@@ -667,7 +667,7 @@ commonMain (compartido Android + iOS):
   ├── :domain          → 99%  — modelos, interfaces use cases
   ├── :usecase         → 100% — lógica de negocio
   ├── :data:core       → 100% — repositorios, interfaces datasource
-  ├── :data:local      → ~85% — schema Room/NSUserDefaults + lógica
+  ├── :data:local      → ~85% — PreferencesLocalDataSource (SharedPreferences/NSUserDefaults)
   ├── :data:remote     → ~75% — interfaces + modelos + datasources iOS completos
   ├── :viewmodel       → ~95% — 14 ViewModels + TimeTicker
   ├── :di              → ~60% — punto de entrada Koin
