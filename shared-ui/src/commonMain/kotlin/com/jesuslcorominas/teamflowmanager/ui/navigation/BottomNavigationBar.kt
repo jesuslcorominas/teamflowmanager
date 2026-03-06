@@ -1,6 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -13,6 +16,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -42,11 +47,17 @@ fun BottomNavigationBar(
         listOf(Route.Matches, Route.Players, Route.Analysis, Route.Team)
     }
 
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
     Surface(
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        shape = RoundedCornerShape(32.dp),
         tonalElevation = 4.dp,
-        shadowElevation = 8.dp,
-        color = BackgroundContrast
+        shadowElevation = 16.dp,
+        color = BackgroundContrast,
     ) {
         NavigationBar(
             containerColor = Color.Transparent,
@@ -98,6 +109,7 @@ fun BottomNavigationBar(
                 )
             }
         }
+    }
     }
 }
 
