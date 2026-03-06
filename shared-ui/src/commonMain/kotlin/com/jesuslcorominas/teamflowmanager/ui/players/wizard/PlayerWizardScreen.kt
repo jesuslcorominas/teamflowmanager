@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.players.wizard
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -52,79 +53,81 @@ fun PlayerWizardScreen(
         wizardViewModel.requestBack(onNavigateBack)
     }
 
-    when (uiState) {
-        is PlayerWizardUiState.Loading -> Loading()
-        is PlayerWizardUiState.Error -> {
-            LaunchedEffect(Unit) { onNavigateBack() }
-        }
-        is PlayerWizardUiState.Ready -> {
-            Column(modifier = Modifier.fillMaxSize()) {
-                when (currentStep) {
-                    PlayerWizardStep.PLAYER_DATA -> {
-                        PlayerDataStep(
-                            initialFirstName = wizardViewModel.getFirstName(),
-                            initialLastName = wizardViewModel.getLastName(),
-                            initialNumber = wizardViewModel.getNumber(),
-                            initialIsCaptain = wizardViewModel.getIsCaptain(),
-                            initialImageUri = wizardViewModel.getImageUri(),
-                            onDataChanged = { firstName, lastName, number, isCaptain, imageUri ->
-                                wizardViewModel.setPlayerData(firstName, lastName, number, isCaptain, imageUri)
-                            },
-                            onNext = { wizardViewModel.goToNextStep() },
-                            onCancel = { wizardViewModel.requestBack(onNavigateBack) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(TFMSpacing.spacing04),
-                        )
-                    }
-                    PlayerWizardStep.POSITIONS -> {
-                        PlayerPositionsStep(
-                            initialPositions = wizardViewModel.getSelectedPositions(),
-                            onPositionsChanged = { positions -> wizardViewModel.setPositions(positions) },
-                            onSave = { wizardViewModel.savePlayer(onSuccess = onNavigateBack) },
-                            onPrevious = { wizardViewModel.goToPreviousStep() },
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(TFMSpacing.spacing04),
-                        )
+    Scaffold { paddingValues ->
+        when (uiState) {
+            is PlayerWizardUiState.Loading -> Loading()
+            is PlayerWizardUiState.Error -> {
+                LaunchedEffect(Unit) { onNavigateBack() }
+            }
+            is PlayerWizardUiState.Ready -> {
+                Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                    when (currentStep) {
+                        PlayerWizardStep.PLAYER_DATA -> {
+                            PlayerDataStep(
+                                initialFirstName = wizardViewModel.getFirstName(),
+                                initialLastName = wizardViewModel.getLastName(),
+                                initialNumber = wizardViewModel.getNumber(),
+                                initialIsCaptain = wizardViewModel.getIsCaptain(),
+                                initialImageUri = wizardViewModel.getImageUri(),
+                                onDataChanged = { firstName, lastName, number, isCaptain, imageUri ->
+                                    wizardViewModel.setPlayerData(firstName, lastName, number, isCaptain, imageUri)
+                                },
+                                onNext = { wizardViewModel.goToNextStep() },
+                                onCancel = { wizardViewModel.requestBack(onNavigateBack) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(TFMSpacing.spacing04),
+                            )
+                        }
+                        PlayerWizardStep.POSITIONS -> {
+                            PlayerPositionsStep(
+                                initialPositions = wizardViewModel.getSelectedPositions(),
+                                onPositionsChanged = { positions -> wizardViewModel.setPositions(positions) },
+                                onSave = { wizardViewModel.savePlayer(onSuccess = onNavigateBack) },
+                                onPrevious = { wizardViewModel.goToPreviousStep() },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(TFMSpacing.spacing04),
+                            )
+                        }
                     }
                 }
-            }
 
-            when (val state = captainConfirmationState) {
-                is CaptainConfirmationState.ConfirmReplace -> CaptainConfirmationDialog(
-                    state = state,
-                    onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
-                    onDismiss = { wizardViewModel.cancelCaptainChange() },
-                )
-                is CaptainConfirmationState.ConfirmReplaceWithMatches -> CaptainConfirmationDialog(
-                    state = state,
-                    onConfirm = { keepInMatches -> wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack) },
-                    onDismiss = { wizardViewModel.cancelCaptainChange() },
-                )
-                is CaptainConfirmationState.ConfirmRemove -> CaptainConfirmationDialog(
-                    state = state,
-                    onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
-                    onDismiss = { wizardViewModel.cancelCaptainChange() },
-                )
-                is CaptainConfirmationState.ConfirmRemoveWithMatches -> CaptainConfirmationDialog(
-                    state = state,
-                    onConfirm = { keepInMatches -> wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack) },
-                    onDismiss = { wizardViewModel.cancelCaptainChange() },
-                )
-                is CaptainConfirmationState.None -> {}
+                when (val state = captainConfirmationState) {
+                    is CaptainConfirmationState.ConfirmReplace -> CaptainConfirmationDialog(
+                        state = state,
+                        onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
+                        onDismiss = { wizardViewModel.cancelCaptainChange() },
+                    )
+                    is CaptainConfirmationState.ConfirmReplaceWithMatches -> CaptainConfirmationDialog(
+                        state = state,
+                        onConfirm = { keepInMatches -> wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack) },
+                        onDismiss = { wizardViewModel.cancelCaptainChange() },
+                    )
+                    is CaptainConfirmationState.ConfirmRemove -> CaptainConfirmationDialog(
+                        state = state,
+                        onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
+                        onDismiss = { wizardViewModel.cancelCaptainChange() },
+                    )
+                    is CaptainConfirmationState.ConfirmRemoveWithMatches -> CaptainConfirmationDialog(
+                        state = state,
+                        onConfirm = { keepInMatches -> wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack) },
+                        onDismiss = { wizardViewModel.cancelCaptainChange() },
+                    )
+                    is CaptainConfirmationState.None -> {}
+                }
             }
         }
-    }
 
-    if (showExitDialog) {
-        AppAlertDialog(
-            title = stringResource(Res.string.unsaved_changes_title),
-            message = stringResource(Res.string.discard_message),
-            confirmText = stringResource(Res.string.discard),
-            dismissText = stringResource(Res.string.cancel),
-            onConfirm = { wizardViewModel.discardChanges(onNavigateBack) },
-            onDismiss = { wizardViewModel.dismissExitDialog() },
-        )
+        if (showExitDialog) {
+            AppAlertDialog(
+                title = stringResource(Res.string.unsaved_changes_title),
+                message = stringResource(Res.string.discard_message),
+                confirmText = stringResource(Res.string.discard),
+                dismissText = stringResource(Res.string.cancel),
+                onConfirm = { wizardViewModel.discardChanges(onNavigateBack) },
+                onDismiss = { wizardViewModel.dismissExitDialog() },
+            )
+        }
     }
 }
