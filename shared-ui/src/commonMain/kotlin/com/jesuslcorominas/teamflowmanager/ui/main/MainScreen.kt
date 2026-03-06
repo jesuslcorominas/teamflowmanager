@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -34,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
+import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -52,16 +52,15 @@ import teamflowmanager.shared_ui.generated.resources.team_list_title
 import teamflowmanager.shared_ui.generated.resources.team_title
 
 /**
- * Shared MainScreen shell: Scaffold with AppTopBar + floating BottomNavigationBar + FAB.
+ * Shared MainScreen shell for iOS.
  *
- * The bottom navigation bar is rendered as a Box overlay (not in Scaffold's bottomBar slot)
- * so the Scaffold surface doesn't paint an opaque background in the gap around the pill.
- *
- * A gradient fade overlay sits between the content and the bar so that items scrolling
- * into the bar zone become progressively unreadable without a hard clip.
- *
- * The bar height is measured via [onSizeChanged] and forwarded as bottom padding to both
- * the Scaffold content (so lists can scroll fully above the bar) and the FAB (16dp margin).
+ * Layout strategy:
+ * - Content (list) has NO bottom padding → extends all the way to the screen bottom.
+ * - A semi-transparent frosted-glass gradient covers the bar zone so list items
+ *   entering that area are progressively obscured without a hard clip.
+ * - The pill-shaped BottomNavigationBar floats as a Box overlay; its surroundings
+ *   (between pill and device edges) are part of the frosted overlay, not opaque.
+ * - The FAB is placed 8 dp above the bar top so it is clearly separated.
  */
 @Composable
 fun MainScreen(
@@ -91,12 +90,15 @@ fun MainScreen(
         ""
     }
 
+    // Height of the floating bar overlay (including navigationBarsPadding inset).
     var bottomNavHeightPx by remember { mutableStateOf(0) }
 
     CompositionLocalProvider(LocalSearchState provides searchState) {
         Box(modifier = Modifier.fillMaxSize()) {
             val bottomNavHeightDp: Dp = with(LocalDensity.current) { bottomNavHeightPx.toDp() }
 
+            // The Scaffold provides top padding (status bar + topBar height) to the content.
+            // Bottom padding is intentionally 0: the list reaches the screen bottom edge.
             Scaffold(
                 topBar = {
                     AppTopBar(
@@ -115,30 +117,33 @@ fun MainScreen(
                         start = 0.dp,
                         top = paddingValues.calculateTopPadding(),
                         end = 0.dp,
-                        bottom = paddingValues.calculateBottomPadding() + bottomNavHeightDp,
+                        bottom = 0.dp, // list goes to screen bottom; frosted overlay handles UX
                     )
                 )
             }
 
-            // Gradient fade — items entering the bar zone become progressively unreadable.
-            // The gradient height extends slightly above the bar top for a smooth transition.
+            // Frosted-glass overlay — semi-transparent dark gradient that covers the bar zone.
+            // The gradient is NOT fully opaque so the bar "floats" over the content background
+            // rather than cutting it with a solid wall. The pill Surface on top adds the fully
+            // opaque bar element.
             if (uiConfig?.showBottomBar == true && bottomNavHeightDp > 0.dp) {
-                val fadeColor = MaterialTheme.colorScheme.background
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .height(bottomNavHeightDp + 32.dp)
+                        .height(bottomNavHeightDp + 24.dp) // 24 dp above bar for smooth fade-in
                         .background(
                             Brush.verticalGradient(
-                                0f to Color.Transparent,
-                                0.4f to Color.Transparent,
-                                1f to fadeColor,
+                                0.00f to Color.Transparent,
+                                0.35f to BackgroundContrast.copy(alpha = 0.30f),
+                                0.70f to BackgroundContrast.copy(alpha = 0.72f),
+                                1.00f to BackgroundContrast.copy(alpha = 0.90f),
                             )
                         )
                 )
             }
 
+            // Floating pill navigation bar.
             if (uiConfig?.showBottomBar == true) {
                 BottomNavigationBar(
                     modifier = Modifier
@@ -151,14 +156,14 @@ fun MainScreen(
                 )
             }
 
-            // FAB: 16 dp clear margin above the bar top.
-            // bottomNavHeightDp already includes the nav-bar inset (measured via onSizeChanged
-            // after navigationBarsPadding is applied), so no extra navigationBarsPadding here.
+            // FAB: positioned 8 dp above the bar top. bottomNavHeightDp already includes the
+            // nav-bar inset (onSizeChanged fires after navigationBarsPadding is applied), so no
+            // extra navigationBarsPadding is needed here.
             if (route != null && uiConfig?.showFab == true) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 24.dp, bottom = bottomNavHeightDp + 16.dp),
+                        .padding(end = 24.dp, bottom = bottomNavHeightDp + 8.dp),
                 ) {
                     MainFloatingActionButton(route = route, onFabClick = onFabClick)
                 }

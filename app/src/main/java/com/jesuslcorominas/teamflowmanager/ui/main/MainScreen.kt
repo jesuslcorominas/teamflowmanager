@@ -122,7 +122,10 @@ private fun MainScaffold(navController: NavHostController, isPresident: Boolean)
             Navigation(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    // Only apply top padding. The bottomBar is drawn on top of the content
+                    // by the Scaffold, so applying bottom padding here creates an empty white
+                    // gap. The FAB is still positioned by Scaffold above the bar.
+                    .padding(top = paddingValues.calculateTopPadding()),
                 navController = navController,
                 currentBackHandler = backHandlerController,
                 onTitleChange = { dynamicTitle = it }
