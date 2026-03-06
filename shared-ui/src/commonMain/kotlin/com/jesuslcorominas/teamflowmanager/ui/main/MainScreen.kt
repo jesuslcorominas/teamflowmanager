@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
@@ -15,8 +16,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
@@ -41,17 +49,9 @@ import teamflowmanager.shared_ui.generated.resources.team_title
  * Shared MainScreen shell: Scaffold with AppTopBar + floating BottomNavigationBar + FAB.
  *
  * The bottom navigation bar is rendered as a Box overlay (not in Scaffold's bottomBar slot)
- * so the content can scroll behind the floating pill without a white background appearing
- * in the gap between the pill and the home indicator.
- *
- * @param currentRoute the current destination route string (e.g. "matches")
- * @param teamMode optional Team route mode (create/view/edit) for resolving UI config
- * @param dynamicTitle optional title override (e.g. for match name set at runtime)
- * @param onBackNavigate called when the back navigation icon is tapped
- * @param onSettingsNavigate called when the settings icon is tapped
- * @param onFabClick called when the FAB is tapped
- * @param onBottomNavNavigate called with the destination string when a bottom nav tab is tapped
- * @param content slot composable that receives the scaffold padding values
+ * so the Scaffold surface doesn't paint an opaque background in the gap around the pill.
+ * The bar height is measured via [onSizeChanged] and forwarded as bottom padding to both
+ * the Scaffold content and the FAB, so lists scroll above the bar and the FAB stays visible.
  */
 @Composable
 fun MainScreen(
@@ -81,8 +81,14 @@ fun MainScreen(
         ""
     }
 
+    // Measured height of the floating bar overlay (px). Used to add equivalent bottom
+    // padding to the Scaffold content and FAB so nothing hides behind the bar.
+    var bottomNavHeightPx by remember { mutableStateOf(0) }
+
     CompositionLocalProvider(LocalSearchState provides searchState) {
         Box(modifier = Modifier.fillMaxSize()) {
+            val bottomNavHeightDp: Dp = with(LocalDensity.current) { bottomNavHeightPx.toDp() }
+
             Scaffold(
                 topBar = {
                     AppTopBar(
@@ -94,24 +100,36 @@ fun MainScreen(
                         onSettings = onSettingsNavigate,
                     )
                 },
-                // bottomBar intentionally omitted — BottomNavigationBar is overlaid as a Box
-                // child so the content can scroll behind the floating pill and no opaque
-                // Scaffold surface appears in the gap around the pill.
+                // bottomBar intentionally omitted — BottomNavigationBar is overlaid as a
+                // Box child so no opaque Scaffold surface appears around the floating pill.
                 contentWindowInsets = WindowInsets(0),
                 floatingActionButton = {
                     if (route != null && uiConfig?.showFab == true) {
-                        MainFloatingActionButton(route = route, onFabClick = onFabClick)
+                        // Lift the FAB above the floating bar.
+                        Box(modifier = Modifier.padding(bottom = bottomNavHeightDp)) {
+                            MainFloatingActionButton(route = route, onFabClick = onFabClick)
+                        }
                     }
                 },
             ) { paddingValues ->
-                content(paddingValues)
+                // Forward scaffold padding but replace bottom with the measured bar height so
+                // lists/content can scroll fully above the floating bar.
+                content(
+                    PaddingValues(
+                        start = 0.dp,
+                        top = paddingValues.calculateTopPadding(),
+                        end = 0.dp,
+                        bottom = paddingValues.calculateBottomPadding() + bottomNavHeightDp,
+                    )
+                )
             }
 
             if (uiConfig?.showBottomBar == true) {
                 BottomNavigationBar(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .navigationBarsPadding(),
+                        .navigationBarsPadding()
+                        .onSizeChanged { bottomNavHeightPx = it.height },
                     currentRoute = currentRoute,
                     isPresident = isPresident,
                     onNavigate = onBottomNavNavigate,
