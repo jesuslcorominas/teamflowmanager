@@ -1,9 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -11,6 +14,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -21,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -50,8 +56,12 @@ import teamflowmanager.shared_ui.generated.resources.team_title
  *
  * The bottom navigation bar is rendered as a Box overlay (not in Scaffold's bottomBar slot)
  * so the Scaffold surface doesn't paint an opaque background in the gap around the pill.
+ *
+ * A gradient fade overlay sits between the content and the bar so that items scrolling
+ * into the bar zone become progressively unreadable without a hard clip.
+ *
  * The bar height is measured via [onSizeChanged] and forwarded as bottom padding to both
- * the Scaffold content and the FAB, so lists scroll above the bar and the FAB stays visible.
+ * the Scaffold content (so lists can scroll fully above the bar) and the FAB (16dp margin).
  */
 @Composable
 fun MainScreen(
@@ -81,8 +91,6 @@ fun MainScreen(
         ""
     }
 
-    // Measured height of the floating bar overlay (px). Used to add equivalent bottom
-    // padding to the Scaffold content and FAB so nothing hides behind the bar.
     var bottomNavHeightPx by remember { mutableStateOf(0) }
 
     CompositionLocalProvider(LocalSearchState provides searchState) {
@@ -100,12 +108,8 @@ fun MainScreen(
                         onSettings = onSettingsNavigate,
                     )
                 },
-                // bottomBar and floatingActionButton intentionally omitted — both are
-                // rendered as Box overlays so content can scroll behind the floating pill
-                // and the FAB can overlap the top edge of the bar.
                 contentWindowInsets = WindowInsets(0),
             ) { paddingValues ->
-                // Replace bottom with measured bar height so lists scroll fully above the bar.
                 content(
                     PaddingValues(
                         start = 0.dp,
@@ -113,6 +117,25 @@ fun MainScreen(
                         end = 0.dp,
                         bottom = paddingValues.calculateBottomPadding() + bottomNavHeightDp,
                     )
+                )
+            }
+
+            // Gradient fade — items entering the bar zone become progressively unreadable.
+            // The gradient height extends slightly above the bar top for a smooth transition.
+            if (uiConfig?.showBottomBar == true && bottomNavHeightDp > 0.dp) {
+                val fadeColor = MaterialTheme.colorScheme.background
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(bottomNavHeightDp + 32.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                0f to Color.Transparent,
+                                0.4f to Color.Transparent,
+                                1f to fadeColor,
+                            )
+                        )
                 )
             }
 
@@ -128,17 +151,14 @@ fun MainScreen(
                 )
             }
 
-            // FAB overlaid at BottomEnd, offset upward so it sits on the top edge of the bar.
-            // The overlap amount (28.dp ≈ half FAB height) makes it look "mounted" on the bar.
+            // FAB: 16 dp clear margin above the bar top.
+            // bottomNavHeightDp already includes the nav-bar inset (measured via onSizeChanged
+            // after navigationBarsPadding is applied), so no extra navigationBarsPadding here.
             if (route != null && uiConfig?.showFab == true) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .navigationBarsPadding()
-                        .padding(
-                            end = 16.dp,
-                            bottom = if (bottomNavHeightDp > 28.dp) bottomNavHeightDp - 28.dp else bottomNavHeightDp,
-                        ),
+                        .padding(end = 24.dp, bottom = bottomNavHeightDp + 16.dp),
                 ) {
                     MainFloatingActionButton(route = route, onFabClick = onFabClick)
                 }

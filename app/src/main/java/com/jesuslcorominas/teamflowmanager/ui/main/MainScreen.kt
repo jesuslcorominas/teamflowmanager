@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -96,6 +97,7 @@ private fun MainScaffold(navController: NavHostController, isPresident: Boolean)
 
     CompositionLocalProvider(LocalSearchState provides searchState) {
         Scaffold(
+            contentWindowInsets = WindowInsets(0),
             topBar = {
                 AppTopBar(
                     modifier = Modifier.padding(top = 16.dp),

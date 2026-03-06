@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -53,7 +54,7 @@ fun BottomNavigationBar(
         shadowElevation = 8.dp,
         color = BackgroundContrast
     ) {
-        NavigationBar(containerColor = Color.Transparent) {
+        NavigationBar(containerColor = Color.Transparent, windowInsets = WindowInsets(0)) {
             items.forEach { route ->
                 val icon: ImageVector? = route.toIcon()
                 val labelRes: Int? = route.toStringRes()
