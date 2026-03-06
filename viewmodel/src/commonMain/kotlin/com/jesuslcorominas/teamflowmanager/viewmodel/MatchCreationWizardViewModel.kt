@@ -72,6 +72,7 @@ class MatchCreationWizardViewModel(
     private var originalStartingLineupIds: Set<Long> = emptySet()
 
     private var allPlayers: List<Player> = emptyList()
+    private var activeMatchId: Long = matchId
     private var isEditMode = matchId != 0L
     private var teamTypeValue: Int = 5 // Default to Football 5
 
@@ -85,6 +86,54 @@ class MatchCreationWizardViewModel(
         loadTeam()
 
         // Load match data if in edit mode
+        if (pendingMatchIdForEdit != null) {
+            loadMatchForEdit(pendingMatchIdForEdit!!)
+        }
+    }
+
+    /**
+     * Resets all wizard state for the given matchId.
+     *
+     * Required on iOS because koinViewModel caches instances in the root
+     * ViewModelStore (no NavBackStackEntry lifecycle). Without this reset,
+     * navigating to "create new match" after editing/creating one would show
+     * the previous match data.
+     *
+     * Call via LaunchedEffect(Unit) { wizardViewModel.resetForMatchId(matchId) }
+     * in the screen composable.
+     */
+    fun resetForMatchId(newMatchId: Long) {
+        activeMatchId = newMatchId
+        isEditMode = newMatchId != 0L
+
+        opponent = ""
+        location = ""
+        date = null
+        time = null
+        numberOfPeriods = 2
+        squadCallUpIds = emptySet()
+        captainId = 0L
+        startingLineupIds = emptySet()
+
+        originalOpponent = ""
+        originalLocation = ""
+        originalDate = null
+        originalTime = null
+        originalNumberOfPeriods = 2
+        originalSquadCallUpIds = emptySet()
+        originalCaptainId = 0L
+        originalStartingLineupIds = emptySet()
+
+        _currentStep.value = WizardStep.GENERAL_DATA
+        _showExitDialog.value = false
+
+        matchDataLoaded = false
+        playersLoaded = false
+        pendingMatchIdForEdit = if (newMatchId != 0L) newMatchId else null
+
+        _uiState.value = MatchCreationWizardUiState.Loading
+        loadPlayers()
+        loadTeam()
         if (pendingMatchIdForEdit != null) {
             loadMatchForEdit(pendingMatchIdForEdit!!)
         }
@@ -317,7 +366,7 @@ class MatchCreationWizardViewModel(
         _uiState.value = MatchCreationWizardUiState.Saving
         viewModelScope.launch {
             try {
-                matchId.takeIf { it != 0L }?.let { id ->
+                activeMatchId.takeIf { it != 0L }?.let { id ->
                     crashReporter.log("Updating match via wizard: $id")
                     val existingMatch = getMatchByIdUseCase.invoke(id).firstOrNull()
                     existingMatch?.let { match ->

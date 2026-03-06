@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,13 @@ fun MatchCreationWizardScreen(
     wizardViewModel: MatchCreationWizardViewModel = koinViewModel(parameters = { parametersOf(matchId) }),
 ) {
     TrackScreenView(screenName = ScreenName.MATCH_WIZARD, screenClass = "MatchCreationWizardScreen")
+
+    // On iOS, koinViewModel caches instances in the root ViewModelStore (no NavBackStackEntry
+    // lifecycle). Reset the wizard state each time the screen enters composition so that
+    // navigating to "new match" after editing one does not show stale data.
+    LaunchedEffect(Unit) {
+        wizardViewModel.resetForMatchId(matchId)
+    }
 
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
