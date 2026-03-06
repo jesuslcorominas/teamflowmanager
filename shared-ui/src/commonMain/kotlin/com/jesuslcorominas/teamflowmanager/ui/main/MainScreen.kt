@@ -1,6 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
@@ -11,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
@@ -33,11 +38,11 @@ import teamflowmanager.shared_ui.generated.resources.team_list_title
 import teamflowmanager.shared_ui.generated.resources.team_title
 
 /**
- * Shared MainScreen shell: Scaffold with AppTopBar + BottomNavigationBar + FAB.
+ * Shared MainScreen shell: Scaffold with AppTopBar + floating BottomNavigationBar + FAB.
  *
- * Navigation is handled by the caller via callbacks. The content slot receives
- * the scaffold [PaddingValues] so the caller can apply them to their NavHost or
- * any other content composable.
+ * The bottom navigation bar is rendered as a Box overlay (not in Scaffold's bottomBar slot)
+ * so the content can scroll behind the floating pill without a white background appearing
+ * in the gap between the pill and the home indicator.
  *
  * @param currentRoute the current destination route string (e.g. "matches")
  * @param teamMode optional Team route mode (create/view/edit) for resolving UI config
@@ -77,33 +82,41 @@ fun MainScreen(
     }
 
     CompositionLocalProvider(LocalSearchState provides searchState) {
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    modifier = Modifier,
-                    uiConfig = uiConfig,
-                    title = title,
-                    searchPlaceholder = searchPlaceholder,
-                    onBack = onBackNavigate,
-                    onSettings = onSettingsNavigate,
-                )
-            },
-            bottomBar = {
-                if (uiConfig?.showBottomBar == true) {
-                    BottomNavigationBar(
-                        currentRoute = currentRoute,
-                        isPresident = isPresident,
-                        onNavigate = onBottomNavNavigate,
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                topBar = {
+                    AppTopBar(
+                        modifier = Modifier,
+                        uiConfig = uiConfig,
+                        title = title,
+                        searchPlaceholder = searchPlaceholder,
+                        onBack = onBackNavigate,
+                        onSettings = onSettingsNavigate,
                     )
-                }
-            },
-            floatingActionButton = {
-                if (route != null && uiConfig?.showFab == true) {
-                    MainFloatingActionButton(route = route, onFabClick = onFabClick)
-                }
-            },
-        ) { paddingValues ->
-            content(paddingValues)
+                },
+                // bottomBar intentionally omitted — BottomNavigationBar is overlaid as a Box
+                // child so the content can scroll behind the floating pill and no opaque
+                // Scaffold surface appears in the gap around the pill.
+                contentWindowInsets = WindowInsets(0),
+                floatingActionButton = {
+                    if (route != null && uiConfig?.showFab == true) {
+                        MainFloatingActionButton(route = route, onFabClick = onFabClick)
+                    }
+                },
+            ) { paddingValues ->
+                content(paddingValues)
+            }
+
+            if (uiConfig?.showBottomBar == true) {
+                BottomNavigationBar(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding(),
+                    currentRoute = currentRoute,
+                    isPresident = isPresident,
+                    onNavigate = onBottomNavNavigate,
+                )
+            }
         }
     }
 }

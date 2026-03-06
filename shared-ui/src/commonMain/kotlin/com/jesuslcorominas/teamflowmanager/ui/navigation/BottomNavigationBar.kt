@@ -40,6 +40,7 @@ fun BottomNavigationBar(
     currentRoute: String?,
     isPresident: Boolean = false,
     onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val items: List<Route> = if (isPresident) {
         listOf(Route.TeamList, Route.ClubMembers)
@@ -48,7 +49,7 @@ fun BottomNavigationBar(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
@@ -60,6 +61,7 @@ fun BottomNavigationBar(
         color = BackgroundContrast,
     ) {
         NavigationBar(
+            modifier = Modifier.padding(horizontal = 8.dp),
             containerColor = Color.Transparent,
             windowInsets = WindowInsets(0),
         ) {
