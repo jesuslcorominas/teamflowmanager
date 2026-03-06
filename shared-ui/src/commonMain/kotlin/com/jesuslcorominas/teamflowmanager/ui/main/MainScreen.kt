@@ -100,20 +100,12 @@ fun MainScreen(
                         onSettings = onSettingsNavigate,
                     )
                 },
-                // bottomBar intentionally omitted — BottomNavigationBar is overlaid as a
-                // Box child so no opaque Scaffold surface appears around the floating pill.
+                // bottomBar and floatingActionButton intentionally omitted — both are
+                // rendered as Box overlays so content can scroll behind the floating pill
+                // and the FAB can overlap the top edge of the bar.
                 contentWindowInsets = WindowInsets(0),
-                floatingActionButton = {
-                    if (route != null && uiConfig?.showFab == true) {
-                        // Lift the FAB above the floating bar.
-                        Box(modifier = Modifier.padding(bottom = bottomNavHeightDp)) {
-                            MainFloatingActionButton(route = route, onFabClick = onFabClick)
-                        }
-                    }
-                },
             ) { paddingValues ->
-                // Forward scaffold padding but replace bottom with the measured bar height so
-                // lists/content can scroll fully above the floating bar.
+                // Replace bottom with measured bar height so lists scroll fully above the bar.
                 content(
                     PaddingValues(
                         start = 0.dp,
@@ -134,6 +126,22 @@ fun MainScreen(
                     isPresident = isPresident,
                     onNavigate = onBottomNavNavigate,
                 )
+            }
+
+            // FAB overlaid at BottomEnd, offset upward so it sits on the top edge of the bar.
+            // The overlap amount (28.dp ≈ half FAB height) makes it look "mounted" on the bar.
+            if (route != null && uiConfig?.showFab == true) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .navigationBarsPadding()
+                        .padding(
+                            end = 16.dp,
+                            bottom = if (bottomNavHeightDp > 28.dp) bottomNavHeightDp - 28.dp else bottomNavHeightDp,
+                        ),
+                ) {
+                    MainFloatingActionButton(route = route, onFabClick = onFabClick)
+                }
             }
         }
     }
