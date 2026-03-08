@@ -28,6 +28,7 @@ import androidx.navigation.compose.rememberNavController
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.main.search.rememberSearchState
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
@@ -95,7 +96,9 @@ private fun MainScaffold(navController: NavHostController, isPresident: Boolean)
 
     val title = dynamicTitle ?: routeTitle ?: ""
 
-    CompositionLocalProvider(LocalSearchState provides searchState) {
+    CompositionLocalProvider(
+        LocalSearchState provides searchState,
+    ) {
         Scaffold(
             contentWindowInsets = WindowInsets(0),
             topBar = {
@@ -119,17 +122,21 @@ private fun MainScaffold(navController: NavHostController, isPresident: Boolean)
                 }
             },
         ) { paddingValues ->
-            Navigation(
-                modifier = Modifier
-                    .fillMaxSize()
-                    // Only apply top padding. The bottomBar is drawn on top of the content
-                    // by the Scaffold, so applying bottom padding here creates an empty white
-                    // gap. The FAB is still positioned by Scaffold above the bar.
-                    .padding(top = paddingValues.calculateTopPadding()),
-                navController = navController,
-                currentBackHandler = backHandlerController,
-                onTitleChange = { dynamicTitle = it }
-            )
+            CompositionLocalProvider(
+                LocalContentBottomPadding provides paddingValues.calculateBottomPadding(),
+            ) {
+                Navigation(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        // Only apply top padding. The bottomBar is drawn on top of the content
+                        // by the Scaffold, so applying bottom padding here creates an empty white
+                        // gap. The FAB and bar clearance is exposed via LocalContentBottomPadding.
+                        .padding(top = paddingValues.calculateTopPadding()),
+                    navController = navController,
+                    currentBackHandler = backHandlerController,
+                    onTitleChange = { dynamicTitle = it }
+                )
+            }
         }
     }
 }
@@ -165,6 +172,7 @@ private fun Route.toDestination() = when (this) {
     Route.Team -> Route.Team.createRoute(Route.Team.MODE_EDIT)
     Route.TeamList -> Route.Team.createRoute(Route.Team.MODE_CREATE)
     Route.Matches -> Route.CreateMatch.createRoute(Route.CreateMatch.DEFAULT_MATCH_ID)
+    Route.Players -> Route.PlayerWizard.createRoute(0L)
     else -> null
 }
 

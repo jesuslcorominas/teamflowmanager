@@ -135,7 +135,7 @@ sealed class Route(
         showSettingsButton = true
     )
 
-    data object Players : Route(path = "players", showBottomBar = true, showSettingsButton = true)
+    data object Players : Route(path = "players", showBottomBar = true, showFab = true, showSettingsButton = true)
 
     data object PlayerWizard : Route(path = "player_wizard", showTopBar = false) {
         const val ARG_PLAYER_ID = "playerId"
