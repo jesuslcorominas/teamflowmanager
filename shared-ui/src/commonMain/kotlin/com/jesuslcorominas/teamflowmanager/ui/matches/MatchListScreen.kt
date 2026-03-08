@@ -2,8 +2,8 @@ package com.jesuslcorominas.teamflowmanager.ui.matches
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -26,6 +26,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.ArchivedMatchesNavigationCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.PausedMatchCard
@@ -102,6 +103,7 @@ private fun MatchesList(
     viewModel: MatchListViewModel,
 ) {
     val searchState = LocalSearchState.current
+    val bottomPadding = LocalContentBottomPadding.current
 
     val pendingMatches = state.matches.filter { it.status == MatchStatus.SCHEDULED }.sortedBy { it.dateTime }
     val activeMatch = state.matches.find { it.status == MatchStatus.IN_PROGRESS }
@@ -133,13 +135,13 @@ private fun MatchesList(
     }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                bottom = TFMSpacing.spacing04,
-                start = TFMSpacing.spacing04,
-                end = TFMSpacing.spacing04,
-            ),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            bottom = bottomPadding,
+            start = TFMSpacing.spacing04,
+            end = TFMSpacing.spacing04,
+            top = TFMSpacing.spacing04,
+        ),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
     ) {
         item { ArchivedMatchesNavigationCard(onClick = onNavigateToArchivedMatches) }
@@ -205,7 +207,6 @@ private fun MatchesList(
             )
         }
 
-        item { Box(Modifier.height(TFMSpacing.spacing11)) }
     }
 }
 

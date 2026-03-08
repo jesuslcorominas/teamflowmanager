@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -23,11 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.jesuslcorominas.teamflowmanager.ui.components.BlurredBox
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
@@ -51,6 +54,7 @@ import teamflowmanager.shared_ui.generated.resources.team_title
 private val FabHeight = 56.dp       // standard Material FAB size
 private val FabBarGap = 16.dp       // gap between FAB bottom and bar top (matches Android Scaffold default)
 private val FabContentGap = 16.dp   // gap between last list item and FAB bottom
+private val FadeHeight = 32.dp      // extra height above the nav bar for the gradient fade
 
 /**
  * Shared MainScreen shell for iOS.
@@ -94,18 +98,22 @@ fun MainScreen(
     }
 
     var bottomNavHeightPx by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
+    val bottomNavHeightDp: Dp = with(density) { bottomNavHeightPx.toDp() }
 
-    CompositionLocalProvider(LocalSearchState provides searchState) {
+    // Content bottom padding: enough space so the last item can scroll
+    // fully above the FAB (bar + gap + FAB height + gap above FAB).
+    val contentBottomPadding = if (uiConfig?.showFab == true) {
+        bottomNavHeightDp + FabBarGap + FabHeight + FabContentGap
+    } else {
+        bottomNavHeightDp
+    }
+
+    CompositionLocalProvider(
+        LocalSearchState provides searchState,
+        LocalContentBottomPadding provides contentBottomPadding,
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            val bottomNavHeightDp: Dp = with(LocalDensity.current) { bottomNavHeightPx.toDp() }
-
-            // Content bottom padding: enough space so the last item can scroll
-            // fully above the FAB (bar + gap + FAB height + gap above FAB).
-            val contentBottomPadding = if (uiConfig?.showFab == true) {
-                bottomNavHeightDp + FabBarGap + FabHeight + FabContentGap
-            } else {
-                bottomNavHeightDp
-            }
 
             Scaffold(
                 topBar = {
@@ -120,24 +128,24 @@ fun MainScreen(
                 },
                 contentWindowInsets = WindowInsets(0),
             ) { paddingValues ->
-                content(
-                    PaddingValues(
-                        start = 0.dp,
-                        top = paddingValues.calculateTopPadding(),
-                        end = 0.dp,
-                        bottom = contentBottomPadding,
-                    )
-                )
+                content(PaddingValues(top = paddingValues.calculateTopPadding()))
             }
 
-            // Frosted-glass overlay covering the bar zone (bar height + 32 dp above for fade-in).
-            // On iOS: real UIVisualEffectView blur. On Android: gradient approximation.
+            // Gradient overlay: transparent → surface color, covering the bar zone + FadeHeight above.
+            // Invisible over a white/surface background; fades out cards as they enter the nav-bar zone.
             if (uiConfig?.showBottomBar == true && bottomNavHeightDp > 0.dp) {
-                BlurredBox(
+                Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .height(bottomNavHeightDp + 32.dp),
+                        .height(bottomNavHeightDp + FadeHeight)
+                        .background(
+                            Brush.verticalGradient(
+                                0.00f to Color.Transparent,
+                                0.40f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                                1.00f to MaterialTheme.colorScheme.surface,
+                            )
+                        ),
                 )
             }
 
@@ -145,8 +153,8 @@ fun MainScreen(
                 BottomNavigationBar(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .onSizeChanged { bottomNavHeightPx = it.height },
+                        .onSizeChanged { bottomNavHeightPx = it.height }
+                        .navigationBarsPadding(),
                     currentRoute = currentRoute,
                     isPresident = isPresident,
                     onNavigate = onBottomNavNavigate,

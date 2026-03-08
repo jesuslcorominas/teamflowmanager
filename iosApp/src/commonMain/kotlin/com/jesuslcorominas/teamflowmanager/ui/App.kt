@@ -121,10 +121,7 @@ fun App(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(
-                                top = paddingValues.calculateTopPadding(),
-                                bottom = paddingValues.calculateBottomPadding(),
-                            ),
+                            .padding(top = paddingValues.calculateTopPadding()),
                     ) {
                         when (dest) {
                             is IosDestination.Matches -> MatchListScreen(
