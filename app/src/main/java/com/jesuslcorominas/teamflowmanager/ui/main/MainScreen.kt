@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -37,6 +38,10 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.PendingNavigation
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import org.koin.androidx.compose.koinViewModel
+
+private val FabHeight = 56.dp
+private val FabBarGap = 16.dp
+private val FabContentGap = 16.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,8 +127,13 @@ private fun MainScaffold(navController: NavHostController, isPresident: Boolean)
                 }
             },
         ) { paddingValues ->
+            val contentBottomPadding: Dp = if (uiConfig?.showFab == true) {
+                paddingValues.calculateBottomPadding() + FabBarGap + FabHeight + FabContentGap
+            } else {
+                paddingValues.calculateBottomPadding()
+            }
             CompositionLocalProvider(
-                LocalContentBottomPadding provides paddingValues.calculateBottomPadding(),
+                LocalContentBottomPadding provides contentBottomPadding,
             ) {
                 Navigation(
                     modifier = Modifier
