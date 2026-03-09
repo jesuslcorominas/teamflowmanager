@@ -23,7 +23,7 @@
 
 | Issue | Título | Prioridad |
 |-------|--------|-----------|
-| #296 | [iOS] EditTeamScreen: swipe-back bypasses unsaved changes guard | Media |
+| ~~#296~~ | ~~[iOS] EditTeamScreen: swipe-back bypasses unsaved changes guard~~ | ✅ **RESUELTO** (BackPressController, commit a93c282a) |
 | #275 | [KMP-27] MatchScreen drag & drop in CMP/iOS (deferred) | Baja |
 | #262 | [KMP-18] Notificaciones de partido — reimplementación KMP (opcional) | Opcional |
 | #198–202 | Épica C-3: Gestión de roles (Coach/Presidente/Club) — product epic | v2.0 |
@@ -777,7 +777,7 @@ platform-specific (código propio de cada plataforma):
 | 2026-03-04 | **Fase 3 parcialmente completada.** 16/18 pantallas en shared-ui (~85% código compartido). Diferidas: KMP-26 (MatchCreationWizardScreen — creación de partidos en iOS no disponible) y KMP-28 (AnalysisScreen — analítica en iOS no disponible hasta reemplazar compose-charts). |
 | 2026-03-05 | **Fase 3 completada.** KMP-26 (MatchCreationWizardScreen): DatePickerDialog/TimePicker disponibles en CMP 1.7.3 — no requirió expect/actual. KMP-28 (AnalysisScreen): compose-charts reemplazado por barras CMP nativas animadas. 18/18 pantallas en :shared-ui. ~90% código compartido. |
 | 2026-03-09 | **Post-Fase 3: barra flotante iOS+Android.** `feat/floating-bottom-bar` merged. iOS: pill nav flotante con `Brush.verticalGradient` (reemplaza UIVisualEffectView), `LocalContentBottomPadding` CompositionLocal, scroll correcto en todas las listas, botón Save visible en Edit Team, FAB Jugadores. Android: `ContentPadding.kt` en `:app`, `calculateBottomPadding() + 88dp` cuando hay FAB (Material3 Scaffold no incluye FAB en el bottom padding), TeamForm Save button, Route.Players FAB. |
-| 2026-03-09 | Issue #296 abierto: iOS EditTeamScreen — `AppBackHandler.ios.kt` actual no existe; swipe-back bypasses unsaved changes guard. |
+| 2026-03-09 | Fix iOS unsaved changes guard (issue #296): `BackPressController` pattern — `AppBackHandler` iOS actual registra un interceptor en `LocalBackPressController`; `MainScreen` top-bar `onBack` pasa por `handleBack()` antes de llamar a `popBackStack`. Ahora el dialog de cambios sin guardar se muestra al pulsar el botón de volver en `TeamScreen` (modo edición). |
 
 ---
 
