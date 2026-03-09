@@ -31,6 +31,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.jesuslcorominas.teamflowmanager.ui.components.BackPressController
+import com.jesuslcorominas.teamflowmanager.ui.components.LocalBackPressController
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
@@ -109,9 +111,14 @@ fun MainScreen(
         bottomNavHeightDp
     }
 
+    // Back-press controller: lets child screens (e.g. TeamScreen in edit mode)
+    // intercept the top-bar back button before the default popBackStack fires.
+    val backPressController = remember { BackPressController() }
+
     CompositionLocalProvider(
         LocalSearchState provides searchState,
         LocalContentBottomPadding provides contentBottomPadding,
+        LocalBackPressController provides backPressController,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
 
@@ -122,7 +129,7 @@ fun MainScreen(
                         uiConfig = uiConfig,
                         title = title,
                         searchPlaceholder = searchPlaceholder,
-                        onBack = onBackNavigate,
+                        onBack = { backPressController.handleBack { onBackNavigate() } },
                         onSettings = onSettingsNavigate,
                     )
                 },
