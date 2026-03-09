@@ -63,11 +63,16 @@ private val FadeHeight = 32.dp      // extra height above the nav bar for the gr
  *
  * Layout:
  * - Content has NO clip at the bottom → list reaches the screen bottom edge.
- * - A native UIVisualEffectView (via [BlurredBox]) covers the bar zone so the
- *   content beneath is truly blurred, not merely tinted.
+ * - A `Brush.verticalGradient` (transparent → surface color) floats over the
+ *   bar zone so cards fade out as they enter the nav-bar area. This replaces a
+ *   UIVisualEffectView-based blur: UIKit's blur targets the layer behind the
+ *   Compose canvas (i.e. the wallpaper), not the rendered Compose content, which
+ *   produces a grey tint on white screens. The gradient is invisible over a white
+ *   background and correctly fades colored cards on both platforms without any
+ *   platform-specific code.
  * - The pill-shaped BottomNavigationBar floats as an overlay; its surroundings
  *   are transparent, giving the "floating" feel.
- * - Content bottom padding = barHeight + FABBarGap + FabHeight + FabContentGap
+ * - Content bottom padding = barHeight + FabBarGap + FabHeight + FabContentGap
  *   so the last list item can always be scrolled fully above the FAB.
  * - The FAB sits FabBarGap (16 dp) above the bar top, matching Android's behaviour.
  */
