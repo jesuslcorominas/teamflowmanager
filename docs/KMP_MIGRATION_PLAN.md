@@ -1,7 +1,7 @@
 # KMP Migration Plan — TeamFlowManager
 
 > **Fecha de análisis inicial**: 2026-02-26
-> **Última actualización**: 2026-03-05 (Fase 3 completada — KMP-26 y KMP-28 implementados; 18/18 pantallas en :shared-ui)
+> **Última actualización**: 2026-03-09 (Post-Fase 3 — barra de navegación flotante iOS+Android; issues pendientes documentados)
 > **Rama base de migración**: `migration/kmp-migration`
 > **Arquitecto**: Senior KMP/Android Architect (Claude Code)
 
@@ -14,11 +14,20 @@
 | **Fase 1** | Infraestructura KMP — todos los módulos convertidos a multiplatform | ✅ **COMPLETADA** |
 | **Fase 2** | iOS MVP — login Firebase (Google Sign-In nativo) + listado de partidos | ✅ **COMPLETADA** |
 | **Fase 3** | iOS con UI completa igual a la de Android (Compose Multiplatform) | ✅ **COMPLETADA** — 18/18 pantallas; ver nota KMP-27 |
+| **Post-Fase 3** | Pulido de UI/UX iOS+Android (barra flotante, clearance FAB, botón Save) | ✅ **COMPLETADA** |
 
 > **Nota Fase 3**: 18/18 pantallas migradas a `:shared-ui`. Pendiente opcional:
-> - **KMP-27** — Drag & drop en `MatchScreen`: la pantalla existe y funciona, pero los jugadores no se pueden reorganizar arrastrando (funcionalidad de confort, no crítica).
+> - **KMP-27** (issue #275) — Drag & drop en `MatchScreen`: la pantalla existe y funciona, pero los jugadores no se pueden reorganizar arrastrando (funcionalidad de confort, no crítica).
 
-### No hay PRs pendientes de merge
+### Issues abiertos post-migración
+
+| Issue | Título | Prioridad |
+|-------|--------|-----------|
+| #296 | [iOS] EditTeamScreen: swipe-back bypasses unsaved changes guard | Media |
+| #275 | [KMP-27] MatchScreen drag & drop in CMP/iOS (deferred) | Baja |
+| #262 | [KMP-18] Notificaciones de partido — reimplementación KMP (opcional) | Opcional |
+| #198–202 | Épica C-3: Gestión de roles (Coach/Presidente/Club) — product epic | v2.0 |
+| #28, #30 | Filtrado y reporte de rendimiento por rango de fechas | v2.0 |
 
 ---
 
@@ -574,7 +583,45 @@ KMP-18 (notificaciones — opcional, paralelo)
 
 ---
 
-## 4. Análisis de viabilidad técnica
+## 4. Post-Fase 3 — Pulido de UI/UX iOS+Android
+
+### 4.0 Barra de navegación flotante (`feat/floating-bottom-bar`)
+
+**Merged**: 2026-03-09 → `migration/kmp-migration`
+
+Implementación completa de una barra de navegación inferior flotante tipo pill para iOS y corrección de los problemas de scroll/clearance en Android.
+
+#### Cambios iOS (`:shared-ui` + `iosApp`)
+
+| Archivo | Cambio |
+|---------|--------|
+| `shared-ui/.../ui/main/SearchState.kt` | Añadido `LocalContentBottomPadding = compositionLocalOf { 0.dp }` |
+| `shared-ui/.../ui/main/MainScreen.kt` | Reemplazado `BlurredBox` (UIVisualEffectView) por `Brush.verticalGradient` Compose-nativo. `contentBottomPadding` = `navBarHeight + FabBarGap + FabHeight + FabContentGap` cuando hay FAB; `navBarHeight` si no hay FAB. |
+| `iosApp/.../ui/App.kt` | Eliminado `bottom = paddingValues.calculateBottomPadding()` del content Box — el contenido ahora llena la pantalla completa. |
+| `shared-ui/.../ui/matches/MatchListScreen.kt` | `contentPadding` con `LocalContentBottomPadding.current`; eliminado spacer hardcodeado. |
+| `shared-ui/.../ui/players/PlayersScreen.kt` | FAB local eliminado (gestionado por `MainScreen` vía `Route.Players.showFab = true`); `PlayerList` usa `LocalContentBottomPadding`. |
+| `shared-ui/.../ui/team/TeamListScreen.kt` | `contentPadding` con `LocalContentBottomPadding.current`. |
+| `shared-ui/.../ui/matches/ArchivedMatchesScreen.kt` | `contentPadding` con `LocalContentBottomPadding.current`. |
+| `shared-ui/.../ui/team/components/TeamForm.kt` | Button Save con `padding(bottom = LocalContentBottomPadding.current + 8.dp)`. |
+| `shared-ui/.../ui/navigation/Route.kt` | `Route.Players.showFab = true`. |
+| Eliminados | `BlurredBox.kt` en commonMain, androidMain e iosMain. |
+
+> **Por qué se eliminó `UIVisualEffectView`**: El blur de UIKit afecta solo al layer UIKit detrás del canvas de Compose (es decir, el fondo del sistema), no al contenido Compose renderizado. Un `Brush.verticalGradient` (transparent → surface) es la solución correcta: invisible sobre fondo blanco, desvanece las cards al entrar en la zona de la barra.
+
+#### Cambios Android (`:app`)
+
+| Archivo | Cambio |
+|---------|--------|
+| `app/.../ui/main/ContentPadding.kt` | Nuevo fichero — define `LocalContentBottomPadding` para el módulo `:app` (`:app` no depende de `:shared-ui`, por lo que no puede usar el que está en shared-ui) |
+| `app/.../ui/main/MainScreen.kt` | `LocalContentBottomPadding` provisto desde el bloque de contenido de Scaffold. Cuando la ruta muestra FAB: `calculateBottomPadding() + FabBarGap(16) + FabHeight(56) + FabContentGap(16)`. **Nota**: `Scaffold.calculateBottomPadding()` en Material3 1.4.0 devuelve solo `bottomBarHeight`, NO incluye el FAB. |
+| `app/.../ui/navigation/Route.kt` | `Route.Players.showFab = true`; `toDestination()` añade `Route.Players → PlayerWizard`. |
+| `app/.../ui/matches/MatchListScreen.kt` | `contentPadding` con `LocalContentBottomPadding.current`; eliminado spacer hardcodeado. |
+| `app/.../ui/players/PlayersScreen.kt` | FAB local eliminado; `PlayerList` usa `LocalContentBottomPadding`. |
+| `app/.../ui/team/components/TeamForm.kt` | Button Save con `padding(bottom = LocalContentBottomPadding.current + 8.dp)`. |
+
+---
+
+## 5. Análisis de viabilidad técnica
 
 ### 4.1 GitLive Firebase SDK vs alternativas
 
@@ -609,7 +656,7 @@ KMP-18 (notificaciones — opcional, paralelo)
 
 ---
 
-## 5. Dependencias entre todas las fases
+## 6. Dependencias entre todas las fases
 
 ```
 ✅ Fase 1 COMPLETADA
@@ -635,14 +682,25 @@ KMP-18 (notificaciones — opcional, paralelo)
    KMP-25 (navegación iOS completa) → PR #282 ✅ merged
 
    ✅ KMP-26 (MatchCreationWizardScreen — migrada, DatePickerDialog/TimePicker nativos en CMP 1.7.3)
-   ❌ KMP-27 (drag & drop en MatchScreen — deferred)
+   ❌ KMP-27 (drag & drop en MatchScreen — deferred, issue #275)
    ✅ KMP-28 (AnalysisScreen — migrada, compose-charts reemplazado por barras CMP nativas)
-   KMP-18 (notificaciones — descartado/opcional)
+   KMP-18 (notificaciones — descartado/opcional, issue #262)
+
+✅ Post-Fase 3 COMPLETADA
+   Floating bottom bar iOS+Android — barra flotante, gradient, scroll clearance, Save button, Players FAB
+   Merged: feat/floating-bottom-bar → migration/kmp-migration (2026-03-09)
+
+⚠️ Pendiente (issues abiertos)
+   #296 — iOS EditTeamScreen: swipe-back bypasses unsaved changes (AppBackHandler.ios.kt falta)
+   #275 — KMP-27: drag & drop MatchScreen (deferred)
+   #262 — KMP-18: notificaciones (opcional)
+   #198–202 — Épica C-3: roles Coach/Presidente/Club (product epic, v2.0)
+   #28, #30 — Filtrado y reporte de rendimiento (v2.0)
 ```
 
 ---
 
-## 6. Porcentaje de reutilización de código — estado real alcanzado
+## 7. Porcentaje de reutilización de código — estado real alcanzado
 
 ### 6.1 Por capa (estado actual, post-Fase 3 completada)
 
@@ -680,7 +738,7 @@ platform-specific (código propio de cada plataforma):
 
 ---
 
-## 7. Registro de cambios
+## 8. Registro de cambios
 
 | Fecha | Cambio |
 |-------|--------|
@@ -718,6 +776,8 @@ platform-specific (código propio de cada plataforma):
 | 2026-03-04 | iOS datasources completos: PlayerTime, Goal, Substitution, MatchOperation, PlayerTimeHistory (Firestore real) |
 | 2026-03-04 | **Fase 3 parcialmente completada.** 16/18 pantallas en shared-ui (~85% código compartido). Diferidas: KMP-26 (MatchCreationWizardScreen — creación de partidos en iOS no disponible) y KMP-28 (AnalysisScreen — analítica en iOS no disponible hasta reemplazar compose-charts). |
 | 2026-03-05 | **Fase 3 completada.** KMP-26 (MatchCreationWizardScreen): DatePickerDialog/TimePicker disponibles en CMP 1.7.3 — no requirió expect/actual. KMP-28 (AnalysisScreen): compose-charts reemplazado por barras CMP nativas animadas. 18/18 pantallas en :shared-ui. ~90% código compartido. |
+| 2026-03-09 | **Post-Fase 3: barra flotante iOS+Android.** `feat/floating-bottom-bar` merged. iOS: pill nav flotante con `Brush.verticalGradient` (reemplaza UIVisualEffectView), `LocalContentBottomPadding` CompositionLocal, scroll correcto en todas las listas, botón Save visible en Edit Team, FAB Jugadores. Android: `ContentPadding.kt` en `:app`, `calculateBottomPadding() + 88dp` cuando hay FAB (Material3 Scaffold no incluye FAB en el bottom padding), TeamForm Save button, Route.Players FAB. |
+| 2026-03-09 | Issue #296 abierto: iOS EditTeamScreen — `AppBackHandler.ios.kt` actual no existe; swipe-back bypasses unsaved changes guard. |
 
 ---
 
