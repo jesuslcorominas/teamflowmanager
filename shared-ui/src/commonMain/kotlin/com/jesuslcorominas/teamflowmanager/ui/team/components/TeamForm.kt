@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
@@ -36,6 +37,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorHeader
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorList
 import com.jesuslcorominas.teamflowmanager.ui.components.form.SelectableItem
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.localizedName
 import org.jetbrains.compose.resources.stringResource
@@ -251,7 +253,7 @@ fun TeamForm(
                     .padding(
                         start = TFMSpacing.spacing04,
                         end = TFMSpacing.spacing04,
-                        bottom = TFMSpacing.spacing04,
+                        bottom = LocalContentBottomPadding.current + 8.dp,
                     )
                     .fillMaxWidth(),
                 onClick = { validateAndSave() },

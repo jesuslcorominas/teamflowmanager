@@ -1,19 +1,14 @@
 package com.jesuslcorominas.teamflowmanager.ui.players
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +18,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.DeleteConfirmationDialog
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -60,15 +56,6 @@ fun PlayersScreen(
             }
         }
 
-        FloatingActionButton(
-            onClick = onNavigateToCreatePlayer,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(TFMSpacing.spacing04),
-        ) {
-            Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.add_player_title))
-        }
-
         when (val state = deleteConfirmationState) {
             is DeleteConfirmationState.Confirming ->
                 DeleteConfirmationDialog(
@@ -90,6 +77,12 @@ private fun PlayersListSuccess(
 ) {
     PlayerList(
         modifier = Modifier.fillMaxSize(),
+        paddingValues = PaddingValues(
+            bottom = LocalContentBottomPadding.current,
+            top = TFMSpacing.spacing04,
+            start = TFMSpacing.spacing04,
+            end = TFMSpacing.spacing04,
+        ),
         players = players.sortedBy { it.number },
         onEditClick = onEditClick,
         onDeleteClick = onDeleteClick,

@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +37,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -146,7 +148,13 @@ private fun TeamsListContent(
     isPresident: Boolean,
 ) {
     LazyColumn(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier,
+        contentPadding = PaddingValues(
+            bottom = LocalContentBottomPadding.current,
+            top = 16.dp,
+            start = 16.dp,
+            end = 16.dp,
+        ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(teams, key = { it.id }) { team ->

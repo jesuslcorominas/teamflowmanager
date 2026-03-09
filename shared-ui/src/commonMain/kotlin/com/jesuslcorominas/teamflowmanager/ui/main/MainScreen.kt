@@ -1,17 +1,36 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
@@ -32,21 +51,23 @@ import teamflowmanager.shared_ui.generated.resources.settings_title
 import teamflowmanager.shared_ui.generated.resources.team_list_title
 import teamflowmanager.shared_ui.generated.resources.team_title
 
+private val FabHeight = 56.dp       // standard Material FAB size
+private val FabBarGap = 16.dp       // gap between FAB bottom and bar top (matches Android Scaffold default)
+private val FabContentGap = 16.dp   // gap between last list item and FAB bottom
+private val FadeHeight = 32.dp      // extra height above the nav bar for the gradient fade
+
 /**
- * Shared MainScreen shell: Scaffold with AppTopBar + BottomNavigationBar + FAB.
+ * Shared MainScreen shell for iOS.
  *
- * Navigation is handled by the caller via callbacks. The content slot receives
- * the scaffold [PaddingValues] so the caller can apply them to their NavHost or
- * any other content composable.
- *
- * @param currentRoute the current destination route string (e.g. "matches")
- * @param teamMode optional Team route mode (create/view/edit) for resolving UI config
- * @param dynamicTitle optional title override (e.g. for match name set at runtime)
- * @param onBackNavigate called when the back navigation icon is tapped
- * @param onSettingsNavigate called when the settings icon is tapped
- * @param onFabClick called when the FAB is tapped
- * @param onBottomNavNavigate called with the destination string when a bottom nav tab is tapped
- * @param content slot composable that receives the scaffold padding values
+ * Layout:
+ * - Content has NO clip at the bottom → list reaches the screen bottom edge.
+ * - A native UIVisualEffectView (via [BlurredBox]) covers the bar zone so the
+ *   content beneath is truly blurred, not merely tinted.
+ * - The pill-shaped BottomNavigationBar floats as an overlay; its surroundings
+ *   are transparent, giving the "floating" feel.
+ * - Content bottom padding = barHeight + FABBarGap + FabHeight + FabContentGap
+ *   so the last list item can always be scrolled fully above the FAB.
+ * - The FAB sits FabBarGap (16 dp) above the bar top, matching Android's behaviour.
  */
 @Composable
 fun MainScreen(
@@ -76,34 +97,81 @@ fun MainScreen(
         ""
     }
 
-    CompositionLocalProvider(LocalSearchState provides searchState) {
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    modifier = Modifier,
-                    uiConfig = uiConfig,
-                    title = title,
-                    searchPlaceholder = searchPlaceholder,
-                    onBack = onBackNavigate,
-                    onSettings = onSettingsNavigate,
-                )
-            },
-            bottomBar = {
-                if (uiConfig?.showBottomBar == true) {
-                    BottomNavigationBar(
-                        currentRoute = currentRoute,
-                        isPresident = isPresident,
-                        onNavigate = onBottomNavNavigate,
+    var bottomNavHeightPx by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
+    val bottomNavHeightDp: Dp = with(density) { bottomNavHeightPx.toDp() }
+
+    // Content bottom padding: enough space so the last item can scroll
+    // fully above the FAB (bar + gap + FAB height + gap above FAB).
+    val contentBottomPadding = if (uiConfig?.showFab == true) {
+        bottomNavHeightDp + FabBarGap + FabHeight + FabContentGap
+    } else {
+        bottomNavHeightDp
+    }
+
+    CompositionLocalProvider(
+        LocalSearchState provides searchState,
+        LocalContentBottomPadding provides contentBottomPadding,
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+
+            Scaffold(
+                topBar = {
+                    AppTopBar(
+                        modifier = Modifier,
+                        uiConfig = uiConfig,
+                        title = title,
+                        searchPlaceholder = searchPlaceholder,
+                        onBack = onBackNavigate,
+                        onSettings = onSettingsNavigate,
                     )
-                }
-            },
-            floatingActionButton = {
-                if (route != null && uiConfig?.showFab == true) {
+                },
+                contentWindowInsets = WindowInsets(0),
+            ) { paddingValues ->
+                content(PaddingValues(top = paddingValues.calculateTopPadding()))
+            }
+
+            // Gradient overlay: transparent → surface color, covering the bar zone + FadeHeight above.
+            // Invisible over a white/surface background; fades out cards as they enter the nav-bar zone.
+            if (uiConfig?.showBottomBar == true && bottomNavHeightDp > 0.dp) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(bottomNavHeightDp + FadeHeight)
+                        .background(
+                            Brush.verticalGradient(
+                                0.00f to Color.Transparent,
+                                0.40f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                                1.00f to MaterialTheme.colorScheme.surface,
+                            )
+                        ),
+                )
+            }
+
+            if (uiConfig?.showBottomBar == true) {
+                BottomNavigationBar(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .onSizeChanged { bottomNavHeightPx = it.height }
+                        .navigationBarsPadding(),
+                    currentRoute = currentRoute,
+                    isPresident = isPresident,
+                    onNavigate = onBottomNavNavigate,
+                )
+            }
+
+            // FAB: FabBarGap (16 dp) above the bar top, matching Android Scaffold behaviour.
+            // bottomNavHeightDp already includes the nav-bar inset.
+            if (route != null && uiConfig?.showFab == true) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 24.dp, bottom = bottomNavHeightDp + FabBarGap),
+                ) {
                     MainFloatingActionButton(route = route, onFabClick = onFabClick)
                 }
-            },
-        ) { paddingValues ->
-            content(paddingValues)
+            }
         }
     }
 }

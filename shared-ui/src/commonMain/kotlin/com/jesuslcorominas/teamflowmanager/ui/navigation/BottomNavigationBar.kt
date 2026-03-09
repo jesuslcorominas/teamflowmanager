@@ -1,6 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -13,6 +16,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -35,6 +40,7 @@ fun BottomNavigationBar(
     currentRoute: String?,
     isPresident: Boolean = false,
     onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val items: List<Route> = if (isPresident) {
         listOf(Route.TeamList, Route.ClubMembers)
@@ -42,13 +48,20 @@ fun BottomNavigationBar(
         listOf(Route.Matches, Route.Players, Route.Analysis, Route.Team)
     }
 
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 4.dp),
+        contentAlignment = Alignment.Center,
+    ) {
     Surface(
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        shape = RoundedCornerShape(32.dp),
         tonalElevation = 4.dp,
-        shadowElevation = 8.dp,
-        color = BackgroundContrast
+        shadowElevation = 16.dp,
+        color = BackgroundContrast,
     ) {
         NavigationBar(
+            modifier = Modifier.padding(horizontal = 8.dp),
             containerColor = Color.Transparent,
             windowInsets = WindowInsets(0),
         ) {
@@ -98,6 +111,7 @@ fun BottomNavigationBar(
                 )
             }
         }
+    }
     }
 }
 

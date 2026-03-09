@@ -2,8 +2,8 @@ package com.jesuslcorominas.teamflowmanager.ui.matches
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -15,6 +15,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.PlayedMatchCard
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesUiState
@@ -39,9 +40,13 @@ fun ArchivedMatchesScreen(
             is ArchivedMatchesUiState.Empty -> EmptyContent(stringResource(Res.string.no_archived_matches))
             is ArchivedMatchesUiState.Success -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(TFMSpacing.spacing04),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        bottom = LocalContentBottomPadding.current,
+                        top = TFMSpacing.spacing04,
+                        start = TFMSpacing.spacing04,
+                        end = TFMSpacing.spacing04,
+                    ),
                     verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                 ) {
                     items(state.matches) { match ->
