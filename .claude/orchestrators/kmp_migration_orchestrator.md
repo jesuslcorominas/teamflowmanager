@@ -90,36 +90,40 @@ migration/kmp-{issue-number}-{short-name}
 
 ## Phase 3 — PR Review Loop
 
-PR Reviewer must validate:
+### Cómo invocar al agente revisor
+
+**CRÍTICO: el prompt al agente revisor debe ser siempre mínimo.** No incluir historial de conversación, resúmenes de sesión ni contexto adicional.
+
+Formato obligatorio del prompt:
+
+```
+Revisar PR #<número> en el repo jesuslcorominas/teamflowmanager.
+Base: <rama base>. Head: <rama head>.
+Tarea original: <una línea describiendo el objetivo de la PR>.
+```
+
+Si el orquestador tiene contexto adicional relevante (ficheros clave, decisiones de diseño), añadirlo como lista concisa de puntos, nunca como bloque de texto copiado de otro sitio.
+
+### PR Reviewer debe validar:
 
 - Code style
-
 - Architecture
-
 - KMP compatibility
-
 - Test quality
-
 - Coverage
-
 - Dead code
-
 - Unnecessary Android coupling
-
 - Public API stability
 
+### Ciclo
+
 If issues found:
-
-- Comment
-
+- Comment on PR
 - Fix in same branch
-
-- Re-run review
+- Re-invoke reviewer with same minimal prompt format
 
 Only when PR is clean:
-
 - Mark Ready for Review
-
 - Add label: ready-for-human-approval
 
 ## Phase 4 — Merge Policy
