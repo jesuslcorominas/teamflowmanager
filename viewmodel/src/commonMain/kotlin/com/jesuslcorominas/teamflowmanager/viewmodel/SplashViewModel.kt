@@ -76,33 +76,50 @@ class SplashViewModel(
     }
 
     private suspend fun loadTeam() {
-        // First, check if user is a President - Presidents should always see team list
-        val clubMember = getUserClubMembership().first()
-        if (clubMember != null) {
-            if (clubMember.hasRole(ClubRole.PRESIDENT)) {
-                _uiState.value = UiState.ClubPresident
-                return
-            }
-        }
-
-        // For non-Presidents, check if they have their own team
+        // ==============================================================
+        // CLUB_HIDDEN — Restaurar bloque CLUB_ORIGINAL para re-habilitar
+        // la funcionalidad de club. Eliminar este bloque al revertir.
+        // ==============================================================
         val team = getTeam().first()
+        _uiState.value = if (team == null) UiState.NoTeam else UiState.TeamExists
+        // ==============================================================
+        // FIN CLUB_HIDDEN
+        // ==============================================================
 
-        if (team == null) {
-            if (clubMember != null) {
-                _uiState.value = UiState.NoClub
-            } else {
-                _uiState.value = UiState.NoClub
-            }
-        } else {
-            // Check if team has a club
-            val hasClub = team.clubId != null || team.clubFirestoreId != null
-
-            if (hasClub) {
-                _uiState.value = UiState.TeamExists
-            } else {
-                _uiState.value = UiState.NoClub
-            }
-        }
+        // ==============================================================
+        // CLUB_ORIGINAL — Descomentar este bloque al revertir el cambio.
+        // Eliminar el bloque CLUB_HIDDEN de arriba al revertir.
+        // ==============================================================
+//        // First, check if user is a President - Presidents should always see team list
+//        val clubMember = getUserClubMembership().first()
+//        if (clubMember != null) {
+//            if (clubMember.hasRole(ClubRole.PRESIDENT)) {
+//                _uiState.value = UiState.ClubPresident
+//                return
+//            }
+//        }
+//
+//        // For non-Presidents, check if they have their own team
+//        val team = getTeam().first()
+//
+//        if (team == null) {
+//            if (clubMember != null) {
+//                _uiState.value = UiState.NoClub
+//            } else {
+//                _uiState.value = UiState.NoClub
+//            }
+//        } else {
+//            // Check if team has a club
+//            val hasClub = team.clubId != null || team.clubFirestoreId != null
+//
+//            if (hasClub) {
+//                _uiState.value = UiState.TeamExists
+//            } else {
+//                _uiState.value = UiState.NoClub
+//            }
+//        }
+        // ==============================================================
+        // FIN CLUB_ORIGINAL
+        // ==============================================================
     }
 }
