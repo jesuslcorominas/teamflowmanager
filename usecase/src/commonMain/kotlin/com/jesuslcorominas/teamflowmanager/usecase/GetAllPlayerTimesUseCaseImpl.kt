@@ -10,5 +10,5 @@ import kotlinx.coroutines.flow.Flow
 internal class GetAllPlayerTimesUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
 ) : GetAllPlayerTimesUseCase {
-    override fun invoke(): Flow<List<PlayerTime>> = playerTimeRepository.getAllPlayerTimes()
+    override fun invoke(matchId: Long): Flow<List<PlayerTime>> = playerTimeRepository.getPlayerTimesByMatch(matchId)
 }

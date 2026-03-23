@@ -17,6 +17,7 @@ data class PlayerTimeFirestoreModel(
     @DocumentId
     val id: String = "",
     val teamId: String = "",
+    val matchId: Long = 0L,
     val playerId: Long = 0L,
     val elapsedTimeMillis: Long = 0L,
     @get:PropertyName("running")
@@ -30,6 +31,7 @@ data class PlayerTimeFirestoreModel(
     constructor() : this(
         id = "",
         teamId = "",
+        matchId = 0L,
         playerId = 0L,
         elapsedTimeMillis = 0L,
         isRunning = false,
@@ -41,6 +43,7 @@ data class PlayerTimeFirestoreModel(
 
 fun PlayerTimeFirestoreModel.toDomain(): PlayerTime =
     PlayerTime(
+        matchId = matchId,
         playerId = playerId,
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
@@ -57,6 +60,7 @@ fun PlayerTime.toFirestoreModel(): PlayerTimeFirestoreModel =
     PlayerTimeFirestoreModel(
         id = "", // Will be set by the data source using playerId
         teamId = "", // Will be set by the data source
+        matchId = matchId,
         playerId = playerId,
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,

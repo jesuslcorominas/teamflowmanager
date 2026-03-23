@@ -58,7 +58,7 @@ class PauseMatchUseCaseTest {
 
             // Then
             coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
-            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
     @Test
@@ -75,7 +75,7 @@ class PauseMatchUseCaseTest {
 
             // Then
             coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
-            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
     @Test
@@ -91,13 +91,13 @@ class PauseMatchUseCaseTest {
                 PlayerTime(playerId = 3L, isRunning = false, elapsedTimeMillis = 200L, status = PlayerTimeStatus.ON_BENCH),
             )
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
-            coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
 
             // When
             pauseMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { playerTimeRepository.pauseTimersBatchWithOperationId(listOf(1L, 2L), currentTime, "op1") }
+            coVerify { playerTimeRepository.pauseTimersBatchWithOperationId(matchId, listOf(1L, 2L), currentTime, "op1") }
             coVerify {
                 matchRepository.updateMatch(
                     match { it.status == MatchStatus.PAUSED }
@@ -117,13 +117,13 @@ class PauseMatchUseCaseTest {
                 PlayerTime(playerId = 2L, isRunning = false, elapsedTimeMillis = 300L, status = PlayerTimeStatus.ON_BENCH),
             )
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
-            coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
 
             // When
             pauseMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any(), any()) }
             coVerify {
                 matchRepository.updateMatch(
                     match { it.status == MatchStatus.PAUSED }
@@ -139,13 +139,13 @@ class PauseMatchUseCaseTest {
             val currentTime = 1000L
             val match = createMatch(matchId, MatchStatus.IN_PROGRESS, currentTime)
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
-            coEvery { getAllPlayerTimesUseCase() } returns flowOf(emptyList())
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(emptyList())
 
             // When
             pauseMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any(), any()) }
             coVerify {
                 matchRepository.updateMatch(
                     match { it.status == MatchStatus.PAUSED }

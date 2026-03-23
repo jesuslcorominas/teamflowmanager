@@ -15,15 +15,15 @@ internal class StartTimeoutUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
 ) : StartTimeoutUseCase {
     override suspend fun invoke(matchId: Long, currentTimeMillis: Long) {
-        // Get all player times that are currently playing
-        val playerTimes = getAllPlayerTimesUseCase().first()
+        // Get all player times for this match that are currently playing
+        val playerTimes = getAllPlayerTimesUseCase(matchId).first()
         val playingPlayerIds = playerTimes
             .filter { it.status == PlayerTimeStatus.PLAYING }
             .map { it.playerId }
 
         // Pause all playing player timers at once using batch operation
         if (playingPlayerIds.isNotEmpty()) {
-            playerTimeRepository.pauseTimersBatch(playingPlayerIds, currentTimeMillis)
+            playerTimeRepository.pauseTimersBatch(matchId, playingPlayerIds, currentTimeMillis)
         }
 
         // Start timeout for the match timer after player timers

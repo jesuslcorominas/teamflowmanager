@@ -39,15 +39,20 @@ internal class PauseMatchUseCaseImpl(
         )
         val operationId = matchOperationRepository.createOperation(operation)
 
-        // Step 2: Get all player times that are currently playing
-        val playerTimes = getAllPlayerTimesUseCase().first()
+        // Step 2: Get all player times for this match that are currently playing
+        val playerTimes = getAllPlayerTimesUseCase(matchId).first()
         val playingPlayerIds = playerTimes
             .filter { it.status == PlayerTimeStatus.PLAYING }
             .map { it.playerId }
 
         // Step 3: Pause all playing player timers with operation ID
         if (playingPlayerIds.isNotEmpty()) {
-            playerTimeRepository.pauseTimersBatchWithOperationId(playingPlayerIds, currentTimeMillis, operationId)
+            playerTimeRepository.pauseTimersBatchWithOperationId(
+                matchId = matchId,
+                playerIds = playingPlayerIds,
+                currentTimeMillis = currentTimeMillis,
+                operationId = operationId,
+            )
         }
 
         // Step 4: Pause the match timer

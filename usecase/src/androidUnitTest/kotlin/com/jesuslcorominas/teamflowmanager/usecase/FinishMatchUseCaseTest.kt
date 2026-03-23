@@ -85,7 +85,7 @@ class FinishMatchUseCaseTest {
                 PlayerTime(playerId = 2L, elapsedTimeMillis = 2000L, isRunning = false),
             )
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
+            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(playerTimes)
             coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
 
             // When
@@ -118,7 +118,7 @@ class FinishMatchUseCaseTest {
             val currentTime = System.currentTimeMillis()
             val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
+            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
 
             // When
             finishMatchUseCase.invoke(matchId, currentTime)
@@ -144,7 +144,7 @@ class FinishMatchUseCaseTest {
                 PlayerTime(playerId = 2L, elapsedTimeMillis = 2000L, isRunning = false),
             )
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
+            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(playerTimes)
             coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
 
             // When
@@ -182,7 +182,7 @@ class FinishMatchUseCaseTest {
                 ),
             )
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
+            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(playerTimes)
             coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
 
             // When
@@ -204,7 +204,7 @@ class FinishMatchUseCaseTest {
             val currentTime = System.currentTimeMillis()
             val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
+            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
 
             // When
             finishMatchUseCase.invoke(matchId, currentTime)
@@ -266,7 +266,7 @@ class FinishMatchUseCaseTest {
             ),
         )
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
+        every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
 
         // When
         finishMatchUseCase.invoke(matchId, currentTime)
@@ -286,7 +286,7 @@ class FinishMatchUseCaseTest {
             PlayerTime(playerId = 1L, elapsedTimeMillis = 5000L, isRunning = true, lastStartTimeMillis = null),
         )
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
+        every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(playerTimes)
         coEvery { playerTimeHistoryRepository.insertPlayerTimeHistory(any()) } returns 1L
 
         // When
@@ -307,7 +307,7 @@ class FinishMatchUseCaseTest {
         val currentTime = System.currentTimeMillis()
         val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
+        every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
         coEvery { playerTimeRepository.resetAllPlayerTimes() } throws RuntimeException("DB error")
 
         // When - expects IllegalStateException wrapping the original exception

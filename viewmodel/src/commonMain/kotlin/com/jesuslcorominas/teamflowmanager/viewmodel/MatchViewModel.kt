@@ -119,7 +119,7 @@ class MatchViewModel(
                     startMatchTimerUseCase(matchId = it.id, currentTime)
                     // Start all player timers at once using batch operation
                     if (it.startingLineupIds.isNotEmpty()) {
-                        startPlayerTimersBatchUseCase(it.startingLineupIds, currentTime)
+                        startPlayerTimersBatchUseCase(it.id, it.startingLineupIds, currentTime)
                     }
                 }
             }
@@ -544,7 +544,7 @@ class MatchViewModel(
         viewModelScope.launch {
             combine(
                 getMatchById(matchId),
-                getAllPlayerTimesUseCase(),
+                getAllPlayerTimesUseCase(matchId),
                 getPlayersUseCase(),
                 _currentTime,
             ) { match, playerTimes, players, currentTime ->

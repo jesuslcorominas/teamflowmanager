@@ -23,8 +23,9 @@ class StartPlayerTimersBatchUseCaseTest {
         val playerIds = listOf(1L, 2L, 3L)
         val currentTimeMillis = 7000L
 
-        useCase.invoke(playerIds, currentTimeMillis)
+        val matchId = 42L
+        useCase.invoke(matchId, playerIds, currentTimeMillis)
 
-        coVerify { playerTimeRepository.startTimersBatch(playerIds, currentTimeMillis) }
+        coVerify { playerTimeRepository.startTimersBatch(matchId, playerIds, currentTimeMillis) }
     }
 }

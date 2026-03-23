@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.domain.model
 
 data class PlayerTime(
     val playerId: Long,
+    val matchId: Long = 0L,
     val elapsedTimeMillis: Long = 0L,
     val isRunning: Boolean = false,
     val lastStartTimeMillis: Long? = null,

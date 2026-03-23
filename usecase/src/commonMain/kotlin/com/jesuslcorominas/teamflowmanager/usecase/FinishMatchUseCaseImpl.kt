@@ -62,9 +62,9 @@ internal class FinishMatchUseCaseImpl(
             )
             matchRepository.updateMatch(finishedMatch)
 
-            // Step 3: Get player times and save history
+            // Step 3: Get player times for this match and save history
             val playerTimes = try {
-                playerTimeRepository.getAllPlayerTimes().first()
+                playerTimeRepository.getPlayerTimesByMatch(matchId).first()
             } catch (e: Exception) {
                 println("FinishMatchUseCase: Error getting player times: ${e.message}")
                 e.printStackTrace()

@@ -57,7 +57,7 @@ class StartMatchTimerUseCaseTest {
             // Then
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
             coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
-            coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
     @Test
@@ -79,7 +79,7 @@ class StartMatchTimerUseCaseTest {
                     match { it.status == MatchStatus.IN_PROGRESS }
                 )
             }
-            coVerify { playerTimeRepository.startTimersBatchWithOperationId(startingLineup, currentTime, "op1") }
+            coVerify { playerTimeRepository.startTimersBatchWithOperationId(matchId, startingLineup, currentTime, "op1") }
         }
 
     @Test
@@ -100,7 +100,7 @@ class StartMatchTimerUseCaseTest {
                     match { it.status == MatchStatus.IN_PROGRESS }
                 )
             }
-            coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
     @Test
@@ -130,7 +130,7 @@ class StartMatchTimerUseCaseTest {
 
             // Then
             coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
-            coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
     private fun createScheduledMatch(id: Long, startingLineupIds: List<Long> = emptyList()): Match {

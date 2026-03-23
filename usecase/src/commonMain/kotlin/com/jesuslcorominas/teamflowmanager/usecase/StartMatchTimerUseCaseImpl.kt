@@ -58,9 +58,10 @@ internal class StartMatchTimerUseCaseImpl(
         // Step 3: Update player times with operation ID
         if (match.startingLineupIds.isNotEmpty()) {
             playerTimeRepository.startTimersBatchWithOperationId(
-                match.startingLineupIds,
-                currentTimeMillis,
-                operationId
+                matchId = matchId,
+                playerIds = match.startingLineupIds,
+                currentTimeMillis = currentTimeMillis,
+                operationId = operationId,
             )
         }
 

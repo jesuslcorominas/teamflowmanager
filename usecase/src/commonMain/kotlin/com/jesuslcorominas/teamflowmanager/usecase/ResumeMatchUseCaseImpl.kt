@@ -39,15 +39,20 @@ internal class ResumeMatchUseCaseImpl(
         )
         val operationId = matchOperationRepository.createOperation(operation)
 
-        // Step 2: Get all player times and resume only the ones that were in PAUSED state
-        val playerTimes = getAllPlayerTimesUseCase().first()
+        // Step 2: Get all player times for this match and resume only the ones that were in PAUSED state
+        val playerTimes = getAllPlayerTimesUseCase(matchId).first()
         val pausedPlayerIds = playerTimes
             .filter { it.status == PlayerTimeStatus.PAUSED }
             .map { it.playerId }
 
         // Step 3: Start all paused player timers with operation ID
         if (pausedPlayerIds.isNotEmpty()) {
-            playerTimeRepository.startTimersBatchWithOperationId(pausedPlayerIds, currentTimeMillis, operationId)
+            playerTimeRepository.startTimersBatchWithOperationId(
+                matchId = matchId,
+                playerIds = pausedPlayerIds,
+                currentTimeMillis = currentTimeMillis,
+                operationId = operationId,
+            )
         }
 
         // Step 4: Resume the match timer

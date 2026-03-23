@@ -46,13 +46,13 @@ class EndTimeoutUseCaseTest {
                     PlayerTime(playerId = 3L, isRunning = false, elapsedTimeMillis = 200L, status = PlayerTimeStatus.ON_BENCH),
                 )
 
-            coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
 
             // When
             endTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { playerTimeRepository.startTimersBatch(listOf(1L, 2L), currentTime) }
+            coVerify { playerTimeRepository.startTimersBatch(matchId, listOf(1L, 2L), currentTime) }
             coVerify { matchRepository.endTimeout(matchId, currentTime) }
         }
 
@@ -68,13 +68,13 @@ class EndTimeoutUseCaseTest {
                     PlayerTime(playerId = 2L, isRunning = true, elapsedTimeMillis = 300L, status = PlayerTimeStatus.PLAYING),
                 )
 
-            coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
 
             // When
             endTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify(exactly = 0) { playerTimeRepository.startTimersBatch(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.startTimersBatch(any(), any(), any()) }
             coVerify { matchRepository.endTimeout(matchId, currentTime) }
         }
 
@@ -84,13 +84,13 @@ class EndTimeoutUseCaseTest {
             // Given
             val matchId = 1L
             val currentTime = 2000L
-            coEvery { getAllPlayerTimesUseCase() } returns flowOf(emptyList())
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(emptyList())
 
             // When
             endTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify(exactly = 0) { playerTimeRepository.startTimersBatch(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.startTimersBatch(any(), any(), any()) }
             coVerify { matchRepository.endTimeout(matchId, currentTime) }
         }
 }

@@ -31,10 +31,10 @@ class GetAllPlayerTimesUseCaseTest {
                     PlayerTime(playerId = 1L, elapsedTimeMillis = 5000L, isRunning = true),
                     PlayerTime(playerId = 2L, elapsedTimeMillis = 3000L, isRunning = false),
                 )
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(playerTimes)
+            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(playerTimes)
 
             // When
-            val result = getAllPlayerTimesUseCase.invoke().first()
+            val result = getAllPlayerTimesUseCase.invoke(matchId = 1L).first()
 
             // Then
             assertEquals(playerTimes, result)
@@ -44,10 +44,10 @@ class GetAllPlayerTimesUseCaseTest {
     fun `invoke should return empty list when no player times exist`() =
         runTest {
             // Given
-            every { playerTimeRepository.getAllPlayerTimes() } returns flowOf(emptyList())
+            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
 
             // When
-            val result = getAllPlayerTimesUseCase.invoke().first()
+            val result = getAllPlayerTimesUseCase.invoke(matchId = 1L).first()
 
             // Then
             assertEquals(emptyList<PlayerTime>(), result)

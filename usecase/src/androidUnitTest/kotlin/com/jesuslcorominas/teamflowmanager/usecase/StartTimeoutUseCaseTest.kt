@@ -46,13 +46,13 @@ class StartTimeoutUseCaseTest {
                     PlayerTime(playerId = 3L, isRunning = false, elapsedTimeMillis = 200L),
                 )
 
-            coEvery { getAllPlayerTimesUseCase() } returns flowOf(runningPlayerTimes)
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(runningPlayerTimes)
 
             // When
             startTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { playerTimeRepository.pauseTimersBatch(listOf(1L, 2L), currentTime) }
+            coVerify { playerTimeRepository.pauseTimersBatch(matchId, listOf(1L, 2L), currentTime) }
             coVerify { matchRepository.startTimeout(matchId, currentTime) }
         }
 
@@ -68,13 +68,13 @@ class StartTimeoutUseCaseTest {
                     PlayerTime(playerId = 2L, isRunning = false, elapsedTimeMillis = 300L),
                 )
 
-            coEvery { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
 
             // When
             startTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatch(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatch(any(), any(), any()) }
             coVerify { matchRepository.startTimeout(matchId, currentTime) }
         }
 
@@ -84,13 +84,13 @@ class StartTimeoutUseCaseTest {
             // Given
             val matchId = 1L
             val currentTime = 1000L
-            coEvery { getAllPlayerTimesUseCase() } returns flowOf(emptyList())
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(emptyList())
 
             // When
             startTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatch(any(), any()) }
+            coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatch(any(), any(), any()) }
             coVerify { matchRepository.startTimeout(matchId, currentTime) }
         }
 }

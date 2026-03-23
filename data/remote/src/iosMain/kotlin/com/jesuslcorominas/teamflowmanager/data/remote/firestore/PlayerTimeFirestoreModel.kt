@@ -16,6 +16,7 @@ import kotlinx.serialization.Transient
 data class PlayerTimeFirestoreModel(
     @Transient val id: String = "",
     val teamId: String = "",
+    val matchId: Long = 0L,
     val playerId: Long = 0L,
     val elapsedTimeMillis: Long = 0L,
     val running: Boolean = false,
@@ -26,6 +27,7 @@ data class PlayerTimeFirestoreModel(
 
 fun PlayerTimeFirestoreModel.toDomain(): PlayerTime =
     PlayerTime(
+        matchId = matchId,
         playerId = playerId,
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = running,
@@ -41,6 +43,7 @@ fun PlayerTimeFirestoreModel.toDomain(): PlayerTime =
 fun PlayerTime.toFirestoreModel(): PlayerTimeFirestoreModel =
     PlayerTimeFirestoreModel(
         teamId = "",
+        matchId = matchId,
         playerId = playerId,
         elapsedTimeMillis = elapsedTimeMillis,
         running = isRunning,

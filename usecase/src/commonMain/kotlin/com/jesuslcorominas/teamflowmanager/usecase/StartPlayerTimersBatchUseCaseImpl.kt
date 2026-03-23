@@ -6,7 +6,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeReposito
 internal class StartPlayerTimersBatchUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
 ) : StartPlayerTimersBatchUseCase {
-    override suspend fun invoke(playerIds: List<Long>, currentTimeMillis: Long) {
-        playerTimeRepository.startTimersBatch(playerIds, currentTimeMillis)
+    override suspend fun invoke(matchId: Long, playerIds: List<Long>, currentTimeMillis: Long) {
+        playerTimeRepository.startTimersBatch(matchId, playerIds, currentTimeMillis)
     }
 }

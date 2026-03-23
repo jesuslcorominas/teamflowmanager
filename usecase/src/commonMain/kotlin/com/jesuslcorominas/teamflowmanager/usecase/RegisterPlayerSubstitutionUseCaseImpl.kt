@@ -32,8 +32,8 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         val match = matchRepository.getMatchById(matchId).first()
         requireNotNull(match) { "No active match found" }
 
-        // Get all player times to check if playerOut is actually playing
-        val playerTimes = getAllPlayerTimesUseCase().first()
+        // Get all player times for this match to check if playerOut is actually playing
+        val playerTimes = getAllPlayerTimesUseCase(matchId).first()
         val playerOutTime = playerTimes.find { it.playerId == playerOutId }
 
         // Only proceed if the player being substituted out is currently playing (status PLAYING)
@@ -61,6 +61,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         
         // Substitute out the leaving player - sets ON_BENCH status
         playerTimeRepository.substituteOutPlayersBatchWithOperationId(
+            matchId = matchId,
             playerIds = listOf(playerOutId),
             currentTimeMillis = currentTimeMillis,
             operationId = operationId,
@@ -68,16 +69,18 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
 
         // Start timer for player coming in with operation ID
         playerTimeRepository.startTimersBatchWithOperationId(
+            matchId = matchId,
             playerIds = listOf(playerInId),
             currentTimeMillis = currentTimeMillis,
             operationId = operationId,
         )
-        
+
         // Update all OTHER currently playing players (excluding playerOut who was just benched)
         // with the new operationId to maintain consistency
         val otherPlayingPlayers = playingPlayerIds.filter { it != playerOutId }
         if (otherPlayingPlayers.isNotEmpty()) {
             playerTimeRepository.startTimersBatchWithOperationId(
+                matchId = matchId,
                 playerIds = otherPlayingPlayers,
                 currentTimeMillis = currentTimeMillis,
                 operationId = operationId,

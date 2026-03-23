@@ -71,7 +71,14 @@ class PlayerTimeFirestoreDataSourceImpl(
         )
     }
 
-    override fun getAllPlayerTimes(): Flow<List<PlayerTime>> = flow {
+    /**
+     * Gets player times scoped to a specific match from Firestore as a real-time Flow.
+     * Documents from previous matches (matchId mismatch) are ignored automatically,
+     * which prevents stale data from corrupting a new match even if deletion failed.
+     *
+     * Note: requires a composite Firestore index on playerTimes(teamId ASC, matchId ASC).
+     */
+    override fun getPlayerTimesByMatch(matchId: Long): Flow<List<PlayerTime>> = flow {
         val currentUserId = firebaseAuth.currentUser?.uid
         if (currentUserId == null) {
             emit(emptyList())
@@ -84,6 +91,7 @@ class PlayerTimeFirestoreDataSourceImpl(
         }
         val snapshots = firestore.collection(PLAYER_TIMES_COLLECTION)
             .where { "teamId" equalTo teamDocId }
+            .where { "matchId" equalTo matchId }
             .snapshots
         emitAll(
             snapshots.map { qs ->
