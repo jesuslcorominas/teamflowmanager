@@ -1,0 +1,162 @@
+name: Post-Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  PACKAGE_NAME: com.jesuslcorominas.teamflowmanager
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # 1. Promote Play Beta → Production  (solo en merges de release/*)
+  # ─────────────────────────────────────────────────────────────
+  promote:
+    name: Promote Play Beta → Production
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ubuntu-latest
+    outputs:
+      version_name: ${{ steps.version.outputs.version_name }}
+      version_code: ${{ steps.version.outputs.version_code }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | grep -oP '\d+')
+          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | grep -oP '"[^"]+"' | tr -d '"')
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+
+      - uses: google-github-actions/auth@v2
+        id: auth
+        with:
+          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: 'access_token'
+          access_token_scopes: 'https://www.googleapis.com/auth/androidpublisher'
+
+      - name: Promote beta → production
+        run: |
+          TOKEN="${{ steps.auth.outputs.access_token }}"
+          PKG="${{ env.PACKAGE_NAME }}"
+          VERSION_CODE="${{ steps.version.outputs.version_code }}"
+
+          if [ -f "distribution/whatsnew/whatsnew-es-ES" ]; then
+            NOTES=$(cat distribution/whatsnew/whatsnew-es-ES)
+          else
+            NOTES="Corrección de errores y mejoras de rendimiento."
+          fi
+
+          EDIT_ID=$(curl -s -X POST \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' | jq -r '.id // empty')
+
+          if [ -z "$EDIT_ID" ]; then
+            echo "❌ Failed to create Play API edit"
+            exit 1
+          fi
+
+          NOTES_JSON=$(echo "$NOTES" | jq -Rs .)
+
+          curl -s -X PUT \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID/tracks/production" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"track\":\"production\",\"releases\":[{\"versionCodes\":[\"$VERSION_CODE\"],\"status\":\"completed\",\"releaseNotes\":[{\"language\":\"es-ES\",\"text\":$NOTES_JSON}]}]}"
+
+          RESULT=$(curl -s -X POST \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID:commit" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+
+          echo "$RESULT"
+          echo "✅ versionCode $VERSION_CODE promoted to production"
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. GitHub Release  (solo en merges de release/*)
+  # ─────────────────────────────────────────────────────────────
+  github-release:
+    name: Create GitHub Release
+    needs: promote
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read release notes
+        id: notes
+        run: |
+          if [ -f "distribution/whatsnew/whatsnew-es-ES" ]; then
+            NOTES=$(cat distribution/whatsnew/whatsnew-es-ES)
+          else
+            NOTES="Corrección de errores y mejoras de rendimiento."
+          fi
+          echo "notes<<EOF_NOTES" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF_NOTES" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.promote.outputs.version_name }}
+          name: TeamFlow Manager ${{ needs.promote.outputs.version_name }}
+          body: |
+            ## TeamFlow Manager ${{ needs.promote.outputs.version_name }}
+
+            ${{ steps.notes.outputs.notes }}
+
+            ---
+            - Android: disponible en Play Store producción
+            - iOS: IPA disponible en los artefactos del workflow de CI (30 días)
+          draft: false
+          prerelease: false
+
+  # ─────────────────────────────────────────────────────────────
+  # 3. Sync main → develop  (en cualquier merge a main)
+  # ─────────────────────────────────────────────────────────────
+  sync-develop:
+    name: Sync main → develop
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge main into develop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git fetch origin
+
+          git checkout develop
+          if git merge origin/main --no-edit; then
+            git push origin develop
+            echo "✅ develop synced with main"
+          else
+            git merge --abort
+            echo "⚠️ Merge conflict — opening PR instead"
+            EXISTING=$(gh pr list --base develop --head main --state open --json number --jq '.[0].number')
+            if [ -z "$EXISTING" ]; then
+              gh pr create \
+                --base develop \
+                --head main \
+                --title "chore: sync main → develop" \
+                --body "Sync automático tras merge a main. Requiere resolución manual de conflictos."
+            else
+              echo "PR #$EXISTING already exists"
+            fi
+          fi

@@ -1,9 +1,10 @@
-name: Release
+name: Release CI
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize]
     branches:
-      - 'release/**'
+      - main
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
@@ -159,27 +160,23 @@ jobs:
           TOKEN="${{ steps.auth.outputs.access_token }}"
           PKG="${{ env.PACKAGE_NAME }}"
 
-          # Create edit
-          EDIT_RESPONSE=$(curl -s -X POST \
+          EDIT_ID=$(curl -s -X POST \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{}')
-          EDIT_ID=$(echo "$EDIT_RESPONSE" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+            -d '{}' | jq -r '.id // empty')
 
           if [ -z "$EDIT_ID" ]; then
             echo "⚠️ Could not create edit for cleanup — skipping"
             exit 0
           fi
 
-          # Clear beta track
           curl -s -X PUT \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID/tracks/beta" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"track":"beta","releases":[]}'
 
-          # Commit edit
           curl -s -X POST \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID:commit" \
             -H "Authorization: Bearer $TOKEN" \
@@ -287,33 +284,3 @@ jobs:
           name: TeamFlowManager-iOS-${{ needs.validate-version.outputs.version_name }}.ipa
           path: ${{ runner.temp }}/ipa/*.ipa
           retention-days: 30
-
-  # ─────────────────────────────────────────────────────────────
-  # 5. GitHub Release
-  # ─────────────────────────────────────────────────────────────
-  github-release:
-    name: Create GitHub Release
-    needs: [android, ios, validate-version]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download AAB artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: TeamFlowManager-${{ needs.validate-version.outputs.version_name }}.aab
-          path: artifacts/
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: TeamFlow Manager ${{ needs.validate-version.outputs.version_name }}
-          body: |
-            ## TeamFlow Manager ${{ needs.validate-version.outputs.version_name }}
-
-            - Android: subido a Play Store Beta — promueve manualmente a producción desde Play Console
-            - iOS: IPA disponible en los artefactos del workflow (30 días)
-          files: artifacts/*.aab
-          draft: false
-          prerelease: true
