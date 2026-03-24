@@ -13,8 +13,8 @@ Start by running `git branch --show-current` to determine the current branch, an
 4. Push: `git push -u origin release/{version}`
    - The pre-push hook will bump versionCode automatically and push
    - GitHub Actions will open a PR to `main` automatically
-5. Inform: "PR creada hacia main. El CI ejecutará tests y subirá la build a Play Beta. Cuando el CI sea verde, mergea la PR para promover a producción."
-6. Provide the Actions URL: `https://github.com/jesuslcorominas/teamflowmanager/actions`
+5. Inform: "PR creada hacia main. Monitorizando la CI..."
+6. Start CI monitoring loop (see ## CI Monitoring below)
 
 **Note on screenshots**: Play Store screenshots require subida manual desde Play Console por ahora.
 Screenshots support via API es trabajo futuro (ver sección iOS App Store más abajo).
@@ -34,7 +34,7 @@ Screenshots support via API es trabajo futuro (ver sección iOS App Store más a
    - `git add -A && git commit -m "{message}"`
 3. Push: `git push origin HEAD`
    - Hook bumps versionCode, pushes, and the CI re-runs on the open PR
-4. Provide the Actions URL: `https://github.com/jesuslcorominas/teamflowmanager/actions`
+4. Start CI monitoring loop (see ## CI Monitoring below)
 
 ## If on `main` or any other branch:
 
@@ -52,6 +52,26 @@ merge PR a main → promueve Play Beta → producción
                → crea GitHub Release con las release notes
                → sincroniza main → develop (merge directo o PR si hay conflictos)
 ```
+
+## CI Monitoring
+
+After every push to a release branch, enter a monitoring loop:
+
+1. Run `gh run list --branch {current-branch} --limit 1 --json status,conclusion,databaseId,name` to get the latest run
+2. If `status == "in_progress"` or `status == "queued"` → wait and check again in 10 minutes
+3. If `status == "completed"` and `conclusion == "success"` → inform the user:
+   "✅ CI verde. La build está en Play Beta. Mergea la PR cuando quieras para promover a producción."
+   Then stop monitoring.
+4. If `status == "completed"` and `conclusion == "failure"` → automatically:
+   a. Run `gh run view {databaseId} --log-failed 2>&1 | head -100` to read the failure logs
+   b. Identify the root cause
+   c. Fix the relevant file(s)
+   d. Commit and push the fix — this will re-trigger the CI
+   e. Inform the user what was fixed
+   f. Continue monitoring the new run from step 1
+5. If the same error repeats after a fix attempt → inform the user and ask for input before retrying
+
+Do NOT stop monitoring until CI is green or the user explicitly says to stop.
 
 ## Notes:
 - The pre-push hook at `scripts/hooks/pre-push` handles the versionCode bump automatically
