@@ -35,6 +35,7 @@ jobs:
 
       - name: Restore google-services.json
         run: |
+          mkdir -p app/src/dev app/src/prod
           echo "${{ secrets.GOOGLE_SERVICES_DEV }}"  | base64 --decode > app/src/dev/google-services.json
           echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 --decode > app/src/prod/google-services.json
 
@@ -127,6 +128,7 @@ jobs:
 
       - name: Restore secrets
         run: |
+          mkdir -p app/src/prod
           echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 --decode > app/src/prod/google-services.json
           echo "${{ secrets.KEYSTORE_JKS }}"         | base64 --decode > ${{ github.workspace }}/teamflow.jks
 
