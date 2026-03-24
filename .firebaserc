@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "tfm-dev": "teamflow-manager-dev"
+  },
+  "targets": {},
+  "etags": {}
+}

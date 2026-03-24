@@ -44,3 +44,19 @@ docs/GoogleService-Info*.plist
 /app/google-services.json
 iosApp/Pods/
 iosApp/iosApp.xcworkspace/xcshareddata/swiftpm/
+iosApp/iosApp.xcworkspace/xcuserdata/
+iosApp/iosApp.xcodeproj/project.xcworkspace/xcuserdata/
+iosApp/iosApp.xcodeproj/xcuserdata/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# Kotlin build cache
+.kotlin/
+
+# Firebase CLI cache
+.firebase/
+
+# Firebase Functions dependencies
+firebase-functions/node_modules/
