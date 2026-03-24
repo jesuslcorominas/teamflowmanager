@@ -40,7 +40,7 @@ class PlayerTimeRepositoryImplTest {
         }
 
     @Test
-    fun `getAllPlayerTimes should return all player times from local data source`() =
+    fun `getPlayerTimesByMatch should return player times from data source`() =
         runTest {
             // Given
             val playerTimes =
@@ -48,10 +48,10 @@ class PlayerTimeRepositoryImplTest {
                     PlayerTime(playerId = 1L, elapsedTimeMillis = 5000L, isRunning = true),
                     PlayerTime(playerId = 2L, elapsedTimeMillis = 3000L, isRunning = false),
                 )
-            every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(playerTimes)
+            every { playerTimeDataSource.getPlayerTimesByMatch(MATCH_ID) } returns flowOf(playerTimes)
 
             // When
-            val result = repository.getAllPlayerTimes().first()
+            val result = repository.getPlayerTimesByMatch(MATCH_ID).first()
 
             // Then
             assertEquals(playerTimes, result)
@@ -67,7 +67,7 @@ class PlayerTimeRepositoryImplTest {
             coEvery { playerTimeDataSource.upsertPlayerTime(any()) } returns Unit
 
             // When
-            repository.startTimer(playerId, currentTime)
+            repository.startTimer(MATCH_ID, playerId, currentTime)
 
             // Then
             coVerify {
@@ -93,7 +93,7 @@ class PlayerTimeRepositoryImplTest {
             coEvery { playerTimeDataSource.upsertPlayerTime(any()) } returns Unit
 
             // When
-            repository.startTimer(playerId, currentTime)
+            repository.startTimer(MATCH_ID, playerId, currentTime)
 
             // Then
             coVerify {
@@ -184,7 +184,7 @@ class PlayerTimeRepositoryImplTest {
             // First start
             every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(null)
             coEvery { playerTimeDataSource.upsertPlayerTime(any()) } returns Unit
-            repository.startTimer(playerId, firstStartTime)
+            repository.startTimer(MATCH_ID, playerId, firstStartTime)
 
             // Pause
             val runningPlayerTime =
@@ -202,7 +202,7 @@ class PlayerTimeRepositoryImplTest {
             every { playerTimeDataSource.getPlayerTime(playerId) } returns flowOf(pausedPlayerTime)
 
             // When
-            repository.startTimer(playerId, secondStartTime)
+            repository.startTimer(MATCH_ID, playerId, secondStartTime)
 
             // Then
             coVerify {
@@ -338,9 +338,9 @@ class PlayerTimeRepositoryImplTest {
 
     @Test
     fun `givenEmptyPlayerIdList_whenStartTimersBatch_thenDoesNothing`() = runTest {
-        repository.startTimersBatch(emptyList(), 1000L)
+        repository.startTimersBatch(MATCH_ID, emptyList(), 1000L)
 
-        coVerify(exactly = 0) { playerTimeDataSource.getAllPlayerTimes() }
+        coVerify(exactly = 0) { playerTimeDataSource.getPlayerTimesByMatch(any()) }
         coVerify(exactly = 0) { playerTimeDataSource.batchUpsertPlayerTimes(any()) }
     }
 
@@ -348,9 +348,9 @@ class PlayerTimeRepositoryImplTest {
     fun `givenPlayerIdsWithNoExistingTimes_whenStartTimersBatch_thenCreatesNewPlayerTimesAsPlaying`() = runTest {
         val playerIds = listOf(1L, 2L)
         val currentTime = 5000L
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(emptyList())
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
 
-        repository.startTimersBatch(playerIds, currentTime)
+        repository.startTimersBatch(MATCH_ID, playerIds, currentTime)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -374,9 +374,9 @@ class PlayerTimeRepositoryImplTest {
             PlayerTime(playerId = 1L, elapsedTimeMillis = 2000L, isRunning = false),
             PlayerTime(playerId = 2L, elapsedTimeMillis = 3000L, isRunning = false),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(existingTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(existingTimes)
 
-        repository.startTimersBatch(listOf(1L, 2L), currentTime)
+        repository.startTimersBatch(MATCH_ID, listOf(1L, 2L), currentTime)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -394,7 +394,7 @@ class PlayerTimeRepositoryImplTest {
 
     @Test
     fun `givenEmptyPlayerIdList_whenPauseTimersBatch_thenDoesNothing`() = runTest {
-        repository.pauseTimersBatch(emptyList(), 1000L)
+        repository.pauseTimersBatch(MATCH_ID, emptyList(), 1000L)
 
         coVerify(exactly = 0) { playerTimeDataSource.batchUpsertPlayerTimes(any()) }
     }
@@ -406,9 +406,9 @@ class PlayerTimeRepositoryImplTest {
             PlayerTime(playerId = 1L, elapsedTimeMillis = 0L, isRunning = true, lastStartTimeMillis = 1000L),
             PlayerTime(playerId = 2L, elapsedTimeMillis = 1000L, isRunning = false),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(allTimes)
 
-        repository.pauseTimersBatch(listOf(1L, 2L), currentTime)
+        repository.pauseTimersBatch(MATCH_ID, listOf(1L, 2L), currentTime)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -429,9 +429,9 @@ class PlayerTimeRepositoryImplTest {
         val allTimes = listOf(
             PlayerTime(playerId = 1L, elapsedTimeMillis = 500L, isRunning = true, lastStartTimeMillis = null),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(allTimes)
 
-        repository.pauseTimersBatch(listOf(1L), currentTime)
+        repository.pauseTimersBatch(MATCH_ID, listOf(1L), currentTime)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -451,9 +451,9 @@ class PlayerTimeRepositoryImplTest {
             PlayerTime(playerId = 1L, elapsedTimeMillis = 2000L, isRunning = false),
             PlayerTime(playerId = 2L, elapsedTimeMillis = 1000L, isRunning = false),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(allTimes)
 
-        repository.pauseTimersBatch(listOf(1L, 2L), 6000L)
+        repository.pauseTimersBatch(MATCH_ID, listOf(1L, 2L), 6000L)
 
         coVerify(exactly = 0) { playerTimeDataSource.batchUpsertPlayerTimes(any()) }
     }
@@ -462,7 +462,7 @@ class PlayerTimeRepositoryImplTest {
 
     @Test
     fun `givenEmptyPlayerIdList_whenStartTimersBatchWithOperationId_thenDoesNothing`() = runTest {
-        repository.startTimersBatchWithOperationId(emptyList(), 1000L, "op-1")
+        repository.startTimersBatchWithOperationId(MATCH_ID, emptyList(), 1000L, "op-1")
 
         coVerify(exactly = 0) { playerTimeDataSource.batchUpsertPlayerTimes(any()) }
     }
@@ -471,9 +471,9 @@ class PlayerTimeRepositoryImplTest {
     fun `givenNewPlayerIds_whenStartTimersBatchWithOperationId_thenCreatesTimesWithOperationId`() = runTest {
         val currentTime = 5000L
         val operationId = "op-start-1"
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(emptyList())
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
 
-        repository.startTimersBatchWithOperationId(listOf(1L), currentTime, operationId)
+        repository.startTimersBatchWithOperationId(MATCH_ID, listOf(1L), currentTime, operationId)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -492,9 +492,9 @@ class PlayerTimeRepositoryImplTest {
         val currentTime = 5000L
         val operationId = "op-start-2"
         val existingTime = PlayerTime(playerId = 1L, elapsedTimeMillis = 1000L, isRunning = false)
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(listOf(existingTime))
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(listOf(existingTime))
 
-        repository.startTimersBatchWithOperationId(listOf(1L), currentTime, operationId)
+        repository.startTimersBatchWithOperationId(MATCH_ID, listOf(1L), currentTime, operationId)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -512,7 +512,7 @@ class PlayerTimeRepositoryImplTest {
 
     @Test
     fun `givenEmptyPlayerIdList_whenPauseTimersBatchWithOperationId_thenDoesNothing`() = runTest {
-        repository.pauseTimersBatchWithOperationId(emptyList(), 1000L, "op-1")
+        repository.pauseTimersBatchWithOperationId(MATCH_ID, emptyList(), 1000L, "op-1")
 
         coVerify(exactly = 0) { playerTimeDataSource.batchUpsertPlayerTimes(any()) }
     }
@@ -524,9 +524,9 @@ class PlayerTimeRepositoryImplTest {
         val allTimes = listOf(
             PlayerTime(playerId = 1L, elapsedTimeMillis = 0L, isRunning = true, lastStartTimeMillis = 1000L),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(allTimes)
 
-        repository.pauseTimersBatchWithOperationId(listOf(1L), currentTime, operationId)
+        repository.pauseTimersBatchWithOperationId(MATCH_ID, listOf(1L), currentTime, operationId)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -549,9 +549,9 @@ class PlayerTimeRepositoryImplTest {
         val allTimes = listOf(
             PlayerTime(playerId = 1L, elapsedTimeMillis = 500L, isRunning = true, lastStartTimeMillis = null),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(allTimes)
 
-        repository.pauseTimersBatchWithOperationId(listOf(1L), currentTime, operationId)
+        repository.pauseTimersBatchWithOperationId(MATCH_ID, listOf(1L), currentTime, operationId)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -571,9 +571,9 @@ class PlayerTimeRepositoryImplTest {
         val allTimes = listOf(
             PlayerTime(playerId = 1L, elapsedTimeMillis = 2000L, isRunning = false),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(allTimes)
 
-        repository.pauseTimersBatchWithOperationId(listOf(1L), 6000L, "op-1")
+        repository.pauseTimersBatchWithOperationId(MATCH_ID, listOf(1L), 6000L, "op-1")
 
         coVerify(exactly = 0) { playerTimeDataSource.batchUpsertPlayerTimes(any()) }
     }
@@ -582,7 +582,7 @@ class PlayerTimeRepositoryImplTest {
 
     @Test
     fun `givenEmptyPlayerIdList_whenSubstituteOutPlayersBatchWithOperationId_thenDoesNothing`() = runTest {
-        repository.substituteOutPlayersBatchWithOperationId(emptyList(), 1000L, "op-1")
+        repository.substituteOutPlayersBatchWithOperationId(MATCH_ID, emptyList(), 1000L, "op-1")
 
         coVerify(exactly = 0) { playerTimeDataSource.batchUpsertPlayerTimes(any()) }
     }
@@ -594,9 +594,9 @@ class PlayerTimeRepositoryImplTest {
         val allTimes = listOf(
             PlayerTime(playerId = 1L, elapsedTimeMillis = 0L, isRunning = true, lastStartTimeMillis = 1000L),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(allTimes)
 
-        repository.substituteOutPlayersBatchWithOperationId(listOf(1L), currentTime, operationId)
+        repository.substituteOutPlayersBatchWithOperationId(MATCH_ID, listOf(1L), currentTime, operationId)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -619,9 +619,9 @@ class PlayerTimeRepositoryImplTest {
         val allTimes = listOf(
             PlayerTime(playerId = 1L, elapsedTimeMillis = 500L, isRunning = true, lastStartTimeMillis = null),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(allTimes)
 
-        repository.substituteOutPlayersBatchWithOperationId(listOf(1L), currentTime, operationId)
+        repository.substituteOutPlayersBatchWithOperationId(MATCH_ID, listOf(1L), currentTime, operationId)
 
         coVerify {
             playerTimeDataSource.batchUpsertPlayerTimes(
@@ -642,10 +642,14 @@ class PlayerTimeRepositoryImplTest {
         val allTimes = listOf(
             PlayerTime(playerId = 1L, elapsedTimeMillis = 2000L, isRunning = false),
         )
-        every { playerTimeDataSource.getAllPlayerTimes() } returns flowOf(allTimes)
+        every { playerTimeDataSource.getPlayerTimesByMatch(any()) } returns flowOf(allTimes)
 
-        repository.substituteOutPlayersBatchWithOperationId(listOf(1L), 6000L, "op-1")
+        repository.substituteOutPlayersBatchWithOperationId(MATCH_ID, listOf(1L), 6000L, "op-1")
 
         coVerify(exactly = 0) { playerTimeDataSource.batchUpsertPlayerTimes(any()) }
+    }
+
+    companion object {
+        private const val MATCH_ID = 1L
     }
 }

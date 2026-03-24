@@ -180,10 +180,10 @@ class PlayerTimeFirestoreDataSourceImplTest {
     }
 
     @Test
-    fun `givenNoAuthenticatedUser_whenGetAllPlayerTimes_thenEmitsEmptyList`() = runTest {
+    fun `givenNoAuthenticatedUser_whenGetPlayerTimesByMatch_thenEmitsEmptyList`() = runTest {
         every { mockAuth.currentUser } returns null
 
-        dataSource.getAllPlayerTimes().test {
+        dataSource.getPlayerTimesByMatch(MATCH_ID).test {
             val result = awaitItem()
             assertEquals(emptyList<PlayerTime>(), result)
             cancel()
@@ -191,10 +191,10 @@ class PlayerTimeFirestoreDataSourceImplTest {
     }
 
     @Test
-    fun `givenNoTeam_whenGetAllPlayerTimes_thenEmitsEmptyList`() = runTest {
+    fun `givenNoTeam_whenGetPlayerTimesByMatch_thenEmitsEmptyList`() = runTest {
         setupUserWithNoTeam()
 
-        dataSource.getAllPlayerTimes().test {
+        dataSource.getPlayerTimesByMatch(MATCH_ID).test {
             val result = awaitItem()
             assertEquals(emptyList<PlayerTime>(), result)
             cancel()
@@ -413,20 +413,22 @@ class PlayerTimeFirestoreDataSourceImplTest {
     }
 
     @Test
-    fun `givenError_whenGetAllPlayerTimes_thenEmitsEmptyList`() = runTest {
+    fun `givenError_whenGetPlayerTimesByMatch_thenEmitsEmptyList`() = runTest {
         setupUserWithTeam()
 
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val playerTimesCollection = mockk<CollectionReference>()
         val playerTimesQuery = mockk<Query>()
+        val playerTimesQueryWithMatch = mockk<Query>()
 
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQueryWithMatch
+        every { playerTimesQueryWithMatch.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
 
-        dataSource.getAllPlayerTimes().test {
+        dataSource.getPlayerTimesByMatch(MATCH_ID).test {
             listenerSlot.captured.onEvent(null, mockError)
             val result = awaitItem()
             assertEquals(emptyList<PlayerTime>(), result)
@@ -463,18 +465,20 @@ class PlayerTimeFirestoreDataSourceImplTest {
     }
 
     @Test
-    fun `givenAuthenticatedUserWithTeam_whenGetAllPlayerTimes_thenEmitsList`() = runTest {
+    fun `givenAuthenticatedUserWithTeam_whenGetPlayerTimesByMatch_thenEmitsList`() = runTest {
         setupUserWithTeam()
 
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val playerTimesCollection = mockk<CollectionReference>()
         val playerTimesQuery = mockk<Query>()
+        val playerTimesQueryWithMatch = mockk<Query>()
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQueryWithMatch
+        every { playerTimesQueryWithMatch.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerTimeFirestoreModel(
             id = "1",
@@ -488,7 +492,7 @@ class PlayerTimeFirestoreDataSourceImplTest {
         every { docSnapshot.toObject(PlayerTimeFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
-        dataSource.getAllPlayerTimes().test {
+        dataSource.getPlayerTimesByMatch(MATCH_ID).test {
             listenerSlot.captured.onEvent(querySnapshot, null)
             val result = awaitItem()
             assertEquals(1, result.size)
@@ -498,18 +502,20 @@ class PlayerTimeFirestoreDataSourceImplTest {
     }
 
     @Test
-    fun `givenNullSnapshot_whenGetAllPlayerTimes_thenEmitsEmptyList`() = runTest {
+    fun `givenNullSnapshot_whenGetPlayerTimesByMatch_thenEmitsEmptyList`() = runTest {
         setupUserWithTeam()
 
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val playerTimesCollection = mockk<CollectionReference>()
         val playerTimesQuery = mockk<Query>()
+        val playerTimesQueryWithMatch = mockk<Query>()
 
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQueryWithMatch
+        every { playerTimesQueryWithMatch.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
-        dataSource.getAllPlayerTimes().test {
+        dataSource.getPlayerTimesByMatch(MATCH_ID).test {
             listenerSlot.captured.onEvent(null, null)
             val result = awaitItem()
             assertEquals(emptyList<PlayerTime>(), result)
@@ -593,5 +599,9 @@ class PlayerTimeFirestoreDataSourceImplTest {
         } catch (e: RuntimeException) {
             // expected
         }
+    }
+
+    companion object {
+        private const val MATCH_ID = 1L
     }
 }
