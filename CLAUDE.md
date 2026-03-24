@@ -113,6 +113,10 @@ Min SDK: 29. Target SDK: 36. Kotlin: 2.1.0. Java: 17.
 ## Documentation
 - Add md files with detailed explanations of complex features (e.g., Match state management, invitation flow) in the `docs/` directory.
 
+# Skills
+
+Antes de ejecutar cualquier tarea, consulta `.claude/SKILLS.md`. Si alguna skill encaja con lo que se pide, úsala siguiendo exactamente las instrucciones del fichero de skill correspondiente en `.claude/commands/`.
+
 # Claude Agent Rules
 
 - You have full autonomy to create, modify, and delete files in the project.
