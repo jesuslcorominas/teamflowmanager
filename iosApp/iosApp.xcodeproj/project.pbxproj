@@ -12,6 +12,7 @@
 		AA000000000000000000022A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000012A /* Assets.xcassets */; };
 		AA000000000000000000023A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000014A /* Preview Assets.xcassets */; };
 		AA000000000000000000024A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000016A /* GoogleService-Info.plist */; };
+		AA000000000000000000025A /* GoogleService-Info-Prod.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000018A /* GoogleService-Info-Prod.plist */; };
 		AA000000000000000000026A /* GoogleSignInHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000017A /* GoogleSignInHandler.swift */; };
 		CA5521B7758F5F55B1EF0F32 /* Pods_iosApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22721E3F55F5E1B35B6A785A /* Pods_iosApp.framework */; };
 /* End PBXBuildFile section */
@@ -27,6 +28,7 @@
 		AA000000000000000000015A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA000000000000000000016A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA000000000000000000017A /* GoogleSignInHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleSignInHandler.swift; sourceTree = "<group>"; };
+		AA000000000000000000018A /* GoogleService-Info-Prod.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-Prod.plist"; sourceTree = "<group>"; };
 		E54ABB1FDFCE4D1BB1C1547A /* Pods-iosApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.debug.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -57,6 +59,7 @@
 			children = (
 				AA000000000000000000015A /* Info.plist */,
 				AA000000000000000000016A /* GoogleService-Info.plist */,
+				AA000000000000000000018A /* GoogleService-Info-Prod.plist */,
 				AA000000000000000000010A /* iOSApp.swift */,
 				AA000000000000000000011A /* ContentView.swift */,
 				AA000000000000000000017A /* GoogleSignInHandler.swift */,
@@ -164,6 +167,7 @@
 				AA000000000000000000023A /* Preview Assets.xcassets in Resources */,
 				AA000000000000000000022A /* Assets.xcassets in Resources */,
 				AA000000000000000000024A /* GoogleService-Info.plist in Resources */,
+				AA000000000000000000025A /* GoogleService-Info-Prod.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

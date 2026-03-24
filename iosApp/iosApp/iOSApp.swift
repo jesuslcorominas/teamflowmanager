@@ -6,9 +6,17 @@ import GoogleSignIn
 @main
 struct iOSApp: App {
     init() {
+        #if DEBUG
         FirebaseApp.configure()
-        // KMP-17: configure GIDSignIn with the CLIENT_ID from GoogleService-Info.plist
-        // (loaded by FirebaseApp.configure() — no need to read the plist again)
+        #else
+        if let path = Bundle.main.path(forResource: "GoogleService-Info-Prod", ofType: "plist"),
+           let options = FirebaseOptions(contentsOfFile: path) {
+            FirebaseApp.configure(options: options)
+        } else {
+            FirebaseApp.configure()
+        }
+        #endif
+        // KMP-17: configure GIDSignIn with the CLIENT_ID from the loaded GoogleService-Info plist
         if let clientID = FirebaseApp.app()?.options.clientID {
             GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
         }
