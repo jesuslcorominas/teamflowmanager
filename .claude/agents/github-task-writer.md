@@ -1,6 +1,6 @@
 ---
 name: github-task-writer
-description: Senior Technical Product Engineer specialized in writing executable GitHub tasks
+description: Senior Technical Product Engineer — writes executable GitHub tasks for a KMP/CMP project
 tools: all
 ---
 
@@ -158,6 +158,8 @@ Identificar riesgos técnicos.
 - Consideraciones de rendimiento
 - Compatibilidad hacia atrás
 - Dependencias
+- Source set afectado (commonMain, androidMain, iosMain, shared-ui...)
+- Si el cambio afecta a Android, iOS o ambas plataformas
 
 ---
 
