@@ -34,6 +34,29 @@ render.experimental.xml
 google-services.json
 !app/google-services.json
 
+# iOS Firebase config — never commit, distribute via CI secrets
+GoogleService-Info.plist
+GoogleService-Info*.plist
+docs/GoogleService-Info*.plist
+
 # Android Profiling
 *.hprof
 /app/google-services.json
+iosApp/Pods/
+iosApp/iosApp.xcworkspace/xcshareddata/swiftpm/
+iosApp/iosApp.xcworkspace/xcuserdata/
+iosApp/iosApp.xcodeproj/project.xcworkspace/xcuserdata/
+iosApp/iosApp.xcodeproj/xcuserdata/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# Kotlin build cache
+.kotlin/
+
+# Firebase CLI cache
+.firebase/
+
+# Firebase Functions dependencies
+firebase-functions/node_modules/

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -38,6 +39,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorHeader
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorList
 import com.jesuslcorominas.teamflowmanager.ui.components.form.SelectableItem
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.toStringRes
@@ -264,7 +266,11 @@ fun TeamForm(
 
             Button(
                 modifier = Modifier
-                    .padding(start = TFMSpacing.spacing04, end = TFMSpacing.spacing04, bottom = TFMSpacing.spacing04)
+                    .padding(
+                        start = TFMSpacing.spacing04,
+                        end = TFMSpacing.spacing04,
+                        bottom = LocalContentBottomPadding.current + 8.dp,
+                    )
                     .fillMaxWidth(),
                 onClick = { validateAndSave() },
             ) {

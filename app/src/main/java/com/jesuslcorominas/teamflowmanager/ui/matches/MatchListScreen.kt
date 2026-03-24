@@ -2,8 +2,8 @@ package com.jesuslcorominas.teamflowmanager.ui.matches
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -33,6 +33,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.ArchivedMatchesNavigationCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.PausedMatchCard
@@ -142,13 +143,13 @@ private fun MatchesList(
     }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                bottom = TFMSpacing.spacing04,
-                start = TFMSpacing.spacing04,
-                end = TFMSpacing.spacing04
-            ),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            bottom = LocalContentBottomPadding.current,
+            start = TFMSpacing.spacing04,
+            end = TFMSpacing.spacing04,
+            top = TFMSpacing.spacing04,
+        ),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
     ) {
@@ -235,10 +236,6 @@ private fun MatchesList(
             )
         }
 
-        item {
-            // empty spacer to allow scrolling past last item
-            Box(Modifier.height(TFMSpacing.spacing11))
-        }
     }
 }
 

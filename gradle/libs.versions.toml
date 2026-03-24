@@ -6,6 +6,7 @@ agp = "8.6.1"
 composeMultiplatform = "1.7.3"
 animation = "1.9.4"
 coil = "2.5.0"
+coil3 = "3.1.0"
 composeCharts = "0.2.0"
 ktlint = "12.1.1"
 core-ktx = "1.13.1"
@@ -35,6 +36,7 @@ material3 = "1.4.0"
 firebaseBom = "33.6.0"
 googleServices = "4.4.2"
 firebaseCrashlyticsGradle = "3.0.2"
+gitliveFirebase = "2.1.0"
 
 [libraries]
 androidx-compose-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }
@@ -45,6 +47,8 @@ androidx-activity-compose = { group = "androidx.activity", name = "activity-comp
 androidx-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+coil3-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil3" }
+coil3-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil3" }
 compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
 ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "ktlintVersion" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
@@ -62,6 +66,7 @@ androidx-material-icons-extended = { module = "androidx.compose.material:materia
 
 # Lifecycle
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycle" }
 
@@ -75,6 +80,8 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
 koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin-compose" }
+koin-compose = { group = "io.insert-koin", name = "koin-compose", version.ref = "koin-compose" }
+koin-compose-viewmodel = { group = "io.insert-koin", name = "koin-compose-viewmodel", version.ref = "koin-compose" }
 
 # Room
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
@@ -103,6 +110,13 @@ firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" 
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx" }
 
+# GitLive Firebase KMP SDK (iOS)
+gitlive-firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "gitliveFirebase" }
+gitlive-firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "gitliveFirebase" }
+
+# Ktor Darwin engine (iOS)
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+
 # Google Play Services
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version = "21.2.0" }
 
@@ -127,6 +141,7 @@ compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMu
 gradle-ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint"}
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvmVersion" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

@@ -1,0 +1,12 @@
+platform :ios, '16.0'
+
+target 'iosApp' do
+  use_frameworks!
+
+  # Required by dev.gitlive:firebase-auth and dev.gitlive:firebase-firestore (KMP wrappers)
+  pod 'FirebaseAuth', '~> 11.0'
+  pod 'FirebaseFirestore', '~> 11.0'
+
+  # KMP-17: Google Sign-In for iOS
+  pod 'GoogleSignIn', '~> 8.0'
+end
