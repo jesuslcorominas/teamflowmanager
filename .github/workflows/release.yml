@@ -2,11 +2,19 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - 'release/**'
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.claude/**'
+      - 'distribution/whatsnew/**'
 
 permissions:
   contents: write
+
+env:
+  PACKAGE_NAME: com.jesuslcorominas.teamflowmanager
 
 jobs:
   # ─────────────────────────────────────────────────────────────
@@ -46,15 +54,73 @@ jobs:
           path: '**/build/test-results/**/*.xml'
 
   # ─────────────────────────────────────────────────────────────
-  # 2. Android — Build AAB & Upload to Play Beta
+  # 2. Validate versionCode not already published
   # ─────────────────────────────────────────────────────────────
-  android:
-    name: Android — Play Beta
+  validate-version:
+    name: Validate versionCode
     needs: test
     runs-on: ubuntu-latest
     outputs:
       version_name: ${{ steps.version.outputs.version_name }}
       version_code: ${{ steps.version.outputs.version_code }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | grep -oP '\d+')
+          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | grep -oP '"[^"]+"' | tr -d '"')
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "versionCode: $VERSION_CODE  versionName: $VERSION_NAME"
+
+      - uses: google-github-actions/auth@v2
+        id: auth
+        with:
+          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: 'access_token'
+          access_token_scopes: 'https://www.googleapis.com/auth/androidpublisher'
+
+      - name: Check versionCode availability
+        run: |
+          VERSION_CODE="${{ steps.version.outputs.version_code }}"
+          TOKEN="${{ steps.auth.outputs.access_token }}"
+          PKG="${{ env.PACKAGE_NAME }}"
+          FOUND=false
+
+          for TRACK in internal alpha beta production; do
+            RESPONSE=$(curl -s \
+              "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/tracks/$TRACK" \
+              -H "Authorization: Bearer $TOKEN")
+            EXISTS=$(echo "$RESPONSE" | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    codes = [str(v) for r in d.get('releases', []) for v in r.get('versionCodes', [])]
+    print('FOUND' if '$VERSION_CODE' in codes else 'OK')
+except:
+    print('OK')
+")
+            if [ "$EXISTS" = "FOUND" ]; then
+              echo "❌ versionCode $VERSION_CODE already exists in track '$TRACK'."
+              echo "   The pre-push hook should have bumped it. Run: bash scripts/install-hooks.sh"
+              FOUND=true
+            fi
+          done
+
+          if [ "$FOUND" = true ]; then
+            exit 1
+          fi
+          echo "✅ versionCode $VERSION_CODE is available in all tracks"
+
+  # ─────────────────────────────────────────────────────────────
+  # 3. Android — Build AAB & Upload to Play Beta
+  # ─────────────────────────────────────────────────────────────
+  android:
+    name: Android — Play Beta
+    needs: validate-version
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -68,14 +134,6 @@ jobs:
         run: |
           echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 --decode > app/src/prod/google-services.json
           echo "${{ secrets.KEYSTORE_JKS }}"         | base64 --decode > ${{ github.workspace }}/teamflow.jks
-
-      - name: Extract version
-        id: version
-        run: |
-          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | grep -oP '"[^"]+"' | tr -d '"')
-          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | grep -oP '\d+')
-          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
-          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
 
       - name: Grant gradlew permission
         run: chmod +x gradlew
@@ -91,26 +149,67 @@ jobs:
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TeamFlowManager-${{ steps.version.outputs.version_name }}.aab
+          name: TeamFlowManager-${{ needs.validate-version.outputs.version_name }}.aab
           path: app/build/outputs/bundle/prodRelease/app-prod-release.aab
           retention-days: 30
+
+      - uses: google-github-actions/auth@v2
+        id: auth
+        with:
+          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: 'access_token'
+          access_token_scopes: 'https://www.googleapis.com/auth/androidpublisher'
+
+      - name: Clean old beta releases
+        run: |
+          TOKEN="${{ steps.auth.outputs.access_token }}"
+          PKG="${{ env.PACKAGE_NAME }}"
+
+          # Create edit
+          EDIT_RESPONSE=$(curl -s -X POST \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          EDIT_ID=$(echo "$EDIT_RESPONSE" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+
+          if [ -z "$EDIT_ID" ]; then
+            echo "⚠️ Could not create edit for cleanup — skipping"
+            exit 0
+          fi
+
+          # Clear beta track
+          curl -s -X PUT \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID/tracks/beta" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"track":"beta","releases":[]}'
+
+          # Commit edit
+          curl -s -X POST \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID:commit" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+
+          echo "✅ Old beta releases cleared"
 
       - name: Upload to Google Play Beta
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.jesuslcorominas.teamflowmanager
+          packageName: ${{ env.PACKAGE_NAME }}
           releaseFiles: app/build/outputs/bundle/prodRelease/app-prod-release.aab
           track: beta
           status: completed
           whatsNewDirectory: distribution/whatsnew
 
   # ─────────────────────────────────────────────────────────────
-  # 3. iOS — Build IPA & attach as artifact
+  # 4. iOS — Build IPA & attach as artifact
   # ─────────────────────────────────────────────────────────────
   ios:
     name: iOS — Build IPA
-    needs: test
+    needs: validate-version
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -192,16 +291,16 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TeamFlowManager-iOS-${{ needs.android.outputs.version_name }}.ipa
+          name: TeamFlowManager-iOS-${{ needs.validate-version.outputs.version_name }}.ipa
           path: ${{ runner.temp }}/ipa/*.ipa
           retention-days: 30
 
   # ─────────────────────────────────────────────────────────────
-  # 4. GitHub Release — crea la release asociada al tag
+  # 5. GitHub Release
   # ─────────────────────────────────────────────────────────────
-  release:
+  github-release:
     name: Create GitHub Release
-    needs: [android, ios]
+    needs: [android, ios, validate-version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -209,19 +308,19 @@ jobs:
       - name: Download AAB artifact
         uses: actions/download-artifact@v4
         with:
-          name: TeamFlowManager-${{ needs.android.outputs.version_name }}.aab
+          name: TeamFlowManager-${{ needs.validate-version.outputs.version_name }}.aab
           path: artifacts/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: TeamFlow Manager ${{ needs.android.outputs.version_name }}
+          name: TeamFlow Manager ${{ needs.validate-version.outputs.version_name }}
           body: |
-            ## TeamFlow Manager ${{ needs.android.outputs.version_name }}
+            ## TeamFlow Manager ${{ needs.validate-version.outputs.version_name }}
 
-            - Android AAB adjunto (subido a Play Store Beta)
-            - iOS IPA disponible en los artefactos del workflow
+            - Android: subido a Play Store Beta — promueve manualmente a producción desde Play Console
+            - iOS: IPA disponible en los artefactos del workflow (30 días)
           files: artifacts/*.aab
           draft: false
-          prerelease: false
+          prerelease: true
