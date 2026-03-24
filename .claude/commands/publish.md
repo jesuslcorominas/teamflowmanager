@@ -41,3 +41,29 @@ Then restart the flow from the beginning.
 - The CI workflow at `.github/workflows/release.yml` handles tests, build, Play Store upload and IPA generation
 - After the CI runs successfully, the user should test on beta and then manually promote to production in Play Console
 - Once promoted to production: merge `release/{version}` into `main` and `develop`
+
+## iOS App Store — Current status & future work
+
+**Current state**: iOS CI builds an ad-hoc IPA and attaches it as a GitHub Actions artifact (30 days retention). There is NO automatic upload to App Store Connect yet.
+
+**Check if Apple secrets are configured** by running:
+```
+gh secret list --repo jesuslcorominas/teamflowmanager | grep APPLE
+```
+
+- If `APPLE_CERTIFICATE_BASE64`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_PROVISIONING_PROFILE_BASE64` are present → the IPA is already being built. Remind the user that App Store Connect upload is still manual.
+- If those secrets are missing → inform the user that iOS CI is not yet fully configured and remind them to add those secrets when ready.
+
+**When iOS App Store upload is implemented**, the following restrictions should mirror what is done for Android (Play Store):
+1. **Version validation**: Check that the build number has not already been uploaded to App Store Connect (use the App Store Connect API `/apps/{id}/builds` or `altool`).
+2. **Old TestFlight cleanup**: Expire previous TestFlight builds if needed (App Store Connect API).
+3. **Upload**: Use `xcrun altool --upload-app` or `fastlane deliver` / `fastlane pilot` targeting TestFlight.
+4. **Skill update**: Add a check here for the iOS track status similar to the Play Store beta check.
+
+Secrets that will be needed (not yet configured):
+- `APPLE_CERTIFICATE_BASE64` — distribution certificate (.p12, base64)
+- `APPLE_CERTIFICATE_PASSWORD` — password for the .p12
+- `APPLE_PROVISIONING_PROFILE_BASE64` — distribution provisioning profile (.mobileprovision, base64)
+- `APP_STORE_CONNECT_API_KEY_ID` — App Store Connect API key ID
+- `APP_STORE_CONNECT_API_ISSUER_ID` — App Store Connect API issuer ID
+- `APP_STORE_CONNECT_API_KEY_BASE64` — App Store Connect API private key (.p8, base64)
