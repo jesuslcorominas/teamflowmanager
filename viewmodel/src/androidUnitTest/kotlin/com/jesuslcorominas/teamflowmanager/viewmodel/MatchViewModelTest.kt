@@ -126,7 +126,7 @@ class MatchViewModelTest {
         fakeTicker = FakeTimeTicker()
 
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(testMatch)
-        every { getAllPlayerTimesUseCase() } returns flowOf(playerTimes)
+        every { getAllPlayerTimesUseCase(any()) } returns flowOf(playerTimes)
         every { getPlayersUseCase() } returns flowOf(players)
         every { shouldShowInvalidSubstitutionAlertUseCase() } returns true
     }
@@ -341,7 +341,7 @@ class MatchViewModelTest {
             viewModel.beginMatch(MATCH_ID)
             advanceUntilIdle()
 
-            coVerify { startPlayerTimersBatchUseCase(listOf(1L, 2L), any()) }
+            coVerify { startPlayerTimersBatchUseCase(MATCH_ID, listOf(1L, 2L), any()) }
         }
 
     @Test

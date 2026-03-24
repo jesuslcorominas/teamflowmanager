@@ -87,7 +87,7 @@ class MatchViewModelGoalTest {
         every { shouldShowInvalidSubstitutionAlertUseCase.invoke() } returns false
 
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(match)
-        every { getAllPlayerTimesUseCase() } returns flowOf(emptyList())
+        every { getAllPlayerTimesUseCase(any()) } returns flowOf(emptyList())
         every { getPlayersUseCase() } returns flowOf(players)
     }
 
