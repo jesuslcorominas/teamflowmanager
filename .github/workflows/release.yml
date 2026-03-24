@@ -93,15 +93,9 @@ jobs:
             RESPONSE=$(curl -s \
               "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/tracks/$TRACK" \
               -H "Authorization: Bearer $TOKEN")
-            EXISTS=$(echo "$RESPONSE" | python3 -c "
-import json, sys
-try:
-    d = json.load(sys.stdin)
-    codes = [str(v) for r in d.get('releases', []) for v in r.get('versionCodes', [])]
-    print('FOUND' if '$VERSION_CODE' in codes else 'OK')
-except:
-    print('OK')
-")
+            EXISTS=$(echo "$RESPONSE" | jq -r --arg vc "$VERSION_CODE" \
+              '[.releases[]? | .versionCodes[]? | tostring] | if any(. == $vc) then "FOUND" else "OK" end' \
+              2>/dev/null || echo "OK")
             if [ "$EXISTS" = "FOUND" ]; then
               echo "❌ versionCode $VERSION_CODE already exists in track '$TRACK'."
               echo "   The pre-push hook should have bumped it. Run: bash scripts/install-hooks.sh"
@@ -269,20 +263,19 @@ except:
 
       - name: Export IPA (ad-hoc)
         run: |
-          cat > $RUNNER_TEMP/ExportOptions.plist << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>ad-hoc</string>
-            <key>teamID</key>
-            <string>KVA2CL6TMG</string>
-            <key>compileBitcode</key>
-            <false/>
-          </dict>
-          </plist>
-          EOF
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="UTF-8"?>' \
+            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+            '<plist version="1.0">' \
+            '<dict>' \
+            '  <key>method</key>' \
+            '  <string>ad-hoc</string>' \
+            '  <key>teamID</key>' \
+            '  <string>KVA2CL6TMG</string>' \
+            '  <key>compileBitcode</key>' \
+            '  <false/>' \
+            '</dict>' \
+            '</plist>' > "$RUNNER_TEMP/ExportOptions.plist"
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/iosApp.xcarchive \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \

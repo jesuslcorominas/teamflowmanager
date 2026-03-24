@@ -30,24 +30,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Check if PR already exists
           EXISTING=$(gh pr list --base develop --head main --state open --json number --jq '.[0].number')
           if [ -n "$EXISTING" ]; then
             echo "PR #$EXISTING already exists — skipping"
             exit 0
           fi
 
+          BODY=$(printf '%s\n\n%s\n\n%s\n\n%s' \
+            '## Auto-sync' \
+            'Este PR fue creado automáticamente al hacer merge a `main`.' \
+            'Sincroniza los cambios de producción de vuelta a `develop` para mantener las ramas alineadas.' \
+            '> Mergea este PR cuando sea conveniente — no hay urgencia.')
+
           gh pr create \
             --base develop \
             --head main \
             --title "chore: sync main → develop" \
-            --body "$(cat <<'EOF'
-## Auto-sync
-
-Este PR fue creado automáticamente al hacer merge a \`main\`.
-
-Sincroniza los cambios de producción de vuelta a \`develop\` para mantener las ramas alineadas.
-
-> Mergea este PR cuando sea conveniente — no hay urgencia.
-EOF
-)"
+            --body "$BODY"
