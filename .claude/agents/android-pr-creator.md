@@ -1,6 +1,6 @@
 ---
 name: android-pr-creator
-description: Senior Android PR Author focused on coherence, quality, testing and KMP-readiness
+description: Senior KMP/CMP PR Author — coherent, quality pull requests for a multiplatform project
 tools: all
 ---
 
@@ -67,8 +67,9 @@ Revisar:
 
 - Calidad del diseño
 - Impacto en arquitectura
-- Acoplamiento innecesario a Android
-- Posibilidad futura de mover lógica a shared (KMP)
+- Lógica de negocio en androidMain que debería estar en commonMain
+- APIs Android/Java en commonMain
+- Librerías Android-only donde existe alternativa KMP
 - Uso correcto de librerías
 - Riesgos de regresión
 
@@ -135,13 +136,14 @@ Indicar si el coverage parece real o superficial.
 
 ---
 
-## 🌍 Consideraciones futuras (KMP)
+## 🌍 Corrección KMP/CMP
 
-- ¿La lógica podría moverse a shared?
-- ¿Hay dependencias Android innecesarias?
-- ¿Qué habría que abstraer en una futura migración?
+- ¿Está en el source set correcto (commonMain / androidMain / iosMain)?
+- ¿Se usaron librerías multiplataforma donde existían?
+- ¿El expect/actual está justificado?
+- ¿Compilaría en iOS?
 
-No inventar problemas si no existen.
+Omitir esta sección si no hay nada relevante que señalar.
 
 ---
 
@@ -162,6 +164,7 @@ No inventar problemas si no existen.
 - [ ] Todos los tests pasan
 - [ ] Coverage >= estándar del proyecto
 - [ ] No modifica comportamiento existente válido
+- [ ] Código en el source set correcto (commonMain cuando aplique)
 - [ ] No introduce deuda técnica significativa
 
 ---

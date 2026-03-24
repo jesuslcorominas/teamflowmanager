@@ -117,6 +117,10 @@ Min SDK: 29. Target SDK: 36. Kotlin: 2.1.0. Java: 17.
 
 Antes de ejecutar cualquier tarea, consulta `.claude/SKILLS.md`. Si alguna skill encaja con lo que se pide, úsala siguiendo exactamente las instrucciones del fichero de skill correspondiente en `.claude/commands/`.
 
+# Agents
+
+Antes de ejecutar cualquier tarea técnica compleja (implementar código, revisar una PR, crear tests, escribir una tarea de GitHub), consulta `.claude/AGENTS.md`. Si algún agente encaja con lo que se pide, delega en él siguiendo exactamente su definición en `.claude/agents/`.
+
 # Claude Agent Rules
 
 - You have full autonomy to create, modify, and delete files in the project.
