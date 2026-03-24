@@ -2,7 +2,8 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -196,19 +197,31 @@ jobs:
           retention-days: 30
 
   # ─────────────────────────────────────────────────────────────
-  # 4. Git tag — solo si Android e iOS han ido bien
+  # 4. GitHub Release — crea la release asociada al tag
   # ─────────────────────────────────────────────────────────────
-  tag:
-    name: Create Git Tag
+  release:
+    name: Create GitHub Release
     needs: [android, ios]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create and push tag
-        run: |
-          VERSION="v${{ needs.android.outputs.version_name }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$VERSION"
-          git push origin "$VERSION"
+      - name: Download AAB artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: TeamFlowManager-${{ needs.android.outputs.version_name }}.aab
+          path: artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: TeamFlow Manager ${{ needs.android.outputs.version_name }}
+          body: |
+            ## TeamFlow Manager ${{ needs.android.outputs.version_name }}
+
+            - Android AAB adjunto (subido a Play Store Beta)
+            - iOS IPA disponible en los artefactos del workflow
+          files: artifacts/*.aab
+          draft: false
+          prerelease: false
