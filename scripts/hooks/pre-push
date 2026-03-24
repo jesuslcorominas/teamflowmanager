@@ -2,16 +2,15 @@
 # Pre-push hook: auto-bumps versionCode on release/* branches.
 # Install with: bash scripts/install-hooks.sh
 
+# Skip if this push was triggered by the hook itself
+if [ -n "$VERSION_BUMP_IN_PROGRESS" ]; then
+  exit 0
+fi
+
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
 
 # Only run on release/* branches
 if [[ ! "$BRANCH" =~ ^release/ ]]; then
-  exit 0
-fi
-
-# Skip if last commit was already a version bump (avoid double-bump)
-LAST_MSG=$(git log -1 --pretty=%B)
-if [[ "$LAST_MSG" == *"[skip-version-bump]"* ]]; then
   exit 0
 fi
 
@@ -48,6 +47,11 @@ sed -i '' \
 
 # Commit the bump
 git add app/build.gradle.kts iosApp/iosApp.xcodeproj/project.pbxproj
-git commit -m "chore: bump version to $VERSION_NAME (build $NEW_CODE) [skip-version-bump]"
+git commit -m "chore: bump version to $VERSION_NAME (build $NEW_CODE)"
 
 echo "✅ Version bumped and committed — pushing v$VERSION_NAME (build $NEW_CODE)"
+
+# Push and cancel the original push (already handled here)
+export VERSION_BUMP_IN_PROGRESS=1
+git push origin HEAD
+exit 1
