@@ -1,0 +1,28 @@
+name: Branch Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main, develop]
+
+permissions:
+  contents: write
+
+jobs:
+  delete-branch:
+    name: Delete merged branch
+    # No borrar ramas protegidas (main, develop) ni la rama de sync main→develop
+    if: |
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref != 'main' &&
+      github.event.pull_request.head.ref != 'develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }} \
+            -X DELETE \
+            && echo "✅ Branch '${{ github.event.pull_request.head.ref }}' deleted" \
+            || echo "⚠️ Branch already deleted or not found — skipping"
