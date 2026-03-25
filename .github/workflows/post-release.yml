@@ -31,7 +31,7 @@ jobs:
         id: version
         run: |
           VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | grep -oP '\d+')
-          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | grep -oP '"[^"]+"' | tr -d '"')
+          VERSION_NAME=$(grep -E '^\s+versionName\s*=' app/build.gradle.kts | grep -oP '"[^"]+"' | tr -d '"')
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
