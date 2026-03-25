@@ -20,29 +20,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Detect skip-tests flag
+        id: skip
+        run: |
+          if git log -1 --format='%s' | grep -q '\[skip-tests\]'; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⏩ [skip-tests] detected — skipping tests and lint"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - uses: actions/setup-java@v4
+        if: steps.skip.outputs.skip != 'true'
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
 
       - name: Restore google-services.json
+        if: steps.skip.outputs.skip != 'true'
         run: |
           mkdir -p app/src/dev app/src/prod
           echo "${{ secrets.GOOGLE_SERVICES_DEV }}"  | base64 --decode > app/src/dev/google-services.json
           echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 --decode > app/src/prod/google-services.json
 
       - name: Grant gradlew permission
+        if: steps.skip.outputs.skip != 'true'
         run: chmod +x gradlew
 
       - name: Run tests
+        if: steps.skip.outputs.skip != 'true'
         run: ./gradlew test --no-daemon --stacktrace
 
       - name: Run ktlint
+        if: steps.skip.outputs.skip != 'true'
         run: ./gradlew ktlintCheck --no-daemon --stacktrace
 
       - name: Upload test results
-        if: always()
+        if: always() && steps.skip.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: test-results
