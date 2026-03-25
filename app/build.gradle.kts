@@ -17,7 +17,7 @@ android {
         applicationId = "com.jesuslcorominas.teamflowmanager"
         minSdk = 29
         targetSdk = 36
-        versionCode = 39
+        versionCode = 40
         versionName = "0.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
