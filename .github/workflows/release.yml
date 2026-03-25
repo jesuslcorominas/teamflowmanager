@@ -234,10 +234,6 @@ jobs:
   ios:
     name: iOS — Build IPA
     needs: validate-version
-    # Solo corre si los secrets de Apple están configurados.
-    # Sin ellos el job se salta (skipped) sin consumir minutos de macOS runner.
-    # Configurar self-hosted runner en un Mac local cuando se quiera activar.
-    if: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' }}
     runs-on: macos-latest
     continue-on-error: true
     steps:
