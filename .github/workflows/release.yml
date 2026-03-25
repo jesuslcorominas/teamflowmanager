@@ -142,7 +142,7 @@ jobs:
   android:
     name: Android — Play Beta
     needs: validate-version
-    if: needs.validate-version.result == 'success'
+    if: always() && needs.validate-version.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -257,7 +257,7 @@ jobs:
   ios:
     name: iOS — Build IPA
     needs: validate-version
-    if: needs.validate-version.result == 'success'
+    if: always() && needs.validate-version.result == 'success'
     runs-on: macos-latest
     continue-on-error: true
     steps:
