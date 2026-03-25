@@ -15,11 +15,14 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────────────────────
-  # 1. Promote Play Beta → Production  (solo en merges de release/*)
+  # 1. Promote Play Alpha → Production  (solo en merges de release/*)
+  # DISABLED: en fase alpha, la promoción a producción es manual.
+  # Reactivar cuando se salga de alpha cambiando el if a:
+  #   if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
   # ─────────────────────────────────────────────────────────────
   promote:
-    name: Promote Play Beta → Production
-    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    name: Promote Play Alpha → Production
+    if: false
     runs-on: ubuntu-latest
     outputs:
       version_name: ${{ steps.version.outputs.version_name }}

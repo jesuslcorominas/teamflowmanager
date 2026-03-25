@@ -140,7 +140,7 @@ jobs:
   # 3. Android — Build AAB & Upload to Play Beta
   # ─────────────────────────────────────────────────────────────
   android:
-    name: Android — Play Beta
+    name: Android — Play Alpha
     needs: validate-version
     if: always() && needs.validate-version.result == 'success'
     runs-on: ubuntu-latest
