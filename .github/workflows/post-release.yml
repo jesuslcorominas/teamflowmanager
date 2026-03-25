@@ -135,14 +135,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.BOTOMINAS_TOKEN }}
 
       - name: Merge main into develop
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOTOMINAS_TOKEN }}
         run: |
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
+          git config user.email "botominas@users.noreply.github.com"
+          git config user.name "botominas"
           git fetch origin
 
           git checkout develop

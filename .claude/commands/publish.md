@@ -92,6 +92,16 @@ After the hook exits, `git status` will show "Your branch is up to date with ori
 
 **Never retry `git push` or `git pull && git push` after a hook exit-1.** Each retry triggers another full hook cycle: another bump, another commit, another CI run. This wastes CI minutes and creates spurious version increments (e.g. builds 17→18→19 from a single logical push).
 
+## ⚠️ Borrar ramas remotas desde una rama release/* — usar VERSION_BUMP_IN_PROGRESS
+
+El pre-push hook se dispara con **cualquier** `git push` ejecutado mientras estás en una rama `release/*`, incluyendo `git push origin --delete <rama>`. Esto provoca un bump de versionCode inesperado.
+
+**Siempre usar el env var de guardia para borrar ramas remotas:**
+
+```bash
+VERSION_BUMP_IN_PROGRESS=1 git push origin --delete <rama>
+```
+
 ## iOS App Store — Current status & future work
 
 **Current state**: iOS CI builds an ad-hoc IPA and attaches it as a GitHub Actions artifact (30 days retention). There is NO automatic upload to App Store Connect yet.
