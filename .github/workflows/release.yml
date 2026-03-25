@@ -23,7 +23,8 @@ jobs:
       - name: Detect skip-tests flag
         id: skip
         run: |
-          if git log -1 --format='%s' | grep -q '\[skip-tests\]'; then
+          COMMIT_MSG=$(git log -1 --format='%s' ${{ github.event.pull_request.head.sha }})
+          if echo "$COMMIT_MSG" | grep -q '\[skip-tests\]'; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "⏩ [skip-tests] detected — skipping tests and lint"
           else
