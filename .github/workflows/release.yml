@@ -9,6 +9,7 @@ on:
       - 'docs/**'
       - '.claude/**'
       - 'distribution/whatsnew/**'
+      - '.github/workflows/**'
 
 permissions:
   contents: write
