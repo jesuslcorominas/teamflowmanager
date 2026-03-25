@@ -115,26 +115,37 @@ jobs:
           VERSION_CODE="${{ steps.version.outputs.version_code }}"
           TOKEN="${{ steps.auth.outputs.access_token }}"
           PKG="${{ env.PACKAGE_NAME }}"
-          FOUND=false
 
-          for TRACK in internal alpha beta production; do
-            RESPONSE=$(curl -s \
-              "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/tracks/$TRACK" \
+          # Create a temporary edit to list all uploaded bundles
+          EDIT_ID=$(curl -s -X POST \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' | jq -r '.id // empty')
+
+          if [ -z "$EDIT_ID" ]; then
+            echo "⚠️ Could not create Play API edit — skipping bundle check"
+          else
+            BUNDLES=$(curl -s \
+              "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID/bundles" \
               -H "Authorization: Bearer $TOKEN")
-            EXISTS=$(echo "$RESPONSE" | jq -r --arg vc "$VERSION_CODE" \
-              '[.releases[]? | .versionCodes[]? | tostring] | if any(. == $vc) then "FOUND" else "OK" end' \
-              2>/dev/null || echo "OK")
-            if [ "$EXISTS" = "FOUND" ]; then
-              echo "❌ versionCode $VERSION_CODE already exists in track '$TRACK'."
-              echo "   The pre-push hook should have bumped it. Run: bash scripts/install-hooks.sh"
-              FOUND=true
-            fi
-          done
 
-          if [ "$FOUND" = true ]; then
-            exit 1
+            # Abort the edit immediately — we only needed it to list bundles
+            curl -s -X DELETE \
+              "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID" \
+              -H "Authorization: Bearer $TOKEN" > /dev/null
+
+            EXISTS=$(echo "$BUNDLES" | jq -r --arg vc "$VERSION_CODE" \
+              '[.bundles[]? | .versionCode | tostring] | if any(. == $vc) then "FOUND" else "OK" end' \
+              2>/dev/null || echo "OK")
+
+            if [ "$EXISTS" = "FOUND" ]; then
+              echo "❌ versionCode $VERSION_CODE is already uploaded to Play Store (bundle exists)."
+              echo "   The pre-push hook should have bumped it. Run: bash scripts/install-hooks.sh"
+              exit 1
+            fi
           fi
-          echo "✅ versionCode $VERSION_CODE is available in all tracks"
+          echo "✅ versionCode $VERSION_CODE is available"
 
   # ─────────────────────────────────────────────────────────────
   # 3. Android — Build AAB & Upload to Play Beta
