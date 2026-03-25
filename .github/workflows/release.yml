@@ -208,7 +208,7 @@ jobs:
           )
           echo "access_token=$TOKEN" >> $GITHUB_OUTPUT
 
-      - name: Clean old beta releases
+      - name: Clean old alpha/beta releases
         run: |
           TOKEN="${{ steps.auth.outputs.access_token }}"
           PKG="${{ env.PACKAGE_NAME }}"
@@ -224,11 +224,13 @@ jobs:
             exit 0
           fi
 
-          curl -s -X PUT \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID/tracks/beta" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{"track":"beta","releases":[]}'
+          for TRACK in alpha beta; do
+            curl -s -X PUT \
+              "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID/tracks/$TRACK" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"track\":\"$TRACK\",\"releases\":[]}"
+          done
 
           curl -s -X POST \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID:commit" \
@@ -236,15 +238,15 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{}'
 
-          echo "✅ Old beta releases cleared"
+          echo "✅ Old alpha/beta releases cleared"
 
-      - name: Upload to Google Play Beta
+      - name: Upload to Google Play Alpha
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: ${{ env.PACKAGE_NAME }}
           releaseFiles: app/build/outputs/bundle/prodRelease/app-prod-release.aab
-          track: beta
+          track: alpha
           status: completed
           whatsNewDirectory: distribution/whatsnew
 
