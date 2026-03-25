@@ -64,6 +64,7 @@ jobs:
         with:
           name: test-results
           path: '**/build/test-results/**/*.xml'
+          retention-days: 7
 
   # ─────────────────────────────────────────────────────────────
   # 2. Validate versionCode not already published
@@ -87,37 +88,12 @@ jobs:
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "versionCode: $VERSION_CODE  versionName: $VERSION_NAME"
 
-      - name: Get Play Store access token
+      - uses: google-github-actions/auth@v2
         id: auth
-        env:
-          SA_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          TOKEN=$(python3 - <<'PYEOF'
-          import json, time, base64, os
-          from cryptography.hazmat.primitives import hashes, serialization
-          from cryptography.hazmat.primitives.asymmetric import padding
-          import urllib.request, urllib.parse
-
-          sa = json.loads(os.environ["SA_JSON"])
-          now = int(time.time())
-
-          def b64url(data):
-              return base64.urlsafe_b64encode(json.dumps(data, separators=(',',':')).encode()).rstrip(b'=').decode()
-
-          header  = b64url({"alg": "RS256", "typ": "JWT"})
-          payload = b64url({"iss": sa["client_email"], "scope": "https://www.googleapis.com/auth/androidpublisher", "aud": "https://oauth2.googleapis.com/token", "iat": now, "exp": now + 3600})
-          unsigned = f"{header}.{payload}"
-
-          key = serialization.load_pem_private_key(sa["private_key"].encode(), password=None)
-          sig = base64.urlsafe_b64encode(key.sign(unsigned.encode(), padding.PKCS1v15(), hashes.SHA256())).rstrip(b'=').decode()
-          jwt = f"{unsigned}.{sig}"
-
-          body = urllib.parse.urlencode({"grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer", "assertion": jwt}).encode()
-          resp = json.loads(urllib.request.urlopen(urllib.request.Request("https://oauth2.googleapis.com/token", body)).read())
-          print(resp["access_token"])
-          PYEOF
-          )
-          echo "access_token=$TOKEN" >> $GITHUB_OUTPUT
+        with:
+          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: 'access_token'
+          access_token_scopes: 'https://www.googleapis.com/auth/androidpublisher'
 
       - name: Check versionCode availability
         run: |
@@ -196,37 +172,12 @@ jobs:
           path: app/build/outputs/bundle/prodRelease/app-prod-release.aab
           retention-days: 30
 
-      - name: Get Play Store access token
+      - uses: google-github-actions/auth@v2
         id: auth
-        env:
-          SA_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          TOKEN=$(python3 - <<'PYEOF'
-          import json, time, base64, os
-          from cryptography.hazmat.primitives import hashes, serialization
-          from cryptography.hazmat.primitives.asymmetric import padding
-          import urllib.request, urllib.parse
-
-          sa = json.loads(os.environ["SA_JSON"])
-          now = int(time.time())
-
-          def b64url(data):
-              return base64.urlsafe_b64encode(json.dumps(data, separators=(',',':')).encode()).rstrip(b'=').decode()
-
-          header  = b64url({"alg": "RS256", "typ": "JWT"})
-          payload = b64url({"iss": sa["client_email"], "scope": "https://www.googleapis.com/auth/androidpublisher", "aud": "https://oauth2.googleapis.com/token", "iat": now, "exp": now + 3600})
-          unsigned = f"{header}.{payload}"
-
-          key = serialization.load_pem_private_key(sa["private_key"].encode(), password=None)
-          sig = base64.urlsafe_b64encode(key.sign(unsigned.encode(), padding.PKCS1v15(), hashes.SHA256())).rstrip(b'=').decode()
-          jwt = f"{unsigned}.{sig}"
-
-          body = urllib.parse.urlencode({"grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer", "assertion": jwt}).encode()
-          resp = json.loads(urllib.request.urlopen(urllib.request.Request("https://oauth2.googleapis.com/token", body)).read())
-          print(resp["access_token"])
-          PYEOF
-          )
-          echo "access_token=$TOKEN" >> $GITHUB_OUTPUT
+        with:
+          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: 'access_token'
+          access_token_scopes: 'https://www.googleapis.com/auth/androidpublisher'
 
       - name: Clean old alpha/beta releases
         run: |
@@ -276,6 +227,10 @@ jobs:
   ios:
     name: iOS — Build IPA
     needs: validate-version
+    # Solo corre si los secrets de Apple están configurados.
+    # Sin ellos el job se salta (skipped) sin consumir minutos de macOS runner.
+    # Configurar self-hosted runner en un Mac local cuando se quiera activar.
+    if: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' }}
     runs-on: macos-latest
     continue-on-error: true
     steps:

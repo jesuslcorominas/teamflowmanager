@@ -36,13 +36,10 @@ jobs:
       - name: Grant gradlew permission
         run: chmod +x gradlew
 
-      - name: Run tests
-        run: ./gradlew test --no-daemon --stacktrace
-
       - name: Run ktlint
         run: ./gradlew ktlintCheck --no-daemon --stacktrace
 
-      - name: Generate coverage report
+      - name: Run tests & coverage
         run: ./gradlew testDebugUnitTestCoverage --no-daemon --stacktrace
 
       - name: Post coverage comment on PR
@@ -63,6 +60,7 @@ jobs:
         with:
           name: test-results
           path: '**/build/test-results/**/*.xml'
+          retention-days: 7
 
       - name: Upload coverage report
         if: always()
