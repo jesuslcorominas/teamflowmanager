@@ -102,6 +102,8 @@ El pre-push hook se dispara con **cualquier** `git push` ejecutado mientras est�
 VERSION_BUMP_IN_PROGRESS=1 git push origin --delete <rama>
 ```
 
+**`VERSION_BUMP_IN_PROGRESS=1` es SOLO para `git push --delete`.** Nunca usarlo en pushes normales de código o de ficheros CI (`.github/workflows/`), aunque el cambio parezca trivial. Cualquier push que dispare Release CI necesita un versionCode único. Si el cambio no debe disparar CI, añádelo al `paths-ignore` del workflow — no lo evites suprimiendo el hook.
+
 ## iOS App Store — Current status & future work
 
 **Current state**: iOS CI builds an ad-hoc IPA and attaches it as a GitHub Actions artifact (30 days retention). There is NO automatic upload to App Store Connect yet.
