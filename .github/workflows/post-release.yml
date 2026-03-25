@@ -87,14 +87,26 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────
   # 2. GitHub Release  (solo en merges de release/*)
+  # Secuencial tras promote: corre si promote tuvo éxito o fue skipped (fase alpha).
+  # Cuando se reactive promote, este job solo correrá si promote también pasa.
   # ─────────────────────────────────────────────────────────────
   github-release:
     name: Create GitHub Release
     needs: promote
-    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    if: |
+      always() &&
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/') &&
+      (needs.promote.result == 'success' || needs.promote.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION_NAME=$(grep -E '^\s+versionName\s*=' app/build.gradle.kts | grep -oP '"[^"]+"' | tr -d '"')
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
       - name: Read release notes
         id: notes
@@ -111,15 +123,15 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.promote.outputs.version_name }}
-          name: TeamFlow Manager ${{ needs.promote.outputs.version_name }}
+          tag_name: v${{ steps.version.outputs.version_name }}
+          name: TeamFlow Manager ${{ steps.version.outputs.version_name }}
           body: |
-            ## TeamFlow Manager ${{ needs.promote.outputs.version_name }}
+            ## TeamFlow Manager ${{ steps.version.outputs.version_name }}
 
             ${{ steps.notes.outputs.notes }}
 
             ---
-            - Android: disponible en Play Store producción
+            - Android: disponible en Play Store alpha
             - iOS: IPA disponible en los artefactos del workflow de CI (30 días)
           draft: false
           prerelease: false

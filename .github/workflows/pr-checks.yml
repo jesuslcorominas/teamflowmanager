@@ -36,20 +36,17 @@ jobs:
       - name: Grant gradlew permission
         run: chmod +x gradlew
 
-      - name: Run tests
-        run: ./gradlew test --no-daemon --stacktrace
-
       - name: Run ktlint
         run: ./gradlew ktlintCheck --no-daemon --stacktrace
 
-      - name: Generate coverage report
+      - name: Run tests & coverage
         run: ./gradlew testDebugUnitTestCoverage --no-daemon --stacktrace
 
       - name: Post coverage comment on PR
         uses: Madrapps/jacoco-report@v1.7.1
         with:
           paths: ${{ github.workspace }}/build/reports/jacoco/testDebugUnitTestCoverage/coverage.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.BOTOMINAS_TOKEN }}
           min-coverage-overall: 0
           min-coverage-changed-files: 80
           title: '📊 Code Coverage'
@@ -63,6 +60,7 @@ jobs:
         with:
           name: test-results
           path: '**/build/test-results/**/*.xml'
+          retention-days: 7
 
       - name: Upload coverage report
         if: always()
