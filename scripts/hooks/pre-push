@@ -45,9 +45,16 @@ sed -i '' \
   "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $VERSION_NAME;/g" \
   iosApp/iosApp.xcodeproj/project.pbxproj
 
+# Propagate [skip-tests] flag if the triggering commit had it
+PREV_MSG=$(git log -1 --format=%s HEAD)
+SKIP_FLAG=""
+if [[ "$PREV_MSG" == *"[skip-tests]"* ]]; then
+  SKIP_FLAG=" [skip-tests]"
+fi
+
 # Commit the bump
 git add app/build.gradle.kts iosApp/iosApp.xcodeproj/project.pbxproj
-git commit -m "chore: bump version to $VERSION_NAME (build $NEW_CODE)"
+git commit -m "chore: bump version to $VERSION_NAME (build $NEW_CODE)$SKIP_FLAG"
 
 echo "✅ Version bumped and committed — pushing v$VERSION_NAME (build $NEW_CODE)"
 
