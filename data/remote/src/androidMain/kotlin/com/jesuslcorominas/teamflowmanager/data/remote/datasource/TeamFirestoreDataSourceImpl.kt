@@ -25,7 +25,6 @@ class TeamFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
 ) : TeamDataSource {
-
     companion object {
         private const val TEAMS_COLLECTION = "teams"
     }
@@ -42,31 +41,33 @@ class TeamFirestoreDataSourceImpl(
     /**
      * Gets the first team assigned to the current user (as coach) from Firestore.
      */
-    override fun getTeam(): Flow<Team?> = callbackFlow {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            trySend(null)
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val listenerRegistration = firestore.collection(TEAMS_COLLECTION)
-            .whereEqualTo("assignedCoachId", currentUserId)
-            .limit(1)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
-
-                val document = snapshot?.documents?.firstOrNull()
-                trySend(document?.let { documentToTeam(it) })
+    override fun getTeam(): Flow<Team?> =
+        callbackFlow {
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                trySend(null)
+                awaitClose { }
+                return@callbackFlow
             }
 
-        awaitClose {
-            listenerRegistration.remove()
+            val listenerRegistration =
+                firestore.collection(TEAMS_COLLECTION)
+                    .whereEqualTo("assignedCoachId", currentUserId)
+                    .limit(1)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(null)
+                            return@addSnapshotListener
+                        }
+
+                        val document = snapshot?.documents?.firstOrNull()
+                        trySend(document?.let { documentToTeam(it) })
+                    }
+
+            awaitClose {
+                listenerRegistration.remove()
+            }
         }
-    }
 
     override suspend fun insertTeam(team: Team) {
         val currentUserId = firebaseAuth.currentUser?.uid
@@ -112,53 +113,57 @@ class TeamFirestoreDataSourceImpl(
         }
     }
 
-    override fun getTeamByCoachId(coachId: String): Flow<Team?> = callbackFlow {
-        val listenerRegistration = firestore.collection(TEAMS_COLLECTION)
-            .document(coachId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
+    override fun getTeamByCoachId(coachId: String): Flow<Team?> =
+        callbackFlow {
+            val listenerRegistration =
+                firestore.collection(TEAMS_COLLECTION)
+                    .document(coachId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(null)
+                            return@addSnapshotListener
+                        }
 
-                if (snapshot == null || !snapshot.exists()) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
+                        if (snapshot == null || !snapshot.exists()) {
+                            trySend(null)
+                            return@addSnapshotListener
+                        }
 
-                trySend(documentToTeam(snapshot))
+                        trySend(documentToTeam(snapshot))
+                    }
+
+            awaitClose {
+                listenerRegistration.remove()
             }
-
-        awaitClose {
-            listenerRegistration.remove()
         }
-    }
 
-    override fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>> = callbackFlow {
-        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+    override fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>> =
+        callbackFlow {
+            require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
 
-        val listenerRegistration = firestore.collection(TEAMS_COLLECTION)
-            .whereEqualTo("clubId", clubFirestoreId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
+            val listenerRegistration =
+                firestore.collection(TEAMS_COLLECTION)
+                    .whereEqualTo("clubId", clubFirestoreId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
 
-                if (snapshot == null || snapshot.isEmpty) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
+                        if (snapshot == null || snapshot.isEmpty) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
 
-                val teams = snapshot.documents.mapNotNull { documentToTeam(it) }
+                        val teams = snapshot.documents.mapNotNull { documentToTeam(it) }
 
-                trySend(teams)
+                        trySend(teams)
+                    }
+
+            awaitClose {
+                listenerRegistration.remove()
             }
-
-        awaitClose {
-            listenerRegistration.remove()
         }
-    }
 
     /**
      * This method is not applicable for remote Firestore data source.
@@ -187,16 +192,18 @@ class TeamFirestoreDataSourceImpl(
         try {
             // Get all teams that don't have a clubId (orphan teams)
             // Since we removed ownerId, orphan teams are simply teams without a clubId
-            val querySnapshot = firestore.collection(TEAMS_COLLECTION)
-                .get()
-                .await()
+            val querySnapshot =
+                firestore.collection(TEAMS_COLLECTION)
+                    .get()
+                    .await()
 
             // Filter to only include teams without a clubId field (orphan teams)
-            val teams = querySnapshot.documents.mapNotNull { document ->
-                val hasClubId = document.contains("clubId") && document.getString("clubId") != null
-                if (hasClubId) return@mapNotNull null
-                documentToTeam(document)
-            }
+            val teams =
+                querySnapshot.documents.mapNotNull { document ->
+                    val hasClubId = document.contains("clubId") && document.getString("clubId") != null
+                    if (hasClubId) return@mapNotNull null
+                    documentToTeam(document)
+                }
 
             return teams
         } catch (e: CancellationException) {
@@ -206,14 +213,19 @@ class TeamFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun updateTeamClubId(teamFirestoreId: String, clubId: Long, clubFirestoreId: String) {
+    override suspend fun updateTeamClubId(
+        teamFirestoreId: String,
+        clubId: Long,
+        clubFirestoreId: String,
+    ) {
         require(teamFirestoreId.isNotBlank()) { "Team Firestore ID cannot be blank" }
         require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
 
         try {
-            val updates = mapOf(
-                "clubId" to clubFirestoreId
-            )
+            val updates =
+                mapOf(
+                    "clubId" to clubFirestoreId,
+                )
 
             // Use set with merge to ensure the operation succeeds even if the document
             // doesn't have all fields yet
@@ -232,10 +244,11 @@ class TeamFirestoreDataSourceImpl(
         require(teamFirestoreId.isNotBlank()) { "Team Firestore ID cannot be blank" }
 
         try {
-            val document = firestore.collection(TEAMS_COLLECTION)
-                .document(teamFirestoreId)
-                .get()
-                .await()
+            val document =
+                firestore.collection(TEAMS_COLLECTION)
+                    .document(teamFirestoreId)
+                    .get()
+                    .await()
 
             if (!document.exists()) {
                 return null
@@ -249,14 +262,18 @@ class TeamFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun updateTeamCoachId(teamFirestoreId: String, coachId: String) {
+    override suspend fun updateTeamCoachId(
+        teamFirestoreId: String,
+        coachId: String,
+    ) {
         require(teamFirestoreId.isNotBlank()) { "Team Firestore ID cannot be blank" }
         require(coachId.isNotBlank()) { "Coach ID cannot be blank" }
 
         try {
-            val updates = mapOf(
-                "assignedCoachId" to coachId
-            )
+            val updates =
+                mapOf(
+                    "assignedCoachId" to coachId,
+                )
 
             firestore.collection(TEAMS_COLLECTION)
                 .document(teamFirestoreId)

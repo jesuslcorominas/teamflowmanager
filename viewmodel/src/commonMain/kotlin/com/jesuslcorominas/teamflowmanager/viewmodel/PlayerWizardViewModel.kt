@@ -34,7 +34,6 @@ class PlayerWizardViewModel(
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<PlayerWizardUiState>(PlayerWizardUiState.Loading)
     val uiState: StateFlow<PlayerWizardUiState> = _uiState.asStateFlow()
 
@@ -121,7 +120,7 @@ class PlayerWizardViewModel(
         lastName: String,
         number: String,
         isCaptain: Boolean,
-        imageUri: String?
+        imageUri: String?,
     ) {
         this.firstName = firstName
         this.lastName = lastName
@@ -135,20 +134,26 @@ class PlayerWizardViewModel(
     }
 
     fun getFirstName() = firstName
+
     fun getLastName() = lastName
+
     fun getNumber() = number
+
     fun getIsCaptain() = isCaptain
+
     fun getImageUri() = imageUri
+
     fun getSelectedPositions() = selectedPositions
+
     fun isEditMode() = playerId != 0L
 
     fun hasUnsavedChanges(): Boolean {
         return firstName != originalFirstName ||
-                lastName != originalLastName ||
-                number != originalNumber ||
-                isCaptain != originalIsCaptain ||
-                imageUri != originalImageUri ||
-                selectedPositions != originalPositions
+            lastName != originalLastName ||
+            number != originalNumber ||
+            isCaptain != originalIsCaptain ||
+            imageUri != originalImageUri ||
+            selectedPositions != originalPositions
     }
 
     fun requestBack(onNavigateBack: () -> Unit) {
@@ -173,31 +178,34 @@ class PlayerWizardViewModel(
     }
 
     fun goToNextStep() {
-        _currentStep.value = when (_currentStep.value) {
-            PlayerWizardStep.PLAYER_DATA -> PlayerWizardStep.POSITIONS
-            PlayerWizardStep.POSITIONS -> PlayerWizardStep.POSITIONS // Stay on last step
-        }
+        _currentStep.value =
+            when (_currentStep.value) {
+                PlayerWizardStep.PLAYER_DATA -> PlayerWizardStep.POSITIONS
+                PlayerWizardStep.POSITIONS -> PlayerWizardStep.POSITIONS // Stay on last step
+            }
     }
 
     fun goToPreviousStep() {
-        _currentStep.value = when (_currentStep.value) {
-            PlayerWizardStep.PLAYER_DATA -> PlayerWizardStep.PLAYER_DATA // Stay on first step
-            PlayerWizardStep.POSITIONS -> PlayerWizardStep.PLAYER_DATA
-        }
+        _currentStep.value =
+            when (_currentStep.value) {
+                PlayerWizardStep.PLAYER_DATA -> PlayerWizardStep.PLAYER_DATA // Stay on first step
+                PlayerWizardStep.POSITIONS -> PlayerWizardStep.PLAYER_DATA
+            }
     }
 
     fun savePlayer(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            val player = Player(
-                id = playerId,
-                firstName = firstName,
-                lastName = lastName,
-                number = number.toInt(),
-                positions = selectedPositions,
-                teamId = 1, // TODO: Get team ID properly
-                isCaptain = isCaptain,
-                imageUri = imageUri
-            )
+            val player =
+                Player(
+                    id = playerId,
+                    firstName = firstName,
+                    lastName = lastName,
+                    number = number.toInt(),
+                    positions = selectedPositions,
+                    teamId = 1, // TODO: Get team ID properly
+                    isCaptain = isCaptain,
+                    imageUri = imageUri,
+                )
 
             val currentCaptain = getCaptainPlayerUseCase.invoke()
 
@@ -206,25 +214,28 @@ class PlayerWizardViewModel(
                 // Check if there are scheduled matches
                 val scheduledMatches = getScheduledMatchesUseCase()
                 if (scheduledMatches.isNotEmpty()) {
-                    _captainConfirmationState.value = CaptainConfirmationState.ConfirmReplaceWithMatches(
-                        currentCaptain = currentCaptain,
-                        newCaptain = player,
-                        matchCount = scheduledMatches.size
-                    )
+                    _captainConfirmationState.value =
+                        CaptainConfirmationState.ConfirmReplaceWithMatches(
+                            currentCaptain = currentCaptain,
+                            newCaptain = player,
+                            matchCount = scheduledMatches.size,
+                        )
                 } else {
-                    _captainConfirmationState.value = CaptainConfirmationState.ConfirmReplace(
-                        currentCaptain = currentCaptain,
-                        newCaptain = player
-                    )
+                    _captainConfirmationState.value =
+                        CaptainConfirmationState.ConfirmReplace(
+                            currentCaptain = currentCaptain,
+                            newCaptain = player,
+                        )
                 }
             } else if (!player.isCaptain && currentCaptain != null && currentCaptain.id == player.id) {
                 // Player is being updated to no longer be captain
                 val scheduledMatches = getScheduledMatchesUseCase()
                 if (scheduledMatches.isNotEmpty()) {
-                    _captainConfirmationState.value = CaptainConfirmationState.ConfirmRemoveWithMatches(
-                        player = player,
-                        matchCount = scheduledMatches.size
-                    )
+                    _captainConfirmationState.value =
+                        CaptainConfirmationState.ConfirmRemoveWithMatches(
+                            player = player,
+                            matchCount = scheduledMatches.size,
+                        )
                 } else {
                     _captainConfirmationState.value = CaptainConfirmationState.ConfirmRemove(player)
                 }
@@ -235,7 +246,10 @@ class PlayerWizardViewModel(
         }
     }
 
-    fun confirmCaptainChange(keepInMatches: Boolean = false, onSuccess: () -> Unit) {
+    fun confirmCaptainChange(
+        keepInMatches: Boolean = false,
+        onSuccess: () -> Unit,
+    ) {
         viewModelScope.launch {
             when (val state = _captainConfirmationState.value) {
                 is CaptainConfirmationState.ConfirmReplace -> {
@@ -266,12 +280,17 @@ class PlayerWizardViewModel(
         _captainConfirmationState.value = CaptainConfirmationState.None
     }
 
-    private fun savePlayerDirectly(player: Player, onSuccess: () -> Unit) {
+    private fun savePlayerDirectly(
+        player: Player,
+        onSuccess: () -> Unit,
+    ) {
         viewModelScope.launch {
             try {
                 val isNewPlayer = player.id == 0L
 
-                crashReporter.log("Saving player via wizard: ${player.firstName} ${player.lastName}, isNew: $isNewPlayer")
+                crashReporter.log(
+                    "Saving player via wizard: ${player.firstName} ${player.lastName}, isNew: $isNewPlayer",
+                )
 
                 if (isNewPlayer) {
                     addPlayerUseCase.invoke(player)
@@ -328,11 +347,13 @@ class PlayerWizardViewModel(
 
 sealed class PlayerWizardUiState {
     data object Loading : PlayerWizardUiState()
+
     data object Ready : PlayerWizardUiState()
+
     data class Error(val message: String) : PlayerWizardUiState()
 }
 
 enum class PlayerWizardStep {
     PLAYER_DATA,
-    POSITIONS
+    POSITIONS,
 }

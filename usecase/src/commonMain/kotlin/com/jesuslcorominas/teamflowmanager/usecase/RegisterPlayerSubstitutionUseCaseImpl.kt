@@ -13,8 +13,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import kotlinx.coroutines.flow.first
 
-
-
 internal class RegisterPlayerSubstitutionUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val playerTimeRepository: PlayerTimeRepository,
@@ -44,21 +42,23 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         val matchElapsedTime = match.getTotalElapsed(currentTimeMillis)
 
         // Step 1: Create operation with IN_PROGRESS status
-        val operation = MatchOperation(
-            matchId = matchId,
-            teamId = match.teamId,
-            type = MatchOperationType.SUBSTITUTION,
-            status = MatchOperationStatus.IN_PROGRESS,
-        )
+        val operation =
+            MatchOperation(
+                matchId = matchId,
+                teamId = match.teamId,
+                type = MatchOperationType.SUBSTITUTION,
+                status = MatchOperationStatus.IN_PROGRESS,
+            )
         val operationId = matchOperationRepository.createOperation(operation)
 
         // Step 2: Update ALL currently playing players' operationId for atomicity
         // This ensures that the UI filter (lastOperationId == match.lastCompletedOperationId)
         // will show all active players consistently after the substitution completes
-        val playingPlayerIds = playerTimes
-            .filter { it.status == PlayerTimeStatus.PLAYING }
-            .map { it.playerId }
-        
+        val playingPlayerIds =
+            playerTimes
+                .filter { it.status == PlayerTimeStatus.PLAYING }
+                .map { it.playerId }
+
         // Substitute out the leaving player - sets ON_BENCH status
         playerTimeRepository.substituteOutPlayersBatchWithOperationId(
             matchId = matchId,
@@ -88,14 +88,15 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         }
 
         // Step 4: Record the substitution with operation ID
-        val substitution = PlayerSubstitution(
-            matchId = matchId,
-            playerOutId = playerOutId,
-            playerInId = playerInId,
-            substitutionTimeMillis = currentTimeMillis,
-            matchElapsedTimeMillis = matchElapsedTime,
-            operationId = operationId,
-        )
+        val substitution =
+            PlayerSubstitution(
+                matchId = matchId,
+                playerOutId = playerOutId,
+                playerInId = playerInId,
+                substitutionTimeMillis = currentTimeMillis,
+                matchElapsedTimeMillis = matchElapsedTime,
+                operationId = operationId,
+            )
 
         playerSubstitutionRepository.insertSubstitution(substitution)
 

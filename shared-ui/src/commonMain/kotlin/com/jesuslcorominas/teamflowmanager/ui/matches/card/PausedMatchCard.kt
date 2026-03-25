@@ -39,18 +39,21 @@ fun PausedMatchCard(
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onNavigateToDetail() },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToDetail() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing04),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

@@ -21,12 +21,12 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 /**
  * Wrapper composable that makes a player item draggable via long-press gesture.
  * Only inactive players (not currently playing) can be dragged.
- * 
+ *
  * Uses detectDragGesturesAfterLongPress to handle the complete drag lifecycle:
  * - Long press initiates the drag
  * - Drag movements update position
  * - Release ends the drag
- * 
+ *
  * NOTE: When this item scrolls off-screen (disposed by LazyColumn), the gesture
  * handler is cancelled but the drag continues to work because DragDropContainer
  * has a backup pointer tracker that continues tracking the drag at the container level.
@@ -58,7 +58,7 @@ fun DraggablePlayerItem(
 
     // Check if THIS player is being dragged (using state from DragDropState)
     val isThisBeingDragged = dragDropState.isDragging && dragDropState.draggedPlayerId == player.id
-    
+
     // Check if drag just ended for THIS player (to show bounce animation for invalid drop)
     val dragJustEndedForThis = dragDropState.dragJustEnded && dragDropState.draggedPlayerId == player.id
 
@@ -68,67 +68,72 @@ fun DraggablePlayerItem(
             // Animate bounce back for invalid drop
             bounceScale.animateTo(
                 targetValue = 0.9f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessHigh
-                )
+                animationSpec =
+                    spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessHigh,
+                    ),
             )
             bounceScale.animateTo(
                 targetValue = 1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
+                animationSpec =
+                    spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium,
+                    ),
             )
         }
     }
 
     Box(
-        modifier = Modifier
-            .onGloballyPositioned { coordinates ->
-                itemPosition = coordinates.positionInRoot()
-            }
-            .graphicsLayer {
-                scaleX = bounceScale.value
-                scaleY = bounceScale.value
-                // Hide the original item when dragging
-                alpha = if (isThisBeingDragged) 0f else 1f
-            }
-            .then(
-                if (canDrag) {
-                    Modifier.pointerInput(player.id) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = { offset ->
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dragDropState.startDrag(
-                                    player = player,
-                                    initialPosition = itemPosition + offset
-                                )
-                                onDragStart()
-                            },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                val newPosition = dragDropState.dragPosition + Offset(
-                                    dragAmount.x,
-                                    dragAmount.y
-                                )
-                                dragDropState.updateDragPosition(newPosition)
-                            },
-                            onDragEnd = {
-                                dragDropState.endDrag()
-                            },
-                            onDragCancel = {
-                                // Item scrolled off-screen and is being disposed.
-                                // Signal that child gesture is no longer active so the 
-                                // container can take over drag tracking.
-                                dragDropState.onChildGestureCancelled()
-                            }
-                        )
-                    }
-                } else {
-                    Modifier
+        modifier =
+            Modifier
+                .onGloballyPositioned { coordinates ->
+                    itemPosition = coordinates.positionInRoot()
                 }
-            )
+                .graphicsLayer {
+                    scaleX = bounceScale.value
+                    scaleY = bounceScale.value
+                    // Hide the original item when dragging
+                    alpha = if (isThisBeingDragged) 0f else 1f
+                }
+                .then(
+                    if (canDrag) {
+                        Modifier.pointerInput(player.id) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = { offset ->
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    dragDropState.startDrag(
+                                        player = player,
+                                        initialPosition = itemPosition + offset,
+                                    )
+                                    onDragStart()
+                                },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    val newPosition =
+                                        dragDropState.dragPosition +
+                                            Offset(
+                                                dragAmount.x,
+                                                dragAmount.y,
+                                            )
+                                    dragDropState.updateDragPosition(newPosition)
+                                },
+                                onDragEnd = {
+                                    dragDropState.endDrag()
+                                },
+                                onDragCancel = {
+                                    // Item scrolled off-screen and is being disposed.
+                                    // Signal that child gesture is no longer active so the
+                                    // container can take over drag tracking.
+                                    dragDropState.onChildGestureCancelled()
+                                },
+                            )
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
     ) {
         content()
     }

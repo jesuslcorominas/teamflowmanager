@@ -37,6 +37,7 @@ class MatchListViewModel(
         MutableStateFlow<MatchDeleteConfirmationState>(MatchDeleteConfirmationState.None)
     val deleteConfirmationState: StateFlow<MatchDeleteConfirmationState> = _deleteConfirmationState.asStateFlow()
 
+    @Suppress("ktlint:standard:property-naming")
     private val _query = MutableStateFlow("")
 
     init {
@@ -46,11 +47,15 @@ class MatchListViewModel(
     private fun loadMatches() {
         viewModelScope.launch {
             combine(getAllMatchesUseCase(), _query) { matches, query ->
-                val filtered = if (query.isBlank()) matches
-                else matches.filter {
-                    it.opponent.contains(query, ignoreCase = true) ||
-                        it.location.contains(query, ignoreCase = true)
-                }
+                val filtered =
+                    if (query.isBlank()) {
+                        matches
+                    } else {
+                        matches.filter {
+                            it.opponent.contains(query, ignoreCase = true) ||
+                                it.location.contains(query, ignoreCase = true)
+                        }
+                    }
 
                 when {
                     matches.isEmpty() -> MatchListUiState.Empty
@@ -153,12 +158,16 @@ class MatchListViewModel(
 
 sealed class MatchListUiState {
     data object Loading : MatchListUiState()
+
     data object Empty : MatchListUiState()
+
     data class Success(val matches: List<Match>) : MatchListUiState()
 }
 
 sealed class MatchDeleteConfirmationState {
     data object None : MatchDeleteConfirmationState()
+
     data class Requested(val match: Match) : MatchDeleteConfirmationState()
+
     data object Deleting : MatchDeleteConfirmationState()
 }

@@ -14,8 +14,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class PdfExporterImpl(private val context: Context): PdfExporter {
-
+class PdfExporterImpl(private val context: Context) : PdfExporter {
     companion object Companion {
         private const val PAGE_WIDTH = 595 // A4 width in points
         private const val PAGE_HEIGHT = 842 // A4 height in points
@@ -41,7 +40,10 @@ class PdfExporterImpl(private val context: Context): PdfExporter {
         }
     }
 
-    override fun exportToPdf(exportData: ExportData, teamName: String): String? {
+    override fun exportToPdf(
+        exportData: ExportData,
+        teamName: String,
+    ): String? {
         val document = PdfDocument()
         var currentPage = 1
         var yPosition = MARGIN
@@ -57,7 +59,11 @@ class PdfExporterImpl(private val context: Context): PdfExporter {
         yPosition += LINE_HEIGHT
 
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val dateString = context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_date_label, dateFormat.format(Date()))
+        val dateString =
+            context.getString(
+                com.jesuslcorominas.teamflowmanager.R.string.pdf_date_label,
+                dateFormat.format(Date()),
+            )
         yPosition = drawText(canvas, dateString, yPosition, BODY_SIZE, Paint.Align.CENTER)
         yPosition += LINE_HEIGHT * 2
 
@@ -108,7 +114,13 @@ class PdfExporterImpl(private val context: Context): PdfExporter {
         } else {
             exportData.topScorers.take(10).forEachIndexed { index, scorer ->
                 val playerName = "${scorer.player.firstName} ${scorer.player.lastName}"
-                val text = context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_scorer_format, index + 1, playerName, scorer.totalGoals)
+                val text =
+                    context.getString(
+                        com.jesuslcorominas.teamflowmanager.R.string.pdf_scorer_format,
+                        index + 1,
+                        playerName,
+                        scorer.totalGoals,
+                    )
                 yPosition = drawText(canvas, text, yPosition, BODY_SIZE)
                 yPosition += LINE_HEIGHT
             }
@@ -160,11 +172,12 @@ class PdfExporterImpl(private val context: Context): PdfExporter {
             outputStream.close()
             document.close()
 
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                file
-            )
+            val uri =
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    file,
+                )
 
             uri.toString()
         } catch (e: Exception) {
@@ -174,21 +187,31 @@ class PdfExporterImpl(private val context: Context): PdfExporter {
         }
     }
 
-    private fun drawTitle(canvas: Canvas, text: String, yPosition: Float): Float {
-        val paint = Paint().apply {
-            textSize = TITLE_SIZE
-            textAlign = Paint.Align.CENTER
-            isFakeBoldText = true
-        }
+    private fun drawTitle(
+        canvas: Canvas,
+        text: String,
+        yPosition: Float,
+    ): Float {
+        val paint =
+            Paint().apply {
+                textSize = TITLE_SIZE
+                textAlign = Paint.Align.CENTER
+                isFakeBoldText = true
+            }
         canvas.drawText(text, PAGE_WIDTH / 2f, yPosition, paint)
         return yPosition + LINE_HEIGHT * 1.5f
     }
 
-    private fun drawSectionTitle(canvas: Canvas, text: String, yPosition: Float): Float {
-        val paint = Paint().apply {
-            textSize = SECTION_SIZE
-            isFakeBoldText = true
-        }
+    private fun drawSectionTitle(
+        canvas: Canvas,
+        text: String,
+        yPosition: Float,
+    ): Float {
+        val paint =
+            Paint().apply {
+                textSize = SECTION_SIZE
+                isFakeBoldText = true
+            }
         canvas.drawText(text, MARGIN, yPosition, paint)
         return yPosition + LINE_HEIGHT
     }
@@ -198,47 +221,54 @@ class PdfExporterImpl(private val context: Context): PdfExporter {
         text: String,
         yPosition: Float,
         textSize: Float = BODY_SIZE,
-        align: Paint.Align = Paint.Align.LEFT
+        align: Paint.Align = Paint.Align.LEFT,
     ): Float {
-        val paint = Paint().apply {
-            this.textSize = textSize
-            this.textAlign = align
-        }
-        val x = when (align) {
-            Paint.Align.CENTER -> PAGE_WIDTH / 2f
-            Paint.Align.RIGHT -> PAGE_WIDTH - MARGIN
-            else -> MARGIN
-        }
+        val paint =
+            Paint().apply {
+                this.textSize = textSize
+                this.textAlign = align
+            }
+        val x =
+            when (align) {
+                Paint.Align.CENTER -> PAGE_WIDTH / 2f
+                Paint.Align.RIGHT -> PAGE_WIDTH - MARGIN
+                else -> MARGIN
+            }
         canvas.drawText(text, x, yPosition, paint)
         return yPosition
     }
 
-    private fun drawPlayerStatsHeader(canvas: Canvas, yPosition: Float): Float {
+    private fun drawPlayerStatsHeader(
+        canvas: Canvas,
+        yPosition: Float,
+    ): Float {
         val tableLeft = MARGIN
         val tableRight = PAGE_WIDTH - MARGIN
         val tableWidth = tableRight - tableLeft
 
         // Column widths (percentages of table width)
-        val col1Width = tableWidth * 0.35f  // Jugador
-        val col2Width = tableWidth * 0.10f  // Conv
-        val col3Width = tableWidth * 0.10f  // Jug
-        val col4Width = tableWidth * 0.20f  // T.Tot
-        val col5Width = tableWidth * 0.15f  // T.Med
-        val col6Width = tableWidth * 0.10f  // Goles
+        val col1Width = tableWidth * 0.35f // Jugador
+        val col2Width = tableWidth * 0.10f // Conv
+        val col3Width = tableWidth * 0.10f // Jug
+        val col4Width = tableWidth * 0.20f // T.Tot
+        val col5Width = tableWidth * 0.15f // T.Med
+        val col6Width = tableWidth * 0.10f // Goles
 
         // Draw header background (light gray)
-        val backgroundPaint = Paint().apply {
-            color = Color.rgb(220, 220, 220)
-            style = Paint.Style.FILL
-        }
+        val backgroundPaint =
+            Paint().apply {
+                color = Color.rgb(220, 220, 220)
+                style = Paint.Style.FILL
+            }
         canvas.drawRect(tableLeft, yPosition - HEADER_ROW_HEIGHT + 5, tableRight, yPosition + 5, backgroundPaint)
 
         // Draw header border
-        val borderPaint = Paint().apply {
-            color = Color.BLACK
-            style = Paint.Style.STROKE
-            strokeWidth = 1f
-        }
+        val borderPaint =
+            Paint().apply {
+                color = Color.BLACK
+                style = Paint.Style.STROKE
+                strokeWidth = 1f
+            }
         canvas.drawRect(tableLeft, yPosition - HEADER_ROW_HEIGHT + 5, tableRight, yPosition + 5, borderPaint)
 
         // Draw vertical lines for columns
@@ -254,35 +284,71 @@ class PdfExporterImpl(private val context: Context): PdfExporter {
         canvas.drawLine(xPos, yPosition - HEADER_ROW_HEIGHT + 5, xPos, yPosition + 5, borderPaint)
 
         // Draw header text (uppercase and bold)
-        val textPaint = Paint().apply {
-            textSize = BODY_SIZE
-            isFakeBoldText = true
-            textAlign = Paint.Align.LEFT
-        }
+        val textPaint =
+            Paint().apply {
+                textSize = BODY_SIZE
+                isFakeBoldText = true
+                textAlign = Paint.Align.LEFT
+            }
 
         val textY = yPosition - (HEADER_ROW_HEIGHT / 2) + (BODY_SIZE / 2)
 
-        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_player), tableLeft + 5, textY, textPaint)
+        canvas.drawText(
+            context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_player),
+            tableLeft + 5,
+            textY,
+            textPaint,
+        )
 
         xPos = tableLeft + col1Width
-        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_called_up), xPos + 5, textY, textPaint)
+        canvas.drawText(
+            context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_called_up),
+            xPos + 5,
+            textY,
+            textPaint,
+        )
 
         xPos += col2Width
-        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_played), xPos + 5, textY, textPaint)
+        canvas.drawText(
+            context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_played),
+            xPos + 5,
+            textY,
+            textPaint,
+        )
 
         xPos += col3Width
-        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_total_time), xPos + 5, textY, textPaint)
+        canvas.drawText(
+            context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_total_time),
+            xPos + 5,
+            textY,
+            textPaint,
+        )
 
         xPos += col4Width
-        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_avg_time), xPos + 5, textY, textPaint)
+        canvas.drawText(
+            context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_avg_time),
+            xPos + 5,
+            textY,
+            textPaint,
+        )
 
         xPos += col5Width
-        canvas.drawText(context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_goals), xPos + 5, textY, textPaint)
+        canvas.drawText(
+            context.getString(com.jesuslcorominas.teamflowmanager.R.string.pdf_header_goals),
+            xPos + 5,
+            textY,
+            textPaint,
+        )
 
         return yPosition
     }
 
-    private fun drawPlayerStats(canvas: Canvas, stat: com.jesuslcorominas.teamflowmanager.domain.model.PlayerExportStats, yPosition: Float, index: Int): Float {
+    private fun drawPlayerStats(
+        canvas: Canvas,
+        stat: com.jesuslcorominas.teamflowmanager.domain.model.PlayerExportStats,
+        yPosition: Float,
+        index: Int,
+    ): Float {
         val tableLeft = MARGIN
         val tableRight = PAGE_WIDTH - MARGIN
         val tableWidth = tableRight - tableLeft
@@ -296,18 +362,20 @@ class PdfExporterImpl(private val context: Context): PdfExporter {
         val col6Width = tableWidth * 0.10f
 
         // Draw alternating row background
-        val backgroundPaint = Paint().apply {
-            color = if (index % 2 == 0) Color.WHITE else Color.rgb(245, 245, 245)
-            style = Paint.Style.FILL
-        }
+        val backgroundPaint =
+            Paint().apply {
+                color = if (index % 2 == 0) Color.WHITE else Color.rgb(245, 245, 245)
+                style = Paint.Style.FILL
+            }
         canvas.drawRect(tableLeft, yPosition, tableRight, yPosition + TABLE_ROW_HEIGHT, backgroundPaint)
 
         // Draw row borders
-        val borderPaint = Paint().apply {
-            color = Color.BLACK
-            style = Paint.Style.STROKE
-            strokeWidth = 1f
-        }
+        val borderPaint =
+            Paint().apply {
+                color = Color.BLACK
+                style = Paint.Style.STROKE
+                strokeWidth = 1f
+            }
         canvas.drawRect(tableLeft, yPosition, tableRight, yPosition + TABLE_ROW_HEIGHT, borderPaint)
 
         // Draw vertical lines for columns
@@ -323,10 +391,11 @@ class PdfExporterImpl(private val context: Context): PdfExporter {
         canvas.drawLine(xPos, yPosition, xPos, yPosition + TABLE_ROW_HEIGHT, borderPaint)
 
         // Draw cell text
-        val textPaint = Paint().apply {
-            textSize = BODY_SIZE
-            textAlign = Paint.Align.LEFT
-        }
+        val textPaint =
+            Paint().apply {
+                textSize = BODY_SIZE
+                textAlign = Paint.Align.LEFT
+            }
 
         val textY = yPosition + (TABLE_ROW_HEIGHT / 2) + (BODY_SIZE / 2)
 

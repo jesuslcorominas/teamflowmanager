@@ -110,12 +110,13 @@ fun AnalysisScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 when (val state = uiState) {
                     is AnalysisUiState.Loading -> Loading()
-                    is AnalysisUiState.Empty -> EmptyContent(
-                        when (selectedTab) {
-                            AnalysisTab.TIMES -> stringResource(Res.string.analysis_no_data)
-                            AnalysisTab.GOALS -> stringResource(Res.string.analysis_no_goals_data)
-                        },
-                    )
+                    is AnalysisUiState.Empty ->
+                        EmptyContent(
+                            when (selectedTab) {
+                                AnalysisTab.TIMES -> stringResource(Res.string.analysis_no_data)
+                                AnalysisTab.GOALS -> stringResource(Res.string.analysis_no_goals_data)
+                            },
+                        )
 
                     is AnalysisUiState.Success -> {
                         when (selectedTab) {
@@ -125,9 +126,10 @@ fun AnalysisScreen(
                                 } else {
                                     PlayerTimeChart(
                                         playerStats = state.playerTimeStats,
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(TFMSpacing.spacing04),
+                                        modifier =
+                                            Modifier
+                                                .fillMaxSize()
+                                                .padding(TFMSpacing.spacing04),
                                     )
                                 }
                             }
@@ -138,9 +140,10 @@ fun AnalysisScreen(
                                 } else {
                                     PlayerGoalChart(
                                         playerStats = state.playerGoalStats,
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(TFMSpacing.spacing04),
+                                        modifier =
+                                            Modifier
+                                                .fillMaxSize()
+                                                .padding(TFMSpacing.spacing04),
                                     )
                                 }
                             }
@@ -152,9 +155,10 @@ fun AnalysisScreen(
 
         FloatingActionButton(
             onClick = { viewModel.requestExport() },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(TFMSpacing.spacing04),
         ) {
             Icon(
                 imageVector = Icons.Default.Share,
@@ -223,10 +227,11 @@ private fun HorizontalBar(
     val fraction = if (maxValue > 0) (value / maxValue).toFloat().coerceIn(0f, 1f) else 0f
     val animatedFraction by animateFloatAsState(
         targetValue = fraction,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow,
-        ),
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow,
+            ),
     )
     val barGradient = Brush.horizontalGradient(colors = listOf(PrimaryLight, Primary))
 
@@ -247,17 +252,19 @@ private fun HorizontalBar(
         }
         Spacer(modifier = Modifier.height(4.dp))
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(TFMSpacing.spacing06)
-                .clip(RoundedCornerShape(topEnd = TFMSpacing.spacing04, bottomEnd = TFMSpacing.spacing04))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(TFMSpacing.spacing06)
+                    .clip(RoundedCornerShape(topEnd = TFMSpacing.spacing04, bottomEnd = TFMSpacing.spacing04))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth(animatedFraction)
-                    .fillMaxHeight()
-                    .background(brush = barGradient),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(animatedFraction)
+                        .fillMaxHeight()
+                        .background(brush = barGradient),
             )
         }
     }

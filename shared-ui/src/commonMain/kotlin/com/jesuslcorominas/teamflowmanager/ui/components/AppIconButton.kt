@@ -18,7 +18,7 @@ fun AppIconButton(
     contentDescription: String,
     enabled: Boolean = true,
     tint: Color? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     IconButton(
         modifier = if (modifier == Modifier) Modifier.size(64.dp) else modifier,
@@ -29,9 +29,13 @@ fun AppIconButton(
             modifier = internalModifier,
             imageVector = imageVector,
             contentDescription = contentDescription,
-            tint = tint
-                ?: if (enabled) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            tint =
+                tint
+                    ?: if (enabled) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    },
         )
     }
 }

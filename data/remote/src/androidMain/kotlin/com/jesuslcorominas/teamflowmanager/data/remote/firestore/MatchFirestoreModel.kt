@@ -89,27 +89,29 @@ fun MatchFirestoreModel.toDomain(): Match {
         squadCallUpIds = squadCallUpIds,
         captainId = captainId,
         startingLineupIds = startingLineupIds,
-        status = try {
-            MatchStatus.valueOf(status)
-        } catch (_: Exception) {
-            MatchStatus.SCHEDULED
-        },
+        status =
+            try {
+                MatchStatus.valueOf(status)
+            } catch (_: Exception) {
+                MatchStatus.SCHEDULED
+            },
         archived = archived,
         pauseCount = pauseCount,
         goals = goals,
         opponentGoals = opponentGoals,
         timeoutStartTimeMillis = timeoutStartTimeMillis,
-        periods = if (periods.isNotEmpty()) {
-            periods.map { it.toDomain() }
-        } else {
-            // Create default periods if none exist
-            (1..periodType.numberOfPeriods).map {
-                MatchPeriod(
-                    periodNumber = it,
-                    periodDuration = periodType.duration
-                )
-            }
-        },
+        periods =
+            if (periods.isNotEmpty()) {
+                periods.map { it.toDomain() }
+            } else {
+                // Create default periods if none exist
+                (1..periodType.numberOfPeriods).map {
+                    MatchPeriod(
+                        periodNumber = it,
+                        periodDuration = periodType.duration,
+                    )
+                }
+            },
         lastCompletedOperationId = lastCompletedOperationId,
     )
 }

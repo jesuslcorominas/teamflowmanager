@@ -13,7 +13,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 
 class MatchNotificationManager(private val context: Context) {
-
     private val notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -41,11 +40,12 @@ class MatchNotificationManager(private val context: Context) {
         val contentIntent = createContentIntent(match.id)
 
         // Show score in title
-        val title = context.getString(
-            R.string.match_score,
-            match.goals,
-            match.opponentGoals
-        ) + " - " + match.opponent
+        val title =
+            context.getString(
+                R.string.match_score,
+                match.goals,
+                match.opponentGoals,
+            ) + " - " + match.opponent
 
         val periodName = getPeriodName(match)
 
@@ -78,7 +78,7 @@ class MatchNotificationManager(private val context: Context) {
                     .setStyle(
                         NotificationCompat.BigTextStyle()
                             .bigText(periodName)
-                            .setBigContentTitle(title)
+                            .setBigContentTitle(title),
                     )
             }
             MatchStatus.PAUSED -> {
@@ -87,7 +87,7 @@ class MatchNotificationManager(private val context: Context) {
                     .setStyle(
                         NotificationCompat.BigTextStyle()
                             .bigText(periodName)
-                            .setBigContentTitle(title)
+                            .setBigContentTitle(title),
                     )
             }
             MatchStatus.TIMEOUT -> {
@@ -96,7 +96,7 @@ class MatchNotificationManager(private val context: Context) {
                     .setStyle(
                         NotificationCompat.BigTextStyle()
                             .bigText(context.getString(R.string.match_timeout))
-                            .setBigContentTitle(title)
+                            .setBigContentTitle(title),
                     )
             }
             else -> {
@@ -112,24 +112,25 @@ class MatchNotificationManager(private val context: Context) {
         val matchStatus = match.status
         val numberOfPauses = match.pauseCount
 
-        val currentPeriod = match
-            .periods
-            .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
-            ?: match.periods.last()
+        val currentPeriod =
+            match
+                .periods
+                .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+                ?: match.periods.last()
 
         return when {
             matchStatus == MatchStatus.TIMEOUT -> context.getString(R.string.match_timeout)
-            matchStatus == MatchStatus.PAUSED
-                && (match.periodType == PeriodType.HALF_TIME || numberOfPauses == 2) ->
+            matchStatus == MatchStatus.PAUSED &&
+                (match.periodType == PeriodType.HALF_TIME || numberOfPauses == 2) ->
                 context.getString(R.string.paused_match_half_time)
 
-            matchStatus == MatchStatus.PAUSED
-                && match.periodType == PeriodType.QUARTER_TIME
-                && (numberOfPauses == 1 || numberOfPauses == 3) ->
+            matchStatus == MatchStatus.PAUSED &&
+                match.periodType == PeriodType.QUARTER_TIME &&
+                (numberOfPauses == 1 || numberOfPauses == 3) ->
                 context.getString(R.string.paused_match_quarter_break)
 
-            match.periodType == PeriodType.HALF_TIME
-                && currentPeriod.periodNumber == 1 -> context.getString(R.string.first_half)
+            match.periodType == PeriodType.HALF_TIME &&
+                currentPeriod.periodNumber == 1 -> context.getString(R.string.first_half)
 
             match.periodType == PeriodType.HALF_TIME && currentPeriod.periodNumber == 2 ->
                 context.getString(R.string.second_half)

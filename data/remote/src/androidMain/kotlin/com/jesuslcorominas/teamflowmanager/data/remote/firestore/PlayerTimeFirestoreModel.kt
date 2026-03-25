@@ -2,7 +2,6 @@ package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.PropertyName
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 
@@ -48,11 +47,12 @@ fun PlayerTimeFirestoreModel.toDomain(): PlayerTime =
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = isRunning,
         lastStartTimeMillis = lastStartTimeMillis,
-        status = try {
-            PlayerTimeStatus.valueOf(status)
-        } catch (_: Exception) {
-            PlayerTimeStatus.ON_BENCH
-        },
+        status =
+            try {
+                PlayerTimeStatus.valueOf(status)
+            } catch (_: Exception) {
+                PlayerTimeStatus.ON_BENCH
+            },
         lastOperationId = lastOperationId,
     )
 

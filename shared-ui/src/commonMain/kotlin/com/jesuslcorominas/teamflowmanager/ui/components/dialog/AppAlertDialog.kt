@@ -29,11 +29,12 @@ fun AppAlertDialog(
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                colors = if (isDestructive) {
-                    ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                } else {
-                    ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-                },
+                colors =
+                    if (isDestructive) {
+                        ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    } else {
+                        ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    },
             ) {
                 Text(confirmText)
             }

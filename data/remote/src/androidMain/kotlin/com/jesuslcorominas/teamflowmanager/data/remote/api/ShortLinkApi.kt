@@ -21,5 +21,7 @@ internal interface ShortLinkApi {
      */
     @POST("createShortLink")
     @Headers("Content-Type: application/json")
-    suspend fun createShortLink(@Body request: CreateShortLinkRequest): CreateShortLinkResponse
+    suspend fun createShortLink(
+        @Body request: CreateShortLinkRequest,
+    ): CreateShortLinkResponse
 }

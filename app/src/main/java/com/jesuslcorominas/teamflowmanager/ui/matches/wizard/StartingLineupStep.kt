@@ -43,35 +43,37 @@ fun StartingLineupStep(
     var showGoalkeeperWarning by remember { mutableStateOf(false) }
     var pendingCreate by remember { mutableStateOf(false) }
 
-    val hasGoalkeeperSelected = players.any { player ->
-        player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
-    }
+    val hasGoalkeeperSelected =
+        players.any { player ->
+            player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
+        }
 
     Column(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
             text = stringResource(R.string.starting_lineup_title),
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
 
         Text(
             text = stringResource(R.string.starting_lineup_subtitle, requiredPlayers),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Text(
             text = stringResource(R.string.starting_lineup_count, currentSelection.size, requiredPlayers),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
-            color = if (currentSelection.size == requiredPlayers) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.error
-            }
+            color =
+                if (currentSelection.size == requiredPlayers) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.error
+                },
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
@@ -95,7 +97,7 @@ fun StartingLineupStep(
                 } else {
                     currentSelection = currentSelection - player.id
                 }
-            }
+            },
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
@@ -144,7 +146,7 @@ fun StartingLineupStep(
             confirmText = stringResource(R.string.close),
             onConfirm = {
                 showMaxError = false
-            }
+            },
         )
     }
 
@@ -164,7 +166,7 @@ fun StartingLineupStep(
             onDismiss = {
                 showGoalkeeperWarning = false
                 pendingCreate = false
-            }
+            },
         )
     }
 }

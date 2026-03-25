@@ -34,7 +34,7 @@ interface ClubMemberDataSource {
         email: String,
         clubId: Long,
         clubFirestoreId: String,
-        roles: List<String>
+        roles: List<String>,
     ): ClubMember
 
     /**
@@ -46,7 +46,7 @@ interface ClubMemberDataSource {
     suspend fun updateClubMemberRoles(
         userId: String,
         clubFirestoreId: String,
-        roles: List<String>
+        roles: List<String>,
     )
 
     /**
@@ -58,7 +58,7 @@ interface ClubMemberDataSource {
     suspend fun addClubMemberRole(
         userId: String,
         clubFirestoreId: String,
-        role: String
+        role: String,
     )
 
     /**
@@ -69,6 +69,6 @@ interface ClubMemberDataSource {
      */
     suspend fun getClubMemberByUserIdAndClub(
         userId: String,
-        clubFirestoreId: String
+        clubFirestoreId: String,
     ): ClubMember?
 }

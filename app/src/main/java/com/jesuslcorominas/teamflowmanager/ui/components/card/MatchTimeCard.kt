@@ -59,27 +59,29 @@ fun MatchTimeCard(
     val rotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
         animationSpec = tween(durationMillis = 300),
-        label = "chevronRotation"
+        label = "chevronRotation",
     )
 
     Box(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         AppCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
         ) {
             Column {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            top = TFMSpacing.spacing04,
-                            start = TFMSpacing.spacing04,
-                            end = TFMSpacing.spacing04
-                        ),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = TFMSpacing.spacing04,
+                                start = TFMSpacing.spacing04,
+                                end = TFMSpacing.spacing04,
+                            ),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     AnimatedVisibility(visible = expanded) {
@@ -91,7 +93,7 @@ fun MatchTimeCard(
                             modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
                             title = match.location,
                             size = TitleSize.MEDIUM,
-                            startIcon = Icons.Default.LocationOn
+                            startIcon = Icons.Default.LocationOn,
                         )
                     }
 
@@ -101,7 +103,7 @@ fun MatchTimeCard(
                         opponent = match.opponent,
                         goals = match.goals,
                         opponentGoals = match.opponentGoals,
-                        expanded = expanded
+                        expanded = expanded,
                     )
 
                     Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
@@ -109,48 +111,52 @@ fun MatchTimeCard(
                     TimeBoard(
                         expanded = expanded,
                         currentTime = currentTime,
-                        match = match
+                        match = match,
                     )
                 }
 
                 // Share button - only visible when match is finished and expanded
                 AnimatedVisibility(
                     modifier = Modifier.align(Alignment.End).padding(end = TFMSpacing.spacing04),
-                    visible = expanded && match.status == MatchStatus.FINISHED && onExport != null
+                    visible = expanded && match.status == MatchStatus.FINISHED && onExport != null,
                 ) {
                     IconButton(
                         onClick = { onExport?.invoke() },
-                        modifier = Modifier.padding(top = TFMSpacing.spacing02)
+                        modifier = Modifier.padding(top = TFMSpacing.spacing02),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = stringResource(R.string.export_match_report_description),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
 
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                        .padding(vertical = TFMSpacing.spacing02),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+                            .padding(vertical = TFMSpacing.spacing02),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.ExpandMore,
                         contentDescription = stringResource(if (expanded) R.string.collapse else R.string.expand),
-                        modifier = Modifier.rotate(rotation)
+                        modifier = Modifier.rotate(rotation),
                     )
                 }
             }
         }
-
     }
 }
 
 @Composable
-private fun TimeBoard(match: Match, currentTime: Long, expanded: Boolean) {
+private fun TimeBoard(
+    match: Match,
+    currentTime: Long,
+    expanded: Boolean,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -162,10 +168,11 @@ private fun TimeBoard(match: Match, currentTime: Long, expanded: Boolean) {
                 ?: match.periods.last()
 
         when (match.status) {
-            MatchStatus.SCHEDULED, MatchStatus.PAUSED, MatchStatus.TIMEOUT -> AnimatedText(
-                text = periodName,
-                expanded = expanded
-            )
+            MatchStatus.SCHEDULED, MatchStatus.PAUSED, MatchStatus.TIMEOUT ->
+                AnimatedText(
+                    text = periodName,
+                    expanded = expanded,
+                )
 
             MatchStatus.IN_PROGRESS -> {
                 val elapsedTime = currentTime - (currentPeriod.startTimeMillis)
@@ -175,18 +182,18 @@ private fun TimeBoard(match: Match, currentTime: Long, expanded: Boolean) {
                 if (additionalTime <= 0) {
                     AnimatedText(
                         text = formatTime(displayTime),
-                        expanded = expanded
+                        expanded = expanded,
                     )
                 } else {
                     AnimatedText(
                         text = " + ",
                         color = MaterialTheme.colorScheme.error,
-                        expanded = expanded
+                        expanded = expanded,
                     )
                     AnimatedText(
                         text = formatTime(additionalTime),
                         color = MaterialTheme.colorScheme.error,
-                        expanded = expanded
+                        expanded = expanded,
                     )
                 }
             }
@@ -194,9 +201,10 @@ private fun TimeBoard(match: Match, currentTime: Long, expanded: Boolean) {
             MatchStatus.FINISHED -> {
                 if (expanded) {
                     Column(
-                        modifier = Modifier
-                            .padding(horizontal = TFMSpacing.spacing04),
-                        verticalArrangement = Arrangement.spacedBy(space = TFMSpacing.spacing02)
+                        modifier =
+                            Modifier
+                                .padding(horizontal = TFMSpacing.spacing04),
+                        verticalArrangement = Arrangement.spacedBy(space = TFMSpacing.spacing02),
                     ) {
                         match
                             .periods
@@ -212,7 +220,7 @@ private fun TimeBoard(match: Match, currentTime: Long, expanded: Boolean) {
                                     AnimatedText(
                                         text = formatTime(displayTime),
                                         end = MaterialTheme.typography.displaySmall,
-                                        expanded = true
+                                        expanded = true,
                                     )
 
                                     if (additionalTime > 0) {
@@ -220,15 +228,14 @@ private fun TimeBoard(match: Match, currentTime: Long, expanded: Boolean) {
                                             text = " +",
                                             color = MaterialTheme.colorScheme.error,
                                             end = MaterialTheme.typography.displaySmall,
-                                            expanded = true
+                                            expanded = true,
                                         )
                                         AnimatedText(
                                             text = formatTime(additionalTime),
                                             color = MaterialTheme.colorScheme.error,
                                             end = MaterialTheme.typography.displaySmall,
-                                            expanded = true
+                                            expanded = true,
                                         )
-
                                     }
                                 }
                             }
@@ -236,7 +243,7 @@ private fun TimeBoard(match: Match, currentTime: Long, expanded: Boolean) {
                 } else {
                     AnimatedText(
                         text = periodName,
-                        expanded = false
+                        expanded = false,
                     )
                 }
             }
@@ -250,7 +257,7 @@ private fun ScoreBoard(
     opponent: String,
     goals: Int,
     opponentGoals: Int,
-    expanded: Boolean
+    expanded: Boolean,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -261,15 +268,16 @@ private fun ScoreBoard(
             modifier = Modifier.weight(1F),
             teamName = teamName,
             goalsCount = goals,
-            expanded = expanded
+            expanded = expanded,
         )
 
         Text(
-            modifier = Modifier.padding(
-                start = TFMSpacing.spacing06,
-                end = TFMSpacing.spacing06,
-                top = if (expanded) TFMSpacing.spacing05 else 0.dp,
-            ),
+            modifier =
+                Modifier.padding(
+                    start = TFMSpacing.spacing06,
+                    end = TFMSpacing.spacing06,
+                    top = if (expanded) TFMSpacing.spacing05 else 0.dp,
+                ),
             text = "-",
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold,
@@ -281,7 +289,7 @@ private fun ScoreBoard(
             teamName = opponent,
             goalsCount = opponentGoals,
             isOpponent = true,
-            expanded = expanded
+            expanded = expanded,
         )
     }
 }
@@ -300,14 +308,15 @@ private fun TeamScore(
     ) {
         AnimatedVisibility(visible = expanded) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(TFMSpacing.spacing05),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(TFMSpacing.spacing05),
                 contentAlignment = if (isOpponent) Alignment.CenterStart else Alignment.CenterEnd,
             ) {
                 AppTitle(
                     title = teamName,
-                    color = if (isOpponent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    color = if (isOpponent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -317,7 +326,7 @@ private fun TeamScore(
             start = MaterialTheme.typography.displaySmall,
             end = MaterialTheme.typography.displayLarge,
             color = if (isOpponent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-            expanded = expanded
+            expanded = expanded,
         )
     }
 }
@@ -328,26 +337,27 @@ private fun getCurrentPeriodName(match: Match): String {
     val numberOfPeriods = match.periodType.numberOfPeriods
     val numberOfPauses = match.pauseCount
 
-    val currentPeriod = match
-        .periods
-        .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
-        ?: match.periods.last()
+    val currentPeriod =
+        match
+            .periods
+            .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+            ?: match.periods.last()
 
     return when {
         matchStatus == MatchStatus.SCHEDULED -> stringResource(R.string.match_next)
         matchStatus == MatchStatus.FINISHED -> stringResource(R.string.match_finished)
         matchStatus == MatchStatus.TIMEOUT -> stringResource(R.string.match_timeout)
-        matchStatus == MatchStatus.PAUSED
-            && (match.periodType == PeriodType.HALF_TIME || numberOfPauses == 2) ->
+        matchStatus == MatchStatus.PAUSED &&
+            (match.periodType == PeriodType.HALF_TIME || numberOfPauses == 2) ->
             stringResource(R.string.paused_match_half_time)
 
-        matchStatus == MatchStatus.PAUSED
-            && match.periodType == PeriodType.QUARTER_TIME
-            && (numberOfPauses == 1 || numberOfPauses == 3) ->
+        matchStatus == MatchStatus.PAUSED &&
+            match.periodType == PeriodType.QUARTER_TIME &&
+            (numberOfPauses == 1 || numberOfPauses == 3) ->
             stringResource(R.string.paused_match_quarter_break)
 
-        match.periodType == PeriodType.HALF_TIME
-            && currentPeriod.periodNumber == 1 -> stringResource(R.string.first_half)
+        match.periodType == PeriodType.HALF_TIME &&
+            currentPeriod.periodNumber == 1 -> stringResource(R.string.first_half)
 
         match.periodType == PeriodType.HALF_TIME && currentPeriod.periodNumber == 2 ->
             stringResource(R.string.second_half)
@@ -373,15 +383,16 @@ private fun getCurrentPeriodName(match: Match): String {
     name = "Pixel 7 Pro",
     device = "spec:width=1440px,height=3120px,dpi=512",
     showSystemUi = true,
-    showBackground = true
+    showBackground = true,
 )
 @Composable
 fun MatchTimeCardPreview() {
     TFMAppTheme {
         Box(
-            modifier = Modifier
-                .padding(TFMSpacing.spacing04)
-                .padding(top = 24.dp)
+            modifier =
+                Modifier
+                    .padding(TFMSpacing.spacing04)
+                    .padding(top = 24.dp),
         ) {
             val currentTime = System.currentTimeMillis()
 
@@ -392,19 +403,21 @@ fun MatchTimeCardPreview() {
                 location = "FUNDOMA",
                 status = MatchStatus.FINISHED,
                 periodType = PeriodType.HALF_TIME,
-                periods = listOf(
-                    MatchPeriod(
-                        periodNumber = 1,
-                        periodDuration = 25 * 60 * 1000L,
-                        startTimeMillis = 0L,
-                        endTimeMillis = 0L,
-                    ), MatchPeriod(
-                        periodNumber = 2,
-                        periodDuration = 25 * 60 * 1000L,
-                        startTimeMillis = 0L,
-                        endTimeMillis = 0L,
-                    )
-                ),
+                periods =
+                    listOf(
+                        MatchPeriod(
+                            periodNumber = 1,
+                            periodDuration = 25 * 60 * 1000L,
+                            startTimeMillis = 0L,
+                            endTimeMillis = 0L,
+                        ),
+                        MatchPeriod(
+                            periodNumber = 2,
+                            periodDuration = 25 * 60 * 1000L,
+                            startTimeMillis = 0L,
+                            endTimeMillis = 0L,
+                        ),
+                    ),
                 pauseCount = 0,
                 goals = 1,
                 captainId = 2L,

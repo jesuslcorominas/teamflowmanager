@@ -96,13 +96,15 @@ fun GeneralDataStep(
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    val formattedDate = remember(selectedDateMillis) {
-        if (selectedDateMillis == 0L) "" else DateFormatter.formatDate(selectedDateMillis)
-    }
+    val formattedDate =
+        remember(selectedDateMillis) {
+            if (selectedDateMillis == 0L) "" else DateFormatter.formatDate(selectedDateMillis)
+        }
 
-    val formattedTime = remember(selectedTimeMillis) {
-        selectedTimeMillis?.let { DateFormatter.formatTimeOfDay(it) } ?: ""
-    }
+    val formattedTime =
+        remember(selectedTimeMillis) {
+            selectedTimeMillis?.let { DateFormatter.formatTimeOfDay(it) } ?: ""
+        }
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -125,16 +127,21 @@ fun GeneralDataStep(
             },
             label = { Text(stringResource(Res.string.opponent)) },
             isError = opponentError != null,
-            supportingText = if (opponentError != null) {
-                { Text(opponentError!!) }
-            } else null,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next,
-                capitalization = KeyboardCapitalization.Words,
-            ),
-            keyboardActions = KeyboardActions(onNext = {
-                focusManager.moveFocus(FocusDirection.Down)
-            }),
+            supportingText =
+                if (opponentError != null) {
+                    { Text(opponentError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
+            keyboardActions =
+                KeyboardActions(onNext = {
+                    focusManager.moveFocus(FocusDirection.Down)
+                }),
         )
 
         AppTextField(
@@ -146,13 +153,17 @@ fun GeneralDataStep(
             },
             label = { Text(stringResource(Res.string.location)) },
             isError = locationError != null,
-            supportingText = if (locationError != null) {
-                { Text(locationError!!) }
-            } else null,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                capitalization = KeyboardCapitalization.Words,
-            ),
+            supportingText =
+                if (locationError != null) {
+                    { Text(locationError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
             keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
         )
 
@@ -163,25 +174,29 @@ fun GeneralDataStep(
             label = { Text(stringResource(Res.string.match_date)) },
             readOnly = true,
             isError = dateError != null,
-            supportingText = if (dateError != null) {
-                { Text(dateError!!) }
-            } else null,
+            supportingText =
+                if (dateError != null) {
+                    { Text(dateError!!) }
+                } else {
+                    null
+                },
             trailingIcon = {
                 IconButton(onClick = { showDatePicker = true }) {
                     Icon(Icons.Default.DateRange, contentDescription = null)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            interactionSource = remember { MutableInteractionSource() }
-                .also { interactionSource ->
-                    LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                showDatePicker = true
+            interactionSource =
+                remember { MutableInteractionSource() }
+                    .also { interactionSource ->
+                        LaunchedEffect(interactionSource) {
+                            interactionSource.interactions.collect {
+                                if (it is PressInteraction.Release) {
+                                    showDatePicker = true
+                                }
                             }
                         }
-                    }
-                },
+                    },
         )
 
         // Time Picker
@@ -191,25 +206,29 @@ fun GeneralDataStep(
             label = { Text(stringResource(Res.string.match_time)) },
             readOnly = true,
             isError = timeError != null,
-            supportingText = if (timeError != null) {
-                { Text(timeError!!) }
-            } else null,
+            supportingText =
+                if (timeError != null) {
+                    { Text(timeError!!) }
+                } else {
+                    null
+                },
             trailingIcon = {
                 IconButton(onClick = { showTimePicker = true }) {
                     Icon(Icons.Default.AccessTime, contentDescription = null)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            interactionSource = remember { MutableInteractionSource() }
-                .also { interactionSource ->
-                    LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                showTimePicker = true
+            interactionSource =
+                remember { MutableInteractionSource() }
+                    .also { interactionSource ->
+                        LaunchedEffect(interactionSource) {
+                            interactionSource.interactions.collect {
+                                if (it is PressInteraction.Release) {
+                                    showTimePicker = true
+                                }
                             }
                         }
-                    }
-                },
+                    },
         )
 
         // Number of Periods - Radio Buttons
@@ -226,9 +245,10 @@ fun GeneralDataStep(
                 // 2 Halves
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { numberOfPeriods = 2 },
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .clickable { numberOfPeriods = 2 },
                 ) {
                     RadioButton(
                         selected = numberOfPeriods == 2,
@@ -243,9 +263,10 @@ fun GeneralDataStep(
                 // 4 Quarters
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { numberOfPeriods = 4 },
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .clickable { numberOfPeriods = 4 },
                 ) {
                     RadioButton(
                         selected = numberOfPeriods == 4,
@@ -317,9 +338,10 @@ fun GeneralDataStep(
 
     // Date Picker Dialog
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = if (selectedDateMillis == 0L) null else selectedDateMillis,
-        )
+        val datePickerState =
+            rememberDatePickerState(
+                initialSelectedDateMillis = if (selectedDateMillis == 0L) null else selectedDateMillis,
+            )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
@@ -347,16 +369,19 @@ fun GeneralDataStep(
 
     // Time Picker Dialog
     if (showTimePicker) {
-        val initialHour = selectedTimeMillis?.let {
-            ((it / (60 * 60 * 1000)) % 24).toInt()
-        } ?: 0
-        val initialMinute = selectedTimeMillis?.let {
-            ((it / (60 * 1000)) % 60).toInt()
-        } ?: 0
-        val timePickerState = rememberTimePickerState(
-            initialHour = initialHour,
-            initialMinute = initialMinute,
-        )
+        val initialHour =
+            selectedTimeMillis?.let {
+                ((it / (60 * 60 * 1000)) % 24).toInt()
+            } ?: 0
+        val initialMinute =
+            selectedTimeMillis?.let {
+                ((it / (60 * 1000)) % 60).toInt()
+            } ?: 0
+        val timePickerState =
+            rememberTimePickerState(
+                initialHour = initialHour,
+                initialMinute = initialMinute,
+            )
 
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
@@ -370,8 +395,9 @@ fun GeneralDataStep(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val timeInMillis = (timePickerState.hour * 60 * 60 * 1000) +
-                            (timePickerState.minute * 60 * 1000)
+                        val timeInMillis =
+                            (timePickerState.hour * 60 * 60 * 1000) +
+                                (timePickerState.minute * 60 * 1000)
                         selectedTimeMillis = timeInMillis.toLong()
                         timeError = null
                         showTimePicker = false

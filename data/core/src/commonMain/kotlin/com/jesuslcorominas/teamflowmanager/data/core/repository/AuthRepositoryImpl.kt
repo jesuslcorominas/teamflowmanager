@@ -6,15 +6,13 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 
 internal class AuthRepositoryImpl(
-    private val authDataSource: AuthDataSource
+    private val authDataSource: AuthDataSource,
 ) : AuthRepository {
     override fun getCurrentUser(): Flow<User?> = authDataSource.getCurrentUser()
 
-    override suspend fun signInWithGoogle(idToken: String): Result<User> =
-        authDataSource.signInWithGoogle(idToken)
+    override suspend fun signInWithGoogle(idToken: String): Result<User> = authDataSource.signInWithGoogle(idToken)
 
     override suspend fun signOut() = authDataSource.signOut()
 
-    override suspend fun saveUserToFirestore(user: User) =
-        authDataSource.saveUserToFirestore(user)
+    override suspend fun saveUserToFirestore(user: User) = authDataSource.saveUserToFirestore(user)
 }

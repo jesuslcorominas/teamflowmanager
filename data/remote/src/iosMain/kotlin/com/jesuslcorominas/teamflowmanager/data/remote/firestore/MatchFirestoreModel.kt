@@ -56,26 +56,28 @@ fun MatchFirestoreModel.toDomain(): Match {
         squadCallUpIds = squadCallUpIds,
         captainId = captainId,
         startingLineupIds = startingLineupIds,
-        status = try {
-            MatchStatus.valueOf(status)
-        } catch (_: Exception) {
-            MatchStatus.SCHEDULED
-        },
+        status =
+            try {
+                MatchStatus.valueOf(status)
+            } catch (_: Exception) {
+                MatchStatus.SCHEDULED
+            },
         archived = archived,
         pauseCount = pauseCount,
         goals = goals,
         opponentGoals = opponentGoals,
         timeoutStartTimeMillis = timeoutStartTimeMillis,
-        periods = if (periods.isNotEmpty()) {
-            periods.map { it.toDomain() }
-        } else {
-            (1..periodType.numberOfPeriods).map {
-                MatchPeriod(
-                    periodNumber = it,
-                    periodDuration = periodType.duration,
-                )
-            }
-        },
+        periods =
+            if (periods.isNotEmpty()) {
+                periods.map { it.toDomain() }
+            } else {
+                (1..periodType.numberOfPeriods).map {
+                    MatchPeriod(
+                        periodNumber = it,
+                        periodDuration = periodType.duration,
+                    )
+                }
+            },
         lastCompletedOperationId = lastCompletedOperationId,
     )
 }
@@ -90,8 +92,8 @@ fun MatchPeriodFirestoreModel.toDomain(): MatchPeriod =
 
 fun Match.toFirestoreModel(): MatchFirestoreModel =
     MatchFirestoreModel(
-        id = "",       // set by data source from document ID
-        teamId = "",   // set by data source
+        id = "", // set by data source from document ID
+        teamId = "", // set by data source
         teamName = teamName,
         opponent = opponent,
         location = location,

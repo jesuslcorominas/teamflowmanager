@@ -26,16 +26,18 @@ fun MatchOperationFirestoreModel.toDomain(): MatchOperation =
         id = id,
         matchId = matchId,
         teamId = teamId.toStableId(),
-        type = try {
-            MatchOperationType.valueOf(type)
-        } catch (_: Exception) {
-            MatchOperationType.START
-        },
-        status = try {
-            MatchOperationStatus.valueOf(status)
-        } catch (_: Exception) {
-            MatchOperationStatus.IN_PROGRESS
-        },
+        type =
+            try {
+                MatchOperationType.valueOf(type)
+            } catch (_: Exception) {
+                MatchOperationType.START
+            },
+        status =
+            try {
+                MatchOperationStatus.valueOf(status)
+            } catch (_: Exception) {
+                MatchOperationStatus.IN_PROGRESS
+            },
         createdAt = createdAt,
     )
 

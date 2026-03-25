@@ -11,41 +11,45 @@ import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
 class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthDataSource {
+    override fun getCurrentUser(): Flow<User?> =
+        callbackFlow {
+            val authStateListener =
+                FirebaseAuth.AuthStateListener { auth ->
+                    val firebaseUser = auth.currentUser
+                    val user =
+                        firebaseUser?.let {
+                            User(
+                                id = it.uid,
+                                email = it.email,
+                                displayName = it.displayName,
+                                photoUrl = it.photoUrl?.toString(),
+                            )
+                        }
+                    trySend(user)
+                }
 
-    override fun getCurrentUser(): Flow<User?> = callbackFlow {
-        val authStateListener = FirebaseAuth.AuthStateListener { auth ->
-            val firebaseUser = auth.currentUser
-            val user = firebaseUser?.let {
-                User(
-                    id = it.uid,
-                    email = it.email,
-                    displayName = it.displayName,
-                    photoUrl = it.photoUrl?.toString()
-                )
+            firebaseAuth.addAuthStateListener(authStateListener)
+
+            awaitClose {
+                firebaseAuth.removeAuthStateListener(authStateListener)
             }
-            trySend(user)
         }
-
-        firebaseAuth.addAuthStateListener(authStateListener)
-
-        awaitClose {
-            firebaseAuth.removeAuthStateListener(authStateListener)
-        }
-    }
 
     override suspend fun signInWithGoogle(idToken: String): Result<User> {
         return try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
-            val firebaseUser = authResult.user
-                ?: return Result.failure(Exception("Firebase user is null after sign in"))
+            val firebaseUser =
+                authResult.user
+                    ?: return Result.failure(Exception("Firebase user is null after sign in"))
 
-            val user = User(
-                id = firebaseUser.uid,
-                email = firebaseUser.email,
-                displayName = firebaseUser.displayName,
-                photoUrl = firebaseUser.photoUrl?.toString()
-            )
+            val user =
+                User(
+                    id = firebaseUser.uid,
+                    email = firebaseUser.email,
+                    displayName = firebaseUser.displayName,
+                    photoUrl = firebaseUser.photoUrl?.toString(),
+                )
             Result.success(user)
         } catch (e: CancellationException) {
             throw e

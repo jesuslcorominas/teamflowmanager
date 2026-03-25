@@ -26,7 +26,10 @@ interface CrashReporter {
      * @param key Key for the custom attribute
      * @param value Value for the custom attribute
      */
-    fun setCustomKey(key: String, value: String)
+    fun setCustomKey(
+        key: String,
+        value: String,
+    )
 
     /**
      * Set a custom key-value pair to be included in crash reports.
@@ -34,7 +37,10 @@ interface CrashReporter {
      * @param key Key for the custom attribute
      * @param value Value for the custom attribute
      */
-    fun setCustomKey(key: String, value: Int)
+    fun setCustomKey(
+        key: String,
+        value: Int,
+    )
 
     /**
      * Set a custom key-value pair to be included in crash reports.
@@ -42,5 +48,8 @@ interface CrashReporter {
      * @param key Key for the custom attribute
      * @param value Value for the custom attribute
      */
-    fun setCustomKey(key: String, value: Boolean)
+    fun setCustomKey(
+        key: String,
+        value: Boolean,
+    )
 }

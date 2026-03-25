@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.ui.components.dialog
 
-import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -18,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMElevation
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
 @Composable
 fun AppDialog(

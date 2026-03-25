@@ -15,12 +15,13 @@ internal class CreateTeamUseCaseImpl(
 ) : CreateTeamUseCase {
     override suspend fun invoke(team: Team) {
         val isPresident = getUserClubMembership().first()?.hasRole(ClubRole.PRESIDENT) ?: false
-        val teamToCreate = if (!isPresident && team.coachId == null) {
-            val currentUserId = getCurrentUser().first()?.id
-            team.copy(coachId = currentUserId)
-        } else {
-            team
-        }
+        val teamToCreate =
+            if (!isPresident && team.coachId == null) {
+                val currentUserId = getCurrentUser().first()?.id
+                team.copy(coachId = currentUserId)
+            } else {
+                team
+            }
         teamRepository.createTeam(teamToCreate)
     }
 }

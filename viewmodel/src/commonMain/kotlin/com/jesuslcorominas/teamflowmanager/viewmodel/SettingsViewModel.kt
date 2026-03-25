@@ -16,11 +16,11 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val signOutUseCase: SignOutUseCase,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
 ) : ViewModel() {
-
-    val currentUser: StateFlow<User?> = getCurrentUserUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val currentUser: StateFlow<User?> =
+        getCurrentUserUseCase()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _signOutComplete = MutableStateFlow(false)
     val signOutComplete: StateFlow<Boolean> = _signOutComplete.asStateFlow()

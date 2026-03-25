@@ -18,7 +18,7 @@ object DateFormatter {
     /**
      * Formats time of day from milliseconds since midnight (00:00:00).
      * This is used for match time fields that store only the time component.
-     * 
+     *
      * @param timeOfDayMillis milliseconds since midnight (0 = 00:00, 3600000 = 01:00, etc.)
      * @return formatted time string in HH:mm format (e.g., "00:00", "14:30")
      */

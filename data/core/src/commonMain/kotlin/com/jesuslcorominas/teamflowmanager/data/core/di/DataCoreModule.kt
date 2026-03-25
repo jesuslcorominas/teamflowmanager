@@ -53,7 +53,6 @@ internal val repositoryModule =
         singleOf(::GoalRepositoryImpl) bind GoalRepository::class
 
         singleOf(::AuthRepositoryImpl) bind AuthRepository::class
-
     }
 
 val dataCoreModule =

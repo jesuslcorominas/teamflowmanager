@@ -37,10 +37,11 @@ fun ClubSelectionScreen(
 
     Scaffold { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(32.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -68,9 +69,10 @@ fun ClubSelectionScreen(
 
             Button(
                 onClick = onCreateClub,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                 shape = MaterialTheme.shapes.small,
             ) {
                 Text(
@@ -84,9 +86,10 @@ fun ClubSelectionScreen(
 
             OutlinedButton(
                 onClick = onJoinClub,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                 shape = MaterialTheme.shapes.small,
             ) {
                 Text(

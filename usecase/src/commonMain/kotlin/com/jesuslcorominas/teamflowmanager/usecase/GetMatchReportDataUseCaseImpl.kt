@@ -23,7 +23,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryR
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-
 internal class GetMatchReportDataUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val playerRepository: PlayerRepository,
@@ -45,50 +44,52 @@ internal class GetMatchReportDataUseCaseImpl(
                 // Get all players who participated in the match (squadCallUpIds)
                 val matchPlayers = players.filter { match.squadCallUpIds.contains(it.id) }
 
-                val playerReports = matchPlayers.map { player ->
-                    // Get player time
-                    val playerTime = playerTimes.find { it.playerId == player.id }
-                    val totalPlayTimeMillis = playerTime?.elapsedTimeMillis ?: 0L
+                val playerReports =
+                    matchPlayers.map { player ->
+                        // Get player time
+                        val playerTime = playerTimes.find { it.playerId == player.id }
+                        val totalPlayTimeMillis = playerTime?.elapsedTimeMillis ?: 0L
 
-                    // Get player goals (only team goals, not opponent goals)
-                    val playerGoals = goals
-                        .filter { it.scorerId == player.id && !it.isOpponentGoal }
-                        .map { GoalReport(it.matchElapsedTimeMillis, it.isOwnGoal) }
-                        .sortedBy { it.matchElapsedTimeMillis }
+                        // Get player goals (only team goals, not opponent goals)
+                        val playerGoals =
+                            goals
+                                .filter { it.scorerId == player.id && !it.isOpponentGoal }
+                                .map { GoalReport(it.matchElapsedTimeMillis, it.isOwnGoal) }
+                                .sortedBy { it.matchElapsedTimeMillis }
 
-                    // Get player substitutions
-                    val playerSubstitutions = mutableListOf<SubstitutionReport>()
-                    substitutions.forEach { sub ->
-                        if (sub.playerOutId == player.id) {
-                            playerSubstitutions.add(
-                                SubstitutionReport(
-                                    type = SubstitutionType.OUT,
-                                    matchElapsedTimeMillis = sub.matchElapsedTimeMillis
+                        // Get player substitutions
+                        val playerSubstitutions = mutableListOf<SubstitutionReport>()
+                        substitutions.forEach { sub ->
+                            if (sub.playerOutId == player.id) {
+                                playerSubstitutions.add(
+                                    SubstitutionReport(
+                                        type = SubstitutionType.OUT,
+                                        matchElapsedTimeMillis = sub.matchElapsedTimeMillis,
+                                    ),
                                 )
-                            )
-                        }
-                        if (sub.playerInId == player.id) {
-                            playerSubstitutions.add(
-                                SubstitutionReport(
-                                    type = SubstitutionType.IN,
-                                    matchElapsedTimeMillis = sub.matchElapsedTimeMillis
+                            }
+                            if (sub.playerInId == player.id) {
+                                playerSubstitutions.add(
+                                    SubstitutionReport(
+                                        type = SubstitutionType.IN,
+                                        matchElapsedTimeMillis = sub.matchElapsedTimeMillis,
+                                    ),
                                 )
-                            )
+                            }
                         }
+                        playerSubstitutions.sortBy { it.matchElapsedTimeMillis }
+
+                        PlayerMatchReport(
+                            player = player,
+                            number = player.number,
+                            isGoalkeeper = player.positions.contains(Position.Goalkeeper),
+                            isCaptain = player.id == match.captainId,
+                            isStarter = match.startingLineupIds.contains(player.id),
+                            totalPlayTimeMillis = totalPlayTimeMillis,
+                            goals = playerGoals,
+                            substitutions = playerSubstitutions,
+                        )
                     }
-                    playerSubstitutions.sortBy { it.matchElapsedTimeMillis }
-
-                    PlayerMatchReport(
-                        player = player,
-                        number = player.number,
-                        isGoalkeeper = player.positions.contains(Position.Goalkeeper),
-                        isCaptain = player.id == match.captainId,
-                        isStarter = match.startingLineupIds.contains(player.id),
-                        totalPlayTimeMillis = totalPlayTimeMillis,
-                        goals = playerGoals,
-                        substitutions = playerSubstitutions,
-                    )
-                }
 
                 // Build timeline events and score evolution for the report
                 val timelineEvents = buildTimelineEvents(match, goals, substitutions, players)
@@ -132,7 +133,7 @@ internal class GetMatchReportDataUseCaseImpl(
                 TimelineEvent.StartingLineup(
                     matchElapsedTimeMillis = 0L,
                     players = startingPlayers.sortedBy { it.number },
-                )
+                ),
             )
         }
 
@@ -152,7 +153,7 @@ internal class GetMatchReportDataUseCaseImpl(
                     isOpponentGoal = goal.isOpponentGoal,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
-                )
+                ),
             )
         }
 
@@ -166,7 +167,7 @@ internal class GetMatchReportDataUseCaseImpl(
                         matchElapsedTimeMillis = substitution.matchElapsedTimeMillis,
                         playerIn = playerIn,
                         playerOut = playerOut,
-                    )
+                    ),
                 )
             }
         }
@@ -176,17 +177,18 @@ internal class GetMatchReportDataUseCaseImpl(
             // Add a break event at the end of each period except the last
             if (index < match.periods.size - 1 && isCompletedPeriod(period)) {
                 // Calculate accumulated play time up to this period's end
-                val accumulatedPlayTime = match.periods
-                    .take(index + 1)
-                    .filter { isCompletedPeriod(it) }
-                    .sumOf { it.endTimeMillis - it.startTimeMillis }
+                val accumulatedPlayTime =
+                    match.periods
+                        .take(index + 1)
+                        .filter { isCompletedPeriod(it) }
+                        .sumOf { it.endTimeMillis - it.startTimeMillis }
 
                 events.add(
                     TimelineEvent.PeriodBreak(
                         matchElapsedTimeMillis = accumulatedPlayTime,
                         periodNumber = period.periodNumber,
                         periodType = match.periodType,
-                    )
+                    ),
                 )
             }
         }
@@ -226,8 +228,8 @@ internal class GetMatchReportDataUseCaseImpl(
                     timeMillis = goal.matchElapsedTimeMillis,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
-                    isOpponentGoal = goal.isOpponentGoal
-                )
+                    isOpponentGoal = goal.isOpponentGoal,
+                ),
             )
         }
 
@@ -240,8 +242,8 @@ internal class GetMatchReportDataUseCaseImpl(
                     timeMillis = totalElapsedTime,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
-                    isOpponentGoal = false
-                )
+                    isOpponentGoal = false,
+                ),
             )
         }
 
@@ -251,8 +253,7 @@ internal class GetMatchReportDataUseCaseImpl(
     /**
      * Checks if a match period has been completed (has valid start and end times).
      */
-    private fun isCompletedPeriod(period: MatchPeriod): Boolean =
-        period.startTimeMillis > 0 && period.endTimeMillis > 0
+    private fun isCompletedPeriod(period: MatchPeriod): Boolean = period.startTimeMillis > 0 && period.endTimeMillis > 0
 
     private fun calculateTotalElapsedTime(match: Match): Long {
         return match.periods
@@ -300,7 +301,7 @@ internal class GetMatchReportDataUseCaseImpl(
                             player = player,
                             startTimeMillis = playerOutStartTime,
                             endTimeMillis = substitution.matchElapsedTimeMillis,
-                        )
+                        ),
                     )
                 }
             }
@@ -318,7 +319,7 @@ internal class GetMatchReportDataUseCaseImpl(
                         player = player,
                         startTimeMillis = startTime,
                         endTimeMillis = totalElapsedTime,
-                    )
+                    ),
                 )
             }
         }

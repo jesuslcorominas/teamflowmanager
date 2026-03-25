@@ -12,20 +12,24 @@ internal class GenerateTeamInvitationUseCaseImpl(
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : GenerateTeamInvitationUseCase {
-
-    override suspend fun invoke(teamFirestoreId: String, teamName: String): String {
+    override suspend fun invoke(
+        teamFirestoreId: String,
+        teamName: String,
+    ): String {
         // Validate inputs
         require(teamFirestoreId.isNotBlank()) {
             "Team Firestore ID cannot be blank"
         }
 
         // Get current authenticated user
-        val currentUser = getCurrentUser().first()
-            ?: throw IllegalStateException("User must be authenticated to generate team invitation")
+        val currentUser =
+            getCurrentUser().first()
+                ?: throw IllegalStateException("User must be authenticated to generate team invitation")
 
         // Get the team
-        val team = teamRepository.getTeamByFirestoreId(teamFirestoreId)
-            ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
+        val team =
+            teamRepository.getTeamByFirestoreId(teamFirestoreId)
+                ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
 
         // Verify team belongs to a club
         require(team.clubFirestoreId != null) {
@@ -33,8 +37,9 @@ internal class GenerateTeamInvitationUseCaseImpl(
         }
 
         // Get current user's club membership
-        val currentUserMembership = clubMemberRepository.getClubMemberByUserId(currentUser.id).first()
-            ?: throw IllegalStateException("User must be a club member to generate team invitation")
+        val currentUserMembership =
+            clubMemberRepository.getClubMemberByUserId(currentUser.id).first()
+                ?: throw IllegalStateException("User must be a club member to generate team invitation")
 
         // Verify current user is a President
         require(currentUserMembership.hasRole(ClubRole.PRESIDENT)) {
@@ -50,4 +55,3 @@ internal class GenerateTeamInvitationUseCaseImpl(
         return teamRepository.generateTeamInvitationLink(teamFirestoreId, teamName)
     }
 }
-

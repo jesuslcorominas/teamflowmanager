@@ -51,9 +51,10 @@ fun AppDialog(
                 content()
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = TFMSpacing.spacing02),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = TFMSpacing.spacing02),
                     horizontalArrangement = Arrangement.End,
                 ) {
                     TextButton(onClick = onDismiss, enabled = isCancelEnabled) {

@@ -1,4 +1,5 @@
 @file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+@file:Suppress("ktlint:standard:no-wildcard-imports", "ktlint:standard:import-ordering")
 
 package com.jesuslcorominas.teamflowmanager.di
 
@@ -22,12 +23,9 @@ import platform.Foundation.NSMutableData
 import platform.Foundation.NSString
 import platform.Foundation.NSTemporaryDirectory
 import platform.posix.time
-// UIKit.* wildcard pulls in UIKit categories on NSString/NSAttributedString
-// (drawAtPoint, drawInRect, sizeWithAttributes, etc.)
-import platform.UIKit.*
+import platform.UIKit.* // UIKit categories on NSString/NSAttributedString (drawAtPoint, drawInRect, sizeWithAttributes, etc.)
 
 internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
-
     companion object {
         private const val PAGE_W = 595.0
         private const val PAGE_H = 842.0
@@ -109,14 +107,20 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
 
     // ── Drawing helpers ───────────────────────────────────────────────────
 
-    private fun drawTitle(text: String, y: Double): Double {
+    private fun drawTitle(
+        text: String,
+        y: Double,
+    ): Double {
         val font = UIFont.boldSystemFontOfSize(TITLE_SIZE)
         val width = measureWidth(text, font)
         drawText(text, (PAGE_W - width) / 2, y, font)
         return y + TITLE_SIZE + LINE_H * 0.3
     }
 
-    private fun drawSectionTitle(text: String, y: Double): Double {
+    private fun drawSectionTitle(
+        text: String,
+        y: Double,
+    ): Double {
         val ctx = UIGraphicsGetCurrentContext()
         if (ctx != null) {
             CGContextSetFillColorWithColor(ctx, UIColor(red = 0.0, green = 0.2, blue = 0.4, alpha = 1.0).CGColor)
@@ -126,7 +130,11 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
         return y + SECTION_SIZE + 8.0
     }
 
-    private fun drawLabelValue(label: String, value: String, y: Double): Double {
+    private fun drawLabelValue(
+        label: String,
+        value: String,
+        y: Double,
+    ): Double {
         drawText("$label:", MARGIN, y, UIFont.boldSystemFontOfSize(BODY_SIZE))
         drawText(value, MARGIN + 110.0, y, UIFont.systemFontOfSize(BODY_SIZE))
         return y + LINE_H
@@ -158,30 +166,50 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
         val tableW = PAGE_W - MARGIN * 2
         val textY = y + (ROW_H - SMALL_SIZE) / 2
         if (ctx != null) {
-            val bg = if (index % 2 == 0) UIColor.whiteColor else UIColor(red = 0.96, green = 0.96, blue = 0.96, alpha = 1.0)
+            val bg =
+                if (index % 2 == 0) {
+                    UIColor.whiteColor
+                } else {
+                    UIColor(
+                        red = 0.96,
+                        green = 0.96,
+                        blue = 0.96,
+                        alpha = 1.0,
+                    )
+                }
             CGContextSetFillColorWithColor(ctx, bg.CGColor)
             CGContextFillRect(ctx, CGRectMake(MARGIN, y, tableW, ROW_H))
             drawTableBorders(ctx, y, ROW_H, tableW)
         }
         val font = UIFont.systemFontOfSize(SMALL_SIZE)
         val name = "${report.player.firstName} ${report.player.lastName}"
-        val values = listOf(
-            "${report.number}",
-            if (name.length > 22) name.take(22) + "…" else name,
-            if (report.isGoalkeeper) "X" else "-",
-            if (report.isCaptain) "X" else "-",
-            if (report.isStarter) "X" else "-",
-            formatTime(report.totalPlayTimeMillis),
-            if (report.goals.isNotEmpty()) "${report.goals.size}" else "-",
-        )
+        val values =
+            listOf(
+                "${report.number}",
+                if (name.length > 22) name.take(22) + "…" else name,
+                if (report.isGoalkeeper) "X" else "-",
+                if (report.isCaptain) "X" else "-",
+                if (report.isStarter) "X" else "-",
+                formatTime(report.totalPlayTimeMillis),
+                if (report.goals.isNotEmpty()) "${report.goals.size}" else "-",
+            )
         columnXPositions(tableW).zip(values).forEach { (x, v) ->
             drawText(v, x + 3.0, textY, font)
         }
         return y + ROW_H
     }
 
-    private fun drawTimelineRow(event: TimelineEvent, y: Double): Double {
-        drawText(formatTimeMinutes(event.matchElapsedTimeMillis), MARGIN, y, UIFont.boldSystemFontOfSize(BODY_SIZE), UIColor.darkGrayColor)
+    private fun drawTimelineRow(
+        event: TimelineEvent,
+        y: Double,
+    ): Double {
+        drawText(
+            formatTimeMinutes(event.matchElapsedTimeMillis),
+            MARGIN,
+            y,
+            UIFont.boldSystemFontOfSize(BODY_SIZE),
+            UIColor.darkGrayColor,
+        )
         drawText(timelineEventText(event), MARGIN + 40.0, y, UIFont.systemFontOfSize(BODY_SIZE))
         val ctx = UIGraphicsGetCurrentContext()
         if (ctx != null) {
@@ -201,23 +229,36 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
         val widths = listOf(0.07, 0.35, 0.07, 0.07, 0.07, 0.22, 0.15).map { it * tableW }
         val positions = mutableListOf<Double>()
         var x = MARGIN
-        widths.forEach { w -> positions.add(x); x += w }
+        widths.forEach { w ->
+            positions.add(x)
+            x += w
+        }
         return positions
     }
 
-    private fun drawTableBorders(ctx: Any, y: Double, h: Double, tableW: Double) {
+    private fun drawTableBorders(
+        ctx: Any,
+        y: Double,
+        h: Double,
+        tableW: Double,
+    ) {
         @Suppress("UNCHECKED_CAST")
         val cgCtx = ctx as platform.CoreGraphics.CGContextRef
         CGContextSetStrokeColorWithColor(cgCtx, UIColor(red = 0.7, green = 0.7, blue = 0.7, alpha = 1.0).CGColor)
         CGContextSetLineWidth(cgCtx, 0.5)
-        CGContextMoveToPoint(cgCtx, MARGIN, y); CGContextAddLineToPoint(cgCtx, MARGIN + tableW, y)
-        CGContextMoveToPoint(cgCtx, MARGIN, y + h); CGContextAddLineToPoint(cgCtx, MARGIN + tableW, y + h)
-        CGContextMoveToPoint(cgCtx, MARGIN, y); CGContextAddLineToPoint(cgCtx, MARGIN, y + h)
-        CGContextMoveToPoint(cgCtx, MARGIN + tableW, y); CGContextAddLineToPoint(cgCtx, MARGIN + tableW, y + h)
+        CGContextMoveToPoint(cgCtx, MARGIN, y)
+        CGContextAddLineToPoint(cgCtx, MARGIN + tableW, y)
+        CGContextMoveToPoint(cgCtx, MARGIN, y + h)
+        CGContextAddLineToPoint(cgCtx, MARGIN + tableW, y + h)
+        CGContextMoveToPoint(cgCtx, MARGIN, y)
+        CGContextAddLineToPoint(cgCtx, MARGIN, y + h)
+        CGContextMoveToPoint(cgCtx, MARGIN + tableW, y)
+        CGContextAddLineToPoint(cgCtx, MARGIN + tableW, y + h)
         var x = MARGIN
         listOf(0.07, 0.35, 0.07, 0.07, 0.07, 0.22).forEach { ratio ->
             x += ratio * tableW
-            CGContextMoveToPoint(cgCtx, x, y); CGContextAddLineToPoint(cgCtx, x, y + h)
+            CGContextMoveToPoint(cgCtx, x, y)
+            CGContextAddLineToPoint(cgCtx, x, y + h)
         }
         CGContextStrokePath(cgCtx)
     }
@@ -231,15 +272,19 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
         font: UIFont,
         color: UIColor = UIColor.blackColor,
     ) {
-        val attrs = mapOf<Any?, Any>(
-            NSFontAttributeName to font,
-            NSForegroundColorAttributeName to color,
-        )
+        val attrs =
+            mapOf<Any?, Any>(
+                NSFontAttributeName to font,
+                NSForegroundColorAttributeName to color,
+            )
         // Use NSString UIKit category: drawAtPoint:withAttributes: (2-param version)
         (text as NSString).drawAtPoint(CGPointMake(x, y), withAttributes = attrs)
     }
 
-    private fun measureWidth(text: String, font: UIFont): Double {
+    private fun measureWidth(
+        text: String,
+        font: UIFont,
+    ): Double {
         val attrs = mapOf<Any?, Any>(NSFontAttributeName to font)
         return (text as NSString).sizeWithAttributes(attrs).useContents { width }
     }
@@ -263,23 +308,25 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
         return fmt.stringFromDate(date)
     }
 
-    private fun timelineEventText(event: TimelineEvent): String = when (event) {
-        is TimelineEvent.StartingLineup -> {
-            val names = event.players.take(5).joinToString(", ") { "${it.number}. ${it.firstName}" }
-            val extra = if (event.players.size > 5) " (+${event.players.size - 5})" else ""
-            "Alineación inicial: $names$extra"
-        }
-        is TimelineEvent.GoalScored -> {
-            val score = "(${event.teamScore}-${event.opponentScore})"
-            if (event.isOpponentGoal) "Gol rival $score"
-            else {
-                val scorer = event.scorer?.let { "${it.firstName} ${it.lastName}" } ?: "Gol en propia"
-                "Gol: $scorer $score"
+    private fun timelineEventText(event: TimelineEvent): String =
+        when (event) {
+            is TimelineEvent.StartingLineup -> {
+                val names = event.players.take(5).joinToString(", ") { "${it.number}. ${it.firstName}" }
+                val extra = if (event.players.size > 5) " (+${event.players.size - 5})" else ""
+                "Alineación inicial: $names$extra"
             }
+            is TimelineEvent.GoalScored -> {
+                val score = "(${event.teamScore}-${event.opponentScore})"
+                if (event.isOpponentGoal) {
+                    "Gol rival $score"
+                } else {
+                    val scorer = event.scorer?.let { "${it.firstName} ${it.lastName}" } ?: "Gol en propia"
+                    "Gol: $scorer $score"
+                }
+            }
+            is TimelineEvent.Substitution ->
+                "Cambio: ${event.playerIn.firstName} ↑  ${event.playerOut.firstName} ↓"
+            is TimelineEvent.Timeout -> "Tiempo muerto"
+            is TimelineEvent.PeriodBreak -> "Descanso (periodo ${event.periodNumber})"
         }
-        is TimelineEvent.Substitution ->
-            "Cambio: ${event.playerIn.firstName} ↑  ${event.playerOut.firstName} ↓"
-        is TimelineEvent.Timeout -> "Tiempo muerto"
-        is TimelineEvent.PeriodBreak -> "Descanso (periodo ${event.periodNumber})"
-    }
 }

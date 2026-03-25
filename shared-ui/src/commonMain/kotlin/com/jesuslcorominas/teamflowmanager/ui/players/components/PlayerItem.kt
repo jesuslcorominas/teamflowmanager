@@ -60,42 +60,51 @@ fun PlayerItem(
     onSingleSelectionChange: (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
 ) {
-    val effectiveModifier = when {
-        onMultiSelectionChange != null && onSingleSelectionChange != null ->
-            throw IllegalArgumentException("Only one of onMultiSelectionChange or onSingleSelectionChange can be provided.")
-        onMultiSelectionChange != null -> modifier.toggleable(
-            value = isSelected,
-            onValueChange = onMultiSelectionChange,
-            role = Role.Checkbox,
-        )
-        onSingleSelectionChange != null -> modifier.toggleable(
-            value = isSelected,
-            onValueChange = { onSingleSelectionChange() },
-            role = Role.RadioButton,
-        )
-        else -> modifier
-    }
+    val effectiveModifier =
+        when {
+            onMultiSelectionChange != null && onSingleSelectionChange != null ->
+                throw IllegalArgumentException(
+                    "Only one of onMultiSelectionChange or onSingleSelectionChange can be provided.",
+                )
+            onMultiSelectionChange != null ->
+                modifier.toggleable(
+                    value = isSelected,
+                    onValueChange = onMultiSelectionChange,
+                    role = Role.Checkbox,
+                )
+            onSingleSelectionChange != null ->
+                modifier.toggleable(
+                    value = isSelected,
+                    onValueChange = { onSingleSelectionChange() },
+                    role = Role.RadioButton,
+                )
+            else -> modifier
+        }
 
-    val colors = onClick?.let {
-        CardDefaults.cardColors(
-            containerColor = when {
-                isSelected -> MaterialTheme.colorScheme.primaryContainer
-                isPlaying -> MaterialTheme.colorScheme.secondaryContainer
-                else -> MaterialTheme.colorScheme.surface
-            },
-        )
-    }
+    val colors =
+        onClick?.let {
+            CardDefaults.cardColors(
+                containerColor =
+                    when {
+                        isSelected -> MaterialTheme.colorScheme.primaryContainer
+                        isPlaying -> MaterialTheme.colorScheme.secondaryContainer
+                        else -> MaterialTheme.colorScheme.surface
+                    },
+            )
+        }
 
     AppCard(
-        modifier = effectiveModifier
-            .fillMaxWidth()
-            .then(onClick?.let { Modifier.clickable(onClick = onClick) } ?: Modifier),
+        modifier =
+            effectiveModifier
+                .fillMaxWidth()
+                .then(onClick?.let { Modifier.clickable(onClick = onClick) } ?: Modifier),
         colors = colors,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing04),
             horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -178,12 +187,16 @@ fun PlayerItem(
 }
 
 @Composable
-fun PlayerBadge(badge: String, background: Color = MaterialTheme.colorScheme.primary) {
+fun PlayerBadge(
+    badge: String,
+    background: Color = MaterialTheme.colorScheme.primary,
+) {
     Box(
-        modifier = Modifier
-            .size(24.dp)
-            .clip(CircleShape)
-            .background(background),
+        modifier =
+            Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(background),
         contentAlignment = Alignment.Center,
     ) {
         Text(

@@ -37,8 +37,8 @@ import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
-import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -107,10 +107,11 @@ fun TeamListScreen(
 
         if (sharingTeamId != null || assigningCoachToTeamId != null) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                    .clickable(enabled = false) {},
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                        .clickable(enabled = false) {},
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
@@ -149,12 +150,13 @@ private fun TeamsListContent(
 ) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(
-            bottom = LocalContentBottomPadding.current,
-            top = 16.dp,
-            start = 16.dp,
-            end = 16.dp,
-        ),
+        contentPadding =
+            PaddingValues(
+                bottom = LocalContentBottomPadding.current,
+                top = 16.dp,
+                start = 16.dp,
+                end = 16.dp,
+            ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(teams, key = { it.id }) { team ->
@@ -185,9 +187,10 @@ private fun TeamCard(
         modifier = Modifier.clickable(onClick = onClick),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -209,11 +212,12 @@ private fun TeamCard(
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = stringResource(Res.string.share_team_button),
-                            tint = if (isSharing) {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
+                            tint =
+                                if (isSharing) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
                         )
                     }
                 }
@@ -251,9 +255,10 @@ private fun TeamCard(
                 Button(
                     onClick = onSelfAssignAsCoach,
                     enabled = !isAssigning,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,

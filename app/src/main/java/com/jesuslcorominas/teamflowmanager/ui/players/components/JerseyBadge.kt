@@ -29,18 +29,19 @@ fun JerseyBadge(
     number: Int,
     modifier: Modifier = Modifier,
     size: Int = 56,
-    cornerShape: RoundedCornerShape = RoundedCornerShape(8.dp)
+    cornerShape: RoundedCornerShape = RoundedCornerShape(8.dp),
 ) {
     Box(
-        modifier = modifier
-            .clip(cornerShape)
-            .background(BackgroundContrast)
-            .size(size.dp),
+        modifier =
+            modifier
+                .clip(cornerShape)
+                .background(BackgroundContrast)
+                .size(size.dp),
         contentAlignment = Alignment.TopCenter,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 modifier = Modifier.padding(top = TFMSpacing.spacing02),
@@ -53,16 +54,18 @@ fun JerseyBadge(
 
         Column {
             Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(TFMSpacing.spacing02)
-                    .background(ShirtOrange)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(TFMSpacing.spacing02)
+                        .background(ShirtOrange),
             )
             Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(TFMSpacing.spacing01)
-                    .background(White)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(TFMSpacing.spacing01)
+                        .background(White),
             )
         }
     }

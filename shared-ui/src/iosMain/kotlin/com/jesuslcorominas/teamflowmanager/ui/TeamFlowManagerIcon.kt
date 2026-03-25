@@ -20,12 +20,13 @@ import androidx.compose.ui.unit.dp
 @Composable
 actual fun TeamFlowManagerIcon() {
     Box(
-        modifier = Modifier
-            .size(144.dp)
-            .background(
-                color = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(28.dp),
-            ),
+        modifier =
+            Modifier
+                .size(144.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(28.dp),
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Text(

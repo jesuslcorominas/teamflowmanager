@@ -89,37 +89,40 @@ fun PlayerDataStep(
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
     // Camera launcher
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success) {
-            tempCameraUri?.let {
-                imageUri = it.toString()
+    val cameraLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.TakePicture(),
+        ) { success ->
+            if (success) {
+                tempCameraUri?.let {
+                    imageUri = it.toString()
+                }
             }
         }
-    }
 
     // Permission launcher for camera
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            // Permission granted, launch camera
-            tempCameraUri?.let { uri ->
-                cameraLauncher.launch(uri)
+    val cameraPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+        ) { isGranted ->
+            if (isGranted) {
+                // Permission granted, launch camera
+                tempCameraUri?.let { uri ->
+                    cameraLauncher.launch(uri)
+                }
             }
         }
-    }
 
     // Gallery launcher
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            imageUri = it.toString()
+    val galleryLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent(),
+        ) { uri: Uri? ->
+            uri?.let {
+                imageUri = it.toString()
+            }
+            showImageOptions = false
         }
-        showImageOptions = false
-    }
 
     val validateAndNext = {
         firstName = firstName.trim()
@@ -138,12 +141,12 @@ fun PlayerDataStep(
 
     Column(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
             text = stringResource(R.string.player_data_step_title),
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
@@ -151,15 +154,16 @@ fun PlayerDataStep(
         // Player image
         Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { showImageOptions = true },
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { showImageOptions = true },
+                contentAlignment = Alignment.Center,
             ) {
                 val contentDescription = "${stringResource(R.string.player_image)} $firstName $lastName"
 
@@ -176,14 +180,14 @@ fun PlayerDataStep(
                         placeholder = rememberVectorPainter(Icons.Default.Person),
                         contentDescription = contentDescription,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
                     )
                 } ?: run {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = contentDescription,
                         modifier = Modifier.size(60.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -193,7 +197,7 @@ fun PlayerDataStep(
             Text(
                 text = stringResource(R.string.tap_to_add_photo),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -209,16 +213,21 @@ fun PlayerDataStep(
             },
             label = { Text(stringResource(R.string.first_name)) },
             isError = firstNameError != null,
-            supportingText = if (firstNameError != null) {
-                { Text(firstNameError!!) }
-            } else null,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next,
-                capitalization = KeyboardCapitalization.Words
-            ),
-            keyboardActions = KeyboardActions(onNext = {
-                focusManager.moveFocus(FocusDirection.Down)
-            }),
+            supportingText =
+                if (firstNameError != null) {
+                    { Text(firstNameError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
+            keyboardActions =
+                KeyboardActions(onNext = {
+                    focusManager.moveFocus(FocusDirection.Down)
+                }),
         )
 
         // Last Name
@@ -231,16 +240,21 @@ fun PlayerDataStep(
             },
             label = { Text(stringResource(R.string.last_name)) },
             isError = lastNameError != null,
-            supportingText = if (lastNameError != null) {
-                { Text(lastNameError!!) }
-            } else null,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next,
-                capitalization = KeyboardCapitalization.Words
-            ),
-            keyboardActions = KeyboardActions(onNext = {
-                focusManager.moveFocus(FocusDirection.Down)
-            }),
+            supportingText =
+                if (lastNameError != null) {
+                    { Text(lastNameError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
+            keyboardActions =
+                KeyboardActions(onNext = {
+                    focusManager.moveFocus(FocusDirection.Down)
+                }),
         )
 
         // Number
@@ -255,28 +269,33 @@ fun PlayerDataStep(
             },
             label = { Text(stringResource(R.string.number)) },
             isError = numberError != null,
-            supportingText = if (numberError != null) {
-                { Text(numberError!!) }
-            } else null,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
+            supportingText =
+                if (numberError != null) {
+                    { Text(numberError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done,
+                ),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         )
 
         // Captain checkbox
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { isCaptain = !isCaptain }
-                .padding(vertical = TFMSpacing.spacing01),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { isCaptain = !isCaptain }
+                    .padding(vertical = TFMSpacing.spacing01),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01)
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
         ) {
             Checkbox(
                 checked = isCaptain,
-                onCheckedChange = { isCaptain = it }
+                onCheckedChange = { isCaptain = it },
             )
             Text(
                 text = stringResource(R.string.is_captain),
@@ -289,7 +308,7 @@ fun PlayerDataStep(
         // Navigation buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             OutlinedButton(onClick = onCancel) {
                 Text(stringResource(R.string.cancel))
@@ -315,20 +334,22 @@ fun PlayerDataStep(
                 if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
                     // Create temp file for camera
                     val photoFile = File.createTempFile("player_", ".jpg", context.cacheDir)
-                    tempCameraUri = FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.fileprovider",
-                        photoFile
-                    )
+                    tempCameraUri =
+                        FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            photoFile,
+                        )
                     cameraLauncher.launch(tempCameraUri!!)
                 } else {
                     // Request permission
                     val photoFile = File.createTempFile("player_", ".jpg", context.cacheDir)
-                    tempCameraUri = FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.fileprovider",
-                        photoFile
-                    )
+                    tempCameraUri =
+                        FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            photoFile,
+                        )
                     cameraPermissionLauncher.launch(permission)
                 }
             },
@@ -336,7 +357,7 @@ fun PlayerDataStep(
                 showImageOptions = false
                 // Dismiss to select from gallery
                 galleryLauncher.launch("image/*")
-            }
+            },
         )
     }
 }

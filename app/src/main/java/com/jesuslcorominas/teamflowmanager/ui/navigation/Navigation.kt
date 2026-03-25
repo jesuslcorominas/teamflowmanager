@@ -36,7 +36,7 @@ fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     onTitleChange: (String?) -> Unit,
-    currentBackHandler: BackHandlerController
+    currentBackHandler: BackHandlerController,
 ) {
     NavHost(
         modifier = modifier,
@@ -79,7 +79,7 @@ fun Navigation(
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.Login.createRoute()) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
@@ -90,7 +90,7 @@ fun Navigation(
                 },
                 onJoinClub = {
                     navController.navigate(Route.JoinClub.createRoute())
-                }
+                },
             )
         }
 
@@ -100,7 +100,7 @@ fun Navigation(
                     navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
                         popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
@@ -110,17 +110,18 @@ fun Navigation(
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
         composable(
             route = Route.Team.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.Team.ARG_MODE) {
-                    type = NavType.StringType
-                }
-            )
+            arguments =
+                listOf(
+                    navArgument(Route.Team.ARG_MODE) {
+                        type = NavType.StringType
+                    },
+                ),
         ) { backStackEntry ->
             val mode = backStackEntry.arguments?.getString(Route.Team.ARG_MODE) ?: ""
 
@@ -156,17 +157,18 @@ fun Navigation(
                 },
                 onNavigateToEditPlayer = { playerId ->
                     navController.navigate(Route.PlayerWizard.createRoute(playerId))
-                }
+                },
             )
         }
 
         composable(
             route = Route.PlayerWizard.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.PlayerWizard.ARG_PLAYER_ID) {
-                    type = NavType.LongType
-                }
-            )
+            arguments =
+                listOf(
+                    navArgument(Route.PlayerWizard.ARG_PLAYER_ID) {
+                        type = NavType.LongType
+                    },
+                ),
         ) { backStackEntry ->
             val playerId = backStackEntry.arguments?.getLong(Route.PlayerWizard.ARG_PLAYER_ID) ?: 0L
             PlayerWizardScreen(
@@ -203,12 +205,13 @@ fun Navigation(
 
         composable(
             route = Route.CreateMatch.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.CreateMatch.ARG_MATCH_ID) {
-                    type = NavType.LongType
-                    defaultValue = 0L
-                }
-            )
+            arguments =
+                listOf(
+                    navArgument(Route.CreateMatch.ARG_MATCH_ID) {
+                        type = NavType.LongType
+                        defaultValue = 0L
+                    },
+                ),
         ) { backStackEntry ->
             val matchId = backStackEntry.arguments?.getLong(Route.CreateMatch.ARG_MATCH_ID) ?: 0L
             MatchCreationWizardScreen(
@@ -220,17 +223,20 @@ fun Navigation(
 
         composable(
             route = Route.Match.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.Match.ARG_MATCH_ID) { type = NavType.LongType },
-            ),
-            deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = "teamflowmanager://match/{${Route.Match.ARG_MATCH_ID}}"
-                }
-            )
+            arguments =
+                listOf(
+                    navArgument(Route.Match.ARG_MATCH_ID) { type = NavType.LongType },
+                ),
+            deepLinks =
+                listOf(
+                    navDeepLink {
+                        uriPattern = "teamflowmanager://match/{${Route.Match.ARG_MATCH_ID}}"
+                    },
+                ),
         ) { backStackEntry ->
-            val matchId = backStackEntry.arguments?.getLong(Route.Match.ARG_MATCH_ID)
-                ?: error("matchId required")
+            val matchId =
+                backStackEntry.arguments?.getLong(Route.Match.ARG_MATCH_ID)
+                    ?: error("matchId required")
             MatchScreen(matchId = matchId, onTitleChange = onTitleChange)
         }
 
@@ -240,28 +246,30 @@ fun Navigation(
                     navController.navigate(Route.Login.createRoute()) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
         composable(
             route = Route.AcceptTeamInvitation.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.AcceptTeamInvitation.ARG_TEAM_ID) {
-                    type = NavType.StringType
-                    nullable = false
-                }
-            ),
-            deepLinks = listOf(
-                // Custom scheme deep link - always works
-                navDeepLink {
-                    uriPattern = "teamflowmanager://team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
-                },
-                // HTTPS deep link - requires server configuration
-                navDeepLink {
-                    uriPattern = "https://teamflowmanager.app/team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
-                }
-            )
+            arguments =
+                listOf(
+                    navArgument(Route.AcceptTeamInvitation.ARG_TEAM_ID) {
+                        type = NavType.StringType
+                        nullable = false
+                    },
+                ),
+            deepLinks =
+                listOf(
+                    // Custom scheme deep link - always works
+                    navDeepLink {
+                        uriPattern = "teamflowmanager://team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                    },
+                    // HTTPS deep link - requires server configuration
+                    navDeepLink {
+                        uriPattern = "https://teamflowmanager.app/team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                    },
+                ),
         ) { backStackEntry ->
             val teamId = backStackEntry.arguments?.getString(Route.AcceptTeamInvitation.ARG_TEAM_ID)
             AcceptTeamInvitationScreen(
@@ -303,15 +311,17 @@ fun Navigation(
             Route.Migration -> activity?.finish()
             Route.ClubSelection -> activity?.finish()
             Route.TeamList -> activity?.finish()
-            Route.CreateClub -> navController.navigate(Route.ClubSelection.createRoute()) {
-                popUpTo(Route.CreateClub.createRoute()) { inclusive = true }
-            }
-            Route.Matches -> if (searchState.isActive) {
-                searchState.clear()
-                searchState.isActive = false
-            } else {
-                activity?.finish()
-            }
+            Route.CreateClub ->
+                navController.navigate(Route.ClubSelection.createRoute()) {
+                    popUpTo(Route.CreateClub.createRoute()) { inclusive = true }
+                }
+            Route.Matches ->
+                if (searchState.isActive) {
+                    searchState.clear()
+                    searchState.isActive = false
+                } else {
+                    activity?.finish()
+                }
 
             Route.Team -> {
                 val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)

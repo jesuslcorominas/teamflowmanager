@@ -14,9 +14,10 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun EmptyContent(text: String) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

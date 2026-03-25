@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 enum class TitleSize {
     SMALL,
     MEDIUM,
-    LARGE
+    LARGE,
 }
 
 @Composable
@@ -59,15 +59,17 @@ fun AppTitle(
     }
 }
 
-private fun TitleSize.toIconSize() = when (this) {
-    TitleSize.LARGE -> 32.dp
-    TitleSize.MEDIUM -> 24.dp
-    TitleSize.SMALL -> 20.dp
-}
+private fun TitleSize.toIconSize() =
+    when (this) {
+        TitleSize.LARGE -> 32.dp
+        TitleSize.MEDIUM -> 24.dp
+        TitleSize.SMALL -> 20.dp
+    }
 
 @Composable
-private fun TitleSize.toTextStyle() = when (this) {
-    TitleSize.LARGE -> MaterialTheme.typography.titleLarge
-    TitleSize.MEDIUM -> MaterialTheme.typography.titleMedium
-    TitleSize.SMALL -> MaterialTheme.typography.titleSmall
-}
+private fun TitleSize.toTextStyle() =
+    when (this) {
+        TitleSize.LARGE -> MaterialTheme.typography.titleLarge
+        TitleSize.MEDIUM -> MaterialTheme.typography.titleMedium
+        TitleSize.SMALL -> MaterialTheme.typography.titleSmall
+    }

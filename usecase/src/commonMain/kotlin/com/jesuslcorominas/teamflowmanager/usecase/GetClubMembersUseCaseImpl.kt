@@ -6,9 +6,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberReposito
 import kotlinx.coroutines.flow.Flow
 
 internal class GetClubMembersUseCaseImpl(
-    private val clubMemberRepository: ClubMemberRepository
+    private val clubMemberRepository: ClubMemberRepository,
 ) : GetClubMembersUseCase {
-
     override fun invoke(clubFirestoreId: String): Flow<List<ClubMember>> {
         require(clubFirestoreId.isNotBlank()) {
             "Club Firestore ID cannot be blank"

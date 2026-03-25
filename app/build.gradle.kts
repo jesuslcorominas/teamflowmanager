@@ -25,7 +25,8 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "${System.getProperty("user.home")}/desarrollo/documents/teamflow/teamflow.jks")
+            val defaultKeystorePath = "${System.getProperty("user.home")}/desarrollo/documents/teamflow/teamflow.jks"
+            storeFile = file(System.getenv("KEYSTORE_PATH") ?: defaultKeystorePath)
             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
             keyAlias = System.getenv("KEY_ALIAS") ?: ""
             keyPassword = System.getenv("KEY_PASSWORD") ?: ""
@@ -91,8 +92,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.animation)
 
-    implementation (libs.compose.charts)
-    implementation (libs.coil.compose)
+    implementation(libs.compose.charts)
+    implementation(libs.coil.compose)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

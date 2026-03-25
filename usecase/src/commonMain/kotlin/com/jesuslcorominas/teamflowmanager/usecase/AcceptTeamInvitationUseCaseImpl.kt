@@ -13,7 +13,6 @@ internal class AcceptTeamInvitationUseCaseImpl(
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : AcceptTeamInvitationUseCase {
-
     override suspend fun invoke(teamFirestoreId: String): Team {
         // Validate input
         require(teamFirestoreId.isNotBlank()) {
@@ -21,8 +20,9 @@ internal class AcceptTeamInvitationUseCaseImpl(
         }
 
         // Get current authenticated user
-        val currentUser = getCurrentUser().first()
-            ?: throw IllegalStateException("User must be authenticated to accept team invitation")
+        val currentUser =
+            getCurrentUser().first()
+                ?: throw IllegalStateException("User must be authenticated to accept team invitation")
 
         // Validate user data
         require(currentUser.displayName?.isNotBlank() == true) {
@@ -33,8 +33,9 @@ internal class AcceptTeamInvitationUseCaseImpl(
         }
 
         // Get the team
-        val team = teamRepository.getTeamByFirestoreId(teamFirestoreId)
-            ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
+        val team =
+            teamRepository.getTeamByFirestoreId(teamFirestoreId)
+                ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
 
         // Verify team has no coach yet
         require(team.coachId == null) {
@@ -51,11 +52,11 @@ internal class AcceptTeamInvitationUseCaseImpl(
             // Currently, these are two separate operations which could fail independently
             // causing data inconsistency. This should be refactored to use Firestore
             // batch writes or transactions to ensure both operations succeed or fail together.
-            
+
             // Step 1: Update team's coachId
             teamRepository.updateTeamCoachId(
                 teamFirestoreId = teamFirestoreId,
-                coachId = currentUser.id
+                coachId = currentUser.id,
             )
 
             // Step 2: Create or update club member with Coach role
@@ -65,7 +66,7 @@ internal class AcceptTeamInvitationUseCaseImpl(
                 email = currentUser.email!!,
                 clubId = team.clubId!!,
                 clubFirestoreId = team.clubFirestoreId!!,
-                roles = listOf(ClubRole.COACH.roleName)
+                roles = listOf(ClubRole.COACH.roleName),
             )
 
             // Return updated team

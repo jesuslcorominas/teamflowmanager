@@ -8,21 +8,37 @@ import androidx.compose.runtime.mutableStateListOf
  */
 sealed class IosDestination {
     data object Splash : IosDestination()
+
     data object Login : IosDestination()
+
     data object Matches : IosDestination()
+
     data class Match(val matchId: Long) : IosDestination()
+
     data object ArchivedMatches : IosDestination()
+
     data object Settings : IosDestination()
+
     data object ClubSelection : IosDestination()
+
     data object CreateClub : IosDestination()
+
     data object JoinClub : IosDestination()
+
     data object TeamList : IosDestination()
+
     data class Team(val mode: String) : IosDestination()
+
     data object ClubMembers : IosDestination()
+
     data object Players : IosDestination()
+
     data class PlayerWizard(val playerId: Long) : IosDestination()
+
     data class MatchWizard(val matchId: Long) : IosDestination()
+
     data class AcceptTeamInvitation(val teamId: String?) : IosDestination()
+
     data object Analysis : IosDestination()
 }
 
@@ -32,7 +48,6 @@ sealed class IosDestination {
  * Backed by [mutableStateListOf] so Compose reacts to push/pop automatically.
  */
 class IosNavController {
-
     val backStack = mutableStateListOf<IosDestination>(IosDestination.Splash)
 
     val current: IosDestination get() = backStack.last()

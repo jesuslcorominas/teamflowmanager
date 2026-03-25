@@ -96,9 +96,10 @@ fun SettingsScreen(
         color = MaterialTheme.colorScheme.background,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(TFMSpacing.spacing04),
         ) {
             Text(
                 text = stringResource(Res.string.settings_account_section),
@@ -127,10 +128,11 @@ private fun UserAccountItem(
     onClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(TFMSpacing.spacing02),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(TFMSpacing.spacing02),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         UserAvatar(

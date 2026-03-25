@@ -37,7 +37,6 @@ class TeamViewModel(
     private val getUserClubMembership: GetUserClubMembershipUseCase,
     private val analyticsTracker: AnalyticsTracker,
 ) : ViewModel() {
-
     companion object {
         const val MODE_CREATE = "create"
         const val MODE_VIEW = "view"
@@ -71,14 +70,16 @@ class TeamViewModel(
     private fun loadTeam() {
         viewModelScope.launch {
             combine(
-                getTeam(), getPlayers(), getUserClubMembership()
+                getTeam(),
+                getPlayers(),
+                getUserClubMembership(),
             ) { team, players, clubMember ->
                 Triple(team, players, clubMember)
             }.collect { (team, players, clubMember) ->
                 if (originalTeam == null) {
                     originalTeam = team
                 }
-                
+
                 if (team == null) {
                     // No team exists, provide club info for creation if user is a President
                     val isPresident = clubMember?.hasRole(ClubRole.PRESIDENT) ?: false
@@ -105,7 +106,10 @@ class TeamViewModel(
         _showSaveError.value = false
     }
 
-    fun createTeam(team: Team, onSuccess: () -> Unit) {
+    fun createTeam(
+        team: Team,
+        onSuccess: () -> Unit,
+    ) {
         viewModelScope.launch {
             try {
                 createTeam.invoke(team)
@@ -125,7 +129,11 @@ class TeamViewModel(
         }
     }
 
-    fun updateTeam(team: Team, captainId: Long?, onSuccess: () -> Unit) {
+    fun updateTeam(
+        team: Team,
+        captainId: Long?,
+        onSuccess: () -> Unit,
+    ) {
         viewModelScope.launch {
             try {
                 val original = originalTeam
@@ -199,7 +207,7 @@ sealed interface TeamUiState {
         val clubId: Long? = null,
         val clubFirestoreId: String? = null,
         val isPresident: Boolean = false,
-        val userRole: ClubRole? = null
+        val userRole: ClubRole? = null,
     ) : TeamUiState
 
     data class Success(val team: Team, val players: List<Player>) : TeamUiState

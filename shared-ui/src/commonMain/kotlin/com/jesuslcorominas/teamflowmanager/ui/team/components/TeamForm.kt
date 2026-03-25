@@ -24,11 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
@@ -80,13 +80,15 @@ fun TeamForm(
     var teamTypeExpanded by remember { mutableStateOf(false) }
 
     val validateAndSave = {
-        formState = formState.copy(
-            errors = FormErrors(
-                name = formState.name.isBlank(),
-                coachName = formState.coachName.isBlank(),
-                delegateName = formState.delegateName.isBlank(),
-            ),
-        )
+        formState =
+            formState.copy(
+                errors =
+                    FormErrors(
+                        name = formState.name.isBlank(),
+                        coachName = formState.coachName.isBlank(),
+                        delegateName = formState.delegateName.isBlank(),
+                    ),
+            )
 
         if (!formState.errors.hasErrors) {
             onSave(formState.toTeam(), selectedOption)
@@ -99,9 +101,10 @@ fun TeamForm(
     ) {
         Column {
             LazyColumn(
-                modifier = Modifier
-                    .weight(1F)
-                    .padding(TFMSpacing.spacing04),
+                modifier =
+                    Modifier
+                        .weight(1F)
+                        .padding(TFMSpacing.spacing04),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (team == null) {
@@ -118,94 +121,109 @@ fun TeamForm(
 
                 item {
                     AppTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = TFMSpacing.spacing03),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = TFMSpacing.spacing03),
                         value = formState.name,
                         onValueChange = {
-                            formState = formState.copy(
-                                name = it,
-                                errors = formState.errors.copy(name = false),
-                            )
+                            formState =
+                                formState.copy(
+                                    name = it,
+                                    errors = formState.errors.copy(name = false),
+                                )
                         },
                         label = { Text(stringResource(Res.string.team_name)) },
                         isError = formState.errors.name,
-                        supportingText = if (formState.errors.name) {
-                            { Text(stringResource(Res.string.team_name_required)) }
-                        } else {
-                            null
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Next,
-                            capitalization = KeyboardCapitalization.Words,
-                        ),
-                        keyboardActions = KeyboardActions(onNext = {
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }),
+                        supportingText =
+                            if (formState.errors.name) {
+                                { Text(stringResource(Res.string.team_name_required)) }
+                            } else {
+                                null
+                            },
+                        keyboardOptions =
+                            KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                capitalization = KeyboardCapitalization.Words,
+                            ),
+                        keyboardActions =
+                            KeyboardActions(onNext = {
+                                focusManager.moveFocus(FocusDirection.Down)
+                            }),
                     )
                 }
 
                 item {
                     AppTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = TFMSpacing.spacing03),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = TFMSpacing.spacing03),
                         value = formState.coachName,
                         onValueChange = {
-                            formState = formState.copy(
-                                coachName = it,
-                                errors = formState.errors.copy(coachName = false),
-                            )
+                            formState =
+                                formState.copy(
+                                    coachName = it,
+                                    errors = formState.errors.copy(coachName = false),
+                                )
                         },
                         label = { Text(stringResource(Res.string.coach_name)) },
                         isError = formState.errors.coachName,
-                        supportingText = if (formState.errors.coachName) {
-                            { Text(stringResource(Res.string.first_name_required)) }
-                        } else {
-                            null
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Next,
-                            capitalization = KeyboardCapitalization.Words,
-                        ),
-                        keyboardActions = KeyboardActions(onNext = {
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }),
+                        supportingText =
+                            if (formState.errors.coachName) {
+                                { Text(stringResource(Res.string.first_name_required)) }
+                            } else {
+                                null
+                            },
+                        keyboardOptions =
+                            KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                capitalization = KeyboardCapitalization.Words,
+                            ),
+                        keyboardActions =
+                            KeyboardActions(onNext = {
+                                focusManager.moveFocus(FocusDirection.Down)
+                            }),
                     )
                 }
 
                 item {
                     AppTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = TFMSpacing.spacing03),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = TFMSpacing.spacing03),
                         value = formState.delegateName,
                         onValueChange = {
-                            formState = formState.copy(
-                                delegateName = it,
-                                errors = formState.errors.copy(delegateName = false),
-                            )
+                            formState =
+                                formState.copy(
+                                    delegateName = it,
+                                    errors = formState.errors.copy(delegateName = false),
+                                )
                         },
                         label = { Text(stringResource(Res.string.delegate_name)) },
                         isError = formState.errors.delegateName,
-                        supportingText = if (formState.errors.delegateName) {
-                            { Text(stringResource(Res.string.delegate_name_required)) }
-                        } else {
-                            null
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Done,
-                            capitalization = KeyboardCapitalization.Words,
-                        ),
+                        supportingText =
+                            if (formState.errors.delegateName) {
+                                { Text(stringResource(Res.string.delegate_name_required)) }
+                            } else {
+                                null
+                            },
+                        keyboardOptions =
+                            KeyboardOptions(
+                                imeAction = ImeAction.Done,
+                                capitalization = KeyboardCapitalization.Words,
+                            ),
                         keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
                     )
                 }
 
                 item {
                     TeamTypeDropdown(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = TFMSpacing.spacing04),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = TFMSpacing.spacing04),
                         selectedType = formState.teamType,
                         expanded = teamTypeExpanded,
                         onExpandedChange = { teamTypeExpanded = !teamTypeExpanded },
@@ -228,12 +246,13 @@ fun TeamForm(
                         )
                     }
 
-                    val selectablePlayers = players.map {
-                        object : SelectableItem {
-                            override val id = it.id
-                            override val label = "${it.firstName} ${it.lastName}"
+                    val selectablePlayers =
+                        players.map {
+                            object : SelectableItem {
+                                override val id = it.id
+                                override val label = "${it.firstName} ${it.lastName}"
+                            }
                         }
-                    }
 
                     items(selectablePlayers) { item ->
                         ClearableRadioSelectorList(
@@ -249,13 +268,14 @@ fun TeamForm(
             }
 
             Button(
-                modifier = Modifier
-                    .padding(
-                        start = TFMSpacing.spacing04,
-                        end = TFMSpacing.spacing04,
-                        bottom = LocalContentBottomPadding.current + 8.dp,
-                    )
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .padding(
+                            start = TFMSpacing.spacing04,
+                            end = TFMSpacing.spacing04,
+                            bottom = LocalContentBottomPadding.current + 8.dp,
+                        )
+                        .fillMaxWidth(),
                 onClick = { validateAndSave() },
             ) {
                 Text(text = stringResource(Res.string.save))
@@ -279,9 +299,10 @@ private fun TeamTypeDropdown(
         onExpandedChange = onExpandedChange,
     ) {
         AppTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
             value = selectedType.localizedName(),
             onValueChange = {},
             readOnly = true,
@@ -325,26 +346,28 @@ private data class TeamFormState(
     val errors: FormErrors = FormErrors(),
 )
 
-private fun TeamFormState.toTeam(): Team = Team(
-    id = id,
-    name = name.trimEnd(),
-    coachName = coachName.trimEnd(),
-    delegateName = delegateName.trimEnd(),
-    teamType = teamType,
-    coachId = coachId,
-    clubId = clubId,
-    clubFirestoreId = clubFirestoreId,
-)
-
-private fun Team?.toTeamFormState() = this?.let {
-    TeamFormState(
-        id = it.id,
-        name = it.name,
-        coachName = it.coachName,
-        delegateName = it.delegateName,
-        teamType = it.teamType,
-        coachId = it.coachId,
-        clubId = it.clubId,
-        clubFirestoreId = it.clubFirestoreId,
+private fun TeamFormState.toTeam(): Team =
+    Team(
+        id = id,
+        name = name.trimEnd(),
+        coachName = coachName.trimEnd(),
+        delegateName = delegateName.trimEnd(),
+        teamType = teamType,
+        coachId = coachId,
+        clubId = clubId,
+        clubFirestoreId = clubFirestoreId,
     )
-} ?: TeamFormState()
+
+private fun Team?.toTeamFormState() =
+    this?.let {
+        TeamFormState(
+            id = it.id,
+            name = it.name,
+            coachName = it.coachName,
+            delegateName = it.delegateName,
+            teamType = it.teamType,
+            coachId = it.coachId,
+            clubId = it.clubId,
+            clubFirestoreId = it.clubFirestoreId,
+        )
+    } ?: TeamFormState()

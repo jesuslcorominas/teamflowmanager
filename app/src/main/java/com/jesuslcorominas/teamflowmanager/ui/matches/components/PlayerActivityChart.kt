@@ -55,23 +55,24 @@ private val PLAYER_ROW_HEIGHT = 20.dp
 /**
  * Predefined colors for player activity lines.
  */
-private val playerColors = listOf(
-    Color(0xFF2196F3), // Blue
-    Color(0xFF4CAF50), // Green
-    Color(0xFFFF9800), // Orange
-    Color(0xFF9C27B0), // Purple
-    Color(0xFFE91E63), // Pink
-    Color(0xFF00BCD4), // Cyan
-    Color(0xFFFFEB3B), // Yellow
-    Color(0xFF795548), // Brown
-    Color(0xFF607D8B), // Blue Gray
-    Color(0xFFFF5722), // Deep Orange
-    Color(0xFF3F51B5), // Indigo
-    Color(0xFF009688), // Teal
-    Color(0xFFCDDC39), // Lime
-    Color(0xFF673AB7), // Deep Purple
-    Color(0xFF8BC34A), // Light Green
-)
+private val playerColors =
+    listOf(
+        Color(0xFF2196F3), // Blue
+        Color(0xFF4CAF50), // Green
+        Color(0xFFFF9800), // Orange
+        Color(0xFF9C27B0), // Purple
+        Color(0xFFE91E63), // Pink
+        Color(0xFF00BCD4), // Cyan
+        Color(0xFFFFEB3B), // Yellow
+        Color(0xFF795548), // Brown
+        Color(0xFF607D8B), // Blue Gray
+        Color(0xFFFF5722), // Deep Orange
+        Color(0xFF3F51B5), // Indigo
+        Color(0xFF009688), // Teal
+        Color(0xFFCDDC39), // Lime
+        Color(0xFF673AB7), // Deep Purple
+        Color(0xFF8BC34A), // Light Green
+    )
 
 /**
  * Converts a Compose Color to a native Android color int.
@@ -81,7 +82,7 @@ private fun Color.toNativeColor(): Int {
         (alpha * 255).toInt(),
         (red * 255).toInt(),
         (green * 255).toInt(),
-        (blue * 255).toInt()
+        (blue * 255).toInt(),
     )
 }
 
@@ -97,32 +98,36 @@ fun PlayerActivityChart(
     if (scoreEvolution.isEmpty() && playerActivity.isEmpty()) return
 
     // Get unique players from activity intervals
-    val uniquePlayers = remember(playerActivity) {
-        playerActivity.map { it.player }.distinctBy { it.id }.sortedBy { it.number }
-    }
+    val uniquePlayers =
+        remember(playerActivity) {
+            playerActivity.map { it.player }.distinctBy { it.id }.sortedBy { it.number }
+        }
 
     // Track which lines are visible
-    val visibleLines = remember {
-        mutableStateMapOf<String, Boolean>().apply {
-            put("teamScore", true)
-            put("opponentScore", true)
-            uniquePlayers.forEach { player ->
-                put("player_${player.id}", true)
+    val visibleLines =
+        remember {
+            mutableStateMapOf<String, Boolean>().apply {
+                put("teamScore", true)
+                put("opponentScore", true)
+                uniquePlayers.forEach { player ->
+                    put("player_${player.id}", true)
+                }
             }
         }
-    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing04),
         ) {
             // Title
             Text(
@@ -149,14 +154,14 @@ fun PlayerActivityChart(
                     label = teamName,
                     isEnabled = false,
                     isChecked = visibleLines["teamScore"] ?: true,
-                    onCheckedChange = { visibleLines["teamScore"] = it }
+                    onCheckedChange = { visibleLines["teamScore"] = it },
                 )
                 ToggleLegendItem(
                     color = ChartOpponentColor,
                     label = opponentName,
                     isEnabled = false,
                     isChecked = visibleLines["opponentScore"] ?: true,
-                    onCheckedChange = { visibleLines["opponentScore"] = it }
+                    onCheckedChange = { visibleLines["opponentScore"] = it },
                 )
             }
 
@@ -172,9 +177,10 @@ fun PlayerActivityChart(
                 )
 
                 FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                     verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                 ) {
@@ -185,7 +191,7 @@ fun PlayerActivityChart(
                             label = "${player.number}. ${player.firstName}",
                             isEnabled = true,
                             isChecked = visibleLines["player_${player.id}"] ?: true,
-                            onCheckedChange = { visibleLines["player_${player.id}"] = it }
+                            onCheckedChange = { visibleLines["player_${player.id}"] = it },
                         )
                     }
                 }
@@ -194,18 +200,20 @@ fun PlayerActivityChart(
             }
 
             // Combined Chart
-            val maxScore = remember(scoreEvolution) {
-                max(
-                    scoreEvolution.maxOfOrNull { it.teamScore } ?: 0,
-                    scoreEvolution.maxOfOrNull { it.opponentScore } ?: 0
-                ).coerceAtLeast(1)
-            }
+            val maxScore =
+                remember(scoreEvolution) {
+                    max(
+                        scoreEvolution.maxOfOrNull { it.teamScore } ?: 0,
+                        scoreEvolution.maxOfOrNull { it.opponentScore } ?: 0,
+                    ).coerceAtLeast(1)
+                }
 
-            val maxTime = remember(scoreEvolution, playerActivity) {
-                val scoreMaxTime = scoreEvolution.maxOfOrNull { it.timeMillis } ?: 0L
-                val activityMaxTime = playerActivity.maxOfOrNull { it.endTimeMillis } ?: 0L
-                max(scoreMaxTime, activityMaxTime).coerceAtLeast(1L)
-            }
+            val maxTime =
+                remember(scoreEvolution, playerActivity) {
+                    val scoreMaxTime = scoreEvolution.maxOfOrNull { it.timeMillis } ?: 0L
+                    val activityMaxTime = playerActivity.maxOfOrNull { it.endTimeMillis } ?: 0L
+                    max(scoreMaxTime, activityMaxTime).coerceAtLeast(1L)
+                }
 
             val density = LocalDensity.current
             val textSize = with(density) { 10.sp.toPx() }
@@ -216,9 +224,10 @@ fun PlayerActivityChart(
             val playersLabel = stringResource(R.string.players_section)
 
             Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(chartHeight)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(chartHeight),
             ) {
                 val leftPadding = 60.dp.toPx() // Extra space for player numbers on the left
                 val rightPadding = 30.dp.toPx()
@@ -241,14 +250,14 @@ fun PlayerActivityChart(
                             color = labelColor
                             this.textSize = textSize
                             textAlign = android.graphics.Paint.Align.CENTER
-                        }
+                        },
                     )
                     // Draw horizontal grid line
                     drawLine(
                         color = ContentHigh.copy(alpha = 0.2f),
                         start = Offset(leftPadding, y),
                         end = Offset(size.width - rightPadding, y),
-                        strokeWidth = 1f
+                        strokeWidth = 1f,
                     )
                 }
 
@@ -263,7 +272,7 @@ fun PlayerActivityChart(
                         chartHeight = scoreChartHeight,
                         verticalPadding = verticalPadding,
                         color = ChartTeamColor,
-                        isTeamScore = true
+                        isTeamScore = true,
                     )
                 }
 
@@ -278,7 +287,7 @@ fun PlayerActivityChart(
                         chartHeight = scoreChartHeight,
                         verticalPadding = verticalPadding,
                         color = ChartOpponentColor,
-                        isTeamScore = false
+                        isTeamScore = false,
                     )
                 }
 
@@ -291,7 +300,7 @@ fun PlayerActivityChart(
                         drawCircle(
                             color = ChartTeamColor,
                             radius = 4.dp.toPx(),
-                            center = Offset(x, teamY)
+                            center = Offset(x, teamY),
                         )
                     }
 
@@ -300,7 +309,7 @@ fun PlayerActivityChart(
                         drawCircle(
                             color = ChartOpponentColor,
                             radius = 4.dp.toPx(),
-                            center = Offset(x, opponentY)
+                            center = Offset(x, opponentY),
                         )
                     }
                 }
@@ -310,7 +319,7 @@ fun PlayerActivityChart(
                     color = ContentHigh.copy(alpha = 0.5f),
                     start = Offset(leftPadding, size.height * 0.5f),
                     end = Offset(size.width - rightPadding, size.height * 0.5f),
-                    strokeWidth = 2f
+                    strokeWidth = 2f,
                 )
 
                 // Draw "Players" label
@@ -322,7 +331,7 @@ fun PlayerActivityChart(
                         color = labelColor
                         this.textSize = textSize
                         textAlign = android.graphics.Paint.Align.LEFT
-                    }
+                    },
                 )
 
                 // Draw player activity bars (horizontal bars showing when each player was active)
@@ -343,7 +352,7 @@ fun PlayerActivityChart(
                             this.color = labelColor
                             this.textSize = textSize
                             textAlign = android.graphics.Paint.Align.RIGHT
-                        }
+                        },
                     )
 
                     // Draw activity intervals for this player
@@ -358,19 +367,19 @@ fun PlayerActivityChart(
                                 color = color,
                                 start = Offset(startX, rowY),
                                 end = Offset(endX, rowY),
-                                strokeWidth = 8.dp.toPx()
+                                strokeWidth = 8.dp.toPx(),
                             )
 
                             // Draw start and end dots
                             drawCircle(
                                 color = color,
                                 radius = 4.dp.toPx(),
-                                center = Offset(startX, rowY)
+                                center = Offset(startX, rowY),
                             )
                             drawCircle(
                                 color = color,
                                 radius = 4.dp.toPx(),
-                                center = Offset(endX, rowY)
+                                center = Offset(endX, rowY),
                             )
                         }
                 }
@@ -381,14 +390,14 @@ fun PlayerActivityChart(
                     val x = leftPadding + (time.toFloat() / maxTime * chartWidth)
                     val minutes = (time / 60000).toInt()
                     drawContext.canvas.nativeCanvas.drawText(
-                        "${minutes}'",
+                        "$minutes'",
                         x,
                         size.height - 5,
                         android.graphics.Paint().apply {
                             color = labelColor
                             this.textSize = textSize
                             textAlign = android.graphics.Paint.Align.CENTER
-                        }
+                        },
                     )
 
                     // Draw vertical grid line across both charts
@@ -396,7 +405,7 @@ fun PlayerActivityChart(
                         color = ContentHigh.copy(alpha = 0.1f),
                         start = Offset(x, verticalPadding / 2),
                         end = Offset(x, size.height - verticalPadding / 2),
-                        strokeWidth = 1f
+                        strokeWidth = 1f,
                     )
                 }
             }
@@ -416,7 +425,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawScoreLine(
     chartHeight: Float,
     verticalPadding: Float,
     color: Color,
-    isTeamScore: Boolean
+    isTeamScore: Boolean,
 ) {
     if (scoreEvolution.size < 2) return
 
@@ -447,7 +456,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawScoreLine(
     drawPath(
         path = path,
         color = color,
-        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx())
+        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx()),
     )
 }
 
@@ -472,16 +481,24 @@ private fun ToggleLegendItem(
             )
         }
         Surface(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape),
+            modifier =
+                Modifier
+                    .size(10.dp)
+                    .clip(CircleShape),
             color = if (isChecked) color else color.copy(alpha = 0.3f),
             content = {},
         )
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = if (isChecked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            color =
+                if (isChecked) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                        alpha = 0.5f,
+                    )
+                },
         )
     }
 }
@@ -489,48 +506,53 @@ private fun ToggleLegendItem(
 @Preview(showBackground = true)
 @Composable
 private fun PlayerActivityChartPreview() {
-    val player1 = Player(
-        id = 1L,
-        firstName = "John",
-        lastName = "Doe",
-        number = 10,
-        positions = listOf(Position.Forward),
-        teamId = 1L,
-        isCaptain = true,
-    )
-    val player2 = Player(
-        id = 2L,
-        firstName = "Jane",
-        lastName = "Smith",
-        number = 7,
-        positions = listOf(Position.Midfielder),
-        teamId = 1L,
-        isCaptain = false,
-    )
-    val player3 = Player(
-        id = 3L,
-        firstName = "Mike",
-        lastName = "Johnson",
-        number = 9,
-        positions = listOf(Position.Forward),
-        teamId = 1L,
-        isCaptain = false,
-    )
+    val player1 =
+        Player(
+            id = 1L,
+            firstName = "John",
+            lastName = "Doe",
+            number = 10,
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = true,
+        )
+    val player2 =
+        Player(
+            id = 2L,
+            firstName = "Jane",
+            lastName = "Smith",
+            number = 7,
+            positions = listOf(Position.Midfielder),
+            teamId = 1L,
+            isCaptain = false,
+        )
+    val player3 =
+        Player(
+            id = 3L,
+            firstName = "Mike",
+            lastName = "Johnson",
+            number = 9,
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = false,
+        )
 
-    val scoreEvolution = listOf(
-        ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0, isOpponentGoal = false),
-        ScorePoint(timeMillis = 300000L, teamScore = 1, opponentScore = 0, isOpponentGoal = false),
-        ScorePoint(timeMillis = 420000L, teamScore = 2, opponentScore = 0, isOpponentGoal = false),
-        ScorePoint(timeMillis = 900000L, teamScore = 2, opponentScore = 1, isOpponentGoal = true),
-        ScorePoint(timeMillis = 2700000L, teamScore = 3, opponentScore = 1, isOpponentGoal = false),
-        ScorePoint(timeMillis = 3000000L, teamScore = 3, opponentScore = 1, isOpponentGoal = false),
-    )
+    val scoreEvolution =
+        listOf(
+            ScorePoint(timeMillis = 0L, teamScore = 0, opponentScore = 0, isOpponentGoal = false),
+            ScorePoint(timeMillis = 300000L, teamScore = 1, opponentScore = 0, isOpponentGoal = false),
+            ScorePoint(timeMillis = 420000L, teamScore = 2, opponentScore = 0, isOpponentGoal = false),
+            ScorePoint(timeMillis = 900000L, teamScore = 2, opponentScore = 1, isOpponentGoal = true),
+            ScorePoint(timeMillis = 2700000L, teamScore = 3, opponentScore = 1, isOpponentGoal = false),
+            ScorePoint(timeMillis = 3000000L, teamScore = 3, opponentScore = 1, isOpponentGoal = false),
+        )
 
-    val playerActivity = listOf(
-        PlayerActivityInterval(player = player1, startTimeMillis = 0L, endTimeMillis = 1500000L),
-        PlayerActivityInterval(player = player2, startTimeMillis = 0L, endTimeMillis = 3000000L),
-        PlayerActivityInterval(player = player3, startTimeMillis = 1500000L, endTimeMillis = 3000000L),
-    )
+    val playerActivity =
+        listOf(
+            PlayerActivityInterval(player = player1, startTimeMillis = 0L, endTimeMillis = 1500000L),
+            PlayerActivityInterval(player = player2, startTimeMillis = 0L, endTimeMillis = 3000000L),
+            PlayerActivityInterval(player = player3, startTimeMillis = 1500000L, endTimeMillis = 3000000L),
+        )
 
     TFMAppTheme {
         PlayerActivityChart(

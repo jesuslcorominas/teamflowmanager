@@ -109,10 +109,11 @@ actual fun PlayerDataStep(
 
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                modifier =
+                    Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -136,32 +137,67 @@ actual fun PlayerDataStep(
         AppTextField(
             modifier = Modifier.fillMaxWidth(),
             value = firstName,
-            onValueChange = { firstName = it; firstNameError = null },
+            onValueChange = {
+                firstName = it
+                firstNameError = null
+            },
             label = { Text(stringResource(Res.string.first_name)) },
             isError = firstNameError != null,
-            supportingText = if (firstNameError != null) { { Text(firstNameError!!) } } else null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, capitalization = KeyboardCapitalization.Words),
+            supportingText =
+                if (firstNameError != null) {
+                    { Text(firstNameError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
 
         AppTextField(
             modifier = Modifier.fillMaxWidth(),
             value = lastName,
-            onValueChange = { lastName = it; lastNameError = null },
+            onValueChange = {
+                lastName = it
+                lastNameError = null
+            },
             label = { Text(stringResource(Res.string.last_name)) },
             isError = lastNameError != null,
-            supportingText = if (lastNameError != null) { { Text(lastNameError!!) } } else null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, capitalization = KeyboardCapitalization.Words),
+            supportingText =
+                if (lastNameError != null) {
+                    { Text(lastNameError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
 
         AppTextField(
             modifier = Modifier.fillMaxWidth(),
             value = number,
-            onValueChange = { newValue -> if (newValue.all { it.isDigit() }) { number = newValue; numberError = null } },
+            onValueChange = {
+                    newValue ->
+                if (newValue.all { it.isDigit() }) {
+                    number = newValue
+                    numberError = null
+                }
+            },
             label = { Text(stringResource(Res.string.number)) },
             isError = numberError != null,
-            supportingText = if (numberError != null) { { Text(numberError!!) } } else null,
+            supportingText =
+                if (numberError != null) {
+                    { Text(numberError!!) }
+                } else {
+                    null
+                },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         )

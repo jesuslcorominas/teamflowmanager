@@ -73,18 +73,20 @@ class PlayerViewModel(
 
             if (player.isCaptain && currentCaptain != null && currentCaptain.id != player.id) {
                 // Show confirmation to replace captain
-                _captainConfirmationState.value = CaptainConfirmationState.ConfirmReplace(
-                    currentCaptain = currentCaptain,
-                    newCaptain = player
-                )
+                _captainConfirmationState.value =
+                    CaptainConfirmationState.ConfirmReplace(
+                        currentCaptain = currentCaptain,
+                        newCaptain = player,
+                    )
             } else if (!player.isCaptain && currentCaptain != null && currentCaptain.id == player.id) {
                 // Player is being updated to no longer be captain
                 val scheduledMatches = getScheduledMatchesUseCase()
                 if (scheduledMatches.isNotEmpty()) {
-                    _captainConfirmationState.value = CaptainConfirmationState.ConfirmRemoveWithMatches(
-                        player = player,
-                        matchCount = scheduledMatches.size
-                    )
+                    _captainConfirmationState.value =
+                        CaptainConfirmationState.ConfirmRemoveWithMatches(
+                            player = player,
+                            matchCount = scheduledMatches.size,
+                        )
                 } else {
                     _captainConfirmationState.value = CaptainConfirmationState.ConfirmRemove(player)
                 }

@@ -16,7 +16,6 @@ class AcceptTeamInvitationViewModel(
     private val acceptTeamInvitation: AcceptTeamInvitationUseCase,
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow<AcceptTeamInvitationState>(AcceptTeamInvitationState.Loading)
     val state: StateFlow<AcceptTeamInvitationState> = _state.asStateFlow()
 
@@ -60,7 +59,10 @@ class AcceptTeamInvitationViewModel(
 
 sealed class AcceptTeamInvitationState {
     data object Loading : AcceptTeamInvitationState()
+
     data class NotAuthenticated(val teamId: String) : AcceptTeamInvitationState()
+
     data class Success(val team: Team) : AcceptTeamInvitationState()
+
     data class Error(val message: String) : AcceptTeamInvitationState()
 }

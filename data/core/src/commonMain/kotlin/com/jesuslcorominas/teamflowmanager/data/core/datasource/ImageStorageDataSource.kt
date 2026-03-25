@@ -11,7 +11,10 @@ interface ImageStorageDataSource {
      * @param path The storage path where the image should be stored (e.g., "players/{playerId}")
      * @return The download URL of the uploaded image, or null if upload failed
      */
-    suspend fun uploadImage(localUri: String, path: String): String?
+    suspend fun uploadImage(
+        localUri: String,
+        path: String,
+    ): String?
 
     /**
      * Deletes an image from storage.

@@ -102,18 +102,21 @@ actual fun PlayerDataStep(
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) tempCameraUri?.let { imageUri = it.toString() }
-    }
+    val cameraLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) tempCameraUri?.let { imageUri = it.toString() }
+        }
 
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (isGranted) tempCameraUri?.let { uri -> cameraLauncher.launch(uri) }
-    }
+    val cameraPermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) tempCameraUri?.let { uri -> cameraLauncher.launch(uri) }
+        }
 
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { imageUri = it.toString() }
-        showImageOptions = false
-    }
+    val galleryLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let { imageUri = it.toString() }
+            showImageOptions = false
+        }
 
     val firstNameRequired = stringResource(Res.string.first_name_required)
     val lastNameRequired = stringResource(Res.string.last_name_required)
@@ -148,11 +151,12 @@ actual fun PlayerDataStep(
 
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { showImageOptions = true },
+                modifier =
+                    Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { showImageOptions = true },
                 contentAlignment = Alignment.Center,
             ) {
                 val contentDescription = "${stringResource(Res.string.player_image)} $firstName $lastName"
@@ -193,32 +197,67 @@ actual fun PlayerDataStep(
         AppTextField(
             modifier = Modifier.fillMaxWidth(),
             value = firstName,
-            onValueChange = { firstName = it; firstNameError = null },
+            onValueChange = {
+                firstName = it
+                firstNameError = null
+            },
             label = { Text(stringResource(Res.string.first_name)) },
             isError = firstNameError != null,
-            supportingText = if (firstNameError != null) { { Text(firstNameError!!) } } else null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, capitalization = KeyboardCapitalization.Words),
+            supportingText =
+                if (firstNameError != null) {
+                    { Text(firstNameError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
 
         AppTextField(
             modifier = Modifier.fillMaxWidth(),
             value = lastName,
-            onValueChange = { lastName = it; lastNameError = null },
+            onValueChange = {
+                lastName = it
+                lastNameError = null
+            },
             label = { Text(stringResource(Res.string.last_name)) },
             isError = lastNameError != null,
-            supportingText = if (lastNameError != null) { { Text(lastNameError!!) } } else null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, capitalization = KeyboardCapitalization.Words),
+            supportingText =
+                if (lastNameError != null) {
+                    { Text(lastNameError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
 
         AppTextField(
             modifier = Modifier.fillMaxWidth(),
             value = number,
-            onValueChange = { newValue -> if (newValue.all { it.isDigit() }) { number = newValue; numberError = null } },
+            onValueChange = {
+                    newValue ->
+                if (newValue.all { it.isDigit() }) {
+                    number = newValue
+                    numberError = null
+                }
+            },
             label = { Text(stringResource(Res.string.number)) },
             isError = numberError != null,
-            supportingText = if (numberError != null) { { Text(numberError!!) } } else null,
+            supportingText =
+                if (numberError != null) {
+                    { Text(numberError!!) }
+                } else {
+                    null
+                },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         )

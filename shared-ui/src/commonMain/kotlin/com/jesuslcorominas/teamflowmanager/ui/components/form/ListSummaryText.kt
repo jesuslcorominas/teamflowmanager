@@ -17,11 +17,12 @@ fun ListSummaryText(
     style: TextStyle = LocalTextStyle.current,
     color: Color = Color.Unspecified,
 ) {
-    val text = when {
-        items.isEmpty() -> ""
-        items.size == 1 -> stringResource(Res.string.list_single, items.first())
-        else -> stringResource(Res.string.list_multiple, items.first(), items.size - 1)
-    }
+    val text =
+        when {
+            items.isEmpty() -> ""
+            items.size == 1 -> stringResource(Res.string.list_single, items.first())
+            else -> stringResource(Res.string.list_multiple, items.first(), items.size - 1)
+        }
 
     Text(
         text = text,

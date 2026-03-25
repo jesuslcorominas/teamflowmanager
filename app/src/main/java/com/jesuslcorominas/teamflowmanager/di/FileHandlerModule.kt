@@ -6,6 +6,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-val fileHandlerModule = module {
-    single { AndroidFileHandler(androidContext()) } bind FileHandler::class
-}
+val fileHandlerModule =
+    module {
+        single { AndroidFileHandler(androidContext()) } bind FileHandler::class
+    }

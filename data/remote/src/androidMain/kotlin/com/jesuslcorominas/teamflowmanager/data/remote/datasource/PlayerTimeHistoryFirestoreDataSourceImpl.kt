@@ -25,7 +25,6 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
 ) : PlayerTimeHistoryDataSource {
-
     companion object {
         private const val PLAYER_TIME_HISTORY_COLLECTION = "playerTimeHistory"
         private const val TEAMS_COLLECTION = "teams"
@@ -44,11 +43,12 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
         }
 
         return try {
-            val snapshot = firestore.collection(TEAMS_COLLECTION)
-                .whereEqualTo("assignedCoachId", currentUserId)
-                .limit(1)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(TEAMS_COLLECTION)
+                    .whereEqualTo("assignedCoachId", currentUserId)
+                    .limit(1)
+                    .get()
+                    .await()
 
             val teamDocId = snapshot.documents.firstOrNull()?.id
             teamDocId
@@ -62,12 +62,16 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
     /**
      * Helper function to find the Firestore document ID for a match based on the Long match ID.
      */
-    private suspend fun findMatchDocumentId(teamDocId: String, matchId: Long): String? {
+    private suspend fun findMatchDocumentId(
+        teamDocId: String,
+        matchId: Long,
+    ): String? {
         return try {
-            val snapshot = firestore.collection(MATCHES_COLLECTION)
-                .whereEqualTo("teamId", teamDocId)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(MATCHES_COLLECTION)
+                    .whereEqualTo("teamId", teamDocId)
+                    .get()
+                    .await()
 
             for (document in snapshot.documents) {
                 // Check if this match's stable ID matches
@@ -87,118 +91,127 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
     /**
      * Gets player time history for a specific player as a real-time Flow.
      */
-    override fun getPlayerTimeHistory(playerId: Long): Flow<List<PlayerTimeHistory>> = callbackFlow {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val listenerRegistration = firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
-            .whereEqualTo("teamId", teamDocId)
-            .whereEqualTo("playerId", playerId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val history = snapshot?.documents?.mapNotNull { document ->
-                    document.toObject(PlayerTimeHistoryFirestoreModel::class.java)?.toDomain()
-                } ?: emptyList()
-
-                trySend(history)
+    override fun getPlayerTimeHistory(playerId: Long): Flow<List<PlayerTimeHistory>> =
+        callbackFlow {
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
             }
 
-        awaitClose {
-            listenerRegistration.remove()
+            val teamDocId = getTeamDocumentId()
+            if (teamDocId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
+            }
+
+            val listenerRegistration =
+                firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
+                    .whereEqualTo("teamId", teamDocId)
+                    .whereEqualTo("playerId", playerId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
+
+                        val history =
+                            snapshot?.documents?.mapNotNull { document ->
+                                document.toObject(PlayerTimeHistoryFirestoreModel::class.java)?.toDomain()
+                            } ?: emptyList()
+
+                        trySend(history)
+                    }
+
+            awaitClose {
+                listenerRegistration.remove()
+            }
         }
-    }
 
     /**
      * Gets player time history for a specific match as a real-time Flow.
      */
-    override fun getMatchPlayerTimeHistory(matchId: Long): Flow<List<PlayerTimeHistory>> = callbackFlow {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val listenerRegistration = firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
-            .whereEqualTo("teamId", teamDocId)
-            .whereEqualTo("matchId", matchId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val history = snapshot?.documents?.mapNotNull { document ->
-                    document.toObject(PlayerTimeHistoryFirestoreModel::class.java)?.toDomain()
-                } ?: emptyList()
-
-                trySend(history)
+    override fun getMatchPlayerTimeHistory(matchId: Long): Flow<List<PlayerTimeHistory>> =
+        callbackFlow {
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
             }
 
-        awaitClose {
-            listenerRegistration.remove()
+            val teamDocId = getTeamDocumentId()
+            if (teamDocId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
+            }
+
+            val listenerRegistration =
+                firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
+                    .whereEqualTo("teamId", teamDocId)
+                    .whereEqualTo("matchId", matchId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
+
+                        val history =
+                            snapshot?.documents?.mapNotNull { document ->
+                                document.toObject(PlayerTimeHistoryFirestoreModel::class.java)?.toDomain()
+                            } ?: emptyList()
+
+                        trySend(history)
+                    }
+
+            awaitClose {
+                listenerRegistration.remove()
+            }
         }
-    }
 
     /**
      * Gets all player time history for the current user's team from Firestore as a real-time Flow.
      */
-    override fun getAllPlayerTimeHistory(): Flow<List<PlayerTimeHistory>> = callbackFlow {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val listenerRegistration = firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
-            .whereEqualTo("teamId", teamDocId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val history = snapshot?.documents?.mapNotNull { document ->
-                    document.toObject(PlayerTimeHistoryFirestoreModel::class.java)?.toDomain()
-                } ?: emptyList()
-
-                trySend(history)
+    override fun getAllPlayerTimeHistory(): Flow<List<PlayerTimeHistory>> =
+        callbackFlow {
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
             }
 
-        awaitClose {
-            listenerRegistration.remove()
+            val teamDocId = getTeamDocumentId()
+            if (teamDocId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
+            }
+
+            val listenerRegistration =
+                firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
+                    .whereEqualTo("teamId", teamDocId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
+
+                        val history =
+                            snapshot?.documents?.mapNotNull { document ->
+                                document.toObject(PlayerTimeHistoryFirestoreModel::class.java)?.toDomain()
+                            } ?: emptyList()
+
+                        trySend(history)
+                    }
+
+            awaitClose {
+                listenerRegistration.remove()
+            }
         }
-    }
 
     /**
      * Inserts a new player time history entry into Firestore.
@@ -218,11 +231,12 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
         val docRef = firestore.collection(PLAYER_TIME_HISTORY_COLLECTION).document()
 
         val firestoreModel = playerTimeHistory.toFirestoreModel()
-        val modelWithTeam = firestoreModel.copy(
-            id = docRef.id,
-            teamId = teamDocId,
-            matchDocId = matchDocId ?: "",
-        )
+        val modelWithTeam =
+            firestoreModel.copy(
+                id = docRef.id,
+                teamId = teamDocId,
+                matchDocId = matchDocId ?: "",
+            )
 
         try {
             docRef.set(modelWithTeam).await()

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -30,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
@@ -53,17 +53,17 @@ fun TeamForm(
     clubFirestoreId: String? = null,
     isPresident: Boolean = false,
     onShowTeamTypeChangeError: () -> Unit = {},
-    onSave: (Team, Long?) -> Unit
+    onSave: (Team, Long?) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
-    var formState by remember { 
+    var formState by remember {
         val baseState = team.toTeamFormState()
         mutableStateOf(
             baseState.copy(
                 clubId = clubId ?: baseState.clubId,
-                clubFirestoreId = clubFirestoreId ?: baseState.clubFirestoreId
-            )
-        ) 
+                clubFirestoreId = clubFirestoreId ?: baseState.clubFirestoreId,
+            ),
+        )
     }
 
     var selectedOption by remember { mutableStateOf(players.firstOrNull { it.isCaptain }?.id) }
@@ -71,13 +71,15 @@ fun TeamForm(
     var teamTypeExpanded by remember { mutableStateOf(false) }
 
     val validateAndSave = {
-        formState = formState.copy(
-            errors = FormErrors(
-                name = formState.name.isBlank(),
-                coachName = formState.coachName.isBlank(),
-                delegateName = formState.delegateName.isBlank()
-            ),
-        )
+        formState =
+            formState.copy(
+                errors =
+                    FormErrors(
+                        name = formState.name.isBlank(),
+                        coachName = formState.coachName.isBlank(),
+                        delegateName = formState.delegateName.isBlank(),
+                    ),
+            )
 
         if (!formState.errors.hasErrors) {
             onSave(formState.toTeam(), selectedOption)
@@ -90,9 +92,10 @@ fun TeamForm(
     ) {
         Column {
             LazyColumn(
-                modifier = Modifier
-                    .weight(1F)
-                    .padding(TFMSpacing.spacing04),
+                modifier =
+                    Modifier
+                        .weight(1F)
+                        .padding(TFMSpacing.spacing04),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (team == null) {
@@ -100,9 +103,10 @@ fun TeamForm(
                         TeamFlowManagerIcon()
 
                         Text(
-                            modifier = Modifier.padding(
-                                bottom = TFMSpacing.spacing04
-                            ),
+                            modifier =
+                                Modifier.padding(
+                                    bottom = TFMSpacing.spacing04,
+                                ),
                             text = stringResource(id = R.string.create_team_title),
                             style = MaterialTheme.typography.headlineMedium,
                         )
@@ -111,101 +115,117 @@ fun TeamForm(
 
                 item {
                     AppTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = TFMSpacing.spacing03),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = TFMSpacing.spacing03),
                         value = formState.name,
                         onValueChange = {
-                            formState = formState.copy(
-                                name = it,
-                                errors = formState.errors.copy(name = false)
-                            )
+                            formState =
+                                formState.copy(
+                                    name = it,
+                                    errors = formState.errors.copy(name = false),
+                                )
                         },
                         label = { Text(stringResource(R.string.team_name)) },
                         isError = formState.errors.name,
-                        supportingText = if (formState.errors.name) {
-                            { Text(stringResource(R.string.team_name_required)) }
-                        } else {
-                            null
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Next,
-                            capitalization = KeyboardCapitalization.Words
-                        ),
-                        keyboardActions = KeyboardActions(onNext = {
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }),
+                        supportingText =
+                            if (formState.errors.name) {
+                                { Text(stringResource(R.string.team_name_required)) }
+                            } else {
+                                null
+                            },
+                        keyboardOptions =
+                            KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                capitalization = KeyboardCapitalization.Words,
+                            ),
+                        keyboardActions =
+                            KeyboardActions(onNext = {
+                                focusManager.moveFocus(FocusDirection.Down)
+                            }),
                     )
                 }
 
                 item {
                     AppTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = TFMSpacing.spacing03),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = TFMSpacing.spacing03),
                         value = formState.coachName,
                         onValueChange = {
-                            formState = formState.copy(
-                                coachName = it,
-                                errors = formState.errors.copy(coachName = false)
-                            )
+                            formState =
+                                formState.copy(
+                                    coachName = it,
+                                    errors = formState.errors.copy(coachName = false),
+                                )
                         },
                         label = { Text(stringResource(R.string.coach_name)) },
                         isError = formState.errors.coachName,
-                        supportingText = if (formState.errors.coachName) {
-                            { Text(stringResource(R.string.first_name_required)) }
-                        } else {
-                            null
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Next,
-                            capitalization = KeyboardCapitalization.Words
-                        ),
-                        keyboardActions = KeyboardActions(onNext = {
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }),
+                        supportingText =
+                            if (formState.errors.coachName) {
+                                { Text(stringResource(R.string.first_name_required)) }
+                            } else {
+                                null
+                            },
+                        keyboardOptions =
+                            KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                capitalization = KeyboardCapitalization.Words,
+                            ),
+                        keyboardActions =
+                            KeyboardActions(onNext = {
+                                focusManager.moveFocus(FocusDirection.Down)
+                            }),
                     )
                 }
 
                 item {
                     AppTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = TFMSpacing.spacing03),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = TFMSpacing.spacing03),
                         value = formState.delegateName,
                         onValueChange = {
-                            formState = formState.copy(
-                                delegateName = it,
-                                errors = formState.errors.copy(delegateName = false)
-                            )
+                            formState =
+                                formState.copy(
+                                    delegateName = it,
+                                    errors = formState.errors.copy(delegateName = false),
+                                )
                         },
                         label = { Text(stringResource(R.string.delegate_name)) },
                         isError = formState.errors.delegateName,
-                        supportingText = if (formState.errors.delegateName) {
-                            { Text(stringResource(R.string.delegate_name_required)) }
-                        } else {
-                            null
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Done,
-                            capitalization = KeyboardCapitalization.Words
-                        ),
+                        supportingText =
+                            if (formState.errors.delegateName) {
+                                { Text(stringResource(R.string.delegate_name_required)) }
+                            } else {
+                                null
+                            },
+                        keyboardOptions =
+                            KeyboardOptions(
+                                imeAction = ImeAction.Done,
+                                capitalization = KeyboardCapitalization.Words,
+                            ),
                         keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
                     )
                 }
 
                 item {
                     ExposedDropdownMenuBox(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = TFMSpacing.spacing04),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = TFMSpacing.spacing04),
                         expanded = teamTypeExpanded,
-                        onExpandedChange = { teamTypeExpanded = !teamTypeExpanded }
+                        onExpandedChange = { teamTypeExpanded = !teamTypeExpanded },
                     ) {
                         AppTextField(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(),
                             value = stringResource(formState.teamType.toStringRes(), formState.teamType.players),
                             onValueChange = {},
                             readOnly = true,
@@ -217,7 +237,7 @@ fun TeamForm(
 
                         ExposedDropdownMenu(
                             expanded = teamTypeExpanded,
-                            onDismissRequest = { teamTypeExpanded = false }
+                            onDismissRequest = { teamTypeExpanded = false },
                         ) {
                             TeamType.entries.forEach { type ->
                                 DropdownMenuItem(
@@ -225,7 +245,7 @@ fun TeamForm(
                                     onClick = {
                                         formState = formState.copy(teamType = type)
                                         teamTypeExpanded = false
-                                    }
+                                    },
                                 )
                             }
                         }
@@ -240,16 +260,17 @@ fun TeamForm(
                             onClear = {
                                 selectedOption = null
                                 formState = formState.copy()
-                            }
+                            },
                         )
                     }
 
-                    val selectablePlayers = players.map {
-                        object : SelectableItem {
-                            override val id = it.id
-                            override val label = "${it.firstName} ${it.lastName}"
+                    val selectablePlayers =
+                        players.map {
+                            object : SelectableItem {
+                                override val id = it.id
+                                override val label = "${it.firstName} ${it.lastName}"
+                            }
                         }
-                    }
 
                     items(selectablePlayers) { item ->
                         ClearableRadioSelectorList(
@@ -258,20 +279,21 @@ fun TeamForm(
                             onSelect = { id ->
                                 selectedOption = id
                                 formState = formState.copy()
-                            }
+                            },
                         )
                     }
                 }
             }
 
             Button(
-                modifier = Modifier
-                    .padding(
-                        start = TFMSpacing.spacing04,
-                        end = TFMSpacing.spacing04,
-                        bottom = LocalContentBottomPadding.current + 8.dp,
-                    )
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .padding(
+                            start = TFMSpacing.spacing04,
+                            end = TFMSpacing.spacing04,
+                            bottom = LocalContentBottomPadding.current + 8.dp,
+                        )
+                        .fillMaxWidth(),
                 onClick = { validateAndSave() },
             ) {
                 Text(text = stringResource(R.string.save))
@@ -283,7 +305,7 @@ fun TeamForm(
 private data class FormErrors(
     val name: Boolean = false,
     val coachName: Boolean = false,
-    val delegateName: Boolean = false
+    val delegateName: Boolean = false,
 ) {
     val hasErrors: Boolean = name || coachName || delegateName
 }
@@ -297,51 +319,55 @@ private data class TeamFormState(
     val coachId: String? = null,
     val clubId: Long? = null,
     val clubFirestoreId: String? = null,
-    val errors: FormErrors = FormErrors()
+    val errors: FormErrors = FormErrors(),
 )
 
-private fun TeamFormState.toTeam(): Team = Team(
-    id = id,
-    name = name.trimEnd(),
-    coachName = coachName.trimEnd(),
-    delegateName = delegateName.trimEnd(),
-    teamType = teamType,
-    coachId = coachId,
-    clubId = clubId,
-    clubFirestoreId = clubFirestoreId
-)
-
-private fun Team?.toTeamFormState() = this?.let {
-    TeamFormState(
-        id = it.id,
-        name = it.name,
-        coachName = it.coachName,
-        delegateName = it.delegateName,
-        teamType = it.teamType,
-        coachId = it.coachId,
-        clubId = it.clubId,
-        clubFirestoreId = it.clubFirestoreId
+private fun TeamFormState.toTeam(): Team =
+    Team(
+        id = id,
+        name = name.trimEnd(),
+        coachName = coachName.trimEnd(),
+        delegateName = delegateName.trimEnd(),
+        teamType = teamType,
+        coachId = coachId,
+        clubId = clubId,
+        clubFirestoreId = clubFirestoreId,
     )
-} ?: TeamFormState()
+
+private fun Team?.toTeamFormState() =
+    this?.let {
+        TeamFormState(
+            id = it.id,
+            name = it.name,
+            coachName = it.coachName,
+            delegateName = it.delegateName,
+            teamType = it.teamType,
+            coachId = it.coachId,
+            clubId = it.clubId,
+            clubFirestoreId = it.clubFirestoreId,
+        )
+    } ?: TeamFormState()
 
 @Preview
 @Composable
 private fun TeamFormPreview() {
     TFMAppTheme {
         TeamForm(
-            team = Team(
-                id = 1,
-                name = "Team A",
-                coachName = "Coach A",
-                delegateName = "Delegate A",
-                teamType = TeamType.FOOTBALL_5
-            ),
-            players = listOf(
-                Player(1, "John", "Doe", 3, listOf(), isCaptain = true, teamId = 1),
-                Player(2, "Jane", "Smith", 2, listOf(), isCaptain = false, teamId = 1),
-                Player(3, "Bob", "Johnson", 17, listOf(), isCaptain = false, teamId = 1),
-            ),
-            onSave = { _, _ -> }
+            team =
+                Team(
+                    id = 1,
+                    name = "Team A",
+                    coachName = "Coach A",
+                    delegateName = "Delegate A",
+                    teamType = TeamType.FOOTBALL_5,
+                ),
+            players =
+                listOf(
+                    Player(1, "John", "Doe", 3, listOf(), isCaptain = true, teamId = 1),
+                    Player(2, "Jane", "Smith", 2, listOf(), isCaptain = false, teamId = 1),
+                    Player(3, "Bob", "Johnson", 17, listOf(), isCaptain = false, teamId = 1),
+                ),
+            onSave = { _, _ -> },
         )
     }
 }

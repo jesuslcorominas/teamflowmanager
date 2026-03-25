@@ -32,11 +32,12 @@ fun PlayerTimeFirestoreModel.toDomain(): PlayerTime =
         elapsedTimeMillis = elapsedTimeMillis,
         isRunning = running,
         lastStartTimeMillis = lastStartTimeMillis,
-        status = try {
-            PlayerTimeStatus.valueOf(status)
-        } catch (_: Exception) {
-            PlayerTimeStatus.ON_BENCH
-        },
+        status =
+            try {
+                PlayerTimeStatus.valueOf(status)
+            } catch (_: Exception) {
+                PlayerTimeStatus.ON_BENCH
+            },
         lastOperationId = lastOperationId,
     )
 

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 interface GetClubMembersUseCase {
     /**
      * Get all members of a club.
-     * 
+     *
      * @param clubFirestoreId The Firestore document ID of the club
      * @return Flow emitting list of club members
      */

@@ -7,6 +7,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-actual val dataLocalModule: Module = module {
-    singleOf(::PreferencesLocalDataSourceImpl) bind PreferencesDataSource::class
-}
+actual val dataLocalModule: Module =
+    module {
+        singleOf(::PreferencesLocalDataSourceImpl) bind PreferencesDataSource::class
+    }

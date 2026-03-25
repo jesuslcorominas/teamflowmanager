@@ -13,8 +13,10 @@ internal class AssignCoachToTeamUseCaseImpl(
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : AssignCoachToTeamUseCase {
-
-    override suspend fun invoke(teamFirestoreId: String, coachUserId: String): Team {
+    override suspend fun invoke(
+        teamFirestoreId: String,
+        coachUserId: String,
+    ): Team {
         // Validate inputs
         require(teamFirestoreId.isNotBlank()) {
             "Team Firestore ID cannot be blank"
@@ -24,12 +26,14 @@ internal class AssignCoachToTeamUseCaseImpl(
         }
 
         // Get current authenticated user
-        val currentUser = getCurrentUser().first()
-            ?: throw IllegalStateException("User must be authenticated to assign a coach")
+        val currentUser =
+            getCurrentUser().first()
+                ?: throw IllegalStateException("User must be authenticated to assign a coach")
 
         // Get the team
-        val team = teamRepository.getTeamByFirestoreId(teamFirestoreId)
-            ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
+        val team =
+            teamRepository.getTeamByFirestoreId(teamFirestoreId)
+                ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
 
         // Verify team belongs to a club
         require(team.clubFirestoreId != null) {
@@ -37,8 +41,9 @@ internal class AssignCoachToTeamUseCaseImpl(
         }
 
         // Get current user's club membership
-        val currentUserMembership = clubMemberRepository.getClubMemberByUserId(currentUser.id).first()
-            ?: throw IllegalStateException("User must be a club member to assign a coach")
+        val currentUserMembership =
+            clubMemberRepository.getClubMemberByUserId(currentUser.id).first()
+                ?: throw IllegalStateException("User must be a club member to assign a coach")
 
         // Verify current user is a President
         require(currentUserMembership.hasRole(ClubRole.PRESIDENT)) {
@@ -51,21 +56,22 @@ internal class AssignCoachToTeamUseCaseImpl(
         }
 
         // Get the coach's club membership
-        val coachMembership = clubMemberRepository.getClubMemberByUserIdAndClub(
-            userId = coachUserId,
-            clubFirestoreId = team.clubFirestoreId!!
-        ) ?: throw IllegalArgumentException("Coach must be a member of the club")
+        val coachMembership =
+            clubMemberRepository.getClubMemberByUserIdAndClub(
+                userId = coachUserId,
+                clubFirestoreId = team.clubFirestoreId!!,
+            ) ?: throw IllegalArgumentException("Coach must be a member of the club")
 
         try {
             // TODO: Implement Firestore transaction or batch write for atomicity
             // Currently, these are two separate operations which could fail independently
             // causing data inconsistency. This should be refactored to use Firestore
             // batch writes or transactions to ensure both operations succeed or fail together.
-            
+
             // Step 1: Update team's coachId
             teamRepository.updateTeamCoachId(
                 teamFirestoreId = teamFirestoreId,
-                coachId = coachUserId
+                coachId = coachUserId,
             )
 
             // Step 2: Add Coach role to club member (if not already present)
@@ -73,7 +79,7 @@ internal class AssignCoachToTeamUseCaseImpl(
                 clubMemberRepository.addClubMemberRole(
                     userId = coachUserId,
                     clubFirestoreId = team.clubFirestoreId!!,
-                    role = ClubRole.COACH.roleName
+                    role = ClubRole.COACH.roleName,
                 )
             }
 

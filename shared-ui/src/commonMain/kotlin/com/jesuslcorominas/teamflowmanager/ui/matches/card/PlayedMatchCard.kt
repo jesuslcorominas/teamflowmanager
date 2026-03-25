@@ -38,14 +38,16 @@ fun PlayedMatchCard(
     onAction: () -> Unit = {},
 ) {
     AppCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onNavigateToDetail() },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToDetail() },
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing04),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -78,7 +80,10 @@ fun PlayedMatchCard(
                 IconButton(onClick = onAction) {
                     Icon(
                         imageVector = if (match.archived) Icons.Default.Unarchive else Icons.Default.Archive,
-                        contentDescription = stringResource(if (match.archived) Res.string.unarchive_match else Res.string.archive_match),
+                        contentDescription =
+                            stringResource(
+                                if (match.archived) Res.string.unarchive_match else Res.string.archive_match,
+                            ),
                     )
                 }
             }

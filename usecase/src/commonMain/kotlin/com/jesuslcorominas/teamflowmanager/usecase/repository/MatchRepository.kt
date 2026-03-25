@@ -12,7 +12,10 @@ interface MatchRepository {
 
     suspend fun getScheduledMatches(): List<Match>
 
-    suspend fun updateMatchCaptain(matchId: Long, captainId: Long?)
+    suspend fun updateMatchCaptain(
+        matchId: Long,
+        captainId: Long?,
+    )
 
     suspend fun createMatch(match: Match): Long
 
@@ -20,13 +23,25 @@ interface MatchRepository {
 
     suspend fun deleteMatch(matchId: Long)
 
-    suspend fun startTimer(matchId: Long, currentTimeMillis: Long)
+    suspend fun startTimer(
+        matchId: Long,
+        currentTimeMillis: Long,
+    )
 
-    suspend fun pauseTimer(matchId: Long, currentTimeMillis: Long)
+    suspend fun pauseTimer(
+        matchId: Long,
+        currentTimeMillis: Long,
+    )
 
-    suspend fun startTimeout(matchId: Long, currentTimeMillis: Long)
+    suspend fun startTimeout(
+        matchId: Long,
+        currentTimeMillis: Long,
+    )
 
-    suspend fun endTimeout(matchId: Long, currentTimeMillis: Long)
+    suspend fun endTimeout(
+        matchId: Long,
+        currentTimeMillis: Long,
+    )
 
     suspend fun archiveMatch(matchId: Long)
 
@@ -35,5 +50,8 @@ interface MatchRepository {
     /**
      * Updates the match with a specific operation ID to track atomic operations
      */
-    suspend fun updateMatchWithOperationId(match: Match, operationId: String)
+    suspend fun updateMatchWithOperationId(
+        match: Match,
+        operationId: String,
+    )
 }

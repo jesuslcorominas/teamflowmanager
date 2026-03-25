@@ -18,7 +18,7 @@ object InvitationCodeGenerator {
      */
     fun generate(length: Int = CODE_LENGTH): String {
         require(length in 6..10) { "Code length must be between 6 and 10 characters" }
-        
+
         return buildString {
             repeat(length) {
                 val randomIndex = Random.nextInt(READABLE_CHARS.length)

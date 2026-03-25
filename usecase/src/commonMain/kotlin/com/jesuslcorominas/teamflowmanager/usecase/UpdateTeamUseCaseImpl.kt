@@ -4,7 +4,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 
-
 internal class UpdateTeamUseCaseImpl(
     private val teamRepository: TeamRepository,
 ) : UpdateTeamUseCase {

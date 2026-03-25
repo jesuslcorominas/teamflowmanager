@@ -59,20 +59,21 @@ fun TeamScreen(
     ) {
         when (val state = uiState) {
             is TeamUiState.Loading -> Loading()
-            is TeamUiState.Success -> if (viewModel.isEditMode) {
-                TeamForm(
-                    team = state.team,
-                    players = state.players,
-                    onShowTeamTypeChangeError = { viewModel.showTeamTypeChangeError() },
-                ) { team, captainId ->
-                    viewModel.updateTeam(team, captainId, onNavigateBackRequest)
+            is TeamUiState.Success ->
+                if (viewModel.isEditMode) {
+                    TeamForm(
+                        team = state.team,
+                        players = state.players,
+                        onShowTeamTypeChangeError = { viewModel.showTeamTypeChangeError() },
+                    ) { team, captainId ->
+                        viewModel.updateTeam(team, captainId, onNavigateBackRequest)
+                    }
+                } else {
+                    TeamDetailContent(
+                        team = state.team,
+                        captain = state.players.firstOrNull { it.isCaptain },
+                    )
                 }
-            } else {
-                TeamDetailContent(
-                    team = state.team,
-                    captain = state.players.firstOrNull { it.isCaptain },
-                )
-            }
 
             is TeamUiState.NoTeam -> {
                 if (state.clubId != null && !state.isPresident) {

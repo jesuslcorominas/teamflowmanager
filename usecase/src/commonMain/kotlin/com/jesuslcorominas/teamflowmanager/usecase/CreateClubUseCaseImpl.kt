@@ -16,8 +16,9 @@ internal class CreateClubUseCaseImpl(
 ) : CreateClubUseCase {
     override suspend fun invoke(clubName: String): Club {
         // Get current authenticated user
-        val currentUser = getCurrentUser().first()
-            ?: throw IllegalStateException("User must be authenticated to create a club")
+        val currentUser =
+            getCurrentUser().first()
+                ?: throw IllegalStateException("User must be authenticated to create a club")
 
         // Validate user data
         require(currentUser.displayName?.isNotBlank() == true) {
@@ -28,20 +29,21 @@ internal class CreateClubUseCaseImpl(
         }
 
         // Create club with owner
-        val club = clubRepository.createClubWithOwner(
-            clubName = clubName,
-            currentUserId = currentUser.id,
-            currentUserName = currentUser.displayName!!,
-            currentUserEmail = currentUser.email!!
-        )
-        
+        val club =
+            clubRepository.createClubWithOwner(
+                clubName = clubName,
+                currentUserId = currentUser.id,
+                currentUserName = currentUser.displayName!!,
+                currentUserEmail = currentUser.email!!,
+            )
+
         // If user has a team, associate it with the newly created club
         val team = getTeam().first()
         if (team != null && club.firestoreId != null) {
             val updatedTeam = team.copy(clubFirestoreId = club.firestoreId)
             updateTeam(updatedTeam)
         }
-        
+
         return club
     }
 }

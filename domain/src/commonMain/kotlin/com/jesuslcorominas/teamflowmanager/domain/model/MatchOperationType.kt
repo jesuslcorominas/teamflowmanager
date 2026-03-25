@@ -5,5 +5,5 @@ enum class MatchOperationType {
     PAUSE,
     RESUME,
     FINISH,
-    SUBSTITUTION
+    SUBSTITUTION,
 }

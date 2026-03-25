@@ -27,14 +27,16 @@ fun ArchivedMatchesNavigationCard(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable { onClick() },
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TFMSpacing.spacing04, vertical = TFMSpacing.spacing02),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TFMSpacing.spacing04, vertical = TFMSpacing.spacing02),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

@@ -15,14 +15,16 @@ class ClubMembersViewModel(
     private val getClubMembers: GetClubMembersUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     sealed interface UiState {
         data object Loading : UiState
+
         data class Success(val members: List<ClubMember>) : UiState
+
         data object Error : UiState
+
         data object NoClubMembership : UiState
     }
 

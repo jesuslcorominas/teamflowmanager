@@ -19,7 +19,6 @@ class MatchOperationFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
 ) : MatchOperationDataSource {
-
     companion object {
         private const val TAG = "MatchOperationFirestoreDS"
         private const val OPERATIONS_COLLECTION = "matchOperations"
@@ -37,11 +36,12 @@ class MatchOperationFirestoreDataSourceImpl(
         }
 
         return try {
-            val snapshot = firestore.collection(TEAMS_COLLECTION)
-                .whereEqualTo("assignedCoachId", currentUserId)
-                .limit(1)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(TEAMS_COLLECTION)
+                    .whereEqualTo("assignedCoachId", currentUserId)
+                    .limit(1)
+                    .get()
+                    .await()
 
             val teamDocId = snapshot.documents.firstOrNull()?.id
             Log.d(TAG, "getTeamDocumentId: Found teamDocId=$teamDocId")
@@ -64,10 +64,11 @@ class MatchOperationFirestoreDataSourceImpl(
         }
 
         val docRef = firestore.collection(OPERATIONS_COLLECTION).document()
-        val firestoreModel = operation.toFirestoreModel().copy(
-            id = docRef.id,
-            teamId = teamDocId
-        )
+        val firestoreModel =
+            operation.toFirestoreModel().copy(
+                id = docRef.id,
+                teamId = teamDocId,
+            )
 
         return try {
             docRef.set(firestoreModel).await()
@@ -115,10 +116,11 @@ class MatchOperationFirestoreDataSourceImpl(
         Log.d(TAG, "getOperationById: operationId=$operationId")
 
         return try {
-            val snapshot = firestore.collection(OPERATIONS_COLLECTION)
-                .document(operationId)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(OPERATIONS_COLLECTION)
+                    .document(operationId)
+                    .get()
+                    .await()
 
             val firestoreModel = snapshot.toObject(MatchOperationFirestoreModel::class.java)
             val operation = firestoreModel?.toDomain()

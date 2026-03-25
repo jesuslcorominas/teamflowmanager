@@ -33,7 +33,8 @@ import teamflowmanager.shared_ui.generated.resources.unsaved_changes_title
 fun PlayerWizardScreen(
     playerId: Long,
     onNavigateBack: () -> Unit,
-    wizardViewModel: PlayerWizardViewModel = koinViewModel(key = playerId.toString(), parameters = { parametersOf(playerId) }),
+    wizardViewModel: PlayerWizardViewModel =
+        koinViewModel(key = playerId.toString(), parameters = { parametersOf(playerId) }),
 ) {
     TrackScreenView(screenName = ScreenName.PLAYER_WIZARD, screenClass = "PlayerWizardScreen")
 
@@ -74,9 +75,10 @@ fun PlayerWizardScreen(
                                 },
                                 onNext = { wizardViewModel.goToNextStep() },
                                 onCancel = { wizardViewModel.requestBack(onNavigateBack) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
                         PlayerWizardStep.POSITIONS -> {
@@ -85,35 +87,46 @@ fun PlayerWizardScreen(
                                 onPositionsChanged = { positions -> wizardViewModel.setPositions(positions) },
                                 onSave = { wizardViewModel.savePlayer(onSuccess = onNavigateBack) },
                                 onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
                     }
                 }
 
                 when (val state = captainConfirmationState) {
-                    is CaptainConfirmationState.ConfirmReplace -> CaptainConfirmationDialog(
-                        state = state,
-                        onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
-                        onDismiss = { wizardViewModel.cancelCaptainChange() },
-                    )
-                    is CaptainConfirmationState.ConfirmReplaceWithMatches -> CaptainConfirmationDialog(
-                        state = state,
-                        onConfirm = { keepInMatches -> wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack) },
-                        onDismiss = { wizardViewModel.cancelCaptainChange() },
-                    )
-                    is CaptainConfirmationState.ConfirmRemove -> CaptainConfirmationDialog(
-                        state = state,
-                        onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
-                        onDismiss = { wizardViewModel.cancelCaptainChange() },
-                    )
-                    is CaptainConfirmationState.ConfirmRemoveWithMatches -> CaptainConfirmationDialog(
-                        state = state,
-                        onConfirm = { keepInMatches -> wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack) },
-                        onDismiss = { wizardViewModel.cancelCaptainChange() },
-                    )
+                    is CaptainConfirmationState.ConfirmReplace ->
+                        CaptainConfirmationDialog(
+                            state = state,
+                            onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
+                            onDismiss = { wizardViewModel.cancelCaptainChange() },
+                        )
+                    is CaptainConfirmationState.ConfirmReplaceWithMatches ->
+                        CaptainConfirmationDialog(
+                            state = state,
+                            onConfirm = {
+                                    keepInMatches ->
+                                wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack)
+                            },
+                            onDismiss = { wizardViewModel.cancelCaptainChange() },
+                        )
+                    is CaptainConfirmationState.ConfirmRemove ->
+                        CaptainConfirmationDialog(
+                            state = state,
+                            onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
+                            onDismiss = { wizardViewModel.cancelCaptainChange() },
+                        )
+                    is CaptainConfirmationState.ConfirmRemoveWithMatches ->
+                        CaptainConfirmationDialog(
+                            state = state,
+                            onConfirm = {
+                                    keepInMatches ->
+                                wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack)
+                            },
+                            onDismiss = { wizardViewModel.cancelCaptainChange() },
+                        )
                     is CaptainConfirmationState.None -> {}
                 }
             }

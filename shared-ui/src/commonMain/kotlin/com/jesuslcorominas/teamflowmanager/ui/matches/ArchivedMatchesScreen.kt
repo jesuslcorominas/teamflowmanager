@@ -41,12 +41,13 @@ fun ArchivedMatchesScreen(
             is ArchivedMatchesUiState.Success -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        bottom = LocalContentBottomPadding.current,
-                        top = TFMSpacing.spacing04,
-                        start = TFMSpacing.spacing04,
-                        end = TFMSpacing.spacing04,
-                    ),
+                    contentPadding =
+                        PaddingValues(
+                            bottom = LocalContentBottomPadding.current,
+                            top = TFMSpacing.spacing04,
+                            start = TFMSpacing.spacing04,
+                            end = TFMSpacing.spacing04,
+                        ),
                     verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                 ) {
                     items(state.matches) { match ->

@@ -28,5 +28,7 @@ interface SampleApi {
      * @return The requested resource
      */
     @GET("resource/{id}")
-    suspend fun getResource(@Path("id") id: String): String // Replace String with your actual response type
+    suspend fun getResource(
+        @Path("id") id: String,
+    ): String // Replace String with your actual response type
 }

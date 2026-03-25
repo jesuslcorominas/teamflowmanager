@@ -104,10 +104,11 @@ private fun StartingLineupCard(event: TimelineEvent.StartingLineup) {
 
 @Composable
 private fun GoalScoredCard(event: TimelineEvent.GoalScored) {
-    val (title, iconBackgroundColor) = when {
-        event.isOpponentGoal -> stringResource(Res.string.timeline_opponent_goal) to SubstitutionRed
-        else -> stringResource(Res.string.timeline_goal) to SubstitutionGreen
-    }
+    val (title, iconBackgroundColor) =
+        when {
+            event.isOpponentGoal -> stringResource(Res.string.timeline_opponent_goal) to SubstitutionRed
+            else -> stringResource(Res.string.timeline_goal) to SubstitutionGreen
+        }
 
     EventCard(
         timeMillis = event.matchElapsedTimeMillis,
@@ -204,10 +205,11 @@ private fun TimeoutCard(event: TimelineEvent.Timeout) {
 
 @Composable
 private fun PeriodBreakCard(event: TimelineEvent.PeriodBreak) {
-    val title = when {
-        event.periodType == PeriodType.HALF_TIME -> stringResource(Res.string.timeline_halftime)
-        else -> stringResource(Res.string.timeline_quarter_break)
-    }
+    val title =
+        when {
+            event.periodType == PeriodType.HALF_TIME -> stringResource(Res.string.timeline_halftime)
+            else -> stringResource(Res.string.timeline_quarter_break)
+        }
 
     EventCard(
         timeMillis = event.matchElapsedTimeMillis,
@@ -232,9 +234,10 @@ private fun EventCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing03),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing03),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -249,10 +252,11 @@ private fun EventCard(
             Spacer(modifier = Modifier.width(TFMSpacing.spacing03))
 
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(iconBackgroundColor),
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(iconBackgroundColor),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

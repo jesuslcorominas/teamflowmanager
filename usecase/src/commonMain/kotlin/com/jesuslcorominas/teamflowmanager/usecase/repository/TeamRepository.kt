@@ -37,7 +37,11 @@ interface TeamRepository {
      * @param clubId The club's numeric ID
      * @param clubFirestoreId The club's Firestore document ID
      */
-    suspend fun updateTeamClubId(teamFirestoreId: String, clubId: Long, clubFirestoreId: String)
+    suspend fun updateTeamClubId(
+        teamFirestoreId: String,
+        clubId: Long,
+        clubFirestoreId: String,
+    )
 
     /**
      * Get team by Firestore document ID.
@@ -51,7 +55,10 @@ interface TeamRepository {
      * @param teamFirestoreId The Firestore document ID of the team
      * @param coachId The Firebase user ID of the coach to assign
      */
-    suspend fun updateTeamCoachId(teamFirestoreId: String, coachId: String)
+    suspend fun updateTeamCoachId(
+        teamFirestoreId: String,
+        coachId: String,
+    )
 
     /**
      * Generate a shareable invitation link for a team.
@@ -59,5 +66,8 @@ interface TeamRepository {
      * @param teamName The name of the team for display in the invitation
      * @return The generated invitation link (Firebase Dynamic Link or fallback)
      */
-    suspend fun generateTeamInvitationLink(teamFirestoreId: String, teamName: String): String
+    suspend fun generateTeamInvitationLink(
+        teamFirestoreId: String,
+        teamName: String,
+    ): String
 }

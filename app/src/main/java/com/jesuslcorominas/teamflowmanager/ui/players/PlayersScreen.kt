@@ -77,12 +77,13 @@ private fun PlayersListSuccess(
 ) {
     PlayerList(
         modifier = Modifier.fillMaxSize(),
-        paddingValues = PaddingValues(
-            bottom = LocalContentBottomPadding.current,
-            top = TFMSpacing.spacing04,
-            start = TFMSpacing.spacing04,
-            end = TFMSpacing.spacing04,
-        ),
+        paddingValues =
+            PaddingValues(
+                bottom = LocalContentBottomPadding.current,
+                top = TFMSpacing.spacing04,
+                start = TFMSpacing.spacing04,
+                end = TFMSpacing.spacing04,
+            ),
         players = players.sortedBy { it.number },
         onEditClick = onEditClick,
         onDeleteClick = onDeleteClick,
@@ -103,7 +104,7 @@ private fun PlayersListSuccessPreview() {
                         number = 10,
                         positions = emptyList(),
                         teamId = 1,
-                        isCaptain = false
+                        isCaptain = false,
                     ),
                     Player(
                         id = 2,
@@ -112,7 +113,7 @@ private fun PlayersListSuccessPreview() {
                         number = 8,
                         positions = emptyList(),
                         teamId = 1,
-                        isCaptain = false
+                        isCaptain = false,
                     ),
                 ),
             onEditClick = {},

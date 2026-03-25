@@ -35,16 +35,23 @@ fun PlayerList(
             PlayerItem(
                 player = player,
                 isSelected = player.id in selectedPlayerIds,
-                showCaptainBadge = if (showCaptainBadge) {
-                    if (captainId != null) player.id == captainId else player.isCaptain
-                } else {
-                    false
-                },
+                showCaptainBadge =
+                    if (showCaptainBadge) {
+                        if (captainId != null) player.id == captainId else player.isCaptain
+                    } else {
+                        false
+                    },
                 showGoalkeeperBadge = showGoalKeeperBadge && player.positions.any { it == Position.Goalkeeper },
                 showPositions = showPositions,
                 onEditClick = onEditClick?.let { { onEditClick(player) } },
                 onDeleteClick = onDeleteClick?.let { { onDeleteClick(player) } },
-                onMultiSelectionChange = onMultiSelectionChange?.let { { isSelected -> onMultiSelectionChange(player, isSelected) } },
+                onMultiSelectionChange =
+                    onMultiSelectionChange?.let {
+                        {
+                                isSelected ->
+                            onMultiSelectionChange(player, isSelected)
+                        }
+                    },
                 onSingleSelectionChange = onSingleSelectionChange?.let { { onSingleSelectionChange(player) } },
             )
         }

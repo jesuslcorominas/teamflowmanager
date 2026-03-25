@@ -22,11 +22,15 @@ import teamflowmanager.shared_ui.generated.resources.team_name
 import teamflowmanager.shared_ui.generated.resources.team_type
 
 @Composable
-fun TeamDetailContent(team: Team, captain: Player? = null) {
+fun TeamDetailContent(
+    team: Team,
+    captain: Player? = null,
+) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(TFMSpacing.spacing04),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(TFMSpacing.spacing04),
         horizontalAlignment = Alignment.Start,
     ) {
         InfoRow(
@@ -59,11 +63,15 @@ fun TeamDetailContent(team: Team, captain: Player? = null) {
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(
+    label: String,
+    value: String,
+) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = TFMSpacing.spacing03, horizontal = TFMSpacing.spacing02),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = TFMSpacing.spacing03, horizontal = TFMSpacing.spacing02),
     ) {
         Text(
             text = label,

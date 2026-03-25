@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.flowOf
 
 class GetUserClubMembershipUseCaseImpl(
     private val getCurrentUser: GetCurrentUserUseCase,
-    private val clubMemberRepository: ClubMemberRepository
+    private val clubMemberRepository: ClubMemberRepository,
 ) : GetUserClubMembershipUseCase {
     override fun invoke(): Flow<ClubMember?> {
         return getCurrentUser().flatMapLatest { user ->

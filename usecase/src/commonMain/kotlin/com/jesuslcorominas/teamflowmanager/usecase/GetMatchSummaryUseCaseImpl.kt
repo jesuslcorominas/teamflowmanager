@@ -11,7 +11,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryR
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-
 internal class GetMatchSummaryUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val playerTimeHistoryRepository: PlayerTimeHistoryRepository,
@@ -28,29 +27,34 @@ internal class GetMatchSummaryUseCaseImpl(
             if (match == null) {
                 null
             } else {
-                val playerTimeSummaries = playerTimes.map { playerTime ->
-                    val player = players.find { it.id == playerTime.playerId }
-                    val substitutionCount = substitutions.count {
-                        it.playerOutId == playerTime.playerId || it.playerInId == playerTime.playerId
-                    }
-                    PlayerTimeSummary(
-                        player = player ?: throw IllegalStateException("Player not found: ${playerTime.playerId}"),
-                        elapsedTimeMillis = playerTime.elapsedTimeMillis,
-                        substitutionCount = substitutionCount,
-                    )
-                }.sortedByDescending { it.elapsedTimeMillis }
+                val playerTimeSummaries =
+                    playerTimes.map { playerTime ->
+                        val player = players.find { it.id == playerTime.playerId }
+                        val substitutionCount =
+                            substitutions.count {
+                                it.playerOutId == playerTime.playerId || it.playerInId == playerTime.playerId
+                            }
+                        PlayerTimeSummary(
+                            player = player ?: throw IllegalStateException("Player not found: ${playerTime.playerId}"),
+                            elapsedTimeMillis = playerTime.elapsedTimeMillis,
+                            substitutionCount = substitutionCount,
+                        )
+                    }.sortedByDescending { it.elapsedTimeMillis }
 
-                val substitutionSummaries = substitutions.map { substitution ->
-                    val playerOut = players.find { it.id == substitution.playerOutId }
-                    val playerIn = players.find { it.id == substitution.playerInId }
-                    SubstitutionSummary(
-                        playerOut = playerOut
-                            ?: throw IllegalStateException("Player not found: ${substitution.playerOutId}"),
-                        playerIn = playerIn
-                            ?: throw IllegalStateException("Player not found: ${substitution.playerInId}"),
-                        matchElapsedTimeMillis = substitution.matchElapsedTimeMillis,
-                    )
-                }.sortedBy { it.matchElapsedTimeMillis }
+                val substitutionSummaries =
+                    substitutions.map { substitution ->
+                        val playerOut = players.find { it.id == substitution.playerOutId }
+                        val playerIn = players.find { it.id == substitution.playerInId }
+                        SubstitutionSummary(
+                            playerOut =
+                                playerOut
+                                    ?: throw IllegalStateException("Player not found: ${substitution.playerOutId}"),
+                            playerIn =
+                                playerIn
+                                    ?: throw IllegalStateException("Player not found: ${substitution.playerInId}"),
+                            matchElapsedTimeMillis = substitution.matchElapsedTimeMillis,
+                        )
+                    }.sortedBy { it.matchElapsedTimeMillis }
 
                 MatchSummary(
                     match = match,

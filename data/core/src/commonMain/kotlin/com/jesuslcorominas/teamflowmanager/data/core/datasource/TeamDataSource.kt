@@ -55,7 +55,11 @@ interface TeamDataSource {
      * @param clubId The club's numeric ID
      * @param clubFirestoreId The club's Firestore document ID
      */
-    suspend fun updateTeamClubId(teamFirestoreId: String, clubId: Long, clubFirestoreId: String)
+    suspend fun updateTeamClubId(
+        teamFirestoreId: String,
+        clubId: Long,
+        clubFirestoreId: String,
+    )
 
     /**
      * Get team by Firestore document ID.
@@ -69,5 +73,8 @@ interface TeamDataSource {
      * @param teamFirestoreId The Firestore document ID of the team
      * @param coachId The Firebase user ID of the coach to assign
      */
-    suspend fun updateTeamCoachId(teamFirestoreId: String, coachId: String)
+    suspend fun updateTeamCoachId(
+        teamFirestoreId: String,
+        coachId: String,
+    )
 }

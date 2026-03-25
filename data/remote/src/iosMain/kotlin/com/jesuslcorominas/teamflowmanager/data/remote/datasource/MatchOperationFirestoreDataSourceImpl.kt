@@ -18,7 +18,6 @@ class MatchOperationFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
 ) : MatchOperationDataSource {
-
     companion object {
         private const val OPERATIONS_COLLECTION = "matchOperations"
         private const val TEAMS_COLLECTION = "teams"
@@ -31,10 +30,11 @@ class MatchOperationFirestoreDataSourceImpl(
     private suspend fun getTeamDocumentId(): String? {
         val currentUserId = firebaseAuth.currentUser?.uid ?: return null
         return try {
-            val snapshot = firestore.collection(TEAMS_COLLECTION)
-                .where { "assignedCoachId" equalTo currentUserId }
-                .limit(1)
-                .get()
+            val snapshot =
+                firestore.collection(TEAMS_COLLECTION)
+                    .where { "assignedCoachId" equalTo currentUserId }
+                    .limit(1)
+                    .get()
             snapshot.documents.firstOrNull()?.id
         } catch (e: CancellationException) {
             throw e
@@ -44,8 +44,9 @@ class MatchOperationFirestoreDataSourceImpl(
     }
 
     override suspend fun createOperation(operation: MatchOperation): String {
-        val teamDocId = getTeamDocumentId()
-            ?: throw IllegalStateException("Team must exist to create operation")
+        val teamDocId =
+            getTeamDocumentId()
+                ?: throw IllegalStateException("Team must exist to create operation")
 
         return try {
             // @Transient id is excluded from serialization, so add() auto-generates it
@@ -62,14 +63,16 @@ class MatchOperationFirestoreDataSourceImpl(
     override suspend fun updateOperation(operation: MatchOperation) {
         require(operation.id.isNotEmpty()) { "Operation ID cannot be empty" }
 
-        val teamDocId = getTeamDocumentId()
-            ?: throw IllegalStateException("Team must exist to update operation")
+        val teamDocId =
+            getTeamDocumentId()
+                ?: throw IllegalStateException("Team must exist to update operation")
 
         try {
-            val model = operation.toFirestoreModel().copy(
-                id = operation.id,
-                teamId = teamDocId,
-            )
+            val model =
+                operation.toFirestoreModel().copy(
+                    id = operation.id,
+                    teamId = teamDocId,
+                )
             firestore.collection(OPERATIONS_COLLECTION)
                 .document(operation.id)
                 .set(model)

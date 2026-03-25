@@ -70,7 +70,7 @@ fun SettingsScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.Logout,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error,
                 )
             },
             title = {
@@ -84,7 +84,7 @@ fun SettingsScreen(
                     onClick = {
                         viewModel.signOut()
                         showSignOutDialog = false
-                    }
+                    },
                 ) {
                     Text(stringResource(R.string.sign_out))
                 }
@@ -93,7 +93,7 @@ fun SettingsScreen(
                 TextButton(onClick = { showSignOutDialog = false }) {
                     Text(stringResource(R.string.cancel))
                 }
-            }
+            },
         )
     }
 
@@ -102,16 +102,17 @@ fun SettingsScreen(
         color = MaterialTheme.colorScheme.background,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TFMSpacing.spacing04)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(TFMSpacing.spacing04),
         ) {
             // Account section
             Text(
                 text = stringResource(R.string.settings_account_section),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = TFMSpacing.spacing02)
+                modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
             )
 
             Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
@@ -120,7 +121,7 @@ fun SettingsScreen(
             currentUser?.let { user ->
                 UserAccountItem(
                     user = user,
-                    onClick = { showSignOutDialog = true }
+                    onClick = { showSignOutDialog = true },
                 )
             }
 
@@ -132,37 +133,40 @@ fun SettingsScreen(
 @Composable
 private fun UserAccountItem(
     user: com.jesuslcorominas.teamflowmanager.domain.model.User,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(TFMSpacing.spacing02),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(TFMSpacing.spacing02),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // User photo or placeholder
         if (user.photoUrl != null) {
             AsyncImage(
                 model = user.photoUrl,
                 contentDescription = null,
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
+                modifier =
+                    Modifier
+                        .size(48.dp)
+                        .clip(CircleShape),
+                contentScale = ContentScale.Crop,
             )
         } else {
             Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Person,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
             }
         }
@@ -172,19 +176,19 @@ private fun UserAccountItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = user.displayName ?: stringResource(R.string.user_name_unknown),
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
             )
             Text(
                 text = user.email ?: "",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.Logout,
             contentDescription = stringResource(R.string.sign_out),
-            tint = MaterialTheme.colorScheme.error
+            tint = MaterialTheme.colorScheme.error,
         )
     }
 }

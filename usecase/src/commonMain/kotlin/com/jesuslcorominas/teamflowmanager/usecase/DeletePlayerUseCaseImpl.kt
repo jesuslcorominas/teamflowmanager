@@ -3,8 +3,6 @@ package com.jesuslcorominas.teamflowmanager.usecase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 
-
-
 internal class DeletePlayerUseCaseImpl(
     private val playerRepository: PlayerRepository,
 ) : DeletePlayerUseCase {

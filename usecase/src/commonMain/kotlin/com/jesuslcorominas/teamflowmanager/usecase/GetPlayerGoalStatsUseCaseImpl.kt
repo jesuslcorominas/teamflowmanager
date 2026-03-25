@@ -14,9 +14,9 @@ internal class GetPlayerGoalStatsUseCaseImpl(
     override operator fun invoke(): Flow<List<PlayerGoalStats>> {
         return combine(
             playerRepository.getAllPlayers(),
-            goalRepository.getAllTeamGoals()
+            goalRepository.getAllTeamGoals(),
         ) { players, goals ->
-            players.map        { player ->
+            players.map { player ->
                 val playerGoals = goals.filter { it.scorerId == player.id }
                 val totalGoals = playerGoals.size
 
@@ -24,7 +24,7 @@ internal class GetPlayerGoalStatsUseCaseImpl(
                 PlayerGoalStats(
                     player = player,
                     totalGoals = totalGoals,
-                    matchesWithGoals = matchesWithGoals
+                    matchesWithGoals = matchesWithGoals,
                 )
             }.sortedByDescending { it.totalGoals }
         }

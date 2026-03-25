@@ -35,7 +35,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ClubMembersScreen(
     viewModel: ClubMembersViewModel = koinViewModel(),
-    onMemberClick: (ClubMember) -> Unit = {}
+    onMemberClick: (ClubMember) -> Unit = {},
 ) {
     TrackScreenView(screenName = ScreenName.CLUB_MEMBERS, screenClass = "ClubMembersScreen")
 
@@ -52,20 +52,20 @@ fun ClubMembersScreen(
                 MembersListContent(
                     members = state.members,
                     modifier = Modifier.fillMaxSize(),
-                    onMemberClick = onMemberClick
+                    onMemberClick = onMemberClick,
                 )
             }
         }
         is ClubMembersViewModel.UiState.Error -> {
             ErrorMessage(
                 message = stringResource(R.string.error_loading_members),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
         }
         is ClubMembersViewModel.UiState.NoClubMembership -> {
             ErrorMessage(
                 message = stringResource(R.string.no_club_membership_error),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }
@@ -75,16 +75,16 @@ fun ClubMembersScreen(
 private fun EmptyMembersMessage(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = stringResource(R.string.no_members_message),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -94,16 +94,16 @@ private fun EmptyMembersMessage(modifier: Modifier = Modifier) {
 private fun MembersListContent(
     members: List<ClubMember>,
     modifier: Modifier = Modifier,
-    onMemberClick: (ClubMember) -> Unit
+    onMemberClick: (ClubMember) -> Unit,
 ) {
     LazyColumn(
         modifier = modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(members, key = { it.id }) { member ->
             MemberCard(
                 member = member,
-                onClick = { onMemberClick(member) }
+                onClick = { onMemberClick(member) },
             )
         }
     }
@@ -112,40 +112,41 @@ private fun MembersListContent(
 @Composable
 private fun MemberCard(
     member: ClubMember,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     AppCard(
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier.clickable(onClick = onClick),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = member.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
                 Text(
                     text = member.email,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = member.roles.joinToString(", "),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -153,15 +154,18 @@ private fun MemberCard(
 }
 
 @Composable
-private fun ErrorMessage(message: String, modifier: Modifier = Modifier) {
+private fun ErrorMessage(
+    message: String,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = message,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.error
+            color = MaterialTheme.colorScheme.error,
         )
     }
 }

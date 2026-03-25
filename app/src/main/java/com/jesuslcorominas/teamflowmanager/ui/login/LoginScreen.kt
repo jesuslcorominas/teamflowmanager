@@ -55,7 +55,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = koinViewModel(),
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
 ) {
     TrackScreenView(screenName = ScreenName.LOGIN, screenClass = "LoginScreen")
 
@@ -83,19 +83,21 @@ fun LoginScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
+                verticalArrangement = Arrangement.Top,
             ) {
                 TeamFlowManagerIcon()
 
@@ -104,7 +106,7 @@ fun LoginScreen(
                 Text(
                     text = stringResource(id = R.string.app_name),
                     style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -113,7 +115,7 @@ fun LoginScreen(
                     text = stringResource(id = R.string.login_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))
@@ -130,10 +132,10 @@ fun LoginScreen(
                                 },
                                 onError = { errorMessage ->
                                     snackbarHostState.showSnackbar(errorMessage)
-                                }
+                                },
                             )
                         }
-                    }
+                    },
                 )
             }
         }
@@ -144,23 +146,26 @@ private suspend fun signInWithCredentialManager(
     context: Context,
     credentialManager: CredentialManager,
     onSuccess: (String) -> Unit,
-    onError: suspend (String) -> Unit
+    onError: suspend (String) -> Unit,
 ) {
-    val googleIdOption = GetGoogleIdOption.Builder()
-        .setFilterByAuthorizedAccounts(false)
-        .setServerClientId(context.getString(R.string.default_web_client_id))
-        .setAutoSelectEnabled(true)
-        .build()
+    val googleIdOption =
+        GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(context.getString(R.string.default_web_client_id))
+            .setAutoSelectEnabled(true)
+            .build()
 
-    val request = GetCredentialRequest.Builder()
-        .addCredentialOption(googleIdOption)
-        .build()
+    val request =
+        GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
 
     try {
-        val result = credentialManager.getCredential(
-            request = request,
-            context = context
-        )
+        val result =
+            credentialManager.getCredential(
+                request = request,
+                context = context,
+            )
         handleSignInResult(result, onSuccess, onError)
     } catch (e: GetCredentialException) {
         onError("Error al iniciar sesión: ${e.message}")
@@ -170,7 +175,7 @@ private suspend fun signInWithCredentialManager(
 private suspend fun handleSignInResult(
     result: GetCredentialResponse,
     onSuccess: (String) -> Unit,
-    onError: suspend (String) -> Unit
+    onError: suspend (String) -> Unit,
 ) {
     when (val credential = result.credential) {
         is CustomCredential -> {
@@ -195,40 +200,43 @@ private suspend fun handleSignInResult(
 @Composable
 private fun GoogleSignInButton(
     isLoading: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     OutlinedButton(
         onClick = onClick,
         enabled = !isLoading,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(48.dp),
         shape = MaterialTheme.shapes.small,
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outline
-        ),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.White,
-            contentColor = Color.Black.copy(alpha = 0.87f)
-        )
+        border =
+            BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+            ),
+        colors =
+            ButtonDefaults.outlinedButtonColors(
+                containerColor = Color.White,
+                contentColor = Color.Black.copy(alpha = 0.87f),
+            ),
     ) {
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp
+                strokeWidth = 2.dp,
             )
         } else {
             Image(
                 painter = painterResource(id = R.drawable.ic_google),
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
             Spacer(modifier = Modifier.size(12.dp))
             Text(
                 text = stringResource(id = R.string.sign_in_with_google),
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
         }
     }

@@ -20,7 +20,6 @@ class TeamListViewModel(
     private val generateTeamInvitation: GenerateTeamInvitationUseCase,
     private val selfAssignAsCoach: SelfAssignAsCoachUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
@@ -38,8 +37,11 @@ class TeamListViewModel(
 
     sealed interface UiState {
         data object Loading : UiState
+
         data class Success(val teams: List<Team>, val clubName: String) : UiState
+
         data object Error : UiState
+
         data object NoClubMembership : UiState
     }
 
@@ -63,11 +65,12 @@ class TeamListViewModel(
 
                 // Store user's primary role (first role in the list)
                 // For display purposes, we use the first role or "President" if available
-                _currentUserRole.value = if (clubMember.hasRole(ClubRole.PRESIDENT)) {
-                    ClubRole.PRESIDENT.roleName
-                } else {
-                    clubMember.roles.firstOrNull() ?: ""
-                }
+                _currentUserRole.value =
+                    if (clubMember.hasRole(ClubRole.PRESIDENT)) {
+                        ClubRole.PRESIDENT.roleName
+                    } else {
+                        clubMember.roles.firstOrNull() ?: ""
+                    }
 
                 // Load teams for the club
                 getTeamsByClub(clubFirestoreId).collect { teams ->

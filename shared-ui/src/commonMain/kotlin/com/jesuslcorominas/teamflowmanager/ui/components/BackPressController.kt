@@ -22,7 +22,10 @@ class BackPressController {
     private var isEnabled: (() -> Boolean)? = null
     private var handler: (() -> Unit)? = null
 
-    fun register(isEnabled: () -> Boolean, handler: () -> Unit) {
+    fun register(
+        isEnabled: () -> Boolean,
+        handler: () -> Unit,
+    ) {
         this.isEnabled = isEnabled
         this.handler = handler
     }

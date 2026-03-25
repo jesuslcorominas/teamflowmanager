@@ -5,7 +5,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCas
 import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
 
 internal class SignInWithGoogleUseCaseImpl(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) : SignInWithGoogleUseCase {
     override suspend fun invoke(idToken: String): Result<User> {
         val result = authRepository.signInWithGoogle(idToken)

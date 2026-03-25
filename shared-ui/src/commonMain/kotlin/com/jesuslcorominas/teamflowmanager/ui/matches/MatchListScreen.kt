@@ -64,17 +64,19 @@ fun MatchListScreen(
         when (val state = uiState) {
             is MatchListUiState.Loading -> Loading()
 
-            is MatchListUiState.Empty -> EmptyContent(
-                text = stringResource(Res.string.no_matches_message),
-            )
+            is MatchListUiState.Empty ->
+                EmptyContent(
+                    text = stringResource(Res.string.no_matches_message),
+                )
 
-            is MatchListUiState.Success -> MatchesList(
-                state = state,
-                onNavigateToArchivedMatches = onNavigateToArchivedMatches,
-                onNavigateToEditMatch = onNavigateToEditMatch,
-                onNavigateToMatch = onNavigateToMatch,
-                viewModel = viewModel,
-            )
+            is MatchListUiState.Success ->
+                MatchesList(
+                    state = state,
+                    onNavigateToArchivedMatches = onNavigateToArchivedMatches,
+                    onNavigateToEditMatch = onNavigateToEditMatch,
+                    onNavigateToMatch = onNavigateToMatch,
+                    viewModel = viewModel,
+                )
         }
 
         if (deleteConfirmationState is MatchDeleteConfirmationState.Requested) {
@@ -136,12 +138,13 @@ private fun MatchesList(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            bottom = bottomPadding,
-            start = TFMSpacing.spacing04,
-            end = TFMSpacing.spacing04,
-            top = TFMSpacing.spacing04,
-        ),
+        contentPadding =
+            PaddingValues(
+                bottom = bottomPadding,
+                start = TFMSpacing.spacing04,
+                end = TFMSpacing.spacing04,
+                top = TFMSpacing.spacing04,
+            ),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
     ) {
         item { ArchivedMatchesNavigationCard(onClick = onNavigateToArchivedMatches) }
@@ -206,7 +209,6 @@ private fun MatchesList(
                 onExpandToggle = { expandedPlayedMatches = !expandedPlayedMatches },
             )
         }
-
     }
 }
 

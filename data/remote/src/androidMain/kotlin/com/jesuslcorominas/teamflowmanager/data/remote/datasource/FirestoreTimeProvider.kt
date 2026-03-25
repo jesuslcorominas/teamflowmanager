@@ -16,9 +16,8 @@ import kotlin.coroutines.cancellation.CancellationException
  */
 class FirestoreTimeProvider(
     private val firestore: FirebaseFirestore,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
 ) : TimeProvider {
-
     companion object {
         private const val TAG = "FirestoreTimeProvider"
         private const val TEAMS_COLLECTION = "teams"
@@ -44,11 +43,12 @@ class FirestoreTimeProvider(
             }
 
             // Find the user's team document
-            val teamQuery = firestore.collection(TEAMS_COLLECTION)
-                .whereEqualTo("assignedCoachId", currentUserId)
-                .limit(1)
-                .get()
-                .await()
+            val teamQuery =
+                firestore.collection(TEAMS_COLLECTION)
+                    .whereEqualTo("assignedCoachId", currentUserId)
+                    .limit(1)
+                    .get()
+                    .await()
 
             val teamDoc = teamQuery.documents.firstOrNull()
             if (teamDoc == null) {

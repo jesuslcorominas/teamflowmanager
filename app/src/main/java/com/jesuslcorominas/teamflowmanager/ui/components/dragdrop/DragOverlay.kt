@@ -50,17 +50,18 @@ fun DragOverlay(
 
         PlayerDragGhost(
             player = player,
-            modifier = modifier
-                .graphicsLayer {
-                    // Position the ghost at the drag location, adjusted for container offset
-                    // The drag position is in root coordinates, so subtract the container offset
-                    translationX = dragDropState.dragPosition.x - containerOffset.x - (GHOST_WIDTH / 2).toPx()
-                    translationY = dragDropState.dragPosition.y - containerOffset.y - (GHOST_HEIGHT / 2).toPx()
-                    alpha = 0.9f
-                    scaleX = 1.05f
-                    scaleY = 1.05f
-                    rotationZ = 2f // Slight rotation for dynamic feel
-                }
+            modifier =
+                modifier
+                    .graphicsLayer {
+                        // Position the ghost at the drag location, adjusted for container offset
+                        // The drag position is in root coordinates, so subtract the container offset
+                        translationX = dragDropState.dragPosition.x - containerOffset.x - (GHOST_WIDTH / 2).toPx()
+                        translationY = dragDropState.dragPosition.y - containerOffset.y - (GHOST_HEIGHT / 2).toPx()
+                        alpha = 0.9f
+                        scaleX = 1.05f
+                        scaleY = 1.05f
+                        rotationZ = 2f // Slight rotation for dynamic feel
+                    },
         )
     }
 }
@@ -77,26 +78,27 @@ private fun PlayerDragGhost(
     val context = LocalContext.current
 
     Row(
-        modifier = modifier
-            .width(GHOST_WIDTH)
-            .shadow(
-                elevation = 16.dp,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .clip(RoundedCornerShape(12.dp))
-            .border(
-                width = 1.dp,
-                color = Primary,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(TFMSpacing.spacing03),
+        modifier =
+            modifier
+                .width(GHOST_WIDTH)
+                .shadow(
+                    elevation = 16.dp,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .clip(RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.dp,
+                    color = Primary,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(TFMSpacing.spacing03),
         horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         JerseyBadge(
             number = player.number,
-            size = 48
+            size = 48,
         )
 
         Column(

@@ -53,10 +53,10 @@ import teamflowmanager.shared_ui.generated.resources.settings_title
 import teamflowmanager.shared_ui.generated.resources.team_list_title
 import teamflowmanager.shared_ui.generated.resources.team_title
 
-private val FabHeight = 56.dp       // standard Material FAB size
-private val FabBarGap = 16.dp       // gap between FAB bottom and bar top (matches Android Scaffold default)
-private val FabContentGap = 16.dp   // gap between last list item and FAB bottom
-private val FadeHeight = 32.dp      // extra height above the nav bar for the gradient fade
+private val FabHeight = 56.dp // standard Material FAB size
+private val FabBarGap = 16.dp // gap between FAB bottom and bar top (matches Android Scaffold default)
+private val FabContentGap = 16.dp // gap between last list item and FAB bottom
+private val FadeHeight = 32.dp // extra height above the nav bar for the gradient fade
 
 /**
  * Shared MainScreen shell for iOS.
@@ -98,11 +98,12 @@ fun MainScreen(
     val routeTitle = route?.toTitle(teamMode)
     val title = dynamicTitle ?: routeTitle ?: ""
 
-    val searchPlaceholder = if (route is Route.Matches) {
-        stringResource(Res.string.search_match_placeholder)
-    } else {
-        ""
-    }
+    val searchPlaceholder =
+        if (route is Route.Matches) {
+            stringResource(Res.string.search_match_placeholder)
+        } else {
+            ""
+        }
 
     var bottomNavHeightPx by remember { mutableStateOf(0) }
     val density = LocalDensity.current
@@ -110,11 +111,12 @@ fun MainScreen(
 
     // Content bottom padding: enough space so the last item can scroll
     // fully above the FAB (bar + gap + FAB height + gap above FAB).
-    val contentBottomPadding = if (uiConfig?.showFab == true) {
-        bottomNavHeightDp + FabBarGap + FabHeight + FabContentGap
-    } else {
-        bottomNavHeightDp
-    }
+    val contentBottomPadding =
+        if (uiConfig?.showFab == true) {
+            bottomNavHeightDp + FabBarGap + FabHeight + FabContentGap
+        } else {
+            bottomNavHeightDp
+        }
 
     // Back-press controller: lets child screens (e.g. TeamScreen in edit mode)
     // intercept the top-bar back button before the default popBackStack fires.
@@ -126,7 +128,6 @@ fun MainScreen(
         LocalBackPressController provides backPressController,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-
             Scaffold(
                 topBar = {
                     AppTopBar(
@@ -147,26 +148,28 @@ fun MainScreen(
             // Invisible over a white/surface background; fades out cards as they enter the nav-bar zone.
             if (uiConfig?.showBottomBar == true && bottomNavHeightDp > 0.dp) {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .height(bottomNavHeightDp + FadeHeight)
-                        .background(
-                            Brush.verticalGradient(
-                                0.00f to Color.Transparent,
-                                0.40f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                                1.00f to MaterialTheme.colorScheme.surface,
-                            )
-                        ),
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .height(bottomNavHeightDp + FadeHeight)
+                            .background(
+                                Brush.verticalGradient(
+                                    0.00f to Color.Transparent,
+                                    0.40f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                                    1.00f to MaterialTheme.colorScheme.surface,
+                                ),
+                            ),
                 )
             }
 
             if (uiConfig?.showBottomBar == true) {
                 BottomNavigationBar(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .onSizeChanged { bottomNavHeightPx = it.height }
-                        .navigationBarsPadding(),
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .onSizeChanged { bottomNavHeightPx = it.height }
+                            .navigationBarsPadding(),
                     currentRoute = currentRoute,
                     isPresident = isPresident,
                     onNavigate = onBottomNavNavigate,
@@ -177,9 +180,10 @@ fun MainScreen(
             // bottomNavHeightDp already includes the nav-bar inset.
             if (route != null && uiConfig?.showFab == true) {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 24.dp, bottom = bottomNavHeightDp + FabBarGap),
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 24.dp, bottom = bottomNavHeightDp + FabBarGap),
                 ) {
                     MainFloatingActionButton(route = route, onFabClick = onFabClick)
                 }
@@ -189,36 +193,42 @@ fun MainScreen(
 }
 
 @Composable
-private fun MainFloatingActionButton(route: Route, onFabClick: () -> Unit) {
+private fun MainFloatingActionButton(
+    route: Route,
+    onFabClick: () -> Unit,
+) {
     FloatingActionButton(onClick = onFabClick) {
         Icon(
             imageVector = if (route is Route.Team) Icons.Default.Edit else Icons.Default.Add,
-            contentDescription = route.toFabContentDescription()
+            contentDescription = route.toFabContentDescription(),
         )
     }
 }
 
 @Composable
-private fun Route.toFabContentDescription(): String? = when (this) {
-    Route.Players -> stringResource(Res.string.add_player_title)
-    Route.Team -> stringResource(Res.string.edit_team_title)
-    Route.TeamList -> stringResource(Res.string.create_team_title)
-    Route.Matches -> stringResource(Res.string.add_match_title)
-    else -> null
-}
+private fun Route.toFabContentDescription(): String? =
+    when (this) {
+        Route.Players -> stringResource(Res.string.add_player_title)
+        Route.Team -> stringResource(Res.string.edit_team_title)
+        Route.TeamList -> stringResource(Res.string.create_team_title)
+        Route.Matches -> stringResource(Res.string.add_match_title)
+        else -> null
+    }
 
 @Composable
-internal fun Route.toTitle(teamMode: String? = null): String? = when (this) {
-    Route.Players -> stringResource(Res.string.players_title)
-    Route.Team -> when (teamMode) {
-        Route.Team.MODE_EDIT -> stringResource(Res.string.edit_team_title)
-        else -> stringResource(Res.string.team_title)
+internal fun Route.toTitle(teamMode: String? = null): String? =
+    when (this) {
+        Route.Players -> stringResource(Res.string.players_title)
+        Route.Team ->
+            when (teamMode) {
+                Route.Team.MODE_EDIT -> stringResource(Res.string.edit_team_title)
+                else -> stringResource(Res.string.team_title)
+            }
+        Route.TeamList -> stringResource(Res.string.team_list_title)
+        Route.Matches -> stringResource(Res.string.matches_title)
+        Route.ArchivedMatches -> stringResource(Res.string.archived_matches)
+        Route.Analysis -> stringResource(Res.string.analysis_title)
+        Route.Settings -> stringResource(Res.string.settings_title)
+        Route.Match -> null
+        else -> null
     }
-    Route.TeamList -> stringResource(Res.string.team_list_title)
-    Route.Matches -> stringResource(Res.string.matches_title)
-    Route.ArchivedMatches -> stringResource(Res.string.archived_matches)
-    Route.Analysis -> stringResource(Res.string.analysis_title)
-    Route.Settings -> stringResource(Res.string.settings_title)
-    Route.Match -> null
-    else -> null
-}

@@ -7,12 +7,15 @@ package com.jesuslcorominas.teamflowmanager.domain.usecase
 interface GenerateTeamInvitationUseCase {
     /**
      * Generate a shareable invitation link for a team.
-     * 
+     *
      * @param teamFirestoreId The Firestore document ID of the team
      * @param teamName The name of the team (for display in invitation)
      * @return A shareable deep link URL for the team invitation
      * @throws IllegalArgumentException if team not found
      * @throws IllegalStateException if user is not authenticated or not a President
      */
-    suspend operator fun invoke(teamFirestoreId: String, teamName: String): String
+    suspend operator fun invoke(
+        teamFirestoreId: String,
+        teamName: String,
+    ): String
 }

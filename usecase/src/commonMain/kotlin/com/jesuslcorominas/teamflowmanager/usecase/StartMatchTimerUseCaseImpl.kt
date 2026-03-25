@@ -12,7 +12,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import kotlinx.coroutines.flow.first
 
-
 internal class StartMatchTimerUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val matchOperationRepository: MatchOperationRepository,
@@ -20,7 +19,10 @@ internal class StartMatchTimerUseCaseImpl(
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
 ) : StartMatchTimerUseCase {
-    override suspend fun invoke(matchId: Long, currentTimeMillis: Long) {
+    override suspend fun invoke(
+        matchId: Long,
+        currentTimeMillis: Long,
+    ) {
         // Get the match first to validate it exists
         val match = getMatchByIdUseCase(matchId).first()
         if (match == null) {
@@ -28,13 +30,14 @@ internal class StartMatchTimerUseCaseImpl(
         }
 
         // Step 1: Create operation with IN_PROGRESS status
-        val operation = MatchOperation(
-            matchId = matchId,
-            teamId = match.teamId,
-            type = MatchOperationType.START,
-            status = MatchOperationStatus.IN_PROGRESS,
-            createdAt = currentTimeMillis
-        )
+        val operation =
+            MatchOperation(
+                matchId = matchId,
+                teamId = match.teamId,
+                type = MatchOperationType.START,
+                status = MatchOperationStatus.IN_PROGRESS,
+                createdAt = currentTimeMillis,
+            )
         val operationId = matchOperationRepository.createOperation(operation)
 
         // Step 2: Update match with operation ID (but not yet as lastCompleted)
@@ -43,16 +46,18 @@ internal class StartMatchTimerUseCaseImpl(
             return // All periods already started, cannot start match
         }
 
-        val updatedMatch = match.copy(
-            status = MatchStatus.IN_PROGRESS,
-            periods = match.periods.map { period ->
-                if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
-                    period.copy(startTimeMillis = currentTimeMillis)
-                } else {
-                    period
-                }
-            },
-        )
+        val updatedMatch =
+            match.copy(
+                status = MatchStatus.IN_PROGRESS,
+                periods =
+                    match.periods.map { period ->
+                        if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
+                            period.copy(startTimeMillis = currentTimeMillis)
+                        } else {
+                            period
+                        }
+                    },
+            )
         matchRepository.updateMatch(updatedMatch)
 
         // Step 3: Update player times with operation ID
@@ -66,10 +71,11 @@ internal class StartMatchTimerUseCaseImpl(
         }
 
         // Step 4: Mark operation as COMPLETED
-        val completedOperation = operation.copy(
-            id = operationId,
-            status = MatchOperationStatus.COMPLETED
-        )
+        val completedOperation =
+            operation.copy(
+                id = operationId,
+                status = MatchOperationStatus.COMPLETED,
+            )
         matchOperationRepository.updateOperation(completedOperation)
 
         // Step 5: Update match with lastCompletedOperationId

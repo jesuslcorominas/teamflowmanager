@@ -64,6 +64,8 @@ class ArchivedMatchesViewModel(
 
 sealed class ArchivedMatchesUiState {
     data object Loading : ArchivedMatchesUiState()
+
     data object Empty : ArchivedMatchesUiState()
+
     data class Success(val matches: List<Match>) : ArchivedMatchesUiState()
 }

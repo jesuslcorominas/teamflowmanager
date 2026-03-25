@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
@@ -46,7 +45,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun JoinClubScreen(
     onClubJoined: () -> Unit,
-    viewModel: JoinClubViewModel = koinViewModel()
+    viewModel: JoinClubViewModel = koinViewModel(),
 ) {
     TrackScreenView(screenName = ScreenName.JOIN_CLUB, screenClass = "JoinClubScreen")
 
@@ -68,13 +67,13 @@ fun JoinClubScreen(
                 viewModel.resetState()
             }
 
-            else -> { /* No action needed */
+            else -> { // No action needed
             }
         }
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         // Show success state instead of form
         if (uiState is JoinClubViewModel.UiState.Success) {
@@ -83,7 +82,7 @@ fun JoinClubScreen(
                 paddingValues = paddingValues,
                 clubName = successState.result.club.name,
                 hasOrphanTeam = successState.result.orphanTeam != null,
-                role = successState.result.clubMember.roles.joinToString(", ")
+                role = successState.result.clubMember.roles.joinToString(", "),
             ) {
                 viewModel.resetState()
                 onClubJoined()
@@ -92,7 +91,7 @@ fun JoinClubScreen(
             // Show form
             JoinClubForm(
                 paddingValues = paddingValues,
-                viewModel = viewModel
+                viewModel = viewModel,
             )
         }
     }
@@ -104,21 +103,22 @@ private fun ClubJoinedSuccessfullyContent(
     clubName: String,
     hasOrphanTeam: Boolean,
     role: String,
-    onContinueClick: () -> Unit
+    onContinueClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = Icons.Default.CheckCircle,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(72.dp)
+            modifier = Modifier.size(72.dp),
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -127,7 +127,7 @@ private fun ClubJoinedSuccessfullyContent(
             text = stringResource(id = R.string.join_club_success_title),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -136,7 +136,7 @@ private fun ClubJoinedSuccessfullyContent(
             text = stringResource(id = R.string.join_club_success_message, clubName),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -146,7 +146,7 @@ private fun ClubJoinedSuccessfullyContent(
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
 
         if (hasOrphanTeam) {
@@ -156,7 +156,7 @@ private fun ClubJoinedSuccessfullyContent(
                 text = stringResource(id = R.string.join_club_success_team_linked),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
         }
 
@@ -166,41 +166,46 @@ private fun ClubJoinedSuccessfullyContent(
             text = stringResource(id = R.string.join_club_redirecting),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = onContinueClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = MaterialTheme.shapes.small
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            shape = MaterialTheme.shapes.small,
         ) {
             Text(
                 text = stringResource(id = R.string.join_club_continue),
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
         }
     }
 }
 
 @Composable
-private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewModel) {
+private fun JoinClubForm(
+    paddingValues: PaddingValues,
+    viewModel: JoinClubViewModel,
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     val invitationCode by viewModel.invitationCode.collectAsState()
     val invitationCodeError by viewModel.invitationCodeError.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         TeamFlowManagerIcon()
 
@@ -210,7 +215,7 @@ private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewMo
             text = stringResource(id = R.string.join_club_title),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -219,7 +224,7 @@ private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewMo
             text = stringResource(id = R.string.join_club_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -229,24 +234,28 @@ private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewMo
             onValueChange = { viewModel.onInvitationCodeChanged(it) },
             label = { Text(stringResource(id = R.string.invitation_code_label)) },
             isError = invitationCodeError != null,
-            supportingText = invitationCodeError?.let { errorResId ->
-                {
-                    Text(
-                        text = stringResource(
-                            id = when (errorResId) {
-                                InvitationCodeError.EMPTY_CODE -> R.string.invitation_code_error_empty
-                                InvitationCodeError.CODE_TOO_SHORT -> R.string.invitation_code_error_too_short
-                                InvitationCodeError.CODE_TOO_LONG -> R.string.invitation_code_error_too_long
-                                InvitationCodeError.INVALID_FORMAT -> R.string.invitation_code_error_invalid_format
-                            }
+            supportingText =
+                invitationCodeError?.let { errorResId ->
+                    {
+                        Text(
+                            text =
+                                stringResource(
+                                    id =
+                                        when (errorResId) {
+                                            InvitationCodeError.EMPTY_CODE -> R.string.invitation_code_error_empty
+                                            InvitationCodeError.CODE_TOO_SHORT -> R.string.invitation_code_error_too_short
+                                            InvitationCodeError.CODE_TOO_LONG -> R.string.invitation_code_error_too_long
+                                            InvitationCodeError.INVALID_FORMAT -> R.string.invitation_code_error_invalid_format
+                                        },
+                                ),
                         )
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done
-            ),
-            readOnly = uiState is JoinClubViewModel.UiState.Loading
+                    }
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                ),
+            readOnly = uiState is JoinClubViewModel.UiState.Loading,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -254,21 +263,22 @@ private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewMo
         Button(
             onClick = { viewModel.joinClub() },
             enabled = uiState !is JoinClubViewModel.UiState.Loading && invitationCode.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = MaterialTheme.shapes.small
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            shape = MaterialTheme.shapes.small,
         ) {
             if (uiState is JoinClubViewModel.UiState.Loading) {
                 CircularProgressIndicator(
                     color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.height(24.dp)
+                    modifier = Modifier.height(24.dp),
                 )
             } else {
                 Text(
                     text = stringResource(id = R.string.join_club_button),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
         }

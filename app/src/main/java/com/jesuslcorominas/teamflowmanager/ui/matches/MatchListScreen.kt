@@ -67,13 +67,14 @@ fun MatchListScreen(
             is MatchListUiState.Loading -> Loading()
             is MatchListUiState.Empty -> EmptyMatches(onNavigateToArchivedMatches = onNavigateToArchivedMatches)
 
-            is MatchListUiState.Success -> MatchesList(
-                state = state,
-                onNavigateToArchivedMatches = onNavigateToArchivedMatches,
-                onNavigateToEditMatch = onNavigateToEditMatch,
-                onNavigateToMatch = onNavigateToMatch,
-                viewModel = viewModel
-            )
+            is MatchListUiState.Success ->
+                MatchesList(
+                    state = state,
+                    onNavigateToArchivedMatches = onNavigateToArchivedMatches,
+                    onNavigateToEditMatch = onNavigateToEditMatch,
+                    onNavigateToMatch = onNavigateToMatch,
+                    viewModel = viewModel,
+                )
         }
 
         // Delete confirmation dialog
@@ -87,7 +88,7 @@ fun MatchListScreen(
                 onDismiss = { viewModel.cancelDeleteMatch() },
             )
         }
-        
+
         // Show loading overlay during delete operation
         if (deleteConfirmationState is MatchDeleteConfirmationState.Deleting) {
             Loading()
@@ -95,14 +96,13 @@ fun MatchListScreen(
     }
 }
 
-
 @Composable
 private fun MatchesList(
     state: MatchListUiState.Success,
     onNavigateToArchivedMatches: () -> Unit,
     onNavigateToEditMatch: (Long) -> Unit,
     onNavigateToMatch: (Match) -> Unit,
-    viewModel: MatchListViewModel
+    viewModel: MatchListViewModel,
 ) {
     val searchState = LocalSearchState.current
 
@@ -137,19 +137,20 @@ private fun MatchesList(
     if (state.matches.isEmpty()) {
         EmptyMatches(
             message = stringResource(R.string.no_results),
-            onNavigateToArchivedMatches = onNavigateToArchivedMatches
+            onNavigateToArchivedMatches = onNavigateToArchivedMatches,
         )
         return
     }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            bottom = LocalContentBottomPadding.current,
-            start = TFMSpacing.spacing04,
-            end = TFMSpacing.spacing04,
-            top = TFMSpacing.spacing04,
-        ),
+        contentPadding =
+            PaddingValues(
+                bottom = LocalContentBottomPadding.current,
+                start = TFMSpacing.spacing04,
+                end = TFMSpacing.spacing04,
+                top = TFMSpacing.spacing04,
+            ),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
     ) {
@@ -235,7 +236,6 @@ private fun MatchesList(
                 },
             )
         }
-
     }
 }
 
@@ -252,7 +252,7 @@ private fun LazyListScope.pendingMatchesSection(
         ExpandableTitle(
             title = stringResource(R.string.pending_matches),
             expanded = expandedPendingMatches,
-            onClick = onExpandToggle
+            onClick = onExpandToggle,
         )
     }
 
@@ -280,7 +280,7 @@ private fun LazyListScope.playedMatchesSection(
         ExpandableTitle(
             title = stringResource(R.string.played_matches),
             expanded = expandedPlayedMatches,
-            onClick = onExpandToggle
+            onClick = onExpandToggle,
         )
     }
 
@@ -301,12 +301,13 @@ private fun LazyListScope.playedMatchesSection(
 @Composable
 private fun EmptyMatches(
     message: String = stringResource(R.string.no_matches_message),
-    onNavigateToArchivedMatches: () -> Unit
+    onNavigateToArchivedMatches: () -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = TFMSpacing.spacing04),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = TFMSpacing.spacing04),
     ) {
         ArchivedMatchesNavigationCard(onClick = onNavigateToArchivedMatches)
 
@@ -318,7 +319,7 @@ private fun EmptyMatches(
     name = "Pixel 7 Pro",
     device = "spec:width=1440px,height=3120px,dpi=512",
     showSystemUi = true,
-    showBackground = true
+    showBackground = true,
 )
 @Composable
 fun EmptyMatchesPreview() {
@@ -326,6 +327,5 @@ fun EmptyMatchesPreview() {
         EmptyMatches(onNavigateToArchivedMatches = {})
     }
 }
-
 
 // endregion

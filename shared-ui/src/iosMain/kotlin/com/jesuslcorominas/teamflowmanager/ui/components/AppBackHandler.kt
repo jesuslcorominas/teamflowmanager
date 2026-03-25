@@ -17,7 +17,10 @@ import androidx.compose.runtime.rememberUpdatedState
  * and [onBack] values on every recomposition without restarting the effect.
  */
 @Composable
-actual fun AppBackHandler(enabled: Boolean, onBack: () -> Unit) {
+actual fun AppBackHandler(
+    enabled: Boolean,
+    onBack: () -> Unit,
+) {
     val controller = LocalBackPressController.current
     val currentEnabled by rememberUpdatedState(enabled)
     val currentOnBack by rememberUpdatedState(onBack)

@@ -2,7 +2,6 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
@@ -20,7 +19,6 @@ class SplashViewModel(
     private val getUserClubMembership: GetUserClubMembershipUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
@@ -53,17 +51,18 @@ class SplashViewModel(
     }
 
     private fun performStartupTasks() {
-        startupJob = viewModelScope.launch {
-            // Synchronize time with server on app startup
-            try {
-                synchronizeTimeUseCase()
-            } catch (_: Exception) {
-                // Continue anyway - time sync will be attempted again when starting matches
-            }
+        startupJob =
+            viewModelScope.launch {
+                // Synchronize time with server on app startup
+                try {
+                    synchronizeTimeUseCase()
+                } catch (_: Exception) {
+                    // Continue anyway - time sync will be attempted again when starting matches
+                }
 
-            // Continue with authentication checks
-            checkAuthAndLoadTeam()
-        }
+                // Continue with authentication checks
+                checkAuthAndLoadTeam()
+            }
     }
 
     private suspend fun checkAuthAndLoadTeam() {

@@ -38,7 +38,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
@@ -104,10 +103,11 @@ private fun StartingLineupCard(event: TimelineEvent.StartingLineup) {
 
 @Composable
 private fun GoalScoredCard(event: TimelineEvent.GoalScored) {
-    val (title, iconBackgroundColor) = when {
-        event.isOpponentGoal -> stringResource(R.string.timeline_opponent_goal) to SubstitutionRed
-        else -> stringResource(R.string.timeline_goal) to SubstitutionGreen
-    }
+    val (title, iconBackgroundColor) =
+        when {
+            event.isOpponentGoal -> stringResource(R.string.timeline_opponent_goal) to SubstitutionRed
+            else -> stringResource(R.string.timeline_goal) to SubstitutionGreen
+        }
 
     EventCard(
         timeMillis = event.matchElapsedTimeMillis,
@@ -207,10 +207,11 @@ private fun TimeoutCard(event: TimelineEvent.Timeout) {
 
 @Composable
 private fun PeriodBreakCard(event: TimelineEvent.PeriodBreak) {
-    val title = when {
-        event.periodType == PeriodType.HALF_TIME -> stringResource(R.string.timeline_halftime)
-        else -> stringResource(R.string.timeline_quarter_break)
-    }
+    val title =
+        when {
+            event.periodType == PeriodType.HALF_TIME -> stringResource(R.string.timeline_halftime)
+            else -> stringResource(R.string.timeline_quarter_break)
+        }
 
     EventCard(
         timeMillis = event.matchElapsedTimeMillis,
@@ -231,15 +232,17 @@ private fun EventCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing03),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing03),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Time badge
@@ -256,10 +259,11 @@ private fun EventCard(
 
             // Icon
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(iconBackgroundColor),
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(iconBackgroundColor),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -291,69 +295,72 @@ private fun EventCard(
 @Preview(showBackground = true)
 @Composable
 private fun TimelineContentPreview() {
-    val player1 = Player(
-        id = 1L,
-        firstName = "John",
-        lastName = "Doe",
-        number = 10,
-        positions = listOf(Position.Forward),
-        teamId = 1L,
-        isCaptain = true,
-    )
-    val player2 = Player(
-        id = 2L,
-        firstName = "Jane",
-        lastName = "Smith",
-        number = 7,
-        positions = listOf(Position.Midfielder),
-        teamId = 1L,
-        isCaptain = false,
-    )
+    val player1 =
+        Player(
+            id = 1L,
+            firstName = "John",
+            lastName = "Doe",
+            number = 10,
+            positions = listOf(Position.Forward),
+            teamId = 1L,
+            isCaptain = true,
+        )
+    val player2 =
+        Player(
+            id = 2L,
+            firstName = "Jane",
+            lastName = "Smith",
+            number = 7,
+            positions = listOf(Position.Midfielder),
+            teamId = 1L,
+            isCaptain = false,
+        )
     // Events in ascending order (first events at top)
-    val events = listOf(
-        TimelineEvent.StartingLineup(
-            matchElapsedTimeMillis = 0L,
-            players = listOf(player1, player2),
-        ),
-        TimelineEvent.GoalScored(
-            matchElapsedTimeMillis = 300000L,
-            scorer = player2,
-            isOpponentGoal = false,
-            teamScore = 1,
-            opponentScore = 0,
-        ),
-        TimelineEvent.GoalScored(
-            matchElapsedTimeMillis = 600000L,
-            scorer = player1,
-            isOpponentGoal = false,
-            teamScore = 2,
-            opponentScore = 0,
-        ),
-        TimelineEvent.GoalScored(
-            matchElapsedTimeMillis = 900000L,
-            scorer = null,
-            isOpponentGoal = true,
-            teamScore = 2,
-            opponentScore = 1,
-        ),
-        TimelineEvent.PeriodBreak(
-            matchElapsedTimeMillis = 1500000L,
-            periodNumber = 1,
-            periodType = PeriodType.HALF_TIME,
-        ),
-        TimelineEvent.Substitution(
-            matchElapsedTimeMillis = 1800000L,
-            playerIn = player2,
-            playerOut = player1,
-        ),
-        TimelineEvent.GoalScored(
-            matchElapsedTimeMillis = 2700000L,
-            scorer = player1,
-            isOpponentGoal = false,
-            teamScore = 3,
-            opponentScore = 1,
-        ),
-    )
+    val events =
+        listOf(
+            TimelineEvent.StartingLineup(
+                matchElapsedTimeMillis = 0L,
+                players = listOf(player1, player2),
+            ),
+            TimelineEvent.GoalScored(
+                matchElapsedTimeMillis = 300000L,
+                scorer = player2,
+                isOpponentGoal = false,
+                teamScore = 1,
+                opponentScore = 0,
+            ),
+            TimelineEvent.GoalScored(
+                matchElapsedTimeMillis = 600000L,
+                scorer = player1,
+                isOpponentGoal = false,
+                teamScore = 2,
+                opponentScore = 0,
+            ),
+            TimelineEvent.GoalScored(
+                matchElapsedTimeMillis = 900000L,
+                scorer = null,
+                isOpponentGoal = true,
+                teamScore = 2,
+                opponentScore = 1,
+            ),
+            TimelineEvent.PeriodBreak(
+                matchElapsedTimeMillis = 1500000L,
+                periodNumber = 1,
+                periodType = PeriodType.HALF_TIME,
+            ),
+            TimelineEvent.Substitution(
+                matchElapsedTimeMillis = 1800000L,
+                playerIn = player2,
+                playerOut = player1,
+            ),
+            TimelineEvent.GoalScored(
+                matchElapsedTimeMillis = 2700000L,
+                scorer = player1,
+                isOpponentGoal = false,
+                teamScore = 3,
+                opponentScore = 1,
+            ),
+        )
 
     TFMAppTheme {
         TimelineContent(events = events)

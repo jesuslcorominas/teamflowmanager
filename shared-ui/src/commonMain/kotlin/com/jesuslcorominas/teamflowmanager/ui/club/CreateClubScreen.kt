@@ -94,12 +94,16 @@ fun CreateClubScreen(
 }
 
 @Composable
-private fun ClubCreatedSuccessfullyContent(paddingValues: PaddingValues, onContinueClick: () -> Unit) {
+private fun ClubCreatedSuccessfullyContent(
+    paddingValues: PaddingValues,
+    onContinueClick: () -> Unit,
+) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -141,9 +145,10 @@ private fun ClubCreatedSuccessfullyContent(paddingValues: PaddingValues, onConti
 
         Button(
             onClick = onContinueClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             Text(
@@ -156,16 +161,20 @@ private fun ClubCreatedSuccessfullyContent(paddingValues: PaddingValues, onConti
 }
 
 @Composable
-private fun CreateClubForm(paddingValues: PaddingValues, viewModel: CreateClubViewModel) {
+private fun CreateClubForm(
+    paddingValues: PaddingValues,
+    viewModel: CreateClubViewModel,
+) {
     val uiState by viewModel.uiState.collectAsState()
     val clubName by viewModel.clubName.collectAsState()
     val clubNameError by viewModel.clubNameError.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -196,23 +205,26 @@ private fun CreateClubForm(paddingValues: PaddingValues, viewModel: CreateClubVi
             onValueChange = { viewModel.onClubNameChanged(it) },
             label = { Text(stringResource(Res.string.club_name_label)) },
             isError = clubNameError != null,
-            supportingText = clubNameError?.let { error ->
-                {
-                    Text(
-                        text = stringResource(
-                            when (error) {
-                                ClubNameError.EMPTY_NAME -> Res.string.club_name_error_empty
-                                ClubNameError.NAME_TOO_SHORT -> Res.string.club_name_error_too_short
-                                ClubNameError.NAME_TOO_LONG -> Res.string.club_name_error_too_long
-                            }
+            supportingText =
+                clubNameError?.let { error ->
+                    {
+                        Text(
+                            text =
+                                stringResource(
+                                    when (error) {
+                                        ClubNameError.EMPTY_NAME -> Res.string.club_name_error_empty
+                                        ClubNameError.NAME_TOO_SHORT -> Res.string.club_name_error_too_short
+                                        ClubNameError.NAME_TOO_LONG -> Res.string.club_name_error_too_long
+                                    },
+                                ),
                         )
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                capitalization = KeyboardCapitalization.Words,
-            ),
+                    }
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
             readOnly = uiState is CreateClubViewModel.UiState.Loading,
         )
 
@@ -221,9 +233,10 @@ private fun CreateClubForm(paddingValues: PaddingValues, viewModel: CreateClubVi
         Button(
             onClick = { viewModel.createClub() },
             enabled = uiState !is CreateClubViewModel.UiState.Loading && clubName.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             if (uiState is CreateClubViewModel.UiState.Loading) {

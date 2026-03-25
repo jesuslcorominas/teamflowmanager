@@ -14,7 +14,6 @@ internal class JoinClubByCodeUseCaseImpl(
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : JoinClubByCodeUseCase {
-
     companion object {
         private const val ROLE_COACH = "Coach"
         private const val ROLE_STAFF = "Staff"
@@ -27,8 +26,9 @@ internal class JoinClubByCodeUseCaseImpl(
         }
 
         // Get current authenticated user
-        val currentUser = getCurrentUser().first()
-            ?: throw IllegalStateException("User must be authenticated to join a club")
+        val currentUser =
+            getCurrentUser().first()
+                ?: throw IllegalStateException("User must be authenticated to join a club")
 
         // Validate user data
         require(currentUser.displayName?.isNotBlank() == true) {
@@ -39,8 +39,9 @@ internal class JoinClubByCodeUseCaseImpl(
         }
 
         // Find club by invitation code
-        val club = clubRepository.getClubByInvitationCode(invitationCode)
-            ?: throw IllegalArgumentException("Club not found with invitation code: $invitationCode")
+        val club =
+            clubRepository.getClubByInvitationCode(invitationCode)
+                ?: throw IllegalArgumentException("Club not found with invitation code: $invitationCode")
 
         require(club.firestoreId != null) {
             "Club firestore ID is required"
@@ -62,24 +63,25 @@ internal class JoinClubByCodeUseCaseImpl(
                 teamRepository.updateTeamClubId(
                     teamFirestoreId = orphanTeam.firestoreId!!,
                     clubId = club.id,
-                    clubFirestoreId = club.firestoreId!!
+                    clubFirestoreId = club.firestoreId!!,
                 )
             }
 
             // Step 2: Create or update club member with appropriate role
-            val clubMember = clubMemberRepository.createOrUpdateClubMember(
-                userId = currentUser.id,
-                name = currentUser.displayName!!,
-                email = currentUser.email!!,
-                clubId = club.id,
-                clubFirestoreId = club.firestoreId!!,
-                roles = roles
-            )
+            val clubMember =
+                clubMemberRepository.createOrUpdateClubMember(
+                    userId = currentUser.id,
+                    name = currentUser.displayName!!,
+                    email = currentUser.email!!,
+                    clubId = club.id,
+                    clubFirestoreId = club.firestoreId!!,
+                    roles = roles,
+                )
 
             return JoinClubResult(
                 club = club,
                 orphanTeam = orphanTeam,
-                clubMember = clubMember
+                clubMember = clubMember,
             )
         } catch (e: Exception) {
             // If club member creation failed but team was linked, we have inconsistent data

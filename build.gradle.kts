@@ -20,6 +20,7 @@ subprojects {
         verbose.set(true)
         filter {
             exclude("**/generated/**", "**/**Test**")
+            exclude { it.file.absolutePath.contains("/build/") }
         }
         reporters {
             reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)

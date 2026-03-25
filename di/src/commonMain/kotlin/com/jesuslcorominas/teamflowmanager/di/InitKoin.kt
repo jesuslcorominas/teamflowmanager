@@ -15,15 +15,16 @@ import org.koin.dsl.module
  * Base business-logic Koin module shared by all platforms.
  * Includes data layers + use cases + a default CoroutineDispatcher.
  */
-val businessLogicModule: Module = module {
-    includes(
-        dataLocalModule,
-        dataCoreModule,
-        dataRemoteModule,
-        useCaseModule,
-    )
-    single<CoroutineDispatcher> { Dispatchers.Default }
-}
+val businessLogicModule: Module =
+    module {
+        includes(
+            dataLocalModule,
+            dataCoreModule,
+            dataRemoteModule,
+            useCaseModule,
+        )
+        single<CoroutineDispatcher> { Dispatchers.Default }
+    }
 
 /**
  * Starts Koin with the shared business-logic module plus any platform-specific modules.

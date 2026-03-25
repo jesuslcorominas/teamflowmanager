@@ -20,17 +20,19 @@ internal class TeamRepositoryImpl(
         teamDataSource.updateTeam(team)
     }
 
-    override fun getTeamByCoachId(coachId: String): Flow<Team?> =
-        teamDataSource.getTeamByCoachId(coachId)
+    override fun getTeamByCoachId(coachId: String): Flow<Team?> = teamDataSource.getTeamByCoachId(coachId)
 
-    override fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>> =
-        teamDataSource.getTeamsByClub(clubFirestoreId)
+    override fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>> = teamDataSource.getTeamsByClub(clubFirestoreId)
 
     override suspend fun getOrphanTeams(ownerId: String): List<Team> {
         return teamDataSource.getOrphanTeams(ownerId)
     }
 
-    override suspend fun updateTeamClubId(teamFirestoreId: String, clubId: Long, clubFirestoreId: String) {
+    override suspend fun updateTeamClubId(
+        teamFirestoreId: String,
+        clubId: Long,
+        clubFirestoreId: String,
+    ) {
         teamDataSource.updateTeamClubId(teamFirestoreId, clubId, clubFirestoreId)
     }
 
@@ -38,11 +40,17 @@ internal class TeamRepositoryImpl(
         return teamDataSource.getTeamByFirestoreId(teamFirestoreId)
     }
 
-    override suspend fun updateTeamCoachId(teamFirestoreId: String, coachId: String) {
+    override suspend fun updateTeamCoachId(
+        teamFirestoreId: String,
+        coachId: String,
+    ) {
         teamDataSource.updateTeamCoachId(teamFirestoreId, coachId)
     }
 
-    override suspend fun generateTeamInvitationLink(teamFirestoreId: String, teamName: String): String {
+    override suspend fun generateTeamInvitationLink(
+        teamFirestoreId: String,
+        teamName: String,
+    ): String {
         return dynamicLinkDataSource.generateTeamInvitationLink(teamFirestoreId, teamName)
     }
 }

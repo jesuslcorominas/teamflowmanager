@@ -14,7 +14,7 @@ class GetPlayerTimeStatsUseCaseImpl(
     override operator fun invoke(): Flow<List<PlayerTimeStats>> {
         return combine(
             playerRepository.getAllPlayers(),
-            playerTimeHistoryRepository.getAllPlayerTimeHistory()
+            playerTimeHistoryRepository.getAllPlayerTimeHistory(),
         ) { players, timeHistory ->
             players.map { player ->
                 val playerHistory = timeHistory.filter { it.playerId == player.id }
@@ -24,7 +24,7 @@ class GetPlayerTimeStatsUseCaseImpl(
                 PlayerTimeStats(
                     player = player,
                     totalTimeMinutes = totalTime,
-                    matchesPlayed = matchesPlayed
+                    matchesPlayed = matchesPlayed,
                 )
             }.sortedByDescending { it.totalTimeMinutes }
         }

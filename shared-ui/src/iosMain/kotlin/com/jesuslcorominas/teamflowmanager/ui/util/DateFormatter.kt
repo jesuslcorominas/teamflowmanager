@@ -7,19 +7,17 @@ import platform.Foundation.currentLocale
 import platform.Foundation.dateWithTimeIntervalSince1970
 
 actual object DateFormatter {
-    private fun formatter(format: String): NSDateFormatter = NSDateFormatter().apply {
-        dateFormat = format
-        locale = NSLocale.currentLocale
-    }
+    private fun formatter(format: String): NSDateFormatter =
+        NSDateFormatter().apply {
+            dateFormat = format
+            locale = NSLocale.currentLocale
+        }
 
-    actual fun formatDate(timestamp: Long): String =
-        formatter("dd/MM/yyyy").stringFromDate(NSDate.dateWithTimeIntervalSince1970(timestamp / 1000.0))
+    actual fun formatDate(timestamp: Long): String = formatter("dd/MM/yyyy").stringFromDate(NSDate.dateWithTimeIntervalSince1970(timestamp / 1000.0))
 
-    actual fun formatTime(timestamp: Long): String =
-        formatter("HH:mm").stringFromDate(NSDate.dateWithTimeIntervalSince1970(timestamp / 1000.0))
+    actual fun formatTime(timestamp: Long): String = formatter("HH:mm").stringFromDate(NSDate.dateWithTimeIntervalSince1970(timestamp / 1000.0))
 
-    actual fun formatDateTime(timestamp: Long): String =
-        formatter("dd/MM/yyyy HH:mm").stringFromDate(NSDate.dateWithTimeIntervalSince1970(timestamp / 1000.0))
+    actual fun formatDateTime(timestamp: Long): String = formatter("dd/MM/yyyy HH:mm").stringFromDate(NSDate.dateWithTimeIntervalSince1970(timestamp / 1000.0))
 
     actual fun formatTimeOfDay(timeOfDayMillis: Long): String {
         val hours = (timeOfDayMillis / (60 * 60 * 1000)) % 24

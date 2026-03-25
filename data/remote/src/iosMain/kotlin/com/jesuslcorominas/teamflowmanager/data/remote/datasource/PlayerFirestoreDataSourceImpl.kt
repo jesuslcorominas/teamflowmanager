@@ -21,7 +21,6 @@ class PlayerFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
 ) : PlayerDataSource {
-
     companion object {
         private const val PLAYERS_COLLECTION = "players"
         private const val TEAMS_COLLECTION = "teams"
@@ -30,10 +29,11 @@ class PlayerFirestoreDataSourceImpl(
     private suspend fun getTeamDocumentId(): String? {
         val currentUserId = firebaseAuth.currentUser?.uid ?: return null
         return try {
-            val snapshot = firestore.collection(TEAMS_COLLECTION)
-                .where { "assignedCoachId" equalTo currentUserId }
-                .limit(1)
-                .get()
+            val snapshot =
+                firestore.collection(TEAMS_COLLECTION)
+                    .where { "assignedCoachId" equalTo currentUserId }
+                    .limit(1)
+                    .get()
             snapshot.documents.firstOrNull()?.id
         } catch (e: CancellationException) {
             throw e
@@ -42,11 +42,15 @@ class PlayerFirestoreDataSourceImpl(
         }
     }
 
-    private suspend fun findDocumentIdByPlayerId(teamDocId: String, playerId: Long): String? {
+    private suspend fun findDocumentIdByPlayerId(
+        teamDocId: String,
+        playerId: Long,
+    ): String? {
         return try {
-            val snapshot = firestore.collection(PLAYERS_COLLECTION)
-                .where { "teamId" equalTo teamDocId }
-                .get()
+            val snapshot =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .where { "teamId" equalTo teamDocId }
+                    .get()
             snapshot.documents.firstOrNull { doc ->
                 doc.id.toStableId() == playerId
             }?.id
@@ -57,44 +61,47 @@ class PlayerFirestoreDataSourceImpl(
         }
     }
 
-    override fun getAllPlayers(): Flow<List<Player>> = flow {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            emit(emptyList())
-            return@flow
-        }
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            emit(emptyList())
-            return@flow
-        }
-        val snapshots = firestore.collection(PLAYERS_COLLECTION)
-            .where { "teamId" equalTo teamDocId }
-            .where { "deleted" equalTo false }
-            .snapshots
-        emitAll(
-            snapshots.map { qs ->
-                qs.documents.mapNotNull { doc ->
-                    try {
-                        val model = doc.data<PlayerFirestoreModel>()
-                        model.copy(id = doc.id, teamId = teamDocId).toDomain()
-                    } catch (_: Exception) {
-                        null
+    override fun getAllPlayers(): Flow<List<Player>> =
+        flow {
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                emit(emptyList())
+                return@flow
+            }
+            val teamDocId = getTeamDocumentId()
+            if (teamDocId == null) {
+                emit(emptyList())
+                return@flow
+            }
+            val snapshots =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .where { "teamId" equalTo teamDocId }
+                    .where { "deleted" equalTo false }
+                    .snapshots
+            emitAll(
+                snapshots.map { qs ->
+                    qs.documents.mapNotNull { doc ->
+                        try {
+                            val model = doc.data<PlayerFirestoreModel>()
+                            model.copy(id = doc.id, teamId = teamDocId).toDomain()
+                        } catch (_: Exception) {
+                            null
+                        }
                     }
-                }
-            }.catch { e ->
-                if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
-            },
-        )
-    }
+                }.catch { e ->
+                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
+                },
+            )
+        }
 
     override suspend fun getPlayerById(playerId: Long): Player? {
         val teamDocId = getTeamDocumentId() ?: return null
         return try {
-            val snapshot = firestore.collection(PLAYERS_COLLECTION)
-                .where { "teamId" equalTo teamDocId }
-                .where { "deleted" equalTo false }
-                .get()
+            val snapshot =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .where { "teamId" equalTo teamDocId }
+                    .where { "deleted" equalTo false }
+                    .get()
             snapshot.documents.mapNotNull { doc ->
                 try {
                     val model = doc.data<PlayerFirestoreModel>()
@@ -113,11 +120,12 @@ class PlayerFirestoreDataSourceImpl(
     override suspend fun getCaptainPlayer(): Player? {
         val teamDocId = getTeamDocumentId() ?: return null
         return try {
-            val snapshot = firestore.collection(PLAYERS_COLLECTION)
-                .where { "teamId" equalTo teamDocId }
-                .where { "captain" equalTo true }
-                .where { "deleted" equalTo false }
-                .get()
+            val snapshot =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .where { "teamId" equalTo teamDocId }
+                    .where { "captain" equalTo true }
+                    .where { "deleted" equalTo false }
+                    .get()
             snapshot.documents.firstOrNull()?.let { doc ->
                 try {
                     val model = doc.data<PlayerFirestoreModel>()
@@ -137,10 +145,11 @@ class PlayerFirestoreDataSourceImpl(
         val teamDocId = getTeamDocumentId() ?: return
         // Clear existing captains first
         try {
-            val snapshot = firestore.collection(PLAYERS_COLLECTION)
-                .where { "teamId" equalTo teamDocId }
-                .where { "captain" equalTo true }
-                .get()
+            val snapshot =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .where { "teamId" equalTo teamDocId }
+                    .where { "captain" equalTo true }
+                    .get()
             snapshot.documents.forEach { doc ->
                 firestore.collection(PLAYERS_COLLECTION).document(doc.id)
                     .update("captain" to false)
@@ -176,8 +185,9 @@ class PlayerFirestoreDataSourceImpl(
     }
 
     override suspend fun insertPlayer(player: Player): Long {
-        val teamDocId = getTeamDocumentId()
-            ?: throw IllegalStateException("No team found for current user")
+        val teamDocId =
+            getTeamDocumentId()
+                ?: throw IllegalStateException("No team found for current user")
         val model = player.toFirestoreModel().copy(teamId = teamDocId)
         return try {
             val docRef = firestore.collection(PLAYERS_COLLECTION).add(model)
@@ -190,10 +200,12 @@ class PlayerFirestoreDataSourceImpl(
     }
 
     override suspend fun updatePlayer(player: Player) {
-        val teamDocId = getTeamDocumentId()
-            ?: throw IllegalStateException("No team found for current user")
-        val documentId = findDocumentIdByPlayerId(teamDocId, player.id)
-            ?: throw IllegalStateException("Cannot find Firestore document for player ${player.id}")
+        val teamDocId =
+            getTeamDocumentId()
+                ?: throw IllegalStateException("No team found for current user")
+        val documentId =
+            findDocumentIdByPlayerId(teamDocId, player.id)
+                ?: throw IllegalStateException("Cannot find Firestore document for player ${player.id}")
         val model = player.toFirestoreModel().copy(id = documentId, teamId = teamDocId)
         try {
             firestore.collection(PLAYERS_COLLECTION).document(documentId).set(model)
@@ -220,10 +232,11 @@ class PlayerFirestoreDataSourceImpl(
     override suspend fun getAllPlayersDirect(): List<Player> {
         val teamDocId = getTeamDocumentId() ?: return emptyList()
         return try {
-            val snapshot = firestore.collection(PLAYERS_COLLECTION)
-                .where { "teamId" equalTo teamDocId }
-                .where { "deleted" equalTo false }
-                .get()
+            val snapshot =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .where { "teamId" equalTo teamDocId }
+                    .where { "deleted" equalTo false }
+                    .get()
             snapshot.documents.mapNotNull { doc ->
                 try {
                     val model = doc.data<PlayerFirestoreModel>()

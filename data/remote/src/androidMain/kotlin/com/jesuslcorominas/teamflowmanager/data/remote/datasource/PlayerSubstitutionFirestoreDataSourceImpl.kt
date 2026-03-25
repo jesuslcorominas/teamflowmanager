@@ -25,7 +25,6 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
 ) : PlayerSubstitutionDataSource {
-
     companion object {
         private const val SUBSTITUTIONS_COLLECTION = "substitutions"
         private const val TEAMS_COLLECTION = "teams"
@@ -44,11 +43,12 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         }
 
         return try {
-            val snapshot = firestore.collection(TEAMS_COLLECTION)
-                .whereEqualTo("assignedCoachId", currentUserId)
-                .limit(1)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(TEAMS_COLLECTION)
+                    .whereEqualTo("assignedCoachId", currentUserId)
+                    .limit(1)
+                    .get()
+                    .await()
 
             val teamDocId = snapshot.documents.firstOrNull()?.id
             teamDocId
@@ -62,12 +62,16 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
     /**
      * Helper function to find the Firestore document ID for a match based on the Long match ID.
      */
-    private suspend fun findMatchDocumentId(teamDocId: String, matchId: Long): String? {
+    private suspend fun findMatchDocumentId(
+        teamDocId: String,
+        matchId: Long,
+    ): String? {
         return try {
-            val snapshot = firestore.collection(MATCHES_COLLECTION)
-                .whereEqualTo("teamId", teamDocId)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(MATCHES_COLLECTION)
+                    .whereEqualTo("teamId", teamDocId)
+                    .get()
+                    .await()
 
             for (document in snapshot.documents) {
                 // Check if this match's stable ID matches
@@ -87,41 +91,44 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
     /**
      * Gets all substitutions for a specific match as a real-time Flow.
      */
-    override fun getMatchSubstitutions(matchId: Long): Flow<List<PlayerSubstitution>> = callbackFlow {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val listenerRegistration = firestore.collection(SUBSTITUTIONS_COLLECTION)
-            .whereEqualTo("teamId", teamDocId)
-            .whereEqualTo("matchId", matchId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val substitutions = snapshot?.documents?.mapNotNull { document ->
-                    document.toObject(PlayerSubstitutionFirestoreModel::class.java)?.toDomain()
-                } ?: emptyList()
-
-                trySend(substitutions)
+    override fun getMatchSubstitutions(matchId: Long): Flow<List<PlayerSubstitution>> =
+        callbackFlow {
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
             }
 
-        awaitClose {
-            listenerRegistration.remove()
+            val teamDocId = getTeamDocumentId()
+            if (teamDocId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
+            }
+
+            val listenerRegistration =
+                firestore.collection(SUBSTITUTIONS_COLLECTION)
+                    .whereEqualTo("teamId", teamDocId)
+                    .whereEqualTo("matchId", matchId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
+
+                        val substitutions =
+                            snapshot?.documents?.mapNotNull { document ->
+                                document.toObject(PlayerSubstitutionFirestoreModel::class.java)?.toDomain()
+                            } ?: emptyList()
+
+                        trySend(substitutions)
+                    }
+
+            awaitClose {
+                listenerRegistration.remove()
+            }
         }
-    }
 
     /**
      * Inserts a new substitution into Firestore.
@@ -141,11 +148,12 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         val docRef = firestore.collection(SUBSTITUTIONS_COLLECTION).document()
 
         val firestoreModel = substitution.toFirestoreModel()
-        val modelWithTeam = firestoreModel.copy(
-            id = docRef.id,
-            teamId = teamDocId,
-            matchDocId = matchDocId ?: "",
-        )
+        val modelWithTeam =
+            firestoreModel.copy(
+                id = docRef.id,
+                teamId = teamDocId,
+                matchDocId = matchDocId ?: "",
+            )
 
         try {
             docRef.set(modelWithTeam).await()

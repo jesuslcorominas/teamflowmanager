@@ -10,7 +10,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
 class TeamFlowManagerApplication : Application(), ImageLoaderFactory {
-
     override fun onCreate() {
         super.onCreate()
         startKoin {
@@ -19,8 +18,9 @@ class TeamFlowManagerApplication : Application(), ImageLoaderFactory {
         }
     }
 
-    override fun newImageLoader(): ImageLoader = ImageLoader
-        .Builder(this)
-        .logger(DebugLogger())
-        .build()
+    override fun newImageLoader(): ImageLoader =
+        ImageLoader
+            .Builder(this)
+            .logger(DebugLogger())
+            .build()
 }

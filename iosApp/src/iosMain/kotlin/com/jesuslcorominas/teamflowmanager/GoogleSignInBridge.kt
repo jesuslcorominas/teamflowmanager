@@ -17,7 +17,6 @@ import kotlinx.coroutines.CompletableDeferred
  * ```
  */
 object GoogleSignInBridge {
-
     /**
      * Set from Swift before the login screen is shown.
      * Swift class must implement onSignInRequested() by starting GIDSignIn.
@@ -47,7 +46,10 @@ object GoogleSignInBridge {
      * Both tokens are encoded as "idToken\naccessToken" so that the iOS
      * FirebaseAuthDataSourceImpl can extract them without changing any shared interface.
      */
-    fun onSuccess(idToken: String, accessToken: String) {
+    fun onSuccess(
+        idToken: String,
+        accessToken: String,
+    ) {
         deferred?.complete("$idToken\n$accessToken")
         deferred = null
     }

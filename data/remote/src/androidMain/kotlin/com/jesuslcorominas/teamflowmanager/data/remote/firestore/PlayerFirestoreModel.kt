@@ -47,10 +47,11 @@ fun PlayerFirestoreModel.toDomain(): Player =
         firstName = firstName,
         lastName = lastName,
         number = number,
-        positions = positions
-            .split(",")
-            .filter { it.isNotBlank() }
-            .mapNotNull { Position.fromId(it.trim()) },
+        positions =
+            positions
+                .split(",")
+                .filter { it.isNotBlank() }
+                .mapNotNull { Position.fromId(it.trim()) },
         teamId = teamId.toStableId(),
         isCaptain = isCaptain,
         imageUri = imageUri,

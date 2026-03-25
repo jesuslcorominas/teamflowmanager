@@ -66,9 +66,10 @@ fun PlayerPositionsStep(
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
         ) {
             items(allPositions) { position ->
@@ -76,11 +77,12 @@ fun PlayerPositionsStep(
                     position = position,
                     isSelected = selectedPositions.contains(position),
                     onCheckedChange = { isChecked ->
-                        selectedPositions = if (isChecked) {
-                            selectedPositions + position
-                        } else {
-                            selectedPositions - position
-                        }
+                        selectedPositions =
+                            if (isChecked) {
+                                selectedPositions + position
+                            } else {
+                                selectedPositions - position
+                            }
                         onPositionsChanged(selectedPositions)
                     },
                 )
@@ -113,17 +115,19 @@ private fun PositionCheckbox(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!isSelected) }
-            .padding(vertical = TFMSpacing.spacing01),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onCheckedChange(!isSelected) }
+                .padding(vertical = TFMSpacing.spacing01),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
     ) {
         Checkbox(
-            modifier = Modifier
-                .size(TFMSpacing.spacing06)
-                .scale(.9F),
+            modifier =
+                Modifier
+                    .size(TFMSpacing.spacing06)
+                    .scale(.9F),
             checked = isSelected,
             onCheckedChange = onCheckedChange,
         )

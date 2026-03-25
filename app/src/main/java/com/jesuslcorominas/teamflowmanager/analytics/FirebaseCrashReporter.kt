@@ -18,15 +18,24 @@ class FirebaseCrashReporter(
         crashlytics.log(message)
     }
 
-    override fun setCustomKey(key: String, value: String) {
+    override fun setCustomKey(
+        key: String,
+        value: String,
+    ) {
         crashlytics.setCustomKey(key, value)
     }
 
-    override fun setCustomKey(key: String, value: Int) {
+    override fun setCustomKey(
+        key: String,
+        value: Int,
+    ) {
         crashlytics.setCustomKey(key, value)
     }
 
-    override fun setCustomKey(key: String, value: Boolean) {
+    override fun setCustomKey(
+        key: String,
+        value: Boolean,
+    ) {
         crashlytics.setCustomKey(key, value)
     }
 }

@@ -31,5 +31,5 @@ data class SubstitutionReport(
 
 enum class SubstitutionType {
     IN,
-    OUT
+    OUT,
 }

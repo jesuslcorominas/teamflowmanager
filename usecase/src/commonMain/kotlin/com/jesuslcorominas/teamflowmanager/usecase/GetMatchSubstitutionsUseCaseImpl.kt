@@ -5,8 +5,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSubstitutionsU
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import kotlinx.coroutines.flow.Flow
 
-
-
 internal class GetMatchSubstitutionsUseCaseImpl(
     private val playerSubstitutionRepository: PlayerSubstitutionRepository,
 ) : GetMatchSubstitutionsUseCase {

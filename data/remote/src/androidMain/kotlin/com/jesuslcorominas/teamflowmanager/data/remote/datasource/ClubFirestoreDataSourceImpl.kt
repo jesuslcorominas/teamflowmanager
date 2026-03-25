@@ -20,7 +20,6 @@ import kotlin.coroutines.cancellation.CancellationException
 class ClubFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
 ) : ClubDataSource {
-
     companion object {
         private const val TAG = "ClubFirestoreDataSource"
         private const val CLUBS_COLLECTION = "clubs"
@@ -38,7 +37,7 @@ class ClubFirestoreDataSourceImpl(
         clubName: String,
         currentUserId: String,
         currentUserName: String,
-        currentUserEmail: String
+        currentUserEmail: String,
     ): Club {
         require(clubName.isNotBlank()) { "Club name cannot be blank" }
         require(currentUserId.isNotBlank()) { "User ID cannot be blank" }
@@ -54,12 +53,13 @@ class ClubFirestoreDataSourceImpl(
             val clubId = clubDocRef.id
 
             // Create club model
-            val clubModel = ClubFirestoreModel(
-                id = clubId,
-                ownerId = currentUserId,
-                name = clubName,
-                invitationCode = invitationCode
-            )
+            val clubModel =
+                ClubFirestoreModel(
+                    id = clubId,
+                    ownerId = currentUserId,
+                    name = clubName,
+                    invitationCode = invitationCode,
+                )
 
             // First, create the club document
             clubDocRef.set(clubModel).await()
@@ -67,18 +67,19 @@ class ClubFirestoreDataSourceImpl(
 
             // Create clubMember document reference with predictable ID format: userId_clubId
             // This format is required by Firestore security rules
-            val clubMemberId = "${currentUserId}_${clubId}"
+            val clubMemberId = "${currentUserId}_$clubId"
             val clubMemberDocRef = firestore.collection(CLUB_MEMBERS_COLLECTION).document(clubMemberId)
 
             // Create clubMember model for the president
-            val clubMemberModel = ClubMemberFirestoreModel(
-                id = clubMemberId,
-                userId = currentUserId,
-                name = currentUserName,
-                email = currentUserEmail,
-                clubId = clubId,
-                roles = listOf(ROLE_PRESIDENTE)
-            )
+            val clubMemberModel =
+                ClubMemberFirestoreModel(
+                    id = clubMemberId,
+                    userId = currentUserId,
+                    name = currentUserName,
+                    email = currentUserEmail,
+                    clubId = clubId,
+                    roles = listOf(ROLE_PRESIDENTE),
+                )
 
             // Then create the clubMember document (now the club exists and security rules can verify ownership)
             clubMemberDocRef.set(clubMemberModel).await()
@@ -97,11 +98,12 @@ class ClubFirestoreDataSourceImpl(
         require(invitationCode.isNotBlank()) { "Invitation code cannot be blank" }
 
         try {
-            val querySnapshot = firestore.collection(CLUBS_COLLECTION)
-                .whereEqualTo("invitationCode", invitationCode)
-                .limit(1)
-                .get()
-                .await()
+            val querySnapshot =
+                firestore.collection(CLUBS_COLLECTION)
+                    .whereEqualTo("invitationCode", invitationCode)
+                    .limit(1)
+                    .get()
+                    .await()
 
             if (querySnapshot.isEmpty) {
                 Log.d(TAG, "No club found with invitation code: $invitationCode")
@@ -118,11 +120,12 @@ class ClubFirestoreDataSourceImpl(
             }
 
             // Ensure the id field is set from the document ID
-            val modelWithId = if (firestoreModel.id.isEmpty()) {
-                firestoreModel.copy(id = documentId)
-            } else {
-                firestoreModel
-            }
+            val modelWithId =
+                if (firestoreModel.id.isEmpty()) {
+                    firestoreModel.copy(id = documentId)
+                } else {
+                    firestoreModel
+                }
 
             Log.d(TAG, "Found club with invitation code: ${modelWithId.name} (id: ${modelWithId.id})")
             return modelWithId.toDomain()

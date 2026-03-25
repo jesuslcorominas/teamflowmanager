@@ -18,18 +18,19 @@ fun ListSummaryText(
     color: Color = Color.Unspecified,
 ) {
     val context = LocalContext.current
-    val text = when {
-        items.isEmpty() -> ""
-        items.size == 1 -> context.getString(R.string.list_single, items.first())
-        else -> context.getString(R.string.list_multiple, items.first(), items.size - 1)
-    }
+    val text =
+        when {
+            items.isEmpty() -> ""
+            items.size == 1 -> context.getString(R.string.list_single, items.first())
+            else -> context.getString(R.string.list_multiple, items.first(), items.size - 1)
+        }
 
     Text(
         text = text,
         style = style,
         color = color,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis
+        overflow = TextOverflow.Ellipsis,
     )
 }
 

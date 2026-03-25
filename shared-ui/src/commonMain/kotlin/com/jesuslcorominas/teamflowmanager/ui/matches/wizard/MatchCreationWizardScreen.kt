@@ -83,9 +83,10 @@ fun MatchCreationWizardScreen(
                                 },
                                 onNext = { wizardViewModel.goToNextStep() },
                                 onCancel = { wizardViewModel.requestBack(onNavigateBack) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
 
@@ -102,9 +103,10 @@ fun MatchCreationWizardScreen(
                                     scope.launch { wizardViewModel.loadDefaultCaptainIfExists() }
                                 },
                                 onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
 
@@ -128,9 +130,10 @@ fun MatchCreationWizardScreen(
                                     }
                                 },
                                 onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
 
@@ -154,9 +157,10 @@ fun MatchCreationWizardScreen(
                                     }
                                 },
                                 onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
                     }
@@ -169,10 +173,11 @@ fun MatchCreationWizardScreen(
     if (showDefaultCaptainDialog && captainForDialog != null) {
         AppAlertDialog(
             title = stringResource(Res.string.make_default_captain_title),
-            message = stringResource(
-                Res.string.make_default_captain_message,
-                "${captainForDialog!!.firstName} ${captainForDialog!!.lastName}",
-            ),
+            message =
+                stringResource(
+                    Res.string.make_default_captain_message,
+                    "${captainForDialog!!.firstName} ${captainForDialog!!.lastName}",
+                ),
             confirmText = stringResource(Res.string.yes),
             dismissText = stringResource(Res.string.no),
             onConfirm = {

@@ -9,21 +9,21 @@ interface TimeTicker {
     val timeFlow: Flow<Long>
 }
 
-fun createTimeTicker(timeProvider: com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider): TimeTicker =
-    RealTimeTicker(timeProvider)
+fun createTimeTicker(timeProvider: com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider): TimeTicker = RealTimeTicker(timeProvider)
 
 internal class RealTimeTicker(
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
 ) : TimeTicker {
-    override val timeFlow: Flow<Long> = flow {
-        while (true) {
-            val now = timeProvider.getCurrentTime()
+    override val timeFlow: Flow<Long> =
+        flow {
+            while (true) {
+                val now = timeProvider.getCurrentTime()
 
-            val rounded = (now / 1000) * 1000
+                val rounded = (now / 1000) * 1000
 
-            emit(rounded)
+                emit(rounded)
 
-            delay(1000)
+                delay(1000)
+            }
         }
-    }
 }

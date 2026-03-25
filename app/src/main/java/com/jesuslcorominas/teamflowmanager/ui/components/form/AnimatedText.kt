@@ -18,7 +18,7 @@ fun AnimatedText(
     end: TextStyle = MaterialTheme.typography.displayMedium,
     fontWeight: FontWeight = FontWeight.Bold,
     color: Color = MaterialTheme.colorScheme.onSurface,
-    expanded: Boolean
+    expanded: Boolean,
 ) {
     val transition = updateTransition(targetState = expanded, label = "textStyleTransition")
     val fraction by transition.animateFloat(label = "fraction") { if (it) 1f else 0f }
@@ -29,18 +29,21 @@ fun AnimatedText(
         text = text,
         style = animatedStyle,
         fontWeight = fontWeight,
-        color = color
+        color = color,
     )
-
 }
 
 @Composable
-private fun lerpTextStyle(start: TextStyle, end: TextStyle, fraction: Float): TextStyle {
+private fun lerpTextStyle(
+    start: TextStyle,
+    end: TextStyle,
+    fraction: Float,
+): TextStyle {
     return TextStyle(
         fontSize = lerp(start.fontSize, end.fontSize, fraction),
         lineHeight = lerp(start.lineHeight, end.lineHeight, fraction),
         letterSpacing = lerp(start.letterSpacing, end.letterSpacing, fraction),
         fontWeight = if (fraction < 0.5f) start.fontWeight else end.fontWeight,
-        fontFamily = start.fontFamily ?: end.fontFamily
+        fontFamily = start.fontFamily ?: end.fontFamily,
     )
 }

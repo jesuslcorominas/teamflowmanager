@@ -19,12 +19,13 @@ data class Match(
     val goals: Int = 0,
     val opponentGoals: Int = 0,
     val timeoutStartTimeMillis: Long = 0L,
-    val periods: List<MatchPeriod> = (1..periodType.numberOfPeriods).map {
-        MatchPeriod(
-            periodNumber = it,
-            periodDuration = PeriodType.fromNumberOfPeriods(periodType.numberOfPeriods).duration
-        )
-    },
+    val periods: List<MatchPeriod> =
+        (1..periodType.numberOfPeriods).map {
+            MatchPeriod(
+                periodNumber = it,
+                periodDuration = PeriodType.fromNumberOfPeriods(periodType.numberOfPeriods).duration,
+            )
+        },
     val lastCompletedOperationId: String? = null,
 ) {
     fun canPause(): Boolean {
@@ -36,12 +37,13 @@ data class Match(
     }
 
     // TODO check this. We are not considering additional time
-    fun getTotalElapsed(currentTime: Long) = periods
-        .filter { it.startTimeMillis > 0 }
-        .sumOf { period ->
-            val end = if (period.endTimeMillis > 0) period.endTimeMillis else currentTime
-            (end - period.startTimeMillis).coerceAtMost(period.periodDuration)
-        }
+    fun getTotalElapsed(currentTime: Long) =
+        periods
+            .filter { it.startTimeMillis > 0 }
+            .sumOf { period ->
+                val end = if (period.endTimeMillis > 0) period.endTimeMillis else currentTime
+                (end - period.startTimeMillis).coerceAtMost(period.periodDuration)
+            }
 
     val isInProgress: Boolean
         get() = status == MatchStatus.IN_PROGRESS
@@ -55,7 +57,7 @@ data class MatchPeriod(
     val periodDuration: Long = 0L,
     val startTimeMillis: Long = 0L,
     val endTimeMillis: Long = 0L,
-){
+) {
     companion object {
         const val PERIOD_DURATION_TWO_HALF = 25 * 60 * 1000L // 25 minutes in milliseconds
         const val PERIOD_DURATION_FOUR_QUARTERS = ((12 * 60) + 30) * 1000L // 12 minutes 30 seconds in milliseconds
@@ -64,7 +66,8 @@ data class MatchPeriod(
 
 enum class PeriodType(val numberOfPeriods: Int, val duration: Long) {
     HALF_TIME(2, MatchPeriod.PERIOD_DURATION_TWO_HALF),
-    QUARTER_TIME(4, MatchPeriod.PERIOD_DURATION_FOUR_QUARTERS);
+    QUARTER_TIME(4, MatchPeriod.PERIOD_DURATION_FOUR_QUARTERS),
+    ;
 
     companion object {
         fun fromNumberOfPeriods(numberOfPeriods: Int): PeriodType {

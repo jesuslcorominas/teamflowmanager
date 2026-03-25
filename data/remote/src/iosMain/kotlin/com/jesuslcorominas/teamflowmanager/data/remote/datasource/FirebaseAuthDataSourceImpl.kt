@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthDataSource {
-
     override fun getCurrentUser(): Flow<User?> =
         firebaseAuth.authStateChanged.map { firebaseUser ->
             firebaseUser?.let {
@@ -30,15 +29,16 @@ class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthD
             val accessToken = parts.getOrElse(1) { "" }
             val credential = GoogleAuthProvider.credential(idToken = actualIdToken, accessToken = accessToken)
             val authResult = firebaseAuth.signInWithCredential(credential)
-            val firebaseUser = authResult.user
-                ?: return Result.failure(Exception("Firebase user is null after sign in"))
+            val firebaseUser =
+                authResult.user
+                    ?: return Result.failure(Exception("Firebase user is null after sign in"))
             Result.success(
                 User(
                     id = firebaseUser.uid,
                     email = firebaseUser.email,
                     displayName = firebaseUser.displayName,
                     photoUrl = firebaseUser.photoURL,
-                )
+                ),
             )
         } catch (e: Exception) {
             Result.failure(e)

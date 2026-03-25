@@ -110,10 +110,11 @@ private fun ClubJoinedSuccessfullyContent(
     onContinueClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -175,9 +176,10 @@ private fun ClubJoinedSuccessfullyContent(
 
         Button(
             onClick = onContinueClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             Text(
@@ -190,16 +192,20 @@ private fun ClubJoinedSuccessfullyContent(
 }
 
 @Composable
-private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewModel) {
+private fun JoinClubForm(
+    paddingValues: PaddingValues,
+    viewModel: JoinClubViewModel,
+) {
     val uiState by viewModel.uiState.collectAsState()
     val invitationCode by viewModel.invitationCode.collectAsState()
     val invitationCodeError by viewModel.invitationCodeError.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -230,20 +236,22 @@ private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewMo
             onValueChange = { viewModel.onInvitationCodeChanged(it) },
             label = { Text(stringResource(Res.string.invitation_code_label)) },
             isError = invitationCodeError != null,
-            supportingText = invitationCodeError?.let { error ->
-                {
-                    Text(
-                        text = stringResource(
-                            when (error) {
-                                InvitationCodeError.EMPTY_CODE -> Res.string.invitation_code_error_empty
-                                InvitationCodeError.CODE_TOO_SHORT -> Res.string.invitation_code_error_too_short
-                                InvitationCodeError.CODE_TOO_LONG -> Res.string.invitation_code_error_too_long
-                                InvitationCodeError.INVALID_FORMAT -> Res.string.invitation_code_error_invalid_format
-                            }
+            supportingText =
+                invitationCodeError?.let { error ->
+                    {
+                        Text(
+                            text =
+                                stringResource(
+                                    when (error) {
+                                        InvitationCodeError.EMPTY_CODE -> Res.string.invitation_code_error_empty
+                                        InvitationCodeError.CODE_TOO_SHORT -> Res.string.invitation_code_error_too_short
+                                        InvitationCodeError.CODE_TOO_LONG -> Res.string.invitation_code_error_too_long
+                                        InvitationCodeError.INVALID_FORMAT -> Res.string.invitation_code_error_invalid_format
+                                    },
+                                ),
                         )
-                    )
-                }
-            },
+                    }
+                },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             readOnly = uiState is JoinClubViewModel.UiState.Loading,
         )
@@ -253,9 +261,10 @@ private fun JoinClubForm(paddingValues: PaddingValues, viewModel: JoinClubViewMo
         Button(
             onClick = { viewModel.joinClub() },
             enabled = uiState !is JoinClubViewModel.UiState.Loading && invitationCode.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             if (uiState is JoinClubViewModel.UiState.Loading) {

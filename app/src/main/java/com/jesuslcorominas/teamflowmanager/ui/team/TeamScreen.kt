@@ -38,7 +38,7 @@ fun TeamScreen(
     viewModel: TeamViewModel = koinViewModel(parameters = { parametersOf(mode) }),
 ) {
     TrackScreenView(screenName = ScreenName.TEAM, screenClass = "TeamScreen")
-    
+
     val uiState by viewModel.uiState.collectAsState()
     val showExitDialog by viewModel.showExitDialog.collectAsState()
     val showTeamTypeChangeError by viewModel.showTeamTypeChangeError.collectAsState()
@@ -46,9 +46,10 @@ fun TeamScreen(
 
     val hasUnsavedChanges = remember { mutableStateOf(true) }
 
-    val latestAction = rememberUpdatedState {
-        viewModel.requestBack(onNavigateBackRequest)
-    }
+    val latestAction =
+        rememberUpdatedState {
+            viewModel.requestBack(onNavigateBackRequest)
+        }
 
     currentBackHandler?.let {
         DisposableEffect(currentBackHandler, hasUnsavedChanges.value) {
@@ -76,20 +77,21 @@ fun TeamScreen(
     ) {
         when (val state = uiState) {
             is TeamUiState.Loading -> Loading()
-            is TeamUiState.Success -> if (viewModel.isEditMode) {
-                TeamForm(
-                    team = state.team, 
-                    players = state.players,
-                    onShowTeamTypeChangeError = { viewModel.showTeamTypeChangeError() }
-                ) { team, captainId ->
-                    viewModel.updateTeam(team, captainId, onNavigateBackRequest)
+            is TeamUiState.Success ->
+                if (viewModel.isEditMode) {
+                    TeamForm(
+                        team = state.team,
+                        players = state.players,
+                        onShowTeamTypeChangeError = { viewModel.showTeamTypeChangeError() },
+                    ) { team, captainId ->
+                        viewModel.updateTeam(team, captainId, onNavigateBackRequest)
+                    }
+                } else {
+                    TeamDetailContent(
+                        team = state.team,
+                        captain = state.players.firstOrNull { it.isCaptain },
+                    )
                 }
-            } else {
-                TeamDetailContent(
-                    team = state.team,
-                    captain = state.players.firstOrNull { it.isCaptain }
-                )
-            }
 
             is TeamUiState.NoTeam -> {
                 if (state.clubId != null && !state.isPresident) {
@@ -102,7 +104,7 @@ fun TeamScreen(
                             TextButton(onClick = { onNavigateBackRequest() }) {
                                 Text(stringResource(R.string.close))
                             }
-                        }
+                        },
                     )
                 } else {
                     TeamForm(
@@ -140,10 +142,10 @@ fun TeamScreen(
                     Text(stringResource(R.string.cancel))
                 }
             },
-            text = { Text(stringResource(R.string.discard_message)) }
+            text = { Text(stringResource(R.string.discard_message)) },
         )
     }
-    
+
     if (showTeamTypeChangeError) {
         AlertDialog(
             title = { Text(stringResource(R.string.team_type_change_not_allowed)) },
@@ -153,10 +155,10 @@ fun TeamScreen(
                 TextButton(onClick = { viewModel.dismissTeamTypeChangeError() }) {
                     Text(stringResource(R.string.close))
                 }
-            }
+            },
         )
     }
-    
+
     if (showSaveError) {
         AlertDialog(
             title = { Text(stringResource(R.string.save_error_title)) },
@@ -166,7 +168,7 @@ fun TeamScreen(
                 TextButton(onClick = { viewModel.dismissSaveError() }) {
                     Text(stringResource(R.string.close))
                 }
-            }
+            },
         )
     }
 }

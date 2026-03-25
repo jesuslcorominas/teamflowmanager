@@ -54,9 +54,10 @@ fun StartingLineupStep(
     var showGoalkeeperWarning by remember { mutableStateOf(false) }
     var pendingCreate by remember { mutableStateOf(false) }
 
-    val hasGoalkeeperSelected = players.any { player ->
-        player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
-    }
+    val hasGoalkeeperSelected =
+        players.any { player ->
+            player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
+        }
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -78,11 +79,12 @@ fun StartingLineupStep(
             text = stringResource(Res.string.starting_lineup_count, currentSelection.size, requiredPlayers),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
-            color = if (currentSelection.size == requiredPlayers) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.error
-            },
+            color =
+                if (currentSelection.size == requiredPlayers) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.error
+                },
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))

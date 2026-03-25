@@ -6,13 +6,11 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberReposito
 import kotlinx.coroutines.flow.Flow
 
 internal class ClubMemberRepositoryImpl(
-    private val clubMemberDataSource: ClubMemberDataSource
+    private val clubMemberDataSource: ClubMemberDataSource,
 ) : ClubMemberRepository {
-    override fun getClubMemberByUserId(userId: String): Flow<ClubMember?> =
-        clubMemberDataSource.getClubMemberByUserId(userId)
+    override fun getClubMemberByUserId(userId: String): Flow<ClubMember?> = clubMemberDataSource.getClubMemberByUserId(userId)
 
-    override fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>> =
-        clubMemberDataSource.getClubMembers(clubFirestoreId)
+    override fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>> = clubMemberDataSource.getClubMembers(clubFirestoreId)
 
     override suspend fun createOrUpdateClubMember(
         userId: String,
@@ -20,17 +18,22 @@ internal class ClubMemberRepositoryImpl(
         email: String,
         clubId: Long,
         clubFirestoreId: String,
-        roles: List<String>
+        roles: List<String>,
     ): ClubMember {
         return clubMemberDataSource.createOrUpdateClubMember(
-            userId, name, email, clubId, clubFirestoreId, roles
+            userId,
+            name,
+            email,
+            clubId,
+            clubFirestoreId,
+            roles,
         )
     }
 
     override suspend fun updateClubMemberRoles(
         userId: String,
         clubFirestoreId: String,
-        roles: List<String>
+        roles: List<String>,
     ) {
         clubMemberDataSource.updateClubMemberRoles(userId, clubFirestoreId, roles)
     }
@@ -38,14 +41,14 @@ internal class ClubMemberRepositoryImpl(
     override suspend fun addClubMemberRole(
         userId: String,
         clubFirestoreId: String,
-        role: String
+        role: String,
     ) {
         clubMemberDataSource.addClubMemberRole(userId, clubFirestoreId, role)
     }
 
     override suspend fun getClubMemberByUserIdAndClub(
         userId: String,
-        clubFirestoreId: String
+        clubFirestoreId: String,
     ): ClubMember? {
         return clubMemberDataSource.getClubMemberByUserIdAndClub(userId, clubFirestoreId)
     }

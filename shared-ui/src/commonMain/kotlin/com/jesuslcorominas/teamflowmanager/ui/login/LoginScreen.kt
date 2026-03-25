@@ -70,17 +70,19 @@ fun LoginScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
@@ -109,15 +111,16 @@ fun LoginScreen(
                                 viewModel.signInWithGoogle(idToken)
                             } catch (e: Exception) {
                                 snackbarHostState.showSnackbar(
-                                    e.message ?: "Error al iniciar sesión"
+                                    e.message ?: "Error al iniciar sesión",
                                 )
                             }
                         }
                     },
                     enabled = uiState !is UiState.Loading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
                 ) {
                     if (uiState is UiState.Loading) {
                         CircularProgressIndicator(

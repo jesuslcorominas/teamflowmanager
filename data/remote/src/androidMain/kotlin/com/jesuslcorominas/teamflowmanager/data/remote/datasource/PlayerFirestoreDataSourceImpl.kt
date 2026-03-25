@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -30,7 +29,6 @@ class PlayerFirestoreDataSourceImpl(
     private val firebaseAuth: FirebaseAuth,
     private val imageStorageDataSource: ImageStorageDataSource,
 ) : PlayerDataSource {
-
     companion object {
         private const val TAG = "PlayerFirestoreDS"
         private const val PLAYERS_COLLECTION = "players"
@@ -46,11 +44,12 @@ class PlayerFirestoreDataSourceImpl(
         val currentUserId = firebaseAuth.currentUser?.uid ?: return null
 
         return try {
-            val snapshot = firestore.collection(TEAMS_COLLECTION)
-                .whereEqualTo("assignedCoachId", currentUserId)
-                .limit(1)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(TEAMS_COLLECTION)
+                    .whereEqualTo("assignedCoachId", currentUserId)
+                    .limit(1)
+                    .get()
+                    .await()
 
             snapshot.documents.firstOrNull()?.id
         } catch (e: CancellationException) {
@@ -76,42 +75,45 @@ class PlayerFirestoreDataSourceImpl(
     /**
      * Gets all players for the current user's team from Firestore as a real-time Flow.
      */
-    override fun getAllPlayers(): Flow<List<Player>> = callbackFlow {
-        val currentUserId = firebaseAuth.currentUser?.uid
-        if (currentUserId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        // First, get the team document ID
-        val teamDocId = getTeamDocumentId()
-        if (teamDocId == null) {
-            trySend(emptyList())
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val listenerRegistration = firestore.collection(PLAYERS_COLLECTION)
-            .whereEqualTo("teamId", teamDocId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val players = snapshot?.documents
-                    ?.mapNotNull { documentToPlayer(it) }
-                    ?.filter { !it.deleted }
-                    ?: emptyList()
-
-                trySend(players)
+    override fun getAllPlayers(): Flow<List<Player>> =
+        callbackFlow {
+            val currentUserId = firebaseAuth.currentUser?.uid
+            if (currentUserId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
             }
 
-        awaitClose {
-            listenerRegistration.remove()
+            // First, get the team document ID
+            val teamDocId = getTeamDocumentId()
+            if (teamDocId == null) {
+                trySend(emptyList())
+                awaitClose { }
+                return@callbackFlow
+            }
+
+            val listenerRegistration =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .whereEqualTo("teamId", teamDocId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
+
+                        val players =
+                            snapshot?.documents
+                                ?.mapNotNull { documentToPlayer(it) }
+                                ?.filter { !it.deleted }
+                                ?: emptyList()
+
+                        trySend(players)
+                    }
+
+            awaitClose {
+                listenerRegistration.remove()
+            }
         }
-    }
 
     /**
      * Gets a player by its document ID.
@@ -122,10 +124,11 @@ class PlayerFirestoreDataSourceImpl(
         val teamDocId = getTeamDocumentId() ?: return null
 
         return try {
-            val snapshot = firestore.collection(PLAYERS_COLLECTION)
-                .whereEqualTo("teamId", teamDocId)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .whereEqualTo("teamId", teamDocId)
+                    .get()
+                    .await()
 
             snapshot.documents
                 .mapNotNull { documentToPlayer(it) }
@@ -145,12 +148,13 @@ class PlayerFirestoreDataSourceImpl(
         val teamDocId = getTeamDocumentId() ?: return null
 
         return try {
-            val snapshot = firestore.collection(PLAYERS_COLLECTION)
-                .whereEqualTo("teamId", teamDocId)
-                .whereEqualTo("isCaptain", true)
-                .limit(1)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .whereEqualTo("teamId", teamDocId)
+                    .whereEqualTo("isCaptain", true)
+                    .limit(1)
+                    .get()
+                    .await()
 
             val document = snapshot.documents.firstOrNull() ?: return null
             val player = documentToPlayer(document) ?: return null
@@ -226,11 +230,12 @@ class PlayerFirestoreDataSourceImpl(
 
             val firestoreModel = player.toFirestoreModel()
             // Set the teamId and image URL
-            val modelWithTeam = firestoreModel.copy(
-                id = docRef.id,
-                teamId = teamDocId,
-                imageUri = imageUrl
-            )
+            val modelWithTeam =
+                firestoreModel.copy(
+                    id = docRef.id,
+                    teamId = teamDocId,
+                    imageUri = imageUrl,
+                )
             docRef.set(modelWithTeam).await()
 
             // Convert Firestore document ID to stable Long ID
@@ -278,49 +283,52 @@ class PlayerFirestoreDataSourceImpl(
 
         try {
             // First, find the document ID for this player
-            val documentId = findDocumentIdByPlayerId(teamDocId, player.id)
-                ?: throw IllegalStateException("Cannot update player without document ID")
+            val documentId =
+                findDocumentIdByPlayerId(teamDocId, player.id)
+                    ?: throw IllegalStateException("Cannot update player without document ID")
 
             // Get current player to check if image changed
             val currentPlayer = getPlayerById(player.id)
             val currentImageUrl = currentPlayer?.imageUri
 
             // Handle image update
-            val newImageUrl = when {
-                // No image in update
-                player.imageUri == null -> {
-                    // Delete old image if exists
-                    currentImageUrl?.let {
-                        if (isFirebaseStorageUrl(it)) {
-                            imageStorageDataSource.deleteImage(it)
+            val newImageUrl =
+                when {
+                    // No image in update
+                    player.imageUri == null -> {
+                        // Delete old image if exists
+                        currentImageUrl?.let {
+                            if (isFirebaseStorageUrl(it)) {
+                                imageStorageDataSource.deleteImage(it)
+                            }
                         }
+                        null
                     }
-                    null
-                }
-                // Same image URL (already uploaded)
-                player.imageUri == currentImageUrl -> currentImageUrl
-                // New local image - upload it
-                isLocalUri(player.imageUri ?: "") -> {
-                    // Delete old image if exists
-                    currentImageUrl?.let {
-                        if (isFirebaseStorageUrl(it)) {
-                            imageStorageDataSource.deleteImage(it)
+                    // Same image URL (already uploaded)
+                    player.imageUri == currentImageUrl -> currentImageUrl
+                    // New local image - upload it
+                    isLocalUri(player.imageUri ?: "") -> {
+                        // Delete old image if exists
+                        currentImageUrl?.let {
+                            if (isFirebaseStorageUrl(it)) {
+                                imageStorageDataSource.deleteImage(it)
+                            }
                         }
+                        // Upload new image
+                        uploadPlayerImageIfNeeded(player.imageUri, documentId)
                     }
-                    // Upload new image
-                    uploadPlayerImageIfNeeded(player.imageUri, documentId)
+                    // Already a Firebase URL (shouldn't happen but handle it)
+                    else -> player.imageUri
                 }
-                // Already a Firebase URL (shouldn't happen but handle it)
-                else -> player.imageUri
-            }
 
             val firestoreModel = player.toFirestoreModel()
             // Ensure teamId, id, and image URL are set correctly
-            val modelWithTeam = firestoreModel.copy(
-                id = documentId,
-                teamId = teamDocId,
-                imageUri = newImageUrl
-            )
+            val modelWithTeam =
+                firestoreModel.copy(
+                    id = documentId,
+                    teamId = teamDocId,
+                    imageUri = newImageUrl,
+                )
             firestore.collection(PLAYERS_COLLECTION)
                 .document(documentId)
                 .set(modelWithTeam)
@@ -337,7 +345,10 @@ class PlayerFirestoreDataSourceImpl(
      * The storage path follows the security rules format: players_images/{ownerId}/{playerId}.jpg
      * @return The download URL if uploaded, the original URI if it's already a remote URL, or null if no image.
      */
-    private suspend fun uploadPlayerImageIfNeeded(imageUri: String?, playerId: String): String? {
+    private suspend fun uploadPlayerImageIfNeeded(
+        imageUri: String?,
+        playerId: String,
+    ): String? {
         if (imageUri == null) return null
 
         // Check if it's already a Firebase Storage URL
@@ -368,17 +379,21 @@ class PlayerFirestoreDataSourceImpl(
      */
     private fun isFirebaseStorageUrl(url: String): Boolean {
         return url.contains("firebasestorage.googleapis.com") ||
-               url.contains("storage.googleapis.com")
+            url.contains("storage.googleapis.com")
     }
 
     /**
      * Helper function to find the Firestore document ID for a player based on the Long player ID.
      */
-    private suspend fun findDocumentIdByPlayerId(teamDocId: String, playerId: Long): String? {
-        val snapshot = firestore.collection(PLAYERS_COLLECTION)
-            .whereEqualTo("teamId", teamDocId)
-            .get()
-            .await()
+    private suspend fun findDocumentIdByPlayerId(
+        teamDocId: String,
+        playerId: Long,
+    ): String? {
+        val snapshot =
+            firestore.collection(PLAYERS_COLLECTION)
+                .whereEqualTo("teamId", teamDocId)
+                .get()
+                .await()
 
         for (document in snapshot.documents) {
             val player = documentToPlayer(document) ?: continue
@@ -391,11 +406,12 @@ class PlayerFirestoreDataSourceImpl(
      * Helper function to clear captain status from all players for the team.
      */
     private suspend fun clearAllCaptains(teamDocId: String) {
-        val snapshot = firestore.collection(PLAYERS_COLLECTION)
-            .whereEqualTo("teamId", teamDocId)
-            .whereEqualTo("isCaptain", true)
-            .get()
-            .await()
+        val snapshot =
+            firestore.collection(PLAYERS_COLLECTION)
+                .whereEqualTo("teamId", teamDocId)
+                .whereEqualTo("isCaptain", true)
+                .get()
+                .await()
 
         for (document in snapshot.documents) {
             val player = documentToPlayer(document) ?: continue

@@ -31,19 +31,20 @@ fun BottomNavigationBar(
     navController: NavController,
     isPresident: Boolean = false,
 ) {
-    val items = if (isPresident) {
-        listOf(
-            Route.TeamList,
-            Route.ClubMembers,
-        )
-    } else {
-        listOf(
-            Route.Matches,
-            Route.Players,
-            Route.Analysis,
-            Route.Team,
-        )
-    }
+    val items =
+        if (isPresident) {
+            listOf(
+                Route.TeamList,
+                Route.ClubMembers,
+            )
+        } else {
+            listOf(
+                Route.Matches,
+                Route.Players,
+                Route.Analysis,
+                Route.Team,
+            )
+        }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -52,24 +53,27 @@ fun BottomNavigationBar(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         tonalElevation = 4.dp,
         shadowElevation = 8.dp,
-        color = BackgroundContrast
+        color = BackgroundContrast,
     ) {
         NavigationBar(containerColor = Color.Transparent, windowInsets = WindowInsets(0)) {
             items.forEach { route ->
                 val icon: ImageVector? = route.toIcon()
                 val labelRes: Int? = route.toStringRes()
 
-                val selected = when {
-                    route is Route.Players && Route.fromValue(currentRoute) is Route.Players -> true
-                    route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
-                    route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
-                    route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
-                    route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
-                    route is Route.Matches && (Route.fromValue(currentRoute) is Route.Matches ||
-                        Route.fromValue(currentRoute) is Route.ArchivedMatches) -> true
+                val selected =
+                    when {
+                        route is Route.Players && Route.fromValue(currentRoute) is Route.Players -> true
+                        route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
+                        route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
+                        route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
+                        route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
+                        route is Route.Matches && (
+                            Route.fromValue(currentRoute) is Route.Matches ||
+                                Route.fromValue(currentRoute) is Route.ArchivedMatches
+                        ) -> true
 
-                    else -> false
-                }
+                        else -> false
+                    }
 
                 NavigationBarItem(
                     alwaysShowLabel = false,
@@ -78,7 +82,7 @@ fun BottomNavigationBar(
                             BottomNavItem(
                                 iconVector = icon,
                                 labelResId = labelRes,
-                                isSelected = selected
+                                isSelected = selected,
                             )
                         }
                     },
@@ -98,10 +102,11 @@ fun BottomNavigationBar(
                     selected = selected,
                     onClick = {
                         if (!selected) {
-                            val destination = when (route) {
-                                is Route.Team -> route.createRoute(Route.Team.MODE_VIEW)
-                                else -> route.createRoute()
-                            }
+                            val destination =
+                                when (route) {
+                                    is Route.Team -> route.createRoute(Route.Team.MODE_VIEW)
+                                    else -> route.createRoute()
+                                }
 
                             navController.navigate(destination) {
                                 // Pop up to the start destination of the graph to
@@ -118,13 +123,14 @@ fun BottomNavigationBar(
                             }
                         }
                     },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = ContentContrast,
-                        unselectedIconColor = PrimaryLight,
-                        selectedTextColor = ContentContrast,
-                        unselectedTextColor = PrimaryLight,
-                        indicatorColor = Primary
-                    )
+                    colors =
+                        NavigationBarItemDefaults.colors(
+                            selectedIconColor = ContentContrast,
+                            unselectedIconColor = PrimaryLight,
+                            selectedTextColor = ContentContrast,
+                            unselectedTextColor = PrimaryLight,
+                            indicatorColor = Primary,
+                        ),
                 )
             }
         }
@@ -142,12 +148,13 @@ private fun Route.toIcon(): ImageVector? =
         else -> null
     }
 
-private fun Route.toStringRes(): Int? = when (this) {
-    Route.Players -> R.string.nav_players
-    Route.Team -> R.string.nav_team
-    Route.TeamList -> R.string.nav_teams
-    Route.ClubMembers -> R.string.nav_staff
-    Route.Matches, Route.ArchivedMatches -> R.string.nav_matches
-    Route.Analysis -> R.string.nav_analysis
-    else -> null
-}
+private fun Route.toStringRes(): Int? =
+    when (this) {
+        Route.Players -> R.string.nav_players
+        Route.Team -> R.string.nav_team
+        Route.TeamList -> R.string.nav_teams
+        Route.ClubMembers -> R.string.nav_staff
+        Route.Matches, Route.ArchivedMatches -> R.string.nav_matches
+        Route.Analysis -> R.string.nav_analysis
+        else -> null
+    }

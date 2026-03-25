@@ -18,7 +18,11 @@ import com.jesuslcorominas.teamflowmanager.ui.components.AppTitle
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
 @Composable
-fun ExpandableTitle(title: String, expanded: Boolean, onClick: () -> Unit) {
+fun ExpandableTitle(
+    title: String,
+    expanded: Boolean,
+    onClick: () -> Unit,
+) {
     val rotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
         animationSpec = tween(durationMillis = 300),
@@ -27,9 +31,10 @@ fun ExpandableTitle(title: String, expanded: Boolean, onClick: () -> Unit) {
 
     Column {
         Row(
-            modifier = Modifier
-                .clickable(onClick = onClick)
-                .padding(vertical = TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .clickable(onClick = onClick)
+                    .padding(vertical = TFMSpacing.spacing04),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AppTitle(modifier = Modifier.weight(1f), title = title)

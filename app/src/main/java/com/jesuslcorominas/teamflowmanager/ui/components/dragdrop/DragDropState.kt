@@ -43,7 +43,10 @@ class DragDropState {
     var childGestureActive by mutableStateOf(false)
         private set
 
-    fun startDrag(player: Player, initialPosition: Offset) {
+    fun startDrag(
+        player: Player,
+        initialPosition: Offset,
+    ) {
         childGestureActive = true
         draggedPlayer = player
         draggedPlayerId = player.id
@@ -57,7 +60,10 @@ class DragDropState {
         dragPosition = newPosition
     }
 
-    fun updateDropTarget(playerId: Long?, isValid: Boolean) {
+    fun updateDropTarget(
+        playerId: Long?,
+        isValid: Boolean,
+    ) {
         currentDropTargetId = playerId
         isValidDropTarget = isValid
     }

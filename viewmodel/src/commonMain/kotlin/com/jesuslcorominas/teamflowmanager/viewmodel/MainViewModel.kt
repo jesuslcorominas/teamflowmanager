@@ -1,24 +1,18 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 
 class MainViewModel(
     private val hasNotificationPermissionBeenRequestedUseCase: HasNotificationPermissionBeenRequestedUseCase,
     private val setNotificationPermissionRequestedUseCase: SetNotificationPermissionRequestedUseCase,
     @Suppress("UNUSED_PARAMETER") getUserClubMembership: GetUserClubMembershipUseCase, // CLUB_HIDDEN
 ) : ViewModel() {
-
     // ==============================================================
     // CLUB_HIDDEN — Restaurar bloque CLUB_ORIGINAL para re-habilitar
     // la funcionalidad de club. Eliminar este bloque al revertir.
@@ -47,8 +41,7 @@ class MainViewModel(
     // FIN CLUB_ORIGINAL
     // ==============================================================
 
-    fun hasNotificationPermissionBeenRequested(): Boolean =
-        hasNotificationPermissionBeenRequestedUseCase()
+    fun hasNotificationPermissionBeenRequested(): Boolean = hasNotificationPermissionBeenRequestedUseCase()
 
     fun setNotificationPermissionRequested(requested: Boolean) {
         setNotificationPermissionRequestedUseCase(requested)

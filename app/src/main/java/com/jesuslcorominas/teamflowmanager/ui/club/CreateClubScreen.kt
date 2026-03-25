@@ -46,12 +46,11 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun CreateClubScreen(
     onClubCreated: () -> Unit,
-    viewModel: CreateClubViewModel = koinViewModel()
+    viewModel: CreateClubViewModel = koinViewModel(),
 ) {
     TrackScreenView(screenName = ScreenName.CREATE_CLUB, screenClass = "CreateClubScreen")
 
     val uiState by viewModel.uiState.collectAsState()
-
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -69,13 +68,13 @@ fun CreateClubScreen(
                 viewModel.resetState()
             }
 
-            else -> { /* No action needed */
+            else -> { // No action needed
             }
         }
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         // Show success state instead of form
         if (uiState is CreateClubViewModel.UiState.Success) {
@@ -87,27 +86,31 @@ fun CreateClubScreen(
             // Show form
             CreateClubForm(
                 paddingValues = paddingValues,
-                viewModel = viewModel
+                viewModel = viewModel,
             )
         }
     }
 }
 
 @Composable
-private fun ClubCreatedSuccessfullyContent(paddingValues: PaddingValues, onContinueClick: () -> Unit) {
+private fun ClubCreatedSuccessfullyContent(
+    paddingValues: PaddingValues,
+    onContinueClick: () -> Unit,
+) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = Icons.Default.CheckCircle,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(72.dp)
+            modifier = Modifier.size(72.dp),
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -116,7 +119,7 @@ private fun ClubCreatedSuccessfullyContent(paddingValues: PaddingValues, onConti
             text = stringResource(id = R.string.create_club_success_title),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -125,7 +128,7 @@ private fun ClubCreatedSuccessfullyContent(paddingValues: PaddingValues, onConti
             text = stringResource(id = R.string.create_club_success_message),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -134,41 +137,46 @@ private fun ClubCreatedSuccessfullyContent(paddingValues: PaddingValues, onConti
             text = stringResource(id = R.string.create_club_redirecting),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = onContinueClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = MaterialTheme.shapes.small
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            shape = MaterialTheme.shapes.small,
         ) {
             Text(
                 text = stringResource(id = R.string.create_club_continue),
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
         }
     }
 }
 
 @Composable
-private fun CreateClubForm(paddingValues: PaddingValues, viewModel: CreateClubViewModel) {
+private fun CreateClubForm(
+    paddingValues: PaddingValues,
+    viewModel: CreateClubViewModel,
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     val clubName by viewModel.clubName.collectAsState()
     val clubNameError by viewModel.clubNameError.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         TeamFlowManagerIcon()
 
@@ -178,7 +186,7 @@ private fun CreateClubForm(paddingValues: PaddingValues, viewModel: CreateClubVi
             text = stringResource(id = R.string.create_club_title),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -187,7 +195,7 @@ private fun CreateClubForm(paddingValues: PaddingValues, viewModel: CreateClubVi
             text = stringResource(id = R.string.create_club_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -197,24 +205,28 @@ private fun CreateClubForm(paddingValues: PaddingValues, viewModel: CreateClubVi
             onValueChange = { viewModel.onClubNameChanged(it) },
             label = { Text(stringResource(id = R.string.club_name_label)) },
             isError = clubNameError != null,
-            supportingText = clubNameError?.let { errorResId ->
-                {
-                    Text(
-                        text = stringResource(
-                            id = when (errorResId) {
-                                ClubNameError.EMPTY_NAME -> R.string.club_name_error_empty
-                                ClubNameError.NAME_TOO_SHORT -> R.string.club_name_error_too_short
-                                ClubNameError.NAME_TOO_LONG -> R.string.club_name_error_too_long
-                            }
+            supportingText =
+                clubNameError?.let { errorResId ->
+                    {
+                        Text(
+                            text =
+                                stringResource(
+                                    id =
+                                        when (errorResId) {
+                                            ClubNameError.EMPTY_NAME -> R.string.club_name_error_empty
+                                            ClubNameError.NAME_TOO_SHORT -> R.string.club_name_error_too_short
+                                            ClubNameError.NAME_TOO_LONG -> R.string.club_name_error_too_long
+                                        },
+                                ),
                         )
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                capitalization = KeyboardCapitalization.Words
-            ),
-            readOnly = uiState is CreateClubViewModel.UiState.Loading
+                    }
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
+            readOnly = uiState is CreateClubViewModel.UiState.Loading,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -222,21 +234,22 @@ private fun CreateClubForm(paddingValues: PaddingValues, viewModel: CreateClubVi
         Button(
             onClick = { viewModel.createClub() },
             enabled = uiState !is CreateClubViewModel.UiState.Loading && clubName.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = MaterialTheme.shapes.small
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            shape = MaterialTheme.shapes.small,
         ) {
             if (uiState is CreateClubViewModel.UiState.Loading) {
                 CircularProgressIndicator(
                     color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.height(24.dp)
+                    modifier = Modifier.height(24.dp),
                 )
             } else {
                 Text(
                     text = stringResource(id = R.string.create_club_button),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
         }

@@ -50,7 +50,7 @@ fun AppTopBar(
     if (uiConfig?.showTopBar == true) {
         Crossfade(
             targetState = searchState.isActive,
-            animationSpec = tween(durationMillis = 300)
+            animationSpec = tween(durationMillis = 300),
         ) { isSearchActive ->
             if (uiConfig.hasSearchBar && isSearchActive) {
                 SearchTopBar(modifier = modifier, placeholder = searchPlaceholder)
@@ -88,7 +88,7 @@ private fun SearchTopBar(
                         onClick = {
                             searchState.clear()
                             searchState.isActive = false
-                        }
+                        },
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -101,27 +101,29 @@ private fun SearchTopBar(
                         IconButton(onClick = { searchState.clear() }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(Res.string.clear)
+                                contentDescription = stringResource(Res.string.clear),
                             )
                         }
                     }
                 },
                 shape = RoundedCornerShape(48.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 16.dp)
-                    .background(Color.LightGray.copy(alpha = 0.3F), RoundedCornerShape(48.dp)),
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    errorIndicatorColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    cursorColor = MaterialTheme.colorScheme.primary
-                )
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(end = 16.dp)
+                        .background(Color.LightGray.copy(alpha = 0.3F), RoundedCornerShape(48.dp)),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                    ),
             )
-        }
+        },
     )
 }
 
@@ -161,7 +163,7 @@ private fun DefaultTopBar(
                 IconButton(onClick = { searchState.isActive = true }) {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = stringResource(Res.string.search)
+                        contentDescription = stringResource(Res.string.search),
                     )
                 }
             }
@@ -169,7 +171,7 @@ private fun DefaultTopBar(
                 IconButton(onClick = onSettings) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = stringResource(Res.string.settings)
+                        contentDescription = stringResource(Res.string.settings),
                     )
                 }
             }

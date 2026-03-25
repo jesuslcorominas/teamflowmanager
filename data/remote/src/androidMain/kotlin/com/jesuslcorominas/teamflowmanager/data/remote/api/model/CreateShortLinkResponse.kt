@@ -11,5 +11,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class CreateShortLinkResponse(
     val shortLink: String,
-    val linkId: String? = null
+    val linkId: String? = null,
 )

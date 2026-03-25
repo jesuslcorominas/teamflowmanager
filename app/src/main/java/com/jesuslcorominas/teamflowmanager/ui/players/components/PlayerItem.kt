@@ -60,46 +60,54 @@ fun PlayerItem(
 ) {
     val context = LocalContext.current
 
-    val modifier = when {
-        onMultiSelectionChange != null && onSingleSelectionChange != null ->
-            throw IllegalArgumentException("Only one of onMultiSelectionChange or onSingleSelectionChange can be provided.")
+    val modifier =
+        when {
+            onMultiSelectionChange != null && onSingleSelectionChange != null ->
+                throw IllegalArgumentException(
+                    "Only one of onMultiSelectionChange or onSingleSelectionChange can be provided.",
+                )
 
-        onMultiSelectionChange != null -> modifier.toggleable(
-            value = isSelected,
-            onValueChange = onMultiSelectionChange,
-            role = Role.Checkbox
-        )
+            onMultiSelectionChange != null ->
+                modifier.toggleable(
+                    value = isSelected,
+                    onValueChange = onMultiSelectionChange,
+                    role = Role.Checkbox,
+                )
 
-        onSingleSelectionChange != null -> modifier.toggleable(
-            value = isSelected,
-            onValueChange = { onSingleSelectionChange() },
-            role = Role.RadioButton
-        )
+            onSingleSelectionChange != null ->
+                modifier.toggleable(
+                    value = isSelected,
+                    onValueChange = { onSingleSelectionChange() },
+                    role = Role.RadioButton,
+                )
 
-        else -> modifier
+            else -> modifier
+        }
 
-    }
-
-    val colors = onClick?.let {
-        CardDefaults.cardColors(
-            containerColor = when {
-                isSelected -> MaterialTheme.colorScheme.primaryContainer
-                isPlaying -> MaterialTheme.colorScheme.secondaryContainer
-                else -> MaterialTheme.colorScheme.surface
-            },
-        )
-    }
+    val colors =
+        onClick?.let {
+            CardDefaults.cardColors(
+                containerColor =
+                    when {
+                        isSelected -> MaterialTheme.colorScheme.primaryContainer
+                        isPlaying -> MaterialTheme.colorScheme.secondaryContainer
+                        else -> MaterialTheme.colorScheme.surface
+                    },
+            )
+        }
 
     AppCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(onClick?.let { Modifier.clickable(onClick = onClick) } ?: Modifier),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .then(onClick?.let { Modifier.clickable(onClick = onClick) } ?: Modifier),
         colors = colors,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing04),
             horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -135,7 +143,7 @@ fun PlayerItem(
                 if (showGoalkeeperBadge) {
                     PlayerBadge(
                         badge = stringResource(R.string.goalkeeper_badge),
-                        background = GoalKeeperBadge
+                        background = GoalKeeperBadge,
                     )
                 }
 
@@ -186,14 +194,17 @@ fun PlayerItem(
     }
 }
 
-
 @Composable
-fun PlayerBadge(badge: String, background: Color = MaterialTheme.colorScheme.primary) {
+fun PlayerBadge(
+    badge: String,
+    background: Color = MaterialTheme.colorScheme.primary,
+) {
     Box(
-        modifier = Modifier
-            .size(24.dp)
-            .clip(androidx.compose.foundation.shape.CircleShape)
-            .background(background),
+        modifier =
+            Modifier
+                .size(24.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(background),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -203,7 +214,6 @@ fun PlayerBadge(badge: String, background: Color = MaterialTheme.colorScheme.pri
             fontWeight = FontWeight.Bold,
         )
     }
-
 }
 
 // region Previews
@@ -220,11 +230,11 @@ private fun PlayerItemPreview() {
                     number = 10,
                     positions = listOf(Position.Forward, Position.Midfielder),
                     teamId = 1,
-                    isCaptain = false
+                    isCaptain = false,
                 ),
             isSelected = false,
             onEditClick = {},
-            onDeleteClick = {}
+            onDeleteClick = {},
         )
     }
 }
@@ -234,17 +244,19 @@ private fun PlayerItemPreview() {
 private fun PlayerCheckboxItemPreview() {
     MaterialTheme {
         PlayerItem(
-            player = Player(
-                id = 1,
-                firstName = "John",
-                lastName = "Doe",
-                number = 10,
-                positions = listOf(Position.Forward, Position.Midfielder),
-                teamId = 1,
-                isCaptain = false
-            ), isSelected = false,
+            player =
+                Player(
+                    id = 1,
+                    firstName = "John",
+                    lastName = "Doe",
+                    number = 10,
+                    positions = listOf(Position.Forward, Position.Midfielder),
+                    teamId = 1,
+                    isCaptain = false,
+                ),
+            isSelected = false,
             showPositions = false,
-            onMultiSelectionChange = { }
+            onMultiSelectionChange = { },
         )
     }
 }
@@ -254,17 +266,19 @@ private fun PlayerCheckboxItemPreview() {
 private fun PlayerRadioButtonItemPreview() {
     MaterialTheme {
         PlayerItem(
-            player = Player(
-                id = 1,
-                firstName = "John",
-                lastName = "Doe",
-                number = 10,
-                positions = listOf(Position.Forward, Position.Midfielder),
-                teamId = 1,
-                isCaptain = false
-            ), isSelected = false,
+            player =
+                Player(
+                    id = 1,
+                    firstName = "John",
+                    lastName = "Doe",
+                    number = 10,
+                    positions = listOf(Position.Forward, Position.Midfielder),
+                    teamId = 1,
+                    isCaptain = false,
+                ),
+            isSelected = false,
             showPositions = false,
-            onSingleSelectionChange = { }
+            onSingleSelectionChange = { },
         )
     }
 }
@@ -274,15 +288,16 @@ private fun PlayerRadioButtonItemPreview() {
 private fun PlayerOnMatchItemPreview() {
     MaterialTheme {
         PlayerItem(
-            player = Player(
-                id = 1,
-                firstName = "John",
-                lastName = "Doe",
-                number = 10,
-                positions = listOf(Position.Forward, Position.Midfielder),
-                teamId = 1,
-                isCaptain = false
-            ),
+            player =
+                Player(
+                    id = 1,
+                    firstName = "John",
+                    lastName = "Doe",
+                    number = 10,
+                    positions = listOf(Position.Forward, Position.Midfielder),
+                    teamId = 1,
+                    isCaptain = false,
+                ),
             timeMillis = 125000,
             isSelected = false,
             showPositions = false,

@@ -15,7 +15,10 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 
 @Composable
-actual fun UserAvatar(photoUrl: String?, modifier: Modifier) {
+actual fun UserAvatar(
+    photoUrl: String?,
+    modifier: Modifier,
+) {
     if (photoUrl != null) {
         AsyncImage(
             model = photoUrl,
@@ -25,9 +28,10 @@ actual fun UserAvatar(photoUrl: String?, modifier: Modifier) {
         )
     } else {
         Box(
-            modifier = modifier
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
+            modifier =
+                modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

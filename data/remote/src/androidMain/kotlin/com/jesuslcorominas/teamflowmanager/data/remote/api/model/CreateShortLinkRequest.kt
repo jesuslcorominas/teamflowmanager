@@ -11,5 +11,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class CreateShortLinkRequest(
     val teamId: String,
-    val teamName: String
+    val teamName: String,
 )

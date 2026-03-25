@@ -6,7 +6,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesReposit
 internal class PreferencesRepositoryImpl(
     private val preferencesDataSource: PreferencesDataSource,
 ) : PreferencesRepository {
-
     override fun shouldShowInvalidSubstitutionAlert(): Boolean {
         return preferencesDataSource.shouldShowInvalidSubstitutionAlert()
     }

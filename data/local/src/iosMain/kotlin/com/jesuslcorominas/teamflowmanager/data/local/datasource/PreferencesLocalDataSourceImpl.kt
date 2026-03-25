@@ -4,7 +4,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesDataS
 import platform.Foundation.NSUserDefaults
 
 internal class PreferencesLocalDataSourceImpl : PreferencesDataSource {
-
     private val defaults = NSUserDefaults.standardUserDefaults
 
     override fun shouldShowInvalidSubstitutionAlert(): Boolean =
@@ -28,8 +27,7 @@ internal class PreferencesLocalDataSourceImpl : PreferencesDataSource {
         defaults.setInteger(playerId?.toLong() ?: SENTINEL_VALUE, KEY_DEFAULT_CAPTAIN_ID)
     }
 
-    override fun hasNotificationPermissionBeenRequested(): Boolean =
-        defaults.boolForKey(KEY_NOTIFICATION_PERMISSION_REQUESTED)
+    override fun hasNotificationPermissionBeenRequested(): Boolean = defaults.boolForKey(KEY_NOTIFICATION_PERMISSION_REQUESTED)
 
     override fun setNotificationPermissionRequested(requested: Boolean) {
         defaults.setBool(requested, KEY_NOTIFICATION_PERMISSION_REQUESTED)

@@ -7,7 +7,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesDataS
 internal class PreferencesLocalDataSourceImpl(
     context: Context,
 ) : PreferencesDataSource {
-
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 

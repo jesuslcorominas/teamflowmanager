@@ -69,9 +69,10 @@ fun ClearableRadioSelectorHeader(
 ) {
     Surface(modifier = modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing02),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing02),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AppTitle(modifier = Modifier.weight(1F), title = title)
@@ -100,10 +101,11 @@ fun <T : SelectableItem> ClearableRadioSelectorList(
         items.forEach { option ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelect(option.id) }
-                    .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing01),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelect(option.id) }
+                        .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing01),
             ) {
                 RadioButton(
                     selected = selectedOption == option.id,

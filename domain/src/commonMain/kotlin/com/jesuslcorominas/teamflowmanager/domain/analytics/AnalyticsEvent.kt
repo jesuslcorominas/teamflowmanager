@@ -118,7 +118,6 @@ object AnalyticsParam {
     const val ERROR_MESSAGE = "error_message"
     const val ERROR_TYPE = "error_type"
     const val ERROR_LOCATION = "error_location"
-
 }
 
 /**

@@ -11,16 +11,18 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     sealed interface UiState {
         data object Idle : UiState
+
         data object Loading : UiState
+
         data object Success : UiState
+
         data class Error(val message: String) : UiState
     }
 
@@ -34,8 +36,8 @@ class LoginViewModel(
                         "login",
                         mapOf(
                             "method" to "google",
-                            "is_new_user" to "unknown"
-                        )
+                            "is_new_user" to "unknown",
+                        ),
                     )
 
                     _uiState.value = UiState.Success
@@ -45,8 +47,8 @@ class LoginViewModel(
                         "login_error",
                         mapOf(
                             "method" to "google",
-                            "error" to (exception.message ?: "Unknown error")
-                        )
+                            "error" to (exception.message ?: "Unknown error"),
+                        ),
                     )
                     _uiState.value = UiState.Error(exception.message ?: "Error al iniciar sesión")
                 }

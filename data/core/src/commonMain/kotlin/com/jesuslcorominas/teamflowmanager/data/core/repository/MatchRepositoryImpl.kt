@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
 internal class MatchRepositoryImpl(
-    private val matchDataSource: MatchDataSource
+    private val matchDataSource: MatchDataSource,
 ) : MatchRepository {
     override fun getMatchById(matchId: Long): Flow<Match?> = matchDataSource.getMatchById(matchId)
 
@@ -18,7 +18,10 @@ internal class MatchRepositoryImpl(
 
     override suspend fun getScheduledMatches(): List<Match> = matchDataSource.getScheduledMatches()
 
-    override suspend fun updateMatchCaptain(matchId: Long, captainId: Long?) {
+    override suspend fun updateMatchCaptain(
+        matchId: Long,
+        captainId: Long?,
+    ) {
         matchDataSource.updateMatchCaptain(matchId, captainId)
     }
 
@@ -32,39 +35,48 @@ internal class MatchRepositoryImpl(
         matchDataSource.deleteMatch(matchId)
     }
 
-    override suspend fun startTimer(matchId: Long, currentTimeMillis: Long) {
+    override suspend fun startTimer(
+        matchId: Long,
+        currentTimeMillis: Long,
+    ) {
         matchDataSource.getMatchById(matchId).first()?.let { currentMatch ->
             val firstNotStartedPeriod = currentMatch.periods.first { it.startTimeMillis == 0L }
 
-            val updatedMatch = currentMatch.copy(
-                status = MatchStatus.IN_PROGRESS,
-                periods = currentMatch.periods.map { period ->
-                    if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
-                        period.copy(startTimeMillis = currentTimeMillis)
-                    } else {
-                        period
-                    }
-                },
-            )
+            val updatedMatch =
+                currentMatch.copy(
+                    status = MatchStatus.IN_PROGRESS,
+                    periods =
+                        currentMatch.periods.map { period ->
+                            if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
+                                period.copy(startTimeMillis = currentTimeMillis)
+                            } else {
+                                period
+                            }
+                        },
+                )
 
             matchDataSource.updateMatch(updatedMatch)
         }
     }
 
-    override suspend fun pauseTimer(matchId: Long, currentTimeMillis: Long) {
+    override suspend fun pauseTimer(
+        matchId: Long,
+        currentTimeMillis: Long,
+    ) {
         val currentMatch = matchDataSource.getMatchById(matchId).first()
         if (currentMatch != null && currentMatch.status == MatchStatus.IN_PROGRESS) {
             val firstNotFinishedPeriod = currentMatch.periods.first { it.endTimeMillis == 0L }
 
             val updatedMatch =
                 currentMatch.copy(
-                    periods = currentMatch.periods.map { period ->
-                        if (period.periodNumber == firstNotFinishedPeriod.periodNumber) {
-                            period.copy(endTimeMillis = currentTimeMillis)
-                        } else {
-                            period
-                        }
-                    },
+                    periods =
+                        currentMatch.periods.map { period ->
+                            if (period.periodNumber == firstNotFinishedPeriod.periodNumber) {
+                                period.copy(endTimeMillis = currentTimeMillis)
+                            } else {
+                                period
+                            }
+                        },
                     status = MatchStatus.PAUSED,
                     pauseCount = currentMatch.pauseCount + 1,
                 )
@@ -73,18 +85,25 @@ internal class MatchRepositoryImpl(
         }
     }
 
-    override suspend fun startTimeout(matchId: Long, currentTimeMillis: Long) {
+    override suspend fun startTimeout(
+        matchId: Long,
+        currentTimeMillis: Long,
+    ) {
         val currentMatch = matchDataSource.getMatchById(matchId).first()
         if (currentMatch != null && currentMatch.status == MatchStatus.IN_PROGRESS) {
-            val updatedMatch = currentMatch.copy(
-                status = MatchStatus.TIMEOUT,
-                timeoutStartTimeMillis = currentTimeMillis
-            )
+            val updatedMatch =
+                currentMatch.copy(
+                    status = MatchStatus.TIMEOUT,
+                    timeoutStartTimeMillis = currentTimeMillis,
+                )
             matchDataSource.updateMatch(updatedMatch)
         }
     }
 
-    override suspend fun endTimeout(matchId: Long, currentTimeMillis: Long) {
+    override suspend fun endTimeout(
+        matchId: Long,
+        currentTimeMillis: Long,
+    ) {
         val currentMatch = matchDataSource.getMatchById(matchId).first()
         if (currentMatch != null && currentMatch.status == MatchStatus.TIMEOUT) {
             val timeoutStartTime = currentMatch.timeoutStartTimeMillis
@@ -93,24 +112,26 @@ internal class MatchRepositoryImpl(
             // Adjust the current period's start time to account for the timeout
             val currentPeriod = currentMatch.periods.firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
 
-            val updatedMatch = if (currentPeriod != null) {
-                currentMatch.copy(
-                    status = MatchStatus.IN_PROGRESS,
-                    timeoutStartTimeMillis = 0L,
-                    periods = currentMatch.periods.map { period ->
-                        if (period.periodNumber == currentPeriod.periodNumber) {
-                            period.copy(startTimeMillis = period.startTimeMillis + timeoutDuration)
-                        } else {
-                            period
-                        }
-                    }
-                )
-            } else {
-                currentMatch.copy(
-                    status = MatchStatus.IN_PROGRESS,
-                    timeoutStartTimeMillis = 0L
-                )
-            }
+            val updatedMatch =
+                if (currentPeriod != null) {
+                    currentMatch.copy(
+                        status = MatchStatus.IN_PROGRESS,
+                        timeoutStartTimeMillis = 0L,
+                        periods =
+                            currentMatch.periods.map { period ->
+                                if (period.periodNumber == currentPeriod.periodNumber) {
+                                    period.copy(startTimeMillis = period.startTimeMillis + timeoutDuration)
+                                } else {
+                                    period
+                                }
+                            },
+                    )
+                } else {
+                    currentMatch.copy(
+                        status = MatchStatus.IN_PROGRESS,
+                        timeoutStartTimeMillis = 0L,
+                    )
+                }
 
             matchDataSource.updateMatch(updatedMatch)
         }
@@ -130,7 +151,10 @@ internal class MatchRepositoryImpl(
         }
     }
 
-    override suspend fun updateMatchWithOperationId(match: Match, operationId: String) {
+    override suspend fun updateMatchWithOperationId(
+        match: Match,
+        operationId: String,
+    ) {
         val updatedMatch = match.copy(lastCompletedOperationId = operationId)
         matchDataSource.updateMatch(updatedMatch)
     }

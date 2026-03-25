@@ -108,12 +108,16 @@ private fun MembersListContent(
 }
 
 @Composable
-private fun MemberCard(member: ClubMember, onClick: () -> Unit) {
+private fun MemberCard(
+    member: ClubMember,
+    onClick: () -> Unit,
+) {
     AppCard(modifier = Modifier.clickable(onClick = onClick)) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -144,7 +148,10 @@ private fun MemberCard(member: ClubMember, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ErrorMessage(message: String, modifier: Modifier = Modifier) {
+private fun ErrorMessage(
+    message: String,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text = message,

@@ -12,12 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-
 enum class InvitationCodeError {
     EMPTY_CODE,
     CODE_TOO_SHORT,
     CODE_TOO_LONG,
-    INVALID_FORMAT
+    INVALID_FORMAT,
 }
 
 private const val MIN_INVITATION_CODE_LENGTH = 6
@@ -25,9 +24,8 @@ private const val MAX_INVITATION_CODE_LENGTH = 10
 
 class JoinClubViewModel(
     private val joinClubByCodeUseCase: JoinClubByCodeUseCase,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
@@ -39,8 +37,11 @@ class JoinClubViewModel(
 
     sealed interface UiState {
         data object Idle : UiState
+
         data object Loading : UiState
+
         data class Success(val result: JoinClubResult) : UiState
+
         data class Error(val message: String) : UiState
     }
 
@@ -86,8 +87,8 @@ class JoinClubViewModel(
                         AnalyticsParam.CLUB_ID to result.club.id.toString(),
                         AnalyticsParam.CLUB_NAME to result.club.name,
                         AnalyticsParam.INVITATION_CODE to code,
-                        AnalyticsParam.HAS_ORPHAN_TEAM to (result.orphanTeam != null).toString()
-                    )
+                        AnalyticsParam.HAS_ORPHAN_TEAM to (result.orphanTeam != null).toString(),
+                    ),
                 )
 
                 // Track orphan team linkage if applicable
@@ -98,8 +99,8 @@ class JoinClubViewModel(
                         mapOf(
                             AnalyticsParam.TEAM_ID to orphanTeam.id.toString(),
                             AnalyticsParam.TEAM_NAME to orphanTeam.name,
-                            AnalyticsParam.CLUB_ID to result.club.id.toString()
-                        )
+                            AnalyticsParam.CLUB_ID to result.club.id.toString(),
+                        ),
                     )
                 }
 
@@ -109,8 +110,8 @@ class JoinClubViewModel(
                     AnalyticsEvent.CLUB_JOIN_ERROR,
                     mapOf(
                         AnalyticsParam.ERROR_MESSAGE to (e.message ?: "Unknown error"),
-                        AnalyticsParam.INVITATION_CODE to code
-                    )
+                        AnalyticsParam.INVITATION_CODE to code,
+                    ),
                 )
                 _uiState.value = UiState.Error(e.message ?: "Failed to join club")
             }

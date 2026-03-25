@@ -24,7 +24,6 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
-
     private val mainViewModel: MainViewModel by viewModel()
 
     private var pendingNavigation by mutableStateOf<PendingNavigation?>(null)
@@ -63,7 +62,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             TFMAppTheme {
                 MainScreen(
-                    pendingNavigation = pendingNavigation
+                    pendingNavigation = pendingNavigation,
                 )
             }
         }
@@ -91,7 +90,7 @@ class MainActivity : ComponentActivity() {
 
             if (ContextCompat.checkSelfPermission(
                     this,
-                    Manifest.permission.POST_NOTIFICATIONS
+                    Manifest.permission.POST_NOTIFICATIONS,
                 ) != PackageManager.PERMISSION_GRANTED && !hasRequestedBefore
             ) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)

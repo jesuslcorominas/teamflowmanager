@@ -54,9 +54,10 @@ fun SquadCallUpStep(
     var showGoalkeeperWarning by remember { mutableStateOf(false) }
     var pendingNext by remember { mutableStateOf(false) }
 
-    val hasGoalkeeper = players.any { player ->
-        player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
-    }
+    val hasGoalkeeper =
+        players.any { player ->
+            player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
+        }
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -78,34 +79,38 @@ fun SquadCallUpStep(
             text = stringResource(Res.string.squad_callup_count, currentSelection.size),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
-            color = if (currentSelection.size >= minPlayers) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.error
-            },
+            color =
+                if (currentSelection.size >= minPlayers) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.error
+                },
         )
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    currentSelection = if (currentSelection.size == players.size) {
-                        emptySet()
-                    } else {
-                        players.map { it.id }.toSet()
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        currentSelection =
+                            if (currentSelection.size == players.size) {
+                                emptySet()
+                            } else {
+                                players.map { it.id }.toSet()
+                            }
                     }
-                }
-                .padding(vertical = TFMSpacing.spacing02),
+                    .padding(vertical = TFMSpacing.spacing02),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Checkbox(
                 checked = currentSelection.size == players.size,
                 onCheckedChange = { isChecked ->
-                    currentSelection = if (isChecked) {
-                        players.map { it.id }.toSet()
-                    } else {
-                        emptySet()
-                    }
+                    currentSelection =
+                        if (isChecked) {
+                            players.map { it.id }.toSet()
+                        } else {
+                            emptySet()
+                        }
                 },
             )
             Text(
@@ -124,11 +129,12 @@ fun SquadCallUpStep(
             showGoalKeeperBadge = true,
             selectedPlayerIds = currentSelection,
             onMultiSelectionChange = { player, isSelected ->
-                currentSelection = if (isSelected) {
-                    currentSelection + player.id
-                } else {
-                    currentSelection - player.id
-                }
+                currentSelection =
+                    if (isSelected) {
+                        currentSelection + player.id
+                    } else {
+                        currentSelection - player.id
+                    }
             },
         )
 

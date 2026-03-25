@@ -12,7 +12,10 @@ interface AnalyticsTracker {
      * @param eventName Name of the event to log (e.g., "team_created", "match_started")
      * @param params Optional map of parameters to include with the event
      */
-    fun logEvent(eventName: String, params: Map<String, Any> = emptyMap())
+    fun logEvent(
+        eventName: String,
+        params: Map<String, Any> = emptyMap(),
+    )
 
     /**
      * Log a screen view event.
@@ -20,7 +23,10 @@ interface AnalyticsTracker {
      * @param screenName Name of the screen being viewed
      * @param screenClass Optional class name of the screen
      */
-    fun logScreenView(screenName: String, screenClass: String? = null)
+    fun logScreenView(
+        screenName: String,
+        screenClass: String? = null,
+    )
 
     /**
      * Set a user ID for analytics.
@@ -35,5 +41,8 @@ interface AnalyticsTracker {
      * @param key Property key
      * @param value Property value
      */
-    fun setUserProperty(key: String, value: String?)
+    fun setUserProperty(
+        key: String,
+        value: String?,
+    )
 }

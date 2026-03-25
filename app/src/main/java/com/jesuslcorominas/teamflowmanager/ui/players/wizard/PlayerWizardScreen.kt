@@ -31,7 +31,7 @@ fun PlayerWizardScreen(
     wizardViewModel: PlayerWizardViewModel = koinViewModel(parameters = { parametersOf(playerId) }),
 ) {
     TrackScreenView(screenName = ScreenName.PLAYER_WIZARD, screenClass = "PlayerWizardScreen")
-    
+
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
     val captainConfirmationState by wizardViewModel.captainConfirmationState.collectAsState()
@@ -51,7 +51,7 @@ fun PlayerWizardScreen(
         }
         is PlayerWizardUiState.Ready -> {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 when (currentStep) {
                     PlayerWizardStep.PLAYER_DATA -> {
@@ -70,9 +70,10 @@ fun PlayerWizardScreen(
                             onCancel = {
                                 wizardViewModel.requestBack(onNavigateBack)
                             },
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(TFMSpacing.spacing04)
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .padding(TFMSpacing.spacing04),
                         )
                     }
                     PlayerWizardStep.POSITIONS -> {
@@ -87,9 +88,10 @@ fun PlayerWizardScreen(
                             onPrevious = {
                                 wizardViewModel.goToPreviousStep()
                             },
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(TFMSpacing.spacing04)
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .padding(TFMSpacing.spacing04),
                         )
                     }
                 }
@@ -158,7 +160,7 @@ fun PlayerWizardScreen(
             confirmText = stringResource(R.string.discard),
             dismissText = stringResource(R.string.cancel),
             onConfirm = { wizardViewModel.discardChanges(onNavigateBack) },
-            onDismiss = { wizardViewModel.dismissExitDialog() }
+            onDismiss = { wizardViewModel.dismissExitDialog() },
         )
     }
 }

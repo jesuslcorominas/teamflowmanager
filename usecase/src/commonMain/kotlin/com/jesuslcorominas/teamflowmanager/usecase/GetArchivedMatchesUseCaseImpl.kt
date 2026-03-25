@@ -5,8 +5,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseC
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import kotlinx.coroutines.flow.Flow
 
-
-
 internal class GetArchivedMatchesUseCaseImpl(
     private val matchRepository: MatchRepository,
 ) : GetArchivedMatchesUseCase {

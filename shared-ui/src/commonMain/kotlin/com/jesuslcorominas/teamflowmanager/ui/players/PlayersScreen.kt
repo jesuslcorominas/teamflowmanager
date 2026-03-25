@@ -41,12 +41,13 @@ fun PlayersScreen(
             is PlayerUiState.Success ->
                 PlayerList(
                     modifier = Modifier.fillMaxSize(),
-                    paddingValues = PaddingValues(
-                        bottom = LocalContentBottomPadding.current,
-                        top = TFMSpacing.spacing04,
-                        start = TFMSpacing.spacing04,
-                        end = TFMSpacing.spacing04,
-                    ),
+                    paddingValues =
+                        PaddingValues(
+                            bottom = LocalContentBottomPadding.current,
+                            top = TFMSpacing.spacing04,
+                            start = TFMSpacing.spacing04,
+                            end = TFMSpacing.spacing04,
+                        ),
                     players = state.players.sortedBy { it.number },
                     onEditClick = { player -> onNavigateToEditPlayer(player.id) },
                     onDeleteClick = { player -> viewModel.showDeleteConfirmation(player) },

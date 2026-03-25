@@ -23,19 +23,22 @@ fun FlipIcon(
 ) {
     val animationRotation by animateFloatAsState(
         targetValue = if (isActive) 180f else 0f,
-        animationSpec = spring(
-            stiffness = Spring.StiffnessLow,
-            dampingRatio = Spring.DampingRatioMediumBouncy
-        ), label = ""
+        animationSpec =
+            spring(
+                stiffness = Spring.StiffnessLow,
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+            ),
+        label = "",
     )
     Box(
-        modifier = modifier
-            .graphicsLayer { rotationY = animationRotation },
+        modifier =
+            modifier
+                .graphicsLayer { rotationY = animationRotation },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             rememberVectorPainter(
-                image = if (animationRotation > 90f) activeIcon else inactiveIcon
+                image = if (animationRotation > 90f) activeIcon else inactiveIcon,
             ),
             contentDescription = contentDescription,
         )

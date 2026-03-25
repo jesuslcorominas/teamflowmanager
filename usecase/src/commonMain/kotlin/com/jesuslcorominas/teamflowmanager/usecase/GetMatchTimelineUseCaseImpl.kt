@@ -16,17 +16,12 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitution
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-
-
-
-
 internal class GetMatchTimelineUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val goalRepository: GoalRepository,
     private val playerSubstitutionRepository: PlayerSubstitutionRepository,
     private val playerRepository: PlayerRepository,
 ) : GetMatchTimelineUseCase {
-
     override fun invoke(matchId: Long): Flow<MatchTimeline?> {
         return combine(
             matchRepository.getMatchById(matchId),
@@ -64,7 +59,7 @@ internal class GetMatchTimelineUseCaseImpl(
                 TimelineEvent.StartingLineup(
                     matchElapsedTimeMillis = 0L,
                     players = startingPlayers.sortedBy { it.number },
-                )
+                ),
             )
         }
 
@@ -84,7 +79,7 @@ internal class GetMatchTimelineUseCaseImpl(
                     isOpponentGoal = goal.isOpponentGoal,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
-                )
+                ),
             )
         }
 
@@ -98,7 +93,7 @@ internal class GetMatchTimelineUseCaseImpl(
                         matchElapsedTimeMillis = substitution.matchElapsedTimeMillis,
                         playerIn = playerIn,
                         playerOut = playerOut,
-                    )
+                    ),
                 )
             }
         }
@@ -109,17 +104,18 @@ internal class GetMatchTimelineUseCaseImpl(
             if (index < match.periods.size - 1 && period.endTimeMillis > 0) {
                 // Calculate accumulated play time up to this period's end
                 // (sum of all period durations up to and including this one)
-                val accumulatedPlayTime = match.periods
-                    .take(index + 1)
-                    .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
-                    .sumOf { it.endTimeMillis - it.startTimeMillis }
+                val accumulatedPlayTime =
+                    match.periods
+                        .take(index + 1)
+                        .filter { it.startTimeMillis > 0 && it.endTimeMillis > 0 }
+                        .sumOf { it.endTimeMillis - it.startTimeMillis }
 
                 events.add(
                     TimelineEvent.PeriodBreak(
                         matchElapsedTimeMillis = accumulatedPlayTime,
                         periodNumber = period.periodNumber,
                         periodType = match.periodType,
-                    )
+                    ),
                 )
             }
         }
@@ -152,8 +148,8 @@ internal class GetMatchTimelineUseCaseImpl(
                     timeMillis = goal.matchElapsedTimeMillis,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
-                    isOpponentGoal = goal.isOpponentGoal
-                )
+                    isOpponentGoal = goal.isOpponentGoal,
+                ),
             )
         }
 
@@ -167,8 +163,8 @@ internal class GetMatchTimelineUseCaseImpl(
                     timeMillis = totalElapsedTime,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
-                    isOpponentGoal = false
-                )
+                    isOpponentGoal = false,
+                ),
             )
 
             points.add(
@@ -176,8 +172,8 @@ internal class GetMatchTimelineUseCaseImpl(
                     timeMillis = totalElapsedTime,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
-                    isOpponentGoal = true
-                )
+                    isOpponentGoal = true,
+                ),
             )
         }
 
@@ -228,7 +224,7 @@ internal class GetMatchTimelineUseCaseImpl(
                             player = player,
                             startTimeMillis = playerOutStartTime,
                             endTimeMillis = substitution.matchElapsedTimeMillis,
-                        )
+                        ),
                     )
                 }
             }
@@ -246,7 +242,7 @@ internal class GetMatchTimelineUseCaseImpl(
                         player = player,
                         startTimeMillis = startTime,
                         endTimeMillis = totalElapsedTime,
-                    )
+                    ),
                 )
             }
         }

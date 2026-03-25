@@ -17,8 +17,8 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.RealTimeTicker
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -29,7 +29,7 @@ val viewModelModule =
             MainViewModel(
                 hasNotificationPermissionBeenRequestedUseCase = get(),
                 setNotificationPermissionRequestedUseCase = get(),
-                getUserClubMembership = get()
+                getUserClubMembership = get(),
             )
         }
 
@@ -38,28 +38,28 @@ val viewModelModule =
                 getTeam = get(),
                 getCurrentUser = get(),
                 getUserClubMembership = get(),
-                synchronizeTimeUseCase = get()
+                synchronizeTimeUseCase = get(),
             )
         }
 
         viewModel {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
-                analyticsTracker = get()
+                analyticsTracker = get(),
             )
         }
 
         viewModel {
             CreateClubViewModel(
                 createClubUseCase = get(),
-                analyticsTracker = get()
+                analyticsTracker = get(),
             )
         }
 
         viewModel {
             JoinClubViewModel(
                 joinClubByCodeUseCase = get(),
-                analyticsTracker = get()
+                analyticsTracker = get(),
             )
         }
 
@@ -75,7 +75,7 @@ val viewModelModule =
                 removePlayerAsCaptainUseCase = get(),
                 getScheduledMatchesUseCase = get(),
                 analyticsTracker = get(),
-                crashReporter = get()
+                crashReporter = get(),
             )
         }
         viewModel { params ->
@@ -113,13 +113,13 @@ val viewModelModule =
                 getTeamsByClub = get(),
                 getUserClubMembership = get(),
                 generateTeamInvitation = get(),
-                selfAssignAsCoach = get()
+                selfAssignAsCoach = get(),
             )
         }
         viewModel {
             ClubMembersViewModel(
                 getClubMembers = get(),
-                getUserClubMembership = get()
+                getUserClubMembership = get(),
             )
         }
         viewModel { params ->
@@ -158,7 +158,7 @@ val viewModelModule =
                 synchronizeTimeUseCase = get(),
                 timeProvider = get(),
                 analyticsTracker = get(),
-                crashReporter = get()
+                crashReporter = get(),
             )
         }
         viewModel {
@@ -166,7 +166,7 @@ val viewModelModule =
                 getArchivedMatchesUseCase = get(),
                 unarchiveMatchUseCase = get(),
                 analyticsTracker = get(),
-                crashReporter = get()
+                crashReporter = get(),
             )
         }
         viewModel { params ->
@@ -193,14 +193,14 @@ val viewModelModule =
                 getTeam = get(),
                 exportToPdf = get(),
                 analyticsTracker = get(),
-                crashReporter = get()
+                crashReporter = get(),
             )
         }
         viewModel {
             SettingsViewModel(
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
-                analyticsTracker = get()
+                analyticsTracker = get(),
             )
         }
 

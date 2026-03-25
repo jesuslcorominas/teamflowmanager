@@ -12,11 +12,11 @@ enum class Position(val id: String) {
     AttackingMidfielder("attacking_midfielder"),
     Forward("forward"),
     Winger("winger"),
-    Striker("striker");
+    Striker("striker"),
+    ;
 
     companion object {
-        fun fromId(id: String): Position? =
-            entries.find { it.id == id }
+        fun fromId(id: String): Position? = entries.find { it.id == id }
 
         fun getAllPositions(): List<Position> = entries.toList()
     }

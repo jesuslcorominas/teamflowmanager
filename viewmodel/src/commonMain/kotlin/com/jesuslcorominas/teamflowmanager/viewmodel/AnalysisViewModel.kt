@@ -65,18 +65,19 @@ class AnalysisViewModel(
 
                 if (exportData != null) {
                     val uri = exportToPdf(exportData, teamName)
-                    _exportState.value = if (uri != null) {
-                        analyticsTracker.logEvent(
-                            AnalyticsEvent.PLAYER_STATS_EXPORTED,
-                            mapOf(
-                                AnalyticsParam.EXPORT_TYPE to "pdf",
-                                AnalyticsParam.STATS_TYPE to "player_stats",
-                            ),
-                        )
-                        ExportState.Ready(uri)
-                    } else {
-                        ExportState.Error
-                    }
+                    _exportState.value =
+                        if (uri != null) {
+                            analyticsTracker.logEvent(
+                                AnalyticsEvent.PLAYER_STATS_EXPORTED,
+                                mapOf(
+                                    AnalyticsParam.EXPORT_TYPE to "pdf",
+                                    AnalyticsParam.STATS_TYPE to "player_stats",
+                                ),
+                            )
+                            ExportState.Ready(uri)
+                        } else {
+                            ExportState.Error
+                        }
                 } else {
                     _exportState.value = ExportState.Error
                 }
@@ -95,12 +96,13 @@ class AnalysisViewModel(
     private fun loadPlayerTimeStats() {
         viewModelScope.launch {
             getPlayerTimeStats().collect { stats ->
-                _uiState.value = if (stats.isEmpty()) {
-                    AnalysisUiState.Empty
-                } else {
-                    (_uiState.value as? AnalysisUiState.Success)?.copy(playerTimeStats = stats)
-                        ?: AnalysisUiState.Success(playerTimeStats = stats, playerGoalStats = emptyList())
-                }
+                _uiState.value =
+                    if (stats.isEmpty()) {
+                        AnalysisUiState.Empty
+                    } else {
+                        (_uiState.value as? AnalysisUiState.Success)?.copy(playerTimeStats = stats)
+                            ?: AnalysisUiState.Success(playerTimeStats = stats, playerGoalStats = emptyList())
+                    }
             }
         }
     }
@@ -109,10 +111,11 @@ class AnalysisViewModel(
         viewModelScope.launch {
             getPlayerGoalStats().collect { stats ->
                 val currentState = _uiState.value
-                _uiState.value = when (currentState) {
-                    is AnalysisUiState.Success -> currentState.copy(playerGoalStats = stats)
-                    else -> AnalysisUiState.Success(playerTimeStats = emptyList(), playerGoalStats = stats)
-                }
+                _uiState.value =
+                    when (currentState) {
+                        is AnalysisUiState.Success -> currentState.copy(playerGoalStats = stats)
+                        else -> AnalysisUiState.Success(playerTimeStats = emptyList(), playerGoalStats = stats)
+                    }
             }
         }
     }
@@ -120,21 +123,26 @@ class AnalysisViewModel(
 
 enum class AnalysisTab {
     TIMES,
-    GOALS
+    GOALS,
 }
 
 sealed interface AnalysisUiState {
     data object Loading : AnalysisUiState
+
     data object Empty : AnalysisUiState
+
     data class Success(
         val playerTimeStats: List<PlayerTimeStats>,
-        val playerGoalStats: List<PlayerGoalStats>
+        val playerGoalStats: List<PlayerGoalStats>,
     ) : AnalysisUiState
 }
 
 sealed interface ExportState {
     data object Idle : ExportState
+
     data object Loading : ExportState
+
     data class Ready(val uri: String) : ExportState
+
     data object Error : ExportState
 }

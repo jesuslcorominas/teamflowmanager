@@ -13,21 +13,22 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.CaptainConfirmationState
 fun CaptainConfirmationDialog(
     state: CaptainConfirmationState.ConfirmReplace,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AppAlertDialog(
         title = stringResource(R.string.captain_confirm_title),
-        message = stringResource(
-            R.string.captain_confirm_message,
-            state.currentCaptain.firstName,
-            state.currentCaptain.lastName,
-            state.newCaptain.firstName,
-            state.newCaptain.lastName
-        ),
+        message =
+            stringResource(
+                R.string.captain_confirm_message,
+                state.currentCaptain.firstName,
+                state.currentCaptain.lastName,
+                state.newCaptain.firstName,
+                state.newCaptain.lastName,
+            ),
         confirmText = stringResource(R.string.yes),
         dismissText = stringResource(R.string.cancel),
         onConfirm = onConfirm,
-        onDismiss = onDismiss
+        onDismiss = onDismiss,
     )
 }
 
@@ -35,7 +36,7 @@ fun CaptainConfirmationDialog(
 fun CaptainConfirmationDialog(
     state: CaptainConfirmationState.ConfirmReplaceWithMatches,
     onConfirm: (Boolean) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -48,8 +49,8 @@ fun CaptainConfirmationDialog(
                     state.currentCaptain.lastName,
                     state.newCaptain.firstName,
                     state.newCaptain.lastName,
-                    state.matchCount
-                )
+                    state.matchCount,
+                ),
             )
         },
         confirmButton = {
@@ -61,7 +62,7 @@ fun CaptainConfirmationDialog(
             TextButton(onClick = { onConfirm(false) }) {
                 Text(stringResource(R.string.keep_current_captain_in_matches))
             }
-        }
+        },
     )
 }
 
@@ -69,19 +70,20 @@ fun CaptainConfirmationDialog(
 fun CaptainConfirmationDialog(
     state: CaptainConfirmationState.ConfirmRemove,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AppAlertDialog(
         title = stringResource(R.string.captain_remove_title),
-        message = stringResource(
-            R.string.captain_remove_message,
-            state.player.firstName,
-            state.player.lastName
-        ),
+        message =
+            stringResource(
+                R.string.captain_remove_message,
+                state.player.firstName,
+                state.player.lastName,
+            ),
         confirmText = stringResource(R.string.yes),
         dismissText = stringResource(R.string.cancel),
         onConfirm = onConfirm,
-        onDismiss = onDismiss
+        onDismiss = onDismiss,
     )
 }
 
@@ -89,7 +91,7 @@ fun CaptainConfirmationDialog(
 fun CaptainConfirmationDialog(
     state: CaptainConfirmationState.ConfirmRemoveWithMatches,
     onConfirm: (Boolean) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -100,8 +102,8 @@ fun CaptainConfirmationDialog(
                     R.string.captain_remove_with_matches_message,
                     state.player.firstName,
                     state.player.lastName,
-                    state.matchCount
-                )
+                    state.matchCount,
+                ),
             )
         },
         confirmButton = {
@@ -113,6 +115,6 @@ fun CaptainConfirmationDialog(
             TextButton(onClick = { onConfirm(false) }) {
                 Text(stringResource(R.string.remove_captain_from_matches))
             }
-        }
+        },
     )
 }

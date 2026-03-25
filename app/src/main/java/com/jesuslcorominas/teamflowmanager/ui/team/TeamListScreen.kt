@@ -47,7 +47,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun TeamListScreen(
     viewModel: TeamListViewModel = koinViewModel(),
-    onTeamClick: (Team) -> Unit = {}
+    onTeamClick: (Team) -> Unit = {},
 ) {
     TrackScreenView(screenName = ScreenName.TEAM, screenClass = "TeamListScreen")
 
@@ -61,11 +61,15 @@ fun TeamListScreen(
     // Handle share event
     LaunchedEffect(shareEvent) {
         shareEvent?.let { event ->
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_team_subject, event.teamName))
-                putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_team_message, event.teamName, event.invitationLink))
-            }
+            val shareIntent =
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_team_subject, event.teamName))
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        context.getString(R.string.share_team_message, event.teamName, event.invitationLink),
+                    )
+                }
             context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_team_title)))
             viewModel.onShareEventConsumed()
         }
@@ -88,36 +92,38 @@ fun TeamListScreen(
                         onSelfAssignAsCoach = { team -> viewModel.selfAssignAsCoachToTeam(team) },
                         sharingTeamId = sharingTeamId,
                         assigningCoachToTeamId = assigningCoachToTeamId,
-                        isPresident = currentUserRole == ClubRole.PRESIDENT.roleName
+                        isPresident = currentUserRole == ClubRole.PRESIDENT.roleName,
                     )
                 }
             }
             is TeamListViewModel.UiState.Error -> {
                 ErrorMessage(
                     message = stringResource(R.string.error_loading_teams),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
             is TeamListViewModel.UiState.NoClubMembership -> {
                 ErrorMessage(
                     message = stringResource(R.string.no_club_membership_teams_error),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         }
-        
+
         // Show full-screen loading overlay while sharing or assigning
         if (sharingTeamId != null || assigningCoachToTeamId != null) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                    .clickable(enabled = false) { }, // Block all clicks
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                        .clickable(enabled = false) { },
+                // Block all clicks
+                contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(48.dp),
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -128,16 +134,16 @@ fun TeamListScreen(
 private fun EmptyTeamsMessage(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = stringResource(R.string.no_teams_message),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -152,11 +158,11 @@ private fun TeamsListContent(
     onSelfAssignAsCoach: (Team) -> Unit,
     sharingTeamId: String?,
     assigningCoachToTeamId: String?,
-    isPresident: Boolean
+    isPresident: Boolean,
 ) {
     LazyColumn(
         modifier = modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(teams, key = { it.id }) { team ->
             TeamCard(
@@ -166,7 +172,7 @@ private fun TeamsListContent(
                 onSelfAssignAsCoach = { onSelfAssignAsCoach(team) },
                 isSharing = team.firestoreId == sharingTeamId,
                 isAssigning = team.firestoreId == assigningCoachToTeamId,
-                isPresident = isPresident
+                isPresident = isPresident,
             )
         }
     }
@@ -180,90 +186,93 @@ private fun TeamCard(
     onSelfAssignAsCoach: () -> Unit,
     isSharing: Boolean = false,
     isAssigning: Boolean = false,
-    isPresident: Boolean = false
+    isPresident: Boolean = false,
 ) {
     AppCard(
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier.clickable(onClick = onClick),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = team.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
-                
+
                 // Show share icon button only if team has no coach assigned
                 if (team.coachId == null) {
                     IconButton(
                         onClick = onShare,
-                        enabled = !isSharing
+                        enabled = !isSharing,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = stringResource(R.string.share_team_button),
-                            tint = if (isSharing) {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            }
+                            tint =
+                                if (isSharing) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
                         )
                     }
                 }
             }
-            
+
             if (team.coachName.isNotBlank()) {
                 Row(
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.coach_name) + ": ",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = team.coachName,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
-            
+
             if (team.delegateName.isNotBlank()) {
                 Row {
                     Text(
                         text = stringResource(R.string.delegate_name) + ": ",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = team.delegateName,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
-            
+
             // Show self-assign button for Presidents when team has no coach
             if (isPresident && team.coachId == null) {
                 Button(
                     onClick = onSelfAssignAsCoach,
                     enabled = !isAssigning,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.PersonAdd,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = stringResource(R.string.self_assign_as_coach_button))
@@ -276,16 +285,16 @@ private fun TeamCard(
 @Composable
 private fun ErrorMessage(
     message: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = message,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.error
+            color = MaterialTheme.colorScheme.error,
         )
     }
 }

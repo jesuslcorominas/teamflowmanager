@@ -18,7 +18,6 @@ import kotlinx.coroutines.tasks.await
 class ClubMemberFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
 ) : ClubMemberDataSource {
-
     companion object {
         private const val TAG = "ClubMemberFirestoreDS"
         private const val CLUB_MEMBERS_COLLECTION = "clubMembers"
@@ -27,96 +26,103 @@ class ClubMemberFirestoreDataSourceImpl(
     /**
      * Gets the club member for a given user ID from Firestore.
      */
-    override fun getClubMemberByUserId(userId: String): Flow<ClubMember?> = callbackFlow {
-        if (userId.isEmpty()) {
-            Log.w(TAG, "Empty user ID, cannot get club member")
-            trySend(null)
-            awaitClose { }
-            return@callbackFlow
-        }
-
-        val listenerRegistration = firestore.collection(CLUB_MEMBERS_COLLECTION)
-            .whereEqualTo("userId", userId)
-            .limit(1)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Log.e(TAG, "Error getting club member from Firestore", error)
-                    trySend(null)
-                    return@addSnapshotListener
-                }
-
-                val document = snapshot?.documents?.firstOrNull()
-                if (document == null) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
-
-                // Get the document ID explicitly to ensure it's available
-                val documentId = document.id
-                val firestoreModel = document.toObject(ClubMemberFirestoreModel::class.java)
-
-                if (firestoreModel != null) {
-                    // Ensure the id field is set from the document ID
-                    // This is needed because @DocumentId may not always populate the field
-                    // during snapshot listener callbacks (consistent with TeamFirestoreDataSourceImpl)
-                    val modelWithId = if (firestoreModel.id.isEmpty()) {
-                        firestoreModel.copy(id = documentId)
-                    } else {
-                        firestoreModel
-                    }
-                    val clubMember = modelWithId.toDomain()
-                    Log.d(TAG, "ClubMember loaded for userId: $userId, clubId: ${clubMember.clubId}")
-                    trySend(clubMember)
-                } else {
-                    trySend(null)
-                }
+    override fun getClubMemberByUserId(userId: String): Flow<ClubMember?> =
+        callbackFlow {
+            if (userId.isEmpty()) {
+                Log.w(TAG, "Empty user ID, cannot get club member")
+                trySend(null)
+                awaitClose { }
+                return@callbackFlow
             }
 
-        awaitClose {
-            listenerRegistration.remove()
-        }
-    }
-
-    override fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>> = callbackFlow {
-        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
-
-        val listenerRegistration = firestore.collection(CLUB_MEMBERS_COLLECTION)
-            .whereEqualTo("clubId", clubFirestoreId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Log.e(TAG, "Error getting club members from Firestore", error)
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                if (snapshot == null || snapshot.isEmpty) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val clubMembers = snapshot.documents.mapNotNull { document ->
-                    val documentId = document.id
-                    val firestoreModel = document.toObject(ClubMemberFirestoreModel::class.java)
-
-                    firestoreModel?.let {
-                        // Ensure the id field is set from the document ID
-                        val modelWithId = if (it.id.isEmpty()) {
-                            it.copy(id = documentId)
-                        } else {
-                            it
+            val listenerRegistration =
+                firestore.collection(CLUB_MEMBERS_COLLECTION)
+                    .whereEqualTo("userId", userId)
+                    .limit(1)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            Log.e(TAG, "Error getting club member from Firestore", error)
+                            trySend(null)
+                            return@addSnapshotListener
                         }
-                        modelWithId.toDomain()
+
+                        val document = snapshot?.documents?.firstOrNull()
+                        if (document == null) {
+                            trySend(null)
+                            return@addSnapshotListener
+                        }
+
+                        // Get the document ID explicitly to ensure it's available
+                        val documentId = document.id
+                        val firestoreModel = document.toObject(ClubMemberFirestoreModel::class.java)
+
+                        if (firestoreModel != null) {
+                            // Ensure the id field is set from the document ID
+                            // This is needed because @DocumentId may not always populate the field
+                            // during snapshot listener callbacks (consistent with TeamFirestoreDataSourceImpl)
+                            val modelWithId =
+                                if (firestoreModel.id.isEmpty()) {
+                                    firestoreModel.copy(id = documentId)
+                                } else {
+                                    firestoreModel
+                                }
+                            val clubMember = modelWithId.toDomain()
+                            Log.d(TAG, "ClubMember loaded for userId: $userId, clubId: ${clubMember.clubId}")
+                            trySend(clubMember)
+                        } else {
+                            trySend(null)
+                        }
                     }
-                }
 
-                Log.d(TAG, "Loaded ${clubMembers.size} club members for club: $clubFirestoreId")
-                trySend(clubMembers)
+            awaitClose {
+                listenerRegistration.remove()
             }
-
-        awaitClose {
-            listenerRegistration.remove()
         }
-    }
+
+    override fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>> =
+        callbackFlow {
+            require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+
+            val listenerRegistration =
+                firestore.collection(CLUB_MEMBERS_COLLECTION)
+                    .whereEqualTo("clubId", clubFirestoreId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            Log.e(TAG, "Error getting club members from Firestore", error)
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
+
+                        if (snapshot == null || snapshot.isEmpty) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
+
+                        val clubMembers =
+                            snapshot.documents.mapNotNull { document ->
+                                val documentId = document.id
+                                val firestoreModel = document.toObject(ClubMemberFirestoreModel::class.java)
+
+                                firestoreModel?.let {
+                                    // Ensure the id field is set from the document ID
+                                    val modelWithId =
+                                        if (it.id.isEmpty()) {
+                                            it.copy(id = documentId)
+                                        } else {
+                                            it
+                                        }
+                                    modelWithId.toDomain()
+                                }
+                            }
+
+                        Log.d(TAG, "Loaded ${clubMembers.size} club members for club: $clubFirestoreId")
+                        trySend(clubMembers)
+                    }
+
+            awaitClose {
+                listenerRegistration.remove()
+            }
+        }
 
     override suspend fun createOrUpdateClubMember(
         userId: String,
@@ -124,7 +130,7 @@ class ClubMemberFirestoreDataSourceImpl(
         email: String,
         clubId: Long,
         clubFirestoreId: String,
-        roles: List<String>
+        roles: List<String>,
     ): ClubMember {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
         require(name.isNotBlank()) { "Name cannot be blank" }
@@ -135,18 +141,19 @@ class ClubMemberFirestoreDataSourceImpl(
         try {
             // Use predictable ID format: userId_clubFirestoreId
             // This format is required by Firestore security rules
-            val clubMemberId = "${userId}_${clubFirestoreId}"
+            val clubMemberId = "${userId}_$clubFirestoreId"
             val clubMemberDocRef = firestore.collection(CLUB_MEMBERS_COLLECTION).document(clubMemberId)
 
             // Create club member model
-            val clubMemberModel = ClubMemberFirestoreModel(
-                id = clubMemberId,
-                userId = userId,
-                name = name,
-                email = email,
-                clubId = clubFirestoreId,
-                roles = roles
-            )
+            val clubMemberModel =
+                ClubMemberFirestoreModel(
+                    id = clubMemberId,
+                    userId = userId,
+                    name = name,
+                    email = email,
+                    clubId = clubFirestoreId,
+                    roles = roles,
+                )
 
             // Create or update the club member document
             clubMemberDocRef.set(clubMemberModel).await()
@@ -162,7 +169,7 @@ class ClubMemberFirestoreDataSourceImpl(
     override suspend fun updateClubMemberRoles(
         userId: String,
         clubFirestoreId: String,
-        roles: List<String>
+        roles: List<String>,
     ) {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
         require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
@@ -170,10 +177,11 @@ class ClubMemberFirestoreDataSourceImpl(
 
         try {
             // Use predictable ID format: userId_clubFirestoreId
-            val clubMemberId = "${userId}_${clubFirestoreId}"
-            val updates = mapOf(
-                "roles" to roles
-            )
+            val clubMemberId = "${userId}_$clubFirestoreId"
+            val updates =
+                mapOf(
+                    "roles" to roles,
+                )
 
             firestore.collection(CLUB_MEMBERS_COLLECTION)
                 .document(clubMemberId)
@@ -190,7 +198,7 @@ class ClubMemberFirestoreDataSourceImpl(
     override suspend fun addClubMemberRole(
         userId: String,
         clubFirestoreId: String,
-        role: String
+        role: String,
     ) {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
         require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
@@ -198,20 +206,22 @@ class ClubMemberFirestoreDataSourceImpl(
 
         try {
             // Use predictable ID format: userId_clubFirestoreId
-            val clubMemberId = "${userId}_${clubFirestoreId}"
-            
+            val clubMemberId = "${userId}_$clubFirestoreId"
+
             // Get current club member
-            val document = firestore.collection(CLUB_MEMBERS_COLLECTION)
-                .document(clubMemberId)
-                .get()
-                .await()
+            val document =
+                firestore.collection(CLUB_MEMBERS_COLLECTION)
+                    .document(clubMemberId)
+                    .get()
+                    .await()
 
             if (!document.exists()) {
                 throw IllegalStateException("ClubMember not found for userId: $userId in club: $clubFirestoreId")
             }
 
-            val firestoreModel = document.toObject(ClubMemberFirestoreModel::class.java)
-                ?: throw IllegalStateException("Failed to parse ClubMember document")
+            val firestoreModel =
+                document.toObject(ClubMemberFirestoreModel::class.java)
+                    ?: throw IllegalStateException("Failed to parse ClubMember document")
 
             // Add role if not already present
             val currentRoles = firestoreModel.roles.toMutableList()
@@ -219,9 +229,10 @@ class ClubMemberFirestoreDataSourceImpl(
                 currentRoles.add(role)
 
                 // Update the document
-                val updates = mapOf(
-                    "roles" to currentRoles
-                )
+                val updates =
+                    mapOf(
+                        "roles" to currentRoles,
+                    )
 
                 firestore.collection(CLUB_MEMBERS_COLLECTION)
                     .document(clubMemberId)
@@ -240,18 +251,19 @@ class ClubMemberFirestoreDataSourceImpl(
 
     override suspend fun getClubMemberByUserIdAndClub(
         userId: String,
-        clubFirestoreId: String
+        clubFirestoreId: String,
     ): ClubMember? {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
         require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
 
         try {
             // Use predictable ID format: userId_clubFirestoreId
-            val clubMemberId = "${userId}_${clubFirestoreId}"
-            val document = firestore.collection(CLUB_MEMBERS_COLLECTION)
-                .document(clubMemberId)
-                .get()
-                .await()
+            val clubMemberId = "${userId}_$clubFirestoreId"
+            val document =
+                firestore.collection(CLUB_MEMBERS_COLLECTION)
+                    .document(clubMemberId)
+                    .get()
+                    .await()
 
             if (!document.exists()) {
                 Log.d(TAG, "ClubMember not found for userId: $userId in club: $clubFirestoreId")
@@ -263,11 +275,12 @@ class ClubMemberFirestoreDataSourceImpl(
 
             return firestoreModel?.let {
                 // Ensure the id field is set from the document ID
-                val modelWithId = if (it.id.isEmpty()) {
-                    it.copy(id = documentId)
-                } else {
-                    it
-                }
+                val modelWithId =
+                    if (it.id.isEmpty()) {
+                        it.copy(id = documentId)
+                    } else {
+                        it
+                    }
                 modelWithId.toDomain()
             }
         } catch (e: Exception) {

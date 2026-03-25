@@ -51,11 +51,9 @@ import ir.ehsannarmani.compose_charts.models.VerticalIndicatorProperties
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AnalysisScreen(
-    viewModel: AnalysisViewModel = koinViewModel(),
-) {
+fun AnalysisScreen(viewModel: AnalysisViewModel = koinViewModel()) {
     TrackScreenView(screenName = ScreenName.ANALYSIS, screenClass = "AnalysisScreen")
-    
+
     val uiState by viewModel.uiState.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
     val exportState by viewModel.exportState.collectAsState()
@@ -65,14 +63,15 @@ fun AnalysisScreen(
         if (exportState is ExportState.Ready) {
             val state = exportState as ExportState.Ready
             val uri = android.net.Uri.parse(state.uri)
-            
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "application/pdf"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+
+            val shareIntent =
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
             context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.export_share_title)))
-            
+
             viewModel.exportCompleted()
         }
     }
@@ -89,9 +88,9 @@ fun AnalysisScreen(
                     text = {
                         Text(
                             text = stringResource(R.string.analysis_times_tab),
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
                         )
-                    }
+                    },
                 )
                 Tab(
                     selected = selectedTab == AnalysisTab.GOALS,
@@ -99,21 +98,22 @@ fun AnalysisScreen(
                     text = {
                         Text(
                             text = stringResource(R.string.analysis_goals_tab),
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
                         )
-                    }
+                    },
                 )
             }
 
             Box(modifier = Modifier.fillMaxSize()) {
                 when (val state = uiState) {
                     is AnalysisUiState.Loading -> Loading()
-                    is AnalysisUiState.Empty -> EmptyContent(
-                        when (selectedTab) {
-                            AnalysisTab.TIMES -> stringResource(R.string.analysis_no_data)
-                            AnalysisTab.GOALS -> stringResource(R.string.analysis_no_goals_data)
-                        }
-                    )
+                    is AnalysisUiState.Empty ->
+                        EmptyContent(
+                            when (selectedTab) {
+                                AnalysisTab.TIMES -> stringResource(R.string.analysis_no_data)
+                                AnalysisTab.GOALS -> stringResource(R.string.analysis_no_goals_data)
+                            },
+                        )
 
                     is AnalysisUiState.Success -> {
                         when (selectedTab) {
@@ -140,13 +140,14 @@ fun AnalysisScreen(
 
         FloatingActionButton(
             onClick = { viewModel.requestExport() },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(TFMSpacing.spacing04)
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(TFMSpacing.spacing04),
         ) {
             Icon(
                 imageVector = Icons.Default.Share,
-                contentDescription = stringResource(R.string.export_button_description)
+                contentDescription = stringResource(R.string.export_button_description),
             )
         }
     }
@@ -157,43 +158,51 @@ private fun PlayerTimeChart(playerStats: List<PlayerTimeStats>) {
     val label = stringResource(R.string.player_time_title)
 
     RowChart(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = TFMSpacing.spacing04, end = TFMSpacing.spacing04, top = TFMSpacing.spacing04),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(start = TFMSpacing.spacing04, end = TFMSpacing.spacing04, top = TFMSpacing.spacing04),
         gridProperties = GridProperties(enabled = false),
-        indicatorProperties = VerticalIndicatorProperties(
-            indicators = listOf(
-                playerStats.maxBy { it.totalTimeMinutes }.totalTimeMinutes,
-                playerStats.maxBy { it.totalTimeMinutes }.totalTimeMinutes / 2,
-                0.0,
+        indicatorProperties =
+            VerticalIndicatorProperties(
+                indicators =
+                    listOf(
+                        playerStats.maxBy { it.totalTimeMinutes }.totalTimeMinutes,
+                        playerStats.maxBy { it.totalTimeMinutes }.totalTimeMinutes / 2,
+                        0.0,
+                    ),
+                count = IndicatorCount.CountBased(count = 3),
             ),
-            count = IndicatorCount.CountBased(count = 3),
-        ),
-        data = remember {
-            playerStats.map {
-                Bars(
-                    label = "${it.player.firstName} ${it.player.lastName}",
-                    values = listOf(
-                        Bars.Data(
-                            label = label,
-                            value = it.totalTimeMinutes,
-                            color = Brush.horizontalGradient(
-                                colors = listOf(PrimaryLight, Primary)
-                            )
-                        ),
+        data =
+            remember {
+                playerStats.map {
+                    Bars(
+                        label = "${it.player.firstName} ${it.player.lastName}",
+                        values =
+                            listOf(
+                                Bars.Data(
+                                    label = label,
+                                    value = it.totalTimeMinutes,
+                                    color =
+                                        Brush.horizontalGradient(
+                                            colors = listOf(PrimaryLight, Primary),
+                                        ),
+                                ),
+                            ),
                     )
-                )
-            }
-        },
-        barProperties = BarProperties(
-            thickness = TFMSpacing.spacing06,
-            spacing = 0.dp,
-            cornerRadius = Rectangle(topRight = TFMSpacing.spacing04, bottomRight = TFMSpacing.spacing04),
-        ),
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
+                }
+            },
+        barProperties =
+            BarProperties(
+                thickness = TFMSpacing.spacing06,
+                spacing = 0.dp,
+                cornerRadius = Rectangle(topRight = TFMSpacing.spacing04, bottomRight = TFMSpacing.spacing04),
+            ),
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow,
+            ),
     )
 }
 
@@ -202,42 +211,57 @@ private fun PlayerGoalChart(playerStats: List<PlayerGoalStats>) {
     val label = stringResource(R.string.analysis_goals_label)
 
     RowChart(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = TFMSpacing.spacing04, end = TFMSpacing.spacing04, top = TFMSpacing.spacing04),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(start = TFMSpacing.spacing04, end = TFMSpacing.spacing04, top = TFMSpacing.spacing04),
         gridProperties = GridProperties(enabled = false),
-        indicatorProperties = VerticalIndicatorProperties(
-            indicators = listOf(
-                playerStats.maxBy { it.totalGoals }.totalGoals.toDouble(),
-                (playerStats.maxBy { it.totalGoals }.totalGoals.toDouble() / 2).let { if (it % 2 == 0.toDouble()) it else null },
-                0.0,
-            ).mapNotNull { it },
-            count = IndicatorCount.CountBased((playerStats.maxBy { it.totalGoals }.totalGoals.toDouble() / 2).let { if (it % 2 == 0.toDouble()) 3 else 2 }),
-        ),
-        data = remember {
-            playerStats.map {
-                Bars(
-                    label = "${it.player.firstName} ${it.player.lastName}",
-                    values = listOf(
-                        Bars.Data(
-                            label = label,
-                            value = it.totalGoals.toDouble(),
-                            color = Brush.horizontalGradient(
-                                colors = listOf(PrimaryLight, Primary)
-                            )
-                        ),
+        indicatorProperties =
+            VerticalIndicatorProperties(
+                indicators =
+                    listOf(
+                        playerStats.maxBy { it.totalGoals }.totalGoals.toDouble(),
+                        (playerStats.maxBy { it.totalGoals }.totalGoals.toDouble() / 2).let { if (it % 2 == 0.toDouble()) it else null },
+                        0.0,
+                    ).mapNotNull { it },
+                count =
+                    IndicatorCount.CountBased(
+                        (
+                            playerStats.maxBy {
+                                it.totalGoals
+                            }.totalGoals.toDouble() / 2
+                        ).let { if (it % 2 == 0.toDouble()) 3 else 2 },
+                    ),
+            ),
+        data =
+            remember {
+                playerStats.map {
+                    Bars(
+                        label = "${it.player.firstName} ${it.player.lastName}",
+                        values =
+                            listOf(
+                                Bars.Data(
+                                    label = label,
+                                    value = it.totalGoals.toDouble(),
+                                    color =
+                                        Brush.horizontalGradient(
+                                            colors = listOf(PrimaryLight, Primary),
+                                        ),
+                                ),
+                            ),
                     )
-                )
-            }
-        },
-        barProperties = BarProperties(
-            thickness = TFMSpacing.spacing06,
-            spacing = 0.dp,
-            cornerRadius = Rectangle(topRight = TFMSpacing.spacing04, bottomRight = TFMSpacing.spacing04),
-        ),
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
+                }
+            },
+        barProperties =
+            BarProperties(
+                thickness = TFMSpacing.spacing06,
+                spacing = 0.dp,
+                cornerRadius = Rectangle(topRight = TFMSpacing.spacing04, bottomRight = TFMSpacing.spacing04),
+            ),
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow,
+            ),
     )
 }

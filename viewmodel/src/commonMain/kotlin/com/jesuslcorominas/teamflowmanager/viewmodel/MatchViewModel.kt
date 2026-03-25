@@ -70,6 +70,7 @@ class MatchViewModel(
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
 
+    @Suppress("ktlint:standard:property-naming")
     private val _currentTime = MutableStateFlow(0L)
 
     private val _selectedPlayerOut = MutableStateFlow<Long?>(null)
@@ -132,8 +133,9 @@ class MatchViewModel(
                 if (!currentState.match.isLastPeriod()) {
                     _showStopConfirmation.value = true
                 } else {
-                    val currentPeriod = currentState.match.periods
-                        .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+                    val currentPeriod =
+                        currentState.match.periods
+                            .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
 
                     if (currentPeriod != null) {
                         val elapsedTime = (_currentTime.value - currentPeriod.startTimeMillis).coerceAtLeast(0L)
@@ -189,8 +191,9 @@ class MatchViewModel(
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                     if (currentState.match.canPause()) {
                         // Calculate remaining time in current period
-                        val currentPeriod = currentState.match.periods
-                            .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+                        val currentPeriod =
+                            currentState.match.periods
+                                .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
 
                         if (currentPeriod != null) {
                             val elapsedTime = (_currentTime.value - currentPeriod.startTimeMillis).coerceAtLeast(0L)
@@ -367,7 +370,7 @@ class MatchViewModel(
             playerIn = playerInId,
             playerOut = playerOut,
             analyticsMessage = "Two-step substitution: $playerOut -> $playerInId",
-            method = "two_step"
+            method = "two_step",
         )
     }
 
@@ -378,7 +381,10 @@ class MatchViewModel(
      * @param playerInId The ID of the player coming in (was inactive/not playing)
      * @param playerOutId The ID of the player going out (was active/playing)
      */
-    fun substitutePlayerDirect(playerInId: Long, playerOutId: Long) {
+    fun substitutePlayerDirect(
+        playerInId: Long,
+        playerOutId: Long,
+    ) {
         // Validate that the incoming player is not already playing
         if (!isValidSubstitution(playerInId)) {
             // No selection state to clear for direct substitution
@@ -389,7 +395,7 @@ class MatchViewModel(
             playerIn = playerInId,
             playerOut = playerOutId,
             analyticsMessage = "Direct substitution: $playerOutId -> $playerInId (drag-drop)",
-            method = "drag_drop"
+            method = "drag_drop",
         )
     }
 
@@ -415,7 +421,12 @@ class MatchViewModel(
         return true
     }
 
-    private fun performSubstitution(playerIn: Long, playerOut: Long, analyticsMessage: String, method: String) {
+    private fun performSubstitution(
+        playerIn: Long,
+        playerOut: Long,
+        analyticsMessage: String,
+        method: String,
+    ) {
         viewModelScope.launch {
             try {
                 val currentState = _uiState.value
@@ -471,13 +482,15 @@ class MatchViewModel(
         viewModelScope.launch {
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                    crashReporter.log("Registering ${scorerId?.let { "goal for player: $it" } ?: "own goal (autogol by rival)"}")
+                    crashReporter.log(
+                        "Registering ${scorerId?.let { "goal for player: $it" } ?: "own goal (autogol by rival)"}",
+                    )
                     registerGoal(
                         matchId = currentState.match.id,
                         scorerId = scorerId,
                         currentTimeMillis = _currentTime.value,
                         isOpponentGoal = false,
-                        isOwnGoal = scorerId == null
+                        isOwnGoal = scorerId == null,
                     )
 
                     analyticsTracker.logEvent(
@@ -558,25 +571,31 @@ class MatchViewModel(
                     else -> {
                         // Only include players that are in the squad call-up
                         val squadPlayers = players.filter { it.id in match.squadCallUpIds }
-                        
+
                         // Filter player times to show only those from completed operations
                         // This prevents UI flicker during multi-step atomic operations
-                        val filteredPlayerTimes = if (match.lastCompletedOperationId != null) {
-                            playerTimes.filter { playerTime ->
-                                // Show players whose lastOperationId matches the match's last completed operation
-                                // OR has null operationId (backward compatibility for pre-operation-tracking data)
-                                // OR is ON_BENCH — bench players are not updated during substitutions involving
-                                // other players, so their lastOperationId may be stale; always show them.
-                                playerTime.lastOperationId == match.lastCompletedOperationId ||
-                                    playerTime.lastOperationId == null ||
-                                    playerTime.status == PlayerTimeStatus.ON_BENCH
+                        val filteredPlayerTimes =
+                            if (match.lastCompletedOperationId != null) {
+                                playerTimes.filter { playerTime ->
+                                    // Show players whose lastOperationId matches the match's last completed operation
+                                    // OR has null operationId (backward compatibility for pre-operation-tracking data)
+                                    // OR is ON_BENCH — bench players are not updated during substitutions involving
+                                    // other players, so their lastOperationId may be stale; always show them.
+                                    playerTime.lastOperationId == match.lastCompletedOperationId ||
+                                        playerTime.lastOperationId == null ||
+                                        playerTime.status == PlayerTimeStatus.ON_BENCH
+                                }
+                            } else {
+                                // No operations completed yet, show all player times
+                                playerTimes
                             }
-                        } else {
-                            // No operations completed yet, show all player times
-                            playerTimes
-                        }
-                        
-                        val playerTimeItems = squadPlayers.toPlayerItems(filteredPlayerTimes, currentTime, match.captainId)
+
+                        val playerTimeItems =
+                            squadPlayers.toPlayerItems(
+                                filteredPlayerTimes,
+                                currentTime,
+                                match.captainId,
+                            )
 
                         MatchUiState.Success(
                             match = match,
@@ -584,7 +603,6 @@ class MatchViewModel(
                             playerTimes = playerTimeItems,
                         )
                     }
-
                 }
             }.collect { state ->
                 if (state != null) {
@@ -601,22 +619,24 @@ class MatchViewModel(
                                     MatchUiState.Finished(
                                         match = match,
                                         currentTime = _currentTime.value,
-                                        playerTimes = summary.playerTimes.map { playerTimeSummary ->
-                                            PlayerTimeItem(
-                                                player = playerTimeSummary.player,
-                                                timeMillis = playerTimeSummary.elapsedTimeMillis,
-                                                isRunning = false,
-                                                isPaused = false,
-                                                isCaptain = playerTimeSummary.player.id == summary.match.captainId,
-                                            )
-                                        },
-                                        substitutions = summary.substitutions.map { sub ->
-                                            SubstitutionItem(
-                                                playerOut = sub.playerOut,
-                                                playerIn = sub.playerIn,
-                                                matchElapsedTimeMillis = sub.matchElapsedTimeMillis,
-                                            )
-                                        },
+                                        playerTimes =
+                                            summary.playerTimes.map { playerTimeSummary ->
+                                                PlayerTimeItem(
+                                                    player = playerTimeSummary.player,
+                                                    timeMillis = playerTimeSummary.elapsedTimeMillis,
+                                                    isRunning = false,
+                                                    isPaused = false,
+                                                    isCaptain = playerTimeSummary.player.id == summary.match.captainId,
+                                                )
+                                            },
+                                        substitutions =
+                                            summary.substitutions.map { sub ->
+                                                SubstitutionItem(
+                                                    playerOut = sub.playerOut,
+                                                    playerIn = sub.playerIn,
+                                                    matchElapsedTimeMillis = sub.matchElapsedTimeMillis,
+                                                )
+                                            },
                                         timelineEvents = timeline?.events ?: emptyList(),
                                         scoreEvolution = timeline?.scoreEvolution ?: emptyList(),
                                         playerActivity = timeline?.playerActivity ?: emptyList(),
@@ -639,20 +659,21 @@ class MatchViewModel(
     private fun List<Player>.toPlayerItems(
         playerTimes: List<PlayerTime>,
         currentTime: Long,
-        captainId: Long
+        captainId: Long,
     ): List<PlayerTimeItem> =
         this.map { player ->
             val playerTime = playerTimes.find { it.playerId == player.id }
-            val displayTime = if (playerTime != null) {
-                calculateCurrentTime(
-                    playerTime.elapsedTimeMillis,
-                    playerTime.isRunning,
-                    playerTime.lastStartTimeMillis,
-                    currentTime,
-                )
-            } else {
-                0L
-            }
+            val displayTime =
+                if (playerTime != null) {
+                    calculateCurrentTime(
+                        playerTime.elapsedTimeMillis,
+                        playerTime.isRunning,
+                        playerTime.lastStartTimeMillis,
+                        currentTime,
+                    )
+                } else {
+                    0L
+                }
             PlayerTimeItem(
                 player = player,
                 timeMillis = displayTime,
@@ -692,18 +713,19 @@ class MatchViewModel(
 
                 if (matchReportData != null) {
                     val uri = exportMatchReportToPdf(matchReportData)
-                    _exportState.value = if (uri != null) {
-                        analyticsTracker.logEvent(
-                            AnalyticsEvent.MATCH_REPORT_EXPORTED,
-                            mapOf(
-                                AnalyticsParam.MATCH_ID to matchId.toString(),
-                                AnalyticsParam.EXPORT_TYPE to "pdf",
-                            ),
-                        )
-                        ExportState.Ready(uri)
-                    } else {
-                        ExportState.Error
-                    }
+                    _exportState.value =
+                        if (uri != null) {
+                            analyticsTracker.logEvent(
+                                AnalyticsEvent.MATCH_REPORT_EXPORTED,
+                                mapOf(
+                                    AnalyticsParam.MATCH_ID to matchId.toString(),
+                                    AnalyticsParam.EXPORT_TYPE to "pdf",
+                                ),
+                            )
+                            ExportState.Ready(uri)
+                        } else {
+                            ExportState.Error
+                        }
                 } else {
                     _exportState.value = ExportState.Error
                 }
@@ -731,10 +753,11 @@ data class PlayerTimeItem(
     val isCaptain: Boolean = false,
 )
 
-
 sealed class MatchUiState {
     data object Loading : MatchUiState()
+
     data object NoMatch : MatchUiState()
+
     data class Success(
         val match: Match,
         val currentTime: Long,

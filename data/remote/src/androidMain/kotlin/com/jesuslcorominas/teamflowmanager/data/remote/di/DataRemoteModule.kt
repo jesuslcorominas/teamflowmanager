@@ -98,11 +98,12 @@ internal val ktorfitModule =
                     json(get())
                 }
                 install(Logging) {
-                    logger = object : Logger {
-                        override fun log(message: String) {
-                            println("Ktor HTTP Client: $message")
+                    logger =
+                        object : Logger {
+                            override fun log(message: String) {
+                                println("Ktor HTTP Client: $message")
+                            }
                         }
-                    }
                     level = LogLevel.INFO
                 }
             }

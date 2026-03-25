@@ -27,18 +27,19 @@ import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 @Composable
 fun ClubSelectionScreen(
     onCreateClub: () -> Unit,
-    onJoinClub: () -> Unit
+    onJoinClub: () -> Unit,
 ) {
     TrackScreenView(screenName = ScreenName.CLUB_SELECTION, screenClass = "ClubSelectionScreen")
 
     Scaffold { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(32.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             TeamFlowManagerIcon()
 
@@ -48,7 +49,7 @@ fun ClubSelectionScreen(
                 text = stringResource(id = R.string.club_selection_title),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -57,22 +58,23 @@ fun ClubSelectionScreen(
                 text = stringResource(id = R.string.club_selection_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Spacer(modifier = Modifier.height(48.dp))
 
             Button(
                 onClick = onCreateClub,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.small
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                shape = MaterialTheme.shapes.small,
             ) {
                 Text(
                     text = stringResource(id = R.string.create_club),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
 
@@ -80,15 +82,16 @@ fun ClubSelectionScreen(
 
             OutlinedButton(
                 onClick = onJoinClub,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.small
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                shape = MaterialTheme.shapes.small,
             ) {
                 Text(
                     text = stringResource(id = R.string.join_club),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
         }

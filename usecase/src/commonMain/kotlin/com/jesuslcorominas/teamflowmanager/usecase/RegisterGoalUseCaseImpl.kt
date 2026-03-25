@@ -6,7 +6,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import kotlinx.coroutines.flow.first
 
-
 internal class RegisterGoalUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val goalRepository: GoalRepository,
@@ -25,19 +24,21 @@ internal class RegisterGoalUseCaseImpl(
         val matchElapsedTime = match.getTotalElapsed(currentTimeMillis)
 
         // Record the goal
-        val goal = Goal(
-            matchId = matchId,
-            scorerId = scorerId,
-            goalTimeMillis = currentTimeMillis,
-            matchElapsedTimeMillis = matchElapsedTime,
-            isOpponentGoal = isOpponentGoal,
-            isOwnGoal = isOwnGoal,
-        )
+        val goal =
+            Goal(
+                matchId = matchId,
+                scorerId = scorerId,
+                goalTimeMillis = currentTimeMillis,
+                matchElapsedTimeMillis = matchElapsedTime,
+                isOpponentGoal = isOpponentGoal,
+                isOwnGoal = isOwnGoal,
+            )
 
-        val updatedMatch = match.copy(
-            goals = if (isOpponentGoal) match.goals else match.goals + 1,
-            opponentGoals = if (isOpponentGoal) match.opponentGoals + 1 else match.opponentGoals
-        )
+        val updatedMatch =
+            match.copy(
+                goals = if (isOpponentGoal) match.goals else match.goals + 1,
+                opponentGoals = if (isOpponentGoal) match.opponentGoals + 1 else match.opponentGoals,
+            )
 
         matchRepository.updateMatch(updatedMatch)
 

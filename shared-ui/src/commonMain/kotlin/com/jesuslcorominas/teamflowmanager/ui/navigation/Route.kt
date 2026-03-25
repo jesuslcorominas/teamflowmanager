@@ -7,9 +7,8 @@ sealed class Route(
     val canGoBack: Boolean = false,
     val showFab: Boolean = false,
     val hasSearchBar: Boolean = false,
-    val showSettingsButton: Boolean = false
+    val showSettingsButton: Boolean = false,
 ) {
-
     companion object {
         val all by lazy {
             listOf(
@@ -43,8 +42,7 @@ sealed class Route(
         }
     }
 
-    fun createRoute(vararg params: Any?): String =
-        path + if (params.isNotEmpty()) params.joinToString("") { "/$it" } else ""
+    fun createRoute(vararg params: Any?): String = path + if (params.isNotEmpty()) params.joinToString("") { "/$it" } else ""
 
     data class UiConfig(
         val showTopBar: Boolean,
@@ -70,7 +68,7 @@ sealed class Route(
         showBottomBar = true,
         showFab = true,
         hasSearchBar = true,
-        showSettingsButton = true
+        showSettingsButton = true,
     )
 
     data object Match : Route(path = "match", canGoBack = true) {
@@ -96,7 +94,7 @@ sealed class Route(
 
     data object Team : Route(
         path = "team",
-        showBottomBar = true
+        showBottomBar = true,
     ) {
         private const val PATH = "team"
         const val ARG_MODE = "mode"
@@ -125,14 +123,14 @@ sealed class Route(
         showBottomBar = true,
         showFab = true,
         hasSearchBar = false,
-        showSettingsButton = true
+        showSettingsButton = true,
     )
 
     data object ClubMembers : Route(
         path = "club_members",
         showTopBar = true,
         showBottomBar = true,
-        showSettingsButton = true
+        showSettingsButton = true,
     )
 
     data object Players : Route(path = "players", showBottomBar = true, showFab = true, showSettingsButton = true)
@@ -147,7 +145,7 @@ sealed class Route(
         path = "archived_matches",
         showBottomBar = true,
         canGoBack = true,
-        showSettingsButton = true
+        showSettingsButton = true,
     )
 
     data object CreateMatch : Route(path = "create_match", showTopBar = false) {

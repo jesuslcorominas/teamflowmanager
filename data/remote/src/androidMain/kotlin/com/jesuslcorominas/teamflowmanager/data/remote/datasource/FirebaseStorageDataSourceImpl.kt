@@ -14,24 +14,26 @@ import kotlin.coroutines.cancellation.CancellationException
 class FirebaseStorageDataSourceImpl(
     private val firebaseStorage: FirebaseStorage,
 ) : ImageStorageDataSource {
-
     companion object {
         private const val TAG = "FirebaseStorageDS"
     }
 
-    override suspend fun uploadImage(localUri: String, path: String): String? {
+    override suspend fun uploadImage(
+        localUri: String,
+        path: String,
+    ): String? {
         return try {
             val uri = Uri.parse(localUri)
             val storageRef = firebaseStorage.reference.child(path)
-            
+
             Log.d(TAG, "Uploading image to path: $path")
-            
+
             // Upload the file
             storageRef.putFile(uri).await()
-            
+
             // Get the download URL
             val downloadUrl = storageRef.downloadUrl.await().toString()
-            
+
             Log.d(TAG, "Image uploaded successfully. Download URL: $downloadUrl")
             downloadUrl
         } catch (e: CancellationException) {
@@ -46,11 +48,11 @@ class FirebaseStorageDataSourceImpl(
         return try {
             // Extract the storage path from the download URL
             val storageRef = firebaseStorage.getReferenceFromUrl(downloadUrl)
-            
+
             Log.d(TAG, "Deleting image: ${storageRef.path}")
-            
+
             storageRef.delete().await()
-            
+
             Log.d(TAG, "Image deleted successfully")
             true
         } catch (e: CancellationException) {

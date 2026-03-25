@@ -29,13 +29,14 @@ fun CaptainConfirmationDialog(
 ) {
     AppAlertDialog(
         title = stringResource(Res.string.captain_confirm_title),
-        message = stringResource(
-            Res.string.captain_confirm_message,
-            state.currentCaptain.firstName,
-            state.currentCaptain.lastName,
-            state.newCaptain.firstName,
-            state.newCaptain.lastName,
-        ),
+        message =
+            stringResource(
+                Res.string.captain_confirm_message,
+                state.currentCaptain.firstName,
+                state.currentCaptain.lastName,
+                state.newCaptain.firstName,
+                state.newCaptain.lastName,
+            ),
         confirmText = stringResource(Res.string.yes),
         dismissText = stringResource(Res.string.cancel),
         onConfirm = onConfirm,
@@ -61,7 +62,7 @@ fun CaptainConfirmationDialog(
                     state.newCaptain.firstName,
                     state.newCaptain.lastName,
                     state.matchCount,
-                )
+                ),
             )
         },
         confirmButton = {
@@ -85,11 +86,12 @@ fun CaptainConfirmationDialog(
 ) {
     AppAlertDialog(
         title = stringResource(Res.string.captain_remove_title),
-        message = stringResource(
-            Res.string.captain_remove_message,
-            state.player.firstName,
-            state.player.lastName,
-        ),
+        message =
+            stringResource(
+                Res.string.captain_remove_message,
+                state.player.firstName,
+                state.player.lastName,
+            ),
         confirmText = stringResource(Res.string.yes),
         dismissText = stringResource(Res.string.cancel),
         onConfirm = onConfirm,
@@ -113,7 +115,7 @@ fun CaptainConfirmationDialog(
                     state.player.firstName,
                     state.player.lastName,
                     state.matchCount,
-                )
+                ),
             )
         },
         confirmButton = {

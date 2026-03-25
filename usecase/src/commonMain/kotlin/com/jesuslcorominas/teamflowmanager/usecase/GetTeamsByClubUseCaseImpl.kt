@@ -6,7 +6,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import kotlinx.coroutines.flow.Flow
 
 internal class GetTeamsByClubUseCaseImpl(
-    private val teamRepository: TeamRepository
+    private val teamRepository: TeamRepository,
 ) : GetTeamsByClubUseCase {
     override fun invoke(clubFirestoreId: String): Flow<List<Team>> {
         return teamRepository.getTeamsByClub(clubFirestoreId)

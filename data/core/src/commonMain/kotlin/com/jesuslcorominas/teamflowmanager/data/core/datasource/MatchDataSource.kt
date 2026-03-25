@@ -12,7 +12,10 @@ interface MatchDataSource {
 
     suspend fun getScheduledMatches(): List<Match>
 
-    suspend fun updateMatchCaptain(matchId: Long, captainId: Long?)
+    suspend fun updateMatchCaptain(
+        matchId: Long,
+        captainId: Long?,
+    )
 
     suspend fun insertMatch(match: Match): Long
 

@@ -34,9 +34,10 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 fun SubstitutionCard(substitution: SubstitutionItem) {
     AppCard {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing04),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -47,7 +48,7 @@ fun SubstitutionCard(substitution: SubstitutionItem) {
                     modifier = Modifier.weight(1f),
                     name = "${substitution.playerIn.firstName} ${substitution.playerIn.lastName}",
                     number = substitution.playerIn.number,
-                    playerIn = true
+                    playerIn = true,
                 )
 
                 Text(
@@ -61,7 +62,7 @@ fun SubstitutionCard(substitution: SubstitutionItem) {
                     modifier = Modifier.weight(1f),
                     name = "${substitution.playerOut.firstName} ${substitution.playerOut.lastName}",
                     number = substitution.playerOut.number,
-                    playerIn = false
+                    playerIn = false,
                 )
             }
         }
@@ -69,32 +70,39 @@ fun SubstitutionCard(substitution: SubstitutionItem) {
 }
 
 @Composable
-private fun PlayerSubstitution(modifier: Modifier = Modifier, name: String, number: Int, playerIn: Boolean) {
+private fun PlayerSubstitution(
+    modifier: Modifier = Modifier,
+    name: String,
+    number: Int,
+    playerIn: Boolean,
+) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         JerseyBadge(
             number = number,
-            cornerShape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
+            cornerShape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         )
 
-        val slantedSidesShape: Shape = GenericShape { size: Size, _ ->
-            val offset = size.height / 2
-            moveTo(offset, 0f)
-            lineTo(size.width, 0f)
-            lineTo(size.width - offset, size.height)
-            lineTo(0f, size.height)
-            close()
-        }
+        val slantedSidesShape: Shape =
+            GenericShape { size: Size, _ ->
+                val offset = size.height / 2
+                moveTo(offset, 0f)
+                lineTo(size.width, 0f)
+                lineTo(size.width - offset, size.height)
+                lineTo(0f, size.height)
+                close()
+            }
 
         Box(
-            modifier = Modifier
-                .padding(bottom = 6.dp)
-                .width(96.dp)
-                .height(8.dp)
-                .clip(slantedSidesShape)
-                .background(if (playerIn) SubstitutionGreen else SubstitutionRed)
+            modifier =
+                Modifier
+                    .padding(bottom = 6.dp)
+                    .width(96.dp)
+                    .height(8.dp)
+                    .clip(slantedSidesShape)
+                    .background(if (playerIn) SubstitutionGreen else SubstitutionRed),
         )
 
         Text(
