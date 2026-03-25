@@ -34,6 +34,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStats
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
 import com.jesuslcorominas.teamflowmanager.ui.theme.PrimaryLight
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -143,7 +144,7 @@ fun AnalysisScreen(viewModel: AnalysisViewModel = koinViewModel()) {
             modifier =
                 Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(TFMSpacing.spacing04),
+                    .padding(bottom = LocalContentBottomPadding.current + TFMSpacing.spacing04, end = TFMSpacing.spacing04),
         ) {
             Icon(
                 imageVector = Icons.Default.Share,
