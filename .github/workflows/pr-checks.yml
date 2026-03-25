@@ -2,7 +2,7 @@ name: PR Checks
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [develop]
 
 permissions:
   contents: read
@@ -12,6 +12,8 @@ permissions:
 jobs:
   test-lint-coverage:
     name: Tests, Lint & Coverage
+    # Skip PRs from main (sync after release merge — no new code to cover)
+    if: github.head_ref != 'main'
     runs-on: ubuntu-latest
 
     steps:

@@ -47,11 +47,13 @@ Then restart the flow from the beginning.
 
 ```
 push release/* → hook bumpa versionCode
-              → CI abre PR a main automáticamente
-              → PR dispara: tests + validate versionCode + AAB a Play Beta + IPA
-merge PR a main → promueve Play Beta → producción
+              → create-release-pr abre PR a main automáticamente
+              → PR a main dispara Release CI: tests → validate versionCode → AAB a Play Alpha + IPA
+merge PR a main → promueve Play Alpha → producción
                → crea GitHub Release con las release notes
                → sincroniza main → develop (merge directo o PR si hay conflictos)
+
+PR a develop   → PR Checks: tests + lint + coverage ≥80% en ficheros modificados
 ```
 
 ## CI Monitoring
