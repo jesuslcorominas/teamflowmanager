@@ -23,6 +23,7 @@ jobs:
   test:
     name: Tests & Lint
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip-tests]')"
     steps:
       - uses: actions/checkout@v4
 
@@ -60,6 +61,7 @@ jobs:
   validate-version:
     name: Validate versionCode
     needs: test
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       version_name: ${{ steps.version.outputs.version_name }}

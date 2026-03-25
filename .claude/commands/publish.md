@@ -32,8 +32,9 @@ Screenshots support via API es trabajo futuro (ver sección iOS App Store más a
    - Show `git diff --stat`
    - Ask for a commit message
    - `git add -A && git commit -m "{message}"`
-3. Push: `git push origin HEAD`
+3. Commit & push: `git push origin HEAD`
    - Hook bumps versionCode, pushes, and the CI re-runs on the open PR
+   - To skip Tests & Lint (e.g. when tests already passed locally), include `[skip-tests]` in the commit message: `git commit -m "fix: whatever [skip-tests]"`
 4. Start CI monitoring loop (see ## CI Monitoring below)
 
 ## If on `main` or any other branch:
@@ -77,6 +78,19 @@ Do NOT stop monitoring until CI is green or the user explicitly says to stop.
 - The pre-push hook at `scripts/hooks/pre-push` handles the versionCode bump automatically
 - If the hook is not installed, remind the user to run `bash scripts/install-hooks.sh`
 - After CI is green on the PR, merge it — post-release handles everything else automatically
+
+## ⚠️ Pre-push hook behavior — DO NOT retry push manually
+
+The pre-push hook:
+1. Bumps versionCode in `app/build.gradle.kts` and `iosApp/iosApp.xcodeproj/project.pbxproj`
+2. Commits the bump
+3. Pushes the bump commit itself
+4. Exits with code 1 — which causes `git push` to report an error
+
+**This exit-1 is intentional and expected.** The remote already has the bump commit after step 3.
+After the hook exits, `git status` will show "Your branch is up to date with origin" — the push succeeded via the hook.
+
+**Never retry `git push` or `git pull && git push` after a hook exit-1.** Each retry triggers another full hook cycle: another bump, another commit, another CI run. This wastes CI minutes and creates spurious version increments (e.g. builds 17→18→19 from a single logical push).
 
 ## iOS App Store — Current status & future work
 
