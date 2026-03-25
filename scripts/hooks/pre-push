@@ -7,6 +7,13 @@ if [ -n "$VERSION_BUMP_IN_PROGRESS" ]; then
   exit 0
 fi
 
+# Skip delete operations — local sha is all zeros when deleting a remote ref
+while read local_ref local_sha remote_ref remote_sha; do
+  if [[ "$local_sha" == "0000000000000000000000000000000000000000" ]]; then
+    exit 0
+  fi
+done
+
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
 
 # Only run on release/* branches
