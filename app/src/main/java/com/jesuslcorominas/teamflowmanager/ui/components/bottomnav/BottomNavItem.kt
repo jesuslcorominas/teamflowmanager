@@ -31,7 +31,7 @@ fun BottomNavItem(
         contentAlignment = Alignment.Center,
     ) {
         val animatedHeight by animateDpAsState(
-            targetValue = if (isSelected) 48.dp else 40.dp,
+            targetValue = if (isSelected) 56.dp else 48.dp,
             label = "",
         )
         val animatedAlpha by animateFloatAsState(
