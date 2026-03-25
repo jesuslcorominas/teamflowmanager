@@ -1,0 +1,71 @@
+#!/bin/bash
+# Pre-push hook: auto-bumps versionCode on release/* branches.
+# Install with: bash scripts/install-hooks.sh
+
+# Skip if this push was triggered by the hook itself
+if [ -n "$VERSION_BUMP_IN_PROGRESS" ]; then
+  exit 0
+fi
+
+# Skip delete operations — local sha is all zeros when deleting a remote ref
+while read local_ref local_sha remote_ref remote_sha; do
+  if [[ "$local_sha" == "0000000000000000000000000000000000000000" ]]; then
+    exit 0
+  fi
+done
+
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# Only run on release/* branches
+if [[ ! "$BRANCH" =~ ^release/ ]]; then
+  exit 0
+fi
+
+# Extract versionName from branch name (release/0.3.0 → 0.3.0)
+VERSION_NAME="${BRANCH#release/}"
+
+# Validate semver format
+if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "⚠️  Branch '$BRANCH' doesn't match release/X.Y.Z — skipping version bump"
+  exit 0
+fi
+
+# Read current versionCode
+CURRENT_CODE=$(grep 'versionCode' app/build.gradle.kts | grep -oE '[0-9]+' | head -1)
+if [ -z "$CURRENT_CODE" ]; then
+  echo "❌ Could not read versionCode from app/build.gradle.kts"
+  exit 1
+fi
+NEW_CODE=$((CURRENT_CODE + 1))
+
+echo "🔢 Bumping versionCode $CURRENT_CODE → $NEW_CODE (v$VERSION_NAME)"
+
+# Update Android
+sed -i '' "s/versionCode = $CURRENT_CODE/versionCode = $NEW_CODE/" app/build.gradle.kts
+sed -i '' "s/versionName = \"[^\"]*\"/versionName = \"$VERSION_NAME\"/" app/build.gradle.kts
+
+# Update iOS
+sed -i '' \
+  "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $NEW_CODE;/g" \
+  iosApp/iosApp.xcodeproj/project.pbxproj
+sed -i '' \
+  "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $VERSION_NAME;/g" \
+  iosApp/iosApp.xcodeproj/project.pbxproj
+
+# Propagate [skip-tests] flag if the triggering commit had it
+PREV_MSG=$(git log -1 --format=%s HEAD)
+SKIP_FLAG=""
+if [[ "$PREV_MSG" == *"[skip-tests]"* ]]; then
+  SKIP_FLAG=" [skip-tests]"
+fi
+
+# Commit the bump
+git add app/build.gradle.kts iosApp/iosApp.xcodeproj/project.pbxproj
+git commit -m "chore: bump version to $VERSION_NAME (build $NEW_CODE)$SKIP_FLAG"
+
+echo "✅ Version bumped and committed — pushing v$VERSION_NAME (build $NEW_CODE)"
+
+# Push and cancel the original push (already handled here)
+export VERSION_BUMP_IN_PROGRESS=1
+git push origin HEAD
+exit 1

@@ -14,7 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 
-
 @Composable
 fun AppIconButton(
     modifier: Modifier = Modifier,
@@ -23,7 +22,7 @@ fun AppIconButton(
     contentDescription: String,
     enabled: Boolean = true,
     tint: Color?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     IconButton(
         modifier = if (modifier == Modifier) Modifier.size(64.dp) else modifier,
@@ -34,9 +33,10 @@ fun AppIconButton(
             modifier = internalModifier,
             imageVector = imageVector,
             contentDescription = contentDescription,
-            tint = tint
-                ?.let { tint }
-                ?: if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            tint =
+                tint
+                    ?.let { tint }
+                    ?: if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
         )
     }
 }
@@ -49,7 +49,7 @@ fun AppIconButton(
     @StringRes contentDescription: Int,
     enabled: Boolean = true,
     tint: Color?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     AppIconButton(
         modifier = modifier,
@@ -58,7 +58,7 @@ fun AppIconButton(
         contentDescription = stringResource(contentDescription),
         enabled = enabled,
         tint = tint,
-        onClick = onClick
+        onClick = onClick,
     )
 }
 
@@ -70,7 +70,7 @@ fun AppIconButton(
     @StringRes contentDescription: Int,
     enabled: Boolean = true,
     tint: Color?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     AppIconButton(
         modifier = modifier,
@@ -79,6 +79,6 @@ fun AppIconButton(
         contentDescription = contentDescription,
         enabled = enabled,
         tint = tint,
-        onClick = onClick
+        onClick = onClick,
     )
 }

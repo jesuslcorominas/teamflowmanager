@@ -1,0 +1,47 @@
+name: Open Release PR
+
+on:
+  push:
+    branches:
+      - 'release/**'
+    paths-ignore:
+      - '**/*.md'
+      - '.claude/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-pr:
+    name: Create PR → main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create PR to main
+        env:
+          GH_TOKEN: ${{ secrets.BOTOMINAS_TOKEN }}
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          VERSION="${BRANCH#release/}"
+
+          EXISTING=$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            echo "PR #$EXISTING already exists — skipping"
+            exit 0
+          fi
+
+          if [ -f "distribution/whatsnew/whatsnew-es-ES" ]; then
+            NOTES=$(cat distribution/whatsnew/whatsnew-es-ES)
+          else
+            NOTES="Corrección de errores y mejoras de rendimiento."
+          fi
+
+          BODY=$(printf '## Release v%s\n\n### Novedades\n\n%s\n\n---\n\n> El CI ejecutará tests y subirá la build a Play Beta antes de permitir el merge.' "$VERSION" "$NOTES")
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "release: v$VERSION" \
+            --body "$BODY"

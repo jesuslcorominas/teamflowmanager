@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun Loading() {
-    Surface (
+    Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {

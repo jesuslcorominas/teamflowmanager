@@ -16,9 +16,10 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 @Composable
 fun EmptyContent(text: String) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = TFMSpacing.spacing04),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = TFMSpacing.spacing04),
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -37,7 +38,7 @@ fun EmptyContent(text: String) {
     name = "Pixel 7 Pro",
     device = "spec:width=1440px,height=3120px,dpi=512",
     showSystemUi = true,
-    showBackground = true
+    showBackground = true,
 )
 @Composable
 private fun EmptyContentPreview() {

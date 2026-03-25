@@ -43,7 +43,7 @@ fun PlayerSortOrderSelector(
         TextButton(onClick = { expanded = true }) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02)
+                horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
             ) {
                 Text(
                     text = stringResource(currentSortOrder.toStringRes()),
@@ -56,12 +56,11 @@ fun PlayerSortOrderSelector(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             availableSorts.forEach { order ->
                 DropdownMenuItem(
@@ -69,16 +68,17 @@ fun PlayerSortOrderSelector(
                     onClick = {
                         onSortOrderChange(order)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
     }
 }
 
-private fun PlayerSortOrderBy.toStringRes() = when (this) {
-    PlayerSortOrderBy.BY_NUMBER -> R.string.sort_by_number
-    PlayerSortOrderBy.BY_ACTIVE_FIRST -> R.string.sort_by_active
-    PlayerSortOrderBy.BY_TIME_DESC -> R.string.sort_by_time_desc
-    PlayerSortOrderBy.BY_TIME_ASC -> R.string.sort_by_time_asc
-}
+private fun PlayerSortOrderBy.toStringRes() =
+    when (this) {
+        PlayerSortOrderBy.BY_NUMBER -> R.string.sort_by_number
+        PlayerSortOrderBy.BY_ACTIVE_FIRST -> R.string.sort_by_active
+        PlayerSortOrderBy.BY_TIME_DESC -> R.string.sort_by_time_desc
+        PlayerSortOrderBy.BY_TIME_ASC -> R.string.sort_by_time_asc
+    }

@@ -40,18 +40,18 @@ fun CaptainSelectionStep(
 
     Column(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
             text = stringResource(R.string.captain_selection_title),
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
 
         Text(
             text = stringResource(R.string.captain_selection_subtitle),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
@@ -65,7 +65,7 @@ fun CaptainSelectionStep(
             selectedPlayerIds = setOf(currentCaptainId).map { it }.toSet(),
             onSingleSelectionChange = { player ->
                 currentCaptainId = player.id
-            }
+            },
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
@@ -99,7 +99,7 @@ fun CaptainSelectionStep(
     name = "Pixel 7 Pro",
     device = "spec:width=1440px,height=3120px,dpi=512",
     showSystemUi = true,
-    showBackground = true
+    showBackground = true,
 )
 @Composable
 fun CaptainSelectionStepPreview() {
@@ -114,13 +114,13 @@ fun CaptainSelectionStepPreview() {
                         number = 10,
                         positions = listOf(Position.Forward, Position.Midfielder),
                         teamId = 1,
-                        isCaptain = false
+                        isCaptain = false,
                     )
                 },
             selectedCaptainId = null,
             onCaptainChanged = {},
             onNext = {},
-            onPrevious = {}
+            onPrevious = {},
         )
     }
 }

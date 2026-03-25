@@ -21,6 +21,7 @@ fun rememberSearchState(): SearchState {
     return remember { SearchState() }
 }
 
-val LocalSearchState = staticCompositionLocalOf<SearchState> {
-    error("No SearchState provided")
-}
+val LocalSearchState =
+    staticCompositionLocalOf<SearchState> {
+        error("No SearchState provided")
+    }

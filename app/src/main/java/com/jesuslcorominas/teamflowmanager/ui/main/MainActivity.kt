@@ -1,4 +1,3 @@
-
 package com.jesuslcorominas.teamflowmanager.ui.main
 
 import android.Manifest
@@ -18,8 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
-import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager
-import com.jesuslcorominas.teamflowmanager.service.MatchNotificationManager.Companion.ACTION_OPEN_MATCH
 import com.jesuslcorominas.teamflowmanager.ui.navigation.PendingNavigation
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
@@ -27,13 +24,12 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
-
     private val mainViewModel: MainViewModel by viewModel()
 
     private var pendingNavigation by mutableStateOf<PendingNavigation?>(null)
 
     private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             mainViewModel.setNotificationPermissionRequested(true)
         }
 
@@ -66,7 +62,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             TFMAppTheme {
                 MainScreen(
-                    pendingNavigation = pendingNavigation
+                    pendingNavigation = pendingNavigation,
                 )
             }
         }
@@ -83,12 +79,6 @@ class MainActivity : ComponentActivity() {
 
         val action = intent.action
 
-        val matchId = intent.getLongExtra(MatchNotificationManager.EXTRA_MATCH_ID, -1)
-        if (matchId != -1L && action == ACTION_OPEN_MATCH) {
-            pendingNavigation = PendingNavigation.Match(matchId)
-            return
-        }
-
         if (action == Intent.ACTION_VIEW && intent.data != null) {
             pendingNavigation = PendingNavigation.DeepLink(intent)
         }
@@ -100,7 +90,7 @@ class MainActivity : ComponentActivity() {
 
             if (ContextCompat.checkSelfPermission(
                     this,
-                    Manifest.permission.POST_NOTIFICATIONS
+                    Manifest.permission.POST_NOTIFICATIONS,
                 ) != PackageManager.PERMISSION_GRANTED && !hasRequestedBefore
             ) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)

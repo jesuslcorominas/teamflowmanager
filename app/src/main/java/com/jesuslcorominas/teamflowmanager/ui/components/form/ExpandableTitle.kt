@@ -20,29 +20,35 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 
 @Composable
-fun ExpandableTitle(title: String, expanded: Boolean, onClick: () -> Unit) {
+fun ExpandableTitle(
+    title: String,
+    expanded: Boolean,
+    onClick: () -> Unit,
+) {
     val rotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
         animationSpec = tween(durationMillis = 300),
-        label = "chevronRotation"
+        label = "chevronRotation",
     )
 
     Column {
-        Row (
-            modifier = Modifier
-                .clickable(onClick = onClick)
-                .padding(vertical = TFMSpacing.spacing04),
+        Row(
+            modifier =
+                Modifier
+                    .clickable(onClick = onClick)
+                    .padding(vertical = TFMSpacing.spacing04),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AppTitle(modifier = Modifier.weight(1F), title = title)
 
             Icon(
                 imageVector = Icons.Default.ExpandMore,
-                contentDescription = if (expanded) {
-                    stringResource(R.string.collapse)
-                } else {
-                    stringResource(R.string.expand)
-                },
+                contentDescription =
+                    if (expanded) {
+                        stringResource(R.string.collapse)
+                    } else {
+                        stringResource(R.string.expand)
+                    },
                 modifier = Modifier.graphicsLayer { rotationZ = rotation },
                 tint = MaterialTheme.colorScheme.onSurface,
             )

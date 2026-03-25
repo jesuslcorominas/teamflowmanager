@@ -27,7 +27,7 @@ private const val DROP_RESET_DELAY = 150L
 /**
  * Container that provides drag-drop functionality with auto-scroll support.
  * Wraps the content in a CompositionLocalProvider to share drag-drop state.
- * 
+ *
  * This container also handles drag continuation when the original draggable item
  * scrolls off-screen, by tracking pointer events at the container level.
  *
@@ -45,7 +45,7 @@ fun DragDropContainer(
     var containerPosition by remember { mutableStateOf(Offset.Zero) }
     var containerTop by remember { mutableStateOf(0f) }
     var containerBottom by remember { mutableStateOf(0f) }
-    
+
     // Track last known pointer position to calculate delta when taking over drag
     var lastPointerPosition by remember { mutableStateOf(Offset.Zero) }
 
@@ -89,53 +89,54 @@ fun DragDropContainer(
 
     CompositionLocalProvider(LocalDragDropState provides dragDropState) {
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .onGloballyPositioned { coordinates ->
-                    val position = coordinates.positionInRoot()
-                    containerPosition = position
-                    containerTop = position.y
-                    containerBottom = position.y + coordinates.size.height
-                }
-                // This pointer input handles drag continuation when the original 
-                // DraggablePlayerItem scrolls off-screen and is disposed.
-                // It uses Initial pass to see events before children, but only
-                // updates drag position when the child gesture is no longer active.
-                .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            // Use Initial pass to see events before children
-                            val event = awaitPointerEvent(PointerEventPass.Initial)
-                            
-                            // Always track pointer position
-                            event.changes.firstOrNull()?.let { change ->
-                                val currentPosition = change.position
-                                
-                                // Only handle drag if dragging AND child gesture is no longer active
-                                // (child was disposed due to scrolling off-screen)
-                                if (dragDropState.isDragging && !dragDropState.childGestureActive) {
-                                    when (event.type) {
-                                        PointerEventType.Move -> {
-                                            // Calculate delta from last position
-                                            val delta = currentPosition - lastPointerPosition
-                                            if (delta != Offset.Zero) {
-                                                val newPosition = dragDropState.dragPosition + delta
-                                                dragDropState.updateDragPosition(newPosition)
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .onGloballyPositioned { coordinates ->
+                        val position = coordinates.positionInRoot()
+                        containerPosition = position
+                        containerTop = position.y
+                        containerBottom = position.y + coordinates.size.height
+                    }
+                    // This pointer input handles drag continuation when the original
+                    // DraggablePlayerItem scrolls off-screen and is disposed.
+                    // It uses Initial pass to see events before children, but only
+                    // updates drag position when the child gesture is no longer active.
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                // Use Initial pass to see events before children
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+
+                                // Always track pointer position
+                                event.changes.firstOrNull()?.let { change ->
+                                    val currentPosition = change.position
+
+                                    // Only handle drag if dragging AND child gesture is no longer active
+                                    // (child was disposed due to scrolling off-screen)
+                                    if (dragDropState.isDragging && !dragDropState.childGestureActive) {
+                                        when (event.type) {
+                                            PointerEventType.Move -> {
+                                                // Calculate delta from last position
+                                                val delta = currentPosition - lastPointerPosition
+                                                if (delta != Offset.Zero) {
+                                                    val newPosition = dragDropState.dragPosition + delta
+                                                    dragDropState.updateDragPosition(newPosition)
+                                                }
+                                            }
+                                            PointerEventType.Release -> {
+                                                // Pointer released - end drag
+                                                dragDropState.endDrag()
                                             }
                                         }
-                                        PointerEventType.Release -> {
-                                            // Pointer released - end drag
-                                            dragDropState.endDrag()
-                                        }
                                     }
+
+                                    // Always update last position for next frame
+                                    lastPointerPosition = currentPosition
                                 }
-                                
-                                // Always update last position for next frame
-                                lastPointerPosition = currentPosition
                             }
                         }
-                    }
-                }
+                    },
         ) {
             content()
 
@@ -143,7 +144,7 @@ fun DragDropContainer(
             // Pass container position so the ghost can be positioned correctly
             DragOverlay(
                 dragDropState = dragDropState,
-                containerOffset = containerPosition
+                containerOffset = containerPosition,
             )
         }
     }

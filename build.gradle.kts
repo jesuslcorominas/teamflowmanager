@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.gradle.ktlint) apply false
     alias(libs.plugins.jetbrains.kotlin.jvm) apply false
     alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.multiplatform) apply false
 }
 
 subprojects {
@@ -19,6 +20,7 @@ subprojects {
         verbose.set(true)
         filter {
             exclude("**/generated/**", "**/**Test**")
+            exclude { it.file.absolutePath.contains("/build/") }
         }
         reporters {
             reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
@@ -38,3 +40,5 @@ tasks.register("ktlintCheckAll") {
     description = "Runs ktlintCheck on all modules"
     dependsOn(subprojects.mapNotNull { it.tasks.findByName("ktlintCheck") })
 }
+
+apply(from = "$rootDir/jacoco-aggregate.gradle.kts")

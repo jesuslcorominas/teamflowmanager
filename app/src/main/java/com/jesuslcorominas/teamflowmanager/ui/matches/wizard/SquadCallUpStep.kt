@@ -46,65 +46,70 @@ fun SquadCallUpStep(
     var showGoalkeeperWarning by remember { mutableStateOf(false) }
     var pendingNext by remember { mutableStateOf(false) }
 
-    val hasGoalkeeper = players.any { player ->
-        player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
-    }
+    val hasGoalkeeper =
+        players.any { player ->
+            player.id in currentSelection && player.positions.any { it == Position.Goalkeeper }
+        }
 
     Column(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
             text = stringResource(R.string.squad_callup_title),
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
 
         Text(
             text = stringResource(R.string.squad_callup_subtitle, minPlayers),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Text(
             text = stringResource(R.string.squad_callup_count, currentSelection.size),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
-            color = if (currentSelection.size >= minPlayers) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.error
-            }
+            color =
+                if (currentSelection.size >= minPlayers) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.error
+                },
         )
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    currentSelection = if (currentSelection.size == players.size) {
-                        emptySet()
-                    } else {
-                        players.map { it.id }.toSet()
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        currentSelection =
+                            if (currentSelection.size == players.size) {
+                                emptySet()
+                            } else {
+                                players.map { it.id }.toSet()
+                            }
                     }
-                }
-                .padding(vertical = TFMSpacing.spacing02),
-            verticalAlignment = Alignment.CenterVertically
+                    .padding(vertical = TFMSpacing.spacing02),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Checkbox(
                 checked = currentSelection.size == players.size,
                 onCheckedChange = { isChecked ->
-                    currentSelection = if (isChecked) {
-                        players.map { it.id }.toSet()
-                    } else {
-                        emptySet()
-                    }
-                }
+                    currentSelection =
+                        if (isChecked) {
+                            players.map { it.id }.toSet()
+                        } else {
+                            emptySet()
+                        }
+                },
             )
             Text(
                 text = stringResource(R.string.squad_callup_select_all),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = TFMSpacing.spacing02)
+                modifier = Modifier.padding(start = TFMSpacing.spacing02),
             )
         }
 
@@ -116,12 +121,13 @@ fun SquadCallUpStep(
             showGoalKeeperBadge = true,
             selectedPlayerIds = currentSelection,
             onMultiSelectionChange = { player, isSelected ->
-                currentSelection = if (isSelected) {
-                    currentSelection + player.id
-                } else {
-                    currentSelection - player.id
-                }
-            }
+                currentSelection =
+                    if (isSelected) {
+                        currentSelection + player.id
+                    } else {
+                        currentSelection - player.id
+                    }
+            },
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
@@ -177,7 +183,7 @@ fun SquadCallUpStep(
             onDismiss = {
                 showGoalkeeperWarning = false
                 pendingNext = false
-            }
+            },
         )
     }
 }
@@ -186,7 +192,7 @@ fun SquadCallUpStep(
     name = "Pixel 7 Pro",
     device = "spec:width=1440px,height=3120px,dpi=512",
     showSystemUi = true,
-    showBackground = true
+    showBackground = true,
 )
 @Composable
 private fun SquadCallUpStepPreview() {
@@ -201,7 +207,7 @@ private fun SquadCallUpStepPreview() {
                         number = 10,
                         positions = listOf(Position.Forward, Position.Midfielder),
                         teamId = 1,
-                        isCaptain = false
+                        isCaptain = false,
                     )
                 },
             selectedPlayerIds = emptySet(),

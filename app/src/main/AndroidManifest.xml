@@ -7,8 +7,6 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -40,13 +38,33 @@
                     android:host="match" />
             </intent-filter>
 
-        </activity>
+            <!-- Custom scheme deep link for team invitations - always works -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
 
-        <service
-            android:name=".service.MatchCountdownService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="teamflowmanager"
+                    android:host="team"
+                    android:pathPrefix="/accept" />
+            </intent-filter>
+
+            <!-- HTTPS deep link for team invitations - requires assetlinks.json on server -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="https"
+                    android:host="teamflowmanager.app"
+                    android:pathPrefix="/team/accept" />
+            </intent-filter>
+
+        </activity>
 
         <provider
             android:name="androidx.core.content.FileProvider"

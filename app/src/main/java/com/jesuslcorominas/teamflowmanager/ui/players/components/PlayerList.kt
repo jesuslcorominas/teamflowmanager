@@ -28,7 +28,7 @@ fun PlayerList(
     onEditClick: ((Player) -> Unit)? = null,
     onDeleteClick: ((Player) -> Unit)? = null,
     onMultiSelectionChange: ((Player, Boolean) -> Unit)? = null,
-    onSingleSelectionChange: ((Player) -> Unit)? = null
+    onSingleSelectionChange: ((Player) -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -49,8 +49,14 @@ fun PlayerList(
                 showPositions = showPositions,
                 onEditClick = onEditClick?.let { { onEditClick(player) } },
                 onDeleteClick = onDeleteClick?.let { { onDeleteClick(player) } },
-                onMultiSelectionChange = onMultiSelectionChange?.let { { isSelected -> onMultiSelectionChange(player, isSelected) } },
-                onSingleSelectionChange = onSingleSelectionChange?.let { { onSingleSelectionChange(player) } }
+                onMultiSelectionChange =
+                    onMultiSelectionChange?.let {
+                        {
+                                isSelected ->
+                            onMultiSelectionChange(player, isSelected)
+                        }
+                    },
+                onSingleSelectionChange = onSingleSelectionChange?.let { { onSingleSelectionChange(player) } },
             )
         }
     }
@@ -65,14 +71,18 @@ private fun PlayerListPreview() {
             players =
                 listOf(
                     Player(1, "John", "Doe", 3, listOf(Position.Forward), isCaptain = true, teamId = 1),
-                    Player(2, "Jane", "Smith", 2, listOf(Position.Midfielder, Position.Defender), isCaptain = false, teamId = 1),
+                    Player(
+                        2,
+                        "Jane",
+                        "Smith",
+                        2,
+                        listOf(Position.Midfielder, Position.Defender),
+                        isCaptain = false,
+                        teamId = 1,
+                    ),
                     Player(3, "Bob", "Johnson", 17, listOf(Position.Goalkeeper), isCaptain = false, teamId = 1),
                 ),
-            onSingleSelectionChange = { }
+            onSingleSelectionChange = { },
         )
     }
 }
-
-
-
-

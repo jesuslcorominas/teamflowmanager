@@ -8,7 +8,8 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-val pdfExporterModule = module {
-    single { PdfExporterImpl(androidContext()) } bind PdfExporter::class
-    single { MatchReportPdfExporterImpl(androidContext()) } bind MatchReportPdfExporter::class
-}
+val pdfExporterModule =
+    module {
+        single { PdfExporterImpl(androidContext()) } bind PdfExporter::class
+        single { MatchReportPdfExporterImpl(androidContext()) } bind MatchReportPdfExporter::class
+    }

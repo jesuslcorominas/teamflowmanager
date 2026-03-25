@@ -12,8 +12,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
@@ -24,6 +28,7 @@ import com.jesuslcorominas.teamflowmanager.ui.players.PlayersScreen
 import com.jesuslcorominas.teamflowmanager.ui.players.wizard.PlayerWizardScreen
 import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
+import com.jesuslcorominas.teamflowmanager.ui.team.TeamListScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 
 @Composable
@@ -31,7 +36,7 @@ fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     onTitleChange: (String?) -> Unit,
-    currentBackHandler: BackHandlerController
+    currentBackHandler: BackHandlerController,
 ) {
     NavHost(
         modifier = modifier,
@@ -45,8 +50,18 @@ fun Navigation(
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
+                onNavigateToClubSelection = {
+                    navController.navigate(Route.ClubSelection.createRoute()) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
                 onNavigateToCreateTeam = {
                     navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeamList = {
+                    navController.navigate(Route.TeamList.createRoute()) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
@@ -64,29 +79,75 @@ fun Navigation(
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.Login.createRoute()) { inclusive = true }
                     }
-                }
+                },
+            )
+        }
+
+        composable(Route.ClubSelection.createRoute()) {
+            ClubSelectionScreen(
+                onCreateClub = {
+                    navController.navigate(Route.CreateClub.createRoute())
+                },
+                onJoinClub = {
+                    navController.navigate(Route.JoinClub.createRoute())
+                },
+            )
+        }
+
+        composable(Route.CreateClub.createRoute()) {
+            CreateClubScreen(
+                onClubCreated = {
+                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
+                        popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(Route.JoinClub.createRoute()) {
+            JoinClubScreen(
+                onClubJoined = {
+                    navController.navigate(Route.Splash.createRoute()) {
+                        popUpTo(Route.ClubSelection.createRoute()) { inclusive = true }
+                    }
+                },
             )
         }
 
         composable(
             route = Route.Team.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.Team.ARG_MODE) {
-                    type = NavType.StringType
-                }
-            )
+            arguments =
+                listOf(
+                    navArgument(Route.Team.ARG_MODE) {
+                        type = NavType.StringType
+                    },
+                ),
         ) { backStackEntry ->
             val mode = backStackEntry.arguments?.getString(Route.Team.ARG_MODE) ?: ""
 
             TeamScreen(
+                mode = mode,
                 onNavigateToMatches = { _ ->
                     navController.navigate(Route.Matches.createRoute()) {
                         popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
                     }
                 },
                 onNavigateBackRequest = { navController.popBackStack() },
+                onNavigateToTeamList = {
+                    navController.navigate(Route.TeamList.createRoute()) {
+                        popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
+                    }
+                },
                 currentBackHandler = if (mode == Route.Team.MODE_EDIT) currentBackHandler else null,
             )
+        }
+
+        composable(Route.TeamList.createRoute()) {
+            TeamListScreen()
+        }
+
+        composable(Route.ClubMembers.createRoute()) {
+            ClubMembersScreen()
         }
 
         composable(Route.Players.createRoute()) {
@@ -96,20 +157,23 @@ fun Navigation(
                 },
                 onNavigateToEditPlayer = { playerId ->
                     navController.navigate(Route.PlayerWizard.createRoute(playerId))
-                }
+                },
             )
         }
 
         composable(
             route = Route.PlayerWizard.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.PlayerWizard.ARG_PLAYER_ID) {
-                    type = NavType.LongType
-                }
-            )
-        ) {
+            arguments =
+                listOf(
+                    navArgument(Route.PlayerWizard.ARG_PLAYER_ID) {
+                        type = NavType.LongType
+                    },
+                ),
+        ) { backStackEntry ->
+            val playerId = backStackEntry.arguments?.getLong(Route.PlayerWizard.ARG_PLAYER_ID) ?: 0L
             PlayerWizardScreen(
-                onNavigateBack = { navController.popBackStack() }
+                playerId = playerId,
+                onNavigateBack = { navController.popBackStack() },
             )
         }
 
@@ -141,31 +205,39 @@ fun Navigation(
 
         composable(
             route = Route.CreateMatch.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.CreateMatch.ARG_MATCH_ID) {
-                    type = NavType.LongType
-                    defaultValue = 0L
-                }
-            )
-        ) {
+            arguments =
+                listOf(
+                    navArgument(Route.CreateMatch.ARG_MATCH_ID) {
+                        type = NavType.LongType
+                        defaultValue = 0L
+                    },
+                ),
+        ) { backStackEntry ->
+            val matchId = backStackEntry.arguments?.getLong(Route.CreateMatch.ARG_MATCH_ID) ?: 0L
             MatchCreationWizardScreen(
+                matchId = matchId,
                 onNavigateBack = { navController.popBackStack() },
-                currentBackHandler = currentBackHandler
+                currentBackHandler = currentBackHandler,
             )
         }
 
         composable(
             route = Route.Match.FULL_ROUTE,
-            arguments = listOf(
-                navArgument(Route.Match.ARG_MATCH_ID) { type = NavType.LongType },
-            ),
-            deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = "teamflowmanager://match/{${Route.Match.ARG_MATCH_ID}}"
-                }
-            )
-        ) {
-            MatchScreen(onTitleChange = onTitleChange)
+            arguments =
+                listOf(
+                    navArgument(Route.Match.ARG_MATCH_ID) { type = NavType.LongType },
+                ),
+            deepLinks =
+                listOf(
+                    navDeepLink {
+                        uriPattern = "teamflowmanager://match/{${Route.Match.ARG_MATCH_ID}}"
+                    },
+                ),
+        ) { backStackEntry ->
+            val matchId =
+                backStackEntry.arguments?.getLong(Route.Match.ARG_MATCH_ID)
+                    ?: error("matchId required")
+            MatchScreen(matchId = matchId, onTitleChange = onTitleChange)
         }
 
         composable(route = Route.Settings.createRoute()) {
@@ -174,7 +246,53 @@ fun Navigation(
                     navController.navigate(Route.Login.createRoute()) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+            )
+        }
+
+        composable(
+            route = Route.AcceptTeamInvitation.FULL_ROUTE,
+            arguments =
+                listOf(
+                    navArgument(Route.AcceptTeamInvitation.ARG_TEAM_ID) {
+                        type = NavType.StringType
+                        nullable = false
+                    },
+                ),
+            deepLinks =
+                listOf(
+                    // Custom scheme deep link - always works
+                    navDeepLink {
+                        uriPattern = "teamflowmanager://team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                    },
+                    // HTTPS deep link - requires server configuration
+                    navDeepLink {
+                        uriPattern = "https://teamflowmanager.app/team/accept?teamId={${Route.AcceptTeamInvitation.ARG_TEAM_ID}}"
+                    },
+                ),
+        ) { backStackEntry ->
+            val teamId = backStackEntry.arguments?.getString(Route.AcceptTeamInvitation.ARG_TEAM_ID)
+            AcceptTeamInvitationScreen(
+                teamId = teamId,
+                onNavigateToLogin = { tid ->
+                    // TODO: Implement proper state saving mechanism
+                    // Current limitation: teamId will be lost after login
+                    // Consider using SharedPreferences to persist the teamId
+                    // so it can be retrieved after login is complete
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeam = {
+                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_VIEW)) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToTeams = {
+                    navController.navigate(Route.TeamList.createRoute()) {
+                        popUpTo(Route.AcceptTeamInvitation.createRoute()) { inclusive = true }
+                    }
+                },
             )
         }
     }
@@ -191,12 +309,19 @@ fun Navigation(
         when (route) {
             Route.Login -> activity?.finish()
             Route.Migration -> activity?.finish()
-            Route.Matches -> if (searchState.isActive) {
-                searchState.clear()
-                searchState.isActive = false
-            } else {
-                activity?.finish()
-            }
+            Route.ClubSelection -> activity?.finish()
+            Route.TeamList -> activity?.finish()
+            Route.CreateClub ->
+                navController.navigate(Route.ClubSelection.createRoute()) {
+                    popUpTo(Route.CreateClub.createRoute()) { inclusive = true }
+                }
+            Route.Matches ->
+                if (searchState.isActive) {
+                    searchState.clear()
+                    searchState.isActive = false
+                } else {
+                    activity?.finish()
+                }
 
             Route.Team -> {
                 val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)

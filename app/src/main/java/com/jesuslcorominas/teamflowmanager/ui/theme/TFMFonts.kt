@@ -28,15 +28,16 @@ val PublicSansFontFamily =
             .Font(publicSans, provider, FontWeight.Bold),
     )
 
-val BebasNeueFontFamily = FontFamily(
-    androidx.compose.ui.text.googlefonts
-        .Font(bebasNeue, provider, FontWeight.Light),
-    androidx.compose.ui.text.googlefonts
-        .Font(bebasNeue, provider, FontWeight.Normal),
-    androidx.compose.ui.text.googlefonts
-        .Font(bebasNeue, provider, FontWeight.Medium),
-    androidx.compose.ui.text.googlefonts
-        .Font(bebasNeue, provider, FontWeight.SemiBold),
-    androidx.compose.ui.text.googlefonts
-        .Font(bebasNeue, provider, FontWeight.Bold),
-)
+val BebasNeueFontFamily =
+    FontFamily(
+        androidx.compose.ui.text.googlefonts
+            .Font(bebasNeue, provider, FontWeight.Light),
+        androidx.compose.ui.text.googlefonts
+            .Font(bebasNeue, provider, FontWeight.Normal),
+        androidx.compose.ui.text.googlefonts
+            .Font(bebasNeue, provider, FontWeight.Medium),
+        androidx.compose.ui.text.googlefonts
+            .Font(bebasNeue, provider, FontWeight.SemiBold),
+        androidx.compose.ui.text.googlefonts
+            .Font(bebasNeue, provider, FontWeight.Bold),
+    )

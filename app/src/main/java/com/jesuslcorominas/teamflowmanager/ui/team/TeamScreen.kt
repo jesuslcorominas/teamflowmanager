@@ -26,16 +26,19 @@ import com.jesuslcorominas.teamflowmanager.ui.team.components.TeamForm
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun TeamScreen(
+    mode: String,
     onNavigateToMatches: (String) -> Unit,
     onNavigateBackRequest: () -> Unit,
+    onNavigateToTeamList: (() -> Unit)? = null,
     currentBackHandler: BackHandlerController?,
-    viewModel: TeamViewModel = koinViewModel(),
+    viewModel: TeamViewModel = koinViewModel(parameters = { parametersOf(mode) }),
 ) {
     TrackScreenView(screenName = ScreenName.TEAM, screenClass = "TeamScreen")
-    
+
     val uiState by viewModel.uiState.collectAsState()
     val showExitDialog by viewModel.showExitDialog.collectAsState()
     val showTeamTypeChangeError by viewModel.showTeamTypeChangeError.collectAsState()
@@ -43,9 +46,10 @@ fun TeamScreen(
 
     val hasUnsavedChanges = remember { mutableStateOf(true) }
 
-    val latestAction = rememberUpdatedState {
-        viewModel.requestBack(onNavigateBackRequest)
-    }
+    val latestAction =
+        rememberUpdatedState {
+            viewModel.requestBack(onNavigateBackRequest)
+        }
 
     currentBackHandler?.let {
         DisposableEffect(currentBackHandler, hasUnsavedChanges.value) {
@@ -73,29 +77,53 @@ fun TeamScreen(
     ) {
         when (val state = uiState) {
             is TeamUiState.Loading -> Loading()
-            is TeamUiState.Success -> if (viewModel.isEditMode) {
-                TeamForm(
-                    team = state.team, 
-                    players = state.players,
-                    onShowTeamTypeChangeError = { viewModel.showTeamTypeChangeError() }
-                ) { team, captainId ->
-                    viewModel.updateTeam(team, captainId, onNavigateBackRequest)
+            is TeamUiState.Success ->
+                if (viewModel.isEditMode) {
+                    TeamForm(
+                        team = state.team,
+                        players = state.players,
+                        onShowTeamTypeChangeError = { viewModel.showTeamTypeChangeError() },
+                    ) { team, captainId ->
+                        viewModel.updateTeam(team, captainId, onNavigateBackRequest)
+                    }
+                } else {
+                    TeamDetailContent(
+                        team = state.team,
+                        captain = state.players.firstOrNull { it.isCaptain },
+                    )
                 }
-            } else {
-                TeamDetailContent(
-                    team = state.team,
-                    captain = state.players.firstOrNull { it.isCaptain }
-                )
-            }
 
             is TeamUiState.NoTeam -> {
-                TeamForm(
-                    onSave = { team, _ ->
-                        viewModel.createTeam(team) {
-                            onNavigateToMatches(team.name)
-                        }
-                    },
-                )
+                if (state.clubId != null && !state.isPresident) {
+                    // User has club membership but is not a President
+                    AlertDialog(
+                        title = { Text(stringResource(R.string.team_creation_permission_error_title)) },
+                        text = { Text(stringResource(R.string.team_creation_permission_error_message)) },
+                        onDismissRequest = { onNavigateBackRequest() },
+                        confirmButton = {
+                            TextButton(onClick = { onNavigateBackRequest() }) {
+                                Text(stringResource(R.string.close))
+                            }
+                        },
+                    )
+                } else {
+                    TeamForm(
+                        clubId = state.clubId,
+                        clubFirestoreId = state.clubFirestoreId,
+                        isPresident = state.isPresident,
+                        onSave = { team, _ ->
+                            viewModel.createTeam(team) {
+                                // If user is a President (based on role), go to TeamList
+                                // Otherwise, go to Matches (normal flow for personal teams)
+                                if (state.isPresident && onNavigateToTeamList != null) {
+                                    onNavigateToTeamList()
+                                } else {
+                                    onNavigateToMatches(team.name)
+                                }
+                            }
+                        },
+                    )
+                }
             }
         }
     }
@@ -114,10 +142,10 @@ fun TeamScreen(
                     Text(stringResource(R.string.cancel))
                 }
             },
-            text = { Text(stringResource(R.string.discard_message)) }
+            text = { Text(stringResource(R.string.discard_message)) },
         )
     }
-    
+
     if (showTeamTypeChangeError) {
         AlertDialog(
             title = { Text(stringResource(R.string.team_type_change_not_allowed)) },
@@ -127,10 +155,10 @@ fun TeamScreen(
                 TextButton(onClick = { viewModel.dismissTeamTypeChangeError() }) {
                     Text(stringResource(R.string.close))
                 }
-            }
+            },
         )
     }
-    
+
     if (showSaveError) {
         AlertDialog(
             title = { Text(stringResource(R.string.save_error_title)) },
@@ -140,7 +168,7 @@ fun TeamScreen(
                 TextButton(onClick = { viewModel.dismissSaveError() }) {
                     Text(stringResource(R.string.close))
                 }
-            }
+            },
         )
     }
 }

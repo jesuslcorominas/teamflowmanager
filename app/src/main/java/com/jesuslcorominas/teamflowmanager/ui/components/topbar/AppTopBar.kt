@@ -31,10 +31,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.jesuslcorominas.teamflowmanager.R
-import com.jesuslcorominas.teamflowmanager.domain.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.main.search.SearchState
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
+import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,14 +45,14 @@ fun AppTopBar(
     title: String?,
     searchPlaceholder: String,
     backHandlerController: BackHandlerController,
-    navController: NavHostController
+    navController: NavHostController,
 ) {
     val searchState = LocalSearchState.current
 
     if (uiConfig?.showTopBar == true) {
         Crossfade(
             targetState = searchState.isActive,
-            animationSpec = tween(durationMillis = 300)
+            animationSpec = tween(durationMillis = 300),
         ) { isSearchActive ->
             if (uiConfig.hasSearchBar && isSearchActive) {
                 SearchTopBar(modifier = modifier, searchPlaceholder)
@@ -62,7 +62,7 @@ fun AppTopBar(
                     uiConfig = uiConfig,
                     title = title,
                     backHandlerController = backHandlerController,
-                    navController = navController
+                    navController = navController,
                 )
             }
         }
@@ -90,7 +90,7 @@ fun SearchTopBar(
                         onClick = {
                             searchState.clear()
                             searchState.isActive = false
-                        }
+                        },
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -103,27 +103,29 @@ fun SearchTopBar(
                         IconButton(onClick = { searchState.clear() }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.clear)
+                                contentDescription = stringResource(R.string.clear),
                             )
                         }
                     }
                 },
                 shape = RoundedCornerShape(48.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 16.dp)
-                    .background(Color.LightGray.copy(alpha = 0.3F), RoundedCornerShape(48.dp)),
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    errorIndicatorColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    cursorColor = MaterialTheme.colorScheme.primary
-                )
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(end = 16.dp)
+                        .background(Color.LightGray.copy(alpha = 0.3F), RoundedCornerShape(48.dp)),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                    ),
             )
-        }
+        },
     )
 }
 
@@ -134,7 +136,7 @@ fun DefaultTopBar(
     uiConfig: Route.UiConfig,
     title: String?,
     backHandlerController: BackHandlerController,
-    navController: NavHostController
+    navController: NavHostController,
 ) {
     val searchState = LocalSearchState.current
 
@@ -154,7 +156,7 @@ fun DefaultTopBar(
                     onClick = {
                         backHandlerController.onBackRequested?.invoke()
                             ?: navController.popBackStack()
-                    }
+                    },
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -166,21 +168,21 @@ fun DefaultTopBar(
         actions = {
             if (uiConfig.hasSearchBar && !searchState.isActive) {
                 IconButton(
-                    onClick = { searchState.isActive = true }
+                    onClick = { searchState.isActive = true },
                 ) {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = stringResource(R.string.search)
+                        contentDescription = stringResource(R.string.search),
                     )
                 }
             }
-            if (uiConfig.showBottomBar) {
+            if (uiConfig.showSettingsButton) {
                 IconButton(
-                    onClick = { navController.navigate(Route.Settings.createRoute()) }
+                    onClick = { navController.navigate(Route.Settings.createRoute()) },
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = stringResource(R.string.settings)
+                        contentDescription = stringResource(R.string.settings),
                     )
                 }
             }
@@ -196,7 +198,7 @@ private fun SearchTopBarPreview() {
 
         CompositionLocalProvider(LocalSearchState provides dummySearchState) {
             SearchTopBar(
-                placeholder = "Busca por rival o ubicación"
+                placeholder = "Busca por rival o ubicación",
             )
         }
     }

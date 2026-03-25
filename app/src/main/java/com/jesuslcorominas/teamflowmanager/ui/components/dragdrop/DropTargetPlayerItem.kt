@@ -76,22 +76,24 @@ fun DropTargetPlayerItem(
     val animatedBorderAlpha by infiniteTransition.animateFloat(
         initialValue = 0.5f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "borderAlpha"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(durationMillis = 500, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "borderAlpha",
     )
 
     // Scale animation for hover
     val animatedScale by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 1.03f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 300, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "hoverScale"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(durationMillis = 300, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "hoverScale",
     )
 
     // Only use animated values when showing drop indication
@@ -99,25 +101,26 @@ fun DropTargetPlayerItem(
     val scale = if (showDropIndication) animatedScale else 1f
 
     Box(
-        modifier = Modifier
-            .onGloballyPositioned { coordinates ->
-                bounds = coordinates.boundsInRoot()
-            }
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .then(
-                if (showDropIndication) {
-                    Modifier.border(
-                        width = 3.dp,
-                        color = Primary.copy(alpha = borderAlpha),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                } else {
-                    Modifier
+        modifier =
+            Modifier
+                .onGloballyPositioned { coordinates ->
+                    bounds = coordinates.boundsInRoot()
                 }
-            )
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .then(
+                    if (showDropIndication) {
+                        Modifier.border(
+                            width = 3.dp,
+                            color = Primary.copy(alpha = borderAlpha),
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                    } else {
+                        Modifier
+                    },
+                ),
     ) {
         content()
     }

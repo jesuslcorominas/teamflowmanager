@@ -22,47 +22,55 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.ui.components.icon.FlipIcon
 
 @Composable
-fun BottomNavItem(iconVector: ImageVector, labelResId: Int, isSelected: Boolean) {
+fun BottomNavItem(
+    iconVector: ImageVector,
+    labelResId: Int,
+    isSelected: Boolean,
+) {
     Box(
         contentAlignment = Alignment.Center,
     ) {
         val animatedHeight by animateDpAsState(
             targetValue = if (isSelected) 48.dp else 40.dp,
-            label = ""
+            label = "",
         )
         val animatedAlpha by animateFloatAsState(
             targetValue = if (isSelected) 1f else .5f,
-            label = ""
+            label = "",
         )
         val animatedIconSize by animateDpAsState(
             targetValue = if (isSelected) 24.dp else 20.dp,
-            animationSpec = spring(
-                stiffness = Spring.StiffnessLow,
-                dampingRatio = Spring.DampingRatioMediumBouncy
-            ), label = ""
+            animationSpec =
+                spring(
+                    stiffness = Spring.StiffnessLow,
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                ),
+            label = "",
         )
         Column(
-            modifier = Modifier
-                .height(animatedHeight),
+            modifier =
+                Modifier
+                    .height(animatedHeight),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             FlipIcon(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .alpha(animatedAlpha)
-                    .size(animatedIconSize),
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .alpha(animatedAlpha)
+                        .size(animatedIconSize),
                 isActive = isSelected,
                 activeIcon = iconVector,
                 inactiveIcon = iconVector,
-                contentDescription = stringResource(id = labelResId)
+                contentDescription = stringResource(id = labelResId),
             )
 
             if (isSelected) {
                 Text(
                     text = stringResource(id = labelResId),
                     maxLines = 1,
-                    style = MaterialTheme.typography.labelSmall
+                    style = MaterialTheme.typography.labelSmall,
                 )
             }
         }

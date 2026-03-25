@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 enum class TitleSize {
     SMALL,
     MEDIUM,
-    LARGE
+    LARGE,
 }
 
 @Composable
@@ -31,7 +31,7 @@ fun AppTitle(
     size: TitleSize = TitleSize.MEDIUM,
     color: Color = MaterialTheme.colorScheme.onSurface,
     startIcon: ImageVector? = null,
-    endIcon: ImageVector? = null
+    endIcon: ImageVector? = null,
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         startIcon?.let {
@@ -39,7 +39,7 @@ fun AppTitle(
                 modifier = Modifier.size(size.toIconSize()),
                 imageVector = startIcon,
                 contentDescription = "",
-                tint = color
+                tint = color,
             )
         }
 
@@ -50,33 +50,32 @@ fun AppTitle(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             fontWeight = FontWeight.Bold,
-
-            )
+        )
         endIcon?.let {
             Icon(
                 imageVector = endIcon,
                 modifier = Modifier.size(size.toIconSize()),
                 contentDescription = "",
-                tint = color
+                tint = color,
             )
         }
-
     }
 }
 
-private fun TitleSize.toIconSize() = when (this) {
-    TitleSize.LARGE -> 32.dp
-    TitleSize.MEDIUM -> 24.dp
-    TitleSize.SMALL -> 20.dp
-}
+private fun TitleSize.toIconSize() =
+    when (this) {
+        TitleSize.LARGE -> 32.dp
+        TitleSize.MEDIUM -> 24.dp
+        TitleSize.SMALL -> 20.dp
+    }
 
 @Composable
-private fun TitleSize.toTextStyle() = when (this) {
-    TitleSize.LARGE -> MaterialTheme.typography.titleLarge
-    TitleSize.MEDIUM -> MaterialTheme.typography.titleMedium
-    TitleSize.SMALL -> MaterialTheme.typography.titleSmall
-}
-
+private fun TitleSize.toTextStyle() =
+    when (this) {
+        TitleSize.LARGE -> MaterialTheme.typography.titleLarge
+        TitleSize.MEDIUM -> MaterialTheme.typography.titleMedium
+        TitleSize.SMALL -> MaterialTheme.typography.titleSmall
+    }
 
 @Preview(showBackground = true, widthDp = 512, heightDp = 1200, device = Devices.NEXUS_10)
 @Composable

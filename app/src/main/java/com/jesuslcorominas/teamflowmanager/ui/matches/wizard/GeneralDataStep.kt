@@ -84,26 +84,28 @@ fun GeneralDataStep(
 
     val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
 
-    val formattedDate = remember(selectedDateMillis) {
-        if (selectedDateMillis == 0L) "" else dateFormatter.format(Date(selectedDateMillis))
-    }
+    val formattedDate =
+        remember(selectedDateMillis) {
+            if (selectedDateMillis == 0L) "" else dateFormatter.format(Date(selectedDateMillis))
+        }
 
-    val formattedTime = remember(selectedTimeMillis) {
-        selectedTimeMillis?.let {
-            val hours = ((it / (60 * 60 * 1000)) % 24).toInt()
-            val minutes = ((it / (60 * 1000)) % 60).toInt()
-            String.format(Locale.getDefault(), "%02d:%02d", hours, minutes)
-        } ?: ""
-    }
+    val formattedTime =
+        remember(selectedTimeMillis) {
+            selectedTimeMillis?.let {
+                val hours = ((it / (60 * 60 * 1000)) % 24).toInt()
+                val minutes = ((it / (60 * 1000)) % 60).toInt()
+                String.format(Locale.getDefault(), "%02d:%02d", hours, minutes)
+            } ?: ""
+        }
 
     Column(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
             text = stringResource(R.string.wizard_step_general_data),
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
@@ -117,16 +119,21 @@ fun GeneralDataStep(
             },
             label = { Text(stringResource(R.string.opponent)) },
             isError = opponentError != null,
-            supportingText = if (opponentError != null) {
-                { Text(opponentError!!) }
-            } else null,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next,
-                capitalization = KeyboardCapitalization.Words
-            ),
-            keyboardActions = KeyboardActions(onNext = {
-                focusManager.moveFocus(FocusDirection.Down)
-            }),
+            supportingText =
+                if (opponentError != null) {
+                    { Text(opponentError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
+            keyboardActions =
+                KeyboardActions(onNext = {
+                    focusManager.moveFocus(FocusDirection.Down)
+                }),
         )
 
         AppTextField(
@@ -138,13 +145,17 @@ fun GeneralDataStep(
             },
             label = { Text(stringResource(R.string.location)) },
             isError = locationError != null,
-            supportingText = if (locationError != null) {
-                { Text(locationError!!) }
-            } else null,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                capitalization = KeyboardCapitalization.Words
-            ),
+            supportingText =
+                if (locationError != null) {
+                    { Text(locationError!!) }
+                } else {
+                    null
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
             keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
         )
 
@@ -155,25 +166,29 @@ fun GeneralDataStep(
             label = { Text(stringResource(R.string.match_date)) },
             readOnly = true,
             isError = dateError != null,
-            supportingText = if (dateError != null) {
-                { Text(dateError!!) }
-            } else null,
+            supportingText =
+                if (dateError != null) {
+                    { Text(dateError!!) }
+                } else {
+                    null
+                },
             trailingIcon = {
                 IconButton(onClick = { showDatePicker = true }) {
                     Icon(Icons.Default.DateRange, contentDescription = null)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            interactionSource = remember { MutableInteractionSource() }
-                .also { interactionSource ->
-                    androidx.compose.runtime.LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                showDatePicker = true
+            interactionSource =
+                remember { MutableInteractionSource() }
+                    .also { interactionSource ->
+                        androidx.compose.runtime.LaunchedEffect(interactionSource) {
+                            interactionSource.interactions.collect {
+                                if (it is PressInteraction.Release) {
+                                    showDatePicker = true
+                                }
                             }
                         }
-                    }
-                }
+                    },
         )
 
         // Time Picker
@@ -183,73 +198,79 @@ fun GeneralDataStep(
             label = { Text(stringResource(R.string.match_time)) },
             readOnly = true,
             isError = timeError != null,
-            supportingText = if (timeError != null) {
-                { Text(timeError!!) }
-            } else null,
+            supportingText =
+                if (timeError != null) {
+                    { Text(timeError!!) }
+                } else {
+                    null
+                },
             trailingIcon = {
                 IconButton(onClick = { showTimePicker = true }) {
                     Icon(Icons.Default.AccessTime, contentDescription = null)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            interactionSource = remember { MutableInteractionSource() }
-                .also { interactionSource ->
-                    androidx.compose.runtime.LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                showTimePicker = true
+            interactionSource =
+                remember { MutableInteractionSource() }
+                    .also { interactionSource ->
+                        androidx.compose.runtime.LaunchedEffect(interactionSource) {
+                            interactionSource.interactions.collect {
+                                if (it is PressInteraction.Release) {
+                                    showTimePicker = true
+                                }
                             }
                         }
-                    }
-                }
+                    },
         )
 
         // Number of Periods- Radio Buttons
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = stringResource(R.string.number_of_periods),
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 8.dp),
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 // 2 Halves
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { numberOfPeriods = 2 }
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .clickable { numberOfPeriods = 2 },
                 ) {
                     RadioButton(
                         selected = numberOfPeriods == 2,
                         onClick = {
                             numberOfPeriods = 2
-                        }
+                        },
                     )
                     Text(
                         text = stringResource(R.string.two_halves),
-                        modifier = Modifier.padding(start = 8.dp)
+                        modifier = Modifier.padding(start = 8.dp),
                     )
                 }
 
                 // 4 Quarters
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { numberOfPeriods = 4 }
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .clickable { numberOfPeriods = 4 },
                 ) {
                     RadioButton(
                         selected = numberOfPeriods == 4,
-                        onClick = { numberOfPeriods = 4 }
+                        onClick = { numberOfPeriods = 4 },
                     )
                     Text(
                         text = stringResource(R.string.four_quarters),
-                        modifier = Modifier.padding(start = 8.dp)
+                        modifier = Modifier.padding(start = 8.dp),
                     )
                 }
             }
@@ -299,7 +320,7 @@ fun GeneralDataStep(
                             location.trimEnd(),
                             selectedDateMillis,
                             selectedTimeMillis,
-                            numberOfPeriods
+                            numberOfPeriods,
                         )
                         onNext()
                     }
@@ -314,7 +335,9 @@ fun GeneralDataStep(
     // Date Picker Dialog
     if (showDatePicker) {
         val datePickerState =
-            rememberDatePickerState(initialSelectedDateMillis = if (selectedDateMillis == 0L) System.currentTimeMillis() else selectedDateMillis)
+            rememberDatePickerState(
+                initialSelectedDateMillis = if (selectedDateMillis == 0L) System.currentTimeMillis() else selectedDateMillis,
+            )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
@@ -325,7 +348,7 @@ fun GeneralDataStep(
                             dateError = null
                         }
                         showDatePicker = false
-                    }
+                    },
                 ) {
                     Text(stringResource(R.string.save))
                 }
@@ -334,7 +357,7 @@ fun GeneralDataStep(
                 TextButton(onClick = { showDatePicker = false }) {
                     Text(stringResource(R.string.cancel))
                 }
-            }
+            },
         ) {
             DatePicker(state = datePickerState)
         }
@@ -342,16 +365,19 @@ fun GeneralDataStep(
 
     // Time Picker Dialog
     if (showTimePicker) {
-        val initialHour = selectedTimeMillis?.let {
-            ((it / (60 * 60 * 1000)) % 24).toInt()
-        } ?: 0
-        val initialMinute = selectedTimeMillis?.let {
-            ((it / (60 * 1000)) % 60).toInt()
-        } ?: 0
-        val timePickerState = rememberTimePickerState(
-            initialHour = initialHour,
-            initialMinute = initialMinute
-        )
+        val initialHour =
+            selectedTimeMillis?.let {
+                ((it / (60 * 60 * 1000)) % 24).toInt()
+            } ?: 0
+        val initialMinute =
+            selectedTimeMillis?.let {
+                ((it / (60 * 1000)) % 60).toInt()
+            } ?: 0
+        val timePickerState =
+            rememberTimePickerState(
+                initialHour = initialHour,
+                initialMinute = initialMinute,
+            )
 
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
@@ -359,19 +385,20 @@ fun GeneralDataStep(
             text = {
                 TimePicker(
                     state = timePickerState,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp),
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         // Store only time of day as milliseconds from midnight
-                        val timeInMillis = (timePickerState.hour * 60 * 60 * 1000) +
-                            (timePickerState.minute * 60 * 1000)
+                        val timeInMillis =
+                            (timePickerState.hour * 60 * 60 * 1000) +
+                                (timePickerState.minute * 60 * 1000)
                         selectedTimeMillis = timeInMillis.toLong()
                         timeError = null
                         showTimePicker = false
-                    }
+                    },
                 ) {
                     Text(stringResource(R.string.save))
                 }
@@ -380,7 +407,7 @@ fun GeneralDataStep(
                 TextButton(onClick = { showTimePicker = false }) {
                     Text(stringResource(R.string.cancel))
                 }
-            }
+            },
         )
     }
 }

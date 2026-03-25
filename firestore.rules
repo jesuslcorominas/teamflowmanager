@@ -1,0 +1,185 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =======================================================================
+    // HELPER FUNCTIONS
+    // =======================================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getClub(clubId) {
+      return get(/databases/$(database)/documents/clubs/$(clubId));
+    }
+
+    function getTeam(teamId) {
+      return get(/databases/$(database)/documents/teams/$(teamId));
+    }
+
+    function userIsTeamOwner(teamId) {
+      return isAuthenticated() && getTeam(teamId).data.assignedCoachId == request.auth.uid;
+    }
+
+    function isClubOwner(clubId) {
+      return isAuthenticated() && getClub(clubId).data.ownerId == request.auth.uid;
+    }
+
+    function getTeamClubId(teamId) {
+      let teamData = getTeam(teamId).data;
+      return ('clubId' in teamData) ? teamData.clubId : null;
+    }
+
+    function isPresidenteOfClub(clubId) {
+      let memberPath = /databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId);
+      return clubId != null &&
+             exists(memberPath) &&
+             ('Presidente' in get(memberPath).data.roles);
+    }
+
+    // =======================================================================
+    // CLUBS AND CLUB MEMBERS
+    // =======================================================================
+
+    match /clubs/{clubId} {
+      allow read: if isAuthenticated();
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.ownerId == request.auth.uid;
+
+      allow update, delete: if isAuthenticated() &&
+        resource.data.ownerId == request.auth.uid;
+    }
+
+    match /clubMembers/{memberId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isClubOwner(resource.data.clubId)
+      );
+
+      allow create: if isAuthenticated() && (
+        isClubOwner(request.resource.data.clubId) || (
+          request.resource.data.userId == request.auth.uid &&
+          memberId == request.auth.uid + '_' + request.resource.data.clubId &&
+          exists(/databases/$(database)/documents/clubs/$(request.resource.data.clubId))
+        )
+      );
+
+      allow update: if isAuthenticated() && (
+        isClubOwner(resource.data.clubId) || (
+          isPresidenteOfClub(resource.data.clubId) &&
+          resource.data.userId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['roles'])
+        )
+      );
+
+      allow delete: if isAuthenticated() && isClubOwner(resource.data.clubId);
+    }
+
+    // =======================================================================
+    // TEAMS
+    // =======================================================================
+
+    match /teams/{teamId} {
+      allow read: if isAuthenticated();
+
+      allow create: if isAuthenticated() && (
+        request.resource.data.assignedCoachId == request.auth.uid || (
+          'clubId' in request.resource.data &&
+          request.resource.data.clubId != null &&
+          isPresidenteOfClub(request.resource.data.clubId)
+        )
+      );
+
+      allow update: if isAuthenticated() && (
+        resource.data.assignedCoachId == request.auth.uid || (
+          getTeamClubId(teamId) != null &&
+          isPresidenteOfClub(getTeamClubId(teamId)) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['assignedCoachId'])
+        )
+      );
+
+      allow delete: if isAuthenticated() &&
+        resource.data.assignedCoachId == request.auth.uid;
+    }
+
+    // =======================================================================
+    // PLAYERS AND MATCHES (Team-based permissions)
+    // =======================================================================
+
+    match /players/{playerId} {
+      allow read: if isAuthenticated();
+      allow create, update: if userIsTeamOwner(request.resource.data.teamId);
+      allow delete: if userIsTeamOwner(resource.data.teamId);
+    }
+
+    match /matches/{matchId} {
+      allow read: if isAuthenticated();
+      allow create, update: if userIsTeamOwner(request.resource.data.teamId);
+      allow delete: if userIsTeamOwner(resource.data.teamId);
+    }
+
+    // =======================================================================
+    // MATCH OPERATIONS AND STATS
+    // =======================================================================
+
+    match /matchOperations/{operationId} {
+      allow read: if isAuthenticated();
+      allow create, update: if userIsTeamOwner(request.resource.data.teamId);
+    }
+
+    match /goals/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if userIsTeamOwner(request.resource.data.teamId);
+    }
+
+    match /substitutions/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if userIsTeamOwner(request.resource.data.teamId);
+    }
+
+    match /playerTimeHistory/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if userIsTeamOwner(request.resource.data.teamId);
+    }
+
+    match /playerTimes/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if userIsTeamOwner(request.resource.data.teamId);
+      allow delete: if userIsTeamOwner(resource.data.teamId);
+    }
+
+    // =======================================================================
+    // SUBCOLLECTIONS
+    // =======================================================================
+
+    match /teams/{teamId}/teamStats/{statId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if userIsTeamOwner(teamId);
+    }
+
+    match /players/{playerId}/playerStats/{statId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if userIsTeamOwner(get(/databases/$(database)/documents/players/$(playerId)).data.teamId);
+    }
+
+    match /matches/{matchId}/matchStats/{statId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if userIsTeamOwner(get(/databases/$(database)/documents/matches/$(matchId)).data.teamId);
+    }
+
+    match /matches/{matchId}/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if userIsTeamOwner(get(/databases/$(database)/documents/matches/$(matchId)).data.teamId);
+    }
+
+    // =======================================================================
+    // USERS
+    // =======================================================================
+
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+  }
+}

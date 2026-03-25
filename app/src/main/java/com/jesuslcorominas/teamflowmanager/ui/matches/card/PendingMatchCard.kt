@@ -37,13 +37,15 @@ fun PendingMatchCard(
     onStart: () -> Unit,
 ) {
     AppCard(
-        modifier = Modifier
-            .then(if (!hasMatchStarted) Modifier.clickable(onClick = onStart) else Modifier)
+        modifier =
+            Modifier
+                .then(if (!hasMatchStarted) Modifier.clickable(onClick = onStart) else Modifier),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing04),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing04),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

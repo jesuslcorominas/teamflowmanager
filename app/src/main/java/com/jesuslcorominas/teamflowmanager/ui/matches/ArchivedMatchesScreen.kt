@@ -36,7 +36,7 @@ fun ArchivedMatchesScreen(
     viewModel: ArchivedMatchesViewModel = koinViewModel(),
 ) {
     TrackScreenView(screenName = ScreenName.ARCHIVED_MATCHES, screenClass = "ArchivedMatchesScreen")
-    
+
     val uiState by viewModel.uiState.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -49,7 +49,7 @@ fun ArchivedMatchesScreen(
                 ArchivedMatches(
                     matches = state.matches,
                     onNavigateToMatchSummary = onNavigateToMatchSummary,
-                    unarchiveMatch = { viewModel.unarchiveMatch(it) }
+                    unarchiveMatch = { viewModel.unarchiveMatch(it) },
                 )
             }
         }
@@ -60,7 +60,7 @@ fun ArchivedMatchesScreen(
 private fun ArchivedMatches(
     matches: List<Match>,
     onNavigateToMatchSummary: (Match) -> Unit,
-    unarchiveMatch: (Long) -> Unit
+    unarchiveMatch: (Long) -> Unit,
 ) {
     LazyColumn(
         modifier =
@@ -79,12 +79,11 @@ private fun ArchivedMatches(
     }
 }
 
-
 @Preview(
     name = "Pixel 7 Pro",
     device = "spec:width=1440px,height=3120px,dpi=512",
     showSystemUi = true,
-    showBackground = true
+    showBackground = true,
 )
 @Composable
 private fun ArchivedMatchesPreview() {
@@ -98,20 +97,21 @@ private fun ArchivedMatchesPreview() {
                 teamId = 1,
                 teamName = "Loyola D",
                 periodType = PeriodType.HALF_TIME,
-                periods = listOf(
-                    MatchPeriod(
-                        periodNumber = 1,
-                        periodDuration = PeriodType.HALF_TIME.duration,
-                        startTimeMillis = System.currentTimeMillis() - 3000000,
-                        endTimeMillis = System.currentTimeMillis() - 1500000,
+                periods =
+                    listOf(
+                        MatchPeriod(
+                            periodNumber = 1,
+                            periodDuration = PeriodType.HALF_TIME.duration,
+                            startTimeMillis = System.currentTimeMillis() - 3000000,
+                            endTimeMillis = System.currentTimeMillis() - 1500000,
+                        ),
+                        MatchPeriod(
+                            periodNumber = 2,
+                            periodDuration = PeriodType.HALF_TIME.duration,
+                            startTimeMillis = System.currentTimeMillis() - 1500000,
+                            endTimeMillis = System.currentTimeMillis(),
+                        ),
                     ),
-                    MatchPeriod(
-                        periodNumber = 2,
-                        periodDuration = PeriodType.HALF_TIME.duration,
-                        startTimeMillis = System.currentTimeMillis() - 1500000,
-                        endTimeMillis = System.currentTimeMillis(),
-                    ),
-                ),
                 squadCallUpIds = listOf(1, 2, 3, 4, 5),
                 captainId = 1,
                 startingLineupIds = listOf(1, 2, 3, 4, 5),
@@ -123,7 +123,7 @@ private fun ArchivedMatchesPreview() {
             ArchivedMatches(
                 matches = matches,
                 onNavigateToMatchSummary = { },
-                unarchiveMatch = {}
+                unarchiveMatch = {},
             )
         }
     }

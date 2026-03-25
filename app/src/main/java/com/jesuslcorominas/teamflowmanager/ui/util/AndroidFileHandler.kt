@@ -14,9 +14,8 @@ import java.io.OutputStream
  * Handles file operations using Android Context, FileProvider, and ContentResolver.
  */
 class AndroidFileHandler(
-    private val context: Context
+    private val context: Context,
 ) : FileHandler {
-
     private var currentExportFile: File? = null
 
     override fun createExportOutputStream(): OutputStream? {
@@ -34,11 +33,12 @@ class AndroidFileHandler(
     override fun finalizeExport(): String? {
         return try {
             currentExportFile?.let { file ->
-                val uri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.fileprovider",
-                    file
-                )
+                val uri =
+                    FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        file,
+                    )
                 uri.toString()
             }
         } catch (e: Exception) {

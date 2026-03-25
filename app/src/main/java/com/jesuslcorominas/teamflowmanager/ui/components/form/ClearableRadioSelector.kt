@@ -40,14 +40,14 @@ fun <T : SelectableItem> ClearableRadioSelector(
     selectedOption: Long?,
     onSelect: (Long) -> Unit,
     onClear: () -> Unit,
-    items: List<T>
+    items: List<T>,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         ClearableRadioSelectorHeader(
             title = title ?: "",
             selectedOption = selectedOption,
             onClear = onClear,
-            modifier = titleModifier
+            modifier = titleModifier,
         )
 
         Spacer(Modifier.height(TFMSpacing.spacing02))
@@ -56,7 +56,7 @@ fun <T : SelectableItem> ClearableRadioSelector(
             items = items,
             selectedOption = selectedOption,
             onSelect = onSelect,
-            modifier = Modifier.padding(horizontal = TFMSpacing.spacing02)
+            modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
         )
     }
 }
@@ -72,29 +72,30 @@ fun ClearableRadioSelectorHeader(
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing02),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing02),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             AppTitle(
                 modifier = Modifier.weight(1F),
-                title = title
+                title = title,
             )
 
             Button(
                 onClick = { onClear() },
-                enabled = selectedOption != null
+                enabled = selectedOption != null,
             ) {
                 Icon(
                     modifier = Modifier.size(TFMSpacing.spacing04),
                     imageVector = Icons.Default.Clear,
-                    contentDescription = stringResource(R.string.clear)
+                    contentDescription = stringResource(R.string.clear),
                 )
                 Spacer(Modifier.width(TFMSpacing.spacing02))
                 Text(
                     stringResource(R.string.clear),
-                    style = MaterialTheme.typography.labelSmall
+                    style = MaterialTheme.typography.labelSmall,
                 )
             }
         }
@@ -112,14 +113,15 @@ fun <T : SelectableItem> ClearableRadioSelectorList(
         items.forEach { option ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelect(option.id) }
-                    .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing01)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelect(option.id) }
+                        .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing01),
             ) {
                 RadioButton(
                     selected = selectedOption == option.id,
-                    onClick = { onSelect(option.id) }
+                    onClick = { onSelect(option.id) },
                 )
 
                 Text(option.label)
@@ -137,20 +139,21 @@ fun ClearableRadioSelectorPreview() {
             selectedOption = 2L,
             onSelect = {},
             onClear = {},
-            items = listOf(
-                object : SelectableItem {
-                    override val id: Long = 1L
-                    override val label: String = "Option 1"
-                },
-                object : SelectableItem {
-                    override val id: Long = 2L
-                    override val label: String = "Option 2"
-                },
-                object : SelectableItem {
-                    override val id: Long = 3L
-                    override val label: String = "Option 3"
-                }
-            )
+            items =
+                listOf(
+                    object : SelectableItem {
+                        override val id: Long = 1L
+                        override val label: String = "Option 1"
+                    },
+                    object : SelectableItem {
+                        override val id: Long = 2L
+                        override val label: String = "Option 2"
+                    },
+                    object : SelectableItem {
+                        override val id: Long = 3L
+                        override val label: String = "Option 3"
+                    },
+                ),
         )
     }
 }

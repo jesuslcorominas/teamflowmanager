@@ -16,6 +16,6 @@ fun TeamFlowManagerIcon() {
         modifier = Modifier.size(TFMSpacing.spacing18),
         painter = painterResource(id = R.drawable.ic_launcher),
         contentDescription = stringResource(R.string.app_name),
-        tint = Color.Unspecified
+        tint = Color.Unspecified,
     )
 }

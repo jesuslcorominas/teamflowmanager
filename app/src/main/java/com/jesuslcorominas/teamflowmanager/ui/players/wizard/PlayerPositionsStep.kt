@@ -46,40 +46,42 @@ fun PlayerPositionsStep(
 
     Column(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03)
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
             text = stringResource(R.string.player_positions_step_title),
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
 
         Text(
             text = stringResource(R.string.player_positions_step_subtitle),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
         ) {
             items(allPositions) { position ->
                 PositionCheckbox(
                     position = position,
                     isSelected = selectedPositions.contains(position),
                     onCheckedChange = { isChecked ->
-                        selectedPositions = if (isChecked) {
-                            selectedPositions + position
-                        } else {
-                            selectedPositions - position
-                        }
+                        selectedPositions =
+                            if (isChecked) {
+                                selectedPositions + position
+                            } else {
+                                selectedPositions - position
+                            }
                         onPositionsChanged(selectedPositions)
-                    }
+                    },
                 )
             }
         }
@@ -89,7 +91,7 @@ fun PlayerPositionsStep(
         // Navigation buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             OutlinedButton(onClick = onPrevious) {
                 Text(stringResource(R.string.previous))
@@ -109,23 +111,25 @@ fun PlayerPositionsStep(
 private fun PositionCheckbox(
     position: Position,
     isSelected: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!isSelected) }
-            .padding(vertical = TFMSpacing.spacing01),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onCheckedChange(!isSelected) }
+                .padding(vertical = TFMSpacing.spacing01),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01)
+        horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
     ) {
         Checkbox(
-            modifier = Modifier
-                .size(TFMSpacing.spacing06)
-                .scale(.9F),
+            modifier =
+                Modifier
+                    .size(TFMSpacing.spacing06)
+                    .scale(.9F),
             checked = isSelected,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
         )
         Text(
             text = position.toLocalizedString(context),

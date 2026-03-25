@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 fun AppCard(
     modifier: Modifier = Modifier,
     colors: CardColors? = null,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -28,7 +28,6 @@ fun AppCard(
         content()
     }
 }
-
 
 @Preview(showBackground = true, widthDp = 512, heightDp = 1200, device = Devices.NEXUS_10)
 @Composable

@@ -3,6 +3,8 @@ package com.jesuslcorominas.teamflowmanager.ui.matches
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
@@ -45,19 +48,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
-import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
+import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
@@ -83,19 +88,25 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionItem
 import org.koin.androidx.compose.koinViewModel
-import androidx.core.net.toUri
+import org.koin.core.parameter.parametersOf
 
 private const val TAB_SUMMARY = 0
-//private const val TAB_SUBSTITUTIONS = 1
+
+// private const val TAB_SUBSTITUTIONS = 1
 private const val TAB_TIMELINE = 1
 private const val TAB_STATISTICS = 2
 
 @Composable
-fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (String?) -> Unit) {
+fun MatchScreen(
+    matchId: Long,
+    onTitleChange: (String?) -> Unit,
+    viewModel: MatchViewModel = koinViewModel(parameters = { parametersOf(matchId) }),
+) {
     TrackScreenView(screenName = ScreenName.MATCH_DETAIL, screenClass = "MatchScreen")
 
     val uiState by viewModel.uiState.collectAsState()
     val exportState by viewModel.exportState.collectAsState()
+    val isSubstitutionInProgress by viewModel.isSubstitutionInProgress.collectAsState()
 
     // TODO try to extract this from viewmodel
     val selectedPlayerOut by viewModel.selectedPlayerOut.collectAsState()
@@ -115,67 +126,71 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
             val state = exportState as ExportState.Ready
             val uri = state.uri.toUri()
 
-            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "application/pdf"
-                putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+            val shareIntent =
+                android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
             context.startActivity(
                 android.content.Intent.createChooser(
                     shareIntent,
-                    context.getString(R.string.export_share_title)
-                )
+                    context.getString(R.string.export_share_title),
+                ),
             )
 
             viewModel.exportCompleted()
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        when (val state = uiState) {
-            is MatchUiState.Loading -> Loading()
-            is MatchUiState.NoMatch -> NoMatchState()
-            is MatchUiState.Success -> SuccessState(
-                state = state,
-                selectedPlayerOut = selectedPlayerOut,
-                currentSortOrder = currentSortOrder,
-                onSaveMatch = { viewModel.saveMatch() },
-                onPauseMatch = { viewModel.pauseMatch() },
-                onResumeMatch = { viewModel.resumeMatch(state.match.id) },
-                onStartTimeout = { viewModel.startTimeout() },
-                onEndTimeout = { viewModel.endTimeout() },
-                onPlayerClick = { playerId ->
-                    when (selectedPlayerOut) {
-                        null -> viewModel.selectPlayerOut(playerId)
-                        playerId -> viewModel.clearPlayerOutSelection()
-                        else -> viewModel.substitutePlayer(playerId)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            when (val state = uiState) {
+                is MatchUiState.Loading -> Loading()
+                is MatchUiState.NoMatch -> NoMatchState()
+                is MatchUiState.Success ->
+                    SuccessState(
+                        state = state,
+                        selectedPlayerOut = selectedPlayerOut,
+                        currentSortOrder = currentSortOrder,
+                        onSaveMatch = { viewModel.saveMatch() },
+                        onPauseMatch = { viewModel.pauseMatch() },
+                        onResumeMatch = { viewModel.resumeMatch(state.match.id) },
+                        onStartTimeout = { viewModel.startTimeout() },
+                        onEndTimeout = { viewModel.endTimeout() },
+                        onPlayerClick = { playerId ->
+                            when (selectedPlayerOut) {
+                                null -> viewModel.selectPlayerOut(playerId)
+                                playerId -> viewModel.clearPlayerOutSelection()
+                                else -> viewModel.substitutePlayer(playerId)
+                            }
+                        },
+                        onDragDropSubstitute = { playerInId, playerOutId ->
+                            viewModel.substitutePlayerDirect(playerInId, playerOutId)
+                        },
+                        onSortOrderChange = { currentSortOrder = it },
+                        onAddGoal = { viewModel.showGoalScorerDialog() },
+                        onAddOpponentGoal = { viewModel.showOpponentGoalDialog() },
+                        onBeginMatch = { viewModel.beginMatch(state.match.id) },
+                        onTitleChange = onTitleChange,
+                    )
+
+                is MatchUiState.Finished -> {
+                    if (currentSortOrder == PlayerSortOrderBy.BY_ACTIVE_FIRST) {
+                        currentSortOrder = PlayerSortOrderBy.BY_TIME_DESC
                     }
-                },
-                onDragDropSubstitute = { playerInId, playerOutId ->
-                    viewModel.substitutePlayerDirect(playerInId, playerOutId)
-                },
-                onSortOrderChange = { currentSortOrder = it },
-                onAddGoal = { viewModel.showGoalScorerDialog() },
-                onAddOpponentGoal = { viewModel.showOpponentGoalDialog() },
-                onBeginMatch = { viewModel.beginMatch(state.match.id) },
-                onTitleChange = onTitleChange
-            )
 
-            is MatchUiState.Finished -> {
-                if (currentSortOrder == PlayerSortOrderBy.BY_ACTIVE_FIRST) {
-                    currentSortOrder = PlayerSortOrderBy.BY_TIME_DESC
+                    FinishedMatchState(
+                        state = state,
+                        currentSortOrder = currentSortOrder,
+                        onSortOrderChange = { currentSortOrder = it },
+                        onExport = { viewModel.requestExport() },
+                        onTitleChange = onTitleChange,
+                    )
                 }
-
-                FinishedMatchState(
-                    state = state,
-                    currentSortOrder = currentSortOrder,
-                    onSortOrderChange = { currentSortOrder = it },
-                    onExport = { viewModel.requestExport() },
-                    onTitleChange = onTitleChange
-                )
             }
         }
 
@@ -184,7 +199,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
             InvalidSubstitutionAlertDialog(
                 onDismiss = { dontShowAgain ->
                     viewModel.dismissInvalidSubstitutionAlert(dontShowAgain)
-                }
+                },
             )
         }
 
@@ -192,7 +207,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
         if (showStopConfirmation) {
             StopMatchEarlyConfirmationDialog(
                 onConfirm = { viewModel.confirmStopMatch() },
-                onDismiss = { viewModel.dismissStopConfirmation() }
+                onDismiss = { viewModel.dismissStopConfirmation() },
             )
         }
 
@@ -201,7 +216,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
             PauseMatchEarlyConfirmationDialog(
                 isBreak = it.isBreak,
                 onConfirm = { if (it.isBreak) viewModel.confirmPauseMatch() else viewModel.confirmStopMatch() },
-                onDismiss = { viewModel.dismissPauseConfirmation() }
+                onDismiss = { viewModel.dismissPauseConfirmation() },
             )
         }
 
@@ -212,7 +227,7 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
                 GoalScorerSelectionDialog(
                     players = state.playerTimes.filter { it.isRunning }.map { it.player },
                     onGoal = { playerId -> viewModel.registerGoal(playerId) },
-                    onDismiss = { viewModel.dismissGoalScorerDialog() }
+                    onDismiss = { viewModel.dismissGoalScorerDialog() },
                 )
             }
         }
@@ -221,8 +236,28 @@ fun MatchScreen(viewModel: MatchViewModel = koinViewModel(), onTitleChange: (Str
         if (showOpponentGoalDialog) {
             OpponentGoalConfirmationDialog(
                 onConfirm = { viewModel.registerOpponentGoal() },
-                onDismiss = { viewModel.dismissOpponentGoalDialog() }
+                onDismiss = { viewModel.dismissOpponentGoalDialog() },
             )
+        }
+
+        // Show blocking loading overlay during substitution
+        if (isSubstitutionInProgress) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                        .pointerInput(Unit) {
+                            // Consume all pointer events to block interaction with underlying UI
+                            detectTapGestures { }
+                        },
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(64.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }
@@ -267,13 +302,14 @@ private fun SuccessState(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = TFMSpacing.spacing04,
-                end = TFMSpacing.spacing04,
-                bottom = TFMSpacing.spacing02
-            )
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    start = TFMSpacing.spacing04,
+                    end = TFMSpacing.spacing04,
+                    bottom = TFMSpacing.spacing02,
+                ),
     ) {
         MatchDetailContent(
             state = state,
@@ -289,7 +325,7 @@ private fun SuccessState(
             onSortOrderChange = onSortOrderChange,
             onAddGoal = onAddGoal,
             onAddOpponentGoal = onAddOpponentGoal,
-            onBeginMatch = onBeginMatch
+            onBeginMatch = onBeginMatch,
         )
     }
 }
@@ -309,7 +345,7 @@ private fun MatchDetailContent(
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
-    onBeginMatch: () -> Unit
+    onBeginMatch: () -> Unit,
 ) {
     val dragDropState = rememberDragDropState()
     val listState = rememberLazyListState()
@@ -319,24 +355,24 @@ private fun MatchDetailContent(
 
         PlayerSortOrder(
             currentSortOrder = currentSortOrder,
-            onSortOrderChange = onSortOrderChange
+            onSortOrderChange = onSortOrderChange,
         )
 
         DragDropContainer(
             dragDropState = dragDropState,
             listState = listState,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         ) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
                 // Disable user scrolling while dragging - auto-scroll handles edge scrolling
-                userScrollEnabled = !dragDropState.isDragging
+                userScrollEnabled = !dragDropState.isDragging,
             ) {
                 items(
                     items = state.playerTimes.sortedBy(currentSortOrder, state.match),
-                    key = { it.player.id }
+                    key = { it.player.id },
                 ) { playerTimeItem ->
                     val isPlaying = if (state.match.isInProgress) playerTimeItem.isRunning else false
 
@@ -352,18 +388,19 @@ private fun MatchDetailContent(
                                     dragDropState.draggedPlayer?.let { draggedPlayer ->
                                         onDragDropSubstitute(
                                             draggedPlayer.id,
-                                            playerTimeItem.player.id
+                                            playerTimeItem.player.id,
                                         )
                                     }
                                     dragDropState.reset()
-                                }
+                                },
                             ) {
                                 PlayerItem(
-                                    modifier = Modifier.animateItem(
-                                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                                        placementSpec = spring(),
-                                        fadeOutSpec = tween(durationMillis = 300)
-                                    ),
+                                    modifier =
+                                        Modifier.animateItem(
+                                            fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                            placementSpec = spring(),
+                                            fadeOutSpec = tween(durationMillis = 300),
+                                        ),
                                     player = playerTimeItem.player,
                                     showPositions = false,
                                     isPlaying = true,
@@ -383,11 +420,12 @@ private fun MatchDetailContent(
                                 // onDragEnd is optional - container handles the actual drag end
                             ) {
                                 PlayerItem(
-                                    modifier = Modifier.animateItem(
-                                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                                        placementSpec = spring(),
-                                        fadeOutSpec = tween(durationMillis = 300)
-                                    ),
+                                    modifier =
+                                        Modifier.animateItem(
+                                            fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                            placementSpec = spring(),
+                                            fadeOutSpec = tween(durationMillis = 300),
+                                        ),
                                     player = playerTimeItem.player,
                                     showPositions = false,
                                     isPlaying = false,
@@ -402,11 +440,12 @@ private fun MatchDetailContent(
                     } else {
                         // Match not in progress - no drag-drop
                         PlayerItem(
-                            modifier = Modifier.animateItem(
-                                fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                                placementSpec = spring(),
-                                fadeOutSpec = tween(durationMillis = 300)
-                            ),
+                            modifier =
+                                Modifier.animateItem(
+                                    fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                    placementSpec = spring(),
+                                    fadeOutSpec = tween(durationMillis = 300),
+                                ),
                             player = playerTimeItem.player,
                             showPositions = false,
                             isPlaying = false,
@@ -432,44 +471,51 @@ private fun MatchDetailContent(
             onEndTimeout = onEndTimeout,
             onAddGoal = onAddGoal,
             onAddOpponentGoal = onAddOpponentGoal,
-            onBeginMatch = onBeginMatch
+            onBeginMatch = onBeginMatch,
         )
     }
 }
 
-private fun List<PlayerTimeItem>.sortedBy(sortOrder: PlayerSortOrderBy, match: Match): List<PlayerTimeItem> =
+private fun List<PlayerTimeItem>.sortedBy(
+    sortOrder: PlayerSortOrderBy,
+    match: Match,
+): List<PlayerTimeItem> =
     when (sortOrder) {
         PlayerSortOrderBy.BY_NUMBER -> sortedBy { it.player.number }
-        PlayerSortOrderBy.BY_TIME_DESC -> sortedWith(
-            compareByDescending<PlayerTimeItem> { it.timeMillis }
-                .thenBy { it.player.number }
-        )
+        PlayerSortOrderBy.BY_TIME_DESC ->
+            sortedWith(
+                compareByDescending<PlayerTimeItem> { it.timeMillis }
+                    .thenBy { it.player.number },
+            )
 
-        PlayerSortOrderBy.BY_TIME_ASC -> sortedWith(
-            compareBy<PlayerTimeItem> { it.timeMillis }
-                .thenBy { it.player.number }
-        )
+        PlayerSortOrderBy.BY_TIME_ASC ->
+            sortedWith(
+                compareBy<PlayerTimeItem> { it.timeMillis }
+                    .thenBy { it.player.number },
+            )
 
         PlayerSortOrderBy.BY_ACTIVE_FIRST -> {
             when (match.status) {
-                MatchStatus.SCHEDULED -> sortedWith(
-                    compareByDescending<PlayerTimeItem> { match.startingLineupIds.contains(it.player.id) }
-                        .thenBy { it.player.number }
-                )
+                MatchStatus.SCHEDULED ->
+                    sortedWith(
+                        compareByDescending<PlayerTimeItem> { match.startingLineupIds.contains(it.player.id) }
+                            .thenBy { it.player.number },
+                    )
 
-                MatchStatus.PAUSED, MatchStatus.TIMEOUT -> sortedWith(
-                    compareByDescending<PlayerTimeItem> { it.isPaused }
-                        .thenBy { it.player.number }
-                )
+                MatchStatus.PAUSED, MatchStatus.TIMEOUT ->
+                    sortedWith(
+                        compareByDescending<PlayerTimeItem> { it.isPaused }
+                            .thenBy { it.player.number },
+                    )
 
-                else -> sortedWith(
-                    compareByDescending<PlayerTimeItem> { it.isRunning }
-                        .thenBy { it.player.number }
-                )
+                else ->
+                    sortedWith(
+                        compareByDescending<PlayerTimeItem> { it.isRunning }
+                            .thenBy { it.player.number },
+                    )
             }
         }
     }
-
 
 @Composable
 fun PlayerSortOrder(
@@ -478,9 +524,10 @@ fun PlayerSortOrder(
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = TFMSpacing.spacing01),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = TFMSpacing.spacing01),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -502,13 +549,13 @@ private fun BottomButtons(
     onEndTimeout: () -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
-    onBeginMatch: () -> Unit
+    onBeginMatch: () -> Unit,
 ) {
     if (state.match.isStarted) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02)
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -517,25 +564,33 @@ private fun BottomButtons(
                 GoalButton(
                     modifier = Modifier.weight(1F),
                     enabled = state.match.isInProgress,
-                    onAddGoal = onAddGoal
+                    onAddGoal = onAddGoal,
                 )
 
                 TimeoutButton(
                     enabled = state.match.isInProgress || state.match.status == MatchStatus.TIMEOUT,
                     isTimeout = state.match.status == MatchStatus.TIMEOUT,
-                    onClick = if (state.match.status == MatchStatus.TIMEOUT) onEndTimeout else onStartTimeout
+                    onClick = if (state.match.status == MatchStatus.TIMEOUT) onEndTimeout else onStartTimeout,
                 )
 
                 AppIconButton(
                     imageVector = if (state.match.isInProgress || state.match.status == MatchStatus.TIMEOUT) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                     contentDescription = if (state.match.isInProgress) R.string.pause_match_button else R.string.resume_match_button,
-                    tint = if ((state.match.canPause() && state.match.isInProgress) || state.match.status == MatchStatus.PAUSED) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                    },
-                    enabled = if (state.match.status == MatchStatus.TIMEOUT) false else if (state.match.isInProgress) state.match.canPause() else true,
-                    onClick = if (state.match.isInProgress) onPauseMatch else onResumeMatch
+                    tint =
+                        if ((state.match.canPause() && state.match.isInProgress) || state.match.status == MatchStatus.PAUSED) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        },
+                    enabled =
+                        if (state.match.status == MatchStatus.TIMEOUT) {
+                            false
+                        } else if (state.match.isInProgress) {
+                            state.match.canPause()
+                        } else {
+                            true
+                        },
+                    onClick = if (state.match.isInProgress) onPauseMatch else onResumeMatch,
                 )
 
                 AppIconButton(
@@ -549,7 +604,7 @@ private fun BottomButtons(
                     modifier = Modifier.weight(1F),
                     enabled = state.match.isInProgress,
                     isOpponent = true,
-                    onAddGoal = onAddOpponentGoal
+                    onAddGoal = onAddOpponentGoal,
                 )
             }
         }
@@ -572,19 +627,20 @@ private fun BottomButtons(
 private fun TimeoutButton(
     enabled: Boolean,
     isTimeout: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     AppIconButton(
         internalModifier = Modifier.size(32.dp),
         icon = if (isTimeout) R.drawable.ic_whistle else R.drawable.ic_timeout,
         contentDescription = if (isTimeout) R.string.end_timeout_button else R.string.timeout_button,
         enabled = enabled,
-        tint = when {
-            !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            isTimeout -> MaterialTheme.colorScheme.error
-            else -> MaterialTheme.colorScheme.primary
-        },
-        onClick = onClick
+        tint =
+            when {
+                !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                isTimeout -> MaterialTheme.colorScheme.error
+                else -> MaterialTheme.colorScheme.primary
+            },
+        onClick = onClick,
     )
 }
 
@@ -593,22 +649,24 @@ private fun GoalButton(
     modifier: Modifier = Modifier,
     enabled: Boolean,
     isOpponent: Boolean = false,
-    onAddGoal: () -> Unit
+    onAddGoal: () -> Unit,
 ) {
     AppIconButton(
         modifier = modifier.size(64.dp),
-        internalModifier = Modifier
-            .size(48.dp)
-            .then(if (isOpponent) Modifier.graphicsLayer(scaleX = -1f) else Modifier),
+        internalModifier =
+            Modifier
+                .size(48.dp)
+                .then(if (isOpponent) Modifier.graphicsLayer(scaleX = -1f) else Modifier),
         imageVector = ImageVector.vectorResource(R.drawable.ic_goal),
         contentDescription = stringResource(R.string.add_goal_button),
         enabled = enabled,
-        tint = when {
-            !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            isOpponent -> MaterialTheme.colorScheme.error
-            else -> MaterialTheme.colorScheme.primary
-        },
-        onClick = onAddGoal
+        tint =
+            when {
+                !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                isOpponent -> MaterialTheme.colorScheme.error
+                else -> MaterialTheme.colorScheme.primary
+            },
+        onClick = onAddGoal,
     )
 }
 
@@ -618,7 +676,7 @@ private fun FinishedMatchState(
     currentSortOrder: PlayerSortOrderBy,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onExport: () -> Unit,
-    onTitleChange: (String?) -> Unit
+    onTitleChange: (String?) -> Unit,
 ) {
     LaunchedEffect(state.match.id, state.match.teamName, state.match.opponent) {
         onTitleChange("${state.match.teamName} - ${state.match.opponent}")
@@ -633,10 +691,11 @@ private fun FinishedMatchState(
     Column(modifier = Modifier.fillMaxSize()) {
         // Match Time Card at top (always visible) with share button
         Box(
-            modifier = Modifier.padding(
-                horizontal = TFMSpacing.spacing04,
-                vertical = TFMSpacing.spacing02
-            )
+            modifier =
+                Modifier.padding(
+                    horizontal = TFMSpacing.spacing04,
+                    vertical = TFMSpacing.spacing02,
+                ),
         ) {
             MatchTimeCard(
                 match = state.match,
@@ -646,7 +705,7 @@ private fun FinishedMatchState(
         }
 
         // Scrollable Tab Row with 4 tabs
-        SecondaryScrollableTabRow (
+        SecondaryScrollableTabRow(
             modifier = Modifier.fillMaxWidth(),
             selectedTabIndex = selectedTab,
             edgePadding = TFMSpacing.spacing04,
@@ -657,9 +716,9 @@ private fun FinishedMatchState(
                 text = {
                     Text(
                         text = stringResource(R.string.summary_tab),
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
                     )
-                }
+                },
             )
             // Removed substitutions tab for finished matches
 //            Tab(
@@ -678,9 +737,9 @@ private fun FinishedMatchState(
                 text = {
                     Text(
                         text = stringResource(R.string.timeline_tab),
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
                     )
-                }
+                },
             )
             Tab(
                 selected = selectedTab == TAB_STATISTICS,
@@ -688,32 +747,35 @@ private fun FinishedMatchState(
                 text = {
                     Text(
                         text = stringResource(R.string.statistics_tab),
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
                     )
-                }
+                },
             )
         }
 
         // Tab Content
         Box(modifier = Modifier.fillMaxSize()) {
             when (selectedTab) {
-                TAB_SUMMARY -> SummaryTabContent(
-                    state = state,
-                    currentSortOrder = currentSortOrder,
-                    onSortOrderChange = onSortOrderChange,
-                )
+                TAB_SUMMARY ->
+                    SummaryTabContent(
+                        state = state,
+                        currentSortOrder = currentSortOrder,
+                        onSortOrderChange = onSortOrderChange,
+                    )
 //                TAB_SUBSTITUTIONS -> SubstitutionsTabContent(
 //                    substitutions = state.substitutions,
 //                )
-                TAB_TIMELINE -> TimelineTabContent(
-                    timelineEvents = state.timelineEvents,
-                )
-                TAB_STATISTICS -> StatisticsTabContent(
-                    scoreEvolution = state.scoreEvolution,
-                    playerActivity = state.playerActivity,
-                    teamName = state.match.teamName,
-                    opponentName = state.match.opponent,
-                )
+                TAB_TIMELINE ->
+                    TimelineTabContent(
+                        timelineEvents = state.timelineEvents,
+                    )
+                TAB_STATISTICS ->
+                    StatisticsTabContent(
+                        scoreEvolution = state.scoreEvolution,
+                        playerActivity = state.playerActivity,
+                        teamName = state.match.teamName,
+                        opponentName = state.match.opponent,
+                    )
             }
         }
     }
@@ -726,13 +788,15 @@ private fun SummaryTabContent(
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = TFMSpacing.spacing04),
-        contentPadding = PaddingValues(
-            top = TFMSpacing.spacing03,
-            bottom = TFMSpacing.spacing04
-        ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = TFMSpacing.spacing04),
+        contentPadding =
+            PaddingValues(
+                top = TFMSpacing.spacing03,
+                bottom = TFMSpacing.spacing04,
+            ),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         item {
@@ -745,14 +809,15 @@ private fun SummaryTabContent(
 
         items(
             items = state.playerTimes.sortedBy(currentSortOrder, state.match),
-            key = { it.player.id }
+            key = { it.player.id },
         ) { playerTimeItem ->
             PlayerItem(
-                modifier = Modifier.animateItem(
-                    fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                    placementSpec = spring(),
-                    fadeOutSpec = tween(durationMillis = 300)
-                ),
+                modifier =
+                    Modifier.animateItem(
+                        fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                        placementSpec = spring(),
+                        fadeOutSpec = tween(durationMillis = 300),
+                    ),
                 player = playerTimeItem.player,
                 showPositions = false,
                 isPlaying = false,
@@ -766,22 +831,22 @@ private fun SummaryTabContent(
 }
 
 @Composable
-private fun SubstitutionsTabContent(
-    substitutions: List<SubstitutionItem>,
-) {
+private fun SubstitutionsTabContent(substitutions: List<SubstitutionItem>) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = TFMSpacing.spacing04),
-        contentPadding = PaddingValues(
-            top = TFMSpacing.spacing03,
-            bottom = TFMSpacing.spacing04
-        ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = TFMSpacing.spacing04),
+        contentPadding =
+            PaddingValues(
+                top = TFMSpacing.spacing03,
+                bottom = TFMSpacing.spacing04,
+            ),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         items(
             items = substitutions,
-            key = { "${it.playerIn.id}_${it.playerOut.id}_${it.matchElapsedTimeMillis}" }
+            key = { "${it.playerIn.id}_${it.playerOut.id}_${it.matchElapsedTimeMillis}" },
         ) { substitution ->
             SubstitutionCard(substitution = substitution)
         }
@@ -789,9 +854,7 @@ private fun SubstitutionsTabContent(
 }
 
 @Composable
-private fun TimelineTabContent(
-    timelineEvents: List<TimelineEvent>,
-) {
+private fun TimelineTabContent(timelineEvents: List<TimelineEvent>) {
     // Timeline Events only (no chart)
     TimelineContent(
         events = timelineEvents,
@@ -807,13 +870,15 @@ private fun StatisticsTabContent(
     opponentName: String,
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = TFMSpacing.spacing04),
-        contentPadding = PaddingValues(
-            top = TFMSpacing.spacing03,
-            bottom = TFMSpacing.spacing04
-        ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = TFMSpacing.spacing04),
+        contentPadding =
+            PaddingValues(
+                top = TFMSpacing.spacing03,
+                bottom = TFMSpacing.spacing04,
+            ),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing04),
     ) {
         // Player Activity Chart with toggleable lines
@@ -833,9 +898,7 @@ private fun StatisticsTabContent(
 // region Dialogs
 
 @Composable
-private fun InvalidSubstitutionAlertDialog(
-    onDismiss: (dontShowAgain: Boolean) -> Unit,
-) {
+private fun InvalidSubstitutionAlertDialog(onDismiss: (dontShowAgain: Boolean) -> Unit) {
     var dontShowAgain by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -843,35 +906,35 @@ private fun InvalidSubstitutionAlertDialog(
         title = {
             Text(
                 stringResource(R.string.invalid_substitution_title),
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
             )
         },
         text = {
             Column {
                 Text(
                     stringResource(R.string.invalid_substitution_message),
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = TFMSpacing.spacing02)
+                    modifier = Modifier.padding(top = TFMSpacing.spacing02),
                 ) {
                     Checkbox(
                         checked = dontShowAgain,
-                        onCheckedChange = { dontShowAgain = it }
+                        onCheckedChange = { dontShowAgain = it },
                     )
                     Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
                     Text(
                         stringResource(R.string.dont_show_again),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { onDismiss(dontShowAgain) }
+                onClick = { onDismiss(dontShowAgain) },
             ) {
                 Text(stringResource(R.string.close))
             }
@@ -890,25 +953,25 @@ private fun StopMatchEarlyConfirmationDialog(
         title = {
             Text(
                 stringResource(R.string.stop_match_early_title),
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
             )
         },
         text = {
             Text(
                 stringResource(R.string.stop_match_early_period_message),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
             )
         },
         confirmButton = {
             TextButton(
-                onClick = onConfirm
+                onClick = onConfirm,
             ) {
                 Text(stringResource(R.string.yes))
             }
         },
         dismissButton = {
             TextButton(
-                onClick = onDismiss
+                onClick = onDismiss,
             ) {
                 Text(stringResource(R.string.no))
             }
@@ -929,7 +992,10 @@ private fun PauseMatchEarlyConfirmationDialog(
         confirmText = stringResource(R.string.yes),
         dismissText = stringResource(R.string.no),
         title = stringResource(if (isBreak) R.string.pause_match_early_title else R.string.stop_match_early_title),
-        message = stringResource(if (isBreak) R.string.pause_match_early_message else R.string.stop_match_early_message),
+        message =
+            stringResource(
+                if (isBreak) R.string.pause_match_early_message else R.string.stop_match_early_message,
+            ),
     )
 }
 
@@ -944,7 +1010,7 @@ private fun GoalScorerSelectionDialog(
         title = {
             Text(
                 stringResource(R.string.select_goal_scorer_title),
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
             )
         },
         text = {
@@ -953,7 +1019,7 @@ private fun GoalScorerSelectionDialog(
                     ScorerItem(
                         number = player.number.toString(),
                         name = "${player.firstName} ${player.lastName}",
-                        onScorerSelected = { onGoal(player.id) }
+                        onScorerSelected = { onGoal(player.id) },
                     )
                 }
 
@@ -962,7 +1028,7 @@ private fun GoalScorerSelectionDialog(
                     ScorerItem(
                         number = "-",
                         name = stringResource(R.string.own_goal_option),
-                        onScorerSelected = { onGoal(null) }
+                        onScorerSelected = { onGoal(null) },
                     )
                 }
             }
@@ -970,7 +1036,7 @@ private fun GoalScorerSelectionDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(
-                onClick = onDismiss
+                onClick = onDismiss,
             ) {
                 Text(stringResource(R.string.cancel))
             }
@@ -980,17 +1046,23 @@ private fun GoalScorerSelectionDialog(
 }
 
 @Composable
-private fun ScorerItem(number: String, name: String, onScorerSelected: () -> Unit) {
+private fun ScorerItem(
+    number: String,
+    name: String,
+    onScorerSelected: () -> Unit,
+) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = TFMSpacing.spacing01),
-        onClick =  onScorerSelected,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = TFMSpacing.spacing01),
+        onClick = onScorerSelected,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TFMSpacing.spacing03),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TFMSpacing.spacing03),
             horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -1017,25 +1089,25 @@ private fun OpponentGoalConfirmationDialog(
         title = {
             Text(
                 stringResource(R.string.add_opponent_goal_title),
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
             )
         },
         text = {
             Text(
                 stringResource(R.string.add_opponent_goal_message),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
             )
         },
         confirmButton = {
             TextButton(
-                onClick = onConfirm
+                onClick = onConfirm,
             ) {
                 Text(stringResource(R.string.add))
             }
         },
         dismissButton = {
             TextButton(
-                onClick = onDismiss
+                onClick = onDismiss,
             ) {
                 Text(stringResource(R.string.cancel))
             }
@@ -1051,40 +1123,44 @@ private fun OpponentGoalConfirmationDialog(
 private fun OngoingMatchViewPreview() {
     TFMAppTheme {
         MatchDetailContent(
-            state = MatchUiState.Success(
-                match = Match(
-                    id = 1,
-                    teamName = "Loyola D",
-                    opponent = "EFRO",
-                    location = "FUNDOMA",
-                    status = MatchStatus.IN_PROGRESS,
-                    pauseCount = 0,
-                    goals = 1,
-                    captainId = 2L,
-                    opponentGoals = 0,
-                    periodType = PeriodType.HALF_TIME,
-                    periods = listOf()
-                ),
-                playerTimes = (1..3).map {
-                    PlayerTimeItem(
-                        player = Player(
-                            id = 1L,
-                            firstName = "John",
-                            lastName = "Doe",
-                            number = 10,
-                            positions = listOf(Position.Forward),
-                            teamId = 1,
-                            isCaptain = false
+            state =
+                MatchUiState.Success(
+                    match =
+                        Match(
+                            id = 1,
+                            teamName = "Loyola D",
+                            opponent = "EFRO",
+                            location = "FUNDOMA",
+                            status = MatchStatus.IN_PROGRESS,
+                            pauseCount = 0,
+                            goals = 1,
+                            captainId = 2L,
+                            opponentGoals = 0,
+                            periodType = PeriodType.HALF_TIME,
+                            periods = listOf(),
                         ),
-                        timeMillis = it * 5 * 60 * 1000L,
-                        isCaptain = it == 1,
-                        isRunning = it % 2 == 0,
-                        isPaused = false,
-                        substitutionCount = 2
-                    )
-                },
-                currentTime = System.currentTimeMillis(),
-            ),
+                    playerTimes =
+                        (1..3).map {
+                            PlayerTimeItem(
+                                player =
+                                    Player(
+                                        id = 1L,
+                                        firstName = "John",
+                                        lastName = "Doe",
+                                        number = 10,
+                                        positions = listOf(Position.Forward),
+                                        teamId = 1,
+                                        isCaptain = false,
+                                    ),
+                                timeMillis = it * 5 * 60 * 1000L,
+                                isCaptain = it == 1,
+                                isRunning = it % 2 == 0,
+                                isPaused = false,
+                                substitutionCount = 2,
+                            )
+                        },
+                    currentTime = System.currentTimeMillis(),
+                ),
             selectedPlayerOut = 1L,
             currentSortOrder = PlayerSortOrderBy.BY_NUMBER,
             onSaveMatch = {},
@@ -1097,7 +1173,7 @@ private fun OngoingMatchViewPreview() {
             onSortOrderChange = {},
             onAddGoal = {},
             onAddOpponentGoal = {},
-            onBeginMatch = {}
+            onBeginMatch = {},
         )
     }
 }
