@@ -3,6 +3,12 @@ name: Release CI
 on:
   pull_request:
     branches: [main]
+  push:
+    branches:
+      - 'release/**'
+    paths-ignore:
+      - '**/*.md'
+      - '.claude/**'
 
 permissions:
   contents: write
@@ -23,8 +29,9 @@ jobs:
       - name: Detect skip-tests flag
         id: skip
         run: |
-          git fetch origin ${{ github.event.pull_request.head.sha }} --depth=1 2>/dev/null || true
-          COMMIT_MSG=$(git log -1 --format='%s' ${{ github.event.pull_request.head.sha }})
+          SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          git fetch origin "$SHA" --depth=1 2>/dev/null || true
+          COMMIT_MSG=$(git log -1 --format='%s' "$SHA")
           if echo "$COMMIT_MSG" | grep -q '\[skip-tests\]'; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "⏩ [skip-tests] detected — skipping tests and lint"
