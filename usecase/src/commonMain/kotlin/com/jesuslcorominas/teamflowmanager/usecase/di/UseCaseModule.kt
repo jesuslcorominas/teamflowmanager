@@ -51,6 +51,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermiss
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
@@ -117,6 +118,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequ
 import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetShouldShowInvalidSubstitutionAlertUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ShouldShowInvalidSubstitutionAlertUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.IsNotificationPermissionGrantedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
@@ -218,6 +220,7 @@ internal val useCaseInternalModule =
         singleOf(::DeleteFcmTokenUseCaseImpl) bind DeleteFcmTokenUseCase::class
         singleOf(::SubscribeToClubNotificationsUseCaseImpl) bind SubscribeToClubNotificationsUseCase::class
         singleOf(::UnsubscribeFromClubNotificationsUseCaseImpl) bind UnsubscribeFromClubNotificationsUseCase::class
+        singleOf(::IsNotificationPermissionGrantedUseCaseImpl) bind IsNotificationPermissionGrantedUseCase::class
     }
 
 val useCaseModule =

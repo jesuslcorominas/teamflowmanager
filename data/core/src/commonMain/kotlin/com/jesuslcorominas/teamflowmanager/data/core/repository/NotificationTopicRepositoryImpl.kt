@@ -11,4 +11,7 @@ class NotificationTopicRepositoryImpl(
 
     override suspend fun unsubscribeFromClub(clubFirestoreId: String) =
         notificationTopicDataSource.unsubscribe("club_$clubFirestoreId")
+
+    override suspend fun unsubscribeFromRawTopic(topic: String) =
+        notificationTopicDataSource.unsubscribe(topic)
 }

@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.di
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProviderDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPermissionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
@@ -25,6 +26,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchOperation
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmTokenDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmTokenProviderDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosNotificationTopicDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosNotificationPermissionDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NoOpDynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NoOpImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
@@ -78,4 +80,5 @@ actual val dataRemoteModule: Module =
         singleOf(::IosFcmTokenDataSourceImpl) bind FcmTokenDataSource::class
         singleOf(::IosFcmTokenProviderDataSourceImpl) bind FcmTokenProviderDataSource::class
         singleOf(::IosNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
+        singleOf(::IosNotificationPermissionDataSourceImpl) bind NotificationPermissionDataSource::class
     }
