@@ -109,6 +109,7 @@ dependencies {
     implementation(libs.firebase.crashlytics.ktx)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.messaging.ktx)
 
     // Credential Manager for Google Sign-In
     implementation(libs.credentials)

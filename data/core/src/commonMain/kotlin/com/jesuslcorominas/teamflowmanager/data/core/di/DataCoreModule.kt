@@ -1,6 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.data.core.di
 
 import com.jesuslcorominas.teamflowmanager.data.core.repository.AuthRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.FcmTokenProviderRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.FcmTokenRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationTopicRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubMemberRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.GoalRepositoryImpl
@@ -13,6 +16,9 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeReposi
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PreferencesRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.TeamRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmTokenProviderRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmTokenRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationTopicRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
@@ -53,6 +59,10 @@ internal val repositoryModule =
         singleOf(::GoalRepositoryImpl) bind GoalRepository::class
 
         singleOf(::AuthRepositoryImpl) bind AuthRepository::class
+
+        singleOf(::FcmTokenRepositoryImpl) bind FcmTokenRepository::class
+        singleOf(::FcmTokenProviderRepositoryImpl) bind FcmTokenProviderRepository::class
+        singleOf(::NotificationTopicRepositoryImpl) bind NotificationTopicRepository::class
     }
 
 val dataCoreModule =

@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase

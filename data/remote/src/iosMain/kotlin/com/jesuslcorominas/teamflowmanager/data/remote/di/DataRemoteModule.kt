@@ -1,6 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.di
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProviderDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
@@ -19,6 +22,9 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDa
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchOperationFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmTokenDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmTokenProviderDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosNotificationTopicDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NoOpDynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NoOpImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
@@ -67,4 +73,9 @@ actual val dataRemoteModule: Module =
         singleOf(::MatchOperationFirestoreDataSourceImpl) bind MatchOperationDataSource::class
         single<ImageStorageDataSource> { NoOpImageStorageDataSource() }
         single<DynamicLinkDataSource> { NoOpDynamicLinkDataSource() }
+
+        // FCM stubs — replace with real implementations when APNs is configured
+        singleOf(::IosFcmTokenDataSourceImpl) bind FcmTokenDataSource::class
+        singleOf(::IosFcmTokenProviderDataSourceImpl) bind FcmTokenProviderDataSource::class
+        singleOf(::IosNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
     }

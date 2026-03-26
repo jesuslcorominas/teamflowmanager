@@ -54,6 +54,10 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubst
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SubscribeToClubNotificationsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UnsubscribeFromClubNotificationsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartPlayerTimersBatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
@@ -116,6 +120,10 @@ import com.jesuslcorominas.teamflowmanager.usecase.ShouldShowInvalidSubstitution
 import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SyncFcmTokenUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.DeleteFcmTokenUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SubscribeToClubNotificationsUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.UnsubscribeFromClubNotificationsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartPlayerTimersBatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCaseImpl
@@ -204,6 +212,12 @@ internal val useCaseInternalModule =
 
         // Time synchronization
         singleOf(::SynchronizeTimeUseCaseImpl) bind SynchronizeTimeUseCase::class
+
+        // FCM push notifications
+        singleOf(::SyncFcmTokenUseCaseImpl) bind SyncFcmTokenUseCase::class
+        singleOf(::DeleteFcmTokenUseCaseImpl) bind DeleteFcmTokenUseCase::class
+        singleOf(::SubscribeToClubNotificationsUseCaseImpl) bind SubscribeToClubNotificationsUseCase::class
+        singleOf(::UnsubscribeFromClubNotificationsUseCaseImpl) bind UnsubscribeFromClubNotificationsUseCase::class
     }
 
 val useCaseModule =

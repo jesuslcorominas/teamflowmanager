@@ -4,6 +4,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProviderDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
@@ -20,6 +23,9 @@ import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.createShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmNotificationTopicDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmTokenFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmTokenProviderDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseDynamicLinkDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseStorageDataSourceImpl
@@ -56,6 +62,9 @@ internal val firebaseModule =
         single { FirebaseFirestore.getInstance() }
         single { FirebaseStorage.getInstance() }
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
+        singleOf(::FcmTokenFirestoreDataSourceImpl) bind FcmTokenDataSource::class
+        singleOf(::FcmTokenProviderDataSourceImpl) bind FcmTokenProviderDataSource::class
+        singleOf(::FcmNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
         single<DynamicLinkDataSource> {
             FirebaseDynamicLinkDataSourceImpl(shortLinkApi = get())
