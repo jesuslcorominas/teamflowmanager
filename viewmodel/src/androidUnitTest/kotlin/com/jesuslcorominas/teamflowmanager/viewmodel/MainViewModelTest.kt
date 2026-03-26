@@ -65,7 +65,6 @@ class MainViewModelTest {
             }
         }
 
-    @Ignore("CLUB_HIDDEN: isPresident is always false while club feature is disabled — restore when CLUB_ORIGINAL is re-enabled")
     @Test
     fun `isPresident should be true when user has President role`() = runTest(testDispatcher) {
         // Given

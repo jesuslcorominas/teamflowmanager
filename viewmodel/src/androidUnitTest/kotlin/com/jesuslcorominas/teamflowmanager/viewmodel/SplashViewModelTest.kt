@@ -62,7 +62,6 @@ class SplashViewModelTest {
         assertEquals(SplashViewModel.UiState.NotAuthenticated, viewModel.uiState.value)
     }
 
-    @Ignore("CLUB_HIDDEN: NoClub state unreachable while club feature is disabled — restore when CLUB_ORIGINAL is re-enabled")
     @Test
     fun `should emit NoClub when user is authenticated but has no team and no club membership`() = runTest {
         // Given
@@ -84,7 +83,6 @@ class SplashViewModelTest {
         assertEquals(SplashViewModel.UiState.NoClub, viewModel.uiState.value)
     }
 
-    @Ignore("CLUB_HIDDEN: ClubPresident state unreachable while club feature is disabled — restore when CLUB_ORIGINAL is re-enabled")
     @Test
     fun `should emit ClubPresident when user has no team but is a President`() = runTest {
         // Given
@@ -116,7 +114,6 @@ class SplashViewModelTest {
         assertEquals(SplashViewModel.UiState.ClubPresident, viewModel.uiState.value)
     }
 
-    @Ignore("CLUB_HIDDEN: NoClub state unreachable while club feature is disabled — restore when CLUB_ORIGINAL is re-enabled")
     @Test
     fun `should emit NoClub when user has no team and is a club member but not President`() = runTest {
         // Given
@@ -148,7 +145,6 @@ class SplashViewModelTest {
         assertEquals(SplashViewModel.UiState.NoClub, viewModel.uiState.value)
     }
 
-    @Ignore("CLUB_HIDDEN: ClubPresident state unreachable while club feature is disabled — restore when CLUB_ORIGINAL is re-enabled")
     @Test
     fun `should emit ClubPresident when user is President even if they own a team`() = runTest {
         // Given
@@ -189,7 +185,6 @@ class SplashViewModelTest {
         assertEquals(SplashViewModel.UiState.ClubPresident, viewModel.uiState.value)
     }
 
-    @Ignore("CLUB_HIDDEN: NoClub state unreachable while club feature is disabled — restore when CLUB_ORIGINAL is re-enabled")
     @Test
     fun `should emit NoClub when user has team but team has no club`() = runTest {
         // Given
