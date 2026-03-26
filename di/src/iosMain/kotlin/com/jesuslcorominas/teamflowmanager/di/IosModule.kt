@@ -52,11 +52,15 @@ val iosModule =
                 getCurrentUser = get(),
                 getUserClubMembership = get(),
                 synchronizeTimeUseCase = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
             )
         }
         factory {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -82,12 +86,18 @@ val iosModule =
         factory {
             CreateClubViewModel(
                 createClubUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
         factory {
             JoinClubViewModel(
                 joinClubByCodeUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -143,6 +153,7 @@ val iosModule =
             SettingsViewModel(
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
+                deleteFcmTokenUseCase = get(),
                 analyticsTracker = get(),
             )
         }

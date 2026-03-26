@@ -39,6 +39,8 @@ val viewModelModule =
                 getCurrentUser = get(),
                 getUserClubMembership = get(),
                 synchronizeTimeUseCase = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
             )
         }
 
@@ -54,6 +56,9 @@ val viewModelModule =
         viewModel {
             CreateClubViewModel(
                 createClubUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -61,6 +66,9 @@ val viewModelModule =
         viewModel {
             JoinClubViewModel(
                 joinClubByCodeUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -202,6 +210,7 @@ val viewModelModule =
             SettingsViewModel(
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
+                deleteFcmTokenUseCase = get(),
                 analyticsTracker = get(),
             )
         }

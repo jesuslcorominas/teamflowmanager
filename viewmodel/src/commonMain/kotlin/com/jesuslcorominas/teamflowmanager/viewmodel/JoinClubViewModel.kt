@@ -5,11 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubResult
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 enum class InvitationCodeError {
@@ -24,6 +28,9 @@ private const val MAX_INVITATION_CODE_LENGTH = 10
 
 class JoinClubViewModel(
     private val joinClubByCodeUseCase: JoinClubByCodeUseCase,
+    private val getCurrentUser: GetCurrentUserUseCase,
+    private val syncFcmTokenUseCase: SyncFcmTokenUseCase,
+    private val isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase,
     private val analyticsTracker: AnalyticsTracker,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
@@ -46,7 +53,6 @@ class JoinClubViewModel(
     }
 
     fun onInvitationCodeChanged(code: String) {
-        // Only allow alphanumeric characters
         val filtered = code.filter { it.isLetterOrDigit() }.uppercase()
         _invitationCode.value = filtered
         _invitationCodeError.value = null
@@ -55,7 +61,6 @@ class JoinClubViewModel(
     fun joinClub() {
         val code = _invitationCode.value.trim()
 
-        // Validate invitation code
         when {
             code.isEmpty() -> {
                 _invitationCodeError.value = InvitationCodeError.EMPTY_CODE
@@ -80,7 +85,6 @@ class JoinClubViewModel(
             try {
                 val result = joinClubByCodeUseCase(code)
 
-                // Track club join
                 analyticsTracker.logEvent(
                     AnalyticsEvent.CLUB_JOINED,
                     mapOf(
@@ -91,7 +95,6 @@ class JoinClubViewModel(
                     ),
                 )
 
-                // Track orphan team linkage if applicable
                 val orphanTeam = result.orphanTeam
                 if (orphanTeam != null) {
                     analyticsTracker.logEvent(
@@ -104,6 +107,9 @@ class JoinClubViewModel(
                     )
                 }
 
+                // Sync FCM token with new club subscription (fire-and-forget)
+                syncFcmTokenAfterClubChange(result.club.firestoreId)
+
                 _uiState.value = UiState.Success(result)
             } catch (e: Exception) {
                 analyticsTracker.logEvent(
@@ -115,6 +121,14 @@ class JoinClubViewModel(
                 )
                 _uiState.value = UiState.Error(e.message ?: "Failed to join club")
             }
+        }
+    }
+
+    private fun syncFcmTokenAfterClubChange(clubFirestoreId: String?) {
+        if (!isNotificationPermissionGranted()) return
+        viewModelScope.launch {
+            val user = getCurrentUser().first() ?: return@launch
+            runCatching { syncFcmTokenUseCase(user.id, "android", clubFirestoreId) }
         }
     }
 
