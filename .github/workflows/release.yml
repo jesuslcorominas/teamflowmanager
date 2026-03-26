@@ -302,3 +302,39 @@ jobs:
           name: TeamFlowManager-iOS-${{ needs.validate-version.outputs.version_name }}.ipa
           path: ${{ runner.temp }}/ipa/*.ipa
           retention-days: 30
+
+  # ─────────────────────────────────────────────────────────────
+  # 5. Notify PR on failure
+  # ─────────────────────────────────────────────────────────────
+  notify-failure:
+    name: Notify failure
+    runs-on: ubuntu-latest
+    needs: [test, validate-version, android]
+    if: failure()
+    steps:
+      - name: Comment on PR
+        env:
+          GH_TOKEN: ${{ secrets.BOTOMINAS_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list \
+            --repo ${{ github.repository }} \
+            --head ${{ github.head_ref }} \
+            --base main \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR found — skipping comment"
+            exit 0
+          fi
+
+          JOBS=$(gh run view ${{ github.run_id }} \
+            --repo ${{ github.repository }} \
+            --json jobs \
+            --jq '[.jobs[] | select(.conclusion == "failure") | "- **\(.name)**: \(.steps[] | select(.conclusion == "failure") | .name)"] | join("\n")')
+
+          LOGS_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          gh pr comment "$PR_NUMBER" \
+            --repo ${{ github.repository }} \
+            --body "$(printf '❌ **Release CI failed** (build ${{ github.run_number }})\n\n**Jobs fallidos:**\n%s\n\n[Ver logs completos](%s)' "$JOBS" "$LOGS_URL")"
