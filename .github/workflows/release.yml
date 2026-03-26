@@ -3,12 +3,6 @@ name: Release CI
 on:
   pull_request:
     branches: [main]
-  push:
-    branches:
-      - 'release/**'
-    paths-ignore:
-      - '**/*.md'
-      - '.claude/**'
 
 concurrency:
   group: release-${{ github.ref }}
