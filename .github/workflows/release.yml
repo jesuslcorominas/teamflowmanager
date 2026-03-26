@@ -10,6 +10,8 @@ concurrency:
 
 permissions:
   contents: write
+  pull-requests: write
+  checks: write
 
 env:
   PACKAGE_NAME: com.jesuslcorominas.teamflowmanager
@@ -23,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Detect skip-tests flag
         id: skip
@@ -55,13 +59,26 @@ jobs:
         if: steps.skip.outputs.skip != 'true'
         run: chmod +x gradlew
 
-      - name: Run tests
-        if: steps.skip.outputs.skip != 'true'
-        run: ./gradlew test --no-daemon --stacktrace
-
       - name: Run ktlint
         if: steps.skip.outputs.skip != 'true'
         run: ./gradlew ktlintCheck --no-daemon --stacktrace
+
+      - name: Run tests & coverage
+        if: steps.skip.outputs.skip != 'true'
+        run: ./gradlew testDebugUnitTestCoverage --no-daemon --stacktrace
+
+      - name: Post coverage comment on PR
+        if: steps.skip.outputs.skip != 'true'
+        uses: Madrapps/jacoco-report@v1.7.1
+        with:
+          paths: ${{ github.workspace }}/build/reports/jacoco/testDebugUnitTestCoverage/coverage.xml
+          token: ${{ secrets.BOTOMINAS_TOKEN }}
+          min-coverage-overall: 0
+          min-coverage-changed-files: 80
+          title: '📊 Code Coverage'
+          update-comment: true
+          pass-emoji: '✅'
+          fail-emoji: '❌'
 
       - name: Upload test results
         if: always() && steps.skip.outputs.skip != 'true'
@@ -69,6 +86,14 @@ jobs:
         with:
           name: test-results
           path: '**/build/test-results/**/*.xml'
+          retention-days: 7
+
+      - name: Upload coverage report
+        if: always() && steps.skip.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/reports/jacoco/testDebugUnitTestCoverage/
           retention-days: 7
 
   # ─────────────────────────────────────────────────────────────
