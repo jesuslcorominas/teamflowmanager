@@ -5,16 +5,17 @@ Start by running `git branch --show-current` to determine the current branch, an
 ## If on `develop`:
 
 1. Ask: "¿Qué versión quieres publicar? (ej: 0.3.1)"
-2. Ask: "¿Tienes release notes para esta versión? (opcional — si no, se usará un mensaje genérico)"
+2. Pull latest develop: `git pull origin develop` — ensures the release branch is cut from the latest remote state
+3. Ask: "¿Tienes release notes para esta versión? (opcional — si no, se usará un mensaje genérico)"
    - If provided: write the text to `distribution/whatsnew/whatsnew-es-ES`
    - If not provided: write "Corrección de errores y mejoras de rendimiento." to `distribution/whatsnew/whatsnew-es-ES`
    - Commit: `git add distribution/whatsnew/ && git commit -m "chore: release notes for v{version}"`
-3. Create the release branch: `git checkout -b release/{version}`
-4. Push: `git push -u origin release/{version}`
+4. Create the release branch: `git checkout -b release/{version}`
+5. Push: `git push -u origin release/{version}`
    - The pre-push hook will bump versionCode automatically and push
    - GitHub Actions will open a PR to `main` automatically
-5. Inform: "PR creada hacia main. Monitorizando la CI..."
-6. Start CI monitoring loop (see ## CI Monitoring below)
+6. Inform: "PR creada hacia main. Monitorizando la CI..."
+7. Start CI monitoring loop (see ## CI Monitoring below)
 
 **Note on screenshots**: Play Store screenshots require subida manual desde Play Console por ahora.
 Screenshots support via API es trabajo futuro (ver sección iOS App Store más abajo).
