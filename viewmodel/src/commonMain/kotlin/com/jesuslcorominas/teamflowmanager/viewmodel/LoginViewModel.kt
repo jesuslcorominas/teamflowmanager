@@ -87,27 +87,29 @@ class LoginViewModel(
             runCatching {
                 syncFcmTokenUseCase(user.id, platform, clubFirestoreId)
             }
+            _uiState.value = UiState.Success
         } else {
-            // Store pending sync to complete after the user grants permission
+            // Store pending sync and defer navigation until the user responds to
+            // the permission dialog — otherwise the screen navigates away before
+            // the launcher can receive the result.
             pendingFcmSync = PendingFcmSync(user.id, platform, clubFirestoreId)
             _events.emit(UiEvent.RequestNotificationPermission)
+            // Success is set inside onNotificationPermissionResult
         }
-
-        _uiState.value = UiState.Success
     }
 
     fun onNotificationPermissionResult(granted: Boolean) {
-        if (!granted) {
-            pendingFcmSync = null
-            return
-        }
-        val pending = pendingFcmSync ?: return
+        val pending = pendingFcmSync
         pendingFcmSync = null
-        viewModelScope.launch {
-            runCatching {
-                syncFcmTokenUseCase(pending.userId, pending.platform, pending.clubFirestoreId)
+        if (granted && pending != null) {
+            viewModelScope.launch {
+                runCatching {
+                    syncFcmTokenUseCase(pending.userId, pending.platform, pending.clubFirestoreId)
+                }
             }
         }
+        // Navigate regardless of whether permission was granted or denied
+        _uiState.value = UiState.Success
     }
 
     fun resetState() {

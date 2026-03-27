@@ -135,7 +135,7 @@ class LoginViewModelTest {
         }
 
     @Test
-    fun `syncFcmToken is NOT called on successful login when permission is not granted`() =
+    fun `state stays Loading until onNotificationPermissionResult when permission is not granted`() =
         runTest(testDispatcher) {
             every { isNotificationPermissionGranted() } returns false
             coEvery { signInWithGoogleUseCase(any()) } returns Result.success(testUser)
@@ -143,6 +143,23 @@ class LoginViewModelTest {
             viewModel.signInWithGoogle("token")
             advanceUntilIdle()
 
+            // Navigation is deferred — Success is NOT emitted yet
+            assertEquals(LoginViewModel.UiState.Loading, viewModel.uiState.value)
+            coVerify(exactly = 0) { syncFcmTokenUseCase(any(), any(), any()) }
+        }
+
+    @Test
+    fun `Success is emitted after onNotificationPermissionResult even when denied`() =
+        runTest(testDispatcher) {
+            every { isNotificationPermissionGranted() } returns false
+            coEvery { signInWithGoogleUseCase(any()) } returns Result.success(testUser)
+            viewModel.signInWithGoogle("token")
+            advanceUntilIdle()
+
+            viewModel.onNotificationPermissionResult(granted = false)
+            advanceUntilIdle()
+
+            assertEquals(LoginViewModel.UiState.Success, viewModel.uiState.value)
             coVerify(exactly = 0) { syncFcmTokenUseCase(any(), any(), any()) }
         }
 
