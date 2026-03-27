@@ -32,6 +32,11 @@ Y luego lee solo los ficheros relevantes con la herramienta Read.
 
 Para cada fichero mencionado en el diff que requiera contexto, usa la herramienta Read con la ruta absoluta. No asumas el contenido de un fichero sin leerlo.
 
+## Paso 2b — Plantilla de resolución (si aplica)
+
+Si la PR cierra un issue conocido y se te pide documentar los hallazgos o el cierre del issue,
+usar `.claude/templates/issue_resolution_template.md` como estructura del documento de resolución.
+
 ## Paso 3 — Autoverificación antes de escribir
 
 Antes de escribir la revisión, respóndete internamente:
