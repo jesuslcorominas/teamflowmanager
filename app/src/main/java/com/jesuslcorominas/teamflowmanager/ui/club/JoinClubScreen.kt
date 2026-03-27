@@ -1,14 +1,16 @@
 package com.jesuslcorominas.teamflowmanager.ui.club
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -16,7 +18,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -50,14 +51,12 @@ fun JoinClubScreen(
     TrackScreenView(screenName = ScreenName.JOIN_CLUB, screenClass = "JoinClubScreen")
 
     val uiState by viewModel.uiState.collectAsState()
-
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Handle success - auto-redirect after delay
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is JoinClubViewModel.UiState.Success -> {
-                delay(5000) // Auto-redirect after 5 seconds
+                delay(5000)
                 viewModel.resetState()
                 onClubJoined()
             }
@@ -67,19 +66,19 @@ fun JoinClubScreen(
                 viewModel.resetState()
             }
 
-            else -> { // No action needed
-            }
+            else -> {}
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { paddingValues ->
-        // Show success state instead of form
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding(),
+    ) {
         if (uiState is JoinClubViewModel.UiState.Success) {
             val successState = uiState as JoinClubViewModel.UiState.Success
             ClubJoinedSuccessfullyContent(
-                paddingValues = paddingValues,
                 clubName = successState.result.club.name,
                 hasOrphanTeam = successState.result.orphanTeam != null,
                 role = successState.result.clubMember.roles.joinToString(", "),
@@ -88,29 +87,27 @@ fun JoinClubScreen(
                 onClubJoined()
             }
         } else {
-            // Show form
-            JoinClubForm(
-                paddingValues = paddingValues,
-                viewModel = viewModel,
-            )
+            JoinClubForm(viewModel = viewModel)
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
 @Composable
 private fun ClubJoinedSuccessfullyContent(
-    paddingValues: PaddingValues,
     clubName: String,
     hasOrphanTeam: Boolean,
     role: String,
     onContinueClick: () -> Unit,
 ) {
     Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(32.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -173,10 +170,9 @@ private fun ClubJoinedSuccessfullyContent(
 
         Button(
             onClick = onContinueClick,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             Text(
@@ -190,20 +186,16 @@ private fun ClubJoinedSuccessfullyContent(
 
 @Composable
 private fun JoinClubForm(
-    paddingValues: PaddingValues,
     viewModel: JoinClubViewModel,
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
     val invitationCode by viewModel.invitationCode.collectAsState()
     val invitationCodeError by viewModel.invitationCodeError.collectAsState()
 
     Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(32.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -234,27 +226,23 @@ private fun JoinClubForm(
             onValueChange = { viewModel.onInvitationCodeChanged(it) },
             label = { Text(stringResource(id = R.string.invitation_code_label)) },
             isError = invitationCodeError != null,
-            supportingText =
-                invitationCodeError?.let { errorResId ->
-                    {
-                        Text(
-                            text =
-                                stringResource(
-                                    id =
-                                        when (errorResId) {
-                                            InvitationCodeError.EMPTY_CODE -> R.string.invitation_code_error_empty
-                                            InvitationCodeError.CODE_TOO_SHORT -> R.string.invitation_code_error_too_short
-                                            InvitationCodeError.CODE_TOO_LONG -> R.string.invitation_code_error_too_long
-                                            InvitationCodeError.INVALID_FORMAT -> R.string.invitation_code_error_invalid_format
-                                        },
-                                ),
-                        )
-                    }
-                },
-            keyboardOptions =
-                KeyboardOptions(
-                    imeAction = ImeAction.Done,
-                ),
+            supportingText = invitationCodeError?.let { errorResId ->
+                {
+                    Text(
+                        text = stringResource(
+                            id = when (errorResId) {
+                                InvitationCodeError.EMPTY_CODE -> R.string.invitation_code_error_empty
+                                InvitationCodeError.CODE_TOO_SHORT -> R.string.invitation_code_error_too_short
+                                InvitationCodeError.CODE_TOO_LONG -> R.string.invitation_code_error_too_long
+                                InvitationCodeError.INVALID_FORMAT -> R.string.invitation_code_error_invalid_format
+                            },
+                        ),
+                    )
+                }
+            },
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done,
+            ),
             readOnly = uiState is JoinClubViewModel.UiState.Loading,
         )
 
@@ -263,10 +251,9 @@ private fun JoinClubForm(
         Button(
             onClick = { viewModel.joinClub() },
             enabled = uiState !is JoinClubViewModel.UiState.Loading && invitationCode.isNotBlank(),
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             if (uiState is JoinClubViewModel.UiState.Loading) {

@@ -49,12 +49,6 @@ fun PlayerPositionsStep(
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
-            text = stringResource(R.string.player_positions_step_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-
-        Text(
             text = stringResource(R.string.player_positions_step_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

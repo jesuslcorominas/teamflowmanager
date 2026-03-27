@@ -102,14 +102,6 @@ fun GeneralDataStep(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
-        Text(
-            text = stringResource(R.string.wizard_step_general_data),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-
-        Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-
         AppTextField(
             modifier = Modifier.fillMaxWidth(),
             value = opponent,

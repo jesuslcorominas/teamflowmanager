@@ -143,14 +143,6 @@ fun PlayerDataStep(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
-        Text(
-            text = stringResource(R.string.player_data_step_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-
-        Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-
         // Player image
         Column(
             modifier = Modifier.fillMaxWidth(),
