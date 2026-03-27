@@ -76,6 +76,12 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Default icon and color for FCM notifications handled by the system
+             (app in background or killed). Must be a monochrome drawable. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_launcher_black_and_white" />
+
         <service
             android:name=".service.TeamFlowFirebaseMessagingService"
             android:exported="false">
