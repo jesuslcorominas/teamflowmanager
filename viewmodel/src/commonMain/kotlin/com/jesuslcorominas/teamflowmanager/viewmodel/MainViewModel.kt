@@ -16,15 +16,16 @@ class MainViewModel(
     private val setNotificationPermissionRequestedUseCase: SetNotificationPermissionRequestedUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
 ) : ViewModel() {
-    val isPresident: StateFlow<Boolean> = getUserClubMembership()
-        .map { clubMember ->
-            clubMember?.hasRole(ClubRole.PRESIDENT) ?: false
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = false
-        )
+    val isPresident: StateFlow<Boolean> =
+        getUserClubMembership()
+            .map { clubMember ->
+                clubMember?.hasRole(ClubRole.PRESIDENT) ?: false
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = false,
+            )
 
     fun hasNotificationPermissionBeenRequested(): Boolean = hasNotificationPermissionBeenRequestedUseCase()
 

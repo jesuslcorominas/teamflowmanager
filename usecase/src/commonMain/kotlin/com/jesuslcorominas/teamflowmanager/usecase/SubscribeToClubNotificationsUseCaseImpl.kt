@@ -6,6 +6,5 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationTopicR
 class SubscribeToClubNotificationsUseCaseImpl(
     private val notificationTopicRepository: NotificationTopicRepository,
 ) : SubscribeToClubNotificationsUseCase {
-    override suspend fun invoke(clubFirestoreId: String) =
-        notificationTopicRepository.subscribeToClub(clubFirestoreId)
+    override suspend fun invoke(clubFirestoreId: String) = notificationTopicRepository.subscribeToClub(clubFirestoreId)
 }

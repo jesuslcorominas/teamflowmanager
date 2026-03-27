@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -38,6 +39,7 @@ fun BottomNavigationBar(
             listOf(
                 Route.TeamList,
                 Route.ClubMembers,
+                Route.ClubSettings,
             )
         } else {
             listOf(
@@ -72,6 +74,7 @@ fun BottomNavigationBar(
                         route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
                         route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
                         route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
+                        route is Route.ClubSettings && Route.fromValue(currentRoute) is Route.ClubSettings -> true
                         route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
                         route is Route.Matches && (
                             Route.fromValue(currentRoute) is Route.Matches ||
@@ -149,6 +152,7 @@ private fun Route.toIcon(): ImageVector? =
         Route.Team -> Icons.Default.Groups
         Route.TeamList -> Icons.Default.Groups
         Route.ClubMembers -> Icons.Default.People
+        Route.ClubSettings -> Icons.Default.Shield
         Route.Matches, Route.ArchivedMatches -> Icons.Default.SportsSoccer
         Route.Analysis -> Icons.Default.BarChart
         else -> null
@@ -160,6 +164,7 @@ private fun Route.toStringRes(): Int? =
         Route.Team -> R.string.nav_team
         Route.TeamList -> R.string.nav_teams
         Route.ClubMembers -> R.string.nav_staff
+        Route.ClubSettings -> R.string.nav_club_settings
         Route.Matches, Route.ArchivedMatches -> R.string.nav_matches
         Route.Analysis -> R.string.nav_analysis
         else -> null

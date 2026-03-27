@@ -8,8 +8,12 @@ import kotlinx.coroutines.tasks.await
 class FcmTokenFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
 ) : FcmTokenDataSource {
-
-    override suspend fun saveToken(userId: String, token: String, platform: String, topic: String?) {
+    override suspend fun saveToken(
+        userId: String,
+        token: String,
+        platform: String,
+        topic: String?,
+    ) {
         val docId = docId(userId, token)
         firestore.collection(COLLECTION).document(docId).set(
             mapOf(
@@ -18,15 +22,21 @@ class FcmTokenFirestoreDataSourceImpl(
                 "platform" to platform,
                 "topic" to topic,
                 "updatedAt" to System.currentTimeMillis(),
-            )
+            ),
         ).await()
     }
 
-    override suspend fun deleteToken(userId: String, token: String) {
+    override suspend fun deleteToken(
+        userId: String,
+        token: String,
+    ) {
         firestore.collection(COLLECTION).document(docId(userId, token)).delete().await()
     }
 
-    override suspend fun getTokenEntry(userId: String, token: String): FcmTokenEntry? {
+    override suspend fun getTokenEntry(
+        userId: String,
+        token: String,
+    ): FcmTokenEntry? {
         val snapshot = firestore.collection(COLLECTION).document(docId(userId, token)).get().await()
         return if (snapshot.exists()) {
             FcmTokenEntry(
@@ -39,11 +49,15 @@ class FcmTokenFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun findTokensForOtherUsers(token: String, currentUserId: String): List<FcmTokenEntry> {
-        val snapshot = firestore.collection(COLLECTION)
-            .whereEqualTo("token", token)
-            .get()
-            .await()
+    override suspend fun findTokensForOtherUsers(
+        token: String,
+        currentUserId: String,
+    ): List<FcmTokenEntry> {
+        val snapshot =
+            firestore.collection(COLLECTION)
+                .whereEqualTo("token", token)
+                .get()
+                .await()
         return snapshot.documents
             .filter { it.getString("userId") != currentUserId }
             .map { doc ->
@@ -55,7 +69,10 @@ class FcmTokenFirestoreDataSourceImpl(
             }
     }
 
-    private fun docId(userId: String, token: String) = "${userId}_${token.takeLast(16)}"
+    private fun docId(
+        userId: String,
+        token: String,
+    ) = "${userId}_${token.takeLast(16)}"
 
     companion object {
         private const val COLLECTION = "fcmTokens"

@@ -9,10 +9,27 @@ import com.jesuslcorominas.teamflowmanager.domain.model.FcmTokenEntry
 // iOS stubs — replace with real implementations when APNs is configured in Firebase Console
 
 class IosFcmTokenDataSourceImpl : FcmTokenDataSource {
-    override suspend fun saveToken(userId: String, token: String, platform: String, topic: String?) {}
-    override suspend fun deleteToken(userId: String, token: String) {}
-    override suspend fun getTokenEntry(userId: String, token: String): FcmTokenEntry? = null
-    override suspend fun findTokensForOtherUsers(token: String, currentUserId: String): List<FcmTokenEntry> = emptyList()
+    override suspend fun saveToken(
+        userId: String,
+        token: String,
+        platform: String,
+        topic: String?,
+    ) {}
+
+    override suspend fun deleteToken(
+        userId: String,
+        token: String,
+    ) {}
+
+    override suspend fun getTokenEntry(
+        userId: String,
+        token: String,
+    ): FcmTokenEntry? = null
+
+    override suspend fun findTokensForOtherUsers(
+        token: String,
+        currentUserId: String,
+    ): List<FcmTokenEntry> = emptyList()
 }
 
 class IosFcmTokenProviderDataSourceImpl : FcmTokenProviderDataSource {
@@ -21,6 +38,7 @@ class IosFcmTokenProviderDataSourceImpl : FcmTokenProviderDataSource {
 
 class IosNotificationTopicDataSourceImpl : NotificationTopicDataSource {
     override suspend fun subscribe(topic: String) {}
+
     override suspend fun unsubscribe(topic: String) {}
 }
 

@@ -19,4 +19,18 @@ internal class ClubRepositoryImpl(
     override suspend fun getClubByInvitationCode(invitationCode: String): Club? {
         return clubDataSource.getClubByInvitationCode(invitationCode)
     }
+
+    override suspend fun getClubByFirestoreId(firestoreId: String): Club? {
+        return clubDataSource.getClubByFirestoreId(firestoreId)
+    }
+
+    override suspend fun regenerateInvitationCode(firestoreId: String): String = clubDataSource.regenerateInvitationCode(firestoreId)
+
+    override suspend fun updateClub(
+        firestoreId: String,
+        name: String,
+        homeGround: String?,
+    ): Club {
+        return clubDataSource.updateClub(firestoreId, name, homeGround)
+    }
 }

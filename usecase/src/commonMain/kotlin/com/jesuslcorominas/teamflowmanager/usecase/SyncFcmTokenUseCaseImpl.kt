@@ -10,7 +10,11 @@ class SyncFcmTokenUseCaseImpl(
     private val fcmTokenRepository: FcmTokenRepository,
     private val notificationTopicRepository: NotificationTopicRepository,
 ) : SyncFcmTokenUseCase {
-    override suspend fun invoke(userId: String, platform: String, clubFirestoreId: String?) {
+    override suspend fun invoke(
+        userId: String,
+        platform: String,
+        clubFirestoreId: String?,
+    ) {
         val token = fcmTokenProviderRepository.getToken()
         if (token.isEmpty()) return
 

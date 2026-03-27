@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewMod
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
@@ -130,6 +131,14 @@ val viewModelModule =
             ClubMembersViewModel(
                 getClubMembers = get(),
                 getUserClubMembership = get(),
+            )
+        }
+        viewModel {
+            ClubSettingsViewModel(
+                getUserClubMembership = get(),
+                getClubByFirestoreId = get(),
+                updateClubUseCase = get(),
+                regenerateInvitationCodeUseCase = get(),
             )
         }
         viewModel { params ->

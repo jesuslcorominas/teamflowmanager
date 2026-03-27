@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -29,6 +30,7 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.PrimaryLight
 import org.jetbrains.compose.resources.stringResource
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.nav_analysis
+import teamflowmanager.shared_ui.generated.resources.nav_club_settings
 import teamflowmanager.shared_ui.generated.resources.nav_matches
 import teamflowmanager.shared_ui.generated.resources.nav_players
 import teamflowmanager.shared_ui.generated.resources.nav_staff
@@ -44,7 +46,7 @@ fun BottomNavigationBar(
 ) {
     val items: List<Route> =
         if (isPresident) {
-            listOf(Route.TeamList, Route.ClubMembers)
+            listOf(Route.TeamList, Route.ClubMembers, Route.ClubSettings)
         } else {
             listOf(Route.Matches, Route.Players, Route.Analysis, Route.Team)
         }
@@ -77,6 +79,7 @@ fun BottomNavigationBar(
                             route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
                             route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
                             route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
+                            route is Route.ClubSettings && Route.fromValue(currentRoute) is Route.ClubSettings -> true
                             route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
                             route is Route.Matches && (
                                 Route.fromValue(currentRoute) is Route.Matches ||
@@ -128,6 +131,7 @@ private fun Route.toIcon(): ImageVector? =
         Route.Team -> Icons.Default.Groups
         Route.TeamList -> Icons.Default.Groups
         Route.ClubMembers -> Icons.Default.People
+        Route.ClubSettings -> Icons.Default.Settings
         Route.Matches, Route.ArchivedMatches -> Icons.Default.SportsSoccer
         Route.Analysis -> Icons.Default.BarChart
         else -> null
@@ -140,6 +144,7 @@ private fun Route.toLabel(): String? =
         Route.Team -> stringResource(Res.string.nav_team)
         Route.TeamList -> stringResource(Res.string.nav_teams)
         Route.ClubMembers -> stringResource(Res.string.nav_staff)
+        Route.ClubSettings -> stringResource(Res.string.nav_club_settings)
         Route.Matches, Route.ArchivedMatches -> stringResource(Res.string.nav_matches)
         Route.Analysis -> stringResource(Res.string.nav_analysis)
         else -> null

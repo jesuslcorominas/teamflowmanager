@@ -5,6 +5,5 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProvider
 import kotlinx.coroutines.tasks.await
 
 class FcmTokenProviderDataSourceImpl : FcmTokenProviderDataSource {
-    override suspend fun getToken(): String =
-        runCatching { FirebaseMessaging.getInstance().token.await() ?: "" }.getOrDefault("")
+    override suspend fun getToken(): String = runCatching { FirebaseMessaging.getInstance().token.await() ?: "" }.getOrDefault("")
 }

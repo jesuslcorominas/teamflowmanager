@@ -102,7 +102,10 @@ class SplashViewModel(
         }
     }
 
-    private fun syncFcmTokenIfPermitted(userId: String, clubFirestoreId: String?) {
+    private fun syncFcmTokenIfPermitted(
+        userId: String,
+        clubFirestoreId: String?,
+    ) {
         if (!isNotificationPermissionGranted()) return
         viewModelScope.launch {
             runCatching { syncFcmTokenUseCase(userId, "android", clubFirestoreId) }

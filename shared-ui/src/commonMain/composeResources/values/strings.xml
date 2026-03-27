@@ -336,4 +336,13 @@
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings">Settings</string>
+
+    <!-- Club Settings -->
+    <string name="nav_club_settings">Club</string>
+    <string name="club_settings_title">Club Settings</string>
+    <string name="home_ground_label">Home Ground</string>
+    <string name="home_ground_placeholder">e.g. Municipal Sports Centre</string>
+    <string name="copy_invitation_code">Copy Code</string>
+    <string name="invitation_code_copied">Invitation code copied</string>
+    <string name="club_settings_saved">Club settings saved</string>
 </resources>
