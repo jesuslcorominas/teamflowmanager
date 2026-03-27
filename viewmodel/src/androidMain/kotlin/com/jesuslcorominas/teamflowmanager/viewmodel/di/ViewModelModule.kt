@@ -42,6 +42,7 @@ val viewModelModule =
                 synchronizeTimeUseCase = get(),
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
+                signOutUseCase = get(),
             )
         }
 
@@ -197,6 +198,7 @@ val viewModelModule =
                 saveDefaultCaptainUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 getTeamUseCase = get(),
+                getClubByFirestoreIdUseCase = get(),
                 createMatch = get(),
                 getMatchByIdUseCase = get(),
                 updateMatchUseCase = get(),

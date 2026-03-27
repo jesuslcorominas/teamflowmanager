@@ -26,6 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -66,6 +67,7 @@ fun GeneralDataStep(
     onNext: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    homeGround: String? = null,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -150,6 +152,17 @@ fun GeneralDataStep(
                 ),
             keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
         )
+
+        if (homeGround != null) {
+            SuggestionChip(
+                onClick = {
+                    location = homeGround
+                    locationError = null
+                    focusManager.clearFocus()
+                },
+                label = { Text(homeGround) },
+            )
+        }
 
         // Date Picker
         OutlinedTextField(

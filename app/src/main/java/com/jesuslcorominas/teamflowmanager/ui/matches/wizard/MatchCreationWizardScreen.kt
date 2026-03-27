@@ -128,6 +128,7 @@ fun MatchCreationWizardScreen(
                                 },
                                 onNext = { wizardViewModel.goToNextStep() },
                                 onCancel = { wizardViewModel.requestBack(onNavigateBack) },
+                                homeGround = wizardViewModel.getHomeGround(),
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(TFMSpacing.spacing04),

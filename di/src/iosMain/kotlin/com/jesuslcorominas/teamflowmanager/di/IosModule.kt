@@ -55,6 +55,7 @@ val iosModule =
                 synchronizeTimeUseCase = get(),
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
+                signOutUseCase = get(),
             )
         }
         factory {
@@ -235,6 +236,7 @@ val iosModule =
                 saveDefaultCaptainUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 getTeamUseCase = get(),
+                getClubByFirestoreIdUseCase = get(),
                 createMatch = get(),
                 getMatchByIdUseCase = get(),
                 updateMatchUseCase = get(),

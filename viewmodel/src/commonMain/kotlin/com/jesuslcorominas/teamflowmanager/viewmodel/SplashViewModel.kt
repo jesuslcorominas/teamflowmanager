@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import kotlinx.coroutines.Job
@@ -24,6 +25,7 @@ class SplashViewModel(
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
     private val syncFcmTokenUseCase: SyncFcmTokenUseCase,
     private val isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase,
+    private val signOutUseCase: SignOutUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -90,7 +92,14 @@ class SplashViewModel(
         val team = getTeam().first()
 
         if (team == null) {
-            _uiState.value = UiState.NoClub
+            if (clubMember == null) {
+                // Authenticated but onboarding never completed — invalidate the session
+                // so the user is sent back to Login instead of the club selection screen.
+                runCatching { signOutUseCase() }
+                _uiState.value = UiState.NotAuthenticated
+            } else {
+                _uiState.value = UiState.NoClub
+            }
         } else {
             val clubFirestoreId = team.clubFirestoreId
             if (clubFirestoreId != null) {
