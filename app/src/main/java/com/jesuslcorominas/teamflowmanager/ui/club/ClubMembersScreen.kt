@@ -29,9 +29,9 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
-import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -101,12 +101,13 @@ private fun MembersListContent(
 ) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(
-            bottom = LocalContentBottomPadding.current,
-            top = TFMSpacing.spacing04,
-            start = TFMSpacing.spacing04,
-            end = TFMSpacing.spacing04,
-        ),
+        contentPadding =
+            PaddingValues(
+                bottom = LocalContentBottomPadding.current,
+                top = TFMSpacing.spacing04,
+                start = TFMSpacing.spacing04,
+                end = TFMSpacing.spacing04,
+            ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(members, key = { it.id }) { member ->
