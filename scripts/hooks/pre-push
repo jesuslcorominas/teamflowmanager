@@ -1,8 +1,12 @@
 #!/bin/bash
-# Pre-push hook: auto-bumps versionCode on release/* branches.
+# Pre-push hook:
+#   ALL feature branches  → ktlint (auto-fix + commit if needed) + tests + coverage
+#   release/* branches    → all of the above + versionCode bump
 # Install with: bash scripts/install-hooks.sh
 
-# Skip if this push was triggered by the hook itself
+COVERAGE_MINIMUM=80
+
+# Skip if this push was triggered by the hook itself (version bump re-push)
 if [ -n "$VERSION_BUMP_IN_PROGRESS" ]; then
   exit 0
 fi
@@ -16,7 +20,75 @@ done
 
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
 
-# Only run on release/* branches
+# Skip protected integration branches — CI handles them
+if [[ "$BRANCH" == "main" || "$BRANCH" == "develop" ]]; then
+  exit 0
+fi
+
+# ── 1. ktlint (ALL branches) ────────────────────────────────────────────────
+echo "🔍 Running ktlint..."
+./gradlew ktlintCheck --no-daemon -q 2>&1
+LINT_EXIT=$?
+
+if [ $LINT_EXIT -ne 0 ]; then
+  echo "⚠️  ktlint issues found — running ktlintFormat to auto-fix..."
+  ./gradlew ktlintFormat --no-daemon -q 2>&1
+  git add -A
+  git commit -m "style: ktlint auto-format"
+  echo "✅ ktlint issues fixed and committed"
+else
+  echo "✅ ktlint OK"
+fi
+
+# ── 2. Tests + Coverage (ALL branches) ──────────────────────────────────────
+PREV_MSG=$(git log -1 --format=%s HEAD)
+SKIP_FLAG=""
+if [[ "$PREV_MSG" == *"[skip-tests]"* ]]; then
+  SKIP_FLAG=" [skip-tests]"
+  echo "⏩ [skip-tests] detected — skipping local tests and coverage"
+else
+  echo "🧪 Running tests and coverage..."
+  ./gradlew testDebugUnitTestCoverage --no-daemon -q 2>&1
+  TEST_EXIT=$?
+
+  if [ $TEST_EXIT -ne 0 ]; then
+    echo "❌ Tests failed — fix them before pushing."
+    echo "   To skip locally: add [skip-tests] to your commit message"
+    exit 1
+  fi
+
+  echo "✅ Tests passed"
+
+  # ── 3. Coverage threshold check ──────────────────────────────────────────
+  COVERAGE_XML="build/reports/jacoco/testDebugUnitTestCoverage/coverage.xml"
+  if [ -f "$COVERAGE_XML" ]; then
+    COVERAGE=$(python3 - "$COVERAGE_XML" <<'EOF'
+import sys, xml.etree.ElementTree as ET
+tree = ET.parse(sys.argv[1])
+root = tree.getroot()
+for counter in root.findall('counter'):
+    if counter.get('type') == 'INSTRUCTION':
+        missed  = int(counter.get('missed',  0))
+        covered = int(counter.get('covered', 0))
+        total   = missed + covered
+        print(f"{covered / total * 100:.1f}" if total > 0 else "0.0")
+        break
+EOF
+)
+    echo "📊 Overall instruction coverage: ${COVERAGE}%"
+    PASSES=$(python3 -c "print('yes' if float('$COVERAGE') >= $COVERAGE_MINIMUM else 'no')")
+    if [ "$PASSES" = "no" ]; then
+      echo "❌ Coverage ${COVERAGE}% is below the required ${COVERAGE_MINIMUM}%"
+      echo "   Add tests to reach the threshold or use [skip-tests] to bypass."
+      exit 1
+    fi
+    echo "✅ Coverage OK (${COVERAGE}% ≥ ${COVERAGE_MINIMUM}%)"
+  else
+    echo "⚠️  Coverage report not found — skipping threshold check"
+  fi
+fi
+
+# ── Release branches only: versionCode bump ─────────────────────────────────
 if [[ ! "$BRANCH" =~ ^release/ ]]; then
   exit 0
 fi
@@ -30,7 +102,7 @@ if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exit 0
 fi
 
-# Read current versionCode
+# ── 4. versionCode bump ────────────────────────────────────────────────────
 CURRENT_CODE=$(grep 'versionCode' app/build.gradle.kts | grep -oE '[0-9]+' | head -1)
 if [ -z "$CURRENT_CODE" ]; then
   echo "❌ Could not read versionCode from app/build.gradle.kts"
