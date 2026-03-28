@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 interface GetTeamsByClubUseCase {
     /**
      * Get all teams for a club.
-     * @param clubFirestoreId The Firestore document ID of the club
+     * @param clubId The identifier of the club
      * @return Flow emitting list of teams in the club
      */
-    operator fun invoke(clubFirestoreId: String): Flow<List<Team>>
+    operator fun invoke(clubId: String): Flow<List<Team>>
 }

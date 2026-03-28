@@ -8,7 +8,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByFirestoreIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,8 +41,8 @@ sealed interface PresidentTeamDetailUiState {
 }
 
 class PresidentTeamDetailViewModel(
-    private val teamFirestoreId: String,
-    private val getTeamByFirestoreId: GetTeamByFirestoreIdUseCase,
+    private val teamId: String,
+    private val getTeamById: GetTeamByIdUseCase,
     private val getPlayersByTeam: GetPlayersByTeamUseCase,
     private val getMatchesByTeam: GetMatchesByTeamUseCase,
 ) : ViewModel() {
@@ -62,15 +62,15 @@ class PresidentTeamDetailViewModel(
 
     private fun load() {
         viewModelScope.launch {
-            val team = getTeamByFirestoreId(teamFirestoreId)
+            val team = getTeamById(teamId)
             if (team == null) {
                 _uiState.value = PresidentTeamDetailUiState.Error
                 return@launch
             }
 
             combine(
-                getPlayersByTeam(teamFirestoreId),
-                getMatchesByTeam(teamFirestoreId),
+                getPlayersByTeam(teamId),
+                getMatchesByTeam(teamId),
             ) { players, matches ->
                 val finishedMatches = matches.filter { it.status == MatchStatus.FINISHED }
                 val stats =

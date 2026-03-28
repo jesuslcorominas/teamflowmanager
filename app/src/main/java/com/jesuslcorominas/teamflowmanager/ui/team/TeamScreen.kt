@@ -94,7 +94,7 @@ fun TeamScreen(
                 }
 
             is TeamUiState.NoTeam -> {
-                if (state.clubId != null && !state.isPresident) {
+                if (state.clubNumericId != null && !state.isPresident) {
                     // User has club membership but is not a President
                     AlertDialog(
                         title = { Text(stringResource(R.string.team_creation_permission_error_title)) },
@@ -108,8 +108,8 @@ fun TeamScreen(
                     )
                 } else {
                     TeamForm(
+                        clubNumericId = state.clubNumericId,
                         clubId = state.clubId,
-                        clubFirestoreId = state.clubFirestoreId,
                         isPresident = state.isPresident,
                         onSave = { team, _ ->
                             viewModel.createTeam(team) {

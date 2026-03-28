@@ -8,7 +8,7 @@ interface MatchDataSource {
 
     fun getAllMatches(): Flow<List<Match>>
 
-    fun getMatchesByTeam(teamFirestoreId: String): Flow<List<Match>>
+    fun getMatchesByTeam(teamId: String): Flow<List<Match>>
 
     fun getArchivedMatches(): Flow<List<Match>>
 

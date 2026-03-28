@@ -61,11 +61,11 @@ class PlayerFirestoreDataSourceImpl(
         }
     }
 
-    override fun getPlayersByTeam(teamFirestoreId: String): Flow<List<Player>> =
+    override fun getPlayersByTeam(teamId: String): Flow<List<Player>> =
         flow {
             val snapshots =
                 firestore.collection(PLAYERS_COLLECTION)
-                    .where { "teamId" equalTo teamFirestoreId }
+                    .where { "teamId" equalTo teamId }
                     .where { "deleted" equalTo false }
                     .snapshots
             emitAll(
@@ -73,7 +73,7 @@ class PlayerFirestoreDataSourceImpl(
                     qs.documents.mapNotNull { doc ->
                         try {
                             val model = doc.data<PlayerFirestoreModel>()
-                            model.copy(id = doc.id, teamId = teamFirestoreId).toDomain()
+                            model.copy(id = doc.id, teamId = teamId).toDomain()
                         } catch (_: Exception) {
                             null
                         }

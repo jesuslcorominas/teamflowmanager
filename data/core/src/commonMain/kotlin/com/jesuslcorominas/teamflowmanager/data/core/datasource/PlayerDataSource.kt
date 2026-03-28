@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface PlayerDataSource {
     fun getAllPlayers(): Flow<List<Player>>
 
-    fun getPlayersByTeam(teamFirestoreId: String): Flow<List<Player>>
+    fun getPlayersByTeam(teamId: String): Flow<List<Player>>
 
     suspend fun getPlayerById(playerId: Long): Player?
 

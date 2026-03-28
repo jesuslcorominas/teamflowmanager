@@ -36,8 +36,8 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun PresidentTeamDetailScreen(
-    teamFirestoreId: String,
-    viewModel: PresidentTeamDetailViewModel = koinViewModel(parameters = { parametersOf(teamFirestoreId) }),
+    teamId: String,
+    viewModel: PresidentTeamDetailViewModel = koinViewModel(parameters = { parametersOf(teamId) }),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()

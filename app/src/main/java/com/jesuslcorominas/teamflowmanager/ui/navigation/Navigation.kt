@@ -168,15 +168,15 @@ fun Navigation(
             route = Route.PresidentTeamDetail.FULL_ROUTE,
             arguments =
                 listOf(
-                    navArgument(Route.PresidentTeamDetail.ARG_TEAM_FIRESTORE_ID) {
+                    navArgument(Route.PresidentTeamDetail.ARG_TEAM_ID) {
                         type = NavType.StringType
                     },
                 ),
         ) { backStackEntry ->
-            val teamFirestoreId =
-                backStackEntry.arguments?.getString(Route.PresidentTeamDetail.ARG_TEAM_FIRESTORE_ID)
+            val teamId =
+                backStackEntry.arguments?.getString(Route.PresidentTeamDetail.ARG_TEAM_ID)
                     ?: return@composable
-            PresidentTeamDetailScreen(teamFirestoreId = teamFirestoreId)
+            PresidentTeamDetailScreen(teamId = teamId)
         }
 
         composable(Route.ClubMembers.createRoute()) {

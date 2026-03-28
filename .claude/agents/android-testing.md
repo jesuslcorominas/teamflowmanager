@@ -35,6 +35,21 @@ El objetivo puede redefinirse dinámicamente, por ejemplo:
 
 ---
 
+# REGLA CRÍTICA — PERSISTENCIA EN DISCO
+
+**Todo test DEBE escribirse en disco usando herramientas. Nunca como texto.**
+
+- SIEMPRE usar `Read` antes de editar cualquier fichero de test.
+- SIEMPRE usar `Edit` para añadir tests a ficheros existentes.
+- SIEMPRE usar `Write` para ficheros de test nuevos.
+- NUNCA generar tests solo como bloques de texto en la respuesta.
+- Tras escribir, ejecutar los tests con Bash para confirmar que compilan y pasan.
+- Verificar con `git status` que los ficheros están modificados en disco.
+
+Si generas tests como texto pero no escribes el fichero, la tarea está **incompleta**.
+
+---
+
 # REGLAS CRÍTICAS SOBRE CÓDIGO DE PRODUCCIÓN
 
 Está estrictamente prohibido:
@@ -133,19 +148,26 @@ Solo si es imprescindible para testabilidad:
 Documentar cada cambio.
 
 ## PASO 4 — Añadir cobertura relevante
-Añadir tests para:
-- Edge cases
-- Inputs inválidos
-- Ramas no cubiertas
-- Excepciones
-- Casos negativos
+
+Escribir tests directamente en disco:
+
+1. Leer el fichero de test existente con `Read` (si existe) antes de editar.
+2. Usar `Edit` para añadir tests a ficheros existentes.
+3. Usar `Write` para ficheros de test nuevos.
+4. Cubrir: edge cases, inputs inválidos, ramas no cubiertas, excepciones, casos negativos.
 
 No añadir tests que no validen comportamiento.
 
 ## PASO 5 — Verificación final
-Confirmar:
+
+Ejecutar con herramientas (Bash):
+
+```
+./gradlew :<modulo>:test --no-daemon
+```
+
+Confirmar con output real:
 - Todos los tests pasan
-- Cobertura >= 90%
 - No se alteró comportamiento productivo
 - No se añadieron hacks
 
@@ -153,14 +175,19 @@ Confirmar:
 
 # ENTREGA FINAL OBLIGATORIA
 
-Siempre entregar:
+Antes de responder, verificar:
 
-1. Lista de cambios en producción (si hubo)
-2. Lista de tests eliminados
-3. Lista de tests nuevos añadidos
-4. Cobertura alcanzada
-5. Confirmación explícita de no modificación funcional
-6. Lista de commits atómicos sugeridos
+1. `git diff --stat` — confirmar que los ficheros de test están escritos en disco.
+2. `./gradlew :<modulo>:test` — confirmar que todos los tests pasan.
+
+En la respuesta incluir:
+
+1. Confirmación de ficheros escritos en disco (output de `git diff --stat`).
+2. Lista de cambios en producción (si hubo).
+3. Lista de tests eliminados.
+4. Lista de tests nuevos añadidos (con rutas absolutas).
+5. Output real del resultado de los tests.
+6. Confirmación explícita de no modificación funcional.
 
 ---
 

@@ -49,7 +49,7 @@ class GenerateTeamInvitationUseCaseTest {
     @Test(expected = IllegalArgumentException::class)
     fun `givenTeamNotFound_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(user)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns null
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns null
         useCase.invoke("team_fs_1", "Team A")
     }
 
@@ -57,14 +57,14 @@ class GenerateTeamInvitationUseCaseTest {
     fun `givenTeamNotInClub_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         val teamWithoutClub = team.copy(clubFirestoreId = null)
         coEvery { getCurrentUser() } returns flowOf(user)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns teamWithoutClub
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns teamWithoutClub
         useCase.invoke("team_fs_1", "Team A")
     }
 
     @Test(expected = IllegalStateException::class)
     fun `givenUserNotClubMember_whenInvoke_thenThrowIllegalStateException`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(user)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(null)
         useCase.invoke("team_fs_1", "Team A")
     }
@@ -73,7 +73,7 @@ class GenerateTeamInvitationUseCaseTest {
     fun `givenNonPresidentUser_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         val staffMember = presidentMember.copy(roles = listOf(ClubRole.STAFF.roleName))
         coEvery { getCurrentUser() } returns flowOf(user)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(staffMember)
         useCase.invoke("team_fs_1", "Team A")
     }
@@ -82,7 +82,7 @@ class GenerateTeamInvitationUseCaseTest {
     fun `givenPresidentUserAndValidTeam_whenInvoke_thenReturnInvitationLink`() = runTest {
         val invitationLink = "https://invite.example.com/teamA"
         coEvery { getCurrentUser() } returns flowOf(user)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(presidentMember)
         coEvery { teamRepository.generateTeamInvitationLink("team_fs_1", "Team A") } returns invitationLink
 

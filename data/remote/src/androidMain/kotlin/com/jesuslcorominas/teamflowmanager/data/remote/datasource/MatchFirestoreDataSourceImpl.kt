@@ -125,11 +125,11 @@ class MatchFirestoreDataSourceImpl(
      * Gets all matches for a given team (by Firestore ID) as a real-time Flow.
      * Used by the president to view any team's match history read-only.
      */
-    override fun getMatchesByTeam(teamFirestoreId: String): Flow<List<Match>> =
+    override fun getMatchesByTeam(teamId: String): Flow<List<Match>> =
         callbackFlow {
             val listenerRegistration =
                 firestore.collection(MATCHES_COLLECTION)
-                    .whereEqualTo("teamId", teamFirestoreId)
+                    .whereEqualTo("teamId", teamId)
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
@@ -137,7 +137,7 @@ class MatchFirestoreDataSourceImpl(
                         }
                         val matches =
                             snapshot?.documents?.mapNotNull { document ->
-                                documentToMatch(document, teamFirestoreId)
+                                documentToMatch(document, teamId)
                             } ?: emptyList()
                         trySend(matches)
                     }

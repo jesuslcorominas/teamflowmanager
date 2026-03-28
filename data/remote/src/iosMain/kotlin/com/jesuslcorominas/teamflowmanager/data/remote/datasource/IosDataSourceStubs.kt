@@ -32,7 +32,7 @@ class NoOpImageStorageDataSource : ImageStorageDataSource {
 
 class NoOpDynamicLinkDataSource : DynamicLinkDataSource {
     override suspend fun generateTeamInvitationLink(
-        teamFirestoreId: String,
+        teamId: String,
         teamName: String,
     ): String = throw NotImplementedError("generateTeamInvitationLink not implemented for iOS Phase 2")
 }

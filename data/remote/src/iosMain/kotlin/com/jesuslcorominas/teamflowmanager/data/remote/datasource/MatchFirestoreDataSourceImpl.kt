@@ -71,18 +71,18 @@ class MatchFirestoreDataSourceImpl(
         }
     }
 
-    override fun getMatchesByTeam(teamFirestoreId: String): Flow<List<Match>> =
+    override fun getMatchesByTeam(teamId: String): Flow<List<Match>> =
         flow {
             val snapshots =
                 firestore.collection(MATCHES_COLLECTION)
-                    .where { "teamId" equalTo teamFirestoreId }
+                    .where { "teamId" equalTo teamId }
                     .snapshots
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
                         try {
                             val model = doc.data<MatchFirestoreModel>()
-                            documentToMatch(doc.id, model, teamFirestoreId)
+                            documentToMatch(doc.id, model, teamId)
                         } catch (_: Exception) {
                             null
                         }

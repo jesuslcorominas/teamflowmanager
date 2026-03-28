@@ -13,12 +13,12 @@ internal class GenerateTeamInvitationUseCaseImpl(
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : GenerateTeamInvitationUseCase {
     override suspend fun invoke(
-        teamFirestoreId: String,
+        teamId: String,
         teamName: String,
     ): String {
         // Validate inputs
-        require(teamFirestoreId.isNotBlank()) {
-            "Team Firestore ID cannot be blank"
+        require(teamId.isNotBlank()) {
+            "Team ID cannot be blank"
         }
 
         // Get current authenticated user
@@ -28,8 +28,8 @@ internal class GenerateTeamInvitationUseCaseImpl(
 
         // Get the team
         val team =
-            teamRepository.getTeamByFirestoreId(teamFirestoreId)
-                ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
+            teamRepository.getTeamById(teamId)
+                ?: throw IllegalArgumentException("Team not found: $teamId")
 
         // Verify team belongs to a club
         require(team.clubFirestoreId != null) {
@@ -52,6 +52,6 @@ internal class GenerateTeamInvitationUseCaseImpl(
         }
 
         // Generate invitation link using the repository (which delegates to data source)
-        return teamRepository.generateTeamInvitationLink(teamFirestoreId, teamName)
+        return teamRepository.generateTeamInvitationLink(teamId, teamName)
     }
 }

@@ -4,5 +4,5 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import kotlinx.coroutines.flow.Flow
 
 interface GetPlayersByTeamUseCase {
-    operator fun invoke(teamFirestoreId: String): Flow<List<Player>>
+    operator fun invoke(teamId: String): Flow<List<Player>>
 }

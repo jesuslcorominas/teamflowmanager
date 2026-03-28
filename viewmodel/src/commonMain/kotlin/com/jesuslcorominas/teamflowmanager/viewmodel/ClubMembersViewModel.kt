@@ -37,15 +37,15 @@ class ClubMembersViewModel(
             try {
                 // Get user's club membership
                 val clubMember = getUserClubMembership().first()
-                val clubFirestoreId = clubMember?.clubFirestoreId
+                val clubId = clubMember?.clubFirestoreId
 
-                if (clubMember == null || clubFirestoreId == null) {
+                if (clubMember == null || clubId == null) {
                     _uiState.value = UiState.NoClubMembership
                     return@launch
                 }
 
                 // Load members for the club
-                getClubMembers(clubFirestoreId).collect { members ->
+                getClubMembers(clubId).collect { members ->
                     _uiState.value = UiState.Success(members)
                 }
             } catch (e: Exception) {

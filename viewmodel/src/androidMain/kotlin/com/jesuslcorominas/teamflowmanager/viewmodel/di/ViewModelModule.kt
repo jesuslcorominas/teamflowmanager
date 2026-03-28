@@ -229,8 +229,8 @@ val viewModelModule =
 
         viewModel { params ->
             PresidentTeamDetailViewModel(
-                teamFirestoreId = params.get(),
-                getTeamByFirestoreId = get(),
+                teamId = params.get(),
+                getTeamById = get(),
                 getPlayersByTeam = get(),
                 getMatchesByTeam = get(),
             )

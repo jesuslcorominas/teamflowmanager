@@ -19,10 +19,10 @@ interface TeamDataSource {
 
     /**
      * Get all teams for a club.
-     * @param clubFirestoreId The Firestore document ID of the club
+     * @param clubId The identifier of the club
      * @return Flow emitting list of teams in the club
      */
-    fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>>
+    fun getTeamsByClub(clubId: String): Flow<List<Team>>
 
     /**
      * Check if there is local data (team) without an associated user ID.
@@ -50,31 +50,31 @@ interface TeamDataSource {
     suspend fun getOrphanTeams(ownerId: String): List<Team>
 
     /**
-     * Update the clubId of a team.
-     * @param teamFirestoreId The Firestore document ID of the team
-     * @param clubId The club's numeric ID
-     * @param clubFirestoreId The club's Firestore document ID
+     * Update the club assignment of a team.
+     * @param teamId The identifier of the team
+     * @param clubNumericId The club's local numeric ID
+     * @param clubId The club's string identifier
      */
     suspend fun updateTeamClubId(
-        teamFirestoreId: String,
-        clubId: Long,
-        clubFirestoreId: String,
+        teamId: String,
+        clubNumericId: Long,
+        clubId: String,
     )
 
     /**
-     * Get team by Firestore document ID.
-     * @param teamFirestoreId The Firestore document ID of the team
+     * Get team by its identifier.
+     * @param teamId The identifier of the team
      * @return The team if found, null otherwise
      */
-    suspend fun getTeamByFirestoreId(teamFirestoreId: String): Team?
+    suspend fun getTeamById(teamId: String): Team?
 
     /**
      * Update the coachId of a team.
-     * @param teamFirestoreId The Firestore document ID of the team
+     * @param teamId The identifier of the team
      * @param coachId The Firebase user ID of the coach to assign
      */
     suspend fun updateTeamCoachId(
-        teamFirestoreId: String,
+        teamId: String,
         coachId: String,
     )
 }

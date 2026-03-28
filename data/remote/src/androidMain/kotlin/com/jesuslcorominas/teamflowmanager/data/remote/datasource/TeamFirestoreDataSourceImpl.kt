@@ -137,13 +137,13 @@ class TeamFirestoreDataSourceImpl(
             }
         }
 
-    override fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>> =
+    override fun getTeamsByClub(clubId: String): Flow<List<Team>> =
         callbackFlow {
-            require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+            require(clubId.isNotBlank()) { "Club ID cannot be blank" }
 
             val listenerRegistration =
                 firestore.collection(TEAMS_COLLECTION)
-                    .whereEqualTo("clubId", clubFirestoreId)
+                    .whereEqualTo("clubId", clubId)
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
@@ -214,23 +214,23 @@ class TeamFirestoreDataSourceImpl(
     }
 
     override suspend fun updateTeamClubId(
-        teamFirestoreId: String,
-        clubId: Long,
-        clubFirestoreId: String,
+        teamId: String,
+        clubNumericId: Long,
+        clubId: String,
     ) {
-        require(teamFirestoreId.isNotBlank()) { "Team Firestore ID cannot be blank" }
-        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+        require(teamId.isNotBlank()) { "Team ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
 
         try {
             val updates =
                 mapOf(
-                    "clubId" to clubFirestoreId,
+                    "clubId" to clubId,
                 )
 
             // Use set with merge to ensure the operation succeeds even if the document
             // doesn't have all fields yet
             firestore.collection(TEAMS_COLLECTION)
-                .document(teamFirestoreId)
+                .document(teamId)
                 .set(updates, com.google.firebase.firestore.SetOptions.merge())
                 .await()
         } catch (e: CancellationException) {
@@ -240,13 +240,13 @@ class TeamFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun getTeamByFirestoreId(teamFirestoreId: String): Team? {
-        require(teamFirestoreId.isNotBlank()) { "Team Firestore ID cannot be blank" }
+    override suspend fun getTeamById(teamId: String): Team? {
+        require(teamId.isNotBlank()) { "Team ID cannot be blank" }
 
         try {
             val document =
                 firestore.collection(TEAMS_COLLECTION)
-                    .document(teamFirestoreId)
+                    .document(teamId)
                     .get()
                     .await()
 
@@ -263,10 +263,10 @@ class TeamFirestoreDataSourceImpl(
     }
 
     override suspend fun updateTeamCoachId(
-        teamFirestoreId: String,
+        teamId: String,
         coachId: String,
     ) {
-        require(teamFirestoreId.isNotBlank()) { "Team Firestore ID cannot be blank" }
+        require(teamId.isNotBlank()) { "Team ID cannot be blank" }
         require(coachId.isNotBlank()) { "Coach ID cannot be blank" }
 
         try {
@@ -276,7 +276,7 @@ class TeamFirestoreDataSourceImpl(
                 )
 
             firestore.collection(TEAMS_COLLECTION)
-                .document(teamFirestoreId)
+                .document(teamId)
                 .update(updates)
                 .await()
         } catch (e: CancellationException) {

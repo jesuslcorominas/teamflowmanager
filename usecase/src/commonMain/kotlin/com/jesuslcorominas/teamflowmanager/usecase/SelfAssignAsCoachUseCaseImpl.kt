@@ -13,10 +13,10 @@ internal class SelfAssignAsCoachUseCaseImpl(
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : SelfAssignAsCoachUseCase {
-    override suspend fun invoke(teamFirestoreId: String): Team {
+    override suspend fun invoke(teamId: String): Team {
         // Validate input
-        require(teamFirestoreId.isNotBlank()) {
-            "Team Firestore ID cannot be blank"
+        require(teamId.isNotBlank()) {
+            "Team ID cannot be blank"
         }
 
         // Get current authenticated user
@@ -26,8 +26,8 @@ internal class SelfAssignAsCoachUseCaseImpl(
 
         // Get the team to verify it has no coach
         val team =
-            teamRepository.getTeamByFirestoreId(teamFirestoreId)
-                ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
+            teamRepository.getTeamById(teamId)
+                ?: throw IllegalArgumentException("Team not found: $teamId")
 
         // Verify team belongs to a club
         require(team.clubFirestoreId != null) {
@@ -57,16 +57,16 @@ internal class SelfAssignAsCoachUseCaseImpl(
         try {
             // Update the team's coachId
             teamRepository.updateTeamCoachId(
-                teamFirestoreId = teamFirestoreId,
+                teamId = teamId,
                 coachId = currentUser.id,
             )
 
             // Add Coach role to the President's roles (if not already present)
             if (!currentUserMembership.hasRole(ClubRole.COACH)) {
-                team.clubFirestoreId?.let { clubFirestoreId ->
+                team.clubFirestoreId?.let { clubId ->
                     clubMemberRepository.addClubMemberRole(
                         userId = currentUser.id,
-                        clubFirestoreId = clubFirestoreId,
+                        clubId = clubId,
                         role = ClubRole.COACH.roleName,
                     )
                 }

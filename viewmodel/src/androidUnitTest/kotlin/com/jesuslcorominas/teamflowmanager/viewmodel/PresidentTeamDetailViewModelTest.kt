@@ -9,7 +9,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByFirestoreIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -31,16 +31,16 @@ import org.junit.Test
 class PresidentTeamDetailViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var getTeamByFirestoreId: GetTeamByFirestoreIdUseCase
+    private lateinit var getTeamById: GetTeamByIdUseCase
     private lateinit var getPlayersByTeam: GetPlayersByTeamUseCase
     private lateinit var getMatchesByTeam: GetMatchesByTeamUseCase
 
-    private val teamFirestoreId = "team_fs_123"
+    private val teamId = "team_fs_123"
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        getTeamByFirestoreId = mockk()
+        getTeamById = mockk()
         getPlayersByTeam = mockk()
         getMatchesByTeam = mockk()
     }
@@ -52,8 +52,8 @@ class PresidentTeamDetailViewModelTest {
 
     private fun createViewModel() =
         PresidentTeamDetailViewModel(
-            teamFirestoreId = teamFirestoreId,
-            getTeamByFirestoreId = getTeamByFirestoreId,
+            teamId = teamId,
+            getTeamById = getTeamById,
             getPlayersByTeam = getPlayersByTeam,
             getMatchesByTeam = getMatchesByTeam,
         )
@@ -65,7 +65,7 @@ class PresidentTeamDetailViewModelTest {
             coachName = "Coach Name",
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
-            firestoreId = teamFirestoreId,
+            firestoreId = teamId,
         )
 
     private fun aPlayer(id: Long = 1L) =
@@ -103,7 +103,7 @@ class PresidentTeamDetailViewModelTest {
 
     @Test
     fun `initial state is Loading before load completes`() {
-        coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+        coEvery { getTeamById(any()) } returns aTeam()
         every { getPlayersByTeam(any()) } returns flowOf(emptyList())
         every { getMatchesByTeam(any()) } returns flowOf(emptyList())
 
@@ -114,7 +114,7 @@ class PresidentTeamDetailViewModelTest {
 
     @Test
     fun `initial selected tab is SUMMARY`() {
-        coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+        coEvery { getTeamById(any()) } returns aTeam()
         every { getPlayersByTeam(any()) } returns flowOf(emptyList())
         every { getMatchesByTeam(any()) } returns flowOf(emptyList())
 
@@ -126,7 +126,7 @@ class PresidentTeamDetailViewModelTest {
     @Test
     fun `when team is not found state becomes Error`() =
         runTest {
-            coEvery { getTeamByFirestoreId(any()) } returns null
+            coEvery { getTeamById(any()) } returns null
 
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -138,7 +138,7 @@ class PresidentTeamDetailViewModelTest {
     fun `when team found state becomes Ready with correct team`() =
         runTest {
             val team = aTeam()
-            coEvery { getTeamByFirestoreId(any()) } returns team
+            coEvery { getTeamById(any()) } returns team
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(emptyList())
 
@@ -153,7 +153,7 @@ class PresidentTeamDetailViewModelTest {
     fun `players are exposed in Ready state`() =
         runTest {
             val players = listOf(aPlayer(1L), aPlayer(2L))
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(players)
             every { getMatchesByTeam(any()) } returns flowOf(emptyList())
 
@@ -167,7 +167,7 @@ class PresidentTeamDetailViewModelTest {
     @Test
     fun `squadSize in stats equals player count`() =
         runTest {
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(listOf(aPlayer(1L), aPlayer(2L), aPlayer(3L)))
             every { getMatchesByTeam(any()) } returns flowOf(emptyList())
 
@@ -182,7 +182,7 @@ class PresidentTeamDetailViewModelTest {
     fun `win is counted when goals greater than opponentGoals in finished match`() =
         runTest {
             val match = aMatch(status = MatchStatus.FINISHED, goals = 3, opponentGoals = 1)
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(listOf(match))
 
@@ -199,7 +199,7 @@ class PresidentTeamDetailViewModelTest {
     fun `draw is counted when goals equal opponentGoals in finished match`() =
         runTest {
             val match = aMatch(status = MatchStatus.FINISHED, goals = 1, opponentGoals = 1)
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(listOf(match))
 
@@ -216,7 +216,7 @@ class PresidentTeamDetailViewModelTest {
     fun `loss is counted when goals less than opponentGoals in finished match`() =
         runTest {
             val match = aMatch(status = MatchStatus.FINISHED, goals = 0, opponentGoals = 2)
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(listOf(match))
 
@@ -238,7 +238,7 @@ class PresidentTeamDetailViewModelTest {
                     aMatch(id = 2L, status = MatchStatus.FINISHED, goals = 1, opponentGoals = 1),
                     aMatch(id = 3L, status = MatchStatus.FINISHED, goals = 0, opponentGoals = 2),
                 )
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(matches)
 
@@ -258,7 +258,7 @@ class PresidentTeamDetailViewModelTest {
     fun `scheduled match is not counted in stats but appears in matches list`() =
         runTest {
             val match = aMatch(id = 1L, status = MatchStatus.SCHEDULED)
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(listOf(match))
 
@@ -275,7 +275,7 @@ class PresidentTeamDetailViewModelTest {
         runTest {
             val active = aMatch(id = 1L, archived = false)
             val archived = aMatch(id = 2L, archived = true)
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(listOf(active, archived))
 
@@ -293,7 +293,7 @@ class PresidentTeamDetailViewModelTest {
             val older = aMatch(id = 1L, dateTime = 1000L)
             val newer = aMatch(id = 2L, dateTime = 3000L)
             val middle = aMatch(id = 3L, dateTime = 2000L)
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(listOf(older, newer, middle))
 
@@ -307,7 +307,7 @@ class PresidentTeamDetailViewModelTest {
     @Test
     fun `selectTab changes selectedTab state`() =
         runTest {
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(emptyList())
             val viewModel = createViewModel()
@@ -329,7 +329,7 @@ class PresidentTeamDetailViewModelTest {
     @Test
     fun `when no matches and no players all stats are zero`() =
         runTest {
-            coEvery { getTeamByFirestoreId(any()) } returns aTeam()
+            coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(emptyList())
 
