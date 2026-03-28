@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,9 +49,9 @@ fun PresidentTeamDetailScreen(
                 EmptyContent(stringResource(R.string.president_team_detail_error))
             }
             is PresidentTeamDetailUiState.Ready -> {
-                SecondaryTabRow(
-                    modifier = Modifier.fillMaxWidth(),
+                ScrollableTabRow(
                     selectedTabIndex = selectedTab.ordinal,
+                    edgePadding = 0.dp,
                 ) {
                     TitleMediumTab(
                         selected = selectedTab == PresidentTeamTab.SUMMARY,
@@ -196,7 +196,7 @@ private fun MatchesTab(state: PresidentTeamDetailUiState.Ready) {
         ) {
             items(state.matches, key = { it.id }) { match ->
                 if (match.status == MatchStatus.FINISHED) {
-                    PlayedMatchCard(match = match)
+                    PlayedMatchCard(match = match, showArchiveAction = false)
                 } else {
                     ScheduledMatchCard(match = match)
                 }
