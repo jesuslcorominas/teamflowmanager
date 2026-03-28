@@ -16,6 +16,7 @@ data class ClubFirestoreModel(
     val ownerId: String = "",
     val name: String = "",
     val invitationCode: String = "",
+    val homeGround: String? = null,
 ) {
     // No-arg constructor required by Firestore
     constructor() : this(
@@ -23,6 +24,7 @@ data class ClubFirestoreModel(
         ownerId = "",
         name = "",
         invitationCode = "",
+        homeGround = null,
     )
 }
 
@@ -33,12 +35,14 @@ fun ClubFirestoreModel.toDomain(): Club =
         name = name,
         invitationCode = invitationCode,
         firestoreId = id,
+        homeGround = homeGround,
     )
 
 fun Club.toFirestoreModel(): ClubFirestoreModel =
     ClubFirestoreModel(
-        id = firestoreId ?: "", // Will be set when inserting/updating
+        id = firestoreId ?: "",
         ownerId = ownerId,
         name = name,
         invitationCode = invitationCode,
+        homeGround = homeGround,
     )

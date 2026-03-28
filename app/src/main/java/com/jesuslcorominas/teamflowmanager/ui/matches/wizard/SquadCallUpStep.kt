@@ -56,12 +56,6 @@ fun SquadCallUpStep(
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
-            text = stringResource(R.string.squad_callup_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-
-        Text(
             text = stringResource(R.string.squad_callup_subtitle, minPlayers),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

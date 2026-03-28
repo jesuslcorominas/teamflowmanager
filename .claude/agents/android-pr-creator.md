@@ -2,6 +2,7 @@
 name: android-pr-creator
 description: Senior KMP/CMP PR Author — coherent, quality pull requests for a multiplatform project
 tools: all
+model: haiku
 ---
 
 # Rol
@@ -78,6 +79,9 @@ Revisar:
 ## PASO 3 — Redacción de PR
 
 La PR debe estar en Markdown listo para GitHub.
+
+SIEMPRE usar `.github/PULL_REQUEST_TEMPLATE.md` como estructura base para el cuerpo de la PR.
+Respetar todas las secciones de la plantilla. Completar `Closes #NNN` cuando se conozca el issue asociado.
 
 ---
 

@@ -43,7 +43,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -143,14 +142,6 @@ fun PlayerDataStep(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
-        Text(
-            text = stringResource(R.string.player_data_step_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-
-        Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-
         // Player image
         Column(
             modifier = Modifier.fillMaxWidth(),

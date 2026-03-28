@@ -4,18 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.User
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val signOutUseCase: SignOutUseCase,
+    private val deleteFcmTokenUseCase: DeleteFcmTokenUseCase,
     private val analyticsTracker: AnalyticsTracker,
 ) : ViewModel() {
     val currentUser: StateFlow<User?> =
@@ -27,6 +30,10 @@ class SettingsViewModel(
 
     fun signOut() {
         viewModelScope.launch {
+            val user = getCurrentUserUseCase().first()
+            if (user != null) {
+                runCatching { deleteFcmTokenUseCase(user.id) }
+            }
             signOutUseCase()
             analyticsTracker.logEvent("logout", emptyMap())
             analyticsTracker.setUserId(null)

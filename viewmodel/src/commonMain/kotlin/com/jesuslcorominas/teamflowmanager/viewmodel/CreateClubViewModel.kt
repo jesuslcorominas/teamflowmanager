@@ -7,9 +7,13 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.Club
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateClubUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 enum class ClubNameError {
@@ -23,6 +27,9 @@ private const val MAX_CLUB_NAME_LENGTH = 50
 
 class CreateClubViewModel(
     private val createClubUseCase: CreateClubUseCase,
+    private val getCurrentUser: GetCurrentUserUseCase,
+    private val syncFcmTokenUseCase: SyncFcmTokenUseCase,
+    private val isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase,
     private val analyticsTracker: AnalyticsTracker,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
@@ -52,7 +59,6 @@ class CreateClubViewModel(
     fun createClub() {
         val name = _clubName.value.trim()
 
-        // Validate club name
         when {
             name.isEmpty() -> {
                 _clubNameError.value = ClubNameError.EMPTY_NAME
@@ -73,7 +79,6 @@ class CreateClubViewModel(
             try {
                 val club = createClubUseCase(name)
 
-                // Track club creation
                 analyticsTracker.logEvent(
                     AnalyticsEvent.CLUB_CREATED,
                     mapOf(
@@ -81,6 +86,9 @@ class CreateClubViewModel(
                         AnalyticsParam.CLUB_NAME to club.name,
                     ),
                 )
+
+                // Sync FCM token with new club subscription (fire-and-forget)
+                syncFcmTokenAfterClubChange(club.firestoreId)
 
                 _uiState.value = UiState.Success(club)
             } catch (e: Exception) {
@@ -92,6 +100,14 @@ class CreateClubViewModel(
                 )
                 _uiState.value = UiState.Error(e.message ?: "Failed to create club")
             }
+        }
+    }
+
+    private fun syncFcmTokenAfterClubChange(clubFirestoreId: String?) {
+        if (!isNotificationPermissionGranted()) return
+        viewModelScope.launch {
+            val user = getCurrentUser().first() ?: return@launch
+            runCatching { syncFcmTokenUseCase(user.id, "android", clubFirestoreId) }
         }
     }
 

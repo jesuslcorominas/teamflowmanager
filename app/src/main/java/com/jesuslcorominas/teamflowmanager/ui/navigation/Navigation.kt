@@ -2,6 +2,10 @@ package com.jesuslcorominas.teamflowmanager.ui.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -15,6 +19,7 @@ import androidx.navigation.navDeepLink
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubSettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
@@ -42,6 +47,12 @@ fun Navigation(
         modifier = modifier,
         navController = navController,
         startDestination = Route.Splash.createRoute(),
+        // Default: entering screens fade in; exiting screens disappear instantly to avoid
+        // layout-shift artifacts (topBar/bottomBar change in the same frame as navigation).
+        enterTransition = { fadeIn(tween(220)) },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { fadeIn(tween(220)) },
+        popExitTransition = { ExitTransition.None },
     ) {
         composable(Route.Splash.createRoute()) {
             SplashScreen(
@@ -150,6 +161,10 @@ fun Navigation(
             ClubMembersScreen()
         }
 
+        composable(Route.ClubSettings.createRoute()) {
+            ClubSettingsScreen()
+        }
+
         composable(Route.Players.createRoute()) {
             PlayersScreen(
                 onNavigateToCreatePlayer = {
@@ -169,6 +184,12 @@ fun Navigation(
                         type = NavType.LongType
                     },
                 ),
+            // Instant transitions: wizard changes topBar/bottomBar visibility, so we switch
+            // atomically to avoid any in-between scaffold state being visible.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val playerId = backStackEntry.arguments?.getLong(Route.PlayerWizard.ARG_PLAYER_ID) ?: 0L
             PlayerWizardScreen(
@@ -212,6 +233,11 @@ fun Navigation(
                         defaultValue = 0L
                     },
                 ),
+            // Instant transitions: same reason as PlayerWizard.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val matchId = backStackEntry.arguments?.getLong(Route.CreateMatch.ARG_MATCH_ID) ?: 0L
             MatchCreationWizardScreen(
@@ -327,7 +353,14 @@ fun Navigation(
                 val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)
 
                 when (mode) {
-                    Route.Team.MODE_CREATE -> activity?.finish()
+                    Route.Team.MODE_CREATE -> {
+                        // If TeamList is in the back stack (president flow), go back there
+                        if (navController.previousBackStackEntry?.destination?.route == Route.TeamList.createRoute()) {
+                            navController.popBackStack()
+                        } else {
+                            activity?.finish()
+                        }
+                    }
                     Route.Team.MODE_VIEW -> navController.navigateToMatches()
                 }
             }

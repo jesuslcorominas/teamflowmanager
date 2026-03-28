@@ -175,6 +175,25 @@ service cloud.firestore {
     }
 
     // =======================================================================
+    // FCM TOKENS
+    // =======================================================================
+
+    match /fcmTokens/{tokenId} {
+      // Any authenticated user can read (needed for cross-user device cleanup:
+      // SyncFcmTokenUseCase queries all docs with the same device token to
+      // remove subscriptions belonging to previous users on the same device).
+      allow read: if isAuthenticated();
+
+      // Only the token owner can write their own doc.
+      allow create, update: if isAuthenticated() &&
+        request.auth.uid == request.resource.data.userId;
+
+      // Any authenticated user can delete (needed for device cleanup: the
+      // current user deletes stale docs that belong to previous users).
+      allow delete: if isAuthenticated();
+    }
+
+    // =======================================================================
     // USERS
     // =======================================================================
 

@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewMod
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
@@ -39,12 +40,17 @@ val viewModelModule =
                 getCurrentUser = get(),
                 getUserClubMembership = get(),
                 synchronizeTimeUseCase = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
+                signOutUseCase = get(),
             )
         }
 
         viewModel {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -52,6 +58,9 @@ val viewModelModule =
         viewModel {
             CreateClubViewModel(
                 createClubUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -59,6 +68,9 @@ val viewModelModule =
         viewModel {
             JoinClubViewModel(
                 joinClubByCodeUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -122,6 +134,14 @@ val viewModelModule =
                 getUserClubMembership = get(),
             )
         }
+        viewModel {
+            ClubSettingsViewModel(
+                getUserClubMembership = get(),
+                getClubByFirestoreId = get(),
+                updateClubUseCase = get(),
+                regenerateInvitationCodeUseCase = get(),
+            )
+        }
         viewModel { params ->
             MatchViewModel(
                 matchId = params.get(),
@@ -178,6 +198,7 @@ val viewModelModule =
                 saveDefaultCaptainUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 getTeamUseCase = get(),
+                getClubByFirestoreIdUseCase = get(),
                 createMatch = get(),
                 getMatchByIdUseCase = get(),
                 updateMatchUseCase = get(),
@@ -200,6 +221,7 @@ val viewModelModule =
             SettingsViewModel(
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
+                deleteFcmTokenUseCase = get(),
                 analyticsTracker = get(),
             )
         }
