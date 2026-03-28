@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -41,6 +42,8 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -161,7 +164,13 @@ private fun TeamsListContent(
     isPresident: Boolean,
 ) {
     LazyColumn(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier,
+        contentPadding = PaddingValues(
+            bottom = LocalContentBottomPadding.current,
+            top = TFMSpacing.spacing04,
+            start = TFMSpacing.spacing04,
+            end = TFMSpacing.spacing04,
+        ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(teams, key = { it.id }) { team ->
