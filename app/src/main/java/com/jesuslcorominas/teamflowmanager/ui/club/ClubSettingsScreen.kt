@@ -95,11 +95,12 @@ fun ClubSettingsScreen(viewModel: ClubSettingsViewModel = koinViewModel()) {
     }
 
     val showFab = !uiState.loading && !uiState.isEditing
-    val detailBottomPadding = if (showFab) {
-        contentBottomPadding + FabBarGap + FabHeight + FabContentGap
-    } else {
-        contentBottomPadding
-    }
+    val detailBottomPadding =
+        if (showFab) {
+            contentBottomPadding + FabBarGap + FabHeight + FabContentGap
+        } else {
+            contentBottomPadding
+        }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Surface(
@@ -153,9 +154,10 @@ fun ClubSettingsScreen(viewModel: ClubSettingsViewModel = koinViewModel()) {
         if (showFab) {
             FloatingActionButton(
                 onClick = viewModel::onEnterEdit,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = contentBottomPadding + FabBarGap),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = contentBottomPadding + FabBarGap),
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
@@ -166,9 +168,10 @@ fun ClubSettingsScreen(viewModel: ClubSettingsViewModel = koinViewModel()) {
 
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = contentBottomPadding),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = contentBottomPadding),
         )
     }
 }
@@ -194,10 +197,11 @@ private fun ClubDetailContent(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = contentBottomPadding)
-            .padding(TFMSpacing.spacing04),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(bottom = contentBottomPadding)
+                .padding(TFMSpacing.spacing04),
     ) {
         InfoRow(
             label = stringResource(R.string.club_name_label),
@@ -243,11 +247,12 @@ private fun ClubEditForm(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = contentBottomPadding)
-            .padding(TFMSpacing.spacing04)
-            .verticalScroll(rememberScrollState()),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(bottom = contentBottomPadding)
+                .padding(TFMSpacing.spacing04)
+                .verticalScroll(rememberScrollState()),
     ) {
         OutlinedTextField(
             value = uiState.name,
@@ -256,10 +261,11 @@ private fun ClubEditForm(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             enabled = !uiState.saving,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next,
-                capitalization = KeyboardCapitalization.Words,
-            ),
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
@@ -272,10 +278,11 @@ private fun ClubEditForm(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             enabled = !uiState.saving,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                capitalization = KeyboardCapitalization.Words,
-            ),
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
         )
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
@@ -293,9 +300,10 @@ private fun ClubEditForm(
         Button(
             onClick = onSave,
             enabled = !uiState.saving && uiState.name.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             if (uiState.saving) {
@@ -323,9 +331,10 @@ private fun InvitationCodeSection(
     onRegenerate: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = TFMSpacing.spacing03, horizontal = TFMSpacing.spacing02),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = TFMSpacing.spacing03, horizontal = TFMSpacing.spacing02),
     ) {
         Text(
             text = stringResource(R.string.invitation_code_label),
@@ -380,9 +389,10 @@ private fun InfoRow(
     value: String,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = TFMSpacing.spacing03, horizontal = TFMSpacing.spacing02),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = TFMSpacing.spacing03, horizontal = TFMSpacing.spacing02),
     ) {
         Text(
             text = label,

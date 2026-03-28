@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -72,10 +72,11 @@ fun CreateClubScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding(),
     ) {
         if (uiState is CreateClubViewModel.UiState.Success) {
             ClubCreatedSuccessfullyContent {
@@ -94,13 +95,12 @@ fun CreateClubScreen(
 }
 
 @Composable
-private fun ClubCreatedSuccessfullyContent(
-    onContinueClick: () -> Unit,
-) {
+private fun ClubCreatedSuccessfullyContent(onContinueClick: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -142,9 +142,10 @@ private fun ClubCreatedSuccessfullyContent(
 
         Button(
             onClick = onContinueClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             Text(
@@ -157,17 +158,16 @@ private fun ClubCreatedSuccessfullyContent(
 }
 
 @Composable
-private fun CreateClubForm(
-    viewModel: CreateClubViewModel,
-) {
+private fun CreateClubForm(viewModel: CreateClubViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     val clubName by viewModel.clubName.collectAsState()
     val clubNameError by viewModel.clubNameError.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -198,23 +198,27 @@ private fun CreateClubForm(
             onValueChange = { viewModel.onClubNameChanged(it) },
             label = { Text(stringResource(id = R.string.club_name_label)) },
             isError = clubNameError != null,
-            supportingText = clubNameError?.let { errorResId ->
-                {
-                    Text(
-                        text = stringResource(
-                            id = when (errorResId) {
-                                ClubNameError.EMPTY_NAME -> R.string.club_name_error_empty
-                                ClubNameError.NAME_TOO_SHORT -> R.string.club_name_error_too_short
-                                ClubNameError.NAME_TOO_LONG -> R.string.club_name_error_too_long
-                            },
-                        ),
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                capitalization = KeyboardCapitalization.Words,
-            ),
+            supportingText =
+                clubNameError?.let { errorResId ->
+                    {
+                        Text(
+                            text =
+                                stringResource(
+                                    id =
+                                        when (errorResId) {
+                                            ClubNameError.EMPTY_NAME -> R.string.club_name_error_empty
+                                            ClubNameError.NAME_TOO_SHORT -> R.string.club_name_error_too_short
+                                            ClubNameError.NAME_TOO_LONG -> R.string.club_name_error_too_long
+                                        },
+                                ),
+                        )
+                    }
+                },
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
             readOnly = uiState is CreateClubViewModel.UiState.Loading,
         )
 
@@ -223,9 +227,10 @@ private fun CreateClubForm(
         Button(
             onClick = { viewModel.createClub() },
             enabled = uiState !is CreateClubViewModel.UiState.Loading && clubName.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             if (uiState is CreateClubViewModel.UiState.Loading) {

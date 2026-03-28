@@ -8,8 +8,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -87,14 +87,15 @@ fun MatchCreationWizardScreen(
         is MatchCreationWizardUiState.Loading -> Loading()
         is MatchCreationWizardUiState.Saving -> Loading()
         is MatchCreationWizardUiState.Ready -> {
-            val stepTitle = stringResource(
-                when (currentStep) {
-                    WizardStep.GENERAL_DATA -> R.string.wizard_step_general_data
-                    WizardStep.SQUAD_CALLUP -> R.string.squad_callup_title
-                    WizardStep.CAPTAIN -> R.string.captain_selection_title
-                    WizardStep.STARTING_LINEUP -> R.string.starting_lineup_title
-                },
-            )
+            val stepTitle =
+                stringResource(
+                    when (currentStep) {
+                        WizardStep.GENERAL_DATA -> R.string.wizard_step_general_data
+                        WizardStep.SQUAD_CALLUP -> R.string.squad_callup_title
+                        WizardStep.CAPTAIN -> R.string.captain_selection_title
+                        WizardStep.STARTING_LINEUP -> R.string.starting_lineup_title
+                    },
+                )
 
             Column(modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                 CenterAlignedTopAppBar(
@@ -129,9 +130,10 @@ fun MatchCreationWizardScreen(
                                 onNext = { wizardViewModel.goToNextStep() },
                                 onCancel = { wizardViewModel.requestBack(onNavigateBack) },
                                 homeGround = wizardViewModel.getHomeGround(),
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
                         WizardStep.SQUAD_CALLUP -> {
@@ -147,9 +149,10 @@ fun MatchCreationWizardScreen(
                                     scope.launch { wizardViewModel.loadDefaultCaptainIfExists() }
                                 },
                                 onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
                         WizardStep.CAPTAIN -> {
@@ -170,9 +173,10 @@ fun MatchCreationWizardScreen(
                                     }
                                 },
                                 onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
                         WizardStep.STARTING_LINEUP -> {
@@ -193,9 +197,10 @@ fun MatchCreationWizardScreen(
                                     }
                                 },
                                 onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
                     }
@@ -207,10 +212,11 @@ fun MatchCreationWizardScreen(
     if (showDefaultCaptainDialog && captainForDialog != null) {
         AppAlertDialog(
             title = stringResource(R.string.make_default_captain_title),
-            message = stringResource(
-                R.string.make_default_captain_message,
-                "${captainForDialog!!.firstName} ${captainForDialog!!.lastName}",
-            ),
+            message =
+                stringResource(
+                    R.string.make_default_captain_message,
+                    "${captainForDialog!!.firstName} ${captainForDialog!!.lastName}",
+                ),
             confirmText = stringResource(R.string.yes),
             dismissText = stringResource(R.string.no),
             onConfirm = {

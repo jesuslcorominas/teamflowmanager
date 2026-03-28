@@ -8,8 +8,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,12 +63,13 @@ fun PlayerWizardScreen(
             }
         }
         is PlayerWizardUiState.Ready -> {
-            val stepTitle = stringResource(
-                when (currentStep) {
-                    PlayerWizardStep.PLAYER_DATA -> R.string.player_data_step_title
-                    PlayerWizardStep.POSITIONS -> R.string.player_positions_step_title
-                },
-            )
+            val stepTitle =
+                stringResource(
+                    when (currentStep) {
+                        PlayerWizardStep.PLAYER_DATA -> R.string.player_data_step_title
+                        PlayerWizardStep.POSITIONS -> R.string.player_positions_step_title
+                    },
+                )
 
             Column(modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                 CenterAlignedTopAppBar(
@@ -102,9 +103,10 @@ fun PlayerWizardScreen(
                                 },
                                 onNext = { wizardViewModel.goToNextStep() },
                                 onCancel = { wizardViewModel.requestBack(onNavigateBack) },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
                         PlayerWizardStep.POSITIONS -> {
@@ -115,9 +117,10 @@ fun PlayerWizardScreen(
                                 },
                                 onSave = { wizardViewModel.savePlayer(onSuccess = onNavigateBack) },
                                 onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(TFMSpacing.spacing04),
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(TFMSpacing.spacing04),
                             )
                         }
                     }
