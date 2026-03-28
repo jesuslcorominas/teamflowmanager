@@ -1,10 +1,12 @@
 #!/bin/bash
-# Pre-push hook: runs ktlint + tests + coverage locally, then auto-bumps versionCode on release/* branches.
+# Pre-push hook:
+#   ALL feature branches  → ktlint (auto-fix + commit if needed) + tests + coverage
+#   release/* branches    → all of the above + versionCode bump
 # Install with: bash scripts/install-hooks.sh
 
 COVERAGE_MINIMUM=80
 
-# Skip if this push was triggered by the hook itself
+# Skip if this push was triggered by the hook itself (version bump re-push)
 if [ -n "$VERSION_BUMP_IN_PROGRESS" ]; then
   exit 0
 fi
@@ -18,56 +20,46 @@ done
 
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
 
-# Only run on release/* branches
-if [[ ! "$BRANCH" =~ ^release/ ]]; then
+# Skip protected integration branches — CI handles them
+if [[ "$BRANCH" == "main" || "$BRANCH" == "develop" ]]; then
   exit 0
 fi
 
-# Extract versionName from branch name (release/0.3.0 → 0.3.0)
-VERSION_NAME="${BRANCH#release/}"
+# ── 1. ktlint (ALL branches) ────────────────────────────────────────────────
+echo "🔍 Running ktlint..."
+./gradlew ktlintCheck --no-daemon -q 2>&1
+LINT_EXIT=$?
 
-# Validate semver format
-if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "⚠️  Branch '$BRANCH' doesn't match release/X.Y.Z — skipping version bump"
-  exit 0
+if [ $LINT_EXIT -ne 0 ]; then
+  echo "⚠️  ktlint issues found — running ktlintFormat to auto-fix..."
+  ./gradlew ktlintFormat --no-daemon -q 2>&1
+  git add -A
+  git commit -m "style: ktlint auto-format"
+  echo "✅ ktlint issues fixed and committed"
+else
+  echo "✅ ktlint OK"
 fi
 
-# Check for [skip-tests] flag in the latest commit
+# ── 2. Tests + Coverage (ALL branches) ──────────────────────────────────────
 PREV_MSG=$(git log -1 --format=%s HEAD)
 SKIP_FLAG=""
 if [[ "$PREV_MSG" == *"[skip-tests]"* ]]; then
   SKIP_FLAG=" [skip-tests]"
-  echo "⏩ [skip-tests] detected — skipping local tests, lint and coverage"
+  echo "⏩ [skip-tests] detected — skipping local tests and coverage"
 else
-  # ── 1. ktlint ──────────────────────────────────────────────────────────────
-  echo "🔍 Running ktlint..."
-  ./gradlew ktlintCheck --no-daemon -q 2>&1
-  LINT_EXIT=$?
-
-  if [ $LINT_EXIT -ne 0 ]; then
-    echo "⚠️  ktlint issues found — running ktlintFormat to auto-fix..."
-    ./gradlew ktlintFormat --no-daemon -q 2>&1
-    git add -A
-    git commit -m "style: ktlint auto-format"
-    echo "✅ ktlint issues fixed and committed"
-  else
-    echo "✅ ktlint OK"
-  fi
-
-  # ── 2. Tests + Coverage ────────────────────────────────────────────────────
   echo "🧪 Running tests and coverage..."
   ./gradlew testDebugUnitTestCoverage --no-daemon -q 2>&1
   TEST_EXIT=$?
 
   if [ $TEST_EXIT -ne 0 ]; then
     echo "❌ Tests failed — fix them before pushing."
-    echo "   To skip in CI only: add [skip-tests] to your commit message"
+    echo "   To skip locally: add [skip-tests] to your commit message"
     exit 1
   fi
 
   echo "✅ Tests passed"
 
-  # ── 3. Coverage threshold check ────────────────────────────────────────────
+  # ── 3. Coverage threshold check ──────────────────────────────────────────
   COVERAGE_XML="build/reports/jacoco/testDebugUnitTestCoverage/coverage.xml"
   if [ -f "$COVERAGE_XML" ]; then
     COVERAGE=$(python3 - "$COVERAGE_XML" <<'EOF'
@@ -96,6 +88,20 @@ EOF
   fi
 fi
 
+# ── Release branches only: versionCode bump ─────────────────────────────────
+if [[ ! "$BRANCH" =~ ^release/ ]]; then
+  exit 0
+fi
+
+# Extract versionName from branch name (release/0.3.0 → 0.3.0)
+VERSION_NAME="${BRANCH#release/}"
+
+# Validate semver format
+if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "⚠️  Branch '$BRANCH' doesn't match release/X.Y.Z — skipping version bump"
+  exit 0
+fi
+
 # ── 4. versionCode bump ────────────────────────────────────────────────────
 CURRENT_CODE=$(grep 'versionCode' app/build.gradle.kts | grep -oE '[0-9]+' | head -1)
 if [ -z "$CURRENT_CODE" ]; then
@@ -117,6 +123,13 @@ sed -i '' \
 sed -i '' \
   "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $VERSION_NAME;/g" \
   iosApp/iosApp.xcodeproj/project.pbxproj
+
+# Propagate [skip-tests] flag if the triggering commit had it
+PREV_MSG=$(git log -1 --format=%s HEAD)
+SKIP_FLAG=""
+if [[ "$PREV_MSG" == *"[skip-tests]"* ]]; then
+  SKIP_FLAG=" [skip-tests]"
+fi
 
 # Commit the bump
 git add app/build.gradle.kts iosApp/iosApp.xcodeproj/project.pbxproj

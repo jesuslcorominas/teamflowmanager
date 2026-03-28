@@ -10,10 +10,33 @@ permissions:
   checks: write
 
 jobs:
-  test-lint-coverage:
-    name: Tests, Lint & Coverage
-    # Skip PRs from main (sync after release merge — no new code to cover)
-    if: github.head_ref != 'main'
+  lint:
+    name: Lint (ktlint)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Restore google-services.json
+        run: |
+          mkdir -p app/src/dev app/src/prod
+          echo "${{ secrets.GOOGLE_SERVICES_DEV }}"  | base64 --decode > app/src/dev/google-services.json
+          echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 --decode > app/src/prod/google-services.json
+
+      - name: Grant gradlew permission
+        run: chmod +x gradlew
+
+      - name: Run ktlint
+        run: ./gradlew ktlintCheck --no-daemon --stacktrace
+
+  test-and-coverage:
+    name: Tests & Coverage
     runs-on: ubuntu-latest
 
     steps:
@@ -36,13 +59,11 @@ jobs:
       - name: Grant gradlew permission
         run: chmod +x gradlew
 
-      - name: Run ktlint
-        run: ./gradlew ktlintCheck --no-daemon --stacktrace
-
       - name: Run tests & coverage
         run: ./gradlew testDebugUnitTestCoverage --no-daemon --stacktrace
 
       - name: Post coverage comment on PR
+        if: always()
         uses: Madrapps/jacoco-report@v1.7.1
         with:
           paths: ${{ github.workspace }}/build/reports/jacoco/testDebugUnitTestCoverage/coverage.xml
@@ -69,3 +90,26 @@ jobs:
           name: coverage-report
           path: build/reports/jacoco/testDebugUnitTestCoverage/
           retention-days: 7
+
+  ci-gate:
+    name: CI Gate
+    needs: [lint, test-and-coverage]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check required jobs
+        run: |
+          lint="${{ needs.lint.result }}"
+          tests="${{ needs.test-and-coverage.result }}"
+          echo "lint: $lint"
+          echo "test-and-coverage: $tests"
+          if [[ "$lint" == "failure" || "$lint" == "cancelled" ]]; then
+            echo "❌ Lint job failed"
+            exit 1
+          fi
+          if [[ "$tests" == "failure" || "$tests" == "cancelled" ]]; then
+            echo "❌ Tests & Coverage job failed"
+            exit 1
+          fi
+          echo "✅ All required checks passed (or were skipped)"
