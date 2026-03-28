@@ -346,6 +346,20 @@
     <string name="settings_title">Settings</string>
     <string name="settings">Settings</string>
 
+    <!-- Club Settings -->
+    <string name="nav_club_settings">Club</string>
+    <string name="club_settings_title">Club</string>
+    <string name="club_settings_edit_title">Editar Club</string>
+    <string name="home_ground_label">Lugar de juego</string>
+    <string name="home_ground_placeholder">Ej. Polideportivo Municipal</string>
+    <string name="copy_invitation_code">Copiar</string>
+    <string name="share_invitation_code">Compartir</string>
+    <string name="regenerate_invitation_code">Renovar</string>
+    <string name="regenerate_code_confirm_title">¿Renovar código?</string>
+    <string name="regenerate_code_confirm_message">Las invitaciones anteriores dejarán de ser válidas. ¿Continuar?</string>
+    <string name="invitation_code_copied">Código copiado</string>
+    <string name="club_settings_saved">Datos del club guardados</string>
+
     <!-- Match Notification -->
     <string name="match_notification_channel_name">Match Countdown</string>
     <string name="match_notification_channel_description">Shows remaining time during active matches</string>

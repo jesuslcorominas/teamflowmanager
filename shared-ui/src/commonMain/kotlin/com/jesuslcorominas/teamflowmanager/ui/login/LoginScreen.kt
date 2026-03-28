@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel.UiState
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -50,6 +51,13 @@ fun LoginScreen(
     viewModel: LoginViewModel = koinViewModel(),
     onSignInWithGoogle: suspend () -> String,
     onLoginSuccess: () -> Unit,
+    /**
+     * Platform-specific callback to request POST_NOTIFICATIONS permission.
+     * On Android 13+ the caller should launch the permission request and then
+     * call [LoginViewModel.onNotificationPermissionResult] with the result.
+     * Pass null on platforms where notification permission is not applicable (iOS).
+     */
+    onRequestNotificationPermission: (() -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -66,6 +74,15 @@ fun LoginScreen(
                 viewModel.resetState()
             }
             else -> {}
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is LoginViewModel.UiEvent.RequestNotificationPermission ->
+                    onRequestNotificationPermission?.invoke()
+            }
         }
     }
 

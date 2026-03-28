@@ -4,8 +4,14 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
+  pull-requests: write
+  checks: write
 
 env:
   PACKAGE_NAME: com.jesuslcorominas.teamflowmanager
@@ -19,12 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Detect skip-tests flag
         id: skip
         run: |
-          git fetch origin ${{ github.event.pull_request.head.sha }} --depth=1 2>/dev/null || true
-          COMMIT_MSG=$(git log -1 --format='%s' ${{ github.event.pull_request.head.sha }})
+          SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          git fetch origin "$SHA" --depth=1 2>/dev/null || true
+          COMMIT_MSG=$(git log -1 --format='%s' "$SHA")
           if echo "$COMMIT_MSG" | grep -q '\[skip-tests\]'; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "⏩ [skip-tests] detected — skipping tests and lint"
@@ -50,13 +59,26 @@ jobs:
         if: steps.skip.outputs.skip != 'true'
         run: chmod +x gradlew
 
-      - name: Run tests
-        if: steps.skip.outputs.skip != 'true'
-        run: ./gradlew test --no-daemon --stacktrace
-
       - name: Run ktlint
         if: steps.skip.outputs.skip != 'true'
         run: ./gradlew ktlintCheck --no-daemon --stacktrace
+
+      - name: Run tests & coverage
+        if: steps.skip.outputs.skip != 'true'
+        run: ./gradlew testDebugUnitTestCoverage --no-daemon --stacktrace
+
+      - name: Post coverage comment on PR
+        if: steps.skip.outputs.skip != 'true'
+        uses: Madrapps/jacoco-report@v1.7.1
+        with:
+          paths: ${{ github.workspace }}/build/reports/jacoco/testDebugUnitTestCoverage/coverage.xml
+          token: ${{ secrets.BOTOMINAS_TOKEN }}
+          min-coverage-overall: 0
+          min-coverage-changed-files: 80
+          title: '📊 Code Coverage'
+          update-comment: true
+          pass-emoji: '✅'
+          fail-emoji: '❌'
 
       - name: Upload test results
         if: always() && steps.skip.outputs.skip != 'true'
@@ -64,6 +86,14 @@ jobs:
         with:
           name: test-results
           path: '**/build/test-results/**/*.xml'
+          retention-days: 7
+
+      - name: Upload coverage report
+        if: always() && steps.skip.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/reports/jacoco/testDebugUnitTestCoverage/
           retention-days: 7
 
   # ─────────────────────────────────────────────────────────────
@@ -88,12 +118,37 @@ jobs:
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "versionCode: $VERSION_CODE  versionName: $VERSION_NAME"
 
-      - uses: google-github-actions/auth@v2
+      - name: Get Play Store access token
         id: auth
-        with:
-          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          token_format: 'access_token'
-          access_token_scopes: 'https://www.googleapis.com/auth/androidpublisher'
+        env:
+          SA_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          TOKEN=$(python3 - <<'PYEOF'
+          import json, time, base64, os
+          from cryptography.hazmat.primitives import hashes, serialization
+          from cryptography.hazmat.primitives.asymmetric import padding
+          import urllib.request, urllib.parse
+
+          sa = json.loads(os.environ["SA_JSON"])
+          now = int(time.time())
+
+          def b64url(data):
+              return base64.urlsafe_b64encode(json.dumps(data, separators=(',',':')).encode()).rstrip(b'=').decode()
+
+          header  = b64url({"alg": "RS256", "typ": "JWT"})
+          payload = b64url({"iss": sa["client_email"], "scope": "https://www.googleapis.com/auth/androidpublisher", "aud": "https://oauth2.googleapis.com/token", "iat": now, "exp": now + 3600})
+          unsigned = f"{header}.{payload}"
+
+          key = serialization.load_pem_private_key(sa["private_key"].encode(), password=None)
+          sig = base64.urlsafe_b64encode(key.sign(unsigned.encode(), padding.PKCS1v15(), hashes.SHA256())).rstrip(b'=').decode()
+          jwt = f"{unsigned}.{sig}"
+
+          body = urllib.parse.urlencode({"grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer", "assertion": jwt}).encode()
+          resp = json.loads(urllib.request.urlopen(urllib.request.Request("https://oauth2.googleapis.com/token", body)).read())
+          print(resp["access_token"])
+          PYEOF
+          )
+          echo "access_token=$TOKEN" >> $GITHUB_OUTPUT
 
       - name: Check versionCode availability
         run: |
@@ -172,45 +227,6 @@ jobs:
           path: app/build/outputs/bundle/prodRelease/app-prod-release.aab
           retention-days: 30
 
-      - uses: google-github-actions/auth@v2
-        id: auth
-        with:
-          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          token_format: 'access_token'
-          access_token_scopes: 'https://www.googleapis.com/auth/androidpublisher'
-
-      - name: Clean old alpha/beta releases
-        run: |
-          TOKEN="${{ steps.auth.outputs.access_token }}"
-          PKG="${{ env.PACKAGE_NAME }}"
-
-          EDIT_ID=$(curl -s -X POST \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{}' | jq -r '.id // empty')
-
-          if [ -z "$EDIT_ID" ]; then
-            echo "⚠️ Could not create edit for cleanup — skipping"
-            exit 0
-          fi
-
-          for TRACK in alpha beta; do
-            curl -s -X PUT \
-              "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID/tracks/$TRACK" \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "{\"track\":\"$TRACK\",\"releases\":[]}"
-          done
-
-          curl -s -X POST \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID:commit" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{}'
-
-          echo "✅ Old alpha/beta releases cleared"
-
       - name: Upload to Google Play Alpha
         uses: r0adkll/upload-google-play@v1
         with:
@@ -227,10 +243,6 @@ jobs:
   ios:
     name: iOS — Build IPA
     needs: validate-version
-    # Solo corre si los secrets de Apple están configurados.
-    # Sin ellos el job se salta (skipped) sin consumir minutos de macOS runner.
-    # Configurar self-hosted runner en un Mac local cuando se quiera activar.
-    if: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' }}
     runs-on: macos-latest
     continue-on-error: true
     steps:
@@ -315,3 +327,39 @@ jobs:
           name: TeamFlowManager-iOS-${{ needs.validate-version.outputs.version_name }}.ipa
           path: ${{ runner.temp }}/ipa/*.ipa
           retention-days: 30
+
+  # ─────────────────────────────────────────────────────────────
+  # 5. Notify PR on failure
+  # ─────────────────────────────────────────────────────────────
+  notify-failure:
+    name: Notify failure
+    runs-on: ubuntu-latest
+    needs: [test, validate-version, android]
+    if: failure()
+    steps:
+      - name: Comment on PR
+        env:
+          GH_TOKEN: ${{ secrets.BOTOMINAS_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list \
+            --repo ${{ github.repository }} \
+            --head ${{ github.head_ref }} \
+            --base main \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR found — skipping comment"
+            exit 0
+          fi
+
+          JOBS=$(gh run view ${{ github.run_id }} \
+            --repo ${{ github.repository }} \
+            --json jobs \
+            --jq '[.jobs[] | select(.conclusion == "failure") | "- **\(.name)**: \(.steps[] | select(.conclusion == "failure") | .name)"] | join("\n")')
+
+          LOGS_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          gh pr comment "$PR_NUMBER" \
+            --repo ${{ github.repository }} \
+            --body "$(printf '❌ **Release CI failed** (build ${{ github.run_number }})\n\n**Jobs fallidos:**\n%s\n\n[Ver logs completos](%s)' "$JOBS" "$LOGS_URL")"

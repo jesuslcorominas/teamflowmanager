@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -43,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -66,6 +65,7 @@ fun GeneralDataStep(
     onNext: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    homeGround: String? = null,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -102,14 +102,6 @@ fun GeneralDataStep(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
-        Text(
-            text = stringResource(R.string.wizard_step_general_data),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-
-        Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-
         AppTextField(
             modifier = Modifier.fillMaxWidth(),
             value = opponent,
@@ -158,6 +150,17 @@ fun GeneralDataStep(
                 ),
             keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
         )
+
+        if (homeGround != null) {
+            SuggestionChip(
+                onClick = {
+                    location = homeGround
+                    locationError = null
+                    focusManager.clearFocus()
+                },
+                label = { Text(homeGround) },
+            )
+        }
 
         // Date Picker
         OutlinedTextField(

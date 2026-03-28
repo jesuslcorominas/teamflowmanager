@@ -1,14 +1,16 @@
 package com.jesuslcorominas.teamflowmanager.ui.club
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -16,7 +18,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -51,14 +52,12 @@ fun CreateClubScreen(
     TrackScreenView(screenName = ScreenName.CREATE_CLUB, screenClass = "CreateClubScreen")
 
     val uiState by viewModel.uiState.collectAsState()
-
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Handle success - auto-redirect after delay
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is CreateClubViewModel.UiState.Success -> {
-                delay(5000) // Auto-redirect after 5 seconds
+                delay(5000)
                 viewModel.resetState()
                 onClubCreated()
             }
@@ -68,40 +67,39 @@ fun CreateClubScreen(
                 viewModel.resetState()
             }
 
-            else -> { // No action needed
-            }
+            else -> {}
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { paddingValues ->
-        // Show success state instead of form
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding(),
+    ) {
         if (uiState is CreateClubViewModel.UiState.Success) {
-            ClubCreatedSuccessfullyContent(paddingValues = paddingValues) {
+            ClubCreatedSuccessfullyContent {
                 viewModel.resetState()
                 onClubCreated()
             }
         } else {
-            // Show form
-            CreateClubForm(
-                paddingValues = paddingValues,
-                viewModel = viewModel,
-            )
+            CreateClubForm(viewModel = viewModel)
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
 @Composable
-private fun ClubCreatedSuccessfullyContent(
-    paddingValues: PaddingValues,
-    onContinueClick: () -> Unit,
-) {
+private fun ClubCreatedSuccessfullyContent(onContinueClick: () -> Unit) {
     Column(
         modifier =
             Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -160,12 +158,8 @@ private fun ClubCreatedSuccessfullyContent(
 }
 
 @Composable
-private fun CreateClubForm(
-    paddingValues: PaddingValues,
-    viewModel: CreateClubViewModel,
-) {
+private fun CreateClubForm(viewModel: CreateClubViewModel) {
     val uiState by viewModel.uiState.collectAsState()
-
     val clubName by viewModel.clubName.collectAsState()
     val clubNameError by viewModel.clubNameError.collectAsState()
 
@@ -173,7 +167,6 @@ private fun CreateClubForm(
         modifier =
             Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,

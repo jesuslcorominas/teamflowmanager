@@ -6,4 +6,5 @@ data class Club(
     val name: String,
     val invitationCode: String,
     val firestoreId: String? = null,
+    val homeGround: String? = null,
 )
