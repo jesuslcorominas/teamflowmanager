@@ -14,6 +14,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
@@ -223,6 +224,15 @@ val viewModelModule =
                 signOutUseCase = get(),
                 deleteFcmTokenUseCase = get(),
                 analyticsTracker = get(),
+            )
+        }
+
+        viewModel { params ->
+            PresidentTeamDetailViewModel(
+                teamId = params.get(),
+                getTeamById = get(),
+                getPlayersByTeam = get(),
+                getMatchesByTeam = get(),
             )
         }
 

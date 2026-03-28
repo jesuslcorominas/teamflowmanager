@@ -257,8 +257,8 @@ class TeamViewModelTest {
             val state = viewModel.uiState.value
             assert(state is TeamUiState.NoTeam)
             val noTeamState = state as TeamUiState.NoTeam
-            assertEquals(100L, noTeamState.clubId)
-            assertEquals("club_firestore_123", noTeamState.clubFirestoreId)
+            assertEquals(100L, noTeamState.clubNumericId)
+            assertEquals("club_firestore_123", noTeamState.clubId)
             assertEquals(true, noTeamState.isPresident)
             assertEquals(ClubRole.PRESIDENT, noTeamState.userRole)
         }
@@ -301,8 +301,8 @@ class TeamViewModelTest {
             val state = viewModel.uiState.value
             assert(state is TeamUiState.NoTeam)
             val noTeamState = state as TeamUiState.NoTeam
-            assertEquals(100L, noTeamState.clubId)
-            assertEquals("club_firestore_123", noTeamState.clubFirestoreId)
+            assertEquals(100L, noTeamState.clubNumericId)
+            assertEquals("club_firestore_123", noTeamState.clubId)
             assertEquals(false, noTeamState.isPresident)
             assertEquals(ClubRole.COACH, noTeamState.userRole)
         }

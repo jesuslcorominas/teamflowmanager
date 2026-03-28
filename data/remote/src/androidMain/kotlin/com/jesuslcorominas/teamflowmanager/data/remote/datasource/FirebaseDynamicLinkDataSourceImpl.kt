@@ -35,7 +35,7 @@ internal class FirebaseDynamicLinkDataSourceImpl(
     }
 
     override suspend fun generateTeamInvitationLink(
-        teamFirestoreId: String,
+        teamId: String,
         teamName: String,
     ): String =
         withContext(Dispatchers.IO) {
@@ -43,11 +43,11 @@ internal class FirebaseDynamicLinkDataSourceImpl(
                 // Call Cloud Function via Ktorfit to create short link
                 val request =
                     CreateShortLinkRequest(
-                        teamId = teamFirestoreId,
+                        teamId = teamId,
                         teamName = teamName,
                     )
 
-                Log.d(TAG, "Creating short link for team: $teamName (ID: $teamFirestoreId)")
+                Log.d(TAG, "Creating short link for team: $teamName (ID: $teamId)")
 
                 // Make the API call with explicit timeout
                 val response =
@@ -62,16 +62,16 @@ internal class FirebaseDynamicLinkDataSourceImpl(
                 Log.w(TAG, "Failed to create short link via Cloud Function: ${e.message}")
                 Log.w(TAG, "Falling back to custom scheme")
 
-                createFallbackLink(teamFirestoreId, teamName)
+                createFallbackLink(teamId, teamName)
             }
         }
 
     private fun createFallbackLink(
-        teamFirestoreId: String,
+        teamId: String,
         teamName: String,
     ): String {
         val encodedTeamName = URLEncoder.encode(teamName, "UTF-8")
-        val fallbackLink = "$FALLBACK_SCHEME?teamId=$teamFirestoreId&teamName=$encodedTeamName"
+        val fallbackLink = "$FALLBACK_SCHEME?teamId=$teamId&teamName=$encodedTeamName"
         Log.d(TAG, "Created fallback link: $fallbackLink")
         return fallbackLink
     }

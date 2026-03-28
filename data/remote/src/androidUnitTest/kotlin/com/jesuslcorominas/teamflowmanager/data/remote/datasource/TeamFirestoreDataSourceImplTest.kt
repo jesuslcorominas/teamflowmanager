@@ -296,7 +296,7 @@ class TeamFirestoreDataSourceImplTest {
     @Test
     fun `givenBlankTeamFirestoreId_whenGetTeamByFirestoreId_thenThrowsIllegalArgumentException`() = runTest {
         try {
-            dataSource.getTeamByFirestoreId("")
+            dataSource.getTeamById("")
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {
             // expected
@@ -317,7 +317,7 @@ class TeamFirestoreDataSourceImplTest {
         coEvery { docTask.await() } returns docSnapshot
         every { docSnapshot.exists() } returns false
 
-        val result = dataSource.getTeamByFirestoreId("non-existent-id")
+        val result = dataSource.getTeamById("non-existent-id")
 
         assertNull(result)
     }
@@ -346,7 +346,7 @@ class TeamFirestoreDataSourceImplTest {
         )
         every { docSnapshot.toObject(TeamFirestoreModel::class.java) } returns teamModel
 
-        val result = dataSource.getTeamByFirestoreId("team-firestore-id")
+        val result = dataSource.getTeamById("team-firestore-id")
 
         assertNotNull(result)
         assertEquals("Test Team", result!!.name)
@@ -812,7 +812,7 @@ class TeamFirestoreDataSourceImplTest {
         every { docSnapshot.id } returns "team-firestore-id"
         every { docSnapshot.toObject(TeamFirestoreModel::class.java) } returns null
 
-        val result = dataSource.getTeamByFirestoreId("team-firestore-id")
+        val result = dataSource.getTeamById("team-firestore-id")
 
         assertNull(result)
     }
@@ -841,7 +841,7 @@ class TeamFirestoreDataSourceImplTest {
         )
         every { docSnapshot.toObject(TeamFirestoreModel::class.java) } returns teamModel
 
-        val result = dataSource.getTeamByFirestoreId("team-firestore-id")
+        val result = dataSource.getTeamById("team-firestore-id")
 
         assertNotNull(result)
         assertEquals("Test Team", result!!.name)

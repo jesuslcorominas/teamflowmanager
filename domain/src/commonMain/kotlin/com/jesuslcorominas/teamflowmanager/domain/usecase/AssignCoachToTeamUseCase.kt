@@ -11,14 +11,14 @@ interface AssignCoachToTeamUseCase {
     /**
      * Assign a coach (club member) to a team.
      *
-     * @param teamFirestoreId The Firestore document ID of the team
+     * @param teamId The Firestore document ID of the team
      * @param coachUserId The Firebase user ID of the coach to assign
      * @return The updated Team with the new coachId
      * @throws IllegalArgumentException if team or coach not found
      * @throws IllegalStateException if user is not authenticated or not a President
      */
     suspend operator fun invoke(
-        teamFirestoreId: String,
+        teamId: String,
         coachUserId: String,
     ): Team
 }

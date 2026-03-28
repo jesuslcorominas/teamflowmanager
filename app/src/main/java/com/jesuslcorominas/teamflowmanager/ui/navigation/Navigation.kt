@@ -22,6 +22,7 @@ import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PresidentTeamDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
@@ -153,8 +154,43 @@ fun Navigation(
             )
         }
 
-        composable(Route.TeamList.createRoute()) {
-            TeamListScreen()
+        composable(
+            route = Route.TeamList.createRoute(),
+            // Instant pop-enter: TeamList ↔ PresidentTeamDetail change the scaffold
+            // (bottomBar/canGoBack), so restoring TeamList must be atomic too.
+            popEnterTransition = { EnterTransition.None },
+        ) {
+            TeamListScreen(
+                onTeamClick = { team ->
+                    team.firestoreId?.let { firestoreId ->
+                        navController.navigate(Route.PresidentTeamDetail.createRoute(firestoreId))
+                    }
+                },
+            )
+        }
+
+        composable(
+            route = Route.PresidentTeamDetail.FULL_ROUTE,
+            arguments =
+                listOf(
+                    navArgument(Route.PresidentTeamDetail.ARG_TEAM_ID) {
+                        type = NavType.StringType
+                    },
+                ),
+            // Instant transitions: PresidentTeamDetail changes canGoBack/bottomBar visibility,
+            // so we switch atomically to avoid scaffold layout-shift artifacts.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
+        ) { backStackEntry ->
+            val teamId =
+                backStackEntry.arguments?.getString(Route.PresidentTeamDetail.ARG_TEAM_ID)
+                    ?: return@composable
+            PresidentTeamDetailScreen(
+                teamId = teamId,
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
 
         composable(Route.ClubMembers.createRoute()) {

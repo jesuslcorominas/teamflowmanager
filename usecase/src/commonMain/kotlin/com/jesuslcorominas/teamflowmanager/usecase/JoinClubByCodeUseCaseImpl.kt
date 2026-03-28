@@ -61,9 +61,9 @@ internal class JoinClubByCodeUseCaseImpl(
                     "Orphan team must have a firestoreId (Firestore document ID)"
                 }
                 teamRepository.updateTeamClubId(
-                    teamFirestoreId = orphanTeam.firestoreId!!,
-                    clubId = club.id,
-                    clubFirestoreId = club.firestoreId!!,
+                    teamId = orphanTeam.firestoreId!!,
+                    clubNumericId = club.id,
+                    clubId = club.firestoreId!!,
                 )
             }
 
@@ -73,8 +73,8 @@ internal class JoinClubByCodeUseCaseImpl(
                     userId = currentUser.id,
                     name = currentUser.displayName!!,
                     email = currentUser.email!!,
-                    clubId = club.id,
-                    clubFirestoreId = club.firestoreId!!,
+                    clubNumericId = club.id,
+                    clubId = club.firestoreId!!,
                     roles = roles,
                 )
 

@@ -352,21 +352,36 @@
     <string name="club_settings_edit_title">Editar Club</string>
     <string name="home_ground_label">Lugar de juego</string>
     <string name="home_ground_placeholder">Ej. Polideportivo Municipal</string>
-    <string name="copy_invitation_code">Copiar</string>
-    <string name="share_invitation_code">Compartir</string>
-    <string name="regenerate_invitation_code">Renovar</string>
-    <string name="regenerate_code_confirm_title">¿Renovar código?</string>
-    <string name="regenerate_code_confirm_message">Las invitaciones anteriores dejarán de ser válidas. ¿Continuar?</string>
-    <string name="invitation_code_copied">Código copiado</string>
-    <string name="club_settings_saved">Datos del club guardados</string>
+    <string name="copy_invitation_code">Copy</string>
+    <string name="share_invitation_code">Share</string>
+    <string name="regenerate_invitation_code">Renew</string>
+    <string name="regenerate_code_confirm_title">Renew code?</string>
+    <string name="regenerate_code_confirm_message">Previous invitations will no longer be valid. Continue?</string>
+    <string name="invitation_code_copied">Code copied</string>
+    <string name="club_settings_saved">Club data saved</string>
 
     <!-- Match Notification -->
     <string name="match_notification_channel_name">Match Countdown</string>
     <string name="match_notification_channel_description">Shows remaining time during active matches</string>
 
     <!-- Self-Assign as Coach Strings -->
-    <string name="self_assign_as_coach_button">Asignarme como Coach</string>
-    <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
-    <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
+    <string name="self_assign_as_coach_button">Assign myself as Coach</string>
+    <string name="self_assign_as_coach_success">You have been assigned as team Coach</string>
+    <string name="self_assign_as_coach_error">Error assigning you as Coach. Please try again.</string>
+
+    <!-- President Team Detail -->
+    <string name="president_team_detail_players_tab">Players</string>
+    <string name="president_team_detail_matches_tab">Matches</string>
+    <string name="president_team_detail_stats_tab">Stats</string>
+    <string name="president_team_detail_error">Could not load team data</string>
+    <string name="president_team_detail_no_matches">No matches registered</string>
+    <string name="president_team_detail_no_players">No players registered</string>
+    <string name="president_team_stats_played">Played</string>
+    <string name="president_team_stats_wins">Wins</string>
+    <string name="president_team_stats_draws">Draws</string>
+    <string name="president_team_stats_losses">Losses</string>
+    <string name="president_team_stats_goals_scored">Goals scored</string>
+    <string name="president_team_stats_goals_conceded">Goals conceded</string>
+    <string name="president_team_stats_squad_size">Squad size</string>
 
 </resources>

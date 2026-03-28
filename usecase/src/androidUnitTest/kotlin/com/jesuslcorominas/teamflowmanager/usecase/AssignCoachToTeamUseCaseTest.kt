@@ -56,7 +56,7 @@ class AssignCoachToTeamUseCaseTest {
     @Test(expected = IllegalArgumentException::class)
     fun `givenTeamNotFound_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(president)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns null
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns null
         useCase.invoke("team_fs_1", "coach1")
     }
 
@@ -64,7 +64,7 @@ class AssignCoachToTeamUseCaseTest {
     fun `givenNonPresidentUser_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         val staffMember = presidentMember.copy(roles = listOf(ClubRole.STAFF.roleName))
         coEvery { getCurrentUser() } returns flowOf(president)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(staffMember)
         useCase.invoke("team_fs_1", "coach1")
     }
@@ -72,7 +72,7 @@ class AssignCoachToTeamUseCaseTest {
     @Test
     fun `givenPresidentAndValidCoach_whenInvoke_thenAssignCoachAndAddRole`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(president)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(presidentMember)
         coEvery { clubMemberRepository.getClubMemberByUserIdAndClub("coach1", "club_fs_1") } returns coachMember
 
@@ -87,14 +87,14 @@ class AssignCoachToTeamUseCaseTest {
     fun `givenTeamWithoutClub_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         val teamWithoutClub = team.copy(clubFirestoreId = null)
         coEvery { getCurrentUser() } returns flowOf(president)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns teamWithoutClub
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns teamWithoutClub
         useCase.invoke("team_fs_1", "coach1")
     }
 
     @Test(expected = IllegalStateException::class)
     fun `givenCurrentUserNotClubMember_whenInvoke_thenThrowIllegalStateException`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(president)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(null)
         useCase.invoke("team_fs_1", "coach1")
     }
@@ -103,7 +103,7 @@ class AssignCoachToTeamUseCaseTest {
     fun `givenPresidentInDifferentClubThanTeam_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         val memberInDifferentClub = presidentMember.copy(clubFirestoreId = "different_club_fs")
         coEvery { getCurrentUser() } returns flowOf(president)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(memberInDifferentClub)
         useCase.invoke("team_fs_1", "coach1")
     }
@@ -111,7 +111,7 @@ class AssignCoachToTeamUseCaseTest {
     @Test(expected = IllegalArgumentException::class)
     fun `givenCoachNotClubMember_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(president)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(presidentMember)
         coEvery { clubMemberRepository.getClubMemberByUserIdAndClub("coach1", "club_fs_1") } returns null
         useCase.invoke("team_fs_1", "coach1")
@@ -120,7 +120,7 @@ class AssignCoachToTeamUseCaseTest {
     @Test(expected = IllegalStateException::class)
     fun `givenRepositoryThrowsOnTeamUpdate_whenInvoke_thenThrowIllegalStateException`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(president)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(presidentMember)
         coEvery { clubMemberRepository.getClubMemberByUserIdAndClub("coach1", "club_fs_1") } returns coachMember
         coEvery { teamRepository.updateTeamCoachId(any(), any()) } throws RuntimeException("Network error")
@@ -131,7 +131,7 @@ class AssignCoachToTeamUseCaseTest {
     fun `givenCoachAlreadyHasCoachRole_whenInvoke_thenDoNotAddRoleAgain`() = runTest {
         val coachWithRole = coachMember.copy(roles = listOf(ClubRole.COACH.roleName))
         coEvery { getCurrentUser() } returns flowOf(president)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(presidentMember)
         coEvery { clubMemberRepository.getClubMemberByUserIdAndClub("coach1", "club_fs_1") } returns coachWithRole
 

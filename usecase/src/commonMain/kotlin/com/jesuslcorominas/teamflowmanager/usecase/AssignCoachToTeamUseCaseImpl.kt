@@ -14,12 +14,12 @@ internal class AssignCoachToTeamUseCaseImpl(
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : AssignCoachToTeamUseCase {
     override suspend fun invoke(
-        teamFirestoreId: String,
+        teamId: String,
         coachUserId: String,
     ): Team {
         // Validate inputs
-        require(teamFirestoreId.isNotBlank()) {
-            "Team Firestore ID cannot be blank"
+        require(teamId.isNotBlank()) {
+            "Team ID cannot be blank"
         }
         require(coachUserId.isNotBlank()) {
             "Coach user ID cannot be blank"
@@ -32,8 +32,8 @@ internal class AssignCoachToTeamUseCaseImpl(
 
         // Get the team
         val team =
-            teamRepository.getTeamByFirestoreId(teamFirestoreId)
-                ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
+            teamRepository.getTeamById(teamId)
+                ?: throw IllegalArgumentException("Team not found: $teamId")
 
         // Verify team belongs to a club
         require(team.clubFirestoreId != null) {
@@ -59,7 +59,7 @@ internal class AssignCoachToTeamUseCaseImpl(
         val coachMembership =
             clubMemberRepository.getClubMemberByUserIdAndClub(
                 userId = coachUserId,
-                clubFirestoreId = team.clubFirestoreId!!,
+                clubId = team.clubFirestoreId!!,
             ) ?: throw IllegalArgumentException("Coach must be a member of the club")
 
         try {
@@ -70,7 +70,7 @@ internal class AssignCoachToTeamUseCaseImpl(
 
             // Step 1: Update team's coachId
             teamRepository.updateTeamCoachId(
-                teamFirestoreId = teamFirestoreId,
+                teamId = teamId,
                 coachId = coachUserId,
             )
 
@@ -78,7 +78,7 @@ internal class AssignCoachToTeamUseCaseImpl(
             if (!coachMembership.hasRole(ClubRole.COACH)) {
                 clubMemberRepository.addClubMemberRole(
                     userId = coachUserId,
-                    clubFirestoreId = team.clubFirestoreId!!,
+                    clubId = team.clubFirestoreId!!,
                     role = ClubRole.COACH.roleName,
                 )
             }

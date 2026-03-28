@@ -29,12 +29,15 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerGoalStatsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerTimeStatsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
@@ -99,12 +102,15 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchReportDataUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetMatchesByTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeStatsUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersByTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetTeamByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamsByClubUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetUserClubMembershipUseCaseImpl
@@ -147,6 +153,7 @@ import org.koin.dsl.module
 internal val useCaseInternalModule =
     module {
         singleOf(::GetPlayersUseCaseImpl) bind GetPlayersUseCase::class
+        singleOf(::GetPlayersByTeamUseCaseImpl) bind GetPlayersByTeamUseCase::class
         singleOf(::GetPlayerByIdUseCaseImpl) bind GetPlayerByIdUseCase::class
         singleOf(::AddPlayerUseCaseImpl) bind AddPlayerUseCase::class
         singleOf(::DeletePlayerUseCaseImpl) bind DeletePlayerUseCase::class
@@ -154,6 +161,7 @@ internal val useCaseInternalModule =
 
         singleOf(::GetTeamUseCaseImpl) bind GetTeamUseCase::class
         singleOf(::GetTeamsByClubUseCaseImpl) bind GetTeamsByClubUseCase::class
+        singleOf(::GetTeamByIdUseCaseImpl) bind GetTeamByIdUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
         singleOf(::AssignCoachToTeamUseCaseImpl) bind AssignCoachToTeamUseCase::class
@@ -170,6 +178,7 @@ internal val useCaseInternalModule =
 
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class
+        singleOf(::GetMatchesByTeamUseCaseImpl) bind GetMatchesByTeamUseCase::class
         singleOf(::GetArchivedMatchesUseCaseImpl) bind GetArchivedMatchesUseCase::class
         singleOf(::HasScheduledMatchesUseCaseImpl) bind HasScheduledMatchesUseCase::class
         singleOf(::GetScheduledMatchesUseCaseImpl) bind GetScheduledMatchesUseCase::class

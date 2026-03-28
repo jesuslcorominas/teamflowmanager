@@ -66,6 +66,23 @@ Antes de escribir código, respóndete: ¿puede esto vivir en commonMain? Si la 
 
 ---
 
+# REGLA CRÍTICA — PERSISTENCIA EN DISCO
+
+**Todo cambio de código DEBE escribirse en disco usando herramientas. Nunca en texto.**
+
+Reglas absolutas:
+
+- SIEMPRE usar `Read` antes de editar cualquier fichero.
+- SIEMPRE usar `Edit` para modificar ficheros existentes (cambios quirúrgicos).
+- SIEMPRE usar `Write` para ficheros nuevos o rewrites completos.
+- NUNCA generar código solo como bloque de texto en la respuesta.
+- NUNCA asumir que un fichero tiene un contenido sin haberlo leído.
+- Tras escribir, verificar con `git status` y `git diff` que los cambios están en disco.
+
+Si generas código como texto pero no escribes el fichero, la tarea está **incompleta**.
+
+---
+
 # REGLAS ESTRICTAS
 
 1. No modificar comportamiento fuera del alcance de la tarea.
@@ -74,6 +91,7 @@ Antes de escribir código, respóndete: ¿puede esto vivir en commonMain? Si la 
 4. No introducir librerías nuevas sin justificación.
 5. No romper compatibilidad pública sin indicarlo explícitamente.
 6. No mezclar responsabilidades en la misma clase.
+7. Persistir SIEMPRE los cambios usando `Write`/`Edit`. Código solo en respuesta de texto = tarea no completada.
 
 ---
 
@@ -108,11 +126,23 @@ Mantenerlo conciso.
 
 ## PASO 3 — Implementación
 
-- Código completo.
-- Listo para copiar.
-- Sin pseudocódigo.
+**Escribir el código directamente en los ficheros usando herramientas. No como texto en la respuesta.**
+
+Proceso obligatorio:
+
+1. Leer cada fichero a modificar con `Read` (obligatorio antes de cualquier edición).
+2. Usar `Edit` para cambios quirúrgicos en ficheros existentes.
+3. Usar `Write` solo para ficheros nuevos o rewrites completos justificados.
+4. Para ficheros renombrados: usar `git mv` vía Bash.
+5. Compilar y ejecutar los tests afectados con Bash.
+6. Verificar con `git diff --stat` que los ficheros correctos están modificados.
+
+Reglas de código:
+
+- Código completo, sin pseudocódigo.
 - Sin omitir imports relevantes.
 - Respetando estilo del proyecto.
+- Sin comentarios innecesarios.
 
 ---
 
@@ -128,14 +158,19 @@ Verificar:
 
 ## PASO 5 — Entrega final
 
-Siempre incluir:
+Antes de responder, verificar con herramientas:
 
-1. Resumen de cambios.
-2. Archivos modificados.
-3. Archivos nuevos.
-4. Impacto en tests.
-5. Impacto arquitectónico.
-6. Verificación de source sets (commonMain/androidMain/iosMain).
+1. `git diff --stat` — confirmar que los ficheros modificados son los esperados.
+2. `./gradlew ktlintCheck` — corregir cualquier violación con `ktlintFormat`.
+3. Tests relevantes pasando (`./gradlew :<modulo>:test`).
+
+En la respuesta incluir:
+
+1. Confirmación de que los cambios están escritos en disco (output de `git diff --stat`).
+2. Resumen de cambios (ficheros modificados y nuevos con rutas absolutas).
+3. Resultado de tests.
+4. Impacto arquitectónico si aplica.
+5. Verificación de source sets (commonMain/androidMain/iosMain).
 
 ---
 

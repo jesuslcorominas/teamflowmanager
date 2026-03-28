@@ -79,13 +79,13 @@ class ClubMemberFirestoreDataSourceImpl(
             }
         }
 
-    override fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>> =
+    override fun getClubMembers(clubId: String): Flow<List<ClubMember>> =
         callbackFlow {
-            require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+            require(clubId.isNotBlank()) { "Club ID cannot be blank" }
 
             val listenerRegistration =
                 firestore.collection(CLUB_MEMBERS_COLLECTION)
-                    .whereEqualTo("clubId", clubFirestoreId)
+                    .whereEqualTo("clubId", clubId)
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             Log.e(TAG, "Error getting club members from Firestore", error)
@@ -115,7 +115,7 @@ class ClubMemberFirestoreDataSourceImpl(
                                 }
                             }
 
-                        Log.d(TAG, "Loaded ${clubMembers.size} club members for club: $clubFirestoreId")
+                        Log.d(TAG, "Loaded ${clubMembers.size} club members for club: $clubId")
                         trySend(clubMembers)
                     }
 
@@ -128,20 +128,20 @@ class ClubMemberFirestoreDataSourceImpl(
         userId: String,
         name: String,
         email: String,
-        clubId: Long,
-        clubFirestoreId: String,
+        clubNumericId: Long,
+        clubId: String,
         roles: List<String>,
     ): ClubMember {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
         require(name.isNotBlank()) { "Name cannot be blank" }
         require(email.isNotBlank()) { "Email cannot be blank" }
-        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
         require(roles.isNotEmpty()) { "Roles cannot be empty" }
 
         try {
-            // Use predictable ID format: userId_clubFirestoreId
+            // Use predictable ID format: userId_clubId
             // This format is required by Firestore security rules
-            val clubMemberId = "${userId}_$clubFirestoreId"
+            val clubMemberId = "${userId}_$clubId"
             val clubMemberDocRef = firestore.collection(CLUB_MEMBERS_COLLECTION).document(clubMemberId)
 
             // Create club member model
@@ -151,13 +151,13 @@ class ClubMemberFirestoreDataSourceImpl(
                     userId = userId,
                     name = name,
                     email = email,
-                    clubId = clubFirestoreId,
+                    clubId = clubId,
                     roles = roles,
                 )
 
             // Create or update the club member document
             clubMemberDocRef.set(clubMemberModel).await()
-            Log.d(TAG, "ClubMember created/updated for userId: $userId with roles: $roles in club: $clubFirestoreId")
+            Log.d(TAG, "ClubMember created/updated for userId: $userId with roles: $roles in club: $clubId")
 
             return clubMemberModel.toDomain()
         } catch (e: Exception) {
@@ -168,16 +168,16 @@ class ClubMemberFirestoreDataSourceImpl(
 
     override suspend fun updateClubMemberRoles(
         userId: String,
-        clubFirestoreId: String,
+        clubId: String,
         roles: List<String>,
     ) {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
-        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
         require(roles.isNotEmpty()) { "Roles cannot be empty" }
 
         try {
-            // Use predictable ID format: userId_clubFirestoreId
-            val clubMemberId = "${userId}_$clubFirestoreId"
+            // Use predictable ID format: userId_clubId
+            val clubMemberId = "${userId}_$clubId"
             val updates =
                 mapOf(
                     "roles" to roles,
@@ -188,7 +188,7 @@ class ClubMemberFirestoreDataSourceImpl(
                 .update(updates)
                 .await()
 
-            Log.d(TAG, "ClubMember roles updated for userId: $userId in club: $clubFirestoreId to roles: $roles")
+            Log.d(TAG, "ClubMember roles updated for userId: $userId in club: $clubId to roles: $roles")
         } catch (e: Exception) {
             Log.e(TAG, "Error updating club member roles in Firestore", e)
             throw e
@@ -197,16 +197,16 @@ class ClubMemberFirestoreDataSourceImpl(
 
     override suspend fun addClubMemberRole(
         userId: String,
-        clubFirestoreId: String,
+        clubId: String,
         role: String,
     ) {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
-        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
         require(role.isNotBlank()) { "Role cannot be blank" }
 
         try {
-            // Use predictable ID format: userId_clubFirestoreId
-            val clubMemberId = "${userId}_$clubFirestoreId"
+            // Use predictable ID format: userId_clubId
+            val clubMemberId = "${userId}_$clubId"
 
             // Get current club member
             val document =
@@ -216,7 +216,7 @@ class ClubMemberFirestoreDataSourceImpl(
                     .await()
 
             if (!document.exists()) {
-                throw IllegalStateException("ClubMember not found for userId: $userId in club: $clubFirestoreId")
+                throw IllegalStateException("ClubMember not found for userId: $userId in club: $clubId")
             }
 
             val firestoreModel =
@@ -239,9 +239,9 @@ class ClubMemberFirestoreDataSourceImpl(
                     .update(updates)
                     .await()
 
-                Log.d(TAG, "Added role $role to ClubMember for userId: $userId in club: $clubFirestoreId")
+                Log.d(TAG, "Added role $role to ClubMember for userId: $userId in club: $clubId")
             } else {
-                Log.d(TAG, "Role $role already exists for userId: $userId in club: $clubFirestoreId")
+                Log.d(TAG, "Role $role already exists for userId: $userId in club: $clubId")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error adding role to club member in Firestore", e)
@@ -251,14 +251,14 @@ class ClubMemberFirestoreDataSourceImpl(
 
     override suspend fun getClubMemberByUserIdAndClub(
         userId: String,
-        clubFirestoreId: String,
+        clubId: String,
     ): ClubMember? {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
-        require(clubFirestoreId.isNotBlank()) { "Club Firestore ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
 
         try {
-            // Use predictable ID format: userId_clubFirestoreId
-            val clubMemberId = "${userId}_$clubFirestoreId"
+            // Use predictable ID format: userId_clubId
+            val clubMemberId = "${userId}_$clubId"
             val document =
                 firestore.collection(CLUB_MEMBERS_COLLECTION)
                     .document(clubMemberId)
@@ -266,7 +266,7 @@ class ClubMemberFirestoreDataSourceImpl(
                     .await()
 
             if (!document.exists()) {
-                Log.d(TAG, "ClubMember not found for userId: $userId in club: $clubFirestoreId")
+                Log.d(TAG, "ClubMember not found for userId: $userId in club: $clubId")
                 return null
             }
 

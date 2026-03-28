@@ -194,24 +194,24 @@ class TeamRepositoryImplTest {
         coVerify { teamDataSource.updateTeamClubId("firestore-team-id", 123L, "firestore-club-id") }
     }
 
-    // --- getTeamByFirestoreId ---
+    // --- getTeamById ---
 
     @Test
     fun `givenTeamFirestoreId_whenGetTeamByFirestoreId_thenReturnsTeam`() = runTest {
         val firestoreId = "firestore-team-123"
         val team = createTeam(firestoreId = firestoreId)
-        coEvery { teamDataSource.getTeamByFirestoreId(firestoreId) } returns team
+        coEvery { teamDataSource.getTeamById(firestoreId) } returns team
 
-        val result = repository.getTeamByFirestoreId(firestoreId)
+        val result = repository.getTeamById(firestoreId)
 
         assertEquals(team, result)
     }
 
     @Test
     fun `givenUnknownFirestoreId_whenGetTeamByFirestoreId_thenReturnsNull`() = runTest {
-        coEvery { teamDataSource.getTeamByFirestoreId("unknown") } returns null
+        coEvery { teamDataSource.getTeamById("unknown") } returns null
 
-        val result = repository.getTeamByFirestoreId("unknown")
+        val result = repository.getTeamById("unknown")
 
         assertNull(result)
     }

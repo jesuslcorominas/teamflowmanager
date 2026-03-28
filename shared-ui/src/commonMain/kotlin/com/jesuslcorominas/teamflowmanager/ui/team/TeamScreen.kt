@@ -76,7 +76,7 @@ fun TeamScreen(
                 }
 
             is TeamUiState.NoTeam -> {
-                if (state.clubId != null && !state.isPresident) {
+                if (state.clubNumericId != null && !state.isPresident) {
                     AlertDialog(
                         title = { Text(stringResource(Res.string.team_creation_permission_error_title)) },
                         text = { Text(stringResource(Res.string.team_creation_permission_error_message)) },
@@ -89,8 +89,8 @@ fun TeamScreen(
                     )
                 } else {
                     TeamForm(
+                        clubNumericId = state.clubNumericId,
                         clubId = state.clubId,
-                        clubFirestoreId = state.clubFirestoreId,
                         isPresident = state.isPresident,
                         onSave = { team, _ ->
                             viewModel.createTeam(team) {

@@ -10,8 +10,8 @@ interface GetClubMembersUseCase {
     /**
      * Get all members of a club.
      *
-     * @param clubFirestoreId The Firestore document ID of the club
+     * @param clubId The document ID of the club
      * @return Flow emitting list of club members
      */
-    operator fun invoke(clubFirestoreId: String): Flow<List<ClubMember>>
+    operator fun invoke(clubId: String): Flow<List<ClubMember>>
 }
