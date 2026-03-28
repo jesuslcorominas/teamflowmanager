@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
 import com.jesuslcorominas.teamflowmanager.domain.utils.MatchReportPdfExporter
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
 import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
@@ -244,6 +245,15 @@ val iosModule =
                 crashReporter = get(),
             )
         }
+        factory { params ->
+            PresidentTeamDetailViewModel(
+                teamFirestoreId = params.get(),
+                getTeamByFirestoreId = get(),
+                getPlayersByTeam = get(),
+                getMatchesByTeam = get(),
+            )
+        }
+
         factory { params ->
             AcceptTeamInvitationViewModel(
                 teamId = params.get(),

@@ -71,6 +71,28 @@ class MatchFirestoreDataSourceImpl(
         }
     }
 
+    override fun getMatchesByTeam(teamFirestoreId: String): Flow<List<Match>> =
+        flow {
+            val snapshots =
+                firestore.collection(MATCHES_COLLECTION)
+                    .where { "teamId" equalTo teamFirestoreId }
+                    .snapshots
+            emitAll(
+                snapshots.map { qs ->
+                    qs.documents.mapNotNull { doc ->
+                        try {
+                            val model = doc.data<MatchFirestoreModel>()
+                            documentToMatch(doc.id, model, teamFirestoreId)
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
+                }.catch { e ->
+                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
+                },
+            )
+        }
+
     override fun getAllMatches(): Flow<List<Match>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid

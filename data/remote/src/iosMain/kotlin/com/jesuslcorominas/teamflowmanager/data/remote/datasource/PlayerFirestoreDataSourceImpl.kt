@@ -61,6 +61,29 @@ class PlayerFirestoreDataSourceImpl(
         }
     }
 
+    override fun getPlayersByTeam(teamFirestoreId: String): Flow<List<Player>> =
+        flow {
+            val snapshots =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .where { "teamId" equalTo teamFirestoreId }
+                    .where { "deleted" equalTo false }
+                    .snapshots
+            emitAll(
+                snapshots.map { qs ->
+                    qs.documents.mapNotNull { doc ->
+                        try {
+                            val model = doc.data<PlayerFirestoreModel>()
+                            model.copy(id = doc.id, teamId = teamFirestoreId).toDomain()
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
+                }.catch { e ->
+                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
+                },
+            )
+        }
+
     override fun getAllPlayers(): Flow<List<Player>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid

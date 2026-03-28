@@ -369,4 +369,19 @@
     <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
     <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
 
+    <!-- President Team Detail -->
+    <string name="president_team_detail_players_tab">Players</string>
+    <string name="president_team_detail_matches_tab">Matches</string>
+    <string name="president_team_detail_stats_tab">Stats</string>
+    <string name="president_team_detail_error">Could not load team data</string>
+    <string name="president_team_detail_no_matches">No matches registered</string>
+    <string name="president_team_detail_no_players">No players registered</string>
+    <string name="president_team_stats_played">Played</string>
+    <string name="president_team_stats_wins">Wins</string>
+    <string name="president_team_stats_draws">Draws</string>
+    <string name="president_team_stats_losses">Losses</string>
+    <string name="president_team_stats_goals_scored">Goals scored</string>
+    <string name="president_team_stats_goals_conceded">Goals conceded</string>
+    <string name="president_team_stats_squad_size">Squad size</string>
+
 </resources>

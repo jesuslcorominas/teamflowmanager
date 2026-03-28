@@ -14,6 +14,9 @@ internal class MatchRepositoryImpl(
 
     override fun getAllMatches(): Flow<List<Match>> = matchDataSource.getAllMatches()
 
+    override fun getMatchesByTeam(teamFirestoreId: String): Flow<List<Match>> =
+        matchDataSource.getMatchesByTeam(teamFirestoreId)
+
     override fun getArchivedMatches(): Flow<List<Match>> = matchDataSource.getArchivedMatches()
 
     override suspend fun getScheduledMatches(): List<Match> = matchDataSource.getScheduledMatches()

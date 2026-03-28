@@ -22,6 +22,7 @@ import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PresidentTeamDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
@@ -154,7 +155,28 @@ fun Navigation(
         }
 
         composable(Route.TeamList.createRoute()) {
-            TeamListScreen()
+            TeamListScreen(
+                onTeamClick = { team ->
+                    team.firestoreId?.let { firestoreId ->
+                        navController.navigate(Route.PresidentTeamDetail.createRoute(firestoreId))
+                    }
+                },
+            )
+        }
+
+        composable(
+            route = Route.PresidentTeamDetail.FULL_ROUTE,
+            arguments =
+                listOf(
+                    navArgument(Route.PresidentTeamDetail.ARG_TEAM_FIRESTORE_ID) {
+                        type = NavType.StringType
+                    },
+                ),
+        ) { backStackEntry ->
+            val teamFirestoreId =
+                backStackEntry.arguments?.getString(Route.PresidentTeamDetail.ARG_TEAM_FIRESTORE_ID)
+                    ?: return@composable
+            PresidentTeamDetailScreen(teamFirestoreId = teamFirestoreId)
         }
 
         composable(Route.ClubMembers.createRoute()) {

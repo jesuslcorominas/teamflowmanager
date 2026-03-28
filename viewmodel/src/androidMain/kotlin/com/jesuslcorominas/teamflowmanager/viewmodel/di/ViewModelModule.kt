@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel.di
 
 import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
@@ -223,6 +224,15 @@ val viewModelModule =
                 signOutUseCase = get(),
                 deleteFcmTokenUseCase = get(),
                 analyticsTracker = get(),
+            )
+        }
+
+        viewModel { params ->
+            PresidentTeamDetailViewModel(
+                teamFirestoreId = params.get(),
+                getTeamByFirestoreId = get(),
+                getPlayersByTeam = get(),
+                getMatchesByTeam = get(),
             )
         }
 
