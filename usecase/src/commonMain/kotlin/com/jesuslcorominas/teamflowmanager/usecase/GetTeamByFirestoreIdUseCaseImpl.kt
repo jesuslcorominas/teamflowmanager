@@ -7,6 +7,5 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 internal class GetTeamByFirestoreIdUseCaseImpl(
     private val teamRepository: TeamRepository,
 ) : GetTeamByFirestoreIdUseCase {
-    override suspend fun invoke(teamFirestoreId: String): Team? =
-        teamRepository.getTeamByFirestoreId(teamFirestoreId)
+    override suspend fun invoke(teamFirestoreId: String): Team? = teamRepository.getTeamByFirestoreId(teamFirestoreId)
 }

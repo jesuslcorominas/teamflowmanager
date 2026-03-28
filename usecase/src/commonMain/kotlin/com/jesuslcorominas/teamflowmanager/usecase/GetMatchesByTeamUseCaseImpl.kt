@@ -8,6 +8,5 @@ import kotlinx.coroutines.flow.Flow
 internal class GetMatchesByTeamUseCaseImpl(
     private val matchRepository: MatchRepository,
 ) : GetMatchesByTeamUseCase {
-    override fun invoke(teamFirestoreId: String): Flow<List<Match>> =
-        matchRepository.getMatchesByTeam(teamFirestoreId)
+    override fun invoke(teamFirestoreId: String): Flow<List<Match>> = matchRepository.getMatchesByTeam(teamFirestoreId)
 }

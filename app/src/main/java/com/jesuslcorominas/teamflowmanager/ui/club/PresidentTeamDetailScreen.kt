@@ -116,9 +116,10 @@ private fun SummaryTab(state: PresidentTeamDetailUiState.Ready) {
         item {
             AppCard {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
@@ -148,9 +149,10 @@ private fun SummaryTab(state: PresidentTeamDetailUiState.Ready) {
         item {
             AppCard {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
@@ -220,9 +222,10 @@ private fun StatsTab(stats: PresidentTeamStats) {
         item {
             AppCard {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     LabelValueRow(
@@ -263,9 +266,10 @@ private fun StatsTab(stats: PresidentTeamStats) {
 private fun ScheduledMatchCard(match: Match) {
     AppCard {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(

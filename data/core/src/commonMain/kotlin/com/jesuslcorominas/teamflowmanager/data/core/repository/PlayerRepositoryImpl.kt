@@ -10,8 +10,7 @@ internal class PlayerRepositoryImpl(
 ) : PlayerRepository {
     override fun getAllPlayers(): Flow<List<Player>> = playerDataSource.getAllPlayers()
 
-    override fun getPlayersByTeam(teamFirestoreId: String): Flow<List<Player>> =
-        playerDataSource.getPlayersByTeam(teamFirestoreId)
+    override fun getPlayersByTeam(teamFirestoreId: String): Flow<List<Player>> = playerDataSource.getPlayersByTeam(teamFirestoreId)
 
     override suspend fun getPlayerById(playerId: Long): Player? = playerDataSource.getPlayerById(playerId)
 
