@@ -154,7 +154,12 @@ fun Navigation(
             )
         }
 
-        composable(Route.TeamList.createRoute()) {
+        composable(
+            route = Route.TeamList.createRoute(),
+            // Instant pop-enter: TeamList ↔ PresidentTeamDetail change the scaffold
+            // (bottomBar/canGoBack), so restoring TeamList must be atomic too.
+            popEnterTransition = { EnterTransition.None },
+        ) {
             TeamListScreen(
                 onTeamClick = { team ->
                     team.firestoreId?.let { firestoreId ->
