@@ -329,4 +329,33 @@
     <string name="settings_title">Ajustes</string>
     <string name="settings">Ajustes</string>
 
+    <!-- Club Settings Strings -->
+    <string name="copy_invitation_code">Copiar</string>
+    <string name="share_invitation_code">Compartir</string>
+    <string name="regenerate_invitation_code">Renovar</string>
+    <string name="regenerate_code_confirm_title">¿Renovar código?</string>
+    <string name="regenerate_code_confirm_message">Las invitaciones anteriores dejarán de ser válidas. ¿Continuar?</string>
+    <string name="invitation_code_copied">Código copiado</string>
+    <string name="club_settings_saved">Datos del club guardados</string>
+
+    <!-- Self-Assign as Coach Strings -->
+    <string name="self_assign_as_coach_button">Asignarme como Coach</string>
+    <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
+    <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
+
+    <!-- President Team Detail -->
+    <string name="president_team_detail_players_tab">Jugadores</string>
+    <string name="president_team_detail_matches_tab">Partidos</string>
+    <string name="president_team_detail_stats_tab">Estadísticas</string>
+    <string name="president_team_detail_error">No se han podido cargar los datos del equipo</string>
+    <string name="president_team_detail_no_matches">No hay partidos registrados</string>
+    <string name="president_team_detail_no_players">No hay jugadores registrados</string>
+    <string name="president_team_stats_played">Jugados</string>
+    <string name="president_team_stats_wins">Victorias</string>
+    <string name="president_team_stats_draws">Empates</string>
+    <string name="president_team_stats_losses">Derrotas</string>
+    <string name="president_team_stats_goals_scored">Goles a favor</string>
+    <string name="president_team_stats_goals_conceded">Goles en contra</string>
+    <string name="president_team_stats_squad_size">Tamaño de la plantilla</string>
+
 </resources>

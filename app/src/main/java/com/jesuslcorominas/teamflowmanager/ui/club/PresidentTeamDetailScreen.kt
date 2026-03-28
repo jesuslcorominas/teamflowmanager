@@ -53,45 +53,25 @@ fun PresidentTeamDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     selectedTabIndex = selectedTab.ordinal,
                 ) {
-                    Tab(
+                    TitleMediumTab(
                         selected = selectedTab == PresidentTeamTab.SUMMARY,
                         onClick = { viewModel.selectTab(PresidentTeamTab.SUMMARY) },
-                        text = {
-                            Text(
-                                text = stringResource(R.string.summary_tab),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        },
+                        text = stringResource(R.string.summary_tab),
                     )
-                    Tab(
+                    TitleMediumTab(
                         selected = selectedTab == PresidentTeamTab.PLAYERS,
                         onClick = { viewModel.selectTab(PresidentTeamTab.PLAYERS) },
-                        text = {
-                            Text(
-                                text = stringResource(R.string.president_team_detail_players_tab),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        },
+                        text = stringResource(R.string.president_team_detail_players_tab),
                     )
-                    Tab(
+                    TitleMediumTab(
                         selected = selectedTab == PresidentTeamTab.MATCHES,
                         onClick = { viewModel.selectTab(PresidentTeamTab.MATCHES) },
-                        text = {
-                            Text(
-                                text = stringResource(R.string.president_team_detail_matches_tab),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        },
+                        text = stringResource(R.string.president_team_detail_matches_tab),
                     )
-                    Tab(
+                    TitleMediumTab(
                         selected = selectedTab == PresidentTeamTab.STATS,
                         onClick = { viewModel.selectTab(PresidentTeamTab.STATS) },
-                        text = {
-                            Text(
-                                text = stringResource(R.string.president_team_detail_stats_tab),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        },
+                        text = stringResource(R.string.president_team_detail_stats_tab),
                     )
                 }
 
@@ -104,6 +84,19 @@ fun PresidentTeamDetailScreen(
             }
         }
     }
+}
+
+@Composable
+private fun TitleMediumTab(
+    selected: Boolean,
+    onClick: () -> Unit,
+    text: String,
+) {
+    Tab(
+        selected = selected,
+        onClick = onClick,
+        text = { Text(text = text, style = MaterialTheme.typography.titleMedium) },
+    )
 }
 
 @Composable
