@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.club
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,10 +38,19 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun PresidentTeamDetailScreen(
     teamId: String,
+    onNavigateBack: () -> Unit = {},
     viewModel: PresidentTeamDetailViewModel = koinViewModel(parameters = { parametersOf(teamId) }),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
+
+    BackHandler {
+        if (selectedTab != PresidentTeamTab.SUMMARY) {
+            viewModel.selectTab(PresidentTeamTab.SUMMARY)
+        } else {
+            onNavigateBack()
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         when (val state = uiState) {

@@ -172,11 +172,20 @@ fun Navigation(
                         type = NavType.StringType
                     },
                 ),
+            // Instant transitions: PresidentTeamDetail changes canGoBack/bottomBar visibility,
+            // so we switch atomically to avoid scaffold layout-shift artifacts.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val teamId =
                 backStackEntry.arguments?.getString(Route.PresidentTeamDetail.ARG_TEAM_ID)
                     ?: return@composable
-            PresidentTeamDetailScreen(teamId = teamId)
+            PresidentTeamDetailScreen(
+                teamId = teamId,
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
 
         composable(Route.ClubMembers.createRoute()) {
