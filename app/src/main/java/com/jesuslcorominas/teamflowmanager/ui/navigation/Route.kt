@@ -32,6 +32,7 @@ sealed class Route(
                 Settings,
                 AcceptTeamInvitation,
                 ClubSettings,
+                PendingTeamAssignment,
             )
         }
 
@@ -183,4 +184,6 @@ sealed class Route(
 
         fun createRoute(teamId: String): String = "$PATH?$ARG_TEAM_ID=$teamId"
     }
+
+    data object PendingTeamAssignment : Route(path = "pending_team_assignment", showTopBar = false)
 }

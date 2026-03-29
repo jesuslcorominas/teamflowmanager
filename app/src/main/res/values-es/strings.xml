@@ -358,4 +358,9 @@
     <string name="president_team_stats_goals_conceded">Goles en contra</string>
     <string name="president_team_stats_squad_size">Tamaño de la plantilla</string>
 
+    <!-- Pending Team Assignment Strings -->
+    <string name="pending_team_title">Asignación de equipo pendiente</string>
+    <string name="pending_team_message">Tu cuenta ha sido verificada. Por favor, espera a que el presidente del club te asigne a un equipo.</string>
+    <string name="pending_team_sign_out">Cerrar sesión</string>
+
 </resources>
