@@ -128,6 +128,8 @@ val viewModelModule =
                 getUserClubMembership = get(),
                 generateTeamInvitation = get(),
                 selfAssignAsCoach = get(),
+                assignCoachToTeam = get(),
+                getClubMembers = get(),
             )
         }
         viewModel {

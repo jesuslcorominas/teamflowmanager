@@ -367,4 +367,14 @@
     <string name="pending_team_message">Tu cuenta ha sido verificada. Por favor, espera a que el presidente del club te asigne a un equipo.</string>
     <string name="pending_team_sign_out">Cerrar sesión</string>
 
+    <!-- Assign Coach Dialog -->
+    <string name="assign_coach_button">Asignar entrenador</string>
+    <string name="assign_coach_dialog_title">Asignar entrenador a %1$s</string>
+    <string name="assign_coach_tab_members">Miembros</string>
+    <string name="assign_coach_tab_email">Por email</string>
+    <string name="assign_coach_email_placeholder">Introduce el email</string>
+    <string name="assign_coach_confirm">Asignar</string>
+    <string name="assign_coach_not_member">Este email no está registrado como miembro del club.</string>
+    <string name="assign_coach_error">Error al asignar el entrenador. Inténtalo de nuevo.</string>
+
 </resources>

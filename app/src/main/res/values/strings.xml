@@ -368,6 +368,16 @@
     <string name="match_notification_channel_name">Match Countdown</string>
     <string name="match_notification_channel_description">Shows remaining time during active matches</string>
 
+    <!-- Assign Coach Dialog -->
+    <string name="assign_coach_button">Assign Coach</string>
+    <string name="assign_coach_dialog_title">Assign Coach to %1$s</string>
+    <string name="assign_coach_tab_members">Members</string>
+    <string name="assign_coach_tab_email">By email</string>
+    <string name="assign_coach_email_placeholder">Enter email address</string>
+    <string name="assign_coach_confirm">Assign</string>
+    <string name="assign_coach_not_member">This email is not registered as a club member.</string>
+    <string name="assign_coach_error">Error assigning coach. Please try again.</string>
+
     <!-- Self-Assign as Coach Strings -->
     <string name="self_assign_as_coach_button">Assign myself as Coach</string>
     <string name="self_assign_as_coach_success">You have been assigned as team Coach</string>

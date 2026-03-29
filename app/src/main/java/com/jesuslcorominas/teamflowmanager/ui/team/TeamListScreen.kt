@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,17 +20,27 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
@@ -62,6 +74,9 @@ fun TeamListScreen(
     val assigningCoachToTeamId by viewModel.assigningCoachToTeamId.collectAsState()
     val currentUserRole by viewModel.currentUserRole.collectAsState()
     val coachFilter by viewModel.coachFilter.collectAsState()
+    val assignCoachDialogTeam by viewModel.assignCoachDialogTeam.collectAsState()
+    val clubMembers by viewModel.clubMembers.collectAsState()
+    val assignCoachError by viewModel.assignCoachError.collectAsState()
     val searchState = LocalSearchState.current
     val context = LocalContext.current
 
@@ -69,7 +84,6 @@ fun TeamListScreen(
         viewModel.onSearchQueryChanged(searchState.query)
     }
 
-    // Handle share event
     LaunchedEffect(shareEvent) {
         shareEvent?.let { event ->
             val shareIntent =
@@ -125,6 +139,7 @@ fun TeamListScreen(
                             onTeamClick = onTeamClick,
                             onShareTeam = { team -> viewModel.shareTeam(team) },
                             onSelfAssignAsCoach = { team -> viewModel.selfAssignAsCoachToTeam(team) },
+                            onAssignCoach = { team -> viewModel.requestAssignCoach(team) },
                             sharingTeamId = sharingTeamId,
                             assigningCoachToTeamId = assigningCoachToTeamId,
                             isPresident = isPresident,
@@ -146,7 +161,6 @@ fun TeamListScreen(
             }
         }
 
-        // Show full-screen loading overlay while sharing or assigning
         if (sharingTeamId != null || assigningCoachToTeamId != null) {
             Box(
                 modifier =
@@ -154,7 +168,6 @@ fun TeamListScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
                         .clickable(enabled = false) { },
-                // Block all clicks
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
@@ -164,6 +177,142 @@ fun TeamListScreen(
             }
         }
     }
+
+    if (assignCoachDialogTeam != null) {
+        AssignCoachDialog(
+            team = assignCoachDialogTeam!!,
+            members = clubMembers,
+            error = assignCoachError,
+            onDismiss = { viewModel.dismissAssignCoachDialog() },
+            onAssignMember = { member -> viewModel.assignCoachByMember(member) },
+            onAssignByEmail = { email -> viewModel.assignCoachByEmail(email) },
+            onClearError = { viewModel.clearAssignCoachError() },
+        )
+    }
+}
+
+@Composable
+private fun AssignCoachDialog(
+    team: Team,
+    members: List<ClubMember>,
+    error: String?,
+    onDismiss: () -> Unit,
+    onAssignMember: (ClubMember) -> Unit,
+    onAssignByEmail: (String) -> Unit,
+    onClearError: () -> Unit,
+) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    var email by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(stringResource(R.string.assign_coach_dialog_title, team.name))
+        },
+        text = {
+            Column {
+                TabRow(selectedTabIndex = selectedTab) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = {
+                            selectedTab = 0
+                            onClearError()
+                        },
+                        text = { Text(stringResource(R.string.assign_coach_tab_members)) },
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = {
+                            selectedTab = 1
+                            onClearError()
+                        },
+                        text = { Text(stringResource(R.string.assign_coach_tab_email)) },
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                when (selectedTab) {
+                    0 -> {
+                        val assignableMembers = members.filter { !it.hasRole(ClubRole.COACH) }
+                        if (assignableMembers.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.no_results),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        } else {
+                            LazyColumn(modifier = Modifier.height(240.dp)) {
+                                items(assignableMembers, key = { it.userId }) { member ->
+                                    Column(
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .clickable { onAssignMember(member) }
+                                                .padding(vertical = 12.dp, horizontal = 4.dp),
+                                    ) {
+                                        Text(
+                                            text = member.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                        )
+                                        Text(
+                                            text = member.email,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    HorizontalDivider()
+                                }
+                            }
+                        }
+                    }
+                    1 -> {
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = {
+                                email = it
+                                onClearError()
+                            },
+                            label = { Text(stringResource(R.string.assign_coach_email_placeholder)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            isError = error != null,
+                            supportingText =
+                                if (error != null) {
+                                    {
+                                        Text(
+                                            text =
+                                                if (error == "NO_MEMBER") {
+                                                    stringResource(R.string.assign_coach_not_member)
+                                                } else {
+                                                    stringResource(R.string.assign_coach_error)
+                                                },
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
+                                    }
+                                } else {
+                                    null
+                                },
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (selectedTab == 1) {
+                Button(
+                    onClick = { onAssignByEmail(email) },
+                    enabled = email.isNotBlank(),
+                ) {
+                    Text(stringResource(R.string.assign_coach_confirm))
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -192,6 +341,7 @@ private fun TeamsListContent(
     onTeamClick: (Team) -> Unit,
     onShareTeam: (Team) -> Unit,
     onSelfAssignAsCoach: (Team) -> Unit,
+    onAssignCoach: (Team) -> Unit,
     sharingTeamId: String?,
     assigningCoachToTeamId: String?,
     isPresident: Boolean,
@@ -213,6 +363,7 @@ private fun TeamsListContent(
                 onClick = { onTeamClick(team) },
                 onShare = { onShareTeam(team) },
                 onSelfAssignAsCoach = { onSelfAssignAsCoach(team) },
+                onAssignCoach = { onAssignCoach(team) },
                 isSharing = team.firestoreId == sharingTeamId,
                 isAssigning = team.firestoreId == assigningCoachToTeamId,
                 isPresident = isPresident,
@@ -227,6 +378,7 @@ private fun TeamCard(
     onClick: () -> Unit,
     onShare: () -> Unit,
     onSelfAssignAsCoach: () -> Unit,
+    onAssignCoach: () -> Unit,
     isSharing: Boolean = false,
     isAssigning: Boolean = false,
     isPresident: Boolean = false,
@@ -252,7 +404,6 @@ private fun TeamCard(
                     modifier = Modifier.weight(1f),
                 )
 
-                // Show share icon button only if team has no coach assigned
                 if (team.coachId == null) {
                     IconButton(
                         onClick = onShare,
@@ -302,23 +453,34 @@ private fun TeamCard(
                 }
             }
 
-            // Show self-assign button for Presidents when team has no coach
             if (isPresident && team.coachId == null) {
-                Button(
-                    onClick = onSelfAssignAsCoach,
-                    enabled = !isAssigning,
+                Row(
                     modifier =
                         Modifier
                             .fillMaxWidth()
                             .padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.PersonAdd,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = stringResource(R.string.self_assign_as_coach_button))
+                    Button(
+                        onClick = onAssignCoach,
+                        enabled = !isAssigning,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = stringResource(R.string.assign_coach_button))
+                    }
+                    Button(
+                        onClick = onSelfAssignAsCoach,
+                        enabled = !isAssigning,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = stringResource(R.string.self_assign_as_coach_button))
+                    }
                 }
             }
         }
