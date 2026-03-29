@@ -113,6 +113,7 @@
     <string name="team_title">Team</string>
     <string name="team_list_title">Club Teams</string>
     <string name="no_teams_message">No teams yet. Create your first team!</string>
+    <string name="team_filter_without_coach">Without coach</string>
     <string name="error_loading_teams">Unable to load teams. Please check your internet connection and try again.</string>
     <string name="no_club_membership_teams_error">You need to join or create a club first to view teams.</string>
     <string name="no_members_message">No staff members in your club yet. Invite members to join!</string>

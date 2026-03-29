@@ -11,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCa
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -34,6 +35,12 @@ class TeamListViewModel(
 
     private val _currentUserRole = MutableStateFlow<String?>(null)
     val currentUserRole: StateFlow<String?> = _currentUserRole.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _showOnlyWithoutCoach = MutableStateFlow(false)
+    val showOnlyWithoutCoach: StateFlow<Boolean> = _showOnlyWithoutCoach.asStateFlow()
 
     sealed interface UiState {
         data object Loading : UiState
@@ -72,9 +79,19 @@ class TeamListViewModel(
                         clubMember.roles.firstOrNull() ?: ""
                     }
 
-                // Load teams for the club
-                getTeamsByClub(clubFirestoreId).collect { teams ->
-                    _uiState.value = UiState.Success(teams, clubMember.name)
+                // Load teams for the club, applying search and filter reactively
+                combine(
+                    getTeamsByClub(clubFirestoreId),
+                    _searchQuery,
+                    _showOnlyWithoutCoach,
+                ) { teams, query, withoutCoach ->
+                    val filtered =
+                        teams
+                            .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
+                            .filter { !withoutCoach || it.coachId == null }
+                    UiState.Success(filtered, clubMember.name)
+                }.collect { state ->
+                    _uiState.value = state
                 }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error
@@ -102,6 +119,14 @@ class TeamListViewModel(
                 _sharingTeamId.value = null
             }
         }
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun toggleWithoutCoachFilter() {
+        _showOnlyWithoutCoach.value = !_showOnlyWithoutCoach.value
     }
 
     fun onShareEventConsumed() {

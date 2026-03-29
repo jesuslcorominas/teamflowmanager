@@ -113,6 +113,7 @@
     <string name="team_title">Equipo</string>
     <string name="team_list_title">Equipos del Club</string>
     <string name="no_teams_message">Aún no hay equipos. ¡Crea tu primer equipo!</string>
+    <string name="team_filter_without_coach">Sin entrenador</string>
     <string name="create_team_title">Crear Equipo</string>
     <string name="team_name">Nombre del Equipo</string>
     <string name="team_name_required">El nombre del equipo es obligatorio</string>
