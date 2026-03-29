@@ -292,6 +292,7 @@
     <string name="match_timeout">Timeout</string>
 
     <string name="search_match_placeholder">Search matches by opponent or place</string>
+    <string name="search_team_placeholder">Search teams by name</string>
 
     <!-- Analysis -->
     <string name="analysis_title">Analysis</string>

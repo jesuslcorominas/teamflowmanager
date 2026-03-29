@@ -117,12 +117,10 @@ private fun MainScaffold(
                     title = title,
                     backHandlerController = backHandlerController,
                     searchPlaceholder =
-                        if (route is Route.Matches) {
-                            stringResource(
-                                R.string.search_match_placeholder,
-                            )
-                        } else {
-                            ""
+                        when (route) {
+                            Route.Matches -> stringResource(R.string.search_match_placeholder)
+                            Route.TeamList -> stringResource(R.string.search_team_placeholder)
+                            else -> ""
                         },
                     navController = navController,
                 )

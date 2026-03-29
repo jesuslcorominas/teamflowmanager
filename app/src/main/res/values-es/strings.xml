@@ -271,6 +271,7 @@
     <string name="match_timeout">Tiempo Muerto</string>
 
     <string name="search_match_placeholder">Busca por oponente o ubicación</string>
+    <string name="search_team_placeholder">Busca equipos por nombre</string>
 
     <!-- Analysis -->
     <string name="analysis_title">Análisis</string>

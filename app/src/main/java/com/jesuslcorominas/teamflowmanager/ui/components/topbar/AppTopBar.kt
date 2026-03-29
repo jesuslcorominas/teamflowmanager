@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.components.topbar
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -76,6 +77,11 @@ fun SearchTopBar(
     placeholder: String,
 ) {
     val searchState = LocalSearchState.current
+
+    BackHandler {
+        searchState.clear()
+        searchState.isActive = false
+    }
 
     TopAppBar(
         modifier = modifier,
