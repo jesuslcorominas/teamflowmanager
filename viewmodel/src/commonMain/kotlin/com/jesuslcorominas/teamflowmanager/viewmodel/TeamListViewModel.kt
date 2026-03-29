@@ -11,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCa
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -34,6 +35,14 @@ class TeamListViewModel(
 
     private val _currentUserRole = MutableStateFlow<String?>(null)
     val currentUserRole: StateFlow<String?> = _currentUserRole.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _coachFilter = MutableStateFlow(CoachFilter.ALL)
+    val coachFilter: StateFlow<CoachFilter> = _coachFilter.asStateFlow()
+
+    enum class CoachFilter { ALL, WITH_COACH, WITHOUT_COACH }
 
     sealed interface UiState {
         data object Loading : UiState
@@ -72,9 +81,25 @@ class TeamListViewModel(
                         clubMember.roles.firstOrNull() ?: ""
                     }
 
-                // Load teams for the club
-                getTeamsByClub(clubFirestoreId).collect { teams ->
-                    _uiState.value = UiState.Success(teams, clubMember.name)
+                // Load teams for the club, applying search and filter reactively
+                combine(
+                    getTeamsByClub(clubFirestoreId),
+                    _searchQuery,
+                    _coachFilter,
+                ) { teams, query, coachFilter ->
+                    val filtered =
+                        teams
+                            .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
+                            .filter {
+                                when (coachFilter) {
+                                    CoachFilter.ALL -> true
+                                    CoachFilter.WITH_COACH -> it.coachId != null
+                                    CoachFilter.WITHOUT_COACH -> it.coachId == null
+                                }
+                            }
+                    UiState.Success(filtered, clubMember.name)
+                }.collect { state ->
+                    _uiState.value = state
                 }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error
@@ -102,6 +127,14 @@ class TeamListViewModel(
                 _sharingTeamId.value = null
             }
         }
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun onCoachFilterChanged(filter: CoachFilter) {
+        _coachFilter.value = filter
     }
 
     fun onShareEventConsumed() {

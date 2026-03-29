@@ -259,4 +259,181 @@ class TeamListViewModelTest {
         // Then
         assertEquals(TeamListViewModel.UiState.Error, viewModel.uiState.value)
     }
+
+    // region Search
+
+    @Test
+    fun `initial searchQuery should be empty`() = runTest(testDispatcher) {
+        // Given
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+
+        // When
+        val viewModel = createViewModel()
+
+        // Then
+        assertEquals("", viewModel.searchQuery.value)
+    }
+
+    @Test
+    fun `onSearchQueryChanged filters teams by name case insensitively`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val teamA = teamWithName("Alpha", firestoreId = "t1")
+        val teamB = teamWithName("Beta", firestoreId = "t2")
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(teamA, teamB))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onSearchQueryChanged("alph")
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(
+            TeamListViewModel.UiState.Success(listOf(teamA), member.name),
+            viewModel.uiState.value,
+        )
+    }
+
+    @Test
+    fun `onSearchQueryChanged with blank query shows all teams`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val teamA = teamWithName("Alpha", firestoreId = "t1")
+        val teamB = teamWithName("Beta", firestoreId = "t2")
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(teamA, teamB))
+        val viewModel = createViewModel()
+        viewModel.onSearchQueryChanged("alph")
+        advanceUntilIdle()
+
+        // When
+        viewModel.onSearchQueryChanged("")
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(
+            TeamListViewModel.UiState.Success(listOf(teamA, teamB), member.name),
+            viewModel.uiState.value,
+        )
+    }
+
+    // endregion
+
+    // region CoachFilter
+
+    @Test
+    fun `initial coachFilter should be ALL`() = runTest(testDispatcher) {
+        // Given
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+
+        // When
+        val viewModel = createViewModel()
+
+        // Then
+        assertEquals(TeamListViewModel.CoachFilter.ALL, viewModel.coachFilter.value)
+    }
+
+    @Test
+    fun `onCoachFilterChanged ALL shows all teams regardless of coach`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val withCoach = teamWithName("With Coach", firestoreId = "t1", coachId = "c1")
+        val withoutCoach = teamWithName("No Coach", firestoreId = "t2", coachId = null)
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(withCoach, withoutCoach))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.ALL)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value as TeamListViewModel.UiState.Success
+        assertEquals(listOf(withCoach, withoutCoach), state.teams)
+    }
+
+    @Test
+    fun `onCoachFilterChanged WITH_COACH shows only teams that have a coach`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val withCoach = teamWithName("With Coach", firestoreId = "t1", coachId = "c1")
+        val withoutCoach = teamWithName("No Coach", firestoreId = "t2", coachId = null)
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(withCoach, withoutCoach))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.WITH_COACH)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value as TeamListViewModel.UiState.Success
+        assertEquals(listOf(withCoach), state.teams)
+    }
+
+    @Test
+    fun `onCoachFilterChanged WITHOUT_COACH shows only teams without a coach`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val withCoach = teamWithName("With Coach", firestoreId = "t1", coachId = "c1")
+        val withoutCoach = teamWithName("No Coach", firestoreId = "t2", coachId = null)
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(withCoach, withoutCoach))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.WITHOUT_COACH)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value as TeamListViewModel.UiState.Success
+        assertEquals(listOf(withoutCoach), state.teams)
+    }
+
+    @Test
+    fun `search and coach filter are applied together`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val alphaWithCoach = teamWithName("Alpha", firestoreId = "t1", coachId = "c1")
+        val alphaNoCoach = teamWithName("Alpha B", firestoreId = "t2", coachId = null)
+        val betaNoCoach = teamWithName("Beta", firestoreId = "t3", coachId = null)
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(alphaWithCoach, alphaNoCoach, betaNoCoach))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When: search "alpha" + filter WITHOUT_COACH
+        viewModel.onSearchQueryChanged("alpha")
+        viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.WITHOUT_COACH)
+        advanceUntilIdle()
+
+        // Then: only alphaNoCoach matches both conditions
+        val state = viewModel.uiState.value as TeamListViewModel.UiState.Success
+        assertEquals(listOf(alphaNoCoach), state.teams)
+    }
+
+    // endregion
+
+    // region helpers
+
+    private fun teamWithName(
+        name: String,
+        firestoreId: String,
+        coachId: String? = null,
+    ) = Team(
+        id = firestoreId.hashCode().toLong(),
+        name = name,
+        coachName = if (coachId != null) "Coach" else "",
+        delegateName = "",
+        teamType = TeamType.FOOTBALL_5,
+        firestoreId = firestoreId,
+        coachId = coachId,
+    )
+
+    // endregion
 }

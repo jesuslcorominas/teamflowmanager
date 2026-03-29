@@ -125,7 +125,7 @@ sealed class Route(
         showTopBar = true,
         showBottomBar = true,
         showFab = true,
-        hasSearchBar = false,
+        hasSearchBar = true,
         showSettingsButton = true,
     )
 

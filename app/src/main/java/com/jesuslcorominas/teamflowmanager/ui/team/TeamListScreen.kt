@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +44,7 @@ import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
+import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -59,7 +61,13 @@ fun TeamListScreen(
     val sharingTeamId by viewModel.sharingTeamId.collectAsState()
     val assigningCoachToTeamId by viewModel.assigningCoachToTeamId.collectAsState()
     val currentUserRole by viewModel.currentUserRole.collectAsState()
+    val coachFilter by viewModel.coachFilter.collectAsState()
+    val searchState = LocalSearchState.current
     val context = LocalContext.current
+
+    LaunchedEffect(searchState.query) {
+        viewModel.onSearchQueryChanged(searchState.query)
+    }
 
     // Handle share event
     LaunchedEffect(shareEvent) {
@@ -84,19 +92,44 @@ fun TeamListScreen(
                 Loading()
             }
             is TeamListViewModel.UiState.Success -> {
-                if (state.teams.isEmpty()) {
-                    EmptyTeamsMessage(modifier = Modifier.fillMaxSize())
-                } else {
-                    TeamsListContent(
-                        teams = state.teams,
-                        modifier = Modifier.fillMaxSize(),
-                        onTeamClick = onTeamClick,
-                        onShareTeam = { team -> viewModel.shareTeam(team) },
-                        onSelfAssignAsCoach = { team -> viewModel.selfAssignAsCoachToTeam(team) },
-                        sharingTeamId = sharingTeamId,
-                        assigningCoachToTeamId = assigningCoachToTeamId,
-                        isPresident = currentUserRole == ClubRole.PRESIDENT.roleName,
-                    )
+                val isPresident = currentUserRole == ClubRole.PRESIDENT.roleName
+                Column(modifier = Modifier.fillMaxSize()) {
+                    if (isPresident) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = TFMSpacing.spacing04, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            FilterChip(
+                                selected = coachFilter == TeamListViewModel.CoachFilter.ALL,
+                                onClick = { viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.ALL) },
+                                label = { Text(stringResource(R.string.team_filter_all)) },
+                            )
+                            FilterChip(
+                                selected = coachFilter == TeamListViewModel.CoachFilter.WITH_COACH,
+                                onClick = { viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.WITH_COACH) },
+                                label = { Text(stringResource(R.string.team_filter_with_coach)) },
+                            )
+                            FilterChip(
+                                selected = coachFilter == TeamListViewModel.CoachFilter.WITHOUT_COACH,
+                                onClick = { viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.WITHOUT_COACH) },
+                                label = { Text(stringResource(R.string.team_filter_without_coach)) },
+                            )
+                        }
+                    }
+                    if (state.teams.isEmpty()) {
+                        EmptyTeamsMessage(modifier = Modifier.weight(1f).fillMaxWidth())
+                    } else {
+                        TeamsListContent(
+                            teams = state.teams,
+                            modifier = Modifier.weight(1f),
+                            onTeamClick = onTeamClick,
+                            onShareTeam = { team -> viewModel.shareTeam(team) },
+                            onSelfAssignAsCoach = { team -> viewModel.selfAssignAsCoachToTeam(team) },
+                            sharingTeamId = sharingTeamId,
+                            assigningCoachToTeamId = assigningCoachToTeamId,
+                            isPresident = isPresident,
+                        )
+                    }
                 }
             }
             is TeamListViewModel.UiState.Error -> {
