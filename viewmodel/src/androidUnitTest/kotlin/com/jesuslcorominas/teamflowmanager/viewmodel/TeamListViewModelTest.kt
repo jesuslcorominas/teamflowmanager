@@ -3,7 +3,9 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubMembersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
@@ -33,6 +35,8 @@ class TeamListViewModelTest {
     private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
     private lateinit var generateTeamInvitationUseCase: GenerateTeamInvitationUseCase
     private lateinit var selfAssignAsCoachUseCase: SelfAssignAsCoachUseCase
+    private lateinit var assignCoachToTeamUseCase: AssignCoachToTeamUseCase
+    private lateinit var getClubMembersUseCase: GetClubMembersUseCase
 
     @Before
     fun setup() {
@@ -41,6 +45,9 @@ class TeamListViewModelTest {
         getUserClubMembershipUseCase = mockk()
         generateTeamInvitationUseCase = mockk()
         selfAssignAsCoachUseCase = mockk(relaxed = true)
+        assignCoachToTeamUseCase = mockk(relaxed = true)
+        getClubMembersUseCase = mockk()
+        every { getClubMembersUseCase.invoke(any()) } returns flowOf(emptyList())
     }
 
     @After
@@ -53,6 +60,8 @@ class TeamListViewModelTest {
         getUserClubMembership = getUserClubMembershipUseCase,
         generateTeamInvitation = generateTeamInvitationUseCase,
         selfAssignAsCoach = selfAssignAsCoachUseCase,
+        assignCoachToTeam = assignCoachToTeamUseCase,
+        getClubMembers = getClubMembersUseCase,
     )
 
     private fun presidentMember() = ClubMember(
