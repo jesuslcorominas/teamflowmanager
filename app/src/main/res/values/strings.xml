@@ -384,4 +384,9 @@
     <string name="president_team_stats_goals_conceded">Goals conceded</string>
     <string name="president_team_stats_squad_size">Squad size</string>
 
+    <!-- Pending Team Assignment Strings -->
+    <string name="pending_team_title">Pending team assignment</string>
+    <string name="pending_team_message">Your account has been verified. Please wait until the club president assigns you to a team.</string>
+    <string name="pending_team_sign_out">Sign out</string>
+
 </resources>

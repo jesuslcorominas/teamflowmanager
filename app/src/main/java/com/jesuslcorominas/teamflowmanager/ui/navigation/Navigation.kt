@@ -22,6 +22,7 @@ import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PendingTeamAssignmentScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.PresidentTeamDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
@@ -69,6 +70,11 @@ fun Navigation(
                 },
                 onNavigateToCreateTeam = {
                     navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToAwaitTeam = {
+                    navController.navigate(Route.PendingTeamAssignment.createRoute()) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
@@ -313,6 +319,28 @@ fun Navigation(
         }
 
         composable(
+            route = Route.PendingTeamAssignment.createRoute(),
+            // Instant transitions: no topBar, so scaffold change must be atomic.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
+        ) {
+            PendingTeamAssignmentScreen(
+                onTeamAssigned = {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onSignOut = {
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(
             route = Route.AcceptTeamInvitation.FULL_ROUTE,
             arguments =
                 listOf(
@@ -373,6 +401,7 @@ fun Navigation(
             Route.Migration -> activity?.finish()
             Route.ClubSelection -> activity?.finish()
             Route.TeamList -> activity?.finish()
+            Route.PendingTeamAssignment -> activity?.finish()
             Route.CreateClub ->
                 navController.navigate(Route.ClubSelection.createRoute()) {
                     popUpTo(Route.CreateClub.createRoute()) { inclusive = true }

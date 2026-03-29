@@ -17,6 +17,7 @@ fun SplashScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToClubSelection: () -> Unit,
     onNavigateToCreateTeam: () -> Unit,
+    onNavigateToAwaitTeam: () -> Unit,
     onNavigateToTeamList: () -> Unit,
     onNavigateToMatches: () -> Unit,
 ) {
@@ -34,7 +35,7 @@ fun SplashScreen(
             is UiState.NotAuthenticated -> onNavigateToLogin()
             is UiState.LocalDataNeedsAuth -> onNavigateToLogin()
             is UiState.NoClub -> onNavigateToClubSelection()
-            is UiState.NoTeam -> onNavigateToCreateTeam()
+            is UiState.NoTeam -> onNavigateToAwaitTeam()
             is UiState.ClubPresident -> onNavigateToTeamList()
             is UiState.TeamExists -> onNavigateToMatches()
             is UiState.Loading -> {

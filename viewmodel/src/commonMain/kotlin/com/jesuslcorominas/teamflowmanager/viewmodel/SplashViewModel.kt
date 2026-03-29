@@ -98,7 +98,8 @@ class SplashViewModel(
                 runCatching { signOutUseCase() }
                 _uiState.value = UiState.NotAuthenticated
             } else {
-                _uiState.value = UiState.NoClub
+                // Member belongs to a club but has no team assigned yet — show waiting screen.
+                _uiState.value = UiState.NoTeam
             }
         } else {
             val clubFirestoreId = team.clubFirestoreId

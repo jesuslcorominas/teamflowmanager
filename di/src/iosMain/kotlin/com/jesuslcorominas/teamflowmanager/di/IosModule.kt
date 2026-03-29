@@ -17,6 +17,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PendingTeamAssignmentViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailViewModel
@@ -259,6 +260,13 @@ val iosModule =
                 teamId = params.get(),
                 acceptTeamInvitation = get(),
                 getCurrentUser = get(),
+            )
+        }
+
+        factory {
+            PendingTeamAssignmentViewModel(
+                getTeam = get(),
+                signOut = get(),
             )
         }
     }

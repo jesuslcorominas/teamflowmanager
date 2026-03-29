@@ -120,7 +120,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `should emit NoClub when user has no team and is a club member but not President`() = runTest {
+    fun `should emit NoTeam when user is a club member but has no team assigned`() = runTest {
         val clubMember = ClubMember(
             id = 1,
             userId = "user123",
@@ -138,7 +138,7 @@ class SplashViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        assertEquals(SplashViewModel.UiState.NoClub, viewModel.uiState.value)
+        assertEquals(SplashViewModel.UiState.NoTeam, viewModel.uiState.value)
     }
 
     @Test
