@@ -39,8 +39,10 @@ class TeamListViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _showOnlyWithoutCoach = MutableStateFlow(false)
-    val showOnlyWithoutCoach: StateFlow<Boolean> = _showOnlyWithoutCoach.asStateFlow()
+    private val _coachFilter = MutableStateFlow(CoachFilter.ALL)
+    val coachFilter: StateFlow<CoachFilter> = _coachFilter.asStateFlow()
+
+    enum class CoachFilter { ALL, WITH_COACH, WITHOUT_COACH }
 
     sealed interface UiState {
         data object Loading : UiState
@@ -83,12 +85,18 @@ class TeamListViewModel(
                 combine(
                     getTeamsByClub(clubFirestoreId),
                     _searchQuery,
-                    _showOnlyWithoutCoach,
-                ) { teams, query, withoutCoach ->
+                    _coachFilter,
+                ) { teams, query, coachFilter ->
                     val filtered =
                         teams
                             .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
-                            .filter { !withoutCoach || it.coachId == null }
+                            .filter {
+                                when (coachFilter) {
+                                    CoachFilter.ALL -> true
+                                    CoachFilter.WITH_COACH -> it.coachId != null
+                                    CoachFilter.WITHOUT_COACH -> it.coachId == null
+                                }
+                            }
                     UiState.Success(filtered, clubMember.name)
                 }.collect { state ->
                     _uiState.value = state
@@ -125,8 +133,8 @@ class TeamListViewModel(
         _searchQuery.value = query
     }
 
-    fun toggleWithoutCoachFilter() {
-        _showOnlyWithoutCoach.value = !_showOnlyWithoutCoach.value
+    fun onCoachFilterChanged(filter: CoachFilter) {
+        _coachFilter.value = filter
     }
 
     fun onShareEventConsumed() {
