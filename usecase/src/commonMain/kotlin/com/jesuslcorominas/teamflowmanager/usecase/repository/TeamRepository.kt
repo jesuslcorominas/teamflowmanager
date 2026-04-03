@@ -63,7 +63,10 @@ interface TeamRepository {
     /**
      * Update the pending coach email of a team (null to clear it).
      */
-    suspend fun updateTeamPendingCoachEmail(teamId: String, email: String?)
+    suspend fun updateTeamPendingCoachEmail(
+        teamId: String,
+        email: String?,
+    )
 
     /**
      * Generate a shareable invitation link for a team.

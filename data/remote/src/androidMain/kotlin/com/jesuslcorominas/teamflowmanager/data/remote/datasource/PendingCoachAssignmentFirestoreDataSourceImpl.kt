@@ -14,7 +14,11 @@ class PendingCoachAssignmentFirestoreDataSourceImpl(
         private const val COLLECTION = "pendingCoachAssignments"
     }
 
-    override suspend fun create(teamId: String, clubId: String, email: String) {
+    override suspend fun create(
+        teamId: String,
+        clubId: String,
+        email: String,
+    ) {
         try {
             firestore.collection(COLLECTION).document(teamId)
                 .set(mapOf("teamId" to teamId, "clubId" to clubId, "email" to email))
@@ -38,10 +42,11 @@ class PendingCoachAssignmentFirestoreDataSourceImpl(
 
     override suspend fun getByEmail(email: String): List<PendingCoachAssignment> {
         return try {
-            val snapshot = firestore.collection(COLLECTION)
-                .whereEqualTo("email", email)
-                .get()
-                .await()
+            val snapshot =
+                firestore.collection(COLLECTION)
+                    .whereEqualTo("email", email)
+                    .get()
+                    .await()
             snapshot.documents.mapNotNull { doc ->
                 val teamId = doc.getString("teamId") ?: return@mapNotNull null
                 val clubId = doc.getString("clubId") ?: return@mapNotNull null

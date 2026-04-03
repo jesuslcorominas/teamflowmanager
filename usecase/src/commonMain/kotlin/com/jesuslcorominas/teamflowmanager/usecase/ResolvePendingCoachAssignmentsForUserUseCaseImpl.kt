@@ -8,7 +8,10 @@ internal class ResolvePendingCoachAssignmentsForUserUseCaseImpl(
     private val pendingCoachAssignmentRepository: PendingCoachAssignmentRepository,
     private val assignCoachToTeam: AssignCoachToTeamUseCase,
 ) : ResolvePendingCoachAssignmentsForUserUseCase {
-    override suspend fun invoke(userId: String, userEmail: String) {
+    override suspend fun invoke(
+        userId: String,
+        userEmail: String,
+    ) {
         val pending = pendingCoachAssignmentRepository.getByEmail(userEmail)
         for (assignment in pending) {
             try {

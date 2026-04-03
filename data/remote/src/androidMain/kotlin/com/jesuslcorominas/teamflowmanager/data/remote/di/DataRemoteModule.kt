@@ -15,16 +15,15 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPermissionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PendingCoachAssignmentDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.PendingCoachAssignmentDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.createShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
-import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PendingCoachAssignmentFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmNotificationTopicDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmTokenFirestoreDataSourceImpl
@@ -37,6 +36,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreD
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchOperationFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NotificationPermissionDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PendingCoachAssignmentFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitutionFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFirestoreDataSourceImpl

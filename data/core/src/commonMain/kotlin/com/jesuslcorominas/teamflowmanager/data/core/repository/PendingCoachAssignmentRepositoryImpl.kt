@@ -7,7 +7,11 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PendingCoachAssign
 internal class PendingCoachAssignmentRepositoryImpl(
     private val dataSource: PendingCoachAssignmentDataSource,
 ) : PendingCoachAssignmentRepository {
-    override suspend fun create(teamId: String, clubId: String, email: String) {
+    override suspend fun create(
+        teamId: String,
+        clubId: String,
+        email: String,
+    ) {
         dataSource.create(teamId, clubId, email)
     }
 

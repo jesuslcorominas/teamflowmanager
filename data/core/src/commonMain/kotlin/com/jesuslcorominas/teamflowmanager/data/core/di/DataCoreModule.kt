@@ -1,7 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.core.di
 
 import com.jesuslcorominas.teamflowmanager.data.core.repository.AuthRepositoryImpl
-import com.jesuslcorominas.teamflowmanager.data.core.repository.PendingCoachAssignmentRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubMemberRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.FcmTokenProviderRepositoryImpl
@@ -11,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchOperationRe
 import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationPermissionRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationTopicRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.PendingCoachAssignmentRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerSubstitutionRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeHistoryRepositoryImpl
@@ -18,7 +18,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeReposi
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PreferencesRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.TeamRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
-import com.jesuslcorominas.teamflowmanager.usecase.repository.PendingCoachAssignmentRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmTokenProviderRepository
@@ -28,6 +27,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepo
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationPermissionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationTopicRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PendingCoachAssignmentRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository

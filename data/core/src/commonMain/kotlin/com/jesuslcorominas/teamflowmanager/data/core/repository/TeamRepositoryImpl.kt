@@ -47,7 +47,10 @@ internal class TeamRepositoryImpl(
         teamDataSource.updateTeamCoachId(teamId, coachId)
     }
 
-    override suspend fun updateTeamPendingCoachEmail(teamId: String, email: String?) {
+    override suspend fun updateTeamPendingCoachEmail(
+        teamId: String,
+        email: String?,
+    ) {
         teamDataSource.updateTeamPendingCoachEmail(teamId, email)
     }
 

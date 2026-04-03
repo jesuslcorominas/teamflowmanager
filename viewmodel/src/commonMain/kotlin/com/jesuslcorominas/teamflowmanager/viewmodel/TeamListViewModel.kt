@@ -186,9 +186,10 @@ class TeamListViewModel(
         val team = _assignCoachDialogTeam.value ?: return
         val teamId = team.firestoreId ?: return
         val trimmedEmail = email.trim()
-        val existingMember = _clubMembers.value.firstOrNull {
-            it.email.equals(trimmedEmail, ignoreCase = true)
-        }
+        val existingMember =
+            _clubMembers.value.firstOrNull {
+                it.email.equals(trimmedEmail, ignoreCase = true)
+            }
         viewModelScope.launch {
             _assigningCoachToTeamId.value = teamId
             try {

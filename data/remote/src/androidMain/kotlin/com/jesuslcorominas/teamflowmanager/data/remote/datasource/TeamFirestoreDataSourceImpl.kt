@@ -286,7 +286,10 @@ class TeamFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun updateTeamPendingCoachEmail(teamId: String, email: String?) {
+    override suspend fun updateTeamPendingCoachEmail(
+        teamId: String,
+        email: String?,
+    ) {
         require(teamId.isNotBlank()) { "Team ID cannot be blank" }
 
         try {

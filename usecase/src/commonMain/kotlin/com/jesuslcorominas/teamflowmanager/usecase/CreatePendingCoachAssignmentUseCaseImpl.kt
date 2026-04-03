@@ -14,7 +14,10 @@ internal class CreatePendingCoachAssignmentUseCaseImpl(
     private val pendingCoachAssignmentRepository: PendingCoachAssignmentRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : CreatePendingCoachAssignmentUseCase {
-    override suspend fun invoke(teamId: String, email: String) {
+    override suspend fun invoke(
+        teamId: String,
+        email: String,
+    ) {
         require(teamId.isNotBlank()) { "Team ID cannot be blank" }
         require(email.isNotBlank()) { "Email cannot be blank" }
 
