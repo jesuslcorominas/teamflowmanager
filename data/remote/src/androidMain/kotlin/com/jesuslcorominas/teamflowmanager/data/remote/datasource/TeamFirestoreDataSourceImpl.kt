@@ -285,4 +285,20 @@ class TeamFirestoreDataSourceImpl(
             throw e
         }
     }
+
+    override suspend fun updateTeamPendingCoachEmail(teamId: String, email: String?) {
+        require(teamId.isNotBlank()) { "Team ID cannot be blank" }
+
+        try {
+            val updates = mapOf("pendingCoachEmail" to email)
+            firestore.collection(TEAMS_COLLECTION)
+                .document(teamId)
+                .update(updates)
+                .await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw e
+        }
+    }
 }

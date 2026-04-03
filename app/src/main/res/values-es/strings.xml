@@ -119,8 +119,9 @@
     <string name="create_team_title">Crear Equipo</string>
     <string name="team_name">Nombre del Equipo</string>
     <string name="team_name_required">El nombre del equipo es obligatorio</string>
-    <string name="coach_name">Nombre del Entrenador</string>
-    <string name="delegate_name">Nombre del Delegado</string>
+    <string name="coach_name">Entrenador</string>
+    <string name="coach_email">Email</string>
+    <string name="delegate_name">Delegado</string>
     <string name="delegate_name_required">El nombre del delegado es obligatorio</string>
     <string name="team_type">Tipo de Equipo</string>
     <string name="team_type_football">Fútbol %d</string>
@@ -369,6 +370,8 @@
 
     <!-- Assign Coach Dialog -->
     <string name="assign_coach_button">Asignar entrenador</string>
+    <string name="pending_coach_assignment">Entrenador pendiente</string>
+    <string name="reassign_coach_button">Reasignar</string>
     <string name="assign_coach_dialog_title">Asignar entrenador a %1$s</string>
     <string name="assign_coach_tab_members">Miembros</string>
     <string name="assign_coach_tab_email">Por email</string>

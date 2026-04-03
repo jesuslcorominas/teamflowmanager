@@ -61,6 +61,11 @@ interface TeamRepository {
     )
 
     /**
+     * Update the pending coach email of a team (null to clear it).
+     */
+    suspend fun updateTeamPendingCoachEmail(teamId: String, email: String?)
+
+    /**
      * Generate a shareable invitation link for a team.
      * @param teamId The identifier of the team
      * @param teamName The name of the team for display in the invitation

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ResolvePendingCoachAssignmentsForUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,6 +21,7 @@ class LoginViewModel(
     private val syncFcmTokenUseCase: SyncFcmTokenUseCase,
     private val isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase,
     private val analyticsTracker: AnalyticsTracker,
+    private val resolvePendingCoachAssignments: ResolvePendingCoachAssignmentsForUserUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -85,6 +87,13 @@ class LoginViewModel(
         // For now we sync the token without subscribing to a topic, which also
         // handles cleanup of any previous user's token on this device.
         val clubFirestoreId: String? = null
+
+        // Resolve any pending coach assignments for this user (non-blocking)
+        viewModelScope.launch {
+            runCatching {
+                user.email?.let { resolvePendingCoachAssignments(user.id, it) }
+            }
+        }
 
         if (isNotificationPermissionGranted()) {
             runCatching {

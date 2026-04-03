@@ -19,10 +19,12 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PendingCoachAssignmentDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.createShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PendingCoachAssignmentFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmNotificationTopicDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmTokenFirestoreDataSourceImpl
@@ -89,6 +91,7 @@ internal val firestoreDataSourceModule =
         singleOf(::PlayerSubstitutionFirestoreDataSourceImpl) bind PlayerSubstitutionDataSource::class
         singleOf(::PlayerTimeFirestoreDataSourceImpl) bind PlayerTimeDataSource::class
         singleOf(::PlayerTimeHistoryFirestoreDataSourceImpl) bind PlayerTimeHistoryDataSource::class
+        singleOf(::PendingCoachAssignmentFirestoreDataSourceImpl) bind PendingCoachAssignmentDataSource::class
     }
 
 internal val ktorfitModule =
