@@ -401,6 +401,12 @@
     <string name="president_team_stats_goals_conceded">Goals conceded</string>
     <string name="president_team_stats_squad_size">Squad size</string>
 
+    <!-- Expel Member -->
+    <string name="expel_member_dialog_title">Expel member</string>
+    <string name="expel_member_dialog_message">Are you sure you want to expel %1$s from the club? This action cannot be undone.</string>
+    <string name="expel_member_confirm">Expel</string>
+    <string name="expel_member_cancel">Cancel</string>
+
     <!-- Pending Team Assignment Strings -->
     <string name="pending_team_title">Pending team assignment</string>
     <string name="pending_team_message">Your account has been verified. Please wait until the club president assigns you to a team.</string>

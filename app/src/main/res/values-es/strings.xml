@@ -389,6 +389,12 @@
     <string name="president_team_stats_goals_conceded">Goles en contra</string>
     <string name="president_team_stats_squad_size">Tamaño de la plantilla</string>
 
+    <!-- Expel Member -->
+    <string name="expel_member_dialog_title">Expulsar miembro</string>
+    <string name="expel_member_dialog_message">¿Estás seguro de que quieres expulsar a %1$s del club? Esta acción no se puede deshacer.</string>
+    <string name="expel_member_confirm">Expulsar</string>
+    <string name="expel_member_cancel">Cancelar</string>
+
     <!-- Pending Team Assignment Strings -->
     <string name="pending_team_title">Asignación de equipo pendiente</string>
     <string name="pending_team_message">Tu cuenta ha sido verificada. Por favor, espera a que el presidente del club te asigne a un equipo.</string>
