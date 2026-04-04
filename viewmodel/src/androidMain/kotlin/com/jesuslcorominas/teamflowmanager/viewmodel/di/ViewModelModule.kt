@@ -54,6 +54,7 @@ val viewModelModule =
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
+                resolvePendingCoachAssignments = get(),
             )
         }
 
@@ -128,6 +129,10 @@ val viewModelModule =
                 getUserClubMembership = get(),
                 generateTeamInvitation = get(),
                 selfAssignAsCoach = get(),
+                assignCoachToTeam = get(),
+                getClubMembers = get(),
+                createPendingCoachAssignment = get(),
+                deletePendingCoachAssignment = get(),
             )
         }
         viewModel {

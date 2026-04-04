@@ -54,8 +54,10 @@ service cloud.firestore {
 
     match /clubMembers/{memberId} {
       allow read: if isAuthenticated() && (
+        resource == null ||
         resource.data.userId == request.auth.uid ||
-        isClubOwner(resource.data.clubId)
+        isClubOwner(resource.data.clubId) ||
+        isPresidenteOfClub(resource.data.clubId)
       );
 
       allow create: if isAuthenticated() && (
@@ -96,7 +98,7 @@ service cloud.firestore {
         resource.data.assignedCoachId == request.auth.uid || (
           getTeamClubId(teamId) != null &&
           isPresidenteOfClub(getTeamClubId(teamId)) &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['assignedCoachId'])
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['assignedCoachId', 'pendingCoachEmail'])
         )
       );
 
@@ -172,6 +174,20 @@ service cloud.firestore {
     match /matches/{matchId}/{document=**} {
       allow read: if isAuthenticated();
       allow write: if userIsTeamOwner(get(/databases/$(database)/documents/matches/$(matchId)).data.teamId);
+    }
+
+    // =======================================================================
+    // PENDING COACH ASSIGNMENTS
+    // =======================================================================
+
+    match /pendingCoachAssignments/{teamId} {
+      // Any authenticated user can read (needed for login-time self-resolution)
+      allow read: if isAuthenticated();
+
+      // Only Presidents of the team's club can create/update/delete pending assignments
+      allow create, update, delete: if isAuthenticated() &&
+        getTeamClubId(teamId) != null &&
+        isPresidenteOfClub(getTeamClubId(teamId));
     }
 
     // =======================================================================

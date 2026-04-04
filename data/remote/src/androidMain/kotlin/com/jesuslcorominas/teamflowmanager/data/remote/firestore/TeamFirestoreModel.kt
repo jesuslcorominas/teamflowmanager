@@ -21,6 +21,7 @@ data class TeamFirestoreModel(
     val captainId: Long? = null,
     val teamType: Int = TeamType.FOOTBALL_5.players,
     val assignedCoachId: String? = null,
+    val pendingCoachEmail: String? = null,
     val clubId: String? = null,
 ) {
     // No-arg constructor required by Firestore
@@ -32,6 +33,7 @@ data class TeamFirestoreModel(
         captainId = null,
         teamType = TeamType.FOOTBALL_5.players,
         assignedCoachId = null,
+        pendingCoachEmail = null,
         clubId = null,
     )
 }
@@ -45,6 +47,7 @@ fun TeamFirestoreModel.toDomain(): Team =
         captainId = captainId,
         teamType = TeamType.fromPlayers(teamType),
         coachId = assignedCoachId, // Store the assigned coach's user ID (null if no coach assigned)
+        pendingCoachEmail = pendingCoachEmail?.takeIf { it.isNotEmpty() },
         clubId = clubId?.takeIf { it.isNotEmpty() }?.toStableId(), // Convert club Firestore ID to Long, null if empty/null
         clubFirestoreId = clubId?.takeIf { it.isNotEmpty() }, // Store original club Firestore ID
         firestoreId = id, // Store the Firestore document ID

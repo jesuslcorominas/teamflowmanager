@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ResolvePendingCoachAssignmentsForUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import io.mockk.coEvery
@@ -32,6 +33,7 @@ class LoginViewModelTest {
     private lateinit var syncFcmTokenUseCase: SyncFcmTokenUseCase
     private lateinit var isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
+    private lateinit var resolvePendingCoachAssignments: ResolvePendingCoachAssignmentsForUserUseCase
     private lateinit var viewModel: LoginViewModel
 
     private val testUser = User(
@@ -48,12 +50,14 @@ class LoginViewModelTest {
         syncFcmTokenUseCase = mockk(relaxed = true)
         isNotificationPermissionGranted = mockk()
         analyticsTracker = mockk(relaxed = true)
+        resolvePendingCoachAssignments = mockk(relaxed = true)
         every { isNotificationPermissionGranted() } returns true
         viewModel = LoginViewModel(
             signInWithGoogleUseCase = signInWithGoogleUseCase,
             syncFcmTokenUseCase = syncFcmTokenUseCase,
             isNotificationPermissionGranted = isNotificationPermissionGranted,
             analyticsTracker = analyticsTracker,
+            resolvePendingCoachAssignments = resolvePendingCoachAssignments,
         )
     }
 

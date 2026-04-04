@@ -77,4 +77,12 @@ interface TeamDataSource {
         teamId: String,
         coachId: String,
     )
+
+    /**
+     * Update the pending coach email of a team (null to clear it).
+     */
+    suspend fun updateTeamPendingCoachEmail(
+        teamId: String,
+        email: String?,
+    )
 }

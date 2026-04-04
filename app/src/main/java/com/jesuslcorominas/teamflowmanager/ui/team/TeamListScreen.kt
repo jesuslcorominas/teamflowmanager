@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.ui.team
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,13 +16,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +30,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +46,11 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import org.koin.androidx.compose.koinViewModel
 
+private const val LOADING_OVERLAY_ALPHA = 0.7f
+private val LOADING_INDICATOR_SIZE = 48.dp
+private val BUTTON_ICON_SIZE = 20.dp
+private val BUTTON_ICON_SPACING = 8.dp
+
 @Composable
 fun TeamListScreen(
     viewModel: TeamListViewModel = koinViewModel(),
@@ -57,33 +59,16 @@ fun TeamListScreen(
     TrackScreenView(screenName = ScreenName.TEAM, screenClass = "TeamListScreen")
 
     val uiState by viewModel.uiState.collectAsState()
-    val shareEvent by viewModel.shareEvent.collectAsState()
-    val sharingTeamId by viewModel.sharingTeamId.collectAsState()
     val assigningCoachToTeamId by viewModel.assigningCoachToTeamId.collectAsState()
     val currentUserRole by viewModel.currentUserRole.collectAsState()
     val coachFilter by viewModel.coachFilter.collectAsState()
+    val assignCoachDialogTeam by viewModel.assignCoachDialogTeam.collectAsState()
+    val clubMembers by viewModel.clubMembers.collectAsState()
+    val assignCoachError by viewModel.assignCoachError.collectAsState()
     val searchState = LocalSearchState.current
-    val context = LocalContext.current
 
     LaunchedEffect(searchState.query) {
         viewModel.onSearchQueryChanged(searchState.query)
-    }
-
-    // Handle share event
-    LaunchedEffect(shareEvent) {
-        shareEvent?.let { event ->
-            val shareIntent =
-                Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_team_subject, event.teamName))
-                    putExtra(
-                        Intent.EXTRA_TEXT,
-                        context.getString(R.string.share_team_message, event.teamName, event.invitationLink),
-                    )
-                }
-            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_team_title)))
-            viewModel.onShareEventConsumed()
-        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -116,6 +101,7 @@ fun TeamListScreen(
                             )
                         }
                     }
+                    val coachEmailMap = clubMembers.associate { it.userId to it.email }
                     if (state.teams.isEmpty()) {
                         EmptyTeamsMessage(modifier = Modifier.weight(1f).fillMaxWidth())
                     } else {
@@ -123,9 +109,9 @@ fun TeamListScreen(
                             teams = state.teams,
                             modifier = Modifier.weight(1f),
                             onTeamClick = onTeamClick,
-                            onShareTeam = { team -> viewModel.shareTeam(team) },
-                            onSelfAssignAsCoach = { team -> viewModel.selfAssignAsCoachToTeam(team) },
-                            sharingTeamId = sharingTeamId,
+                            onAssignCoach = { team -> viewModel.requestAssignCoach(team) },
+                            onDeletePendingAssignment = { team -> viewModel.deletePendingAssignment(team) },
+                            coachEmailMap = coachEmailMap,
                             assigningCoachToTeamId = assigningCoachToTeamId,
                             isPresident = isPresident,
                         )
@@ -146,23 +132,33 @@ fun TeamListScreen(
             }
         }
 
-        // Show full-screen loading overlay while sharing or assigning
-        if (sharingTeamId != null || assigningCoachToTeamId != null) {
+        if (assigningCoachToTeamId != null) {
             Box(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = LOADING_OVERLAY_ALPHA))
                         .clickable(enabled = false) { },
-                // Block all clicks
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(LOADING_INDICATOR_SIZE),
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
+    }
+
+    if (assignCoachDialogTeam != null) {
+        AssignCoachDialog(
+            team = assignCoachDialogTeam!!,
+            members = clubMembers,
+            error = assignCoachError,
+            onDismiss = { viewModel.dismissAssignCoachDialog() },
+            onAssignMember = { member -> viewModel.assignCoachByMember(member) },
+            onAssignByEmail = { email -> viewModel.assignCoachByEmail(email) },
+            onClearError = { viewModel.clearAssignCoachError() },
+        )
     }
 }
 
@@ -190,9 +186,9 @@ private fun TeamsListContent(
     teams: List<Team>,
     modifier: Modifier = Modifier,
     onTeamClick: (Team) -> Unit,
-    onShareTeam: (Team) -> Unit,
-    onSelfAssignAsCoach: (Team) -> Unit,
-    sharingTeamId: String?,
+    onAssignCoach: (Team) -> Unit,
+    onDeletePendingAssignment: (Team) -> Unit,
+    coachEmailMap: Map<String, String>,
     assigningCoachToTeamId: String?,
     isPresident: Boolean,
 ) {
@@ -211,9 +207,9 @@ private fun TeamsListContent(
             TeamCard(
                 team = team,
                 onClick = { onTeamClick(team) },
-                onShare = { onShareTeam(team) },
-                onSelfAssignAsCoach = { onSelfAssignAsCoach(team) },
-                isSharing = team.firestoreId == sharingTeamId,
+                onAssignCoach = { onAssignCoach(team) },
+                onDeletePendingAssignment = { onDeletePendingAssignment(team) },
+                coachEmail = team.coachId?.let { coachEmailMap[it] },
                 isAssigning = team.firestoreId == assigningCoachToTeamId,
                 isPresident = isPresident,
             )
@@ -225,9 +221,9 @@ private fun TeamsListContent(
 private fun TeamCard(
     team: Team,
     onClick: () -> Unit,
-    onShare: () -> Unit,
-    onSelfAssignAsCoach: () -> Unit,
-    isSharing: Boolean = false,
+    onAssignCoach: () -> Unit,
+    onDeletePendingAssignment: () -> Unit,
+    coachEmail: String? = null,
     isAssigning: Boolean = false,
     isPresident: Boolean = false,
 ) {
@@ -240,37 +236,15 @@ private fun TeamCard(
                     .fillMaxWidth()
                     .padding(16.dp),
         ) {
-            Row(
+            Text(
+                text = team.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = team.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
+            )
 
-                // Show share icon button only if team has no coach assigned
-                if (team.coachId == null) {
-                    IconButton(
-                        onClick = onShare,
-                        enabled = !isSharing,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = stringResource(R.string.share_team_button),
-                            tint =
-                                if (isSharing) {
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                },
-                        )
-                    }
-                }
-            }
+            // TODO: Re-enable share button when invitation flow is revisited
+            //  IconButton(onClick = onShare) { Icon(Icons.Default.Share, ...) }
 
             if (team.coachName.isNotBlank()) {
                 Row(
@@ -302,23 +276,59 @@ private fun TeamCard(
                 }
             }
 
-            // Show self-assign button for Presidents when team has no coach
-            if (isPresident && team.coachId == null) {
+            if (!coachEmail.isNullOrBlank()) {
+                Row {
+                    Text(
+                        text = stringResource(R.string.coach_email) + ": ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = coachEmail,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+
+            val pendingEmail = team.pendingCoachEmail
+            if (isPresident && pendingEmail != null) {
+                Row(modifier = Modifier.padding(top = 8.dp)) {
+                    Text(
+                        text = stringResource(R.string.pending_coach_assignment) + ": ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = pendingEmail,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
                 Button(
-                    onClick = onSelfAssignAsCoach,
+                    onClick = onDeletePendingAssignment,
                     enabled = !isAssigning,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Autorenew,
+                        contentDescription = null,
+                        modifier = Modifier.size(BUTTON_ICON_SIZE),
+                    )
+                    Spacer(modifier = Modifier.width(BUTTON_ICON_SPACING))
+                    Text(text = stringResource(R.string.reassign_coach_button))
+                }
+            } else if (isPresident && team.coachId == null) {
+                Button(
+                    onClick = onAssignCoach,
+                    enabled = !isAssigning,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.PersonAdd,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(BUTTON_ICON_SIZE),
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = stringResource(R.string.self_assign_as_coach_button))
+                    Spacer(modifier = Modifier.width(BUTTON_ICON_SPACING))
+                    Text(text = stringResource(R.string.assign_coach_button))
                 }
             }
         }

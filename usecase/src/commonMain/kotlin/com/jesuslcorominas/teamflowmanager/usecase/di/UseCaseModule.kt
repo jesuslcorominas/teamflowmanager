@@ -6,9 +6,11 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreatePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteMatchUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
@@ -51,6 +53,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCo
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ResolvePendingCoachAssignmentsForUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
@@ -79,9 +82,11 @@ import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.AssignCoachToTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateClubUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.CreatePendingCoachAssignmentUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteFcmTokenUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.DeletePendingCoachAssignmentUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
@@ -124,6 +129,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.RegenerateInvitationCodeUseCa
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RemovePlayerAsCaptainUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ResolvePendingCoachAssignmentsForUserUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SelfAssignAsCoachUseCaseImpl
@@ -166,6 +172,9 @@ internal val useCaseInternalModule =
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
         singleOf(::AssignCoachToTeamUseCaseImpl) bind AssignCoachToTeamUseCase::class
         singleOf(::SelfAssignAsCoachUseCaseImpl) bind SelfAssignAsCoachUseCase::class
+        singleOf(::CreatePendingCoachAssignmentUseCaseImpl) bind CreatePendingCoachAssignmentUseCase::class
+        singleOf(::DeletePendingCoachAssignmentUseCaseImpl) bind DeletePendingCoachAssignmentUseCase::class
+        singleOf(::ResolvePendingCoachAssignmentsForUserUseCaseImpl) bind ResolvePendingCoachAssignmentsForUserUseCase::class
         singleOf(::GenerateTeamInvitationUseCaseImpl) bind GenerateTeamInvitationUseCase::class
         singleOf(::AcceptTeamInvitationUseCaseImpl) bind AcceptTeamInvitationUseCase::class
         singleOf(::GetUserClubMembershipUseCaseImpl) bind GetUserClubMembershipUseCase::class

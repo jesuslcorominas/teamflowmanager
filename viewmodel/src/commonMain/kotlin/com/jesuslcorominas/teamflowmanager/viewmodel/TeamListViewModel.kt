@@ -2,9 +2,14 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreatePendingCoachAssignmentUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubMembersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
@@ -20,6 +25,10 @@ class TeamListViewModel(
     private val getUserClubMembership: GetUserClubMembershipUseCase,
     private val generateTeamInvitation: GenerateTeamInvitationUseCase,
     private val selfAssignAsCoach: SelfAssignAsCoachUseCase,
+    private val assignCoachToTeam: AssignCoachToTeamUseCase,
+    private val getClubMembers: GetClubMembersUseCase,
+    private val createPendingCoachAssignment: CreatePendingCoachAssignmentUseCase,
+    private val deletePendingCoachAssignment: DeletePendingCoachAssignmentUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -42,6 +51,15 @@ class TeamListViewModel(
     private val _coachFilter = MutableStateFlow(CoachFilter.ALL)
     val coachFilter: StateFlow<CoachFilter> = _coachFilter.asStateFlow()
 
+    private val _assignCoachDialogTeam = MutableStateFlow<Team?>(null)
+    val assignCoachDialogTeam: StateFlow<Team?> = _assignCoachDialogTeam.asStateFlow()
+
+    private val _clubMembers = MutableStateFlow<List<ClubMember>>(emptyList())
+    val clubMembers: StateFlow<List<ClubMember>> = _clubMembers.asStateFlow()
+
+    private val _assignCoachError = MutableStateFlow<String?>(null)
+    val assignCoachError: StateFlow<String?> = _assignCoachError.asStateFlow()
+
     enum class CoachFilter { ALL, WITH_COACH, WITHOUT_COACH }
 
     sealed interface UiState {
@@ -63,7 +81,6 @@ class TeamListViewModel(
     private fun loadTeams() {
         viewModelScope.launch {
             try {
-                // Get user's club membership
                 val clubMember = getUserClubMembership().first()
                 val clubFirestoreId = clubMember?.clubFirestoreId
 
@@ -72,14 +89,19 @@ class TeamListViewModel(
                     return@launch
                 }
 
-                // Store user's primary role (first role in the list)
-                // For display purposes, we use the first role or "President" if available
                 _currentUserRole.value =
                     if (clubMember.hasRole(ClubRole.PRESIDENT)) {
                         ClubRole.PRESIDENT.roleName
                     } else {
                         clubMember.roles.firstOrNull() ?: ""
                     }
+
+                // Load club members in background for the assign coach dialog
+                launch {
+                    getClubMembers(clubFirestoreId).collect { members ->
+                        _clubMembers.value = members
+                    }
+                }
 
                 // Load teams for the club, applying search and filter reactively
                 combine(
@@ -108,16 +130,11 @@ class TeamListViewModel(
     }
 
     fun shareTeam(team: Team) {
-        // Prevent multiple concurrent share operations for the same team
-        if (_sharingTeamId.value == team.firestoreId) {
-            return
-        }
+        if (_sharingTeamId.value == team.firestoreId) return
 
         viewModelScope.launch {
             val teamFirestoreId = team.firestoreId ?: return@launch
-
             _sharingTeamId.value = teamFirestoreId
-
             try {
                 val invitationLink = generateTeamInvitation(teamFirestoreId, team.name)
                 _shareEvent.value = ShareEvent(invitationLink, team.name)
@@ -137,24 +154,89 @@ class TeamListViewModel(
         _coachFilter.value = filter
     }
 
+    fun requestAssignCoach(team: Team) {
+        _assignCoachError.value = null
+        _assignCoachDialogTeam.value = team
+    }
+
+    fun dismissAssignCoachDialog() {
+        _assignCoachDialogTeam.value = null
+        _assignCoachError.value = null
+    }
+
+    fun assignCoachByMember(member: ClubMember) {
+        val team = _assignCoachDialogTeam.value ?: return
+        val teamId = team.firestoreId ?: return
+
+        viewModelScope.launch {
+            _assigningCoachToTeamId.value = teamId
+            try {
+                assignCoachToTeam(teamId, member.userId)
+                _assignCoachDialogTeam.value = null
+                _assignCoachError.value = null
+            } catch (e: Exception) {
+                _assignCoachError.value = e.message
+            } finally {
+                _assigningCoachToTeamId.value = null
+            }
+        }
+    }
+
+    fun assignCoachByEmail(email: String) {
+        val team = _assignCoachDialogTeam.value ?: return
+        val teamId = team.firestoreId ?: return
+        val trimmedEmail = email.trim()
+        val existingMember =
+            _clubMembers.value.firstOrNull {
+                it.email.equals(trimmedEmail, ignoreCase = true)
+            }
+        viewModelScope.launch {
+            _assigningCoachToTeamId.value = teamId
+            try {
+                if (existingMember != null) {
+                    // Member already in the club — assign directly
+                    assignCoachToTeam(teamId, existingMember.userId)
+                } else {
+                    // External email — create pending assignment (#307)
+                    createPendingCoachAssignment(teamId, trimmedEmail)
+                }
+                _assignCoachDialogTeam.value = null
+                _assignCoachError.value = null
+            } catch (e: Exception) {
+                _assignCoachError.value = e.message
+            } finally {
+                _assigningCoachToTeamId.value = null
+            }
+        }
+    }
+
+    fun deletePendingAssignment(team: Team) {
+        val teamId = team.firestoreId ?: return
+        viewModelScope.launch {
+            try {
+                deletePendingCoachAssignment(teamId)
+            } catch (e: Exception) {
+                // TODO: Show error to user
+            }
+        }
+    }
+
+    fun clearAssignCoachError() {
+        _assignCoachError.value = null
+    }
+
     fun onShareEventConsumed() {
         _shareEvent.value = null
     }
 
     fun selfAssignAsCoachToTeam(team: Team) {
-        // Prevent multiple concurrent operations for the same team
-        if (_assigningCoachToTeamId.value == team.firestoreId) {
-            return
-        }
+        if (_assigningCoachToTeamId.value == team.firestoreId) return
 
         viewModelScope.launch {
             val teamFirestoreId = team.firestoreId ?: return@launch
-
             _assigningCoachToTeamId.value = teamFirestoreId
-
             try {
                 selfAssignAsCoach(teamFirestoreId)
-                // The UI will automatically update through the teams flow
             } catch (e: Exception) {
                 // TODO: Show error to user
             } finally {

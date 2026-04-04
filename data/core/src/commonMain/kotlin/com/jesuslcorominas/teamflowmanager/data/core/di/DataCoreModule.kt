@@ -10,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchOperationRe
 import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationPermissionRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationTopicRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.PendingCoachAssignmentRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerSubstitutionRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeHistoryRepositoryImpl
@@ -26,6 +27,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepo
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationPermissionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationTopicRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PendingCoachAssignmentRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
@@ -66,6 +68,7 @@ internal val repositoryModule =
         singleOf(::FcmTokenProviderRepositoryImpl) bind FcmTokenProviderRepository::class
         singleOf(::NotificationTopicRepositoryImpl) bind NotificationTopicRepository::class
         singleOf(::NotificationPermissionRepositoryImpl) bind NotificationPermissionRepository::class
+        singleOf(::PendingCoachAssignmentRepositoryImpl) bind PendingCoachAssignmentRepository::class
     }
 
 val dataCoreModule =
