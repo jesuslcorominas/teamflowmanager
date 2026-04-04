@@ -72,7 +72,7 @@
     <string name="previous">Previous</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="retry">Reintentar</string>
+    <string name="retry">Retry</string>
 
     <!-- Players -->
     <string name="players_title">Team Roster</string>
@@ -124,9 +124,9 @@
     <string name="error_loading_members">Unable to load staff members. Please check your internet connection and try again.</string>
     <string name="no_club_membership_error">You need to join or create a club first to view staff members.</string>
     <string name="share_team_button">Share</string>
-    <string name="share_team_title">Compartir Invitación de Equipo</string>
-    <string name="share_team_subject">Únete a %1$s como Entrenador</string>
-    <string name="share_team_message">¡Has sido invitado a ser el entrenador de %1$s! Haz clic en el enlace para aceptar: %2$s</string>
+    <string name="share_team_title">Share Team Invitation</string>
+    <string name="share_team_subject">Join %1$s as Coach</string>
+    <string name="share_team_message">You have been invited to be the coach of %1$s! Click the link to accept: %2$s</string>
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>
@@ -152,8 +152,8 @@
     <string name="go_to_team">Go to Team</string>
     <string name="go_to_teams">Go to Teams</string>
     <string name="self_assign_as_coach_button">Assign me as Coach</string>
-    <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
-    <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
+    <string name="self_assign_as_coach_success">You have been assigned as team Coach</string>
+    <string name="self_assign_as_coach_error">Error assigning you as Coach. Please try again.</string>
 
     <!-- Matches -->
     <string name="matches_title">Matches</string>
