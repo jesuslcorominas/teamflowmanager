@@ -52,4 +52,11 @@ internal class ClubMemberRepositoryImpl(
     ): ClubMember? {
         return clubMemberDataSource.getClubMemberByUserIdAndClub(userId, clubId)
     }
+
+    override suspend fun removeClubMember(
+        userId: String,
+        clubId: String,
+    ) {
+        clubMemberDataSource.removeClubMember(userId, clubId)
+    }
 }

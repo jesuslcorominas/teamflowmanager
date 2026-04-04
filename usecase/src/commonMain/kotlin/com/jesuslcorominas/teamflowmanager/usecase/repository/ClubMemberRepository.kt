@@ -71,4 +71,9 @@ interface ClubMemberRepository {
         userId: String,
         clubId: String,
     ): ClubMember?
+
+    suspend fun removeClubMember(
+        userId: String,
+        clubId: String,
+    )
 }

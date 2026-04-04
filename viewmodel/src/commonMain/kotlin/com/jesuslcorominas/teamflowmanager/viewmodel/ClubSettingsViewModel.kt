@@ -34,6 +34,7 @@ class ClubSettingsViewModel(
         val loading: Boolean = true,
         val isEditing: Boolean = false,
         val saving: Boolean = false,
+        val saved: Boolean = false,
         val regenerating: Boolean = false,
         val showExitDialog: Boolean = false,
         val error: String? = null,
@@ -141,12 +142,17 @@ class ClubSettingsViewModel(
                         name = updated.name,
                         homeGround = updated.homeGround ?: "",
                         saving = false,
+                        saved = true,
                         isEditing = false,
                     )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(saving = false, error = e.message)
             }
         }
+    }
+
+    fun resetSavedState() {
+        _uiState.value = _uiState.value.copy(saved = false)
     }
 
     fun onRegenerateCode() {
