@@ -52,6 +52,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMat
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemoveClubMemberUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResolvePendingCoachAssignmentsForUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
@@ -128,6 +129,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPause
 import com.jesuslcorominas.teamflowmanager.usecase.RegenerateInvitationCodeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.RemoveClubMemberUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RemovePlayerAsCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ResolvePendingCoachAssignmentsForUserUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCaseImpl
@@ -184,6 +186,7 @@ internal val useCaseInternalModule =
         singleOf(::GetClubByFirestoreIdUseCaseImpl) bind GetClubByFirestoreIdUseCase::class
         singleOf(::UpdateClubUseCaseImpl) bind UpdateClubUseCase::class
         singleOf(::RegenerateInvitationCodeUseCaseImpl) bind RegenerateInvitationCodeUseCase::class
+        singleOf(::RemoveClubMemberUseCaseImpl) bind RemoveClubMemberUseCase::class
 
         singleOf(::GetMatchByIdUseCaseImpl) bind GetMatchByIdUseCase::class
         singleOf(::GetAllMatchesUseCaseImpl) bind GetAllMatchesUseCase::class

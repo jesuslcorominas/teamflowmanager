@@ -60,4 +60,8 @@ internal class TeamRepositoryImpl(
     ): String {
         return dynamicLinkDataSource.generateTeamInvitationLink(teamId, teamName)
     }
+
+    override suspend fun clearTeamCoach(teamId: String) {
+        teamDataSource.clearTeamCoach(teamId)
+    }
 }

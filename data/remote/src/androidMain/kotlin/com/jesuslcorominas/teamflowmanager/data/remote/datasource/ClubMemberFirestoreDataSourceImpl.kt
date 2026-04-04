@@ -288,4 +288,23 @@ class ClubMemberFirestoreDataSourceImpl(
             throw e
         }
     }
+
+    override suspend fun removeClubMember(
+        userId: String,
+        clubId: String,
+    ) {
+        require(userId.isNotBlank()) { "User ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
+        try {
+            val clubMemberId = "${userId}_$clubId"
+            firestore.collection(CLUB_MEMBERS_COLLECTION)
+                .document(clubMemberId)
+                .delete()
+                .await()
+            Log.d(TAG, "Removed club member userId=$userId from club=$clubId")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error removing club member from Firestore", e)
+            throw e
+        }
+    }
 }

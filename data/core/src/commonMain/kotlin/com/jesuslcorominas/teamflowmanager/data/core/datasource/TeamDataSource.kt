@@ -85,4 +85,6 @@ interface TeamDataSource {
         teamId: String,
         email: String?,
     )
+
+    suspend fun clearTeamCoach(teamId: String)
 }

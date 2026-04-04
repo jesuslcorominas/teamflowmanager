@@ -304,4 +304,18 @@ class TeamFirestoreDataSourceImpl(
             throw e
         }
     }
+
+    override suspend fun clearTeamCoach(teamId: String) {
+        require(teamId.isNotBlank()) { "Team ID cannot be blank" }
+        try {
+            firestore.collection(TEAMS_COLLECTION)
+                .document(teamId)
+                .update(mapOf("assignedCoachId" to null))
+                .await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw e
+        }
+    }
 }

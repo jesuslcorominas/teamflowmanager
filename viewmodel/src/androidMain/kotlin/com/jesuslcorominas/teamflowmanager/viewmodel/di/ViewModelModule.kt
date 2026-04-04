@@ -139,6 +139,7 @@ val viewModelModule =
             ClubMembersViewModel(
                 getClubMembers = get(),
                 getUserClubMembership = get(),
+                removeClubMember = get(),
             )
         }
         viewModel {

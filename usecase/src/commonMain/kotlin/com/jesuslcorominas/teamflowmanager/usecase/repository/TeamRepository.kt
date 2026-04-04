@@ -78,4 +78,6 @@ interface TeamRepository {
         teamId: String,
         teamName: String,
     ): String
+
+    suspend fun clearTeamCoach(teamId: String)
 }
