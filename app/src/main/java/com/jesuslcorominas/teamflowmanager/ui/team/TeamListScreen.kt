@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,26 +18,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -46,7 +35,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
-import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
@@ -57,6 +45,11 @@ import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import org.koin.androidx.compose.koinViewModel
+
+private const val LOADING_OVERLAY_ALPHA = 0.7f
+private val LOADING_INDICATOR_SIZE = 48.dp
+private val BUTTON_ICON_SIZE = 20.dp
+private val BUTTON_ICON_SPACING = 8.dp
 
 @Composable
 fun TeamListScreen(
@@ -144,12 +137,12 @@ fun TeamListScreen(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = LOADING_OVERLAY_ALPHA))
                         .clickable(enabled = false) { },
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(LOADING_INDICATOR_SIZE),
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -167,131 +160,6 @@ fun TeamListScreen(
             onClearError = { viewModel.clearAssignCoachError() },
         )
     }
-}
-
-@Composable
-private fun AssignCoachDialog(
-    team: Team,
-    members: List<ClubMember>,
-    error: String?,
-    onDismiss: () -> Unit,
-    onAssignMember: (ClubMember) -> Unit,
-    onAssignByEmail: (String) -> Unit,
-    onClearError: () -> Unit,
-) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-    var email by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = MaterialTheme.shapes.medium,
-        title = {
-            Text(stringResource(R.string.assign_coach_dialog_title, team.name))
-        },
-        text = {
-            Column {
-                TabRow(selectedTabIndex = selectedTab) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = {
-                            selectedTab = 0
-                            onClearError()
-                        },
-                        text = { Text(stringResource(R.string.assign_coach_tab_members)) },
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = {
-                            selectedTab = 1
-                            onClearError()
-                        },
-                        text = { Text(stringResource(R.string.assign_coach_tab_email)) },
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                when (selectedTab) {
-                    0 -> {
-                        val assignableMembers = members.filter { !it.hasRole(ClubRole.COACH) }
-                        if (assignableMembers.isEmpty()) {
-                            Text(
-                                text = stringResource(R.string.no_results),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        } else {
-                            LazyColumn(modifier = Modifier.height(240.dp)) {
-                                items(assignableMembers, key = { it.userId }) { member ->
-                                    Column(
-                                        modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .clickable { onAssignMember(member) }
-                                                .padding(vertical = 12.dp, horizontal = 4.dp),
-                                    ) {
-                                        Text(
-                                            text = member.name,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium,
-                                        )
-                                        Text(
-                                            text = member.email,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                    HorizontalDivider()
-                                }
-                            }
-                        }
-                    }
-                    1 -> {
-                        OutlinedTextField(
-                            value = email,
-                            onValueChange = {
-                                email = it
-                                onClearError()
-                            },
-                            label = { Text(stringResource(R.string.assign_coach_email_placeholder)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            isError = error != null,
-                            supportingText =
-                                if (error != null) {
-                                    {
-                                        Text(
-                                            text =
-                                                if (error == "NO_MEMBER") {
-                                                    stringResource(R.string.assign_coach_not_member)
-                                                } else {
-                                                    stringResource(R.string.assign_coach_error)
-                                                },
-                                            color = MaterialTheme.colorScheme.error,
-                                        )
-                                    }
-                                } else {
-                                    null
-                                },
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            if (selectedTab == 1) {
-                Button(
-                    onClick = { onAssignByEmail(email) },
-                    enabled = email.isNotBlank(),
-                ) {
-                    Text(stringResource(R.string.assign_coach_confirm))
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-    )
 }
 
 @Composable
@@ -443,9 +311,9 @@ private fun TeamCard(
                     Icon(
                         imageVector = Icons.Default.Autorenew,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(BUTTON_ICON_SIZE),
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(BUTTON_ICON_SPACING))
                     Text(text = stringResource(R.string.reassign_coach_button))
                 }
             } else if (isPresident && team.coachId == null) {
@@ -457,9 +325,9 @@ private fun TeamCard(
                     Icon(
                         imageVector = Icons.Default.PersonAdd,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(BUTTON_ICON_SIZE),
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(BUTTON_ICON_SPACING))
                     Text(text = stringResource(R.string.assign_coach_button))
                 }
             }
