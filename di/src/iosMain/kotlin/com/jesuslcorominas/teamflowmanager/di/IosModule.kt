@@ -127,7 +127,11 @@ val iosModule =
                 generateTeamInvitation = get(),
                 selfAssignAsCoach = get(),
                 assignCoachToTeam = get(),
+                clearTeamCoachUseCase = get(),
                 getClubMembers = get(),
+                getMatchesByTeam = get(),
+                createPendingCoachAssignment = get(),
+                deletePendingCoachAssignment = get(),
             )
         }
         factory {

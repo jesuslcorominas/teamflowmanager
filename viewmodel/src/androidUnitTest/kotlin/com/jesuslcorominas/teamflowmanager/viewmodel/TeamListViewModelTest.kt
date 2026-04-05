@@ -4,10 +4,12 @@ import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearTeamCoachUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreatePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubMembersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
@@ -38,7 +40,9 @@ class TeamListViewModelTest {
     private lateinit var generateTeamInvitationUseCase: GenerateTeamInvitationUseCase
     private lateinit var selfAssignAsCoachUseCase: SelfAssignAsCoachUseCase
     private lateinit var assignCoachToTeamUseCase: AssignCoachToTeamUseCase
+    private lateinit var clearTeamCoachUseCase: ClearTeamCoachUseCase
     private lateinit var getClubMembersUseCase: GetClubMembersUseCase
+    private lateinit var getMatchesByTeamUseCase: GetMatchesByTeamUseCase
     private lateinit var createPendingCoachAssignmentUseCase: CreatePendingCoachAssignmentUseCase
     private lateinit var deletePendingCoachAssignmentUseCase: DeletePendingCoachAssignmentUseCase
 
@@ -50,10 +54,13 @@ class TeamListViewModelTest {
         generateTeamInvitationUseCase = mockk()
         selfAssignAsCoachUseCase = mockk(relaxed = true)
         assignCoachToTeamUseCase = mockk(relaxed = true)
+        clearTeamCoachUseCase = mockk(relaxed = true)
         getClubMembersUseCase = mockk()
+        getMatchesByTeamUseCase = mockk()
         createPendingCoachAssignmentUseCase = mockk(relaxed = true)
         deletePendingCoachAssignmentUseCase = mockk(relaxed = true)
         every { getClubMembersUseCase.invoke(any()) } returns flowOf(emptyList())
+        every { getMatchesByTeamUseCase.invoke(any()) } returns flowOf(emptyList())
     }
 
     @After
@@ -67,7 +74,9 @@ class TeamListViewModelTest {
         generateTeamInvitation = generateTeamInvitationUseCase,
         selfAssignAsCoach = selfAssignAsCoachUseCase,
         assignCoachToTeam = assignCoachToTeamUseCase,
+        clearTeamCoachUseCase = clearTeamCoachUseCase,
         getClubMembers = getClubMembersUseCase,
+        getMatchesByTeam = getMatchesByTeamUseCase,
         createPendingCoachAssignment = createPendingCoachAssignmentUseCase,
         deletePendingCoachAssignment = deletePendingCoachAssignmentUseCase,
     )

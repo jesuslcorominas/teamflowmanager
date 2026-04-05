@@ -386,6 +386,17 @@
     <string name="self_assign_as_coach_success">You have been assigned as team Coach</string>
     <string name="self_assign_as_coach_error">Error assigning you as Coach. Please try again.</string>
 
+    <!-- Remove Coach -->
+    <string name="remove_coach_button">Remove coach</string>
+    <string name="remove_coach_confirm_title">Remove coach</string>
+    <string name="remove_coach_confirm_message">The team will have no assigned coach. You can reassign later.</string>
+    <string name="remove_coach_confirm">Remove</string>
+    <string name="remove_coach_cancel">Cancel</string>
+
+    <!-- Match status in team card -->
+    <string name="match_live_badge">LIVE</string>
+    <string name="next_match_label">Next:</string>
+
     <!-- President Team Detail -->
     <string name="president_team_detail_players_tab">Players</string>
     <string name="president_team_detail_matches_tab">Matches</string>
