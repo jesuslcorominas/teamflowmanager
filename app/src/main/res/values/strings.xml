@@ -12,6 +12,7 @@
     <string name="club_selection_subtitle">Choose how you want to get started</string>
     <string name="create_club">Create a Club</string>
     <string name="join_club">Join a Club</string>
+    <string name="sign_in_with_another_account">Sign in with another account</string>
 
     <!-- Create Club Strings -->
     <string name="create_club_title">Create Your Club</string>

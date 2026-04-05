@@ -57,7 +57,6 @@ val iosModule =
                 synchronizeTimeUseCase = get(),
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
-                signOutUseCase = get(),
             )
         }
         factory {

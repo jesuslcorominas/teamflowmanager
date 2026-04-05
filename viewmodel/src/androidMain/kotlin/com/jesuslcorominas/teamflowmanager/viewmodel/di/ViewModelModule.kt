@@ -44,7 +44,6 @@ val viewModelModule =
                 synchronizeTimeUseCase = get(),
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
-                signOutUseCase = get(),
             )
         }
 

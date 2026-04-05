@@ -8,7 +8,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import kotlinx.coroutines.Job
@@ -25,7 +24,6 @@ class SplashViewModel(
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
     private val syncFcmTokenUseCase: SyncFcmTokenUseCase,
     private val isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase,
-    private val signOutUseCase: SignOutUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -93,10 +91,10 @@ class SplashViewModel(
 
         if (team == null) {
             if (clubMember == null) {
-                // Authenticated but onboarding never completed — invalidate the session
-                // so the user is sent back to Login instead of the club selection screen.
-                runCatching { signOutUseCase() }
-                _uiState.value = UiState.NotAuthenticated
+                // No club membership and no team: covers expelled members and new users
+                // who never completed onboarding. Send them to club selection so they
+                // can join or create a club.
+                _uiState.value = UiState.NoClub
             } else {
                 // Member belongs to a club but has no team assigned yet — show waiting screen.
                 _uiState.value = UiState.NoTeam
