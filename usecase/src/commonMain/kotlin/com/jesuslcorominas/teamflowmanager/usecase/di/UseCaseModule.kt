@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.AcceptTeamInvitationUs
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ArchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearTeamCoachUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreatePendingCoachAssignmentUseCase
@@ -81,6 +82,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.AcceptTeamInvitationUseCaseIm
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ArchiveMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.AssignCoachToTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ClearTeamCoachUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateClubUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreatePendingCoachAssignmentUseCaseImpl
@@ -173,6 +175,7 @@ internal val useCaseInternalModule =
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
         singleOf(::AssignCoachToTeamUseCaseImpl) bind AssignCoachToTeamUseCase::class
+        singleOf(::ClearTeamCoachUseCaseImpl) bind ClearTeamCoachUseCase::class
         singleOf(::SelfAssignAsCoachUseCaseImpl) bind SelfAssignAsCoachUseCase::class
         singleOf(::CreatePendingCoachAssignmentUseCaseImpl) bind CreatePendingCoachAssignmentUseCase::class
         singleOf(::DeletePendingCoachAssignmentUseCaseImpl) bind DeletePendingCoachAssignmentUseCase::class

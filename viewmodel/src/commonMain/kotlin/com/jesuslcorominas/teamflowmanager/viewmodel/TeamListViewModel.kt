@@ -4,21 +4,34 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
+import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearTeamCoachUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreatePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubMembersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+
+data class TeamMatchInfo(
+    val currentMatch: Match?,
+    val nextMatch: Match?,
+)
 
 class TeamListViewModel(
     private val getTeamsByClub: GetTeamsByClubUseCase,
@@ -26,7 +39,9 @@ class TeamListViewModel(
     private val generateTeamInvitation: GenerateTeamInvitationUseCase,
     private val selfAssignAsCoach: SelfAssignAsCoachUseCase,
     private val assignCoachToTeam: AssignCoachToTeamUseCase,
+    private val clearTeamCoachUseCase: ClearTeamCoachUseCase,
     private val getClubMembers: GetClubMembersUseCase,
+    private val getMatchesByTeam: GetMatchesByTeamUseCase,
     private val createPendingCoachAssignment: CreatePendingCoachAssignmentUseCase,
     private val deletePendingCoachAssignment: DeletePendingCoachAssignmentUseCase,
 ) : ViewModel() {
@@ -59,6 +74,12 @@ class TeamListViewModel(
 
     private val _assignCoachError = MutableStateFlow<String?>(null)
     val assignCoachError: StateFlow<String?> = _assignCoachError.asStateFlow()
+
+    // Raw (unfiltered) team list — backing store for both display and match status
+    private val allTeamsCache = MutableStateFlow<List<Team>>(emptyList())
+
+    private val _matchStatusByTeam = MutableStateFlow<Map<String, TeamMatchInfo>>(emptyMap())
+    val matchStatusByTeam: StateFlow<Map<String, TeamMatchInfo>> = _matchStatusByTeam.asStateFlow()
 
     enum class CoachFilter { ALL, WITH_COACH, WITHOUT_COACH }
 
@@ -103,9 +124,16 @@ class TeamListViewModel(
                     }
                 }
 
+                // Collect raw teams into allTeamsCache
+                launch {
+                    getTeamsByClub(clubFirestoreId).collect { teams ->
+                        allTeamsCache.value = teams
+                    }
+                }
+
                 // Load teams for the club, applying search and filter reactively
                 combine(
-                    getTeamsByClub(clubFirestoreId),
+                    allTeamsCache,
                     _searchQuery,
                     _coachFilter,
                 ) { teams, query, coachFilter ->
@@ -126,6 +154,34 @@ class TeamListViewModel(
             } catch (e: Exception) {
                 _uiState.value = UiState.Error
             }
+        }
+
+        // Reactively subscribe to match status for all teams
+        viewModelScope.launch {
+            allTeamsCache
+                .flatMapLatest { teams ->
+                    val teamsWithId = teams.filter { !it.firestoreId.isNullOrBlank() }
+                    if (teamsWithId.isEmpty()) return@flatMapLatest flowOf(emptyMap())
+                    combine(
+                        teamsWithId.map { team ->
+                            getMatchesByTeam(team.firestoreId!!)
+                                .map { matches ->
+                                    val current =
+                                        matches.firstOrNull {
+                                            it.status == MatchStatus.IN_PROGRESS ||
+                                                it.status == MatchStatus.PAUSED
+                                        }
+                                    val next =
+                                        matches
+                                            .filter { it.status == MatchStatus.SCHEDULED }
+                                            .minByOrNull { it.dateTime ?: Long.MAX_VALUE }
+                                    team.firestoreId!! to TeamMatchInfo(current, next)
+                                }
+                        },
+                    ) { pairs -> pairs.toMap() }
+                }
+                .catch { emit(emptyMap()) }
+                .collect { _matchStatusByTeam.value = it }
         }
     }
 
@@ -206,6 +262,17 @@ class TeamListViewModel(
                 _assignCoachError.value = e.message
             } finally {
                 _assigningCoachToTeamId.value = null
+            }
+        }
+    }
+
+    fun removeCoach(team: Team) {
+        val teamId = team.firestoreId ?: return
+        viewModelScope.launch {
+            try {
+                clearTeamCoachUseCase(teamId)
+            } catch (e: Exception) {
+                // TODO: Show error to user
             }
         }
     }

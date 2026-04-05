@@ -17,17 +17,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -44,12 +51,18 @@ import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.TeamMatchInfo
 import org.koin.androidx.compose.koinViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private const val LOADING_OVERLAY_ALPHA = 0.7f
 private val LOADING_INDICATOR_SIZE = 48.dp
 private val BUTTON_ICON_SIZE = 20.dp
 private val BUTTON_ICON_SPACING = 8.dp
+private val MATCH_BADGE_HORIZONTAL_PADDING = 6.dp
+private val MATCH_BADGE_VERTICAL_PADDING = 2.dp
 
 @Composable
 fun TeamListScreen(
@@ -65,7 +78,10 @@ fun TeamListScreen(
     val assignCoachDialogTeam by viewModel.assignCoachDialogTeam.collectAsState()
     val clubMembers by viewModel.clubMembers.collectAsState()
     val assignCoachError by viewModel.assignCoachError.collectAsState()
+    val matchStatusByTeam by viewModel.matchStatusByTeam.collectAsState()
     val searchState = LocalSearchState.current
+
+    var removeCoachDialogTeam by remember { mutableStateOf<Team?>(null) }
 
     LaunchedEffect(searchState.query) {
         viewModel.onSearchQueryChanged(searchState.query)
@@ -111,9 +127,11 @@ fun TeamListScreen(
                             onTeamClick = onTeamClick,
                             onAssignCoach = { team -> viewModel.requestAssignCoach(team) },
                             onDeletePendingAssignment = { team -> viewModel.deletePendingAssignment(team) },
+                            onRemoveCoach = { team -> removeCoachDialogTeam = team },
                             coachEmailMap = coachEmailMap,
                             assigningCoachToTeamId = assigningCoachToTeamId,
                             isPresident = isPresident,
+                            matchStatusByTeam = matchStatusByTeam,
                         )
                     }
                 }
@@ -160,6 +178,32 @@ fun TeamListScreen(
             onClearError = { viewModel.clearAssignCoachError() },
         )
     }
+
+    removeCoachDialogTeam?.let { team ->
+        AlertDialog(
+            onDismissRequest = { removeCoachDialogTeam = null },
+            title = { Text(stringResource(R.string.remove_coach_confirm_title)) },
+            text = { Text(stringResource(R.string.remove_coach_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.removeCoach(team)
+                        removeCoachDialogTeam = null
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.remove_coach_confirm),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { removeCoachDialogTeam = null }) {
+                    Text(stringResource(R.string.remove_coach_cancel))
+                }
+            },
+        )
+    }
 }
 
 @Composable
@@ -188,9 +232,11 @@ private fun TeamsListContent(
     onTeamClick: (Team) -> Unit,
     onAssignCoach: (Team) -> Unit,
     onDeletePendingAssignment: (Team) -> Unit,
+    onRemoveCoach: (Team) -> Unit,
     coachEmailMap: Map<String, String>,
     assigningCoachToTeamId: String?,
     isPresident: Boolean,
+    matchStatusByTeam: Map<String, TeamMatchInfo>,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -209,9 +255,11 @@ private fun TeamsListContent(
                 onClick = { onTeamClick(team) },
                 onAssignCoach = { onAssignCoach(team) },
                 onDeletePendingAssignment = { onDeletePendingAssignment(team) },
+                onRemoveCoach = { onRemoveCoach(team) },
                 coachEmail = team.coachId?.let { coachEmailMap[it] },
                 isAssigning = team.firestoreId == assigningCoachToTeamId,
                 isPresident = isPresident,
+                matchInfo = team.firestoreId?.let { matchStatusByTeam[it] },
             )
         }
     }
@@ -223,9 +271,11 @@ private fun TeamCard(
     onClick: () -> Unit,
     onAssignCoach: () -> Unit,
     onDeletePendingAssignment: () -> Unit,
+    onRemoveCoach: () -> Unit,
     coachEmail: String? = null,
     isAssigning: Boolean = false,
     isPresident: Boolean = false,
+    matchInfo: TeamMatchInfo? = null,
 ) {
     AppCard(
         modifier = Modifier.clickable(onClick = onClick),
@@ -243,12 +293,10 @@ private fun TeamCard(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            // TODO: Re-enable share button when invitation flow is revisited
-            //  IconButton(onClick = onShare) { Icon(Icons.Default.Share, ...) }
-
             if (team.coachName.isNotBlank()) {
                 Row(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = stringResource(R.string.coach_name) + ": ",
@@ -258,7 +306,21 @@ private fun TeamCard(
                     Text(
                         text = team.coachName,
                         style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
                     )
+                    if (isPresident && team.coachId != null) {
+                        IconButton(
+                            onClick = onRemoveCoach,
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LinkOff,
+                                contentDescription = stringResource(R.string.remove_coach_button),
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
                 }
             }
 
@@ -288,6 +350,13 @@ private fun TeamCard(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
+            }
+
+            if (matchInfo != null) {
+                MatchStatusSection(
+                    matchInfo = matchInfo,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
             }
 
             val pendingEmail = team.pendingCoachEmail
@@ -330,6 +399,72 @@ private fun TeamCard(
                     Spacer(modifier = Modifier.width(BUTTON_ICON_SPACING))
                     Text(text = stringResource(R.string.assign_coach_button))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MatchStatusSection(
+    matchInfo: TeamMatchInfo,
+    modifier: Modifier = Modifier,
+) {
+    val currentMatch = matchInfo.currentMatch
+    val nextMatch = matchInfo.nextMatch
+    when {
+        currentMatch != null -> {
+            val match = currentMatch
+            Row(
+                modifier = modifier,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(
+                    modifier =
+                        Modifier.background(
+                            color = MaterialTheme.colorScheme.error,
+                            shape = MaterialTheme.shapes.extraSmall,
+                        ).padding(horizontal = MATCH_BADGE_HORIZONTAL_PADDING, vertical = MATCH_BADGE_VERTICAL_PADDING),
+                ) {
+                    Text(
+                        text = stringResource(R.string.match_live_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onError,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Text(
+                    text = "${match.goals} – ${match.opponentGoals}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = match.opponent,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        nextMatch != null -> {
+            val match = nextMatch
+            val dateText =
+                match.dateTime?.let {
+                    SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(it))
+                } ?: ""
+            Row(
+                modifier = modifier,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.next_match_label),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = if (dateText.isNotBlank()) "$dateText · ${match.opponent}" else match.opponent,
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
     }

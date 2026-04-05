@@ -374,6 +374,17 @@
     <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
     <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
 
+    <!-- Remove Coach -->
+    <string name="remove_coach_button">Quitar entrenador</string>
+    <string name="remove_coach_confirm_title">Quitar entrenador</string>
+    <string name="remove_coach_confirm_message">El equipo quedará sin entrenador asignado. Podrás reasignarlo más adelante.</string>
+    <string name="remove_coach_confirm">Quitar</string>
+    <string name="remove_coach_cancel">Cancelar</string>
+
+    <!-- Match status in team card -->
+    <string name="match_live_badge">EN DIRECTO</string>
+    <string name="next_match_label">Próximo:</string>
+
     <!-- President Team Detail -->
     <string name="president_team_detail_players_tab">Jugadores</string>
     <string name="president_team_detail_matches_tab">Partidos</string>
