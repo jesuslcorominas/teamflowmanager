@@ -52,6 +52,9 @@
 
     <!-- Account Strings -->
     <string name="settings_account_section">Cuenta</string>
+    <string name="settings_role_section">Vista activa</string>
+    <string name="settings_role_president">Vista Presidente</string>
+    <string name="settings_role_coach">Vista Entrenador</string>
     <string name="sign_out">Cerrar sesión</string>
     <string name="sign_out_title">Cerrar sesión</string>
     <string name="sign_out_message">¿Estás seguro de que quieres cerrar sesión?</string>

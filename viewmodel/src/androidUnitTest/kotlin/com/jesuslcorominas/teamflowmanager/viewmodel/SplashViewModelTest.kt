@@ -1,9 +1,11 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
@@ -36,6 +38,7 @@ class SplashViewModelTest {
     private lateinit var synchronizeTimeUseCase: SynchronizeTimeUseCase
     private lateinit var syncFcmTokenUseCase: SyncFcmTokenUseCase
     private lateinit var isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase
+    private lateinit var getActiveViewRoleUseCase: GetActiveViewRoleUseCase
 
     private val testUser = User(
         id = "user123",
@@ -53,8 +56,10 @@ class SplashViewModelTest {
         synchronizeTimeUseCase = mockk()
         syncFcmTokenUseCase = mockk(relaxed = true)
         isNotificationPermissionGranted = mockk()
+        getActiveViewRoleUseCase = mockk()
         coEvery { synchronizeTimeUseCase() } returns Unit
         every { isNotificationPermissionGranted() } returns false
+        every { getActiveViewRoleUseCase() } returns ActiveViewRole.President
     }
 
     @After
@@ -69,6 +74,7 @@ class SplashViewModelTest {
         synchronizeTimeUseCase = synchronizeTimeUseCase,
         syncFcmTokenUseCase = syncFcmTokenUseCase,
         isNotificationPermissionGranted = isNotificationPermissionGranted,
+        getActiveViewRole = getActiveViewRoleUseCase,
     )
 
     @Test
@@ -151,7 +157,8 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `should emit ClubPresident when user is President even if they own a team`() = runTest {
+    fun `should emit ClubPresident when President preference is President even if they own a team`() = runTest {
+        every { getActiveViewRoleUseCase() } returns ActiveViewRole.President
         val clubMember = ClubMember(
             id = 1,
             userId = "user123",
@@ -179,6 +186,38 @@ class SplashViewModelTest {
         advanceUntilIdle()
 
         assertEquals(SplashViewModel.UiState.ClubPresident, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `should emit TeamExists when President preference is Coach and has a team with club`() = runTest {
+        every { getActiveViewRoleUseCase() } returns ActiveViewRole.Coach
+        val clubMember = ClubMember(
+            id = 1,
+            userId = "user123",
+            name = "Test User",
+            email = "test@example.com",
+            clubId = 100,
+            roles = listOf("Presidente"),
+            firestoreId = "clubmember_doc_123",
+            clubFirestoreId = "club123",
+        )
+        val teamWithClub = Team(
+            id = 1,
+            name = "Test Team",
+            coachName = "Coach",
+            delegateName = "Delegate",
+            teamType = TeamType.FOOTBALL_5,
+            clubId = 100L,
+            clubFirestoreId = "club123",
+        )
+        every { getCurrentUserUseCase() } returns flowOf(testUser)
+        every { getUserClubMembershipUseCase() } returns flowOf(clubMember)
+        every { getTeamUseCase() } returns flowOf(teamWithClub)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(SplashViewModel.UiState.TeamExists, viewModel.uiState.value)
     }
 
     @Test

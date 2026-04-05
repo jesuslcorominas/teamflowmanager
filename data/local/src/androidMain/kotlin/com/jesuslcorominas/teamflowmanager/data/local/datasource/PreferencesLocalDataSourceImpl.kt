@@ -41,10 +41,19 @@ internal class PreferencesLocalDataSourceImpl(
             .apply()
     }
 
+    override fun getActiveViewRole(): String? = sharedPreferences.getString(KEY_ACTIVE_VIEW_ROLE, null)
+
+    override fun setActiveViewRole(role: String) {
+        sharedPreferences.edit()
+            .putString(KEY_ACTIVE_VIEW_ROLE, role)
+            .apply()
+    }
+
     companion object {
         private const val PREFS_NAME = "teamflowmanager_preferences"
         private const val KEY_SHOW_INVALID_SUBSTITUTION_ALERT = "show_invalid_substitution_alert"
         private const val KEY_DEFAULT_CAPTAIN_ID = "default_captain_id"
         private const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
+        private const val KEY_ACTIVE_VIEW_ROLE = "active_view_role"
     }
 }

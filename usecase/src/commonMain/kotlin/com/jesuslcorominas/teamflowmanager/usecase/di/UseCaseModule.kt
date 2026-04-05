@@ -18,6 +18,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdf
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
@@ -59,6 +60,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ResolvePendingCoachAss
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
@@ -96,6 +98,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.FinishMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GenerateTeamInvitationUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetActiveViewRoleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCaseImpl
@@ -137,6 +140,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.ResolvePendingCoachAssignment
 import com.jesuslcorominas.teamflowmanager.usecase.ResumeMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SaveDefaultCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SelfAssignAsCoachUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SetActiveViewRoleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetShouldShowInvalidSubstitutionAlertUseCaseImpl
@@ -254,6 +258,10 @@ internal val useCaseInternalModule =
         singleOf(::SubscribeToClubNotificationsUseCaseImpl) bind SubscribeToClubNotificationsUseCase::class
         singleOf(::UnsubscribeFromClubNotificationsUseCaseImpl) bind UnsubscribeFromClubNotificationsUseCase::class
         singleOf(::IsNotificationPermissionGrantedUseCaseImpl) bind IsNotificationPermissionGrantedUseCase::class
+
+        // Role selector (president acting as coach)
+        singleOf(::GetActiveViewRoleUseCaseImpl) bind GetActiveViewRoleUseCase::class
+        singleOf(::SetActiveViewRoleUseCaseImpl) bind SetActiveViewRoleUseCase::class
     }
 
 val useCaseModule =

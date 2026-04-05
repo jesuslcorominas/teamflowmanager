@@ -12,4 +12,8 @@ interface PreferencesDataSource {
     fun hasNotificationPermissionBeenRequested(): Boolean
 
     fun setNotificationPermissionRequested(requested: Boolean)
+
+    fun getActiveViewRole(): String?
+
+    fun setActiveViewRole(role: String)
 }

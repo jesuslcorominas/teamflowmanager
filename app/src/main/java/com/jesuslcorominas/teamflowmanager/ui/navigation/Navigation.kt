@@ -329,6 +329,11 @@ fun Navigation(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                onRoleChanged = {
+                    navController.navigate(Route.Splash.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
 

@@ -44,6 +44,7 @@ val viewModelModule =
                 synchronizeTimeUseCase = get(),
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
+                getActiveViewRole = get(),
             )
         }
 
@@ -232,6 +233,10 @@ val viewModelModule =
                 signOutUseCase = get(),
                 deleteFcmTokenUseCase = get(),
                 analyticsTracker = get(),
+                getTeam = get(),
+                getUserClubMembership = get(),
+                getActiveViewRole = get(),
+                setActiveViewRole = get(),
             )
         }
 

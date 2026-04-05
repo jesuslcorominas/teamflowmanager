@@ -57,6 +57,7 @@ val iosModule =
                 synchronizeTimeUseCase = get(),
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
+                getActiveViewRole = get(),
             )
         }
         factory {
@@ -172,6 +173,10 @@ val iosModule =
                 signOutUseCase = get(),
                 deleteFcmTokenUseCase = get(),
                 analyticsTracker = get(),
+                getTeam = get(),
+                getUserClubMembership = get(),
+                getActiveViewRole = get(),
+                setActiveViewRole = get(),
             )
         }
 

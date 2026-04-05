@@ -29,4 +29,10 @@ internal class PreferencesRepositoryImpl(
     override fun setNotificationPermissionRequested(requested: Boolean) {
         preferencesDataSource.setNotificationPermissionRequested(requested)
     }
+
+    override fun getActiveViewRole(): String? = preferencesDataSource.getActiveViewRole()
+
+    override fun setActiveViewRole(role: String) {
+        preferencesDataSource.setActiveViewRole(role)
+    }
 }
