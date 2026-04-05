@@ -8,7 +8,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import io.mockk.coEvery
@@ -37,7 +36,6 @@ class SplashViewModelTest {
     private lateinit var synchronizeTimeUseCase: SynchronizeTimeUseCase
     private lateinit var syncFcmTokenUseCase: SyncFcmTokenUseCase
     private lateinit var isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase
-    private lateinit var signOutUseCase: SignOutUseCase
 
     private val testUser = User(
         id = "user123",
@@ -55,7 +53,6 @@ class SplashViewModelTest {
         synchronizeTimeUseCase = mockk()
         syncFcmTokenUseCase = mockk(relaxed = true)
         isNotificationPermissionGranted = mockk()
-        signOutUseCase = mockk(relaxed = true)
         coEvery { synchronizeTimeUseCase() } returns Unit
         every { isNotificationPermissionGranted() } returns false
     }
@@ -72,7 +69,6 @@ class SplashViewModelTest {
         synchronizeTimeUseCase = synchronizeTimeUseCase,
         syncFcmTokenUseCase = syncFcmTokenUseCase,
         isNotificationPermissionGranted = isNotificationPermissionGranted,
-        signOutUseCase = signOutUseCase,
     )
 
     @Test
@@ -86,7 +82,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `should sign out and emit NotAuthenticated when user is authenticated but has no team and no club membership`() = runTest {
+    fun `should emit NoClub when user is authenticated but has no team and no club membership`() = runTest {
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getTeamUseCase() } returns flowOf(null)
         every { getUserClubMembershipUseCase() } returns flowOf(null)
@@ -94,7 +90,20 @@ class SplashViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        assertEquals(SplashViewModel.UiState.NotAuthenticated, viewModel.uiState.value)
+        assertEquals(SplashViewModel.UiState.NoClub, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `should emit NoClub when expelled member logs in again`() = runTest {
+        // Expelled members have no clubMember document and their team's coachId is cleared
+        every { getCurrentUserUseCase() } returns flowOf(testUser)
+        every { getUserClubMembershipUseCase() } returns flowOf(null)
+        every { getTeamUseCase() } returns flowOf(null)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(SplashViewModel.UiState.NoClub, viewModel.uiState.value)
     }
 
     @Test
