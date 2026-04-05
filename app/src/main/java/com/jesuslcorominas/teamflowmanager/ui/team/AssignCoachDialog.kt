@@ -78,7 +78,8 @@ internal fun AssignCoachDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 when (selectedTab) {
                     TAB_MEMBERS -> {
-                        val assignableMembers = members.filter { !it.hasRole(ClubRole.COACH) }
+                        val assignableMembers =
+                            members.filter { !it.hasRole(ClubRole.COACH) || it.hasRole(ClubRole.PRESIDENT) }
                         if (assignableMembers.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.no_results),

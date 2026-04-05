@@ -181,7 +181,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `roleSelectorState showRoleSelector is false when president has no team`() = runTest(testDispatcher) {
+    fun `roleSelectorState showRoleSelector is true but disabled when president has no team`() = runTest(testDispatcher) {
         every { getUserClubMembershipUseCase() } returns flowOf(
             ClubMember(
                 id = 1,
@@ -207,7 +207,8 @@ class SettingsViewModelTest {
         )
         advanceUntilIdle()
 
-        assertFalse(viewModel.roleSelectorState.value.showRoleSelector)
+        assertTrue(viewModel.roleSelectorState.value.showRoleSelector)
+        assertFalse(viewModel.roleSelectorState.value.isRoleSelectorEnabled)
     }
 
     @Test
@@ -248,6 +249,7 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         assertTrue(viewModel.roleSelectorState.value.showRoleSelector)
+        assertTrue(viewModel.roleSelectorState.value.isRoleSelectorEnabled)
         assertEquals(ActiveViewRole.President, viewModel.roleSelectorState.value.activeRole)
     }
 

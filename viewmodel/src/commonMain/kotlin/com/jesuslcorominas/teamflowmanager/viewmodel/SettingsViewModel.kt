@@ -43,6 +43,7 @@ class SettingsViewModel(
 
     data class RoleSelectorState(
         val showRoleSelector: Boolean = false,
+        val isRoleSelectorEnabled: Boolean = false,
         val activeRole: ActiveViewRole = ActiveViewRole.President,
         val roleChangedEvent: Boolean = false,
     )
@@ -58,11 +59,11 @@ class SettingsViewModel(
             if (!isPresident) return@launch
 
             val team = getTeam().first()
-            val showSelector = team != null
 
             _roleSelectorState.value =
                 RoleSelectorState(
-                    showRoleSelector = showSelector,
+                    showRoleSelector = true,
+                    isRoleSelectorEnabled = team != null,
                     activeRole = getActiveViewRole(),
                 )
         }

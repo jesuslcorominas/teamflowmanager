@@ -145,6 +145,7 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
                 RoleSelectorSection(
                     activeRole = roleSelectorState.activeRole,
+                    enabled = roleSelectorState.isRoleSelectorEnabled,
                     onRoleSelected = { viewModel.onRoleSelected(it) },
                 )
             }

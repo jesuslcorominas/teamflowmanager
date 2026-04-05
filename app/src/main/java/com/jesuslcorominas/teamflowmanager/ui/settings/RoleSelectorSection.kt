@@ -23,6 +23,7 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 @Composable
 fun RoleSelectorSection(
     activeRole: ActiveViewRole,
+    enabled: Boolean,
     onRoleSelected: (ActiveViewRole) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -30,7 +31,7 @@ fun RoleSelectorSection(
         Text(
             text = stringResource(R.string.settings_role_section),
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
+            color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
             modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
         )
 
@@ -40,11 +41,13 @@ fun RoleSelectorSection(
             RoleOption(
                 label = stringResource(R.string.settings_role_president),
                 selected = activeRole == ActiveViewRole.President,
+                enabled = enabled,
                 onClick = { onRoleSelected(ActiveViewRole.President) },
             )
             RoleOption(
                 label = stringResource(R.string.settings_role_coach),
                 selected = activeRole == ActiveViewRole.Coach,
+                enabled = enabled,
                 onClick = { onRoleSelected(ActiveViewRole.Coach) },
             )
         }
@@ -55,6 +58,7 @@ fun RoleSelectorSection(
 private fun RoleOption(
     label: String,
     selected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit,
 ) {
     Row(
@@ -63,16 +67,18 @@ private fun RoleOption(
                 .fillMaxWidth()
                 .selectable(
                     selected = selected,
+                    enabled = enabled,
                     onClick = onClick,
                     role = Role.RadioButton,
                 )
                 .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing01),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RadioButton(selected = selected, onClick = null)
+        RadioButton(selected = selected, enabled = enabled, onClick = null)
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
+            color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
             modifier = Modifier.padding(start = TFMSpacing.spacing02),
         )
     }
