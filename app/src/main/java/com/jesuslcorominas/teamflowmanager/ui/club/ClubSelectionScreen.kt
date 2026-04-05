@@ -13,6 +13,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 fun ClubSelectionScreen(
     onCreateClub: () -> Unit,
     onJoinClub: () -> Unit,
+    onSignInWithAnotherAccount: () -> Unit,
 ) {
     TrackScreenView(screenName = ScreenName.CLUB_SELECTION, screenClass = "ClubSelectionScreen")
 
@@ -93,6 +95,16 @@ fun ClubSelectionScreen(
                 text = stringResource(id = R.string.join_club),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Medium,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(onClick = onSignInWithAnotherAccount) {
+            Text(
+                text = stringResource(id = R.string.sign_in_with_another_account),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
