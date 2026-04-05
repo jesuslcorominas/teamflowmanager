@@ -79,6 +79,7 @@ fun TeamListScreen(
     val clubMembers by viewModel.clubMembers.collectAsState()
     val assignCoachError by viewModel.assignCoachError.collectAsState()
     val matchStatusByTeam by viewModel.matchStatusByTeam.collectAsState()
+    val assignedCoachIds by viewModel.assignedCoachIds.collectAsState()
     val searchState = LocalSearchState.current
 
     var removeCoachDialogTeam by remember { mutableStateOf<Team?>(null) }
@@ -171,6 +172,7 @@ fun TeamListScreen(
         AssignCoachDialog(
             team = assignCoachDialogTeam!!,
             members = clubMembers,
+            assignedCoachIds = assignedCoachIds,
             error = assignCoachError,
             onDismiss = { viewModel.dismissAssignCoachDialog() },
             onAssignMember = { member -> viewModel.assignCoachByMember(member) },

@@ -29,7 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
-import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 
 private const val TAB_MEMBERS = 0
@@ -40,6 +39,7 @@ private val MEMBERS_LIST_HEIGHT = 240.dp
 internal fun AssignCoachDialog(
     team: Team,
     members: List<ClubMember>,
+    assignedCoachIds: Set<String>,
     error: String?,
     onDismiss: () -> Unit,
     onAssignMember: (ClubMember) -> Unit,
@@ -78,8 +78,7 @@ internal fun AssignCoachDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 when (selectedTab) {
                     TAB_MEMBERS -> {
-                        val assignableMembers =
-                            members.filter { !it.hasRole(ClubRole.COACH) || it.hasRole(ClubRole.PRESIDENT) }
+                        val assignableMembers = members.filter { it.userId !in assignedCoachIds }
                         if (assignableMembers.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.no_results),
