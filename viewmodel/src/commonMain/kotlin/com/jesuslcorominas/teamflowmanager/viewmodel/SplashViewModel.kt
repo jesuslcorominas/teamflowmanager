@@ -2,8 +2,10 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.User
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
@@ -24,6 +26,7 @@ class SplashViewModel(
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
     private val syncFcmTokenUseCase: SyncFcmTokenUseCase,
     private val isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase,
+    private val getActiveViewRole: GetActiveViewRoleUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -79,12 +82,32 @@ class SplashViewModel(
 
     private suspend fun loadTeam(user: User) {
         val clubMember = getUserClubMembership().first()
-        if (clubMember != null) {
-            if (clubMember.hasRole(ClubRole.PRESIDENT)) {
+
+        if (clubMember != null && clubMember.hasRole(ClubRole.PRESIDENT)) {
+            val team = getTeam().first()
+            if (team != null) {
+                // President who is also assigned as coach to a team — respect the role preference
+                when (getActiveViewRole()) {
+                    ActiveViewRole.Coach -> {
+                        val clubFirestoreId = team.clubFirestoreId
+                        if (clubFirestoreId != null) {
+                            syncFcmTokenIfPermitted(user.id, clubFirestoreId)
+                            _uiState.value = UiState.TeamExists
+                        } else {
+                            _uiState.value = UiState.ClubPresident
+                        }
+                    }
+                    ActiveViewRole.President -> {
+                        syncFcmTokenIfPermitted(user.id, clubMember.clubFirestoreId)
+                        _uiState.value = UiState.ClubPresident
+                    }
+                }
+            } else {
+                // President with no team assigned as coach — always show president view
                 syncFcmTokenIfPermitted(user.id, clubMember.clubFirestoreId)
                 _uiState.value = UiState.ClubPresident
-                return
             }
+            return
         }
 
         val team = getTeam().first()

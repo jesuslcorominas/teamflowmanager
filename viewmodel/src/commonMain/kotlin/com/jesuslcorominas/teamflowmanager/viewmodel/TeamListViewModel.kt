@@ -18,6 +18,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class TeamMatchInfo(
@@ -77,6 +79,12 @@ class TeamListViewModel(
 
     // Raw (unfiltered) team list — backing store for both display and match status
     private val allTeamsCache = MutableStateFlow<List<Team>>(emptyList())
+
+    // Set of userIds currently assigned as coach to any team — used to filter assignable members
+    val assignedCoachIds: StateFlow<Set<String>> =
+        allTeamsCache
+            .map { teams -> teams.mapNotNull { it.coachId }.toSet() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
     private val _matchStatusByTeam = MutableStateFlow<Map<String, TeamMatchInfo>>(emptyMap())
     val matchStatusByTeam: StateFlow<Map<String, TeamMatchInfo>> = _matchStatusByTeam.asStateFlow()

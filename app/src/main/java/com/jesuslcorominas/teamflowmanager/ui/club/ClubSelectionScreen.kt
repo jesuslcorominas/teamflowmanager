@@ -15,6 +15,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,14 +28,26 @@ import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSelectionViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ClubSelectionScreen(
+    viewModel: ClubSelectionViewModel = koinViewModel(),
     onCreateClub: () -> Unit,
     onJoinClub: () -> Unit,
-    onSignInWithAnotherAccount: () -> Unit,
+    onSignedOut: () -> Unit,
 ) {
     TrackScreenView(screenName = ScreenName.CLUB_SELECTION, screenClass = "ClubSelectionScreen")
+
+    val signOutComplete by viewModel.signOutComplete.collectAsState()
+
+    LaunchedEffect(signOutComplete) {
+        if (signOutComplete) {
+            viewModel.clearSignOutComplete()
+            onSignedOut()
+        }
+    }
 
     Column(
         modifier =
@@ -100,7 +115,7 @@ fun ClubSelectionScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        TextButton(onClick = onSignInWithAnotherAccount) {
+        TextButton(onClick = { viewModel.signOut() }) {
             Text(
                 text = stringResource(id = R.string.sign_in_with_another_account),
                 style = MaterialTheme.typography.bodyMedium,

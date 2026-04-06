@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -48,11 +49,13 @@ import org.koin.androidx.compose.koinViewModel
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onSignOut: () -> Unit = {},
+    onRoleChanged: () -> Unit = {},
 ) {
     TrackScreenView(screenName = ScreenName.SETTINGS, screenClass = "SettingsScreen")
 
     val currentUser by viewModel.currentUser.collectAsState()
     val signOutComplete by viewModel.signOutComplete.collectAsState()
+    val roleSelectorState by viewModel.roleSelectorState.collectAsState()
     var showSignOutDialog by remember { mutableStateOf(false) }
 
     // Handle sign out complete
@@ -60,6 +63,14 @@ fun SettingsScreen(
         if (signOutComplete) {
             viewModel.clearSignOutComplete()
             onSignOut()
+        }
+    }
+
+    // Handle role change event — navigate to Splash so routing is re-evaluated
+    LaunchedEffect(roleSelectorState.roleChangedEvent) {
+        if (roleSelectorState.roleChangedEvent) {
+            viewModel.onRoleChangedEventConsumed()
+            onRoleChanged()
         }
     }
 
@@ -124,6 +135,18 @@ fun SettingsScreen(
                 UserAccountItem(
                     user = user,
                     onClick = { showSignOutDialog = true },
+                )
+            }
+
+            // Role selector — visible only when president is also assigned as coach to a team
+            if (roleSelectorState.showRoleSelector) {
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                RoleSelectorSection(
+                    activeRole = roleSelectorState.activeRole,
+                    enabled = roleSelectorState.isRoleSelectorEnabled,
+                    onRoleSelected = { viewModel.onRoleSelected(it) },
                 )
             }
 

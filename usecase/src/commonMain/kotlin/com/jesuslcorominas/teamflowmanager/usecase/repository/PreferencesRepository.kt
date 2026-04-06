@@ -12,4 +12,8 @@ interface PreferencesRepository {
     fun hasNotificationPermissionBeenRequested(): Boolean
 
     fun setNotificationPermissionRequested(requested: Boolean)
+
+    fun getActiveViewRole(): String?
+
+    fun setActiveViewRole(role: String)
 }

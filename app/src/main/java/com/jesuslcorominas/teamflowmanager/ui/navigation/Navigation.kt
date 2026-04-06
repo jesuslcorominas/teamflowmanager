@@ -8,7 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -17,7 +16,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
-import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
@@ -39,14 +37,13 @@ import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamListScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
-import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 
 @Composable
 fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     onTitleChange: (String?) -> Unit,
+    onRoleChanged: () -> Unit,
     currentBackHandler: BackHandlerController,
 ) {
     NavHost(
@@ -106,8 +103,6 @@ fun Navigation(
         }
 
         composable(Route.ClubSelection.createRoute()) {
-            val signOut = koinInject<SignOutUseCase>()
-            val scope = rememberCoroutineScope()
             ClubSelectionScreen(
                 onCreateClub = {
                     navController.navigate(Route.CreateClub.createRoute())
@@ -115,12 +110,9 @@ fun Navigation(
                 onJoinClub = {
                     navController.navigate(Route.JoinClub.createRoute())
                 },
-                onSignInWithAnotherAccount = {
-                    scope.launch {
-                        runCatching { signOut() }
-                        navController.navigate(Route.Login.createRoute()) {
-                            popUpTo(0) { inclusive = true }
-                        }
+                onSignedOut = {
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(0) { inclusive = true }
                     }
                 },
             )
@@ -326,6 +318,12 @@ fun Navigation(
             SettingsScreen(
                 onSignOut = {
                     navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onRoleChanged = {
+                    onRoleChanged()
+                    navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
