@@ -77,6 +77,7 @@ internal class GetMatchTimelineUseCaseImpl(
                     matchElapsedTimeMillis = goal.matchElapsedTimeMillis,
                     scorer = if (goal.scorerId != null) players.find { it.id == goal.scorerId } else null,
                     isOpponentGoal = goal.isOpponentGoal,
+                    isOwnGoal = goal.isOwnGoal,
                     teamScore = teamScore,
                     opponentScore = opponentScore,
                 ),

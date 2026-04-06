@@ -63,6 +63,7 @@ fun MatchTimeCard(
     match: Match,
     currentTime: Long,
     onExport: (() -> Unit)? = null,
+    onScoreBoardClick: (() -> Unit)? = null,
 ) {
     val periodName = getCurrentPeriodName(match)
 
@@ -115,6 +116,7 @@ fun MatchTimeCard(
                         goals = match.goals,
                         opponentGoals = match.opponentGoals,
                         expanded = expanded,
+                        onClick = onScoreBoardClick,
                     )
 
                     Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
@@ -258,9 +260,11 @@ private fun ScoreBoard(
     goals: Int,
     opponentGoals: Int,
     expanded: Boolean,
+    onClick: (() -> Unit)? = null,
 ) {
+    val clickModifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().then(clickModifier),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {

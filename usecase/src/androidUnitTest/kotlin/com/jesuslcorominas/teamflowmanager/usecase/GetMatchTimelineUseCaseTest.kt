@@ -382,6 +382,43 @@ class GetMatchTimelineUseCaseTest {
     )
 
     @Test
+    fun `invoke should propagate isOwnGoal from Goal to GoalScored timeline event`() = runTest {
+        // Given
+        val matchId = 1L
+        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val match = createFinishedMatch(id = matchId)
+        val goals = listOf(
+            Goal(id = 1L, matchId = matchId, scorerId = 1L, goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false, isOwnGoal = false),
+            Goal(id = 2L, matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = false, isOwnGoal = true),
+            Goal(id = 3L, matchId = matchId, scorerId = null, goalTimeMillis = 900000L, matchElapsedTimeMillis = 900000L, isOpponentGoal = true, isOwnGoal = false),
+        )
+
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1))
+
+        // When
+        val result = getMatchTimelineUseCase(matchId).first()
+
+        // Then
+        val goalEvents = result?.events?.filterIsInstance<TimelineEvent.GoalScored>()
+        assertEquals(3, goalEvents?.size)
+
+        val regularGoal = goalEvents?.find { it.matchElapsedTimeMillis == 300000L }
+        assertEquals(false, regularGoal?.isOwnGoal)
+        assertEquals(false, regularGoal?.isOpponentGoal)
+
+        val ownGoal = goalEvents?.find { it.matchElapsedTimeMillis == 600000L }
+        assertEquals(true, ownGoal?.isOwnGoal)
+        assertEquals(false, ownGoal?.isOpponentGoal)
+
+        val opponentGoal = goalEvents?.find { it.matchElapsedTimeMillis == 900000L }
+        assertEquals(false, opponentGoal?.isOwnGoal)
+        assertEquals(true, opponentGoal?.isOpponentGoal)
+    }
+
+    @Test
     fun `invoke should return player activity intervals for starting lineup`() = runTest {
         // Given
         val matchId = 1L
