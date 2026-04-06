@@ -91,6 +91,10 @@ class MatchViewModelGoalTest {
         every { getPlayersUseCase() } returns flowOf(players)
     }
 
+    private val getMatchTimelineUseCaseStub: GetMatchTimelineUseCase = mockk {
+        every { this@mockk(any()) } returns flowOf(null)
+    }
+
     @After
     fun tearDown() {
         Dispatchers.resetMain()
@@ -107,7 +111,7 @@ class MatchViewModelGoalTest {
         startMatchTimerUseCase = mockk(relaxed = true),
         registerPlayerSubstitutionUseCase = mockk(relaxed = true),
         getMatchSummaryUseCase = mockk(relaxed = true),
-        getMatchTimelineUseCase = mockk(relaxed = true),
+        getMatchTimelineUseCase = getMatchTimelineUseCaseStub,
         registerGoal = registerGoalUseCase,
         startTimeoutUseCase = mockk(relaxed = true),
         endTimeoutUseCase = mockk(relaxed = true),

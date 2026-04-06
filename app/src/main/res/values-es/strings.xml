@@ -220,9 +220,13 @@
     <string name="match_finished">Partido Finalizado</string>
 
     <!-- Timeline Tab -->
+    <string name="scorers_tab">Goleadores</string>
     <string name="timeline_tab">Timeline</string>
     <string name="summary_tab">Resumen</string>
     <string name="statistics_tab">Estadísticas</string>
+    <string name="scorers_dialog_title">Goleadores</string>
+    <string name="own_goal_scorer_label">Gol en propia</string>
+    <string name="no_scorers_label">Sin goles marcados</string>
     <string name="timeline_starting_lineup">Alineación Inicial</string>
     <string name="timeline_goal">Gol</string>
     <string name="timeline_opponent_goal">Gol Rival</string>
