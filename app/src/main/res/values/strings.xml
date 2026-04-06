@@ -220,9 +220,13 @@
     <string name="match_next">Upcoming Match</string>
 
     <!-- Timeline Tab -->
+    <string name="scorers_tab">Scorers</string>
     <string name="timeline_tab">Timeline</string>
     <string name="summary_tab">Summary</string>
     <string name="statistics_tab">Statistics</string>
+    <string name="scorers_dialog_title">Scorers</string>
+    <string name="own_goal_scorer_label">Own Goal</string>
+    <string name="no_scorers_label">No goals scored</string>
     <string name="timeline_starting_lineup">Starting Lineup</string>
     <string name="timeline_goal">Goal</string>
     <string name="timeline_opponent_goal">Opponent Goal</string>
