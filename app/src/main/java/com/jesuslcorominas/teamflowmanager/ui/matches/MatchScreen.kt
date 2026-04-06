@@ -353,9 +353,27 @@ private fun MatchDetailContent(
 ) {
     val dragDropState = rememberDragDropState()
     val listState = rememberLazyListState()
+    var showScorersPopup by remember { mutableStateOf(false) }
+
+    if (showScorersPopup) {
+        ScorersDialog(
+            events = state.timelineEvents,
+            onDismiss = { showScorersPopup = false },
+        )
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        MatchTimeCard(match = state.match, currentTime = state.currentTime)
+        val scoreBoardClick =
+            if (state.match.status != MatchStatus.SCHEDULED) {
+                { showScorersPopup = true }
+            } else {
+                null
+            }
+        MatchTimeCard(
+            match = state.match,
+            currentTime = state.currentTime,
+            onScoreBoardClick = scoreBoardClick,
+        )
 
         PlayerSortOrder(
             currentSortOrder = currentSortOrder,
