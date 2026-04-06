@@ -9,6 +9,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewMod
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSelectionViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
@@ -85,6 +86,7 @@ val iosModule =
                 hasNotificationPermissionBeenRequestedUseCase = get(),
                 setNotificationPermissionRequestedUseCase = get(),
                 getUserClubMembership = get(),
+                getActiveViewRole = get(),
             )
         }
         factory {
@@ -271,6 +273,10 @@ val iosModule =
                 acceptTeamInvitation = get(),
                 getCurrentUser = get(),
             )
+        }
+
+        factory {
+            ClubSelectionViewModel(signOutUseCase = get())
         }
 
         factory {

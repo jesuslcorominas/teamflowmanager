@@ -74,13 +74,18 @@ fun MainScreen(
         }
     }
 
-    MainScaffold(navController = navController, isPresident = isPresident)
+    MainScaffold(
+        navController = navController,
+        isPresident = isPresident,
+        onRoleChanged = { viewModel.refreshIsPresident() },
+    )
 }
 
 @Composable
 private fun MainScaffold(
     navController: NavHostController,
     isPresident: Boolean,
+    onRoleChanged: () -> Unit,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val backHandlerController = remember { BackHandlerController() }
@@ -156,6 +161,7 @@ private fun MainScaffold(
                     navController = navController,
                     currentBackHandler = backHandlerController,
                     onTitleChange = { dynamicTitle = it },
+                    onRoleChanged = onRoleChanged,
                 )
             }
         }

@@ -2,30 +2,45 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val hasNotificationPermissionBeenRequestedUseCase: HasNotificationPermissionBeenRequestedUseCase,
     private val setNotificationPermissionRequestedUseCase: SetNotificationPermissionRequestedUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
+    private val getActiveViewRole: GetActiveViewRoleUseCase,
 ) : ViewModel() {
-    val isPresident: StateFlow<Boolean> =
-        getUserClubMembership()
-            .map { clubMember ->
-                clubMember?.hasRole(ClubRole.PRESIDENT) ?: false
+    private val _isPresident = MutableStateFlow(false)
+    val isPresident: StateFlow<Boolean> = _isPresident.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            getUserClubMembership().collect { clubMember ->
+                _isPresident.value =
+                    clubMember?.hasRole(ClubRole.PRESIDENT) == true &&
+                    getActiveViewRole() != ActiveViewRole.Coach
             }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = false,
-            )
+        }
+    }
+
+    fun refreshIsPresident() {
+        viewModelScope.launch {
+            val clubMember = getUserClubMembership().first()
+            _isPresident.value =
+                clubMember?.hasRole(ClubRole.PRESIDENT) == true &&
+                getActiveViewRole() != ActiveViewRole.Coach
+        }
+    }
 
     fun hasNotificationPermissionBeenRequested(): Boolean = hasNotificationPermissionBeenRequestedUseCase()
 
