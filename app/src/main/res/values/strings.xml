@@ -52,8 +52,6 @@
 
     <!-- Account Strings -->
     <string name="settings_account_section">Account</string>
-    <string name="settings_role_section">Active view</string>
-    <string name="settings_role_president">President view</string>
     <string name="settings_role_coach">Coach view</string>
     <string name="sign_out">Logout</string>
     <string name="sign_out_title">Logout</string>

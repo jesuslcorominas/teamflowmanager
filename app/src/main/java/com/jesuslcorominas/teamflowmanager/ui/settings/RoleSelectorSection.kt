@@ -2,9 +2,7 @@ package com.jesuslcorominas.teamflowmanager.ui.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -25,15 +23,6 @@ fun RoleSelectorSection(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        Text(
-            text = stringResource(R.string.settings_role_section),
-            style = MaterialTheme.typography.titleMedium,
-            color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-            modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
-        )
-
-        Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-
         Row(
             modifier =
                 Modifier
