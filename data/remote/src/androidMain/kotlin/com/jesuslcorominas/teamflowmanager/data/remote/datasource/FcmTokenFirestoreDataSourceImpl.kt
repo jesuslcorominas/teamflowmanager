@@ -2,11 +2,14 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.api.FcmNotificationApi
+import com.jesuslcorominas.teamflowmanager.data.remote.api.model.SendNotificationRequest
 import com.jesuslcorominas.teamflowmanager.domain.model.FcmTokenEntry
 import kotlinx.coroutines.tasks.await
 
 class FcmTokenFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
+    private val fcmNotificationApi: FcmNotificationApi,
 ) : FcmTokenDataSource {
     override suspend fun saveToken(
         userId: String,
@@ -76,6 +79,10 @@ class FcmTokenFirestoreDataSourceImpl(
                 .get()
                 .await()
         return snapshot.documents.mapNotNull { it.getString("token") }
+    }
+
+    override suspend fun sendNotification(token: String, title: String, body: String) {
+        fcmNotificationApi.sendNotification(SendNotificationRequest(token = token, title = title, body = body))
     }
 
     private fun docId(

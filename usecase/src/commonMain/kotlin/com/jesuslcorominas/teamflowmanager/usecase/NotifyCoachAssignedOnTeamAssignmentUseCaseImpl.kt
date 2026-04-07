@@ -1,22 +1,24 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.repository.CoachAssignmentNotificationRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmNotificationRepository
+
+private const val NOTIFICATION_TITLE = "Has sido asignado como entrenador"
 
 internal class NotifyCoachAssignedOnTeamAssignmentUseCaseImpl(
-    private val coachAssignmentNotificationRepository: CoachAssignmentNotificationRepository,
+    private val fcmNotificationRepository: FcmNotificationRepository,
 ) : NotifyCoachAssignedOnTeamAssignmentUseCase {
     override suspend fun invoke(
         coachUserId: String,
         assignedByUserId: String,
         teamName: String,
     ) {
-        // Self-assignment: president assigns themselves as coach — no notification
         if (assignedByUserId == coachUserId) return
 
-        coachAssignmentNotificationRepository.notifyCoachAssigned(
-            coachUserId = coachUserId,
-            teamName = teamName,
+        fcmNotificationRepository.sendNotificationToUser(
+            userId = coachUserId,
+            title = NOTIFICATION_TITLE,
+            body = "Has sido asignado como entrenador del equipo $teamName",
         )
     }
 }

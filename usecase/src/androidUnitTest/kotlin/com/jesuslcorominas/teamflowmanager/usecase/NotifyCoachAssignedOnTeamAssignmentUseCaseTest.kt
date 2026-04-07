@@ -1,7 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
-import com.jesuslcorominas.teamflowmanager.usecase.repository.CoachAssignmentNotificationRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmNotificationRepository
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -9,54 +9,57 @@ import org.junit.Before
 import org.junit.Test
 
 class NotifyCoachAssignedOnTeamAssignmentUseCaseTest {
-    private lateinit var coachAssignmentNotificationRepository: CoachAssignmentNotificationRepository
+    private lateinit var fcmNotificationRepository: FcmNotificationRepository
     private lateinit var useCase: NotifyCoachAssignedOnTeamAssignmentUseCase
 
     @Before
     fun setup() {
-        coachAssignmentNotificationRepository = mockk(relaxed = true)
-        useCase = NotifyCoachAssignedOnTeamAssignmentUseCaseImpl(coachAssignmentNotificationRepository)
+        fcmNotificationRepository = mockk(relaxed = true)
+        useCase = NotifyCoachAssignedOnTeamAssignmentUseCaseImpl(fcmNotificationRepository)
     }
 
     @Test
     fun `givenDifferentAssignorAndCoach_whenInvoke_thenNotificationIsSent`() = runTest {
-        // Given
-        val coachUserId = "coach1"
-        val assignedByUserId = "president1"
-        val teamName = "Team Alpha"
-
-        // When
         useCase.invoke(
-            coachUserId = coachUserId,
-            assignedByUserId = assignedByUserId,
-            teamName = teamName,
+            coachUserId = "coach1",
+            assignedByUserId = "president1",
+            teamName = "Team Alpha",
         )
 
-        // Then — notification must be triggered
         coVerify(exactly = 1) {
-            coachAssignmentNotificationRepository.notifyCoachAssigned(
-                coachUserId = coachUserId,
-                teamName = teamName,
+            fcmNotificationRepository.sendNotificationToUser(
+                userId = "coach1",
+                title = any(),
+                body = any(),
             )
         }
     }
 
     @Test
     fun `givenSelfAssignment_whenInvoke_thenNotificationIsNotSent`() = runTest {
-        // Given — president assigns themselves as coach
-        val userId = "president1"
-        val teamName = "Team Alpha"
-
-        // When
         useCase.invoke(
-            coachUserId = userId,
-            assignedByUserId = userId,
-            teamName = teamName,
+            coachUserId = "president1",
+            assignedByUserId = "president1",
+            teamName = "Team Alpha",
         )
 
-        // Then — no notification must be sent
-        coVerify(exactly = 0) {
-            coachAssignmentNotificationRepository.notifyCoachAssigned(any(), any())
+        coVerify(exactly = 0) { fcmNotificationRepository.sendNotificationToUser(any(), any(), any()) }
+    }
+
+    @Test
+    fun `givenDifferentAssignorAndCoach_whenInvoke_thenNotificationBodyContainsTeamName`() = runTest {
+        useCase.invoke(
+            coachUserId = "coach1",
+            assignedByUserId = "president1",
+            teamName = "Atlético Junior",
+        )
+
+        coVerify {
+            fcmNotificationRepository.sendNotificationToUser(
+                userId = any(),
+                title = any(),
+                body = match { it.contains("Atlético Junior") },
+            )
         }
     }
 }

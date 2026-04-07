@@ -131,6 +131,32 @@ class AssignCoachToTeamUseCaseTest {
     }
 
     @Test
+    fun `givenPresidentAndValidCoach_whenInvoke_thenNotifyCoachIsCalled`() = runTest {
+        coEvery { getCurrentUser() } returns flowOf(president)
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
+        coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(presidentMember)
+        coEvery { clubMemberRepository.getClubMemberByUserIdAndClub("coach1", "club_fs_1") } returns coachMember
+
+        useCase.invoke("team_fs_1", "coach1")
+
+        coVerify { notifyCoachAssigned(coachUserId = "coach1", assignedByUserId = "user1", teamName = "Team A") }
+    }
+
+    @Test
+    fun `givenNotifyCoachThrows_whenInvoke_thenAssignmentStillSucceeds`() = runTest {
+        coEvery { getCurrentUser() } returns flowOf(president)
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
+        coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(presidentMember)
+        coEvery { clubMemberRepository.getClubMemberByUserIdAndClub("coach1", "club_fs_1") } returns coachMember
+        coEvery { notifyCoachAssigned(any(), any(), any()) } throws RuntimeException("FCM down")
+
+        val result = useCase.invoke("team_fs_1", "coach1")
+
+        assertEquals("coach1", result.coachId)
+        coVerify { teamRepository.updateTeamCoachId("team_fs_1", "coach1") }
+    }
+
+    @Test
     fun `givenCoachAlreadyHasCoachRole_whenInvoke_thenDoNotAddRoleAgain`() = runTest {
         val coachWithRole = coachMember.copy(roles = listOf(ClubRole.COACH.roleName))
         coEvery { getCurrentUser() } returns flowOf(president)
