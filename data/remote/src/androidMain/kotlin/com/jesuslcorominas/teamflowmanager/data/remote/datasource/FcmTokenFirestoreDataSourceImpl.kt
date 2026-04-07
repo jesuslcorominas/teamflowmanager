@@ -81,7 +81,11 @@ class FcmTokenFirestoreDataSourceImpl(
         return snapshot.documents.mapNotNull { it.getString("token") }
     }
 
-    override suspend fun sendNotification(token: String, title: String, body: String) {
+    override suspend fun sendNotification(
+        token: String,
+        title: String,
+        body: String,
+    ) {
         fcmNotificationApi.sendNotification(SendNotificationRequest(token = token, title = title, body = body))
     }
 
