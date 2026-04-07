@@ -21,6 +21,10 @@
       {
         "source": "/api/createShortLink",
         "function": "createShortLink"
+      },
+      {
+        "source": "/api/sendNotification",
+        "function": "sendNotification"
       }
     ]
   }

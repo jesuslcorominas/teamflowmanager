@@ -1,13 +1,17 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.api.FcmNotificationApi
+import com.jesuslcorominas.teamflowmanager.data.remote.api.model.SendNotificationRequest
 import com.jesuslcorominas.teamflowmanager.domain.model.FcmTokenEntry
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationPayload
 import kotlinx.coroutines.tasks.await
 
-class FcmTokenFirestoreDataSourceImpl(
+internal class AndroidFcmDataSourceImpl(
     private val firestore: FirebaseFirestore,
-) : FcmTokenDataSource {
+    private val fcmNotificationApi: FcmNotificationApi,
+) : FcmDataSource {
     override suspend fun saveToken(
         userId: String,
         token: String,
@@ -67,6 +71,37 @@ class FcmTokenFirestoreDataSourceImpl(
                     topic = doc.getString("topic"),
                 )
             }
+    }
+
+    override suspend fun getTokensByUserId(userId: String): List<String> {
+        val snapshot =
+            firestore.collection(COLLECTION)
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+        return snapshot.documents.mapNotNull { it.getString("token") }
+    }
+
+    override suspend fun sendNotification(
+        token: String,
+        payload: NotificationPayload,
+    ) {
+        val request =
+            when (payload) {
+                is NotificationPayload.FreeText ->
+                    SendNotificationRequest(
+                        token = token,
+                        title = payload.title,
+                        body = payload.body,
+                    )
+                is NotificationPayload.Typed ->
+                    SendNotificationRequest(
+                        token = token,
+                        type = payload.type.key,
+                        params = payload.params.ifEmpty { null },
+                    )
+            }
+        fcmNotificationApi.sendNotification(request)
     }
 
     private fun docId(

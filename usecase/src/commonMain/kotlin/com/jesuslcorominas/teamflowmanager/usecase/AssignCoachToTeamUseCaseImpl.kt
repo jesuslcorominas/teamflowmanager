@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import kotlinx.coroutines.flow.first
@@ -12,6 +13,7 @@ internal class AssignCoachToTeamUseCaseImpl(
     private val teamRepository: TeamRepository,
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
+    private val notifyCoachAssigned: NotifyCoachAssignedOnTeamAssignmentUseCase,
 ) : AssignCoachToTeamUseCase {
     override suspend fun invoke(
         teamId: String,
@@ -81,6 +83,18 @@ internal class AssignCoachToTeamUseCaseImpl(
                     clubId = team.clubFirestoreId!!,
                     role = ClubRole.COACH.roleName,
                 )
+            }
+
+            // Step 3: Notify the assigned coach (fire-and-forget; errors are swallowed
+            //          to avoid rolling back a successful assignment due to a notification failure)
+            try {
+                notifyCoachAssigned(
+                    coachUserId = coachUserId,
+                    assignedByUserId = currentUser.id,
+                    teamName = team.name,
+                )
+            } catch (_: Exception) {
+                // Notification failures must not break the assignment flow
             }
 
             // Return updated team

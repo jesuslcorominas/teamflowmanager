@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import io.mockk.coEvery
@@ -22,6 +23,7 @@ class AssignCoachToTeamUseCaseTest {
     private lateinit var teamRepository: TeamRepository
     private lateinit var clubMemberRepository: ClubMemberRepository
     private lateinit var getCurrentUser: GetCurrentUserUseCase
+    private lateinit var notifyCoachAssigned: NotifyCoachAssignedOnTeamAssignmentUseCase
     private lateinit var useCase: AssignCoachToTeamUseCase
 
     private val president = User(id = "user1", email = "pres@test.com", displayName = "President", photoUrl = null)
@@ -34,7 +36,8 @@ class AssignCoachToTeamUseCaseTest {
         teamRepository = mockk(relaxed = true)
         clubMemberRepository = mockk(relaxed = true)
         getCurrentUser = mockk()
-        useCase = AssignCoachToTeamUseCaseImpl(teamRepository, clubMemberRepository, getCurrentUser)
+        notifyCoachAssigned = mockk(relaxed = true)
+        useCase = AssignCoachToTeamUseCaseImpl(teamRepository, clubMemberRepository, getCurrentUser, notifyCoachAssigned)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -125,6 +128,32 @@ class AssignCoachToTeamUseCaseTest {
         coEvery { clubMemberRepository.getClubMemberByUserIdAndClub("coach1", "club_fs_1") } returns coachMember
         coEvery { teamRepository.updateTeamCoachId(any(), any()) } throws RuntimeException("Network error")
         useCase.invoke("team_fs_1", "coach1")
+    }
+
+    @Test
+    fun `givenPresidentAndValidCoach_whenInvoke_thenNotifyCoachIsCalled`() = runTest {
+        coEvery { getCurrentUser() } returns flowOf(president)
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
+        coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(presidentMember)
+        coEvery { clubMemberRepository.getClubMemberByUserIdAndClub("coach1", "club_fs_1") } returns coachMember
+
+        useCase.invoke("team_fs_1", "coach1")
+
+        coVerify { notifyCoachAssigned(coachUserId = "coach1", assignedByUserId = "user1", teamName = "Team A") }
+    }
+
+    @Test
+    fun `givenNotifyCoachThrows_whenInvoke_thenAssignmentStillSucceeds`() = runTest {
+        coEvery { getCurrentUser() } returns flowOf(president)
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
+        coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(presidentMember)
+        coEvery { clubMemberRepository.getClubMemberByUserIdAndClub("coach1", "club_fs_1") } returns coachMember
+        coEvery { notifyCoachAssigned(any(), any(), any()) } throws RuntimeException("FCM down")
+
+        val result = useCase.invoke("team_fs_1", "coach1")
+
+        assertEquals("coach1", result.coachId)
+        coVerify { teamRepository.updateTeamCoachId("team_fs_1", "coach1") }
     }
 
     @Test
