@@ -7,7 +7,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.api.model.SendNotificatio
 import com.jesuslcorominas.teamflowmanager.domain.model.FcmTokenEntry
 import kotlinx.coroutines.tasks.await
 
-class FcmTokenFirestoreDataSourceImpl(
+internal class FcmTokenFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val fcmNotificationApi: FcmNotificationApi,
 ) : FcmTokenDataSource {
