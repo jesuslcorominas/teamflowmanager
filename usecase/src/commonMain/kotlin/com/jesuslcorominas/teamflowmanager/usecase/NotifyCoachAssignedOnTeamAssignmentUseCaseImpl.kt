@@ -3,6 +3,8 @@ package com.jesuslcorominas.teamflowmanager.usecase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmNotificationRepository
 
+// TODO internacionalizar?
+
 private const val NOTIFICATION_TITLE = "Has sido asignado como entrenador"
 
 internal class NotifyCoachAssignedOnTeamAssignmentUseCaseImpl(
