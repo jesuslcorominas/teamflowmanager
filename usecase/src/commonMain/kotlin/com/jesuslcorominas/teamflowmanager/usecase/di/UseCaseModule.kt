@@ -49,6 +49,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermiss
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCodeUseCase
@@ -129,6 +130,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeen
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.IsNotificationPermissionGrantedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.JoinClubByCodeUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.NotifyCoachAssignedOnTeamAssignmentUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegenerateInvitationCodeUseCaseImpl
@@ -178,6 +180,7 @@ internal val useCaseInternalModule =
         singleOf(::GetTeamByIdUseCaseImpl) bind GetTeamByIdUseCase::class
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
+        singleOf(::NotifyCoachAssignedOnTeamAssignmentUseCaseImpl) bind NotifyCoachAssignedOnTeamAssignmentUseCase::class
         singleOf(::AssignCoachToTeamUseCaseImpl) bind AssignCoachToTeamUseCase::class
         singleOf(::ClearTeamCoachUseCaseImpl) bind ClearTeamCoachUseCase::class
         singleOf(::SelfAssignAsCoachUseCaseImpl) bind SelfAssignAsCoachUseCase::class

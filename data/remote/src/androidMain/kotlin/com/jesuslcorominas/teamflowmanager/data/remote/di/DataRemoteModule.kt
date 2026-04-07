@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmSendNotificationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProviderDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
@@ -21,11 +22,14 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstituti
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.api.FcmNotificationApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
+import com.jesuslcorominas.teamflowmanager.data.remote.api.createFcmNotificationApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.createShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmNotificationTopicDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmSendNotificationDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmTokenFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmTokenProviderDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
@@ -71,6 +75,7 @@ internal val firebaseModule =
         singleOf(::FcmTokenProviderDataSourceImpl) bind FcmTokenProviderDataSource::class
         singleOf(::FcmNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
         single<NotificationPermissionDataSource> { NotificationPermissionDataSourceImpl(androidApplication()) }
+        singleOf(::FcmSendNotificationDataSourceImpl) bind FcmSendNotificationDataSource::class
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
         single<DynamicLinkDataSource> {
             FirebaseDynamicLinkDataSourceImpl(shortLinkApi = get())
@@ -133,6 +138,9 @@ internal val ktorfitModule =
         }
         single<ShortLinkApi> {
             get<Ktorfit>().createShortLinkApi()
+        }
+        single<FcmNotificationApi> {
+            get<Ktorfit>().createFcmNotificationApi()
         }
     }
 

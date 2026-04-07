@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmSendNotificationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProviderDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPermissionDataSource
@@ -30,6 +31,18 @@ class IosFcmTokenDataSourceImpl : FcmTokenDataSource {
         token: String,
         currentUserId: String,
     ): List<FcmTokenEntry> = emptyList()
+
+    override suspend fun getTokensByUserId(userId: String): List<String> = emptyList()
+}
+
+class IosFcmSendNotificationDataSourceImpl : FcmSendNotificationDataSource {
+    override suspend fun sendNotification(
+        token: String,
+        title: String,
+        body: String,
+    ) {
+        // iOS stub — APNs / FCM send not configured yet
+    }
 }
 
 class IosFcmTokenProviderDataSourceImpl : FcmTokenProviderDataSource {

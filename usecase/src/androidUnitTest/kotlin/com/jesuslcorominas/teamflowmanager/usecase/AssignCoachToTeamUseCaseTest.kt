@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import io.mockk.coEvery
@@ -22,6 +23,7 @@ class AssignCoachToTeamUseCaseTest {
     private lateinit var teamRepository: TeamRepository
     private lateinit var clubMemberRepository: ClubMemberRepository
     private lateinit var getCurrentUser: GetCurrentUserUseCase
+    private lateinit var notifyCoachAssigned: NotifyCoachAssignedOnTeamAssignmentUseCase
     private lateinit var useCase: AssignCoachToTeamUseCase
 
     private val president = User(id = "user1", email = "pres@test.com", displayName = "President", photoUrl = null)
@@ -34,7 +36,8 @@ class AssignCoachToTeamUseCaseTest {
         teamRepository = mockk(relaxed = true)
         clubMemberRepository = mockk(relaxed = true)
         getCurrentUser = mockk()
-        useCase = AssignCoachToTeamUseCaseImpl(teamRepository, clubMemberRepository, getCurrentUser)
+        notifyCoachAssigned = mockk(relaxed = true)
+        useCase = AssignCoachToTeamUseCaseImpl(teamRepository, clubMemberRepository, getCurrentUser, notifyCoachAssigned)
     }
 
     @Test(expected = IllegalArgumentException::class)

@@ -226,6 +226,56 @@ exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
 });
 
 /**
+ * Send an FCM push notification to a specific device token.
+ *
+ * This function receives a token, title, and body and uses the Firebase Admin SDK
+ * to send a notification message to that device via FCM.
+ *
+ * POST /api/sendNotification
+ * Body: { token: string, title: string, body: string }
+ * Response: { success: true } or error JSON
+ */
+exports.sendNotification = functions
+  .runWith({ timeoutSeconds: 30 })
+  .https.onRequest(async (req, res) => {
+    // CORS
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Preflight
+    if (req.method === 'OPTIONS') {
+      return res.status(204).send('');
+    }
+
+    if (req.method !== 'POST') {
+      return res.status(405).send('Method Not Allowed');
+    }
+
+    try {
+      const { token, title, body } = req.body;
+
+      if (!token || !title || !body) {
+        return res.status(400).json({ error: 'token, title, and body are required' });
+      }
+
+      const message = {
+        notification: { title, body },
+        token,
+      };
+
+      await admin.messaging().send(message);
+
+      console.log('[sendNotification] Notification sent to token', token.slice(-8));
+
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('[sendNotification] Error sending notification:', error);
+      return res.status(500).json({ error: 'Failed to send notification' });
+    }
+  });
+
+/**
  * Generate a short, URL-safe ID.
  * Uses base62 encoding (a-z, A-Z, 0-9) for readability.
  */
