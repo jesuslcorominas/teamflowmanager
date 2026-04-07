@@ -7,7 +7,10 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmNotificationRep
 class FcmNotificationRepositoryImpl(
     private val fcmDataSource: FcmDataSource,
 ) : FcmNotificationRepository {
-    override suspend fun sendNotificationToUser(userId: String, payload: NotificationPayload) {
+    override suspend fun sendNotificationToUser(
+        userId: String,
+        payload: NotificationPayload,
+    ) {
         val tokens = fcmDataSource.getTokensByUserId(userId)
         tokens.forEach { token -> fcmDataSource.sendNotification(token, payload) }
     }

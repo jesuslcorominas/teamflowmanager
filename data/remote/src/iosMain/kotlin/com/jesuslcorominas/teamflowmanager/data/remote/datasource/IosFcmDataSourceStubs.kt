@@ -34,7 +34,10 @@ class IosFcmDataSourceImpl : FcmDataSource {
 
     override suspend fun getTokensByUserId(userId: String): List<String> = emptyList()
 
-    override suspend fun sendNotification(token: String, payload: NotificationPayload) {}
+    override suspend fun sendNotification(
+        token: String,
+        payload: NotificationPayload,
+    ) {}
 }
 
 class IosFcmTokenProviderDataSourceImpl : FcmTokenProviderDataSource {

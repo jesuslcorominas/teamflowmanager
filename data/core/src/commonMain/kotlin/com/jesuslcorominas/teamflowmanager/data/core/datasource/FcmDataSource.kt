@@ -34,5 +34,8 @@ interface FcmDataSource {
      */
     suspend fun getTokensByUserId(userId: String): List<String>
 
-    suspend fun sendNotification(token: String, payload: NotificationPayload)
+    suspend fun sendNotification(
+        token: String,
+        payload: NotificationPayload,
+    )
 }

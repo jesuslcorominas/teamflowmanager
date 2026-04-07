@@ -82,19 +82,25 @@ internal class AndroidFcmDataSourceImpl(
         return snapshot.documents.mapNotNull { it.getString("token") }
     }
 
-    override suspend fun sendNotification(token: String, payload: NotificationPayload) {
-        val request = when (payload) {
-            is NotificationPayload.FreeText -> SendNotificationRequest(
-                token = token,
-                title = payload.title,
-                body = payload.body,
-            )
-            is NotificationPayload.Typed -> SendNotificationRequest(
-                token = token,
-                type = payload.type.key,
-                params = payload.params.ifEmpty { null },
-            )
-        }
+    override suspend fun sendNotification(
+        token: String,
+        payload: NotificationPayload,
+    ) {
+        val request =
+            when (payload) {
+                is NotificationPayload.FreeText ->
+                    SendNotificationRequest(
+                        token = token,
+                        title = payload.title,
+                        body = payload.body,
+                    )
+                is NotificationPayload.Typed ->
+                    SendNotificationRequest(
+                        token = token,
+                        type = payload.type.key,
+                        params = payload.params.ifEmpty { null },
+                    )
+            }
         fcmNotificationApi.sendNotification(request)
     }
 

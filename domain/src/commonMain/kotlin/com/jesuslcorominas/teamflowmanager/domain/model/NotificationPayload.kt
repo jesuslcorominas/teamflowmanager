@@ -1,7 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.domain.model
 
 sealed class NotificationPayload {
-
     data class FreeText(
         val title: String,
         val body: String,
