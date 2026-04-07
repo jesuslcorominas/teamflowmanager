@@ -1,16 +1,16 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.api.FcmNotificationApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.model.SendNotificationRequest
 import com.jesuslcorominas.teamflowmanager.domain.model.FcmTokenEntry
 import kotlinx.coroutines.tasks.await
 
-internal class FcmTokenFirestoreDataSourceImpl(
+internal class AndroidFcmDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val fcmNotificationApi: FcmNotificationApi,
-) : FcmTokenDataSource {
+) : FcmDataSource {
     override suspend fun saveToken(
         userId: String,
         token: String,

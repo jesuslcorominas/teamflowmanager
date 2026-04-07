@@ -5,7 +5,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmSendNotificationDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProviderDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
@@ -23,7 +23,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFire
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmSendNotificationDataSourceImpl
-import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmTokenDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmTokenProviderDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosNotificationPermissionDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosNotificationTopicDataSourceImpl
@@ -79,7 +79,7 @@ actual val dataRemoteModule: Module =
         single<DynamicLinkDataSource> { NoOpDynamicLinkDataSource() }
 
         // FCM stubs — replace with real implementations when APNs is configured
-        singleOf(::IosFcmTokenDataSourceImpl) bind FcmTokenDataSource::class
+        singleOf(::IosFcmDataSourceImpl) bind FcmDataSource::class
         singleOf(::IosFcmTokenProviderDataSourceImpl) bind FcmTokenProviderDataSource::class
         singleOf(::IosNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
         singleOf(::IosNotificationPermissionDataSourceImpl) bind NotificationPermissionDataSource::class

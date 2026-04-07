@@ -2,7 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.datasource
 
 import com.jesuslcorominas.teamflowmanager.domain.model.FcmTokenEntry
 
-interface FcmTokenDataSource {
+interface FcmDataSource {
     suspend fun saveToken(
         userId: String,
         token: String,

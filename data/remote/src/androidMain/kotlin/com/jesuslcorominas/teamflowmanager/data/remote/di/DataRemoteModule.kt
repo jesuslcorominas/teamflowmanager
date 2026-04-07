@@ -7,7 +7,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
-import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProviderDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
@@ -28,7 +28,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.api.createShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmNotificationTopicDataSourceImpl
-import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmTokenFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.AndroidFcmDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmTokenProviderDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseDynamicLinkDataSourceImpl
@@ -69,7 +69,7 @@ internal val firebaseModule =
         single { FirebaseFirestore.getInstance() }
         single { FirebaseStorage.getInstance() }
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
-        single<FcmTokenDataSource> { FcmTokenFirestoreDataSourceImpl(get(), get()) }
+        single<FcmDataSource> { AndroidFcmDataSourceImpl(get(), get()) }
         singleOf(::FcmTokenProviderDataSourceImpl) bind FcmTokenProviderDataSource::class
         singleOf(::FcmNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
         single<NotificationPermissionDataSource> { NotificationPermissionDataSourceImpl(androidApplication()) }
