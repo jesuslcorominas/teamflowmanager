@@ -1,9 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase.repository
 
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationPayload
+
 interface FcmNotificationRepository {
-    suspend fun sendNotificationToUser(
-        userId: String,
-        title: String,
-        body: String,
-    )
+    suspend fun sendNotificationToUser(userId: String, payload: NotificationPayload)
 }

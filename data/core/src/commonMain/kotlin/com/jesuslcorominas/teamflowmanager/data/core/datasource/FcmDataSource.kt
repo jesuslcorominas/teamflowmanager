@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.core.datasource
 
 import com.jesuslcorominas.teamflowmanager.domain.model.FcmTokenEntry
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationPayload
 
 interface FcmDataSource {
     suspend fun saveToken(
@@ -33,9 +34,5 @@ interface FcmDataSource {
      */
     suspend fun getTokensByUserId(userId: String): List<String>
 
-    suspend fun sendNotification(
-        token: String,
-        title: String,
-        body: String,
-    )
+    suspend fun sendNotification(token: String, payload: NotificationPayload)
 }

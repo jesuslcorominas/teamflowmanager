@@ -5,6 +5,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProvider
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPermissionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.FcmTokenEntry
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationPayload
 
 // iOS stubs — replace with real implementations when APNs is configured in Firebase Console
 
@@ -33,11 +34,7 @@ class IosFcmDataSourceImpl : FcmDataSource {
 
     override suspend fun getTokensByUserId(userId: String): List<String> = emptyList()
 
-    override suspend fun sendNotification(
-        token: String,
-        title: String,
-        body: String,
-    ) {}
+    override suspend fun sendNotification(token: String, payload: NotificationPayload) {}
 }
 
 class IosFcmTokenProviderDataSourceImpl : FcmTokenProviderDataSource {

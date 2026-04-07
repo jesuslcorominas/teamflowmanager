@@ -1,5 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationPayload
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationType
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmNotificationRepository
 import io.mockk.coVerify
@@ -19,7 +21,7 @@ class NotifyCoachAssignedOnTeamAssignmentUseCaseTest {
     }
 
     @Test
-    fun `givenDifferentAssignorAndCoach_whenInvoke_thenNotificationIsSent`() = runTest {
+    fun `givenDifferentAssignorAndCoach_whenInvoke_thenTypedPayloadIsSent`() = runTest {
         useCase.invoke(
             coachUserId = "coach1",
             assignedByUserId = "president1",
@@ -29,8 +31,7 @@ class NotifyCoachAssignedOnTeamAssignmentUseCaseTest {
         coVerify(exactly = 1) {
             fcmNotificationRepository.sendNotificationToUser(
                 userId = "coach1",
-                title = any(),
-                body = any(),
+                payload = NotificationPayload.Typed.AssignedAsCoach(teamName = "Team Alpha"),
             )
         }
     }
@@ -43,11 +44,11 @@ class NotifyCoachAssignedOnTeamAssignmentUseCaseTest {
             teamName = "Team Alpha",
         )
 
-        coVerify(exactly = 0) { fcmNotificationRepository.sendNotificationToUser(any(), any(), any()) }
+        coVerify(exactly = 0) { fcmNotificationRepository.sendNotificationToUser(any(), any()) }
     }
 
     @Test
-    fun `givenDifferentAssignorAndCoach_whenInvoke_thenNotificationBodyContainsTeamName`() = runTest {
+    fun `givenDifferentAssignorAndCoach_whenInvoke_thenPayloadTypeIsAssignedAsCoach`() = runTest {
         useCase.invoke(
             coachUserId = "coach1",
             assignedByUserId = "president1",
@@ -56,9 +57,24 @@ class NotifyCoachAssignedOnTeamAssignmentUseCaseTest {
 
         coVerify {
             fcmNotificationRepository.sendNotificationToUser(
-                userId = any(),
-                title = any(),
-                body = match { it.contains("Atlético Junior") },
+                userId = "coach1",
+                payload = match { it is NotificationPayload.Typed && it.type == NotificationType.ASSIGNED_AS_COACH },
+            )
+        }
+    }
+
+    @Test
+    fun `givenDifferentAssignorAndCoach_whenInvoke_thenPayloadParamsContainTeamName`() = runTest {
+        useCase.invoke(
+            coachUserId = "coach1",
+            assignedByUserId = "president1",
+            teamName = "Atlético Junior",
+        )
+
+        coVerify {
+            fcmNotificationRepository.sendNotificationToUser(
+                userId = "coach1",
+                payload = match { it is NotificationPayload.Typed && it.params["teamName"] == "Atlético Junior" },
             )
         }
     }

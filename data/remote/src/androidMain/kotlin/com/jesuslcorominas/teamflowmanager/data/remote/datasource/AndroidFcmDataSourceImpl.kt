@@ -5,6 +5,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.api.FcmNotificationApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.model.SendNotificationRequest
 import com.jesuslcorominas.teamflowmanager.domain.model.FcmTokenEntry
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationPayload
 import kotlinx.coroutines.tasks.await
 
 internal class AndroidFcmDataSourceImpl(
@@ -81,12 +82,20 @@ internal class AndroidFcmDataSourceImpl(
         return snapshot.documents.mapNotNull { it.getString("token") }
     }
 
-    override suspend fun sendNotification(
-        token: String,
-        title: String,
-        body: String,
-    ) {
-        fcmNotificationApi.sendNotification(SendNotificationRequest(token = token, title = title, body = body))
+    override suspend fun sendNotification(token: String, payload: NotificationPayload) {
+        val request = when (payload) {
+            is NotificationPayload.FreeText -> SendNotificationRequest(
+                token = token,
+                title = payload.title,
+                body = payload.body,
+            )
+            is NotificationPayload.Typed -> SendNotificationRequest(
+                token = token,
+                type = payload.type.key,
+                params = payload.params.ifEmpty { null },
+            )
+        }
+        fcmNotificationApi.sendNotification(request)
     }
 
     private fun docId(

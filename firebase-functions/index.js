@@ -253,20 +253,37 @@ exports.sendNotification = functions
     }
 
     try {
-      const { token, title, body } = req.body;
+      const { token, title, body, type, params } = req.body;
 
-      if (!token || !title || !body) {
-        return res.status(400).json({ error: 'token, title, and body are required' });
+      if (!token) {
+        return res.status(400).json({ error: 'token is required' });
       }
 
-      const message = {
-        notification: { title, body },
-        token,
-      };
+      let message;
+
+      if (type) {
+        // Typed notification: resolve default text server-side (Spanish fallback),
+        // and include type + params in the data payload for client-side i18n.
+        const defaultText = resolveNotificationText(type, params || {});
+        message = {
+          notification: { title: defaultText.title, body: defaultText.body },
+          data: { notificationType: type, ...flattenParams(params) },
+          token,
+        };
+      } else {
+        // Free-text notification
+        if (!title || !body) {
+          return res.status(400).json({ error: 'title and body are required for free-text notifications' });
+        }
+        message = {
+          notification: { title, body },
+          token,
+        };
+      }
 
       await admin.messaging().send(message);
 
-      console.log('[sendNotification] Notification sent to token', token.slice(-8));
+      console.log('[sendNotification] Sent', type || 'free-text', 'to token', token.slice(-8));
 
       return res.status(200).json({ success: true });
     } catch (error) {
@@ -274,6 +291,39 @@ exports.sendNotification = functions
       return res.status(500).json({ error: 'Failed to send notification' });
     }
   });
+
+/**
+ * Resolve default (Spanish) title and body for a typed notification.
+ * The client app should override this text using its own localized string resources.
+ */
+function resolveNotificationText(type, params) {
+  switch (type) {
+    case 'ASSIGNED_AS_COACH':
+      return {
+        title: 'Has sido asignado como entrenador',
+        body: `Has sido asignado como entrenador del equipo ${params.teamName || ''}`,
+      };
+    case 'USER_WAITING_FOR_ASSIGNMENT':
+      return {
+        title: 'Nuevo miembro esperando asignación',
+        body: 'Un miembro de tu club está esperando que le asignes un equipo',
+      };
+    default:
+      console.warn('[sendNotification] Unknown notification type:', type);
+      return { title: type, body: JSON.stringify(params) };
+  }
+}
+
+/**
+ * Flatten a params object into string key-value pairs for FCM data payload.
+ * FCM data values must be strings.
+ */
+function flattenParams(params) {
+  if (!params) return {};
+  return Object.fromEntries(
+    Object.entries(params).map(([k, v]) => [k, String(v)])
+  );
+}
 
 /**
  * Generate a short, URL-safe ID.
