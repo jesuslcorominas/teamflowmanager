@@ -31,6 +31,7 @@ sealed class Route(
                 Settings,
                 AcceptTeamInvitation,
                 ClubSettings,
+                PresidentNotifications,
             )
         }
 
@@ -163,6 +164,13 @@ sealed class Route(
         path = "club_settings",
         showBottomBar = true,
         showSettingsButton = true,
+    )
+
+    data object PresidentNotifications : Route(
+        path = "president_notifications",
+        showTopBar = true,
+        showBottomBar = true,
+        showSettingsButton = false,
     )
 
     data object AcceptTeamInvitation : Route(path = "accept_team_invitation", showTopBar = false) {

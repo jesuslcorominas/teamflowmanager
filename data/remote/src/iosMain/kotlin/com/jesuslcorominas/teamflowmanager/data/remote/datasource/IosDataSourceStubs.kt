@@ -3,7 +3,11 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PresidentNotificationDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Club
+import com.jesuslcorominas.teamflowmanager.domain.model.PresidentNotification
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 // ── Stub datasources for iOS Phase 2 MVP ─────────────────────────────────────
 // Write operations and local-only operations throw NotImplementedError.
@@ -35,4 +39,25 @@ class NoOpDynamicLinkDataSource : DynamicLinkDataSource {
         teamId: String,
         teamName: String,
     ): String = throw NotImplementedError("generateTeamInvitationLink not implemented for iOS Phase 2")
+}
+
+class PresidentNotificationDataSourceStub : PresidentNotificationDataSource {
+    override fun getNotifications(clubId: String): Flow<List<PresidentNotification>> = flowOf(emptyList())
+
+    override fun getUnreadCount(clubId: String): Flow<Int> = flowOf(0)
+
+    override suspend fun markAsRead(
+        clubId: String,
+        notificationId: String,
+    ): Unit = throw NotImplementedError("markAsRead not implemented for iOS Phase 2")
+
+    override suspend fun markAsUnread(
+        clubId: String,
+        notificationId: String,
+    ): Unit = throw NotImplementedError("markAsUnread not implemented for iOS Phase 2")
+
+    override suspend fun deleteNotification(
+        clubId: String,
+        notificationId: String,
+    ): Unit = throw NotImplementedError("deleteNotification not implemented for iOS Phase 2")
 }

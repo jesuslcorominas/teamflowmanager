@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePresidentNotificationUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportToPdfUseCase
@@ -39,16 +40,20 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerGoalStatsUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerTimeStatsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPresidentNotificationsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUnreadPresidentNotificationsCountUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasScheduledMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsReadUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsUnreadUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
@@ -94,6 +99,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.DeleteFcmTokenUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePendingCoachAssignmentUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePlayerUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.DeletePresidentNotificationUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.EndTimeoutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportMatchReportToPdfUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ExportToPdfUseCaseImpl
@@ -120,16 +126,20 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeStatsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersByTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetPresidentNotificationsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamsByClubUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetUnreadPresidentNotificationsCountUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetUserClubMembershipUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasNotificationPermissionBeenRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.HasScheduledMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.IsNotificationPermissionGrantedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.JoinClubByCodeUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.MarkPresidentNotificationAsReadUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.MarkPresidentNotificationAsUnreadUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyCoachAssignedOnTeamAssignmentUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
@@ -265,6 +275,13 @@ internal val useCaseInternalModule =
         // Role selector (president acting as coach)
         singleOf(::GetActiveViewRoleUseCaseImpl) bind GetActiveViewRoleUseCase::class
         singleOf(::SetActiveViewRoleUseCaseImpl) bind SetActiveViewRoleUseCase::class
+
+        // President notification center
+        singleOf(::GetPresidentNotificationsUseCaseImpl) bind GetPresidentNotificationsUseCase::class
+        singleOf(::GetUnreadPresidentNotificationsCountUseCaseImpl) bind GetUnreadPresidentNotificationsCountUseCase::class
+        singleOf(::MarkPresidentNotificationAsReadUseCaseImpl) bind MarkPresidentNotificationAsReadUseCase::class
+        singleOf(::MarkPresidentNotificationAsUnreadUseCaseImpl) bind MarkPresidentNotificationAsUnreadUseCase::class
+        singleOf(::DeletePresidentNotificationUseCaseImpl) bind DeletePresidentNotificationUseCase::class
     }
 
 val useCaseModule =

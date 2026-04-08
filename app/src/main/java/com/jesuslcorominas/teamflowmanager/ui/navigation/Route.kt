@@ -33,6 +33,7 @@ sealed class Route(
                 AcceptTeamInvitation,
                 ClubSettings,
                 PendingTeamAssignment,
+                PresidentNotifications,
             )
         }
 
@@ -186,4 +187,11 @@ sealed class Route(
     }
 
     data object PendingTeamAssignment : Route(path = "pending_team_assignment", showTopBar = false)
+
+    data object PresidentNotifications : Route(
+        path = "president_notifications",
+        showTopBar = true,
+        showBottomBar = true,
+        showSettingsButton = false,
+    )
 }
