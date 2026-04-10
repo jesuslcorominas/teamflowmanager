@@ -55,6 +55,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsReadUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsUnreadUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentOnMemberWaitingUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCodeUseCase
@@ -141,6 +142,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.JoinClubByCodeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.MarkPresidentNotificationAsReadUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.MarkPresidentNotificationAsUnreadUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyCoachAssignedOnTeamAssignmentUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.NotifyPresidentOnMemberWaitingUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegenerateInvitationCodeUseCaseImpl
@@ -191,6 +193,7 @@ internal val useCaseInternalModule =
         singleOf(::CreateTeamUseCaseImpl) bind CreateTeamUseCase::class
         singleOf(::UpdateTeamUseCaseImpl) bind UpdateTeamUseCase::class
         singleOf(::NotifyCoachAssignedOnTeamAssignmentUseCaseImpl) bind NotifyCoachAssignedOnTeamAssignmentUseCase::class
+        singleOf(::NotifyPresidentOnMemberWaitingUseCaseImpl) bind NotifyPresidentOnMemberWaitingUseCase::class
         singleOf(::AssignCoachToTeamUseCaseImpl) bind AssignCoachToTeamUseCase::class
         singleOf(::ClearTeamCoachUseCaseImpl) bind ClearTeamCoachUseCase::class
         singleOf(::SelfAssignAsCoachUseCaseImpl) bind SelfAssignAsCoachUseCase::class

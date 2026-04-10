@@ -8,6 +8,11 @@ interface PresidentNotificationRepository {
 
     fun getUnreadCount(clubId: String): Flow<Int>
 
+    suspend fun createNotification(
+        clubId: String,
+        notification: PresidentNotification,
+    )
+
     suspend fun markAsRead(
         clubId: String,
         notificationId: String,

@@ -10,6 +10,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 @Suppress("TooManyFunctions")
 class PresidentNotificationFirestoreDataSourceImpl(
@@ -81,6 +82,33 @@ class PresidentNotificationFirestoreDataSourceImpl(
 
             awaitClose { registration.remove() }
         }
+
+    override suspend fun createNotification(
+        clubId: String,
+        notification: PresidentNotification,
+    ) {
+        try {
+            val docId = if (notification.id.isNotEmpty()) notification.id else UUID.randomUUID().toString()
+            val model =
+                PresidentNotificationFirestoreModel(
+                    id = docId,
+                    type = notification.type.key,
+                    title = notification.title,
+                    body = notification.body,
+                    userData = notification.userData,
+                    createdAt = notification.createdAt,
+                    read = notification.read,
+                )
+            notificationsCollection(clubId)
+                .document(docId)
+                .set(model)
+                .await()
+            Log.d(TAG, "Created notification=$docId in club=$clubId")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating notification in club=$clubId", e)
+            throw e
+        }
+    }
 
     override suspend fun markAsRead(
         clubId: String,

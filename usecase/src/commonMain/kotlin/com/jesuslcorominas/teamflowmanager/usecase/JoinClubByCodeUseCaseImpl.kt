@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubResult
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentOnMemberWaitingUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
@@ -13,6 +14,7 @@ internal class JoinClubByCodeUseCaseImpl(
     private val teamRepository: TeamRepository,
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
+    private val notifyPresidentOnMemberWaiting: NotifyPresidentOnMemberWaitingUseCase,
 ) : JoinClubByCodeUseCase {
     companion object {
         private const val ROLE_COACH = "Coach"
@@ -77,6 +79,19 @@ internal class JoinClubByCodeUseCaseImpl(
                     clubId = club.firestoreId!!,
                     roles = roles,
                 )
+
+            if (orphanTeam == null) {
+                try {
+                    notifyPresidentOnMemberWaiting(
+                        clubId = club.firestoreId!!,
+                        presidentUserId = club.ownerId,
+                        userName = currentUser.displayName!!,
+                        userEmail = currentUser.email!!,
+                    )
+                } catch (e: Exception) {
+                    // Notification failure must not prevent the user from joining the club
+                }
+            }
 
             return JoinClubResult(
                 club = club,

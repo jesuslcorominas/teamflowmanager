@@ -12,6 +12,13 @@ internal class PresidentNotificationRepositoryImpl(
 
     override fun getUnreadCount(clubId: String): Flow<Int> = dataSource.getUnreadCount(clubId)
 
+    override suspend fun createNotification(
+        clubId: String,
+        notification: PresidentNotification,
+    ) {
+        dataSource.createNotification(clubId, notification)
+    }
+
     override suspend fun markAsRead(
         clubId: String,
         notificationId: String,
