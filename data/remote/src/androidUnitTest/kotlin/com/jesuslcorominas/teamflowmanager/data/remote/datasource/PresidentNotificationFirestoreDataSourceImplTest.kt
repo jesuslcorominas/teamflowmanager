@@ -13,6 +13,8 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PresidentNotificationFirestoreModel
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationType
+import com.jesuslcorominas.teamflowmanager.domain.model.PresidentNotification
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -354,6 +356,76 @@ class PresidentNotificationFirestoreDataSourceImplTest {
                 assert(false) { "Expected RuntimeException" }
             } catch (e: RuntimeException) {
                 assertEquals("Delete failed", e.message)
+            }
+        }
+
+    // --- createNotification ---
+
+    private fun aPresidentNotification(id: String = "notif-new") =
+        PresidentNotification(
+            id = id,
+            type = NotificationType.USER_WAITING_FOR_ASSIGNMENT,
+            title = "New member waiting",
+            body = "John Doe is waiting for team assignment",
+            userData = mapOf("userName" to "John Doe", "userEmail" to "john@example.com"),
+            createdAt = 1000L,
+            read = false,
+        )
+
+    @Test
+    fun `createNotification sets document with notification id when id is not empty`() =
+        runTest {
+            mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+            setupNotificationsCollection()
+
+            val notification = aPresidentNotification(id = "explicit-id")
+            every { mockNotificationsCollection.document("explicit-id") } returns mockDocRef
+            val voidTask = mockk<Task<Void>>()
+            every { mockDocRef.set(any()) } returns voidTask
+            coEvery { voidTask.await() } returns mockk()
+
+            dataSource.createNotification(clubId, notification)
+
+            verify { mockNotificationsCollection.document("explicit-id") }
+            verify { mockDocRef.set(any()) }
+        }
+
+    @Test
+    fun `createNotification generates uuid when notification id is empty`() =
+        runTest {
+            mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+            setupNotificationsCollection()
+
+            val notification = aPresidentNotification(id = "")
+            every { mockNotificationsCollection.document(any()) } returns mockDocRef
+            val voidTask = mockk<Task<Void>>()
+            every { mockDocRef.set(any()) } returns voidTask
+            coEvery { voidTask.await() } returns mockk()
+
+            dataSource.createNotification(clubId, notification)
+
+            // document() called with a generated UUID (non-empty string)
+            verify { mockNotificationsCollection.document(match { it.isNotEmpty() }) }
+            verify { mockDocRef.set(any()) }
+        }
+
+    @Test
+    fun `createNotification propagates exception on failure`() =
+        runTest {
+            mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+            setupNotificationsCollection()
+
+            val notification = aPresidentNotification()
+            every { mockNotificationsCollection.document(any()) } returns mockDocRef
+            val voidTask = mockk<Task<Void>>()
+            every { mockDocRef.set(any()) } returns voidTask
+            coEvery { voidTask.await() } throws RuntimeException("Write failed")
+
+            try {
+                dataSource.createNotification(clubId, notification)
+                assert(false) { "Expected RuntimeException" }
+            } catch (e: RuntimeException) {
+                assertEquals("Write failed", e.message)
             }
         }
 }
