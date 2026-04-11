@@ -44,8 +44,8 @@ fun BottomNavigationBar(
             listOf(
                 Route.TeamList,
                 Route.ClubMembers,
-                Route.ClubSettings,
                 Route.PresidentNotifications,
+                Route.ClubSettings,
             )
         } else {
             listOf(

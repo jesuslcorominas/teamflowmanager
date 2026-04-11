@@ -52,7 +52,7 @@ fun BottomNavigationBar(
 ) {
     val items: List<Route> =
         if (isPresident) {
-            listOf(Route.TeamList, Route.ClubMembers, Route.ClubSettings, Route.PresidentNotifications)
+            listOf(Route.TeamList, Route.ClubMembers, Route.PresidentNotifications, Route.ClubSettings)
         } else {
             listOf(Route.Matches, Route.Players, Route.Analysis, Route.Team)
         }

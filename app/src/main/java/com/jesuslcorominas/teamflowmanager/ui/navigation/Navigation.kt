@@ -215,7 +215,11 @@ fun Navigation(
         }
 
         composable(Route.PresidentNotifications.createRoute()) {
-            PresidentNotificationsScreen()
+            PresidentNotificationsScreen(
+                onNavigateToClubSettings = {
+                    navController.navigate(Route.ClubSettings.createRoute())
+                },
+            )
         }
 
         composable(Route.Players.createRoute()) {
