@@ -32,8 +32,8 @@ class ClubMemberRepositoryImplTest {
         email: String = "john@example.com",
         clubId: Long = 10L,
         roles: List<String> = listOf("player"),
-        firestoreId: String? = "member-firestore-id",
-        clubFirestoreId: String? = "club-firestore-id",
+        remoteId: String? = "member-firestore-id",
+        clubRemoteId: String? = "club-firestore-id",
     ) = ClubMember(
         id = id,
         userId = userId,
@@ -41,8 +41,8 @@ class ClubMemberRepositoryImplTest {
         email = email,
         clubId = clubId,
         roles = roles,
-        firestoreId = firestoreId,
-        clubFirestoreId = clubFirestoreId,
+        remoteId = remoteId,
+        clubRemoteId = clubRemoteId,
     )
 
     // --- getClubMemberByUserId ---
@@ -72,24 +72,24 @@ class ClubMemberRepositoryImplTest {
 
     @Test
     fun `givenClubFirestoreId_whenGetClubMembers_thenReturnsAllMembers`() = runTest {
-        val clubFirestoreId = "club-123"
+        val clubRemoteId = "club-123"
         val members = listOf(
             createClubMember(id = 1L, userId = "user-1"),
             createClubMember(id = 2L, userId = "user-2"),
         )
-        every { clubMemberDataSource.getClubMembers(clubFirestoreId) } returns flowOf(members)
+        every { clubMemberDataSource.getClubMembers(clubRemoteId) } returns flowOf(members)
 
-        val result = repository.getClubMembers(clubFirestoreId).first()
+        val result = repository.getClubMembers(clubRemoteId).first()
 
         assertEquals(members, result)
     }
 
     @Test
     fun `givenClubWithNoMembers_whenGetClubMembers_thenReturnsEmptyList`() = runTest {
-        val clubFirestoreId = "empty-club"
-        every { clubMemberDataSource.getClubMembers(clubFirestoreId) } returns flowOf(emptyList())
+        val clubRemoteId = "empty-club"
+        every { clubMemberDataSource.getClubMembers(clubRemoteId) } returns flowOf(emptyList())
 
-        val result = repository.getClubMembers(clubFirestoreId).first()
+        val result = repository.getClubMembers(clubRemoteId).first()
 
         assertEquals(emptyList<ClubMember>(), result)
     }
@@ -102,17 +102,17 @@ class ClubMemberRepositoryImplTest {
         val name = "John Doe"
         val email = "john@example.com"
         val clubId = 10L
-        val clubFirestoreId = "club-firestore-id"
+        val clubRemoteId = "club-firestore-id"
         val roles = listOf("player")
         val expectedMember = createClubMember(userId = userId, roles = roles)
         coEvery {
-            clubMemberDataSource.createOrUpdateClubMember(userId, name, email, clubId, clubFirestoreId, roles)
+            clubMemberDataSource.createOrUpdateClubMember(userId, name, email, clubId, clubRemoteId, roles)
         } returns expectedMember
 
-        val result = repository.createOrUpdateClubMember(userId, name, email, clubId, clubFirestoreId, roles)
+        val result = repository.createOrUpdateClubMember(userId, name, email, clubId, clubRemoteId, roles)
 
         assertEquals(expectedMember, result)
-        coVerify { clubMemberDataSource.createOrUpdateClubMember(userId, name, email, clubId, clubFirestoreId, roles) }
+        coVerify { clubMemberDataSource.createOrUpdateClubMember(userId, name, email, clubId, clubRemoteId, roles) }
     }
 
     @Test
@@ -134,22 +134,22 @@ class ClubMemberRepositoryImplTest {
     @Test
     fun `givenUserAndNewRoles_whenUpdateClubMemberRoles_thenDelegatesToDataSource`() = runTest {
         val userId = "user-123"
-        val clubFirestoreId = "club-firestore-id"
+        val clubRemoteId = "club-firestore-id"
         val roles = listOf("coach")
 
-        repository.updateClubMemberRoles(userId, clubFirestoreId, roles)
+        repository.updateClubMemberRoles(userId, clubRemoteId, roles)
 
-        coVerify { clubMemberDataSource.updateClubMemberRoles(userId, clubFirestoreId, roles) }
+        coVerify { clubMemberDataSource.updateClubMemberRoles(userId, clubRemoteId, roles) }
     }
 
     @Test
     fun `givenEmptyRolesList_whenUpdateClubMemberRoles_thenDelegatesToDataSource`() = runTest {
         val userId = "user-123"
-        val clubFirestoreId = "club-firestore-id"
+        val clubRemoteId = "club-firestore-id"
 
-        repository.updateClubMemberRoles(userId, clubFirestoreId, emptyList())
+        repository.updateClubMemberRoles(userId, clubRemoteId, emptyList())
 
-        coVerify { clubMemberDataSource.updateClubMemberRoles(userId, clubFirestoreId, emptyList()) }
+        coVerify { clubMemberDataSource.updateClubMemberRoles(userId, clubRemoteId, emptyList()) }
     }
 
     // --- addClubMemberRole ---
@@ -157,12 +157,12 @@ class ClubMemberRepositoryImplTest {
     @Test
     fun `givenUserAndRole_whenAddClubMemberRole_thenDelegatesToDataSource`() = runTest {
         val userId = "user-123"
-        val clubFirestoreId = "club-firestore-id"
+        val clubRemoteId = "club-firestore-id"
         val role = "president"
 
-        repository.addClubMemberRole(userId, clubFirestoreId, role)
+        repository.addClubMemberRole(userId, clubRemoteId, role)
 
-        coVerify { clubMemberDataSource.addClubMemberRole(userId, clubFirestoreId, role) }
+        coVerify { clubMemberDataSource.addClubMemberRole(userId, clubRemoteId, role) }
     }
 
     // --- getClubMemberByUserIdAndClub ---
@@ -170,23 +170,23 @@ class ClubMemberRepositoryImplTest {
     @Test
     fun `givenUserIdAndClubFirestoreId_whenGetClubMemberByUserIdAndClub_thenReturnsMember`() = runTest {
         val userId = "user-123"
-        val clubFirestoreId = "club-firestore-id"
-        val member = createClubMember(userId = userId, clubFirestoreId = clubFirestoreId)
-        coEvery { clubMemberDataSource.getClubMemberByUserIdAndClub(userId, clubFirestoreId) } returns member
+        val clubRemoteId = "club-firestore-id"
+        val member = createClubMember(userId = userId, clubRemoteId = clubRemoteId)
+        coEvery { clubMemberDataSource.getClubMemberByUserIdAndClub(userId, clubRemoteId) } returns member
 
-        val result = repository.getClubMemberByUserIdAndClub(userId, clubFirestoreId)
+        val result = repository.getClubMemberByUserIdAndClub(userId, clubRemoteId)
 
         assertEquals(member, result)
-        coVerify { clubMemberDataSource.getClubMemberByUserIdAndClub(userId, clubFirestoreId) }
+        coVerify { clubMemberDataSource.getClubMemberByUserIdAndClub(userId, clubRemoteId) }
     }
 
     @Test
     fun `givenNonMemberUserId_whenGetClubMemberByUserIdAndClub_thenReturnsNull`() = runTest {
         val userId = "non-member-user"
-        val clubFirestoreId = "club-firestore-id"
-        coEvery { clubMemberDataSource.getClubMemberByUserIdAndClub(userId, clubFirestoreId) } returns null
+        val clubRemoteId = "club-firestore-id"
+        coEvery { clubMemberDataSource.getClubMemberByUserIdAndClub(userId, clubRemoteId) } returns null
 
-        val result = repository.getClubMemberByUserIdAndClub(userId, clubFirestoreId)
+        val result = repository.getClubMemberByUserIdAndClub(userId, clubRemoteId)
 
         assertNull(result)
     }

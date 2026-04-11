@@ -38,13 +38,13 @@ fun ClubMemberFirestoreModel.toDomain(): ClubMember =
         email = email,
         clubId = clubId.toStableId(),
         roles = roles,
-        firestoreId = id,
-        clubFirestoreId = clubId,
+        remoteId = id,
+        clubRemoteId = clubId,
     )
 
 fun ClubMember.toFirestoreModel(): ClubMemberFirestoreModel =
     ClubMemberFirestoreModel(
-        id = firestoreId ?: "", // Will be set when inserting/updating
+        id = remoteId ?: "", // Will be set when inserting/updating
         userId = userId,
         name = name,
         email = email,

@@ -27,13 +27,13 @@ class ClubRepositoryImplTest {
         ownerId: String = "owner-123",
         name: String = "Test Club",
         invitationCode: String = "ABCD1234",
-        firestoreId: String? = "club-firestore-id",
+        remoteId: String? = "club-firestore-id",
     ) = Club(
         id = id,
         ownerId = ownerId,
         name = name,
         invitationCode = invitationCode,
-        firestoreId = firestoreId,
+        remoteId = remoteId,
     )
 
     // --- createClubWithOwner ---

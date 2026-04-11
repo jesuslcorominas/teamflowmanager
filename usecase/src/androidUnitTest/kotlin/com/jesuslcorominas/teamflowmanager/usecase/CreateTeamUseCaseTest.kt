@@ -33,7 +33,7 @@ class CreateTeamUseCaseTest {
         email = "user@test.com",
         clubId = 10L,
         roles = listOf(ClubRole.PRESIDENT.roleName),
-        clubFirestoreId = "club_fs_1",
+        clubRemoteId = "club_fs_1",
     )
 
     @Before

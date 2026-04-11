@@ -84,7 +84,7 @@ class TeamViewModel(
                 val isPresident = clubMember?.hasRole(ClubRole.PRESIDENT) ?: false
                 val userRole = clubMember?.roles?.firstNotNullOfOrNull { ClubRole.fromString(it) }
                 val clubNumericId = clubMember?.clubId
-                val clubId = clubMember?.clubFirestoreId
+                val clubId = clubMember?.clubRemoteId
 
                 if (team == null || isCreateMode) {
                     // No team exists, or explicitly creating a new one

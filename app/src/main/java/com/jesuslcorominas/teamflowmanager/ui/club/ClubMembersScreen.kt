@@ -66,7 +66,7 @@ fun ClubMembersScreen(
                     currentUserId = state.currentUserId,
                     showExpelAction = state.currentUserIsPresident,
                     onExpelMember = { member ->
-                        viewModel.expelMember(member.userId, state.clubFirestoreId)
+                        viewModel.expelMember(member.userId, state.clubRemoteId)
                     },
                 )
             }

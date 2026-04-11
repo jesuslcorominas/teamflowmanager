@@ -104,7 +104,7 @@ class TeamFirestoreDataSourceImplTest {
         every { mockAuth.currentUser } returns null
 
         val team = mockk<Team>(relaxed = true)
-        every { team.firestoreId } returns "team-doc-id"
+        every { team.remoteId } returns "team-doc-id"
 
         try {
             dataSource.updateTeam(team)
@@ -131,9 +131,9 @@ class TeamFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } returns mockk()
 
         val team = mockk<Team>(relaxed = true)
-        every { team.firestoreId } returns null
+        every { team.remoteId } returns null
         every { team.coachId } returns null
-        every { team.clubFirestoreId } returns null
+        every { team.clubRemoteId } returns null
 
         // Should not throw
         dataSource.insertTeam(team)
@@ -456,7 +456,7 @@ class TeamFirestoreDataSourceImplTest {
         every { mockUser.uid } returns "user-123"
 
         val team = mockk<Team>(relaxed = true)
-        every { team.firestoreId } returns null
+        every { team.remoteId } returns null
 
         try {
             dataSource.updateTeam(team)
@@ -482,9 +482,9 @@ class TeamFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } returns mockk()
 
         val team = mockk<Team>(relaxed = true)
-        every { team.firestoreId } returns "team-doc-id"
+        every { team.remoteId } returns "team-doc-id"
         every { team.coachId } returns "coach-123"
-        every { team.clubFirestoreId } returns null
+        every { team.clubRemoteId } returns null
 
         dataSource.updateTeam(team)
     }

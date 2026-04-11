@@ -161,8 +161,8 @@ class SettingsViewModelTest {
                 email = "test@example.com",
                 clubId = 100,
                 roles = listOf("Coach"),
-                firestoreId = "clubmember_doc_123",
-                clubFirestoreId = "club123",
+                remoteId = "clubmember_doc_123",
+                clubRemoteId = "club123",
             ),
         )
         viewModel = SettingsViewModel(
@@ -190,8 +190,8 @@ class SettingsViewModelTest {
                 email = "test@example.com",
                 clubId = 100,
                 roles = listOf("Presidente"),
-                firestoreId = "clubmember_doc_123",
-                clubFirestoreId = "club123",
+                remoteId = "clubmember_doc_123",
+                clubRemoteId = "club123",
             ),
         )
         every { getTeamUseCase() } returns flowOf(null)
@@ -221,8 +221,8 @@ class SettingsViewModelTest {
                 email = "test@example.com",
                 clubId = 100,
                 roles = listOf("Presidente"),
-                firestoreId = "clubmember_doc_123",
-                clubFirestoreId = "club123",
+                remoteId = "clubmember_doc_123",
+                clubRemoteId = "club123",
             ),
         )
         every { getTeamUseCase() } returns flowOf(
@@ -233,7 +233,7 @@ class SettingsViewModelTest {
                 delegateName = "Delegate",
                 teamType = TeamType.FOOTBALL_5,
                 clubId = 100L,
-                clubFirestoreId = "club123",
+                clubRemoteId = "club123",
             ),
         )
         viewModel = SettingsViewModel(

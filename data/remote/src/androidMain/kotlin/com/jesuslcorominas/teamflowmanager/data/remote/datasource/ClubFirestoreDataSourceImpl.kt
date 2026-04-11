@@ -140,35 +140,35 @@ class ClubFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun getClubByFirestoreId(firestoreId: String): Club? {
-        require(firestoreId.isNotBlank()) { "Firestore ID cannot be blank" }
+    override suspend fun getClubById(id: String): Club? {
+        require(id.isNotBlank()) { "ID cannot be blank" }
 
         return try {
-            val document = firestore.collection(CLUBS_COLLECTION).document(firestoreId).get().await()
+            val document = firestore.collection(CLUBS_COLLECTION).document(id).get().await()
             if (!document.exists()) {
-                Log.d(TAG, "No club found with firestoreId: $firestoreId")
+                Log.d(TAG, "No club found with id: $id")
                 return null
             }
             val model = document.toObject(ClubFirestoreModel::class.java) ?: return null
-            val modelWithId = if (model.id.isEmpty()) model.copy(id = firestoreId) else model
-            Log.d(TAG, "Found club: ${modelWithId.name} (id: $firestoreId)")
+            val modelWithId = if (model.id.isEmpty()) model.copy(id = id) else model
+            Log.d(TAG, "Found club: ${modelWithId.name} (id: $id)")
             modelWithId.toDomain()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting club by firestoreId from Firestore", e)
+            Log.e(TAG, "Error getting club by id from Firestore", e)
             throw e
         }
     }
 
-    override suspend fun regenerateInvitationCode(firestoreId: String): String {
-        require(firestoreId.isNotBlank()) { "Firestore ID cannot be blank" }
+    override suspend fun regenerateInvitationCode(id: String): String {
+        require(id.isNotBlank()) { "ID cannot be blank" }
 
         return try {
             val newCode = InvitationCodeGenerator.generate()
-            val docRef = firestore.collection(CLUBS_COLLECTION).document(firestoreId)
+            val docRef = firestore.collection(CLUBS_COLLECTION).document(id)
             docRef.update(mapOf(INVITATION_CODE_FIELD to newCode)).await()
-            Log.d(TAG, "Invitation code regenerated for club: $firestoreId")
+            Log.d(TAG, "Invitation code regenerated for club: $id")
             newCode
         } catch (e: CancellationException) {
             throw e
@@ -179,26 +179,26 @@ class ClubFirestoreDataSourceImpl(
     }
 
     override suspend fun updateClub(
-        firestoreId: String,
+        id: String,
         name: String,
         homeGround: String?,
     ): Club {
-        require(firestoreId.isNotBlank()) { "Firestore ID cannot be blank" }
+        require(id.isNotBlank()) { "ID cannot be blank" }
         require(name.isNotBlank()) { "Club name cannot be blank" }
 
         return try {
-            val docRef = firestore.collection(CLUBS_COLLECTION).document(firestoreId)
+            val docRef = firestore.collection(CLUBS_COLLECTION).document(id)
             val updates =
                 hashMapOf<String, Any?>(
                     NAME_FIELD to name,
                     HOME_GROUND_FIELD to homeGround,
                 )
             docRef.update(updates).await()
-            Log.d(TAG, "Club updated: $firestoreId, name=$name, homeGround=$homeGround")
+            Log.d(TAG, "Club updated: $id, name=$name, homeGround=$homeGround")
             // Re-fetch to return authoritative state
             val updated =
-                getClubByFirestoreId(firestoreId)
-                    ?: throw IllegalStateException("Club not found after update: $firestoreId")
+                getClubById(id)
+                    ?: throw IllegalStateException("Club not found after update: $id")
             updated
         } catch (e: CancellationException) {
             throw e

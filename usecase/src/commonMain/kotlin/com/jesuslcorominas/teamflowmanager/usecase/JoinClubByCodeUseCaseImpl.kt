@@ -45,8 +45,8 @@ internal class JoinClubByCodeUseCaseImpl(
             clubRepository.getClubByInvitationCode(invitationCode)
                 ?: throw IllegalArgumentException("Club not found with invitation code: $invitationCode")
 
-        require(club.firestoreId != null) {
-            "Club firestore ID is required"
+        require(club.remoteId != null) {
+            "Club remote ID is required"
         }
 
         // Get orphan teams (teams without clubId) for current user
@@ -59,13 +59,13 @@ internal class JoinClubByCodeUseCaseImpl(
         try {
             // Step 1: Link orphan team to club if exists
             if (orphanTeam != null) {
-                require(orphanTeam.firestoreId != null) {
-                    "Orphan team must have a firestoreId (Firestore document ID)"
+                require(orphanTeam.remoteId != null) {
+                    "Orphan team must have a remote ID"
                 }
                 teamRepository.updateTeamClubId(
-                    teamId = orphanTeam.firestoreId!!,
+                    teamId = orphanTeam.remoteId!!,
                     clubNumericId = club.id,
-                    clubId = club.firestoreId!!,
+                    clubId = club.remoteId!!,
                 )
             }
 
@@ -76,14 +76,14 @@ internal class JoinClubByCodeUseCaseImpl(
                     name = currentUser.displayName!!,
                     email = currentUser.email!!,
                     clubNumericId = club.id,
-                    clubId = club.firestoreId!!,
+                    clubId = club.remoteId!!,
                     roles = roles,
                 )
 
             if (orphanTeam == null) {
                 try {
                     notifyPresidentOnMemberWaiting(
-                        clubId = club.firestoreId!!,
+                        clubId = club.remoteId!!,
                         presidentUserId = club.ownerId,
                         userName = currentUser.displayName!!,
                         userEmail = currentUser.email!!,

@@ -2,7 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByFirestoreIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateClubUseCase
@@ -14,14 +14,14 @@ import kotlinx.coroutines.launch
 
 class ClubSettingsViewModel(
     private val getUserClubMembership: GetUserClubMembershipUseCase,
-    private val getClubByFirestoreId: GetClubByFirestoreIdUseCase,
+    private val getClubById: GetClubByIdUseCase,
     private val updateClubUseCase: UpdateClubUseCase,
     private val regenerateInvitationCodeUseCase: RegenerateInvitationCodeUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    private var clubFirestoreId: String? = null
+    private var clubId: String? = null
 
     // Original values to restore on cancel
     private var savedName: String = ""
@@ -48,8 +48,8 @@ class ClubSettingsViewModel(
         viewModelScope.launch {
             try {
                 val member = getUserClubMembership().first()
-                val firestoreId = member?.clubFirestoreId
-                if (firestoreId == null) {
+                val remoteId = member?.clubRemoteId
+                if (remoteId == null) {
                     _uiState.value =
                         _uiState.value.copy(
                             loading = false,
@@ -57,8 +57,8 @@ class ClubSettingsViewModel(
                         )
                     return@launch
                 }
-                clubFirestoreId = firestoreId
-                val club = getClubByFirestoreId(firestoreId)
+                clubId = remoteId
+                val club = getClubById(remoteId)
                 if (club == null) {
                     _uiState.value =
                         _uiState.value.copy(
@@ -125,7 +125,7 @@ class ClubSettingsViewModel(
     }
 
     fun onSave() {
-        val firestoreId = clubFirestoreId ?: return
+        val id = clubId ?: return
         val name = _uiState.value.name.trim()
         if (name.isBlank()) return
 
@@ -134,7 +134,7 @@ class ClubSettingsViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(saving = true, error = null)
             try {
-                val updated = updateClubUseCase(firestoreId, name, homeGround)
+                val updated = updateClubUseCase(id, name, homeGround)
                 savedName = updated.name
                 savedHomeGround = updated.homeGround ?: ""
                 _uiState.value =
@@ -156,11 +156,11 @@ class ClubSettingsViewModel(
     }
 
     fun onRegenerateCode() {
-        val firestoreId = clubFirestoreId ?: return
+        val id = clubId ?: return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(regenerating = true, error = null)
             try {
-                val newCode = regenerateInvitationCodeUseCase(firestoreId)
+                val newCode = regenerateInvitationCodeUseCase(id)
                 _uiState.value =
                     _uiState.value.copy(
                         invitationCode = newCode,

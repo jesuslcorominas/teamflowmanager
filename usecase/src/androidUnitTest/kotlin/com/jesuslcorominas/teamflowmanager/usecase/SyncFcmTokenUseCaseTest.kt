@@ -71,7 +71,7 @@ class SyncFcmTokenUseCaseTest {
     }
 
     @Test
-    fun `when clubFirestoreId is null, saves token without subscribing`() = runTest {
+    fun `when clubRemoteId is null, saves token without subscribing`() = runTest {
         coEvery { fcmTokenProviderRepository.getToken() } returns "token123"
         coEvery { fcmTokenRepository.findTokensForOtherUsers(any(), any()) } returns emptyList()
 

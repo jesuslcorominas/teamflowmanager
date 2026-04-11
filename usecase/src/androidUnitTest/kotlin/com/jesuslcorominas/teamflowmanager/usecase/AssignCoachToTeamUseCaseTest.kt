@@ -27,9 +27,9 @@ class AssignCoachToTeamUseCaseTest {
     private lateinit var useCase: AssignCoachToTeamUseCase
 
     private val president = User(id = "user1", email = "pres@test.com", displayName = "President", photoUrl = null)
-    private val team = Team(id = 1L, name = "Team A", coachName = "", delegateName = "Del", teamType = TeamType.FOOTBALL_7, firestoreId = "team_fs_1", clubFirestoreId = "club_fs_1")
-    private val presidentMember = ClubMember(id = 1L, userId = "user1", name = "President", email = "pres@test.com", clubId = 10L, roles = listOf(ClubRole.PRESIDENT.roleName), clubFirestoreId = "club_fs_1")
-    private val coachMember = ClubMember(id = 2L, userId = "coach1", name = "Coach", email = "coach@test.com", clubId = 10L, roles = listOf(ClubRole.STAFF.roleName), clubFirestoreId = "club_fs_1")
+    private val team = Team(id = 1L, name = "Team A", coachName = "", delegateName = "Del", teamType = TeamType.FOOTBALL_7, remoteId = "team_fs_1", clubRemoteId = "club_fs_1")
+    private val presidentMember = ClubMember(id = 1L, userId = "user1", name = "President", email = "pres@test.com", clubId = 10L, roles = listOf(ClubRole.PRESIDENT.roleName), clubRemoteId = "club_fs_1")
+    private val coachMember = ClubMember(id = 2L, userId = "coach1", name = "Coach", email = "coach@test.com", clubId = 10L, roles = listOf(ClubRole.STAFF.roleName), clubRemoteId = "club_fs_1")
 
     @Before
     fun setup() {
@@ -88,7 +88,7 @@ class AssignCoachToTeamUseCaseTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `givenTeamWithoutClub_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val teamWithoutClub = team.copy(clubFirestoreId = null)
+        val teamWithoutClub = team.copy(clubRemoteId = null)
         coEvery { getCurrentUser() } returns flowOf(president)
         coEvery { teamRepository.getTeamById("team_fs_1") } returns teamWithoutClub
         useCase.invoke("team_fs_1", "coach1")
@@ -104,7 +104,7 @@ class AssignCoachToTeamUseCaseTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `givenPresidentInDifferentClubThanTeam_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val memberInDifferentClub = presidentMember.copy(clubFirestoreId = "different_club_fs")
+        val memberInDifferentClub = presidentMember.copy(clubRemoteId = "different_club_fs")
         coEvery { getCurrentUser() } returns flowOf(president)
         coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(memberInDifferentClub)

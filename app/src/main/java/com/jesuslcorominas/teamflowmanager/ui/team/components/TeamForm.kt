@@ -331,7 +331,7 @@ private fun TeamFormState.toTeam(): Team =
         teamType = teamType,
         coachId = coachId,
         clubId = clubNumericId,
-        clubFirestoreId = clubId,
+        clubRemoteId = clubId,
     )
 
 private fun Team?.toTeamFormState() =
@@ -344,7 +344,7 @@ private fun Team?.toTeamFormState() =
             teamType = it.teamType,
             coachId = it.coachId,
             clubNumericId = it.clubId,
-            clubId = it.clubFirestoreId,
+            clubId = it.clubRemoteId,
         )
     } ?: TeamFormState()
 

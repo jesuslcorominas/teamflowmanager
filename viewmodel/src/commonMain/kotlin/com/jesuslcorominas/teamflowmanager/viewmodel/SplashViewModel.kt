@@ -89,22 +89,22 @@ class SplashViewModel(
                 // President who is also assigned as coach to a team — respect the role preference
                 when (getActiveViewRole()) {
                     ActiveViewRole.Coach -> {
-                        val clubFirestoreId = team.clubFirestoreId
-                        if (clubFirestoreId != null) {
-                            syncFcmTokenIfPermitted(user.id, clubFirestoreId)
+                        val clubRemoteId = team.clubRemoteId
+                        if (clubRemoteId != null) {
+                            syncFcmTokenIfPermitted(user.id, clubRemoteId)
                             _uiState.value = UiState.TeamExists
                         } else {
                             _uiState.value = UiState.ClubPresident
                         }
                     }
                     ActiveViewRole.President -> {
-                        syncFcmTokenIfPermitted(user.id, clubMember.clubFirestoreId)
+                        syncFcmTokenIfPermitted(user.id, clubMember.clubRemoteId)
                         _uiState.value = UiState.ClubPresident
                     }
                 }
             } else {
                 // President with no team assigned as coach — always show president view
-                syncFcmTokenIfPermitted(user.id, clubMember.clubFirestoreId)
+                syncFcmTokenIfPermitted(user.id, clubMember.clubRemoteId)
                 _uiState.value = UiState.ClubPresident
             }
             return
@@ -123,9 +123,9 @@ class SplashViewModel(
                 _uiState.value = UiState.NoTeam
             }
         } else {
-            val clubFirestoreId = team.clubFirestoreId
-            if (clubFirestoreId != null) {
-                syncFcmTokenIfPermitted(user.id, clubFirestoreId)
+            val clubRemoteId = team.clubRemoteId
+            if (clubRemoteId != null) {
+                syncFcmTokenIfPermitted(user.id, clubRemoteId)
                 _uiState.value = UiState.TeamExists
             } else {
                 _uiState.value = UiState.NoClub
@@ -135,11 +135,11 @@ class SplashViewModel(
 
     private fun syncFcmTokenIfPermitted(
         userId: String,
-        clubFirestoreId: String?,
+        clubRemoteId: String?,
     ) {
         if (!isNotificationPermissionGranted()) return
         viewModelScope.launch {
-            runCatching { syncFcmTokenUseCase(userId, "android", clubFirestoreId) }
+            runCatching { syncFcmTokenUseCase(userId, "android", clubRemoteId) }
         }
     }
 }

@@ -30,7 +30,7 @@ class JoinClubByCodeUseCaseTest {
     private lateinit var useCase: JoinClubByCodeUseCase
 
     private val authenticatedUser = User(id = "user1", email = "alice@test.com", displayName = "Alice", photoUrl = null)
-    private val club = Club(id = 10L, ownerId = "owner1", name = "Club A", invitationCode = "ABC123", firestoreId = "club_fs_1")
+    private val club = Club(id = 10L, ownerId = "owner1", name = "Club A", invitationCode = "ABC123", remoteId = "club_fs_1")
     private val clubMember = ClubMember(id = 1L, userId = "user1", name = "Alice", email = "alice@test.com", clubId = 10L, roles = listOf("Staff"))
 
     @Before
@@ -91,7 +91,7 @@ class JoinClubByCodeUseCaseTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `givenClubWithNullFirestoreId_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val clubWithNullFirestoreId = club.copy(firestoreId = null)
+        val clubWithNullFirestoreId = club.copy(remoteId = null)
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
         coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns clubWithNullFirestoreId
         useCase.invoke("ABC123")
@@ -101,7 +101,7 @@ class JoinClubByCodeUseCaseTest {
     fun `givenOrphanTeamWithNullFirestoreId_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         val orphanTeamWithNullFirestoreId = Team(
             id = 5L, name = "My Team", coachName = "Coach", delegateName = "Del",
-            teamType = TeamType.FOOTBALL_7, firestoreId = null,
+            teamType = TeamType.FOOTBALL_7, remoteId = null,
         )
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
         coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
@@ -126,7 +126,7 @@ class JoinClubByCodeUseCaseTest {
 
     @Test
     fun `givenValidCodeWithOrphanTeam_whenInvoke_thenJoinWithCoachRoleAndLinkTeam`() = runTest {
-        val orphanTeam = Team(id = 5L, name = "My Team", coachName = "Coach", delegateName = "Del", teamType = TeamType.FOOTBALL_7, firestoreId = "team_fs_1")
+        val orphanTeam = Team(id = 5L, name = "My Team", coachName = "Coach", delegateName = "Del", teamType = TeamType.FOOTBALL_7, remoteId = "team_fs_1")
         val memberWithCoach = ClubMember(id = 1L, userId = "user1", name = "Alice", email = "alice@test.com", clubId = 10L, roles = listOf("Coach"))
 
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
@@ -162,7 +162,7 @@ class JoinClubByCodeUseCaseTest {
 
     @Test
     fun `givenValidCodeWithOrphanTeam_whenInvoke_thenDoesNotNotifyPresident`() = runTest {
-        val orphanTeam = Team(id = 5L, name = "My Team", coachName = "Coach", delegateName = "Del", teamType = TeamType.FOOTBALL_7, firestoreId = "team_fs_1")
+        val orphanTeam = Team(id = 5L, name = "My Team", coachName = "Coach", delegateName = "Del", teamType = TeamType.FOOTBALL_7, remoteId = "team_fs_1")
         val memberWithCoach = ClubMember(id = 1L, userId = "user1", name = "Alice", email = "alice@test.com", clubId = 10L, roles = listOf("Coach"))
 
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)

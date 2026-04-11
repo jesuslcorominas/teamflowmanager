@@ -196,7 +196,7 @@ class JoinClubViewModelTest {
     }
 
     @Test
-    fun `syncFcmToken is called with club firestoreId on successful join when permission is granted`() = runTest {
+    fun `syncFcmToken is called with club remoteId on successful join when permission is granted`() = runTest {
         every { isNotificationPermissionGranted() } returns true
         val code = "ABC123"
         val club = Club(
@@ -204,7 +204,7 @@ class JoinClubViewModelTest {
             ownerId = "owner",
             name = "Test Club",
             invitationCode = code,
-            firestoreId = "club_firestore_123",
+            remoteId = "club_firestore_123",
         )
         val clubMember = ClubMember(
             id = 1L,
@@ -233,7 +233,7 @@ class JoinClubViewModelTest {
             ownerId = "owner",
             name = "Test Club",
             invitationCode = code,
-            firestoreId = "club_firestore_123",
+            remoteId = "club_firestore_123",
         )
         val clubMember = ClubMember(
             id = 1L,

@@ -35,7 +35,7 @@ class LoginViewModel(
     private data class PendingFcmSync(
         val userId: String,
         val platform: String,
-        val clubFirestoreId: String?,
+        val clubRemoteId: String?,
     )
 
     sealed interface UiState {
@@ -82,11 +82,11 @@ class LoginViewModel(
 
     private suspend fun handlePostLogin(user: User) {
         val platform = "android"
-        // clubFirestoreId is unknown at login time; subscription will be updated
+        // clubRemoteId is unknown at login time; subscription will be updated
         // when the user's club is loaded (e.g. in SplashViewModel / MainViewModel).
         // For now we sync the token without subscribing to a topic, which also
         // handles cleanup of any previous user's token on this device.
-        val clubFirestoreId: String? = null
+        val clubRemoteId: String? = null
 
         // Resolve any pending coach assignments for this user (non-blocking)
         viewModelScope.launch {
@@ -97,14 +97,14 @@ class LoginViewModel(
 
         if (isNotificationPermissionGranted()) {
             runCatching {
-                syncFcmTokenUseCase(user.id, platform, clubFirestoreId)
+                syncFcmTokenUseCase(user.id, platform, clubRemoteId)
             }
             _uiState.value = UiState.Success
         } else {
             // Store pending sync and defer navigation until the user responds to
             // the permission dialog — otherwise the screen navigates away before
             // the launcher can receive the result.
-            pendingFcmSync = PendingFcmSync(user.id, platform, clubFirestoreId)
+            pendingFcmSync = PendingFcmSync(user.id, platform, clubRemoteId)
             _events.emit(UiEvent.RequestNotificationPermission)
             // Success is set inside onNotificationPermissionResult
         }
@@ -116,7 +116,7 @@ class LoginViewModel(
         if (granted && pending != null) {
             viewModelScope.launch {
                 runCatching {
-                    syncFcmTokenUseCase(pending.userId, pending.platform, pending.clubFirestoreId)
+                    syncFcmTokenUseCase(pending.userId, pending.platform, pending.clubRemoteId)
                 }
             }
         }

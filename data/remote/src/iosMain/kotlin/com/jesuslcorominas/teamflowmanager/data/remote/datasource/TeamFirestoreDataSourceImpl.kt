@@ -135,7 +135,7 @@ class TeamFirestoreDataSourceImpl(
 
     override suspend fun updateTeam(team: Team) {
         val docId =
-            team.firestoreId ?: findTeamDocumentId()
+            team.remoteId ?: findTeamDocumentId()
                 ?: throw IllegalStateException("Cannot find team document to update")
         val model = team.toFirestoreModel()
         firestore.collection(TEAMS_COLLECTION).document(docId).set(model)

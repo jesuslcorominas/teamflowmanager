@@ -175,8 +175,8 @@ fun Navigation(
         ) {
             TeamListScreen(
                 onTeamClick = { team ->
-                    team.firestoreId?.let { firestoreId ->
-                        navController.navigate(Route.PresidentTeamDetail.createRoute(firestoreId))
+                    team.remoteId?.let { remoteId ->
+                        navController.navigate(Route.PresidentTeamDetail.createRoute(remoteId))
                     }
                 },
             )

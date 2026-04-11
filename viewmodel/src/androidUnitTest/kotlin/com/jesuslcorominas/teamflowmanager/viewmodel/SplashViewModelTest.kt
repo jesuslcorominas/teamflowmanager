@@ -121,8 +121,8 @@ class SplashViewModelTest {
             email = "test@example.com",
             clubId = 100,
             roles = listOf("Presidente"),
-            firestoreId = "clubmember_doc_123",
-            clubFirestoreId = "club123",
+            remoteId = "clubmember_doc_123",
+            clubRemoteId = "club123",
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getTeamUseCase() } returns flowOf(null)
@@ -143,8 +143,8 @@ class SplashViewModelTest {
             email = "test@example.com",
             clubId = 100,
             roles = listOf("Coach"),
-            firestoreId = "clubmember_doc_123",
-            clubFirestoreId = "club123",
+            remoteId = "clubmember_doc_123",
+            clubRemoteId = "club123",
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getTeamUseCase() } returns flowOf(null)
@@ -166,8 +166,8 @@ class SplashViewModelTest {
             email = "test@example.com",
             clubId = 100,
             roles = listOf("Presidente"),
-            firestoreId = "clubmember_doc_123",
-            clubFirestoreId = "club123",
+            remoteId = "clubmember_doc_123",
+            clubRemoteId = "club123",
         )
         val teamWithClub = Team(
             id = 1,
@@ -176,7 +176,7 @@ class SplashViewModelTest {
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
             clubId = 100L,
-            clubFirestoreId = "club123",
+            clubRemoteId = "club123",
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getUserClubMembershipUseCase() } returns flowOf(clubMember)
@@ -198,8 +198,8 @@ class SplashViewModelTest {
             email = "test@example.com",
             clubId = 100,
             roles = listOf("Presidente"),
-            firestoreId = "clubmember_doc_123",
-            clubFirestoreId = "club123",
+            remoteId = "clubmember_doc_123",
+            clubRemoteId = "club123",
         )
         val teamWithClub = Team(
             id = 1,
@@ -208,7 +208,7 @@ class SplashViewModelTest {
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
             clubId = 100L,
-            clubFirestoreId = "club123",
+            clubRemoteId = "club123",
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getUserClubMembershipUseCase() } returns flowOf(clubMember)
@@ -221,7 +221,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `should emit NoClub when user has team but team has no clubFirestoreId`() = runTest {
+    fun `should emit NoClub when user has team but team has no clubRemoteId`() = runTest {
         val teamWithoutClubFirestore = Team(
             id = 1,
             name = "Test Team",
@@ -229,7 +229,7 @@ class SplashViewModelTest {
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
             clubId = 100L,
-            clubFirestoreId = null,
+            clubRemoteId = null,
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getUserClubMembershipUseCase() } returns flowOf(null)
@@ -250,7 +250,7 @@ class SplashViewModelTest {
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
             clubId = null,
-            clubFirestoreId = null,
+            clubRemoteId = null,
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getUserClubMembershipUseCase() } returns flowOf(null)
@@ -263,7 +263,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `should emit TeamExists when user has team and team has clubFirestoreId`() = runTest {
+    fun `should emit TeamExists when user has team and team has clubRemoteId`() = runTest {
         val clubMember = ClubMember(
             id = 1,
             userId = "user123",
@@ -271,8 +271,8 @@ class SplashViewModelTest {
             email = "test@example.com",
             clubId = 100,
             roles = listOf("Coach"),
-            firestoreId = "clubmember_doc_123",
-            clubFirestoreId = "club123",
+            remoteId = "clubmember_doc_123",
+            clubRemoteId = "club123",
         )
         val teamWithClub = Team(
             id = 1,
@@ -281,7 +281,7 @@ class SplashViewModelTest {
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
             clubId = null,
-            clubFirestoreId = "club123",
+            clubRemoteId = "club123",
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getUserClubMembershipUseCase() } returns flowOf(clubMember)
@@ -331,7 +331,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `syncFcmToken is called with clubFirestoreId when TeamExists and permission is granted`() = runTest {
+    fun `syncFcmToken is called with clubRemoteId when TeamExists and permission is granted`() = runTest {
         every { isNotificationPermissionGranted() } returns true
         val teamWithClub = Team(
             id = 1,
@@ -340,7 +340,7 @@ class SplashViewModelTest {
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
             clubId = null,
-            clubFirestoreId = "club123",
+            clubRemoteId = "club123",
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getUserClubMembershipUseCase() } returns flowOf(null)
@@ -362,7 +362,7 @@ class SplashViewModelTest {
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
             clubId = null,
-            clubFirestoreId = "club123",
+            clubRemoteId = "club123",
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getUserClubMembershipUseCase() } returns flowOf(null)
@@ -375,7 +375,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `syncFcmToken is called with clubFirestoreId when ClubPresident and permission is granted`() = runTest {
+    fun `syncFcmToken is called with clubRemoteId when ClubPresident and permission is granted`() = runTest {
         every { isNotificationPermissionGranted() } returns true
         val clubMember = ClubMember(
             id = 1,
@@ -384,8 +384,8 @@ class SplashViewModelTest {
             email = "test@example.com",
             clubId = 100,
             roles = listOf("Presidente"),
-            firestoreId = "clubmember_doc_123",
-            clubFirestoreId = "club123",
+            remoteId = "clubmember_doc_123",
+            clubRemoteId = "club123",
         )
         every { getCurrentUserUseCase() } returns flowOf(testUser)
         every { getTeamUseCase() } returns flowOf(null)

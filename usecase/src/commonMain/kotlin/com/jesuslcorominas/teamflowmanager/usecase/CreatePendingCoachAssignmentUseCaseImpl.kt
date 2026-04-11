@@ -30,7 +30,7 @@ internal class CreatePendingCoachAssignmentUseCaseImpl(
                 ?: throw IllegalArgumentException("Team not found: $teamId")
 
         val clubId =
-            team.clubFirestoreId
+            team.clubRemoteId
                 ?: throw IllegalArgumentException("Team must belong to a club")
 
         val membership =
@@ -41,7 +41,7 @@ internal class CreatePendingCoachAssignmentUseCaseImpl(
             "Only club Presidents can create pending coach assignments"
         }
 
-        require(membership.clubFirestoreId == clubId) {
+        require(membership.clubRemoteId == clubId) {
             "User and team must be in the same club"
         }
 

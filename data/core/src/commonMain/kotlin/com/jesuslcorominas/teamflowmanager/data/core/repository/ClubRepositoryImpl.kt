@@ -20,17 +20,17 @@ internal class ClubRepositoryImpl(
         return clubDataSource.getClubByInvitationCode(invitationCode)
     }
 
-    override suspend fun getClubByFirestoreId(firestoreId: String): Club? {
-        return clubDataSource.getClubByFirestoreId(firestoreId)
+    override suspend fun getClubById(id: String): Club? {
+        return clubDataSource.getClubById(id)
     }
 
-    override suspend fun regenerateInvitationCode(firestoreId: String): String = clubDataSource.regenerateInvitationCode(firestoreId)
+    override suspend fun regenerateInvitationCode(id: String): String = clubDataSource.regenerateInvitationCode(id)
 
     override suspend fun updateClub(
-        firestoreId: String,
+        id: String,
         name: String,
         homeGround: String?,
     ): Club {
-        return clubDataSource.updateClub(firestoreId, name, homeGround)
+        return clubDataSource.updateClub(id, name, homeGround)
     }
 }

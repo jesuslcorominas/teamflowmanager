@@ -46,7 +46,7 @@ class GetUserClubMembershipUseCaseTest {
             email = "test@example.com",
             clubId = 100L,
             roles = listOf("member"),
-            firestoreId = "member1"
+            remoteId = "member1"
         )
         every { getCurrentUser() } returns flowOf(user)
         every { clubMemberRepository.getClubMemberByUserId("user123") } returns flowOf(clubMember)

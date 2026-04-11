@@ -28,7 +28,7 @@ class ClubMembersViewModel(
             val members: List<ClubMember>,
             val currentUserId: String,
             val currentUserIsPresident: Boolean,
-            val clubFirestoreId: String,
+            val clubRemoteId: String,
         ) : UiState
 
         data object Error : UiState
@@ -58,7 +58,7 @@ class ClubMembersViewModel(
             try {
                 // Get user's club membership
                 val clubMember = getUserClubMembership().first()
-                val clubId = clubMember?.clubFirestoreId
+                val clubId = clubMember?.clubRemoteId
 
                 if (clubMember == null || clubId == null) {
                     _uiState.value = UiState.NoClubMembership
@@ -75,7 +75,7 @@ class ClubMembersViewModel(
                             members = members,
                             currentUserId = currentUserId,
                             currentUserIsPresident = isPresident,
-                            clubFirestoreId = clubId,
+                            clubRemoteId = clubId,
                         )
                 }
             } catch (e: Exception) {

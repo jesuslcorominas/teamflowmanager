@@ -36,8 +36,8 @@ class ClubMembersViewModelTest {
         email = "president@example.com",
         clubId = 100L,
         roles = listOf("Presidente"),
-        firestoreId = "member1",
-        clubFirestoreId = "club_fs_1",
+        remoteId = "member1",
+        clubRemoteId = "club_fs_1",
     )
 
     private val coachMember = ClubMember(
@@ -47,8 +47,8 @@ class ClubMembersViewModelTest {
         email = "coach@example.com",
         clubId = 100L,
         roles = listOf("Coach"),
-        firestoreId = "member2",
-        clubFirestoreId = "club_fs_1",
+        remoteId = "member2",
+        clubRemoteId = "club_fs_1",
     )
 
     @Before
@@ -114,7 +114,7 @@ class ClubMembersViewModelTest {
                     members = members,
                     currentUserId = "user123",
                     currentUserIsPresident = true,
-                    clubFirestoreId = "club_fs_1",
+                    clubRemoteId = "club_fs_1",
                 ),
                 viewModel.uiState.value,
             )

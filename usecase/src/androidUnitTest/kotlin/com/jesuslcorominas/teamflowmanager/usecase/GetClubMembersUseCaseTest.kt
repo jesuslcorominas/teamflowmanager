@@ -38,12 +38,12 @@ class GetClubMembersUseCaseTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun `invoke should throw when clubFirestoreId is blank`() {
+    fun `invoke should throw when clubRemoteId is blank`() {
         useCase.invoke("")
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun `invoke should throw when clubFirestoreId is whitespace`() {
+    fun `invoke should throw when clubRemoteId is whitespace`() {
         useCase.invoke("   ")
     }
 }

@@ -13,7 +13,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByFirestoreIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
@@ -36,7 +36,7 @@ class MatchCreationWizardViewModel(
     private val saveDefaultCaptainUseCase: SaveDefaultCaptainUseCase,
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
     private val getTeamUseCase: GetTeamUseCase,
-    private val getClubByFirestoreIdUseCase: GetClubByFirestoreIdUseCase,
+    private val getClubByIdUseCase: GetClubByIdUseCase,
     private val createMatch: CreateMatchUseCase,
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
     private val updateMatchUseCase: UpdateMatchUseCase,
@@ -146,8 +146,8 @@ class MatchCreationWizardViewModel(
         viewModelScope.launch {
             val team = getTeamUseCase.invoke().first()
             teamTypeValue = team?.teamType?.players ?: 5
-            team?.clubFirestoreId?.let { firestoreId ->
-                homeGround = getClubByFirestoreIdUseCase.invoke(firestoreId)?.homeGround
+            team?.clubRemoteId?.let { remoteId ->
+                homeGround = getClubByIdUseCase.invoke(remoteId)?.homeGround
             }
         }
     }
