@@ -1,5 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.di
 
+import com.google.firebase.Firebase
+import com.google.firebase.app
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -133,7 +135,7 @@ internal val ktorfitModule =
             Ktorfit
                 .Builder()
                 .httpClient(get<HttpClient>())
-                .baseUrl("https://us-central1-teamflow-manager-dev.cloudfunctions.net/")
+                .baseUrl("https://us-central1-${Firebase.app.options.projectId}.cloudfunctions.net/")
                 .build()
         }
         single<ShortLinkApi> {
