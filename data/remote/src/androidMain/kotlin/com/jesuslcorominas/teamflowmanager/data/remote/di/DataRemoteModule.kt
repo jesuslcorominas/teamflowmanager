@@ -49,6 +49,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreD
 import com.jesuslcorominas.teamflowmanager.data.remote.transaction.FirestoreTransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
+import com.jesuslcorominas.teamflowmanager.data.remote.BuildConfig
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -133,7 +134,7 @@ internal val ktorfitModule =
             Ktorfit
                 .Builder()
                 .httpClient(get<HttpClient>())
-                .baseUrl("https://us-central1-teamflow-manager-dev.cloudfunctions.net/")
+                .baseUrl(BuildConfig.CLOUD_FUNCTIONS_BASE_URL)
                 .build()
         }
         single<ShortLinkApi> {
