@@ -157,18 +157,6 @@ private fun NotificationItem(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = if (notification.read) Icons.Default.Drafts else Icons.Default.Email,
-            contentDescription = null,
-            tint =
-                if (notification.read) {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
-            modifier = Modifier.padding(end = 12.dp),
-        )
-
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = notification.title,
