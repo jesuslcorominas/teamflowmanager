@@ -36,6 +36,7 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.PendingNavigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
 import org.koin.androidx.compose.koinViewModel
 
 private val FabHeight = 56.dp
@@ -74,9 +75,13 @@ fun MainScreen(
         }
     }
 
+    val notificationsViewModel: PresidentNotificationsViewModel = koinViewModel()
+    val unreadCount by notificationsViewModel.unreadCount.collectAsState()
+
     MainScaffold(
         navController = navController,
         isPresident = isPresident,
+        unreadNotificationsCount = if (isPresident) unreadCount else 0,
         onRoleChanged = { viewModel.refreshIsPresident() },
     )
 }
@@ -85,6 +90,7 @@ fun MainScreen(
 private fun MainScaffold(
     navController: NavHostController,
     isPresident: Boolean,
+    unreadNotificationsCount: Int = 0,
     onRoleChanged: () -> Unit,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -132,7 +138,11 @@ private fun MainScaffold(
             },
             bottomBar = {
                 if (uiConfig?.showBottomBar == true) {
-                    BottomNavigationBar(navController = navController, isPresident = isPresident)
+                    BottomNavigationBar(
+                        navController = navController,
+                        isPresident = isPresident,
+                        unreadNotificationsCount = unreadNotificationsCount,
+                    )
                 }
             },
             floatingActionButton = {
@@ -228,6 +238,7 @@ fun Route.toTitleRes(backStackEntry: NavBackStackEntry?): Int? =
         Route.Analysis -> R.string.analysis_title
         Route.Settings -> R.string.settings_title
         Route.ClubSettings -> R.string.club_settings_title
+        Route.PresidentNotifications -> R.string.nav_notifications
 
         Route.Match -> null
 

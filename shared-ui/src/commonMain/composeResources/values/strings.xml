@@ -286,6 +286,7 @@
     <string name="nav_staff">Staff</string>
     <string name="nav_matches">Matches</string>
     <string name="nav_analysis">Analysis</string>
+    <string name="nav_notifications">Notifications</string>
 
     <!-- Analysis -->
     <string name="analysis_title">Analysis</string>
@@ -340,6 +341,13 @@
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings">Settings</string>
+
+    <!-- President Notifications -->
+    <string name="notifications_empty">No notifications yet</string>
+    <string name="notifications_no_club">You need to join a club to see notifications</string>
+    <string name="notifications_mark_read_description">Mark as read</string>
+    <string name="notifications_mark_unread_description">Mark as unread</string>
+    <string name="notifications_delete_description">Delete notification</string>
 
     <!-- Club Settings -->
     <string name="nav_club_settings">Club</string>

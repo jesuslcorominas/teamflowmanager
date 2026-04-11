@@ -7,6 +7,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentOnMemberWaitingUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
@@ -25,6 +26,7 @@ class JoinClubByCodeUseCaseTest {
     private lateinit var teamRepository: TeamRepository
     private lateinit var clubMemberRepository: ClubMemberRepository
     private lateinit var getCurrentUser: GetCurrentUserUseCase
+    private lateinit var notifyPresidentOnMemberWaiting: NotifyPresidentOnMemberWaitingUseCase
     private lateinit var useCase: JoinClubByCodeUseCase
 
     private val authenticatedUser = User(id = "user1", email = "alice@test.com", displayName = "Alice", photoUrl = null)
@@ -37,7 +39,8 @@ class JoinClubByCodeUseCaseTest {
         teamRepository = mockk(relaxed = true)
         clubMemberRepository = mockk()
         getCurrentUser = mockk()
-        useCase = JoinClubByCodeUseCaseImpl(clubRepository, teamRepository, clubMemberRepository, getCurrentUser)
+        notifyPresidentOnMemberWaiting = mockk(relaxed = true)
+        useCase = JoinClubByCodeUseCaseImpl(clubRepository, teamRepository, clubMemberRepository, getCurrentUser, notifyPresidentOnMemberWaiting)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -136,5 +139,54 @@ class JoinClubByCodeUseCaseTest {
         assertEquals(orphanTeam, result.orphanTeam)
         coVerify { teamRepository.updateTeamClubId("team_fs_1", 10L, "club_fs_1") }
         coVerify { clubMemberRepository.createOrUpdateClubMember("user1", "Alice", "alice@test.com", 10L, "club_fs_1", listOf("Coach")) }
+    }
+
+    @Test
+    fun `givenValidCodeAndNoOrphanTeam_whenInvoke_thenNotifiesPresident`() = runTest {
+        coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
+        coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
+        coEvery { teamRepository.getOrphanTeams("user1") } returns emptyList()
+        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns clubMember
+
+        useCase.invoke("ABC123")
+
+        coVerify {
+            notifyPresidentOnMemberWaiting(
+                clubId = "club_fs_1",
+                presidentUserId = "owner1",
+                userName = "Alice",
+                userEmail = "alice@test.com",
+            )
+        }
+    }
+
+    @Test
+    fun `givenValidCodeWithOrphanTeam_whenInvoke_thenDoesNotNotifyPresident`() = runTest {
+        val orphanTeam = Team(id = 5L, name = "My Team", coachName = "Coach", delegateName = "Del", teamType = TeamType.FOOTBALL_7, firestoreId = "team_fs_1")
+        val memberWithCoach = ClubMember(id = 1L, userId = "user1", name = "Alice", email = "alice@test.com", clubId = 10L, roles = listOf("Coach"))
+
+        coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
+        coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
+        coEvery { teamRepository.getOrphanTeams("user1") } returns listOf(orphanTeam)
+        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns memberWithCoach
+
+        useCase.invoke("ABC123")
+
+        coVerify(exactly = 0) { notifyPresidentOnMemberWaiting(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `givenNotifyPresidentThrows_whenInvoke_thenJoinSucceeds`() = runTest {
+        coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
+        coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
+        coEvery { teamRepository.getOrphanTeams("user1") } returns emptyList()
+        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns clubMember
+        coEvery { notifyPresidentOnMemberWaiting(any(), any(), any(), any()) } throws RuntimeException("Notification failed")
+
+        val result = useCase.invoke("ABC123")
+
+        assertEquals(club, result.club)
+        assertEquals(clubMember, result.clubMember)
+        assertNull(result.orphanTeam)
     }
 }

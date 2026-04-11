@@ -21,6 +21,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PendingTeamAssignmentViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
@@ -283,6 +284,17 @@ val iosModule =
             PendingTeamAssignmentViewModel(
                 getTeam = get(),
                 signOut = get(),
+            )
+        }
+
+        factory {
+            PresidentNotificationsViewModel(
+                getNotifications = get(),
+                getUnreadCount = get(),
+                markAsRead = get(),
+                markAsUnread = get(),
+                deleteNotification = get(),
+                getUserClubMembership = get(),
             )
         }
     }

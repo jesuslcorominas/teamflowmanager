@@ -286,6 +286,14 @@
     <string name="nav_staff">Staff</string>
     <string name="nav_matches">Partidos</string>
     <string name="nav_analysis">Análisis</string>
+    <string name="nav_notifications">Notificaciones</string>
+
+    <!-- President Notifications -->
+    <string name="notifications_empty">No hay notificaciones</string>
+    <string name="notifications_no_club">No perteneces a ningún club</string>
+    <string name="notifications_mark_read_description">Marcar como leída</string>
+    <string name="notifications_mark_unread_description">Marcar como no leída</string>
+    <string name="notifications_delete_description">Eliminar notificación</string>
 
     <!-- Analysis -->
     <string name="analysis_title">Análisis</string>

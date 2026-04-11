@@ -15,9 +15,16 @@ sealed class NotificationPayload {
             override val params: Map<String, String> = mapOf("teamName" to teamName)
         }
 
-        data object UserWaitingForAssignment : Typed() {
+        data class UserWaitingForAssignment(
+            val userName: String,
+            val userEmail: String,
+        ) : Typed() {
             override val type: NotificationType = NotificationType.USER_WAITING_FOR_ASSIGNMENT
-            override val params: Map<String, String> = emptyMap()
+            override val params: Map<String, String> =
+                mapOf(
+                    "userName" to userName,
+                    "userEmail" to userEmail,
+                )
         }
     }
 }

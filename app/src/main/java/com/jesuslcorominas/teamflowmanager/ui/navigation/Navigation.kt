@@ -23,6 +23,7 @@ import com.jesuslcorominas.teamflowmanager.ui.club.ClubSettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.PendingTeamAssignmentScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PresidentNotificationsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.PresidentTeamDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
@@ -211,6 +212,10 @@ fun Navigation(
 
         composable(Route.ClubSettings.createRoute()) {
             ClubSettingsScreen()
+        }
+
+        composable(Route.PresidentNotifications.createRoute()) {
+            PresidentNotificationsScreen()
         }
 
         composable(Route.Players.createRoute()) {

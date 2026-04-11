@@ -196,6 +196,12 @@
     <string name="nav_staff">Staff</string>
     <string name="nav_matches">Matches</string>
     <string name="nav_analysis">Analysis</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="notifications_empty">No notifications</string>
+    <string name="notifications_no_club">No club membership found</string>
+    <string name="notifications_mark_read_description">Mark as read</string>
+    <string name="notifications_mark_unread_description">Mark as unread</string>
+    <string name="notifications_delete_description">Delete notification</string>
 
     <!-- Match Status -->
     <string name="pending_matches">Pending Matches</string>

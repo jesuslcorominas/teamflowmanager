@@ -7,13 +7,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -33,12 +37,14 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.PrimaryLight
 fun BottomNavigationBar(
     navController: NavController,
     isPresident: Boolean = false,
+    unreadNotificationsCount: Int = 0,
 ) {
     val items =
         if (isPresident) {
             listOf(
                 Route.TeamList,
                 Route.ClubMembers,
+                Route.PresidentNotifications,
                 Route.ClubSettings,
             )
         } else {
@@ -75,6 +81,7 @@ fun BottomNavigationBar(
                         route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
                         route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
                         route is Route.ClubSettings && Route.fromValue(currentRoute) is Route.ClubSettings -> true
+                        route is Route.PresidentNotifications && Route.fromValue(currentRoute) is Route.PresidentNotifications -> true
                         route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
                         route is Route.Matches && (
                             Route.fromValue(currentRoute) is Route.Matches ||
@@ -88,11 +95,25 @@ fun BottomNavigationBar(
                     alwaysShowLabel = false,
                     icon = {
                         if (labelRes != null && icon != null) {
-                            BottomNavItem(
-                                iconVector = icon,
-                                labelResId = labelRes,
-                                isSelected = selected,
-                            )
+                            if (route is Route.PresidentNotifications && unreadNotificationsCount > 0) {
+                                BadgedBox(
+                                    badge = {
+                                        Badge { Text(text = unreadNotificationsCount.toString()) }
+                                    },
+                                ) {
+                                    BottomNavItem(
+                                        iconVector = icon,
+                                        labelResId = labelRes,
+                                        isSelected = selected,
+                                    )
+                                }
+                            } else {
+                                BottomNavItem(
+                                    iconVector = icon,
+                                    labelResId = labelRes,
+                                    isSelected = selected,
+                                )
+                            }
                         }
                     },
 //                    icon = {
@@ -155,6 +176,7 @@ private fun Route.toIcon(): ImageVector? =
         Route.ClubSettings -> Icons.Default.Shield
         Route.Matches, Route.ArchivedMatches -> Icons.Default.SportsSoccer
         Route.Analysis -> Icons.Default.BarChart
+        Route.PresidentNotifications -> Icons.Default.Notifications
         else -> null
     }
 
@@ -167,5 +189,6 @@ private fun Route.toStringRes(): Int? =
         Route.ClubSettings -> R.string.nav_club_settings
         Route.Matches, Route.ArchivedMatches -> R.string.nav_matches
         Route.Analysis -> R.string.nav_analysis
+        Route.PresidentNotifications -> R.string.nav_notifications
         else -> null
     }
