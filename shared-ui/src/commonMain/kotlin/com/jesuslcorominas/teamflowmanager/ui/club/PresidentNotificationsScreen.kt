@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.club
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,8 +33,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.model.PresidentNotification
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -50,6 +53,7 @@ import teamflowmanager.shared_ui.generated.resources.notifications_no_club
 @Composable
 fun PresidentNotificationsScreen(viewModel: PresidentNotificationsViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+    val bottomPadding = LocalContentBottomPadding.current
     var selectedNotification by remember { mutableStateOf<PresidentNotification?>(null) }
 
     selectedNotification?.let { notification ->
@@ -71,7 +75,7 @@ fun PresidentNotificationsScreen(viewModel: PresidentNotificationsViewModel = ko
     when (val state = uiState) {
         is PresidentNotificationsViewModel.UiState.Loading -> {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(bottom = bottomPadding),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
@@ -80,7 +84,7 @@ fun PresidentNotificationsScreen(viewModel: PresidentNotificationsViewModel = ko
 
         is PresidentNotificationsViewModel.UiState.Error -> {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(bottom = bottomPadding),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -93,7 +97,7 @@ fun PresidentNotificationsScreen(viewModel: PresidentNotificationsViewModel = ko
 
         is PresidentNotificationsViewModel.UiState.NoClubMembership -> {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(bottom = bottomPadding),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -106,7 +110,7 @@ fun PresidentNotificationsScreen(viewModel: PresidentNotificationsViewModel = ko
         is PresidentNotificationsViewModel.UiState.Success -> {
             if (state.notifications.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().padding(bottom = bottomPadding),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -115,7 +119,10 @@ fun PresidentNotificationsScreen(viewModel: PresidentNotificationsViewModel = ko
                     )
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = bottomPadding),
+                ) {
                     itemsIndexed(state.notifications, key = { _, it -> it.id }) { index, notification ->
                         NotificationItem(
                             notification = notification,
@@ -167,12 +174,15 @@ private fun NotificationItem(
                 text = notification.title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (notification.read) FontWeight.Normal else FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = notification.body,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = if (notification.read) FontWeight.Normal else FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
 
