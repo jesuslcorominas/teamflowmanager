@@ -190,10 +190,13 @@ class TeamFirestoreDataSourceImpl(
         require(ownerId.isNotBlank()) { "Owner ID cannot be blank" }
 
         try {
-            // Get all teams that don't have a clubId (orphan teams)
-            // Since we removed ownerId, orphan teams are simply teams without a clubId
+            // Get only teams assigned to this coach, then filter client-side for missing clubId.
+            // Filtering by assignedCoachId server-side is critical: without it the query returns
+            // ALL users' orphan teams and the subsequent updateTeamClubId call fails with
+            // "insufficient permissions" when the first result belongs to a different user.
             val querySnapshot =
                 firestore.collection(TEAMS_COLLECTION)
+                    .whereEqualTo("assignedCoachId", ownerId)
                     .get()
                     .await()
 
