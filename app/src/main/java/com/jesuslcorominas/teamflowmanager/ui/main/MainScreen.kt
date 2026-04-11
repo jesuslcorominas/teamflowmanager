@@ -238,6 +238,7 @@ fun Route.toTitleRes(backStackEntry: NavBackStackEntry?): Int? =
         Route.Analysis -> R.string.analysis_title
         Route.Settings -> R.string.settings_title
         Route.ClubSettings -> R.string.club_settings_title
+        Route.PresidentNotifications -> R.string.nav_notifications
 
         Route.Match -> null
 

@@ -13,16 +13,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Drafts
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,19 +40,16 @@ import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.close
 import teamflowmanager.shared_ui.generated.resources.error_loading_members
-import teamflowmanager.shared_ui.generated.resources.nav_notifications
 import teamflowmanager.shared_ui.generated.resources.notifications_delete_description
 import teamflowmanager.shared_ui.generated.resources.notifications_empty
 import teamflowmanager.shared_ui.generated.resources.notifications_mark_read_description
 import teamflowmanager.shared_ui.generated.resources.notifications_mark_unread_description
 import teamflowmanager.shared_ui.generated.resources.notifications_no_club
-import teamflowmanager.shared_ui.generated.resources.settings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PresidentNotificationsScreen(
     viewModel: PresidentNotificationsViewModel = koinViewModel(),
-    onNavigateToClubSettings: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedNotification by remember { mutableStateOf<PresidentNotification?>(null) }
@@ -76,87 +70,64 @@ fun PresidentNotificationsScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(Res.string.nav_notifications),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToClubSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = stringResource(Res.string.settings),
-                        )
-                    }
-                },
-            )
-        },
-    ) { innerPadding ->
-        when (val state = uiState) {
-            is PresidentNotificationsViewModel.UiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
+    when (val state = uiState) {
+        is PresidentNotificationsViewModel.UiState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
             }
+        }
 
-            is PresidentNotificationsViewModel.UiState.Error -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = stringResource(Res.string.error_loading_members),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
+        is PresidentNotificationsViewModel.UiState.Error -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(Res.string.error_loading_members),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
+        }
 
-            is PresidentNotificationsViewModel.UiState.NoClubMembership -> {
+        is PresidentNotificationsViewModel.UiState.NoClubMembership -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(Res.string.notifications_no_club),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+
+        is PresidentNotificationsViewModel.UiState.Success -> {
+            if (state.notifications.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = stringResource(Res.string.notifications_no_club),
+                        text = stringResource(Res.string.notifications_empty),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
-            }
-
-            is PresidentNotificationsViewModel.UiState.Success -> {
-                if (state.notifications.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().padding(innerPadding),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(Res.string.notifications_empty),
-                            style = MaterialTheme.typography.bodyMedium,
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    itemsIndexed(state.notifications, key = { _, it -> it.id }) { index, notification ->
+                        NotificationItem(
+                            notification = notification,
+                            onMarkRead = { viewModel.markAsRead(notification.id) },
+                            onMarkUnread = { viewModel.markAsUnread(notification.id) },
+                            onDelete = { viewModel.deleteNotification(notification.id) },
+                            onClick = { selectedNotification = notification },
                         )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    ) {
-                        itemsIndexed(state.notifications, key = { _, it -> it.id }) { index, notification ->
-                            NotificationItem(
-                                notification = notification,
-                                onMarkRead = { viewModel.markAsRead(notification.id) },
-                                onMarkUnread = { viewModel.markAsUnread(notification.id) },
-                                onDelete = { viewModel.deleteNotification(notification.id) },
-                                onClick = { selectedNotification = notification },
-                            )
-                            if (index < state.notifications.lastIndex) {
-                                HorizontalDivider()
-                            }
+                        if (index < state.notifications.lastIndex) {
+                            HorizontalDivider()
                         }
                     }
                 }

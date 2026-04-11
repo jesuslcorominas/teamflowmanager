@@ -50,8 +50,8 @@ class NotifyPresidentOnMemberWaitingUseCaseTest {
             }
             val notification = notificationSlot.captured
             assertEquals(NotificationType.USER_WAITING_FOR_ASSIGNMENT, notification.type)
-            assertEquals(userName, notification.title)
-            assertEquals(userEmail, notification.body)
+            assertEquals("$userName espera asignación de equipo", notification.title)
+            assertEquals("$userName ($userEmail) se ha unido al club y está esperando que le asignes un equipo.", notification.body)
             assertEquals(userName, notification.userData[NotifyPresidentOnMemberWaitingUseCaseImpl.KEY_USER_NAME])
             assertEquals(userEmail, notification.userData[NotifyPresidentOnMemberWaitingUseCaseImpl.KEY_USER_EMAIL])
             assertFalse(notification.read)

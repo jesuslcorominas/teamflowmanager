@@ -192,6 +192,6 @@ sealed class Route(
         path = "president_notifications",
         showTopBar = true,
         showBottomBar = true,
-        showSettingsButton = false,
+        showSettingsButton = true,
     )
 }

@@ -21,8 +21,8 @@ internal class NotifyPresidentOnMemberWaitingUseCaseImpl(
             PresidentNotification(
                 id = "",
                 type = NotificationType.USER_WAITING_FOR_ASSIGNMENT,
-                title = userName,
-                body = userEmail,
+                title = "$userName espera asignación de equipo",
+                body = "$userName ($userEmail) se ha unido al club y está esperando que le asignes un equipo.",
                 userData =
                     mapOf(
                         KEY_USER_NAME to userName,

@@ -170,7 +170,7 @@ sealed class Route(
         path = "president_notifications",
         showTopBar = true,
         showBottomBar = true,
-        showSettingsButton = false,
+        showSettingsButton = true,
     )
 
     data object AcceptTeamInvitation : Route(path = "accept_team_invitation", showTopBar = false) {
