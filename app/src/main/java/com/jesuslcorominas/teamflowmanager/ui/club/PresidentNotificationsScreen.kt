@@ -41,9 +41,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PresidentNotificationsScreen(
-    viewModel: PresidentNotificationsViewModel = koinViewModel(),
-) {
+fun PresidentNotificationsScreen(viewModel: PresidentNotificationsViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedNotification by remember { mutableStateOf<PresidentNotification?>(null) }
 
