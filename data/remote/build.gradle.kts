@@ -85,36 +85,12 @@ android {
         consumerProguardFiles("consumer-rules.pro")
     }
 
-    buildFeatures {
-        buildConfig = true
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
-            )
-        }
-    }
-
-    flavorDimensions += "environment"
-    productFlavors {
-        create("dev") {
-            dimension = "environment"
-            buildConfigField(
-                "String",
-                "CLOUD_FUNCTIONS_BASE_URL",
-                "\"https://us-central1-teamflow-manager-dev.cloudfunctions.net/\"",
-            )
-        }
-        create("prod") {
-            dimension = "environment"
-            buildConfigField(
-                "String",
-                "CLOUD_FUNCTIONS_BASE_URL",
-                "\"https://us-central1-teamflow-manager-897a3.cloudfunctions.net/\"",
             )
         }
     }

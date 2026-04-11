@@ -1,5 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.di
 
+import com.google.firebase.Firebase
+import com.google.firebase.app
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -22,7 +24,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSo
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PresidentNotificationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.BuildConfig
 import com.jesuslcorominas.teamflowmanager.data.remote.api.FcmNotificationApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.createFcmNotificationApi
@@ -134,7 +135,7 @@ internal val ktorfitModule =
             Ktorfit
                 .Builder()
                 .httpClient(get<HttpClient>())
-                .baseUrl(BuildConfig.CLOUD_FUNCTIONS_BASE_URL)
+                .baseUrl("https://us-central1-${Firebase.app.options.projectId}.cloudfunctions.net/")
                 .build()
         }
         single<ShortLinkApi> {

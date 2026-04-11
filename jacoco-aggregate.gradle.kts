@@ -6,7 +6,6 @@ apply(plugin = "jacoco")
 // Add new flavored app modules here (1 line each)
 val androidAppModules = listOf(
     ":app" to "testDevDebugUnitTest",
-    ":data:remote" to "testDevDebugUnitTest",
 )
 
 // Android library modules (no flavors) — task pattern: testDebugUnitTest
@@ -14,6 +13,7 @@ val androidAppModules = listOf(
 val androidModules = listOf(
     ":viewmodel",
     ":data:local",
+    ":data:remote",
 )
 
 // Pure JVM/Kotlin modules — add new JVM modules here (1 line each)
