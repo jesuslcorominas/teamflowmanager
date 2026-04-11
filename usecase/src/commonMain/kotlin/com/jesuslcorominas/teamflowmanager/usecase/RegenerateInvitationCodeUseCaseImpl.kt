@@ -6,5 +6,5 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubRepository
 internal class RegenerateInvitationCodeUseCaseImpl(
     private val clubRepository: ClubRepository,
 ) : RegenerateInvitationCodeUseCase {
-    override suspend fun invoke(firestoreId: String): String = clubRepository.regenerateInvitationCode(firestoreId)
+    override suspend fun invoke(id: String): String = clubRepository.regenerateInvitationCode(id)
 }

@@ -81,8 +81,8 @@ class MainViewModelTest {
             email = "john@example.com",
             clubId = 100L,
             roles = listOf("Presidente"),
-            firestoreId = "member1",
-            clubFirestoreId = "club_fs_1",
+            remoteId = "member1",
+            clubRemoteId = "club_fs_1",
         )
         every { getUserClubMembershipUseCase.invoke() } returns flowOf(presidentMember)
         val viewModel = createViewModel()
@@ -107,8 +107,8 @@ class MainViewModelTest {
                 email = "john@example.com",
                 clubId = 100L,
                 roles = listOf("Presidente"),
-                firestoreId = "member1",
-                clubFirestoreId = "club_fs_1",
+                remoteId = "member1",
+                clubRemoteId = "club_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(presidentMember)
             every { getActiveViewRoleUseCase() } returns ActiveViewRole.Coach

@@ -24,7 +24,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetArchivedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByFirestoreIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubMembersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
@@ -111,7 +111,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetAllMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetAllPlayerTimesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetArchivedMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetCaptainPlayerUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetClubByFirestoreIdUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetClubByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetClubMembersUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetCurrentUserUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetDefaultCaptainUseCaseImpl
@@ -206,7 +206,7 @@ internal val useCaseInternalModule =
         singleOf(::GetClubMembersUseCaseImpl) bind GetClubMembersUseCase::class
         singleOf(::CreateClubUseCaseImpl) bind CreateClubUseCase::class
         singleOf(::JoinClubByCodeUseCaseImpl) bind JoinClubByCodeUseCase::class
-        singleOf(::GetClubByFirestoreIdUseCaseImpl) bind GetClubByFirestoreIdUseCase::class
+        singleOf(::GetClubByIdUseCaseImpl) bind GetClubByIdUseCase::class
         singleOf(::UpdateClubUseCaseImpl) bind UpdateClubUseCase::class
         singleOf(::RegenerateInvitationCodeUseCaseImpl) bind RegenerateInvitationCodeUseCase::class
         singleOf(::RemoveClubMemberUseCaseImpl) bind RemoveClubMemberUseCase::class

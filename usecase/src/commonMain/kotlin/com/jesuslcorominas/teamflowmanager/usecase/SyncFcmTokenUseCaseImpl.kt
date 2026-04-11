@@ -13,7 +13,7 @@ class SyncFcmTokenUseCaseImpl(
     override suspend fun invoke(
         userId: String,
         platform: String,
-        clubFirestoreId: String?,
+        clubRemoteId: String?,
     ) {
         val token = fcmTokenProviderRepository.getToken()
         if (token.isEmpty()) return
@@ -26,12 +26,12 @@ class SyncFcmTokenUseCaseImpl(
         }
 
         // Save current user token with their club topic
-        val topic = clubFirestoreId?.let { "club_$it" }
+        val topic = clubRemoteId?.let { "club_$it" }
         fcmTokenRepository.saveToken(userId, token, platform, topic)
 
         // Subscribe to club topic if present
-        if (clubFirestoreId != null) {
-            notificationTopicRepository.subscribeToClub(clubFirestoreId)
+        if (clubRemoteId != null) {
+            notificationTopicRepository.subscribeToClub(clubRemoteId)
         }
     }
 }

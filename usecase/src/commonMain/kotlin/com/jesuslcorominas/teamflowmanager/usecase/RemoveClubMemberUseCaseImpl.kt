@@ -16,9 +16,9 @@ internal class RemoveClubMemberUseCaseImpl(
         val teams = teamRepository.getTeamsByClub(clubId).first()
         val coachTeam = teams.find { it.coachId == userId }
         if (coachTeam != null) {
-            val teamFirestoreId = coachTeam.firestoreId
-            requireNotNull(teamFirestoreId) { "Team firestoreId is null" }
-            teamRepository.clearTeamCoach(teamFirestoreId)
+            val teamRemoteId = coachTeam.remoteId
+            requireNotNull(teamRemoteId) { "Team remoteId is null" }
+            teamRepository.clearTeamCoach(teamRemoteId)
         }
         clubMemberRepository.removeClubMember(userId, clubId)
     }

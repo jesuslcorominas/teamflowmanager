@@ -22,12 +22,12 @@ interface ClubRepository {
      */
     suspend fun getClubByInvitationCode(invitationCode: String): Club?
 
-    suspend fun getClubByFirestoreId(firestoreId: String): Club?
+    suspend fun getClubById(id: String): Club?
 
-    suspend fun regenerateInvitationCode(firestoreId: String): String
+    suspend fun regenerateInvitationCode(id: String): String
 
     suspend fun updateClub(
-        firestoreId: String,
+        id: String,
         name: String,
         homeGround: String?,
     ): Club

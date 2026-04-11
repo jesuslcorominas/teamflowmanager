@@ -131,7 +131,7 @@ class CreateClubViewModelTest {
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            firestoreId = "club123",
+            remoteId = "club123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase(clubName) } returns expectedClub
@@ -160,7 +160,7 @@ class CreateClubViewModelTest {
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            firestoreId = "club123",
+            remoteId = "club123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase(clubName) } coAnswers {
@@ -204,7 +204,7 @@ class CreateClubViewModelTest {
             ownerId = "user123",
             name = "Test Club",
             invitationCode = "ABC12345",
-            firestoreId = "club123",
+            remoteId = "club123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase("Test Club") } returns expectedClub
@@ -230,7 +230,7 @@ class CreateClubViewModelTest {
     }
 
     @Test
-    fun `syncFcmToken is called with club firestoreId on successful creation when permission is granted`() = runTest {
+    fun `syncFcmToken is called with club remoteId on successful creation when permission is granted`() = runTest {
         every { isNotificationPermissionGranted() } returns true
         val clubName = "Test Club"
         val expectedClub = Club(
@@ -238,7 +238,7 @@ class CreateClubViewModelTest {
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            firestoreId = "club_firestore_123",
+            remoteId = "club_firestore_123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase(clubName) } returns expectedClub
@@ -258,7 +258,7 @@ class CreateClubViewModelTest {
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            firestoreId = "club_firestore_123",
+            remoteId = "club_firestore_123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase(clubName) } returns expectedClub

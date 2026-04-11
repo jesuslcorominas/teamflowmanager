@@ -30,8 +30,8 @@ class AcceptTeamInvitationUseCaseTest {
         coachName = "",
         delegateName = "Del",
         teamType = TeamType.FOOTBALL_7,
-        firestoreId = "team_fs_1",
-        clubFirestoreId = "club_fs_1",
+        remoteId = "team_fs_1",
+        clubRemoteId = "club_fs_1",
         clubId = 10L,
         coachId = null,
     )
@@ -100,7 +100,7 @@ class AcceptTeamInvitationUseCaseTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `givenTeamNotInClub_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val teamWithoutClub = team.copy(clubFirestoreId = null, clubId = null)
+        val teamWithoutClub = team.copy(clubRemoteId = null, clubId = null)
         coEvery { getCurrentUser() } returns flowOf(coach)
         coEvery { teamRepository.getTeamById("team_fs_1") } returns teamWithoutClub
         useCase.invoke("team_fs_1")

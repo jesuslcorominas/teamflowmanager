@@ -96,9 +96,9 @@ class TeamFirestoreDataSourceImpl(
         }
 
         try {
-            val documentId = team.firestoreId
+            val documentId = team.remoteId
             if (documentId.isNullOrEmpty()) {
-                throw IllegalStateException("Cannot update team without Firestore document ID")
+                throw IllegalStateException("Cannot update team without remote document ID")
             }
 
             val firestoreModel = team.toFirestoreModel()

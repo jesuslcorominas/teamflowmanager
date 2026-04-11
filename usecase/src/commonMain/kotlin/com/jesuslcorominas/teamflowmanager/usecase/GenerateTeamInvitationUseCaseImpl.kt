@@ -32,7 +32,7 @@ internal class GenerateTeamInvitationUseCaseImpl(
                 ?: throw IllegalArgumentException("Team not found: $teamId")
 
         // Verify team belongs to a club
-        require(team.clubFirestoreId != null) {
+        require(team.clubRemoteId != null) {
             "Team must belong to a club to generate invitation"
         }
 
@@ -47,7 +47,7 @@ internal class GenerateTeamInvitationUseCaseImpl(
         }
 
         // Verify they are in the same club
-        require(currentUserMembership.clubFirestoreId == team.clubFirestoreId) {
+        require(currentUserMembership.clubRemoteId == team.clubRemoteId) {
             "User and team must be in the same club"
         }
 

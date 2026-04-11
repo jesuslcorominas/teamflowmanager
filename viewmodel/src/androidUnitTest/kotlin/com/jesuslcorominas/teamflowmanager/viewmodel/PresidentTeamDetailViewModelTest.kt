@@ -65,7 +65,7 @@ class PresidentTeamDetailViewModelTest {
             coachName = "Coach Name",
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
-            firestoreId = teamId,
+            remoteId = teamId,
         )
 
     private fun aPlayer(id: Long = 1L) =

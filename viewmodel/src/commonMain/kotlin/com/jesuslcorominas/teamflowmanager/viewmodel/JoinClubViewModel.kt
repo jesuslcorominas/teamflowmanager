@@ -108,7 +108,7 @@ class JoinClubViewModel(
                 }
 
                 // Sync FCM token with new club subscription (fire-and-forget)
-                syncFcmTokenAfterClubChange(result.club.firestoreId)
+                syncFcmTokenAfterClubChange(result.club.remoteId)
 
                 _uiState.value = UiState.Success(result)
             } catch (e: Exception) {
@@ -124,11 +124,11 @@ class JoinClubViewModel(
         }
     }
 
-    private fun syncFcmTokenAfterClubChange(clubFirestoreId: String?) {
+    private fun syncFcmTokenAfterClubChange(clubRemoteId: String?) {
         if (!isNotificationPermissionGranted()) return
         viewModelScope.launch {
             val user = getCurrentUser().first() ?: return@launch
-            runCatching { syncFcmTokenUseCase(user.id, "android", clubFirestoreId) }
+            runCatching { syncFcmTokenUseCase(user.id, "android", clubRemoteId) }
         }
     }
 

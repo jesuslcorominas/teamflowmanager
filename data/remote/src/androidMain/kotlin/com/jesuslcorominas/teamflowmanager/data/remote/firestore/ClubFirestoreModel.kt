@@ -34,13 +34,13 @@ fun ClubFirestoreModel.toDomain(): Club =
         ownerId = ownerId,
         name = name,
         invitationCode = invitationCode,
-        firestoreId = id,
+        remoteId = id,
         homeGround = homeGround,
     )
 
 fun Club.toFirestoreModel(): ClubFirestoreModel =
     ClubFirestoreModel(
-        id = firestoreId ?: "",
+        id = remoteId ?: "",
         ownerId = ownerId,
         name = name,
         invitationCode = invitationCode,

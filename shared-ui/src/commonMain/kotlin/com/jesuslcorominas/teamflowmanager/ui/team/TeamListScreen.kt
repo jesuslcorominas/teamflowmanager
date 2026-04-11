@@ -165,8 +165,8 @@ private fun TeamsListContent(
                 onClick = { onTeamClick(team) },
                 onShare = { onShareTeam(team) },
                 onSelfAssignAsCoach = { onSelfAssignAsCoach(team) },
-                isSharing = team.firestoreId == sharingTeamId,
-                isAssigning = team.firestoreId == assigningCoachToTeamId,
+                isSharing = team.remoteId == sharingTeamId,
+                isAssigning = team.remoteId == assigningCoachToTeamId,
                 isPresident = isPresident,
             )
         }

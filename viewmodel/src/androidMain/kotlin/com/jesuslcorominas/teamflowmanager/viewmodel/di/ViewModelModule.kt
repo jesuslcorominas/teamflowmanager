@@ -150,7 +150,7 @@ val viewModelModule =
         viewModel {
             ClubSettingsViewModel(
                 getUserClubMembership = get(),
-                getClubByFirestoreId = get(),
+                getClubById = get(),
                 updateClubUseCase = get(),
                 regenerateInvitationCodeUseCase = get(),
             )
@@ -211,7 +211,7 @@ val viewModelModule =
                 saveDefaultCaptainUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 getTeamUseCase = get(),
-                getClubByFirestoreIdUseCase = get(),
+                getClubByIdUseCase = get(),
                 createMatch = get(),
                 getMatchByIdUseCase = get(),
                 updateMatchUseCase = get(),

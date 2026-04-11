@@ -13,7 +13,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByFirestoreIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SaveDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateMatchUseCase
@@ -47,7 +47,7 @@ class MatchCreationWizardViewModelTest {
     private lateinit var saveDefaultCaptainUseCase: SaveDefaultCaptainUseCase
     private lateinit var getCaptainPlayerUseCase: GetCaptainPlayerUseCase
     private lateinit var getTeamUseCase: GetTeamUseCase
-    private lateinit var getClubByFirestoreIdUseCase: GetClubByFirestoreIdUseCase
+    private lateinit var getClubByIdUseCase: GetClubByIdUseCase
     private lateinit var createMatchUseCase: CreateMatchUseCase
     private lateinit var getMatchByIdUseCase: GetMatchByIdUseCase
     private lateinit var updateMatchUseCase: UpdateMatchUseCase
@@ -76,7 +76,7 @@ class MatchCreationWizardViewModelTest {
         saveDefaultCaptainUseCase = mockk()
         getCaptainPlayerUseCase = mockk()
         getTeamUseCase = mockk()
-        getClubByFirestoreIdUseCase = mockk(relaxed = true)
+        getClubByIdUseCase = mockk(relaxed = true)
         createMatchUseCase = mockk(relaxed = true)
         getMatchByIdUseCase = mockk(relaxed = true)
         updateMatchUseCase = mockk(relaxed = true)
@@ -102,7 +102,7 @@ class MatchCreationWizardViewModelTest {
             saveDefaultCaptainUseCase = saveDefaultCaptainUseCase,
             getCaptainPlayerUseCase = getCaptainPlayerUseCase,
             getTeamUseCase = getTeamUseCase,
-            getClubByFirestoreIdUseCase = getClubByFirestoreIdUseCase,
+            getClubByIdUseCase = getClubByIdUseCase,
             createMatch = createMatchUseCase,
             getMatchByIdUseCase = getMatchByIdUseCase,
             updateMatchUseCase = updateMatchUseCase,

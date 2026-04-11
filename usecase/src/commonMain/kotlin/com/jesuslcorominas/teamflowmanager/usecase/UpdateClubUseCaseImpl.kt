@@ -8,8 +8,8 @@ internal class UpdateClubUseCaseImpl(
     private val clubRepository: ClubRepository,
 ) : UpdateClubUseCase {
     override suspend fun invoke(
-        firestoreId: String,
+        id: String,
         name: String,
         homeGround: String?,
-    ): Club = clubRepository.updateClub(firestoreId, name, homeGround)
+    ): Club = clubRepository.updateClub(id, name, homeGround)
 }

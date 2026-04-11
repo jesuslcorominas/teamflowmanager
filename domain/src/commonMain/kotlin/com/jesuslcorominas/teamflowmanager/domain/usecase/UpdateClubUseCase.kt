@@ -4,7 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Club
 
 interface UpdateClubUseCase {
     suspend operator fun invoke(
-        firestoreId: String,
+        id: String,
         name: String,
         homeGround: String?,
     ): Club

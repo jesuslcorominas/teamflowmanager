@@ -49,18 +49,18 @@ fun TeamFirestoreModel.toDomain(): Team =
         coachId = assignedCoachId, // Store the assigned coach's user ID (null if no coach assigned)
         pendingCoachEmail = pendingCoachEmail?.takeIf { it.isNotEmpty() },
         clubId = clubId?.takeIf { it.isNotEmpty() }?.toStableId(), // Convert club Firestore ID to Long, null if empty/null
-        clubFirestoreId = clubId?.takeIf { it.isNotEmpty() }, // Store original club Firestore ID
-        firestoreId = id, // Store the Firestore document ID
+        clubRemoteId = clubId?.takeIf { it.isNotEmpty() }, // Store original club remote ID
+        remoteId = id, // Store the remote document ID
     )
 
 fun Team.toFirestoreModel(): TeamFirestoreModel =
     TeamFirestoreModel(
-        id = firestoreId ?: "", // Use the team's Firestore document ID
+        id = remoteId ?: "", // Use the team's remote document ID
         name = name,
         coachName = coachName,
         delegateName = delegateName,
         captainId = captainId,
         teamType = teamType.players,
         assignedCoachId = coachId, // Store the assigned coach's user ID
-        clubId = clubFirestoreId, // Use the stored club Firestore ID, null for orphaned teams
+        clubId = clubRemoteId, // Use the stored club remote ID, null for orphaned teams
     )

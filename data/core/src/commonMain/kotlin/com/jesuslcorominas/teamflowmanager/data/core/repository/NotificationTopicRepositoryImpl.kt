@@ -6,9 +6,9 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationTopicR
 class NotificationTopicRepositoryImpl(
     private val notificationTopicDataSource: NotificationTopicDataSource,
 ) : NotificationTopicRepository {
-    override suspend fun subscribeToClub(clubFirestoreId: String) = notificationTopicDataSource.subscribe("club_$clubFirestoreId")
+    override suspend fun subscribeToClub(clubId: String) = notificationTopicDataSource.subscribe("club_$clubId")
 
-    override suspend fun unsubscribeFromClub(clubFirestoreId: String) = notificationTopicDataSource.unsubscribe("club_$clubFirestoreId")
+    override suspend fun unsubscribeFromClub(clubId: String) = notificationTopicDataSource.unsubscribe("club_$clubId")
 
     override suspend fun unsubscribeFromRawTopic(topic: String) = notificationTopicDataSource.unsubscribe(topic)
 }

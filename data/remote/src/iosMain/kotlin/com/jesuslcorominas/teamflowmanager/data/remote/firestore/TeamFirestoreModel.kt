@@ -28,18 +28,18 @@ fun TeamFirestoreModel.toDomain(): Team =
         teamType = TeamType.fromPlayers(teamType),
         coachId = assignedCoachId,
         clubId = clubId?.takeIf { it.isNotEmpty() }?.toStableId(),
-        clubFirestoreId = clubId?.takeIf { it.isNotEmpty() },
-        firestoreId = id,
+        clubRemoteId = clubId?.takeIf { it.isNotEmpty() },
+        remoteId = id,
     )
 
 fun Team.toFirestoreModel(): TeamFirestoreModel =
     TeamFirestoreModel(
-        id = firestoreId.orEmpty(),
+        id = remoteId.orEmpty(),
         name = name,
         coachName = coachName,
         delegateName = delegateName,
         captainId = captainId,
         teamType = teamType.players,
         assignedCoachId = coachId,
-        clubId = clubFirestoreId,
+        clubId = clubRemoteId,
     )

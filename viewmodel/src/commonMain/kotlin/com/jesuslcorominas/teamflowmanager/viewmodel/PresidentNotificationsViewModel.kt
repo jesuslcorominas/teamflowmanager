@@ -85,7 +85,7 @@ class PresidentNotificationsViewModel(
                     null
                 }
 
-            val clubId = membership?.clubFirestoreId
+            val clubId = membership?.clubRemoteId
             if (clubId.isNullOrBlank()) {
                 _uiState.value = UiState.NoClubMembership
                 return@launch
@@ -120,6 +120,6 @@ class PresidentNotificationsViewModel(
             } catch (_: Exception) {
                 null
             }
-        return membership?.clubFirestoreId?.takeIf { it.isNotBlank() }
+        return membership?.clubRemoteId?.takeIf { it.isNotBlank() }
     }
 }

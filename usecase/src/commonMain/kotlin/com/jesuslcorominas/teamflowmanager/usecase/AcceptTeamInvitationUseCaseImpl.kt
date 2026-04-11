@@ -43,7 +43,7 @@ internal class AcceptTeamInvitationUseCaseImpl(
         }
 
         // Verify team belongs to a club
-        require(team.clubId != null && team.clubFirestoreId != null) {
+        require(team.clubId != null && team.clubRemoteId != null) {
             "Team must belong to a club to accept invitation"
         }
 
@@ -65,7 +65,7 @@ internal class AcceptTeamInvitationUseCaseImpl(
                 name = currentUser.displayName!!,
                 email = currentUser.email!!,
                 clubNumericId = team.clubId!!,
-                clubId = team.clubFirestoreId!!,
+                clubId = team.clubRemoteId!!,
                 roles = listOf(ClubRole.COACH.roleName),
             )
 
