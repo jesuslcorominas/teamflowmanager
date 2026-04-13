@@ -3,26 +3,40 @@ package com.jesuslcorominas.teamflowmanager.data.core.di
 import com.jesuslcorominas.teamflowmanager.data.core.repository.AuthRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubMemberRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.FcmNotificationRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.FcmTokenProviderRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.FcmTokenRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.GoalRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchOperationRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.MatchRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationPermissionRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationTopicRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.PendingCoachAssignmentRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerSubstitutionRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeHistoryRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PreferencesRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.PresidentNotificationRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.TeamRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmNotificationRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmTokenProviderRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmTokenRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationPermissionRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationTopicRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PendingCoachAssignmentRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PresidentNotificationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -53,6 +67,14 @@ internal val repositoryModule =
         singleOf(::GoalRepositoryImpl) bind GoalRepository::class
 
         singleOf(::AuthRepositoryImpl) bind AuthRepository::class
+
+        singleOf(::FcmTokenRepositoryImpl) bind FcmTokenRepository::class
+        singleOf(::FcmTokenProviderRepositoryImpl) bind FcmTokenProviderRepository::class
+        singleOf(::NotificationTopicRepositoryImpl) bind NotificationTopicRepository::class
+        singleOf(::NotificationPermissionRepositoryImpl) bind NotificationPermissionRepository::class
+        singleOf(::PendingCoachAssignmentRepositoryImpl) bind PendingCoachAssignmentRepository::class
+        singleOf(::FcmNotificationRepositoryImpl) bind FcmNotificationRepository::class
+        singleOf(::PresidentNotificationRepositoryImpl) bind PresidentNotificationRepository::class
     }
 
 val dataCoreModule =

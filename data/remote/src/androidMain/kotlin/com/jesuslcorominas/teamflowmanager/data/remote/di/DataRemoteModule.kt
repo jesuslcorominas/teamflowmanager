@@ -1,5 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.di
 
+import com.google.firebase.Firebase
+import com.google.firebase.app
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -7,19 +9,30 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProviderDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPermissionDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PendingCoachAssignmentDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PresidentNotificationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.api.FcmNotificationApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
+import com.jesuslcorominas.teamflowmanager.data.remote.api.createFcmNotificationApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.createShortLinkApi
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.AndroidFcmDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmNotificationTopicDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FcmTokenProviderDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseDynamicLinkDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseStorageDataSourceImpl
@@ -27,10 +40,13 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirestoreTimeP
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchOperationFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NotificationPermissionDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PendingCoachAssignmentFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitutionFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeHistoryFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PresidentNotificationFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.transaction.FirestoreTransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
@@ -45,6 +61,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.koin.android.ext.koin.androidApplication
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -56,6 +73,10 @@ internal val firebaseModule =
         single { FirebaseFirestore.getInstance() }
         single { FirebaseStorage.getInstance() }
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
+        single<FcmDataSource> { AndroidFcmDataSourceImpl(get(), get()) }
+        singleOf(::FcmTokenProviderDataSourceImpl) bind FcmTokenProviderDataSource::class
+        singleOf(::FcmNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
+        single<NotificationPermissionDataSource> { NotificationPermissionDataSourceImpl(androidApplication()) }
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
         single<DynamicLinkDataSource> {
             FirebaseDynamicLinkDataSourceImpl(shortLinkApi = get())
@@ -76,6 +97,8 @@ internal val firestoreDataSourceModule =
         singleOf(::PlayerSubstitutionFirestoreDataSourceImpl) bind PlayerSubstitutionDataSource::class
         singleOf(::PlayerTimeFirestoreDataSourceImpl) bind PlayerTimeDataSource::class
         singleOf(::PlayerTimeHistoryFirestoreDataSourceImpl) bind PlayerTimeHistoryDataSource::class
+        singleOf(::PendingCoachAssignmentFirestoreDataSourceImpl) bind PendingCoachAssignmentDataSource::class
+        singleOf(::PresidentNotificationFirestoreDataSourceImpl) bind PresidentNotificationDataSource::class
     }
 
 internal val ktorfitModule =
@@ -112,11 +135,14 @@ internal val ktorfitModule =
             Ktorfit
                 .Builder()
                 .httpClient(get<HttpClient>())
-                .baseUrl("https://us-central1-teamflow-manager-dev.cloudfunctions.net/")
+                .baseUrl("https://us-central1-${Firebase.app.options.projectId}.cloudfunctions.net/")
                 .build()
         }
         single<ShortLinkApi> {
             get<Ktorfit>().createShortLinkApi()
+        }
+        single<FcmNotificationApi> {
+            get<Ktorfit>().createFcmNotificationApi()
         }
     }
 

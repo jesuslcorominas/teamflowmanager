@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.TeamRepository
 import kotlinx.coroutines.flow.first
@@ -12,14 +13,15 @@ internal class AssignCoachToTeamUseCaseImpl(
     private val teamRepository: TeamRepository,
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
+    private val notifyCoachAssigned: NotifyCoachAssignedOnTeamAssignmentUseCase,
 ) : AssignCoachToTeamUseCase {
     override suspend fun invoke(
-        teamFirestoreId: String,
+        teamId: String,
         coachUserId: String,
     ): Team {
         // Validate inputs
-        require(teamFirestoreId.isNotBlank()) {
-            "Team Firestore ID cannot be blank"
+        require(teamId.isNotBlank()) {
+            "Team ID cannot be blank"
         }
         require(coachUserId.isNotBlank()) {
             "Coach user ID cannot be blank"
@@ -32,11 +34,11 @@ internal class AssignCoachToTeamUseCaseImpl(
 
         // Get the team
         val team =
-            teamRepository.getTeamByFirestoreId(teamFirestoreId)
-                ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
+            teamRepository.getTeamById(teamId)
+                ?: throw IllegalArgumentException("Team not found: $teamId")
 
         // Verify team belongs to a club
-        require(team.clubFirestoreId != null) {
+        require(team.clubRemoteId != null) {
             "Team must belong to a club to assign a coach"
         }
 
@@ -51,7 +53,7 @@ internal class AssignCoachToTeamUseCaseImpl(
         }
 
         // Verify they are in the same club
-        require(currentUserMembership.clubFirestoreId == team.clubFirestoreId) {
+        require(currentUserMembership.clubRemoteId == team.clubRemoteId) {
             "User and team must be in the same club"
         }
 
@@ -59,7 +61,7 @@ internal class AssignCoachToTeamUseCaseImpl(
         val coachMembership =
             clubMemberRepository.getClubMemberByUserIdAndClub(
                 userId = coachUserId,
-                clubFirestoreId = team.clubFirestoreId!!,
+                clubId = team.clubRemoteId!!,
             ) ?: throw IllegalArgumentException("Coach must be a member of the club")
 
         try {
@@ -70,7 +72,7 @@ internal class AssignCoachToTeamUseCaseImpl(
 
             // Step 1: Update team's coachId
             teamRepository.updateTeamCoachId(
-                teamFirestoreId = teamFirestoreId,
+                teamId = teamId,
                 coachId = coachUserId,
             )
 
@@ -78,9 +80,21 @@ internal class AssignCoachToTeamUseCaseImpl(
             if (!coachMembership.hasRole(ClubRole.COACH)) {
                 clubMemberRepository.addClubMemberRole(
                     userId = coachUserId,
-                    clubFirestoreId = team.clubFirestoreId!!,
+                    clubId = team.clubRemoteId!!,
                     role = ClubRole.COACH.roleName,
                 )
+            }
+
+            // Step 3: Notify the assigned coach (fire-and-forget; errors are swallowed
+            //          to avoid rolling back a successful assignment due to a notification failure)
+            try {
+                notifyCoachAssigned(
+                    coachUserId = coachUserId,
+                    assignedByUserId = currentUser.id,
+                    teamName = team.name,
+                )
+            } catch (_: Exception) {
+                // Notification failures must not break the assignment flow
             }
 
             // Return updated team

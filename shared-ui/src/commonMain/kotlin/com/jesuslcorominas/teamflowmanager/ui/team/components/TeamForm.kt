@@ -58,8 +58,8 @@ import teamflowmanager.shared_ui.generated.resources.team_type
 fun TeamForm(
     team: Team? = null,
     players: List<Player> = listOf(),
-    clubId: Long? = null,
-    clubFirestoreId: String? = null,
+    clubNumericId: Long? = null,
+    clubId: String? = null,
     isPresident: Boolean = false,
     onShowTeamTypeChangeError: () -> Unit = {},
     onSave: (Team, Long?) -> Unit,
@@ -69,8 +69,8 @@ fun TeamForm(
         val baseState = team.toTeamFormState()
         mutableStateOf(
             baseState.copy(
+                clubNumericId = clubNumericId ?: baseState.clubNumericId,
                 clubId = clubId ?: baseState.clubId,
-                clubFirestoreId = clubFirestoreId ?: baseState.clubFirestoreId,
             ),
         )
     }
@@ -341,8 +341,8 @@ private data class TeamFormState(
     val delegateName: String = "",
     val teamType: TeamType = TeamType.FOOTBALL_5,
     val coachId: String? = null,
-    val clubId: Long? = null,
-    val clubFirestoreId: String? = null,
+    val clubNumericId: Long? = null,
+    val clubId: String? = null,
     val errors: FormErrors = FormErrors(),
 )
 
@@ -354,8 +354,8 @@ private fun TeamFormState.toTeam(): Team =
         delegateName = delegateName.trimEnd(),
         teamType = teamType,
         coachId = coachId,
-        clubId = clubId,
-        clubFirestoreId = clubFirestoreId,
+        clubId = clubNumericId,
+        clubRemoteId = clubId,
     )
 
 private fun Team?.toTeamFormState() =
@@ -367,7 +367,7 @@ private fun Team?.toTeamFormState() =
             delegateName = it.delegateName,
             teamType = it.teamType,
             coachId = it.coachId,
-            clubId = it.clubId,
-            clubFirestoreId = it.clubFirestoreId,
+            clubNumericId = it.clubId,
+            clubId = it.clubRemoteId,
         )
     } ?: TeamFormState()

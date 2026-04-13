@@ -10,10 +10,10 @@ interface AcceptTeamInvitationUseCase {
     /**
      * Accept a team invitation and become the coach of the team.
      *
-     * @param teamFirestoreId The Firestore document ID of the team to accept
+     * @param teamId The Firestore document ID of the team to accept
      * @return The updated Team with the user assigned as coach
      * @throws IllegalArgumentException if team not found or already has a coach
      * @throws IllegalStateException if user is not authenticated
      */
-    suspend operator fun invoke(teamFirestoreId: String): Team
+    suspend operator fun invoke(teamId: String): Team
 }

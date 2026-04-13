@@ -560,7 +560,8 @@ class MatchViewModel(
                 getAllPlayerTimesUseCase(matchId),
                 getPlayersUseCase(),
                 _currentTime,
-            ) { match, playerTimes, players, currentTime ->
+                getMatchTimelineUseCase(matchId),
+            ) { match, playerTimes, players, currentTime, timeline ->
                 when {
                     match == null -> MatchUiState.NoMatch
                     match.status == MatchStatus.FINISHED -> {
@@ -601,6 +602,7 @@ class MatchViewModel(
                             match = match,
                             currentTime = _currentTime.value,
                             playerTimes = playerTimeItems,
+                            timelineEvents = timeline?.events ?: emptyList(),
                         )
                     }
                 }
@@ -762,6 +764,7 @@ sealed class MatchUiState {
         val match: Match,
         val currentTime: Long,
         val playerTimes: List<PlayerTimeItem>,
+        val timelineEvents: List<TimelineEvent> = emptyList(),
     ) : MatchUiState()
 
     data class Finished(

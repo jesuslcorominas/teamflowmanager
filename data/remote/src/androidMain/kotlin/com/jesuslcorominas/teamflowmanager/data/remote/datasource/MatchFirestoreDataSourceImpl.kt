@@ -122,6 +122,29 @@ class MatchFirestoreDataSourceImpl(
         }
 
     /**
+     * Gets all matches for a given team (by Firestore ID) as a real-time Flow.
+     * Used by the president to view any team's match history read-only.
+     */
+    override fun getMatchesByTeam(teamId: String): Flow<List<Match>> =
+        callbackFlow {
+            val listenerRegistration =
+                firestore.collection(MATCHES_COLLECTION)
+                    .whereEqualTo("teamId", teamId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
+                        val matches =
+                            snapshot?.documents?.mapNotNull { document ->
+                                documentToMatch(document, teamId)
+                            } ?: emptyList()
+                        trySend(matches)
+                    }
+            awaitClose { listenerRegistration.remove() }
+        }
+
+    /**
      * Gets all non-archived matches for the current user's team from Firestore as a real-time Flow.
      */
     override fun getAllMatches(): Flow<List<Match>> =

@@ -30,8 +30,8 @@ class AcceptTeamInvitationUseCaseTest {
         coachName = "",
         delegateName = "Del",
         teamType = TeamType.FOOTBALL_7,
-        firestoreId = "team_fs_1",
-        clubFirestoreId = "club_fs_1",
+        remoteId = "team_fs_1",
+        clubRemoteId = "club_fs_1",
         clubId = 10L,
         coachId = null,
     )
@@ -86,7 +86,7 @@ class AcceptTeamInvitationUseCaseTest {
     @Test(expected = IllegalArgumentException::class)
     fun `givenTeamNotFound_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(coach)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns null
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns null
         useCase.invoke("team_fs_1")
     }
 
@@ -94,22 +94,22 @@ class AcceptTeamInvitationUseCaseTest {
     fun `givenTeamAlreadyHasCoach_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
         val teamWithCoach = team.copy(coachId = "existingCoach")
         coEvery { getCurrentUser() } returns flowOf(coach)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns teamWithCoach
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns teamWithCoach
         useCase.invoke("team_fs_1")
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `givenTeamNotInClub_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val teamWithoutClub = team.copy(clubFirestoreId = null, clubId = null)
+        val teamWithoutClub = team.copy(clubRemoteId = null, clubId = null)
         coEvery { getCurrentUser() } returns flowOf(coach)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns teamWithoutClub
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns teamWithoutClub
         useCase.invoke("team_fs_1")
     }
 
     @Test
     fun `givenValidCoachAndTeam_whenInvoke_thenUpdateTeamCoachIdAndCreateMember`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(coach)
-        coEvery { teamRepository.getTeamByFirestoreId("team_fs_1") } returns team
+        coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns mockk()
 
         val result = useCase.invoke("team_fs_1")

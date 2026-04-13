@@ -13,10 +13,10 @@ internal class AcceptTeamInvitationUseCaseImpl(
     private val clubMemberRepository: ClubMemberRepository,
     private val getCurrentUser: GetCurrentUserUseCase,
 ) : AcceptTeamInvitationUseCase {
-    override suspend fun invoke(teamFirestoreId: String): Team {
+    override suspend fun invoke(teamId: String): Team {
         // Validate input
-        require(teamFirestoreId.isNotBlank()) {
-            "Team Firestore ID cannot be blank"
+        require(teamId.isNotBlank()) {
+            "Team ID cannot be blank"
         }
 
         // Get current authenticated user
@@ -34,8 +34,8 @@ internal class AcceptTeamInvitationUseCaseImpl(
 
         // Get the team
         val team =
-            teamRepository.getTeamByFirestoreId(teamFirestoreId)
-                ?: throw IllegalArgumentException("Team not found with Firestore ID: $teamFirestoreId")
+            teamRepository.getTeamById(teamId)
+                ?: throw IllegalArgumentException("Team not found: $teamId")
 
         // Verify team has no coach yet
         require(team.coachId == null) {
@@ -43,7 +43,7 @@ internal class AcceptTeamInvitationUseCaseImpl(
         }
 
         // Verify team belongs to a club
-        require(team.clubId != null && team.clubFirestoreId != null) {
+        require(team.clubId != null && team.clubRemoteId != null) {
             "Team must belong to a club to accept invitation"
         }
 
@@ -55,7 +55,7 @@ internal class AcceptTeamInvitationUseCaseImpl(
 
             // Step 1: Update team's coachId
             teamRepository.updateTeamCoachId(
-                teamFirestoreId = teamFirestoreId,
+                teamId = teamId,
                 coachId = currentUser.id,
             )
 
@@ -64,8 +64,8 @@ internal class AcceptTeamInvitationUseCaseImpl(
                 userId = currentUser.id,
                 name = currentUser.displayName!!,
                 email = currentUser.email!!,
-                clubId = team.clubId!!,
-                clubFirestoreId = team.clubFirestoreId!!,
+                clubNumericId = team.clubId!!,
+                clubId = team.clubRemoteId!!,
                 roles = listOf(ClubRole.COACH.roleName),
             )
 

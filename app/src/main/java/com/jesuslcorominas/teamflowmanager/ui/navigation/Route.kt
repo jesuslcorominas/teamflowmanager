@@ -22,6 +22,7 @@ sealed class Route(
                 Team,
                 TeamList,
                 ClubMembers,
+                PresidentTeamDetail,
                 Matches,
                 ArchivedMatches,
                 CreateMatch,
@@ -30,6 +31,9 @@ sealed class Route(
                 Analysis,
                 Settings,
                 AcceptTeamInvitation,
+                ClubSettings,
+                PendingTeamAssignment,
+                PresidentNotifications,
             )
         }
 
@@ -122,7 +126,7 @@ sealed class Route(
         showTopBar = true,
         showBottomBar = true,
         showFab = true,
-        hasSearchBar = false,
+        hasSearchBar = true,
         showSettingsButton = true,
     )
 
@@ -158,6 +162,21 @@ sealed class Route(
 
     data object Analysis : Route(path = "analysis", showBottomBar = true, showSettingsButton = true)
 
+    data object ClubSettings : Route(
+        path = "club_settings",
+        showBottomBar = true,
+        showSettingsButton = true,
+    )
+
+    data object PresidentTeamDetail : Route(path = "president_team_detail", canGoBack = true) {
+        const val ARG_TEAM_ID = "teamId"
+        private const val PATH = "president_team_detail"
+
+        const val FULL_ROUTE = "$PATH/{$ARG_TEAM_ID}"
+
+        fun createRoute(teamId: String): String = "$PATH/$teamId"
+    }
+
     data object AcceptTeamInvitation : Route(path = "accept_team_invitation", showTopBar = false) {
         const val ARG_TEAM_ID = "teamId"
         private const val PATH = "accept_team_invitation"
@@ -166,4 +185,13 @@ sealed class Route(
 
         fun createRoute(teamId: String): String = "$PATH?$ARG_TEAM_ID=$teamId"
     }
+
+    data object PendingTeamAssignment : Route(path = "pending_team_assignment", showTopBar = false)
+
+    data object PresidentNotifications : Route(
+        path = "president_notifications",
+        showTopBar = true,
+        showBottomBar = true,
+        showSettingsButton = true,
+    )
 }

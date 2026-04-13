@@ -60,6 +60,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
+import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppIconButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
@@ -92,11 +93,15 @@ import teamflowmanager.shared_ui.generated.resources.invalid_substitution_messag
 import teamflowmanager.shared_ui.generated.resources.invalid_substitution_title
 import teamflowmanager.shared_ui.generated.resources.no
 import teamflowmanager.shared_ui.generated.resources.no_match_message
+import teamflowmanager.shared_ui.generated.resources.no_scorers_label
 import teamflowmanager.shared_ui.generated.resources.own_goal_option
+import teamflowmanager.shared_ui.generated.resources.own_goal_scorer_label
 import teamflowmanager.shared_ui.generated.resources.pause_match_button
 import teamflowmanager.shared_ui.generated.resources.pause_match_early_message
 import teamflowmanager.shared_ui.generated.resources.pause_match_early_title
 import teamflowmanager.shared_ui.generated.resources.resume_match_button
+import teamflowmanager.shared_ui.generated.resources.scorers_dialog_title
+import teamflowmanager.shared_ui.generated.resources.scorers_tab
 import teamflowmanager.shared_ui.generated.resources.select_goal_scorer_title
 import teamflowmanager.shared_ui.generated.resources.statistics_tab
 import teamflowmanager.shared_ui.generated.resources.stop_match_early_message
@@ -107,9 +112,10 @@ import teamflowmanager.shared_ui.generated.resources.timeline_tab
 import teamflowmanager.shared_ui.generated.resources.timeout_button
 import teamflowmanager.shared_ui.generated.resources.yes
 
-private const val TAB_SUMMARY = 0
-private const val TAB_TIMELINE = 1
-private const val TAB_STATISTICS = 2
+private const val TAB_SCORERS = 0
+private const val TAB_SUMMARY = 1
+private const val TAB_TIMELINE = 2
+private const val TAB_STATISTICS = 3
 
 @Composable
 fun MatchScreen(
@@ -319,8 +325,27 @@ private fun MatchDetailContent(
     onAddOpponentGoal: () -> Unit,
     onBeginMatch: () -> Unit,
 ) {
+    var showScorersPopup by remember { mutableStateOf(false) }
+
+    if (showScorersPopup) {
+        ScorersDialog(
+            events = state.timelineEvents,
+            onDismiss = { showScorersPopup = false },
+        )
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        MatchTimeCard(match = state.match, currentTime = state.currentTime)
+        val scoreBoardClick =
+            if (state.match.status != MatchStatus.SCHEDULED) {
+                { showScorersPopup = true }
+            } else {
+                null
+            }
+        MatchTimeCard(
+            match = state.match,
+            currentTime = state.currentTime,
+            onScoreBoardClick = scoreBoardClick,
+        )
 
         PlayerSortOrderRow(
             currentSortOrder = currentSortOrder,
@@ -585,7 +610,15 @@ private fun FinishedMatchState(
     }
     DisposableEffect(Unit) { onDispose { onTitleChange(null) } }
 
-    var selectedTab by remember { mutableIntStateOf(TAB_SUMMARY) }
+    var selectedTab by remember { mutableIntStateOf(TAB_SCORERS) }
+    var showScorersPopup by remember { mutableStateOf(false) }
+
+    if (showScorersPopup) {
+        ScorersDialog(
+            events = state.timelineEvents,
+            onDismiss = { showScorersPopup = false },
+        )
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -595,7 +628,12 @@ private fun FinishedMatchState(
                     vertical = TFMSpacing.spacing02,
                 ),
         ) {
-            MatchTimeCard(match = state.match, currentTime = state.currentTime, onExport = onExport)
+            MatchTimeCard(
+                match = state.match,
+                currentTime = state.currentTime,
+                onExport = onExport,
+                onScoreBoardClick = { showScorersPopup = true },
+            )
         }
 
         ScrollableTabRow(
@@ -603,6 +641,16 @@ private fun FinishedMatchState(
             selectedTabIndex = selectedTab,
             edgePadding = TFMSpacing.spacing04,
         ) {
+            Tab(
+                selected = selectedTab == TAB_SCORERS,
+                onClick = { selectedTab = TAB_SCORERS },
+                text = {
+                    Text(
+                        text = stringResource(Res.string.scorers_tab),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                },
+            )
             Tab(
                 selected = selectedTab == TAB_SUMMARY,
                 onClick = { selectedTab = TAB_SUMMARY },
@@ -637,6 +685,8 @@ private fun FinishedMatchState(
 
         Box(modifier = Modifier.fillMaxSize()) {
             when (selectedTab) {
+                TAB_SCORERS ->
+                    ScorersTabContent(events = state.timelineEvents)
                 TAB_SUMMARY ->
                     SummaryTabContent(
                         state = state,
@@ -656,6 +706,142 @@ private fun FinishedMatchState(
             }
         }
     }
+}
+
+private data class ScorerEntry(val name: String, val count: Int)
+
+private fun aggregateScorers(events: List<TimelineEvent>): Pair<List<ScorerEntry>, Int> {
+    val scorerMap = mutableMapOf<Long, ScorerEntry>()
+    var ownGoalCount = 0
+    events.filterIsInstance<TimelineEvent.GoalScored>()
+        .filter { !it.isOpponentGoal }
+        .forEach { goal ->
+            if (goal.isOwnGoal) {
+                ownGoalCount++
+            } else {
+                goal.scorer?.let { player ->
+                    val name = "${player.firstName} ${player.lastName}"
+                    val current = scorerMap[player.id]
+                    scorerMap[player.id] = ScorerEntry(name, (current?.count ?: 0) + 1)
+                }
+            }
+        }
+    val scorers = scorerMap.values.sortedByDescending { it.count }
+    return scorers to ownGoalCount
+}
+
+@Composable
+private fun ScorersTabContent(events: List<TimelineEvent>) {
+    val (scorers, ownGoalCount) = remember(events) { aggregateScorers(events) }
+    val noGoals = scorers.isEmpty() && ownGoalCount == 0
+
+    if (noGoals) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = stringResource(Res.string.no_scorers_label),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(horizontal = TFMSpacing.spacing04),
+            contentPadding = PaddingValues(top = TFMSpacing.spacing03, bottom = TFMSpacing.spacing04),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+        ) {
+            items(scorers, key = { it.name }) { entry ->
+                ScorerRow(name = entry.name, count = entry.count)
+            }
+            if (ownGoalCount > 0) {
+                item(key = "own_goal") {
+                    ScorerRow(name = stringResource(Res.string.own_goal_scorer_label), count = ownGoalCount)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScorerRow(
+    name: String,
+    count: Int,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = TFMSpacing.spacing02),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Default.SportsSoccer,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Text(text = name, style = MaterialTheme.typography.bodyLarge)
+        }
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+}
+
+@Composable
+private fun ScorersDialog(
+    events: List<TimelineEvent>,
+    onDismiss: () -> Unit,
+) {
+    val (scorers, ownGoalCount) = remember(events) { aggregateScorers(events) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(Res.string.scorers_dialog_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+        },
+        text = {
+            if (scorers.isEmpty() && ownGoalCount == 0) {
+                Text(
+                    text = stringResource(Res.string.no_scorers_label),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                LazyColumn {
+                    items(scorers, key = { it.name }) { entry ->
+                        ScorerItem(
+                            number = entry.count.toString(),
+                            name = entry.name,
+                            onScorerSelected = {},
+                        )
+                    }
+                    if (ownGoalCount > 0) {
+                        item(key = "own_goal") {
+                            ScorerItem(
+                                number = ownGoalCount.toString(),
+                                name = stringResource(Res.string.own_goal_scorer_label),
+                                onScorerSelected = {},
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.close)) }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
 }
 
 @Composable

@@ -128,6 +128,7 @@ class MatchViewModelTest {
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(testMatch)
         every { getAllPlayerTimesUseCase(any()) } returns flowOf(playerTimes)
         every { getPlayersUseCase() } returns flowOf(players)
+        every { getMatchTimelineUseCase(any()) } returns flowOf(null)
         every { shouldShowInvalidSubstitutionAlertUseCase() } returns true
     }
 

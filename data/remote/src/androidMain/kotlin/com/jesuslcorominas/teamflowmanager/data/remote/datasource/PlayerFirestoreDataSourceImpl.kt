@@ -73,6 +73,30 @@ class PlayerFirestoreDataSourceImpl(
     }
 
     /**
+     * Gets all players for a given team (by Firestore ID) as a real-time Flow.
+     * Used by the president to view any team's squad read-only.
+     */
+    override fun getPlayersByTeam(teamId: String): Flow<List<Player>> =
+        callbackFlow {
+            val listenerRegistration =
+                firestore.collection(PLAYERS_COLLECTION)
+                    .whereEqualTo("teamId", teamId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            trySend(emptyList())
+                            return@addSnapshotListener
+                        }
+                        val players =
+                            snapshot?.documents
+                                ?.mapNotNull { documentToPlayer(it) }
+                                ?.filter { !it.deleted }
+                                ?: emptyList()
+                        trySend(players)
+                    }
+            awaitClose { listenerRegistration.remove() }
+        }
+
+    /**
      * Gets all players for the current user's team from Firestore as a real-time Flow.
      */
     override fun getAllPlayers(): Flow<List<Player>> =

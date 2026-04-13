@@ -104,7 +104,7 @@ class TeamFirestoreDataSourceImplTest {
         every { mockAuth.currentUser } returns null
 
         val team = mockk<Team>(relaxed = true)
-        every { team.firestoreId } returns "team-doc-id"
+        every { team.remoteId } returns "team-doc-id"
 
         try {
             dataSource.updateTeam(team)
@@ -131,9 +131,9 @@ class TeamFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } returns mockk()
 
         val team = mockk<Team>(relaxed = true)
-        every { team.firestoreId } returns null
+        every { team.remoteId } returns null
         every { team.coachId } returns null
-        every { team.clubFirestoreId } returns null
+        every { team.clubRemoteId } returns null
 
         // Should not throw
         dataSource.insertTeam(team)
@@ -209,10 +209,12 @@ class TeamFirestoreDataSourceImplTest {
         mockkStatic("kotlinx.coroutines.tasks.TasksKt")
 
         val teamsCollection = mockk<CollectionReference>()
+        val teamsQuery = mockk<Query>()
         val querySnapshot = mockk<QuerySnapshot>()
         every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamsQuery
         val allTask = mockk<Task<QuerySnapshot>>()
-        every { teamsCollection.get() } returns allTask
+        every { teamsQuery.get() } returns allTask
         coEvery { allTask.await() } returns querySnapshot
         every { querySnapshot.documents } returns emptyList()
 
@@ -296,7 +298,7 @@ class TeamFirestoreDataSourceImplTest {
     @Test
     fun `givenBlankTeamFirestoreId_whenGetTeamByFirestoreId_thenThrowsIllegalArgumentException`() = runTest {
         try {
-            dataSource.getTeamByFirestoreId("")
+            dataSource.getTeamById("")
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {
             // expected
@@ -317,7 +319,7 @@ class TeamFirestoreDataSourceImplTest {
         coEvery { docTask.await() } returns docSnapshot
         every { docSnapshot.exists() } returns false
 
-        val result = dataSource.getTeamByFirestoreId("non-existent-id")
+        val result = dataSource.getTeamById("non-existent-id")
 
         assertNull(result)
     }
@@ -346,7 +348,7 @@ class TeamFirestoreDataSourceImplTest {
         )
         every { docSnapshot.toObject(TeamFirestoreModel::class.java) } returns teamModel
 
-        val result = dataSource.getTeamByFirestoreId("team-firestore-id")
+        val result = dataSource.getTeamById("team-firestore-id")
 
         assertNotNull(result)
         assertEquals("Test Team", result!!.name)
@@ -403,11 +405,13 @@ class TeamFirestoreDataSourceImplTest {
         mockkStatic("kotlinx.coroutines.tasks.TasksKt")
 
         val teamsCollection = mockk<CollectionReference>()
+        val teamsQuery = mockk<Query>()
         val querySnapshot = mockk<QuerySnapshot>()
         val docWithClubId = mockk<DocumentSnapshot>()
         every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamsQuery
         val allTask = mockk<Task<QuerySnapshot>>()
-        every { teamsCollection.get() } returns allTask
+        every { teamsQuery.get() } returns allTask
         coEvery { allTask.await() } returns querySnapshot
 
         every { docWithClubId.id } returns "team-with-club-id"
@@ -425,11 +429,13 @@ class TeamFirestoreDataSourceImplTest {
         mockkStatic("kotlinx.coroutines.tasks.TasksKt")
 
         val teamsCollection = mockk<CollectionReference>()
+        val teamsQuery = mockk<Query>()
         val querySnapshot = mockk<QuerySnapshot>()
         val orphanDoc = mockk<DocumentSnapshot>()
         every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamsQuery
         val allTask = mockk<Task<QuerySnapshot>>()
-        every { teamsCollection.get() } returns allTask
+        every { teamsQuery.get() } returns allTask
         coEvery { allTask.await() } returns querySnapshot
 
         every { orphanDoc.id } returns "orphan-team-id"
@@ -456,7 +462,7 @@ class TeamFirestoreDataSourceImplTest {
         every { mockUser.uid } returns "user-123"
 
         val team = mockk<Team>(relaxed = true)
-        every { team.firestoreId } returns null
+        every { team.remoteId } returns null
 
         try {
             dataSource.updateTeam(team)
@@ -482,9 +488,9 @@ class TeamFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } returns mockk()
 
         val team = mockk<Team>(relaxed = true)
-        every { team.firestoreId } returns "team-doc-id"
+        every { team.remoteId } returns "team-doc-id"
         every { team.coachId } returns "coach-123"
-        every { team.clubFirestoreId } returns null
+        every { team.clubRemoteId } returns null
 
         dataSource.updateTeam(team)
     }
@@ -750,11 +756,13 @@ class TeamFirestoreDataSourceImplTest {
         mockkStatic("kotlinx.coroutines.tasks.TasksKt")
 
         val teamsCollection = mockk<CollectionReference>()
+        val teamsQuery = mockk<Query>()
         val querySnapshot = mockk<QuerySnapshot>()
         val orphanDoc = mockk<DocumentSnapshot>()
         every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamsQuery
         val allTask = mockk<Task<QuerySnapshot>>()
-        every { teamsCollection.get() } returns allTask
+        every { teamsQuery.get() } returns allTask
         coEvery { allTask.await() } returns querySnapshot
 
         every { orphanDoc.id } returns "orphan-team-id"
@@ -772,11 +780,13 @@ class TeamFirestoreDataSourceImplTest {
         mockkStatic("kotlinx.coroutines.tasks.TasksKt")
 
         val teamsCollection = mockk<CollectionReference>()
+        val teamsQuery = mockk<Query>()
         val querySnapshot = mockk<QuerySnapshot>()
         val orphanDoc = mockk<DocumentSnapshot>()
         every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamsQuery
         val allTask = mockk<Task<QuerySnapshot>>()
-        every { teamsCollection.get() } returns allTask
+        every { teamsQuery.get() } returns allTask
         coEvery { allTask.await() } returns querySnapshot
 
         every { orphanDoc.id } returns "orphan-team-id"
@@ -812,7 +822,7 @@ class TeamFirestoreDataSourceImplTest {
         every { docSnapshot.id } returns "team-firestore-id"
         every { docSnapshot.toObject(TeamFirestoreModel::class.java) } returns null
 
-        val result = dataSource.getTeamByFirestoreId("team-firestore-id")
+        val result = dataSource.getTeamById("team-firestore-id")
 
         assertNull(result)
     }
@@ -841,7 +851,7 @@ class TeamFirestoreDataSourceImplTest {
         )
         every { docSnapshot.toObject(TeamFirestoreModel::class.java) } returns teamModel
 
-        val result = dataSource.getTeamByFirestoreId("team-firestore-id")
+        val result = dataSource.getTeamById("team-firestore-id")
 
         assertNotNull(result)
         assertEquals("Test Team", result!!.name)

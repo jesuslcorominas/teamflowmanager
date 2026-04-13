@@ -62,6 +62,7 @@ class TeamViewModel(
     private var originalTeam: Team? = null
 
     val isEditMode: Boolean = mode == MODE_EDIT
+    private val isCreateMode: Boolean = mode == MODE_CREATE
 
     init {
         loadTeam()
@@ -76,17 +77,18 @@ class TeamViewModel(
             ) { team, players, clubMember ->
                 Triple(team, players, clubMember)
             }.collect { (team, players, clubMember) ->
-                if (originalTeam == null) {
+                if (originalTeam == null && !isCreateMode) {
                     originalTeam = team
                 }
 
-                if (team == null) {
-                    // No team exists, provide club info for creation if user is a President
-                    val isPresident = clubMember?.hasRole(ClubRole.PRESIDENT) ?: false
-                    val userRole = clubMember?.roles?.firstNotNullOfOrNull { ClubRole.fromString(it) }
-                    val clubId = clubMember?.clubId
-                    val clubFirestoreId = clubMember?.clubFirestoreId
-                    _uiState.update { TeamUiState.NoTeam(clubId, clubFirestoreId, isPresident, userRole) }
+                val isPresident = clubMember?.hasRole(ClubRole.PRESIDENT) ?: false
+                val userRole = clubMember?.roles?.firstNotNullOfOrNull { ClubRole.fromString(it) }
+                val clubNumericId = clubMember?.clubId
+                val clubId = clubMember?.clubRemoteId
+
+                if (team == null || isCreateMode) {
+                    // No team exists, or explicitly creating a new one
+                    _uiState.update { TeamUiState.NoTeam(clubNumericId, clubId, isPresident, userRole) }
                 } else {
                     _uiState.update { TeamUiState.Success(team, players) }
                 }
@@ -204,8 +206,8 @@ sealed interface TeamUiState {
     data object Loading : TeamUiState
 
     data class NoTeam(
-        val clubId: Long? = null,
-        val clubFirestoreId: String? = null,
+        val clubNumericId: Long? = null,
+        val clubId: String? = null,
         val isPresident: Boolean = false,
         val userRole: ClubRole? = null,
     ) : TeamUiState

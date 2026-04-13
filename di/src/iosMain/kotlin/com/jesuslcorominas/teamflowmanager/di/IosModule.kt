@@ -9,6 +9,8 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewMod
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSelectionViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
@@ -16,8 +18,11 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PendingTeamAssignmentViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
@@ -52,11 +57,16 @@ val iosModule =
                 getCurrentUser = get(),
                 getUserClubMembership = get(),
                 synchronizeTimeUseCase = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
+                getActiveViewRole = get(),
             )
         }
         factory {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -77,17 +87,24 @@ val iosModule =
                 hasNotificationPermissionBeenRequestedUseCase = get(),
                 setNotificationPermissionRequestedUseCase = get(),
                 getUserClubMembership = get(),
+                getActiveViewRole = get(),
             )
         }
         factory {
             CreateClubViewModel(
                 createClubUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
         factory {
             JoinClubViewModel(
                 joinClubByCodeUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -112,12 +129,26 @@ val iosModule =
                 getUserClubMembership = get(),
                 generateTeamInvitation = get(),
                 selfAssignAsCoach = get(),
+                assignCoachToTeam = get(),
+                clearTeamCoachUseCase = get(),
+                getClubMembers = get(),
+                getMatchesByTeam = get(),
+                createPendingCoachAssignment = get(),
+                deletePendingCoachAssignment = get(),
             )
         }
         factory {
             ClubMembersViewModel(
                 getClubMembers = get(),
                 getUserClubMembership = get(),
+            )
+        }
+        factory {
+            ClubSettingsViewModel(
+                getUserClubMembership = get(),
+                getClubById = get(),
+                updateClubUseCase = get(),
+                regenerateInvitationCodeUseCase = get(),
             )
         }
         factory {
@@ -143,7 +174,12 @@ val iosModule =
             SettingsViewModel(
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
+                deleteFcmTokenUseCase = get(),
                 analyticsTracker = get(),
+                getTeam = get(),
+                getUserClubMembership = get(),
+                getActiveViewRole = get(),
+                setActiveViewRole = get(),
             )
         }
 
@@ -215,6 +251,7 @@ val iosModule =
                 saveDefaultCaptainUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 getTeamUseCase = get(),
+                getClubByIdUseCase = get(),
                 createMatch = get(),
                 getMatchByIdUseCase = get(),
                 updateMatchUseCase = get(),
@@ -223,10 +260,41 @@ val iosModule =
             )
         }
         factory { params ->
+            PresidentTeamDetailViewModel(
+                teamId = params.get(),
+                getTeamById = get(),
+                getPlayersByTeam = get(),
+                getMatchesByTeam = get(),
+            )
+        }
+
+        factory { params ->
             AcceptTeamInvitationViewModel(
                 teamId = params.get(),
                 acceptTeamInvitation = get(),
                 getCurrentUser = get(),
+            )
+        }
+
+        factory {
+            ClubSelectionViewModel(signOutUseCase = get())
+        }
+
+        factory {
+            PendingTeamAssignmentViewModel(
+                getTeam = get(),
+                signOut = get(),
+            )
+        }
+
+        factory {
+            PresidentNotificationsViewModel(
+                getNotifications = get(),
+                getUnreadCount = get(),
+                markAsRead = get(),
+                markAsUnread = get(),
+                deleteNotification = get(),
+                getUserClubMembership = get(),
             )
         }
     }

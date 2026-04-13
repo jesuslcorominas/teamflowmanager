@@ -17,10 +17,10 @@ interface SelfAssignAsCoachUseCase {
     /**
      * Self-assign the current user as coach to a team.
      *
-     * @param teamFirestoreId The Firestore document ID of the team
+     * @param teamId The Firestore document ID of the team
      * @return The updated Team with the new coachId
      * @throws IllegalArgumentException if team not found or team already has a coach
      * @throws IllegalStateException if user is not authenticated or not a President
      */
-    suspend operator fun invoke(teamFirestoreId: String): Team
+    suspend operator fun invoke(teamId: String): Team
 }

@@ -75,11 +75,11 @@ class TeamFirestoreDataSourceImpl(
             )
         }
 
-    override fun getTeamsByClub(clubFirestoreId: String): Flow<List<Team>> =
+    override fun getTeamsByClub(clubId: String): Flow<List<Team>> =
         flow {
             val snapshots =
                 firestore.collection(TEAMS_COLLECTION)
-                    .where { "clubId" equalTo clubFirestoreId }
+                    .where { "clubId" equalTo clubId }
                     .snapshots
             emitAll(
                 snapshots.map { qs ->
@@ -96,9 +96,9 @@ class TeamFirestoreDataSourceImpl(
             )
         }
 
-    override suspend fun getTeamByFirestoreId(teamFirestoreId: String): Team? =
+    override suspend fun getTeamById(teamId: String): Team? =
         try {
-            val doc = firestore.collection(TEAMS_COLLECTION).document(teamFirestoreId).get()
+            val doc = firestore.collection(TEAMS_COLLECTION).document(teamId).get()
             if (doc.exists) doc.data<TeamFirestoreModel>().copy(id = doc.id).toDomain() else null
         } catch (e: CancellationException) {
             throw e
@@ -135,20 +135,20 @@ class TeamFirestoreDataSourceImpl(
 
     override suspend fun updateTeam(team: Team) {
         val docId =
-            team.firestoreId ?: findTeamDocumentId()
+            team.remoteId ?: findTeamDocumentId()
                 ?: throw IllegalStateException("Cannot find team document to update")
         val model = team.toFirestoreModel()
         firestore.collection(TEAMS_COLLECTION).document(docId).set(model)
     }
 
     override suspend fun updateTeamClubId(
-        teamFirestoreId: String,
-        clubId: Long,
-        clubFirestoreId: String,
+        teamId: String,
+        clubNumericId: Long,
+        clubId: String,
     ) = throw NotImplementedError("updateTeamClubId not implemented for iOS Phase 2")
 
     override suspend fun updateTeamCoachId(
-        teamFirestoreId: String,
+        teamId: String,
         coachId: String,
     ) = throw NotImplementedError("updateTeamCoachId not implemented for iOS Phase 2")
 }

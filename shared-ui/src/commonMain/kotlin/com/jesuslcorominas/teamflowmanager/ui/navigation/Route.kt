@@ -30,6 +30,8 @@ sealed class Route(
                 Analysis,
                 Settings,
                 AcceptTeamInvitation,
+                ClubSettings,
+                PresidentNotifications,
             )
         }
 
@@ -157,6 +159,19 @@ sealed class Route(
     }
 
     data object Analysis : Route(path = "analysis", showBottomBar = true, showSettingsButton = true)
+
+    data object ClubSettings : Route(
+        path = "club_settings",
+        showBottomBar = true,
+        showSettingsButton = true,
+    )
+
+    data object PresidentNotifications : Route(
+        path = "president_notifications",
+        showTopBar = true,
+        showBottomBar = true,
+        showSettingsButton = true,
+    )
 
     data object AcceptTeamInvitation : Route(path = "accept_team_invitation", showTopBar = false) {
         const val ARG_TEAM_ID = "teamId"

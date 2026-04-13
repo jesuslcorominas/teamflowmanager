@@ -1,7 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import app.cash.turbine.test
+import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
@@ -30,6 +32,7 @@ class MainViewModelTest {
     private lateinit var hasNotificationPermissionBeenRequestedUseCase: HasNotificationPermissionBeenRequestedUseCase
     private lateinit var setNotificationPermissionRequestedUseCase: SetNotificationPermissionRequestedUseCase
     private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
+    private lateinit var getActiveViewRoleUseCase: GetActiveViewRoleUseCase
 
     @Before
     fun setup() {
@@ -37,6 +40,8 @@ class MainViewModelTest {
         hasNotificationPermissionBeenRequestedUseCase = mockk()
         setNotificationPermissionRequestedUseCase = mockk(relaxed = true)
         getUserClubMembershipUseCase = mockk()
+        getActiveViewRoleUseCase = mockk()
+        every { getActiveViewRoleUseCase() } returns ActiveViewRole.President
     }
 
     @After
@@ -48,6 +53,7 @@ class MainViewModelTest {
         hasNotificationPermissionBeenRequestedUseCase = hasNotificationPermissionBeenRequestedUseCase,
         setNotificationPermissionRequestedUseCase = setNotificationPermissionRequestedUseCase,
         getUserClubMembership = getUserClubMembershipUseCase,
+        getActiveViewRole = getActiveViewRoleUseCase,
     )
 
     @Test
@@ -65,7 +71,6 @@ class MainViewModelTest {
             }
         }
 
-    @Ignore("CLUB_HIDDEN: isPresident is always false while club feature is disabled — restore when CLUB_ORIGINAL is re-enabled")
     @Test
     fun `isPresident should be true when user has President role`() = runTest(testDispatcher) {
         // Given
@@ -76,8 +81,8 @@ class MainViewModelTest {
             email = "john@example.com",
             clubId = 100L,
             roles = listOf("Presidente"),
-            firestoreId = "member1",
-            clubFirestoreId = "club_fs_1",
+            remoteId = "member1",
+            clubRemoteId = "club_fs_1",
         )
         every { getUserClubMembershipUseCase.invoke() } returns flowOf(presidentMember)
         val viewModel = createViewModel()
@@ -91,6 +96,30 @@ class MainViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `isPresident should be false when user is president but active role is Coach`() =
+        runTest(testDispatcher) {
+            val presidentMember = ClubMember(
+                id = 1L,
+                userId = "user123",
+                name = "John Doe",
+                email = "john@example.com",
+                clubId = 100L,
+                roles = listOf("Presidente"),
+                remoteId = "member1",
+                clubRemoteId = "club_fs_1",
+            )
+            every { getUserClubMembershipUseCase.invoke() } returns flowOf(presidentMember)
+            every { getActiveViewRoleUseCase() } returns ActiveViewRole.Coach
+            val viewModel = createViewModel()
+
+            // Value stays false (initial=false, computed=false) — no second emission from MutableStateFlow
+            viewModel.isPresident.test {
+                assertFalse(awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 
     @Test
     fun `hasNotificationPermissionBeenRequested should delegate to use case`() {

@@ -9,12 +9,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +34,9 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.PrimaryLight
 import org.jetbrains.compose.resources.stringResource
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.nav_analysis
+import teamflowmanager.shared_ui.generated.resources.nav_club_settings
 import teamflowmanager.shared_ui.generated.resources.nav_matches
+import teamflowmanager.shared_ui.generated.resources.nav_notifications
 import teamflowmanager.shared_ui.generated.resources.nav_players
 import teamflowmanager.shared_ui.generated.resources.nav_staff
 import teamflowmanager.shared_ui.generated.resources.nav_team
@@ -39,12 +46,13 @@ import teamflowmanager.shared_ui.generated.resources.nav_teams
 fun BottomNavigationBar(
     currentRoute: String?,
     isPresident: Boolean = false,
+    unreadNotificationsCount: Int = 0,
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val items: List<Route> =
         if (isPresident) {
-            listOf(Route.TeamList, Route.ClubMembers)
+            listOf(Route.TeamList, Route.ClubMembers, Route.PresidentNotifications, Route.ClubSettings)
         } else {
             listOf(Route.Matches, Route.Players, Route.Analysis, Route.Team)
         }
@@ -77,6 +85,8 @@ fun BottomNavigationBar(
                             route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
                             route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
                             route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
+                            route is Route.ClubSettings && Route.fromValue(currentRoute) is Route.ClubSettings -> true
+                            route is Route.PresidentNotifications && Route.fromValue(currentRoute) is Route.PresidentNotifications -> true
                             route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
                             route is Route.Matches && (
                                 Route.fromValue(currentRoute) is Route.Matches ||
@@ -89,11 +99,25 @@ fun BottomNavigationBar(
                         alwaysShowLabel = false,
                         icon = {
                             if (label != null && icon != null) {
-                                BottomNavItem(
-                                    iconVector = icon,
-                                    label = label,
-                                    isSelected = selected,
-                                )
+                                if (route is Route.PresidentNotifications && unreadNotificationsCount > 0) {
+                                    BadgedBox(
+                                        badge = {
+                                            Badge { Text(text = unreadNotificationsCount.toString()) }
+                                        },
+                                    ) {
+                                        BottomNavItem(
+                                            iconVector = icon,
+                                            label = label,
+                                            isSelected = selected,
+                                        )
+                                    }
+                                } else {
+                                    BottomNavItem(
+                                        iconVector = icon,
+                                        label = label,
+                                        isSelected = selected,
+                                    )
+                                }
                             }
                         },
                         selected = selected,
@@ -128,8 +152,10 @@ private fun Route.toIcon(): ImageVector? =
         Route.Team -> Icons.Default.Groups
         Route.TeamList -> Icons.Default.Groups
         Route.ClubMembers -> Icons.Default.People
+        Route.ClubSettings -> Icons.Default.Settings
         Route.Matches, Route.ArchivedMatches -> Icons.Default.SportsSoccer
         Route.Analysis -> Icons.Default.BarChart
+        Route.PresidentNotifications -> Icons.Default.Notifications
         else -> null
     }
 
@@ -140,7 +166,9 @@ private fun Route.toLabel(): String? =
         Route.Team -> stringResource(Res.string.nav_team)
         Route.TeamList -> stringResource(Res.string.nav_teams)
         Route.ClubMembers -> stringResource(Res.string.nav_staff)
+        Route.ClubSettings -> stringResource(Res.string.nav_club_settings)
         Route.Matches, Route.ArchivedMatches -> stringResource(Res.string.nav_matches)
         Route.Analysis -> stringResource(Res.string.nav_analysis)
+        Route.PresidentNotifications -> stringResource(Res.string.nav_notifications)
         else -> null
     }

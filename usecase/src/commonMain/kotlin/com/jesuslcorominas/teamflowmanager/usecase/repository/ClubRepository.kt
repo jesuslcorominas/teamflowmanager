@@ -21,4 +21,14 @@ interface ClubRepository {
      * @return The club if found, null otherwise
      */
     suspend fun getClubByInvitationCode(invitationCode: String): Club?
+
+    suspend fun getClubById(id: String): Club?
+
+    suspend fun regenerateInvitationCode(id: String): String
+
+    suspend fun updateClub(
+        id: String,
+        name: String,
+        homeGround: String?,
+    ): Club
 }

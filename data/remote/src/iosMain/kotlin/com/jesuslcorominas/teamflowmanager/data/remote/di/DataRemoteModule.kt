@@ -4,19 +4,30 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmSendNotificationDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.FcmTokenProviderDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPermissionDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PresidentNotificationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmSendNotificationDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosFcmTokenProviderDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosNotificationPermissionDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.IosNotificationTopicDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchOperationFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NoOpDynamicLinkDataSource
@@ -25,6 +36,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestor
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitutionFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeHistoryFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PresidentNotificationDataSourceStub
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.transaction.FirestoreTransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
@@ -67,4 +79,12 @@ actual val dataRemoteModule: Module =
         singleOf(::MatchOperationFirestoreDataSourceImpl) bind MatchOperationDataSource::class
         single<ImageStorageDataSource> { NoOpImageStorageDataSource() }
         single<DynamicLinkDataSource> { NoOpDynamicLinkDataSource() }
+
+        // FCM stubs — replace with real implementations when APNs is configured
+        singleOf(::IosFcmDataSourceImpl) bind FcmDataSource::class
+        singleOf(::IosFcmTokenProviderDataSourceImpl) bind FcmTokenProviderDataSource::class
+        singleOf(::IosNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
+        singleOf(::IosNotificationPermissionDataSourceImpl) bind NotificationPermissionDataSource::class
+        singleOf(::IosFcmSendNotificationDataSourceImpl) bind FcmSendNotificationDataSource::class
+        single<PresidentNotificationDataSource> { PresidentNotificationDataSourceStub() }
     }

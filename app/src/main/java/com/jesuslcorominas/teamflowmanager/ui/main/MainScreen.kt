@@ -36,6 +36,7 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.PendingNavigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
 import org.koin.androidx.compose.koinViewModel
 
 private val FabHeight = 56.dp
@@ -74,13 +75,23 @@ fun MainScreen(
         }
     }
 
-    MainScaffold(navController = navController, isPresident = isPresident)
+    val notificationsViewModel: PresidentNotificationsViewModel = koinViewModel()
+    val unreadCount by notificationsViewModel.unreadCount.collectAsState()
+
+    MainScaffold(
+        navController = navController,
+        isPresident = isPresident,
+        unreadNotificationsCount = if (isPresident) unreadCount else 0,
+        onRoleChanged = { viewModel.refreshIsPresident() },
+    )
 }
 
 @Composable
 private fun MainScaffold(
     navController: NavHostController,
     isPresident: Boolean,
+    unreadNotificationsCount: Int = 0,
+    onRoleChanged: () -> Unit,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val backHandlerController = remember { BackHandlerController() }
@@ -117,19 +128,21 @@ private fun MainScaffold(
                     title = title,
                     backHandlerController = backHandlerController,
                     searchPlaceholder =
-                        if (route is Route.Matches) {
-                            stringResource(
-                                R.string.search_match_placeholder,
-                            )
-                        } else {
-                            ""
+                        when (route) {
+                            Route.Matches -> stringResource(R.string.search_match_placeholder)
+                            Route.TeamList -> stringResource(R.string.search_team_placeholder)
+                            else -> ""
                         },
                     navController = navController,
                 )
             },
             bottomBar = {
                 if (uiConfig?.showBottomBar == true) {
-                    BottomNavigationBar(navController = navController, isPresident = isPresident)
+                    BottomNavigationBar(
+                        navController = navController,
+                        isPresident = isPresident,
+                        unreadNotificationsCount = unreadNotificationsCount,
+                    )
                 }
             },
             floatingActionButton = {
@@ -158,6 +171,7 @@ private fun MainScaffold(
                     navController = navController,
                     currentBackHandler = backHandlerController,
                     onTitleChange = { dynamicTitle = it },
+                    onRoleChanged = onRoleChanged,
                 )
             }
         }
@@ -223,6 +237,8 @@ fun Route.toTitleRes(backStackEntry: NavBackStackEntry?): Int? =
         Route.ArchivedMatches -> R.string.archived_matches
         Route.Analysis -> R.string.analysis_title
         Route.Settings -> R.string.settings_title
+        Route.ClubSettings -> R.string.club_settings_title
+        Route.PresidentNotifications -> R.string.nav_notifications
 
         Route.Match -> null
 

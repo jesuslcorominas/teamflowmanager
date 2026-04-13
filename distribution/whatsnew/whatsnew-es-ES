@@ -1,1 +1,4 @@
-Corrección de errores y mejoras de rendimiento.
+* Nuevo modo club. Gestiona todos los equipos pertenecientes a un mismo club.
+* Agregados roles de presidente y entrenador. Diferenciación de funciones y pantallas para cada estamento del club.
+* Notificaciones y alertas para los eventos más importantes del club o de tu equipo.
+* Corrección de errores y otras mejoras.

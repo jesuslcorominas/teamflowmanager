@@ -13,18 +13,18 @@ interface ClubMemberDataSource {
 
     /**
      * Get all members of a club.
-     * @param clubFirestoreId The Firestore document ID of the club
+     * @param clubId The identifier of the club
      * @return Flow emitting list of club members
      */
-    fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>>
+    fun getClubMembers(clubId: String): Flow<List<ClubMember>>
 
     /**
      * Create or update a club member.
      * @param userId The Firebase user ID
      * @param name The user's display name
      * @param email The user's email
-     * @param clubId The club's numeric ID
-     * @param clubFirestoreId The club's Firestore document ID
+     * @param clubNumericId The club's local numeric ID
+     * @param clubId The club's string identifier
      * @param roles The member's roles in the club
      * @return The created or updated ClubMember
      */
@@ -32,43 +32,48 @@ interface ClubMemberDataSource {
         userId: String,
         name: String,
         email: String,
-        clubId: Long,
-        clubFirestoreId: String,
+        clubNumericId: Long,
+        clubId: String,
         roles: List<String>,
     ): ClubMember
 
     /**
      * Update the roles of a club member (replaces existing roles).
      * @param userId The Firebase user ID
-     * @param clubFirestoreId The club's Firestore document ID
+     * @param clubId The identifier of the club
      * @param roles The new roles for the member
      */
     suspend fun updateClubMemberRoles(
         userId: String,
-        clubFirestoreId: String,
+        clubId: String,
         roles: List<String>,
     )
 
     /**
      * Add a role to a club member's existing roles.
      * @param userId The Firebase user ID
-     * @param clubFirestoreId The club's Firestore document ID
+     * @param clubId The identifier of the club
      * @param role The role to add
      */
     suspend fun addClubMemberRole(
         userId: String,
-        clubFirestoreId: String,
+        clubId: String,
         role: String,
     )
 
     /**
      * Get club member by user ID and club ID.
      * @param userId The Firebase user ID
-     * @param clubFirestoreId The club's Firestore document ID
+     * @param clubId The identifier of the club
      * @return The club member if found, null otherwise
      */
     suspend fun getClubMemberByUserIdAndClub(
         userId: String,
-        clubFirestoreId: String,
+        clubId: String,
     ): ClubMember?
+
+    suspend fun removeClubMember(
+        userId: String,
+        clubId: String,
+    )
 }

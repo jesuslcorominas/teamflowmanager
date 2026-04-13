@@ -3,7 +3,13 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AssignCoachToTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearTeamCoachUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.CreatePendingCoachAssignmentUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GenerateTeamInvitationUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubMembersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SelfAssignAsCoachUseCase
@@ -33,6 +39,12 @@ class TeamListViewModelTest {
     private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
     private lateinit var generateTeamInvitationUseCase: GenerateTeamInvitationUseCase
     private lateinit var selfAssignAsCoachUseCase: SelfAssignAsCoachUseCase
+    private lateinit var assignCoachToTeamUseCase: AssignCoachToTeamUseCase
+    private lateinit var clearTeamCoachUseCase: ClearTeamCoachUseCase
+    private lateinit var getClubMembersUseCase: GetClubMembersUseCase
+    private lateinit var getMatchesByTeamUseCase: GetMatchesByTeamUseCase
+    private lateinit var createPendingCoachAssignmentUseCase: CreatePendingCoachAssignmentUseCase
+    private lateinit var deletePendingCoachAssignmentUseCase: DeletePendingCoachAssignmentUseCase
 
     @Before
     fun setup() {
@@ -41,6 +53,14 @@ class TeamListViewModelTest {
         getUserClubMembershipUseCase = mockk()
         generateTeamInvitationUseCase = mockk()
         selfAssignAsCoachUseCase = mockk(relaxed = true)
+        assignCoachToTeamUseCase = mockk(relaxed = true)
+        clearTeamCoachUseCase = mockk(relaxed = true)
+        getClubMembersUseCase = mockk()
+        getMatchesByTeamUseCase = mockk()
+        createPendingCoachAssignmentUseCase = mockk(relaxed = true)
+        deletePendingCoachAssignmentUseCase = mockk(relaxed = true)
+        every { getClubMembersUseCase.invoke(any()) } returns flowOf(emptyList())
+        every { getMatchesByTeamUseCase.invoke(any()) } returns flowOf(emptyList())
     }
 
     @After
@@ -53,6 +73,12 @@ class TeamListViewModelTest {
         getUserClubMembership = getUserClubMembershipUseCase,
         generateTeamInvitation = generateTeamInvitationUseCase,
         selfAssignAsCoach = selfAssignAsCoachUseCase,
+        assignCoachToTeam = assignCoachToTeamUseCase,
+        clearTeamCoachUseCase = clearTeamCoachUseCase,
+        getClubMembers = getClubMembersUseCase,
+        getMatchesByTeam = getMatchesByTeamUseCase,
+        createPendingCoachAssignment = createPendingCoachAssignmentUseCase,
+        deletePendingCoachAssignment = deletePendingCoachAssignmentUseCase,
     )
 
     private fun presidentMember() = ClubMember(
@@ -62,8 +88,8 @@ class TeamListViewModelTest {
         email = "john@test.com",
         clubId = 100L,
         roles = listOf("Presidente"),
-        firestoreId = "member1",
-        clubFirestoreId = "club_fs_1",
+        remoteId = "member1",
+        clubRemoteId = "club_fs_1",
     )
 
     @Test
@@ -103,7 +129,7 @@ class TeamListViewModelTest {
                 coachName = "Coach",
                 delegateName = "Delegate",
                 teamType = TeamType.FOOTBALL_5,
-                firestoreId = "team_fs_1",
+                remoteId = "team_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
             every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -145,8 +171,8 @@ class TeamListViewModelTest {
                 email = "john@test.com",
                 clubId = 100L,
                 roles = listOf("Coach"),
-                firestoreId = "member1",
-                clubFirestoreId = "club_fs_1",
+                remoteId = "member1",
+                clubRemoteId = "club_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
             every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(emptyList())
@@ -170,7 +196,7 @@ class TeamListViewModelTest {
                 coachName = "Coach",
                 delegateName = "Delegate",
                 teamType = TeamType.FOOTBALL_5,
-                firestoreId = "team_fs_1",
+                remoteId = "team_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
             every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -203,7 +229,7 @@ class TeamListViewModelTest {
             coachName = "Coach",
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
-            firestoreId = "team_fs_1",
+            remoteId = "team_fs_1",
         )
         every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
         every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -230,7 +256,7 @@ class TeamListViewModelTest {
                 coachName = "",
                 delegateName = "Delegate",
                 teamType = TeamType.FOOTBALL_5,
-                firestoreId = "team_fs_1",
+                remoteId = "team_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
             every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -259,4 +285,327 @@ class TeamListViewModelTest {
         // Then
         assertEquals(TeamListViewModel.UiState.Error, viewModel.uiState.value)
     }
+
+    // region Search
+
+    @Test
+    fun `initial searchQuery should be empty`() = runTest(testDispatcher) {
+        // Given
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+
+        // When
+        val viewModel = createViewModel()
+
+        // Then
+        assertEquals("", viewModel.searchQuery.value)
+    }
+
+    @Test
+    fun `onSearchQueryChanged filters teams by name case insensitively`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val teamA = teamWithName("Alpha", remoteId = "t1")
+        val teamB = teamWithName("Beta", remoteId = "t2")
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(teamA, teamB))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onSearchQueryChanged("alph")
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(
+            TeamListViewModel.UiState.Success(listOf(teamA), member.name),
+            viewModel.uiState.value,
+        )
+    }
+
+    @Test
+    fun `onSearchQueryChanged with blank query shows all teams`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val teamA = teamWithName("Alpha", remoteId = "t1")
+        val teamB = teamWithName("Beta", remoteId = "t2")
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(teamA, teamB))
+        val viewModel = createViewModel()
+        viewModel.onSearchQueryChanged("alph")
+        advanceUntilIdle()
+
+        // When
+        viewModel.onSearchQueryChanged("")
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(
+            TeamListViewModel.UiState.Success(listOf(teamA, teamB), member.name),
+            viewModel.uiState.value,
+        )
+    }
+
+    // endregion
+
+    // region CoachFilter
+
+    @Test
+    fun `initial coachFilter should be ALL`() = runTest(testDispatcher) {
+        // Given
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+
+        // When
+        val viewModel = createViewModel()
+
+        // Then
+        assertEquals(TeamListViewModel.CoachFilter.ALL, viewModel.coachFilter.value)
+    }
+
+    @Test
+    fun `onCoachFilterChanged ALL shows all teams regardless of coach`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val withCoach = teamWithName("With Coach", remoteId = "t1", coachId = "c1")
+        val withoutCoach = teamWithName("No Coach", remoteId = "t2", coachId = null)
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(withCoach, withoutCoach))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.ALL)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value as TeamListViewModel.UiState.Success
+        assertEquals(listOf(withCoach, withoutCoach), state.teams)
+    }
+
+    @Test
+    fun `onCoachFilterChanged WITH_COACH shows only teams that have a coach`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val withCoach = teamWithName("With Coach", remoteId = "t1", coachId = "c1")
+        val withoutCoach = teamWithName("No Coach", remoteId = "t2", coachId = null)
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(withCoach, withoutCoach))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.WITH_COACH)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value as TeamListViewModel.UiState.Success
+        assertEquals(listOf(withCoach), state.teams)
+    }
+
+    @Test
+    fun `onCoachFilterChanged WITHOUT_COACH shows only teams without a coach`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val withCoach = teamWithName("With Coach", remoteId = "t1", coachId = "c1")
+        val withoutCoach = teamWithName("No Coach", remoteId = "t2", coachId = null)
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(withCoach, withoutCoach))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.WITHOUT_COACH)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value as TeamListViewModel.UiState.Success
+        assertEquals(listOf(withoutCoach), state.teams)
+    }
+
+    @Test
+    fun `search and coach filter are applied together`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val alphaWithCoach = teamWithName("Alpha", remoteId = "t1", coachId = "c1")
+        val alphaNoCoach = teamWithName("Alpha B", remoteId = "t2", coachId = null)
+        val betaNoCoach = teamWithName("Beta", remoteId = "t3", coachId = null)
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(alphaWithCoach, alphaNoCoach, betaNoCoach))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When: search "alpha" + filter WITHOUT_COACH
+        viewModel.onSearchQueryChanged("alpha")
+        viewModel.onCoachFilterChanged(TeamListViewModel.CoachFilter.WITHOUT_COACH)
+        advanceUntilIdle()
+
+        // Then: only alphaNoCoach matches both conditions
+        val state = viewModel.uiState.value as TeamListViewModel.UiState.Success
+        assertEquals(listOf(alphaNoCoach), state.teams)
+    }
+
+    // endregion
+
+    // region Assign coach dialog
+
+    @Test
+    fun `requestAssignCoach sets assignCoachDialogTeam and clears error`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val team = teamWithName("Team A", remoteId = "t1")
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.requestAssignCoach(team)
+
+        // Then
+        assertEquals(team, viewModel.assignCoachDialogTeam.value)
+        assertNull(viewModel.assignCoachError.value)
+    }
+
+    @Test
+    fun `dismissAssignCoachDialog clears dialog team and error`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val team = teamWithName("Team A", remoteId = "t1")
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.requestAssignCoach(team)
+
+        // When
+        viewModel.dismissAssignCoachDialog()
+
+        // Then
+        assertNull(viewModel.assignCoachDialogTeam.value)
+        assertNull(viewModel.assignCoachError.value)
+    }
+
+    @Test
+    fun `assignCoachByMember calls use case and closes dialog`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val team = teamWithName("Team A", remoteId = "t1")
+        val coachMember = ClubMember(
+            id = 2L, userId = "coach1", name = "Coach", email = "coach@test.com",
+            clubId = 100L, roles = listOf("Coach"), remoteId = "cm1", clubRemoteId = "club_fs_1",
+        )
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.requestAssignCoach(team)
+
+        // When
+        viewModel.assignCoachByMember(coachMember)
+        advanceUntilIdle()
+
+        // Then
+        coVerify { assignCoachToTeamUseCase.invoke("t1", "coach1") }
+        assertNull(viewModel.assignCoachDialogTeam.value)
+        assertNull(viewModel.assignCoachError.value)
+        assertNull(viewModel.assigningCoachToTeamId.value)
+    }
+
+    @Test
+    fun `assignCoachByEmail assigns directly when email matches an existing member`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val team = teamWithName("Team A", remoteId = "t1")
+        val coachMember = ClubMember(
+            id = 2L, userId = "coach1", name = "Coach", email = "coach@test.com",
+            clubId = 100L, roles = listOf("Coach"), remoteId = "cm1", clubRemoteId = "club_fs_1",
+        )
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
+        every { getClubMembersUseCase.invoke(any()) } returns flowOf(listOf(coachMember))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.requestAssignCoach(team)
+
+        // When
+        viewModel.assignCoachByEmail("coach@test.com")
+        advanceUntilIdle()
+
+        // Then — uses the member's userId, not the email string
+        coVerify { assignCoachToTeamUseCase.invoke("t1", "coach1") }
+        assertNull(viewModel.assignCoachDialogTeam.value)
+    }
+
+    @Test
+    fun `assignCoachByEmail creates pending assignment for external email not in club`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val team = teamWithName("Team A", remoteId = "t1")
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
+        // getClubMembersUseCase returns empty list (no members match the email)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.requestAssignCoach(team)
+
+        // When
+        viewModel.assignCoachByEmail("external@example.com")
+        advanceUntilIdle()
+
+        // Then — creates pending assignment, dismisses dialog, no error
+        coVerify { createPendingCoachAssignmentUseCase.invoke("t1", "external@example.com") }
+        coVerify(exactly = 0) { assignCoachToTeamUseCase.invoke(any(), any()) }
+        assertNull(viewModel.assignCoachDialogTeam.value)
+        assertNull(viewModel.assignCoachError.value)
+    }
+
+    @Test
+    fun `deletePendingAssignment calls use case with team id`() = runTest(testDispatcher) {
+        // Given
+        val member = presidentMember()
+        val team = teamWithName("Team A", remoteId = "t1")
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
+        every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.deletePendingAssignment(team)
+        advanceUntilIdle()
+
+        // Then
+        coVerify { deletePendingCoachAssignmentUseCase.invoke("t1") }
+    }
+
+    @Test
+    fun `clearAssignCoachError clears the error`() = runTest(testDispatcher) {
+        // Given
+        every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+        val viewModel = createViewModel()
+
+        // When
+        viewModel.clearAssignCoachError()
+
+        // Then
+        assertNull(viewModel.assignCoachError.value)
+    }
+
+    // endregion
+
+    // region helpers
+
+    private fun teamWithName(
+        name: String,
+        remoteId: String,
+        coachId: String? = null,
+    ) = Team(
+        id = remoteId.hashCode().toLong(),
+        name = name,
+        coachName = if (coachId != null) "Coach" else "",
+        delegateName = "",
+        teamType = TeamType.FOOTBALL_5,
+        remoteId = remoteId,
+        coachId = coachId,
+    )
+
+    // endregion
 }

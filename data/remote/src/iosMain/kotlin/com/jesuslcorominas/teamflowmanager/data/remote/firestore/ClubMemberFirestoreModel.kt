@@ -22,6 +22,6 @@ fun ClubMemberFirestoreModel.toDomain(): ClubMember =
         email = email,
         clubId = clubId.toStableId(),
         roles = roles,
-        firestoreId = id,
-        clubFirestoreId = clubId,
+        remoteId = id,
+        clubRemoteId = clubId,
     )

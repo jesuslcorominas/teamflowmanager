@@ -36,8 +36,8 @@ class TeamRepositoryImplTest {
         name: String = "Test Team",
         coachId: String? = null,
         clubId: Long? = null,
-        clubFirestoreId: String? = null,
-        firestoreId: String? = null,
+        clubRemoteId: String? = null,
+        remoteId: String? = null,
     ) = Team(
         id = id,
         name = name,
@@ -46,8 +46,8 @@ class TeamRepositoryImplTest {
         teamType = TeamType.FOOTBALL_5,
         coachId = coachId,
         clubId = clubId,
-        clubFirestoreId = clubFirestoreId,
-        firestoreId = firestoreId,
+        clubRemoteId = clubRemoteId,
+        remoteId = remoteId,
     )
 
     // --- getTeam ---
@@ -85,7 +85,7 @@ class TeamRepositoryImplTest {
 
     @Test
     fun `givenTeamWithClubId_whenCreateTeam_thenDelegatesToDataSource`() = runTest {
-        val team = createTeam(id = 0L, clubId = 123L, clubFirestoreId = "club-abc")
+        val team = createTeam(id = 0L, clubId = 123L, clubRemoteId = "club-abc")
         coEvery { teamDataSource.insertTeam(team) } just runs
 
         repository.createTeam(team)
@@ -95,7 +95,7 @@ class TeamRepositoryImplTest {
 
     @Test
     fun `givenOrphanTeamWithNullClubId_whenCreateTeam_thenDelegatesToDataSource`() = runTest {
-        val team = createTeam(id = 0L, clubId = null, clubFirestoreId = null)
+        val team = createTeam(id = 0L, clubId = null, clubRemoteId = null)
         coEvery { teamDataSource.insertTeam(team) } just runs
 
         repository.createTeam(team)
@@ -142,21 +142,21 @@ class TeamRepositoryImplTest {
 
     @Test
     fun `givenClubFirestoreId_whenGetTeamsByClub_thenReturnsTeams`() = runTest {
-        val clubFirestoreId = "club-123"
+        val clubRemoteId = "club-123"
         val teams = listOf(createTeam(id = 1L), createTeam(id = 2L))
-        every { teamDataSource.getTeamsByClub(clubFirestoreId) } returns flowOf(teams)
+        every { teamDataSource.getTeamsByClub(clubRemoteId) } returns flowOf(teams)
 
-        val result = repository.getTeamsByClub(clubFirestoreId).first()
+        val result = repository.getTeamsByClub(clubRemoteId).first()
 
         assertEquals(teams, result)
     }
 
     @Test
     fun `givenClubWithNoTeams_whenGetTeamsByClub_thenReturnsEmptyList`() = runTest {
-        val clubFirestoreId = "empty-club"
-        every { teamDataSource.getTeamsByClub(clubFirestoreId) } returns flowOf(emptyList())
+        val clubRemoteId = "empty-club"
+        every { teamDataSource.getTeamsByClub(clubRemoteId) } returns flowOf(emptyList())
 
-        val result = repository.getTeamsByClub(clubFirestoreId).first()
+        val result = repository.getTeamsByClub(clubRemoteId).first()
 
         assertEquals(emptyList<Team>(), result)
     }
@@ -194,24 +194,24 @@ class TeamRepositoryImplTest {
         coVerify { teamDataSource.updateTeamClubId("firestore-team-id", 123L, "firestore-club-id") }
     }
 
-    // --- getTeamByFirestoreId ---
+    // --- getTeamById ---
 
     @Test
     fun `givenTeamFirestoreId_whenGetTeamByFirestoreId_thenReturnsTeam`() = runTest {
-        val firestoreId = "firestore-team-123"
-        val team = createTeam(firestoreId = firestoreId)
-        coEvery { teamDataSource.getTeamByFirestoreId(firestoreId) } returns team
+        val remoteId = "firestore-team-123"
+        val team = createTeam(remoteId = remoteId)
+        coEvery { teamDataSource.getTeamById(remoteId) } returns team
 
-        val result = repository.getTeamByFirestoreId(firestoreId)
+        val result = repository.getTeamById(remoteId)
 
         assertEquals(team, result)
     }
 
     @Test
     fun `givenUnknownFirestoreId_whenGetTeamByFirestoreId_thenReturnsNull`() = runTest {
-        coEvery { teamDataSource.getTeamByFirestoreId("unknown") } returns null
+        coEvery { teamDataSource.getTeamById("unknown") } returns null
 
-        val result = repository.getTeamByFirestoreId("unknown")
+        val result = repository.getTeamById("unknown")
 
         assertNull(result)
     }

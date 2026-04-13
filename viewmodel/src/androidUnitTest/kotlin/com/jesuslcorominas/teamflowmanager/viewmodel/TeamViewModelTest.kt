@@ -230,8 +230,8 @@ class TeamViewModelTest {
                 email = "john@example.com",
                 clubId = 100,
                 roles = listOf("Presidente"),
-                firestoreId = "clubmember_doc_123",
-                clubFirestoreId = "club_firestore_123"
+                remoteId = "clubmember_doc_123",
+                clubRemoteId = "club_firestore_123"
             )
             every { getTeamUseCase.invoke() } returns flowOf(null)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
@@ -257,8 +257,8 @@ class TeamViewModelTest {
             val state = viewModel.uiState.value
             assert(state is TeamUiState.NoTeam)
             val noTeamState = state as TeamUiState.NoTeam
-            assertEquals(100L, noTeamState.clubId)
-            assertEquals("club_firestore_123", noTeamState.clubFirestoreId)
+            assertEquals(100L, noTeamState.clubNumericId)
+            assertEquals("club_firestore_123", noTeamState.clubId)
             assertEquals(true, noTeamState.isPresident)
             assertEquals(ClubRole.PRESIDENT, noTeamState.userRole)
         }
@@ -274,8 +274,8 @@ class TeamViewModelTest {
                 email = "john@example.com",
                 clubId = 100,
                 roles = listOf("Coach"),
-                firestoreId = "clubmember_doc_123",
-                clubFirestoreId = "club_firestore_123"
+                remoteId = "clubmember_doc_123",
+                clubRemoteId = "club_firestore_123"
             )
             every { getTeamUseCase.invoke() } returns flowOf(null)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
@@ -301,8 +301,8 @@ class TeamViewModelTest {
             val state = viewModel.uiState.value
             assert(state is TeamUiState.NoTeam)
             val noTeamState = state as TeamUiState.NoTeam
-            assertEquals(100L, noTeamState.clubId)
-            assertEquals("club_firestore_123", noTeamState.clubFirestoreId)
+            assertEquals(100L, noTeamState.clubNumericId)
+            assertEquals("club_firestore_123", noTeamState.clubId)
             assertEquals(false, noTeamState.isPresident)
             assertEquals(ClubRole.COACH, noTeamState.userRole)
         }

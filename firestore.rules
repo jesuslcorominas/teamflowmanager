@@ -54,8 +54,10 @@ service cloud.firestore {
 
     match /clubMembers/{memberId} {
       allow read: if isAuthenticated() && (
+        resource == null ||
         resource.data.userId == request.auth.uid ||
-        isClubOwner(resource.data.clubId)
+        isClubOwner(resource.data.clubId) ||
+        isPresidenteOfClub(resource.data.clubId)
       );
 
       allow create: if isAuthenticated() && (
@@ -96,7 +98,7 @@ service cloud.firestore {
         resource.data.assignedCoachId == request.auth.uid || (
           getTeamClubId(teamId) != null &&
           isPresidenteOfClub(getTeamClubId(teamId)) &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['assignedCoachId'])
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['assignedCoachId', 'pendingCoachEmail'])
         )
       );
 
@@ -172,6 +174,53 @@ service cloud.firestore {
     match /matches/{matchId}/{document=**} {
       allow read: if isAuthenticated();
       allow write: if userIsTeamOwner(get(/databases/$(database)/documents/matches/$(matchId)).data.teamId);
+    }
+
+    // =======================================================================
+    // PENDING COACH ASSIGNMENTS
+    // =======================================================================
+
+    match /pendingCoachAssignments/{teamId} {
+      // Any authenticated user can read (needed for login-time self-resolution)
+      allow read: if isAuthenticated();
+
+      // Only Presidents of the team's club can create/update/delete pending assignments
+      allow create, update, delete: if isAuthenticated() &&
+        getTeamClubId(teamId) != null &&
+        isPresidenteOfClub(getTeamClubId(teamId));
+    }
+
+    // =======================================================================
+    // PRESIDENT NOTIFICATIONS
+    // =======================================================================
+
+    match /presidentNotifications/{clubId}/notifications/{notifId} {
+      // Any club member can create a notification for the president
+      // (e.g. a new user notifying the president they are waiting for team assignment)
+      allow create: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId));
+
+      // Only the president can read, update (mark read/unread) and delete
+      allow read, update, delete: if isAuthenticated() && isPresidenteOfClub(clubId);
+    }
+
+    // =======================================================================
+    // FCM TOKENS
+    // =======================================================================
+
+    match /fcmTokens/{tokenId} {
+      // Any authenticated user can read (needed for cross-user device cleanup:
+      // SyncFcmTokenUseCase queries all docs with the same device token to
+      // remove subscriptions belonging to previous users on the same device).
+      allow read: if isAuthenticated();
+
+      // Only the token owner can write their own doc.
+      allow create, update: if isAuthenticated() &&
+        request.auth.uid == request.resource.data.userId;
+
+      // Any authenticated user can delete (needed for device cleanup: the
+      // current user deletes stale docs that belong to previous users).
+      allow delete: if isAuthenticated();
     }
 
     // =======================================================================

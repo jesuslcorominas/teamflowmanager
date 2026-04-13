@@ -2,6 +2,10 @@ package com.jesuslcorominas.teamflowmanager.ui.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -15,8 +19,12 @@ import androidx.navigation.navDeepLink
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubSettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PendingTeamAssignmentScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PresidentNotificationsScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PresidentTeamDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
@@ -36,12 +44,19 @@ fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     onTitleChange: (String?) -> Unit,
+    onRoleChanged: () -> Unit,
     currentBackHandler: BackHandlerController,
 ) {
     NavHost(
         modifier = modifier,
         navController = navController,
         startDestination = Route.Splash.createRoute(),
+        // Default: entering screens fade in; exiting screens disappear instantly to avoid
+        // layout-shift artifacts (topBar/bottomBar change in the same frame as navigation).
+        enterTransition = { fadeIn(tween(220)) },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { fadeIn(tween(220)) },
+        popExitTransition = { ExitTransition.None },
     ) {
         composable(Route.Splash.createRoute()) {
             SplashScreen(
@@ -57,6 +72,11 @@ fun Navigation(
                 },
                 onNavigateToCreateTeam = {
                     navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
+                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
+                    }
+                },
+                onNavigateToAwaitTeam = {
+                    navController.navigate(Route.PendingTeamAssignment.createRoute()) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
@@ -90,6 +110,11 @@ fun Navigation(
                 },
                 onJoinClub = {
                     navController.navigate(Route.JoinClub.createRoute())
+                },
+                onSignedOut = {
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
             )
         }
@@ -142,12 +167,55 @@ fun Navigation(
             )
         }
 
-        composable(Route.TeamList.createRoute()) {
-            TeamListScreen()
+        composable(
+            route = Route.TeamList.createRoute(),
+            // Instant pop-enter: TeamList ↔ PresidentTeamDetail change the scaffold
+            // (bottomBar/canGoBack), so restoring TeamList must be atomic too.
+            popEnterTransition = { EnterTransition.None },
+        ) {
+            TeamListScreen(
+                onTeamClick = { team ->
+                    team.remoteId?.let { remoteId ->
+                        navController.navigate(Route.PresidentTeamDetail.createRoute(remoteId))
+                    }
+                },
+            )
+        }
+
+        composable(
+            route = Route.PresidentTeamDetail.FULL_ROUTE,
+            arguments =
+                listOf(
+                    navArgument(Route.PresidentTeamDetail.ARG_TEAM_ID) {
+                        type = NavType.StringType
+                    },
+                ),
+            // Instant transitions: PresidentTeamDetail changes canGoBack/bottomBar visibility,
+            // so we switch atomically to avoid scaffold layout-shift artifacts.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
+        ) { backStackEntry ->
+            val teamId =
+                backStackEntry.arguments?.getString(Route.PresidentTeamDetail.ARG_TEAM_ID)
+                    ?: return@composable
+            PresidentTeamDetailScreen(
+                teamId = teamId,
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
 
         composable(Route.ClubMembers.createRoute()) {
             ClubMembersScreen()
+        }
+
+        composable(Route.ClubSettings.createRoute()) {
+            ClubSettingsScreen()
+        }
+
+        composable(Route.PresidentNotifications.createRoute()) {
+            PresidentNotificationsScreen()
         }
 
         composable(Route.Players.createRoute()) {
@@ -169,6 +237,12 @@ fun Navigation(
                         type = NavType.LongType
                     },
                 ),
+            // Instant transitions: wizard changes topBar/bottomBar visibility, so we switch
+            // atomically to avoid any in-between scaffold state being visible.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val playerId = backStackEntry.arguments?.getLong(Route.PlayerWizard.ARG_PLAYER_ID) ?: 0L
             PlayerWizardScreen(
@@ -212,6 +286,11 @@ fun Navigation(
                         defaultValue = 0L
                     },
                 ),
+            // Instant transitions: same reason as PlayerWizard.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val matchId = backStackEntry.arguments?.getLong(Route.CreateMatch.ARG_MATCH_ID) ?: 0L
             MatchCreationWizardScreen(
@@ -242,6 +321,34 @@ fun Navigation(
 
         composable(route = Route.Settings.createRoute()) {
             SettingsScreen(
+                onSignOut = {
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onRoleChanged = {
+                    onRoleChanged()
+                    navController.navigate(Route.Splash.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(
+            route = Route.PendingTeamAssignment.createRoute(),
+            // Instant transitions: no topBar, so scaffold change must be atomic.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
+        ) {
+            PendingTeamAssignmentScreen(
+                onTeamAssigned = {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onSignOut = {
                     navController.navigate(Route.Login.createRoute()) {
                         popUpTo(0) { inclusive = true }
@@ -311,6 +418,7 @@ fun Navigation(
             Route.Migration -> activity?.finish()
             Route.ClubSelection -> activity?.finish()
             Route.TeamList -> activity?.finish()
+            Route.PendingTeamAssignment -> activity?.finish()
             Route.CreateClub ->
                 navController.navigate(Route.ClubSelection.createRoute()) {
                     popUpTo(Route.CreateClub.createRoute()) { inclusive = true }
@@ -327,7 +435,14 @@ fun Navigation(
                 val mode = backStackEntry?.arguments?.getString(Route.Team.ARG_MODE)
 
                 when (mode) {
-                    Route.Team.MODE_CREATE -> activity?.finish()
+                    Route.Team.MODE_CREATE -> {
+                        // If TeamList is in the back stack (president flow), go back there
+                        if (navController.previousBackStackEntry?.destination?.route == Route.TeamList.createRoute()) {
+                            navController.popBackStack()
+                        } else {
+                            activity?.finish()
+                        }
+                    }
                     Route.Team.MODE_VIEW -> navController.navigateToMatches()
                 }
             }

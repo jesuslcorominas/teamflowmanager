@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
@@ -35,6 +36,7 @@ class MatchCreationWizardViewModel(
     private val saveDefaultCaptainUseCase: SaveDefaultCaptainUseCase,
     private val getCaptainPlayerUseCase: GetCaptainPlayerUseCase,
     private val getTeamUseCase: GetTeamUseCase,
+    private val getClubByIdUseCase: GetClubByIdUseCase,
     private val createMatch: CreateMatchUseCase,
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
     private val updateMatchUseCase: UpdateMatchUseCase,
@@ -74,6 +76,7 @@ class MatchCreationWizardViewModel(
     private var activeMatchId: Long = matchId
     private var isEditMode = matchId != 0L
     private var teamTypeValue: Int = 5 // Default to Football 5
+    private var homeGround: String? = null
 
     // Flag to track if match data is loaded for edit mode
     private var matchDataLoaded = false
@@ -128,6 +131,7 @@ class MatchCreationWizardViewModel(
 
         matchDataLoaded = false
         playersLoaded = false
+        homeGround = null
         pendingMatchIdForEdit = if (newMatchId != 0L) newMatchId else null
 
         _uiState.value = MatchCreationWizardUiState.Loading
@@ -142,6 +146,9 @@ class MatchCreationWizardViewModel(
         viewModelScope.launch {
             val team = getTeamUseCase.invoke().first()
             teamTypeValue = team?.teamType?.players ?: 5
+            team?.clubRemoteId?.let { remoteId ->
+                homeGround = getClubByIdUseCase.invoke(remoteId)?.homeGround
+            }
         }
     }
 
@@ -250,6 +257,8 @@ class MatchCreationWizardViewModel(
     fun getStartingLineupIds() = startingLineupIds
 
     fun getTeamTypePlayerCount() = teamTypeValue
+
+    fun getHomeGround() = homeGround
 
     fun goToNextStep() {
         viewModelScope.launch {

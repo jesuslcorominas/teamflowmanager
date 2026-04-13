@@ -39,11 +39,11 @@ class ClubMemberFirestoreDataSourceImpl(
             )
         }
 
-    override fun getClubMembers(clubFirestoreId: String): Flow<List<ClubMember>> =
+    override fun getClubMembers(clubId: String): Flow<List<ClubMember>> =
         flow {
             val snapshots =
                 firestore.collection(CLUB_MEMBERS_COLLECTION)
-                    .where { "clubId" equalTo clubFirestoreId }
+                    .where { "clubId" equalTo clubId }
                     .snapshots
             emitAll(
                 snapshots.map { qs ->
@@ -60,10 +60,10 @@ class ClubMemberFirestoreDataSourceImpl(
 
     override suspend fun getClubMemberByUserIdAndClub(
         userId: String,
-        clubFirestoreId: String,
+        clubId: String,
     ): ClubMember? =
         try {
-            val docId = "${userId}_$clubFirestoreId"
+            val docId = "${userId}_$clubId"
             val doc = firestore.collection(CLUB_MEMBERS_COLLECTION).document(docId).get()
             if (doc.exists) doc.data<ClubMemberFirestoreModel>().copy(id = doc.id).toDomain() else null
         } catch (e: CancellationException) {
@@ -77,20 +77,20 @@ class ClubMemberFirestoreDataSourceImpl(
         userId: String,
         name: String,
         email: String,
-        clubId: Long,
-        clubFirestoreId: String,
+        clubNumericId: Long,
+        clubId: String,
         roles: List<String>,
     ): ClubMember = throw NotImplementedError("createOrUpdateClubMember not implemented for iOS Phase 2")
 
     override suspend fun updateClubMemberRoles(
         userId: String,
-        clubFirestoreId: String,
+        clubId: String,
         roles: List<String>,
     ) = throw NotImplementedError("updateClubMemberRoles not implemented for iOS Phase 2")
 
     override suspend fun addClubMemberRole(
         userId: String,
-        clubFirestoreId: String,
+        clubId: String,
         role: String,
     ) = throw NotImplementedError("addClubMemberRole not implemented for iOS Phase 2")
 }

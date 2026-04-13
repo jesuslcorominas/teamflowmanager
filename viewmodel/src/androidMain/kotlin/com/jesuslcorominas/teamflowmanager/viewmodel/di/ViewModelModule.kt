@@ -4,6 +4,8 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewMod
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ArchivedMatchesViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubMembersViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSelectionViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
@@ -11,8 +13,11 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PendingTeamAssignmentViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
@@ -30,6 +35,7 @@ val viewModelModule =
                 hasNotificationPermissionBeenRequestedUseCase = get(),
                 setNotificationPermissionRequestedUseCase = get(),
                 getUserClubMembership = get(),
+                getActiveViewRole = get(),
             )
         }
 
@@ -39,19 +45,28 @@ val viewModelModule =
                 getCurrentUser = get(),
                 getUserClubMembership = get(),
                 synchronizeTimeUseCase = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
+                getActiveViewRole = get(),
             )
         }
 
         viewModel {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
+                resolvePendingCoachAssignments = get(),
             )
         }
 
         viewModel {
             CreateClubViewModel(
                 createClubUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -59,6 +74,9 @@ val viewModelModule =
         viewModel {
             JoinClubViewModel(
                 joinClubByCodeUseCase = get(),
+                getCurrentUser = get(),
+                syncFcmTokenUseCase = get(),
+                isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
             )
         }
@@ -114,12 +132,27 @@ val viewModelModule =
                 getUserClubMembership = get(),
                 generateTeamInvitation = get(),
                 selfAssignAsCoach = get(),
+                assignCoachToTeam = get(),
+                clearTeamCoachUseCase = get(),
+                getClubMembers = get(),
+                getMatchesByTeam = get(),
+                createPendingCoachAssignment = get(),
+                deletePendingCoachAssignment = get(),
             )
         }
         viewModel {
             ClubMembersViewModel(
                 getClubMembers = get(),
                 getUserClubMembership = get(),
+                removeClubMember = get(),
+            )
+        }
+        viewModel {
+            ClubSettingsViewModel(
+                getUserClubMembership = get(),
+                getClubById = get(),
+                updateClubUseCase = get(),
+                regenerateInvitationCodeUseCase = get(),
             )
         }
         viewModel { params ->
@@ -178,6 +211,7 @@ val viewModelModule =
                 saveDefaultCaptainUseCase = get(),
                 getCaptainPlayerUseCase = get(),
                 getTeamUseCase = get(),
+                getClubByIdUseCase = get(),
                 createMatch = get(),
                 getMatchByIdUseCase = get(),
                 updateMatchUseCase = get(),
@@ -200,7 +234,21 @@ val viewModelModule =
             SettingsViewModel(
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
+                deleteFcmTokenUseCase = get(),
                 analyticsTracker = get(),
+                getTeam = get(),
+                getUserClubMembership = get(),
+                getActiveViewRole = get(),
+                setActiveViewRole = get(),
+            )
+        }
+
+        viewModel { params ->
+            PresidentTeamDetailViewModel(
+                teamId = params.get(),
+                getTeamById = get(),
+                getPlayersByTeam = get(),
+                getMatchesByTeam = get(),
             )
         }
 
@@ -209,6 +257,28 @@ val viewModelModule =
                 teamId = params.get(),
                 acceptTeamInvitation = get(),
                 getCurrentUser = get(),
+            )
+        }
+
+        viewModel {
+            ClubSelectionViewModel(signOutUseCase = get())
+        }
+
+        viewModel {
+            PendingTeamAssignmentViewModel(
+                getTeam = get(),
+                signOut = get(),
+            )
+        }
+
+        viewModel {
+            PresidentNotificationsViewModel(
+                getNotifications = get(),
+                getUnreadCount = get(),
+                markAsRead = get(),
+                markAsUnread = get(),
+                deleteNotification = get(),
+                getUserClubMembership = get(),
             )
         }
 

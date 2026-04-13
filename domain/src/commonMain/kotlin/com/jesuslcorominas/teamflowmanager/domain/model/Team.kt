@@ -8,7 +8,8 @@ data class Team(
     val captainId: Long? = null,
     val teamType: TeamType,
     val coachId: String? = null, // ID of the assigned coach (null if no coach assigned)
+    val pendingCoachEmail: String? = null, // Email pending assignment (not yet a club member)
     val clubId: Long? = null,
-    val clubFirestoreId: String? = null,
-    val firestoreId: String? = null, // The Firestore document ID of this team
+    val clubRemoteId: String? = null,
+    val remoteId: String? = null, // The remote document ID of this team
 )

@@ -53,12 +53,6 @@ fun StartingLineupStep(
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
-            text = stringResource(R.string.starting_lineup_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-
-        Text(
             text = stringResource(R.string.starting_lineup_subtitle, requiredPlayers),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

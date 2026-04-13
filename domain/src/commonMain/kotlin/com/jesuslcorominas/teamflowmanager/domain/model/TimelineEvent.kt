@@ -21,6 +21,7 @@ sealed class TimelineEvent {
         override val matchElapsedTimeMillis: Long,
         val scorer: Player?,
         val isOpponentGoal: Boolean,
+        val isOwnGoal: Boolean = false,
         val teamScore: Int,
         val opponentScore: Int,
     ) : TimelineEvent()

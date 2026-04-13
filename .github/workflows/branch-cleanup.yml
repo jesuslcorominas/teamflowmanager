@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Delete branch
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOTOMINAS_TOKEN }}
         run: |
           gh api repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }} \
             -X DELETE \

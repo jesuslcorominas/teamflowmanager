@@ -8,6 +8,8 @@ interface MatchDataSource {
 
     fun getAllMatches(): Flow<List<Match>>
 
+    fun getMatchesByTeam(teamId: String): Flow<List<Match>>
+
     fun getArchivedMatches(): Flow<List<Match>>
 
     suspend fun getScheduledMatches(): List<Match>

@@ -7,8 +7,8 @@ data class ClubMember(
     val email: String,
     val clubId: Long,
     val roles: List<String>,
-    val firestoreId: String? = null,
-    val clubFirestoreId: String? = null,
+    val remoteId: String? = null,
+    val clubRemoteId: String? = null,
 ) {
     /**
      * Helper function to check if the member has a specific role.

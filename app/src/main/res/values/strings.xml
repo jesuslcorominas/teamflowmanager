@@ -12,6 +12,7 @@
     <string name="club_selection_subtitle">Choose how you want to get started</string>
     <string name="create_club">Create a Club</string>
     <string name="join_club">Join a Club</string>
+    <string name="sign_in_with_another_account">Sign in with another account</string>
 
     <!-- Create Club Strings -->
     <string name="create_club_title">Create Your Club</string>
@@ -51,6 +52,7 @@
 
     <!-- Account Strings -->
     <string name="settings_account_section">Account</string>
+    <string name="settings_role_coach">Coach view</string>
     <string name="sign_out">Logout</string>
     <string name="sign_out_title">Logout</string>
     <string name="sign_out_message">Are you sure you want to close session?</string>
@@ -113,30 +115,34 @@
     <string name="team_title">Team</string>
     <string name="team_list_title">Club Teams</string>
     <string name="no_teams_message">No teams yet. Create your first team!</string>
+    <string name="team_filter_all">All</string>
+    <string name="team_filter_with_coach">With coach</string>
+    <string name="team_filter_without_coach">Without coach</string>
     <string name="error_loading_teams">Unable to load teams. Please check your internet connection and try again.</string>
     <string name="no_club_membership_teams_error">You need to join or create a club first to view teams.</string>
     <string name="no_members_message">No staff members in your club yet. Invite members to join!</string>
     <string name="error_loading_members">Unable to load staff members. Please check your internet connection and try again.</string>
     <string name="no_club_membership_error">You need to join or create a club first to view staff members.</string>
-    <string name="share_team_button">Compartir</string>
-    <string name="share_team_title">Compartir Invitación de Equipo</string>
-    <string name="share_team_subject">Únete a %1$s como Entrenador</string>
-    <string name="share_team_message">¡Has sido invitado a ser el entrenador de %1$s! Haz clic en el enlace para aceptar: %2$s</string>
+    <string name="share_team_button">Share</string>
+    <string name="share_team_title">Share Team Invitation</string>
+    <string name="share_team_subject">Join %1$s as Coach</string>
+    <string name="share_team_message">You have been invited to be the coach of %1$s! Click the link to accept: %2$s</string>
 
     <!-- Team Invitation Acceptance Strings -->
-    <string name="accepting_team_invitation">Procesando invitación…</string>
-    <string name="redirecting_to_login">Por favor inicia sesión para aceptar la invitación…</string>
-    <string name="team_invitation_accepted">¡Invitación Aceptada!</string>
-    <string name="team_invitation_success_message">Ahora eres el entrenador de %1$s</string>
-    <string name="team_invitation_error">Error al Aceptar Invitación</string>
-    <string name="go_to_team">Ir al Equipo</string>
-    <string name="go_to_teams">Ir a Equipos</string>
-    <string name="retry">Reintentar</string>
+    <string name="accepting_team_invitation">Processing invitation…</string>
+    <string name="redirecting_to_login">Please sign in to accept the invitation…</string>
+    <string name="team_invitation_accepted">Invitation Accepted!</string>
+    <string name="team_invitation_success_message">You are now the coach of %1$s</string>
+    <string name="team_invitation_error">Error Accepting Invitation</string>
+    <string name="go_to_team">Go to Team</string>
+    <string name="go_to_teams">Go to Teams</string>
+    <string name="retry">Retry</string>
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>
-    <string name="coach_name">Coach Name</string>
-    <string name="delegate_name">Delegate Name</string>
+    <string name="coach_name">Coach</string>
+    <string name="coach_email">Email</string>
+    <string name="delegate_name">Delegate</string>
     <string name="delegate_name_required">Delegate name is required</string>
     <string name="team_type">Team Type</string>
     <string name="team_type_football">Football %d</string>
@@ -190,6 +196,12 @@
     <string name="nav_staff">Staff</string>
     <string name="nav_matches">Matches</string>
     <string name="nav_analysis">Analysis</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="notifications_empty">No notifications</string>
+    <string name="notifications_no_club">No club membership found</string>
+    <string name="notifications_mark_read_description">Mark as read</string>
+    <string name="notifications_mark_unread_description">Mark as unread</string>
+    <string name="notifications_delete_description">Delete notification</string>
 
     <!-- Match Status -->
     <string name="pending_matches">Pending Matches</string>
@@ -214,9 +226,13 @@
     <string name="match_next">Upcoming Match</string>
 
     <!-- Timeline Tab -->
+    <string name="scorers_tab">Scorers</string>
     <string name="timeline_tab">Timeline</string>
     <string name="summary_tab">Summary</string>
     <string name="statistics_tab">Statistics</string>
+    <string name="scorers_dialog_title">Scorers</string>
+    <string name="own_goal_scorer_label">Own Goal</string>
+    <string name="no_scorers_label">No goals scored</string>
     <string name="timeline_starting_lineup">Starting Lineup</string>
     <string name="timeline_goal">Goal</string>
     <string name="timeline_opponent_goal">Opponent Goal</string>
@@ -289,6 +305,7 @@
     <string name="match_timeout">Timeout</string>
 
     <string name="search_match_placeholder">Search matches by opponent or place</string>
+    <string name="search_team_placeholder">Search teams by name</string>
 
     <!-- Analysis -->
     <string name="analysis_title">Analysis</string>
@@ -346,13 +363,76 @@
     <string name="settings_title">Settings</string>
     <string name="settings">Settings</string>
 
+    <!-- Club Settings -->
+    <string name="nav_club_settings">Club</string>
+    <string name="club_settings_title">Club</string>
+    <string name="club_settings_edit_title">Edit Club</string>
+    <string name="home_ground_label">Home Ground</string>
+    <string name="home_ground_placeholder">e.g. Municipal Sports Centre</string>
+    <string name="copy_invitation_code">Copy</string>
+    <string name="share_invitation_code">Share</string>
+    <string name="regenerate_invitation_code">Renew</string>
+    <string name="regenerate_code_confirm_title">Renew code?</string>
+    <string name="regenerate_code_confirm_message">Previous invitations will no longer be valid. Continue?</string>
+    <string name="invitation_code_copied">Code copied</string>
+    <string name="club_settings_saved">Club data saved</string>
+
     <!-- Match Notification -->
     <string name="match_notification_channel_name">Match Countdown</string>
     <string name="match_notification_channel_description">Shows remaining time during active matches</string>
 
+    <!-- Assign Coach Dialog -->
+    <string name="assign_coach_button">Assign Coach</string>
+    <string name="pending_coach_assignment">Pending coach</string>
+    <string name="reassign_coach_button">Reassign</string>
+    <string name="assign_coach_dialog_title">Assign Coach to %1$s</string>
+    <string name="assign_coach_tab_members">Members</string>
+    <string name="assign_coach_tab_email">By email</string>
+    <string name="assign_coach_email_placeholder">Enter email address</string>
+    <string name="assign_coach_confirm">Assign</string>
+    <string name="assign_coach_not_member">This email is not registered as a club member.</string>
+    <string name="assign_coach_error">Error assigning coach. Please try again.</string>
+
     <!-- Self-Assign as Coach Strings -->
-    <string name="self_assign_as_coach_button">Asignarme como Coach</string>
-    <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
-    <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
+    <string name="self_assign_as_coach_button">Assign myself as Coach</string>
+    <string name="self_assign_as_coach_success">You have been assigned as team Coach</string>
+    <string name="self_assign_as_coach_error">Error assigning you as Coach. Please try again.</string>
+
+    <!-- Remove Coach -->
+    <string name="remove_coach_button">Remove coach</string>
+    <string name="remove_coach_confirm_title">Remove coach</string>
+    <string name="remove_coach_confirm_message">The team will have no assigned coach. You can reassign later.</string>
+    <string name="remove_coach_confirm">Remove</string>
+    <string name="remove_coach_cancel">Cancel</string>
+
+    <!-- Match status in team card -->
+    <string name="match_live_badge">LIVE</string>
+    <string name="next_match_label">Next:</string>
+
+    <!-- President Team Detail -->
+    <string name="president_team_detail_players_tab">Players</string>
+    <string name="president_team_detail_matches_tab">Matches</string>
+    <string name="president_team_detail_stats_tab">Stats</string>
+    <string name="president_team_detail_error">Could not load team data</string>
+    <string name="president_team_detail_no_matches">No matches registered</string>
+    <string name="president_team_detail_no_players">No players registered</string>
+    <string name="president_team_stats_played">Played</string>
+    <string name="president_team_stats_wins">Wins</string>
+    <string name="president_team_stats_draws">Draws</string>
+    <string name="president_team_stats_losses">Losses</string>
+    <string name="president_team_stats_goals_scored">Goals scored</string>
+    <string name="president_team_stats_goals_conceded">Goals conceded</string>
+    <string name="president_team_stats_squad_size">Squad size</string>
+
+    <!-- Expel Member -->
+    <string name="expel_member_dialog_title">Expel member</string>
+    <string name="expel_member_dialog_message">Are you sure you want to expel %1$s from the club? This action cannot be undone.</string>
+    <string name="expel_member_confirm">Expel</string>
+    <string name="expel_member_cancel">Cancel</string>
+
+    <!-- Pending Team Assignment Strings -->
+    <string name="pending_team_title">Pending team assignment</string>
+    <string name="pending_team_message">Your account has been verified. Please wait until the club president assigns you to a team.</string>
+    <string name="pending_team_sign_out">Sign out</string>
 
 </resources>

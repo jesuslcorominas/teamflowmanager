@@ -72,7 +72,7 @@
     <string name="previous">Previous</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="retry">Reintentar</string>
+    <string name="retry">Retry</string>
 
     <!-- Players -->
     <string name="players_title">Team Roster</string>
@@ -124,9 +124,9 @@
     <string name="error_loading_members">Unable to load staff members. Please check your internet connection and try again.</string>
     <string name="no_club_membership_error">You need to join or create a club first to view staff members.</string>
     <string name="share_team_button">Share</string>
-    <string name="share_team_title">Compartir Invitación de Equipo</string>
-    <string name="share_team_subject">Únete a %1$s como Entrenador</string>
-    <string name="share_team_message">¡Has sido invitado a ser el entrenador de %1$s! Haz clic en el enlace para aceptar: %2$s</string>
+    <string name="share_team_title">Share Team Invitation</string>
+    <string name="share_team_subject">Join %1$s as Coach</string>
+    <string name="share_team_message">You have been invited to be the coach of %1$s! Click the link to accept: %2$s</string>
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>
@@ -152,8 +152,8 @@
     <string name="go_to_team">Go to Team</string>
     <string name="go_to_teams">Go to Teams</string>
     <string name="self_assign_as_coach_button">Assign me as Coach</string>
-    <string name="self_assign_as_coach_success">Te has asignado como Coach del equipo</string>
-    <string name="self_assign_as_coach_error">Error al asignarte como Coach. Por favor, inténtalo de nuevo.</string>
+    <string name="self_assign_as_coach_success">You have been assigned as team Coach</string>
+    <string name="self_assign_as_coach_error">Error assigning you as Coach. Please try again.</string>
 
     <!-- Matches -->
     <string name="matches_title">Matches</string>
@@ -235,9 +235,13 @@
     <string name="captain_badge">C</string>
 
     <!-- Match Summary Tabs -->
+    <string name="scorers_tab">Scorers</string>
     <string name="timeline_tab">Timeline</string>
     <string name="summary_tab">Summary</string>
     <string name="statistics_tab">Statistics</string>
+    <string name="scorers_dialog_title">Scorers</string>
+    <string name="own_goal_scorer_label">Own Goal</string>
+    <string name="no_scorers_label">No goals scored</string>
     <string name="timeline_starting_lineup">Starting Lineup</string>
     <string name="timeline_goal">Goal</string>
     <string name="timeline_opponent_goal">Opponent Goal</string>
@@ -282,6 +286,7 @@
     <string name="nav_staff">Staff</string>
     <string name="nav_matches">Matches</string>
     <string name="nav_analysis">Analysis</string>
+    <string name="nav_notifications">Notifications</string>
 
     <!-- Analysis -->
     <string name="analysis_title">Analysis</string>
@@ -336,4 +341,24 @@
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings">Settings</string>
+
+    <!-- President Notifications -->
+    <string name="notifications_empty">No notifications yet</string>
+    <string name="notifications_no_club">You need to join a club to see notifications</string>
+    <string name="notifications_mark_read_description">Mark as read</string>
+    <string name="notifications_mark_unread_description">Mark as unread</string>
+    <string name="notifications_delete_description">Delete notification</string>
+
+    <!-- Club Settings -->
+    <string name="nav_club_settings">Club</string>
+    <string name="club_settings_title">Club Settings</string>
+    <string name="home_ground_label">Home Ground</string>
+    <string name="home_ground_placeholder">e.g. Municipal Sports Centre</string>
+    <string name="copy_invitation_code">Copy Code</string>
+    <string name="invitation_code_copied">Invitation code copied</string>
+    <string name="club_settings_saved">Club settings saved</string>
+    <string name="expel_member_dialog_title">Expel member</string>
+    <string name="expel_member_dialog_message">Are you sure you want to expel %1$s from the club? This action cannot be undone.</string>
+    <string name="expel_member_confirm">Expel</string>
+    <string name="expel_member_cancel">Cancel</string>
 </resources>

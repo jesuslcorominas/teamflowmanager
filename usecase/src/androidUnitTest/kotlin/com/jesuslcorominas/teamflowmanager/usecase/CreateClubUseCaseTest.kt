@@ -54,7 +54,7 @@ class CreateClubUseCaseTest {
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            firestoreId = "club123"
+            remoteId = "club123"
         )
         every { getCurrentUser() } returns flowOf(user)
         every { getTeam() } returns flowOf(null)
@@ -100,7 +100,7 @@ class CreateClubUseCaseTest {
             teamType = TeamType.FOOTBALL_7,
             coachId = "user123",
             clubId = null,
-            clubFirestoreId = null
+            clubRemoteId = null
         )
         val clubName = "Test Club"
         val expectedClub = Club(
@@ -108,7 +108,7 @@ class CreateClubUseCaseTest {
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            firestoreId = "club123"
+            remoteId = "club123"
         )
         every { getCurrentUser() } returns flowOf(user)
         every { getTeam() } returns flowOf(existingTeam)
@@ -129,7 +129,7 @@ class CreateClubUseCaseTest {
         assertEquals(expectedClub, result)
         coVerify {
             updateTeam(
-                existingTeam.copy(clubFirestoreId = "club123")
+                existingTeam.copy(clubRemoteId = "club123")
             )
         }
     }
