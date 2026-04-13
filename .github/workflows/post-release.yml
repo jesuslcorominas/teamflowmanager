@@ -138,6 +138,9 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────
   # 3. Sync main → develop  (en cualquier merge a main)
+  # Siempre crea PR (develop tiene branch protection + CI Gate).
+  # Si no hay conflictos, activa auto-merge para que se fusione
+  # automáticamente en cuanto pase el CI.
   # ─────────────────────────────────────────────────────────────
   sync-develop:
     name: Sync main → develop
@@ -149,7 +152,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.BOTOMINAS_TOKEN }}
 
-      - name: Merge main into develop
+      - name: Create sync PR and enable auto-merge if no conflicts
         env:
           GH_TOKEN: ${{ secrets.BOTOMINAS_TOKEN }}
         run: |
@@ -157,21 +160,38 @@ jobs:
           git config user.name "botominas"
           git fetch origin
 
-          git checkout develop
-          if git merge origin/main --no-edit; then
-            git push origin develop
-            echo "✅ develop synced with main"
+          # Detectar si hay conflictos antes de crear la PR
+          git checkout -b sync/main-to-develop origin/develop
+          if git merge origin/main --no-edit --no-commit 2>/dev/null; then
+            git merge --abort 2>/dev/null || true
+            HAS_CONFLICTS=false
           else
-            git merge --abort
-            echo "⚠️ Merge conflict — opening PR instead"
-            EXISTING=$(gh pr list --base develop --head main --state open --json number --jq '.[0].number')
-            if [ -z "$EXISTING" ]; then
-              gh pr create \
-                --base develop \
-                --head main \
-                --title "chore: sync main → develop" \
-                --body "Sync automático tras merge a main. Requiere resolución manual de conflictos."
+            git merge --abort 2>/dev/null || true
+            HAS_CONFLICTS=true
+          fi
+
+          # Crear PR si no existe ya
+          EXISTING=$(gh pr list --base develop --head main --state open --json number --jq '.[0].number')
+          if [ -z "$EXISTING" ]; then
+            if [ "$HAS_CONFLICTS" = "false" ]; then
+              BODY="Sync automático tras merge a main. Sin conflictos — se fusionará automáticamente al pasar el CI."
             else
-              echo "PR #$EXISTING already exists"
+              BODY="Sync automático tras merge a main. ⚠️ Hay conflictos — requiere resolución manual antes de fusionar."
             fi
+            PR_URL=$(gh pr create \
+              --base develop \
+              --head main \
+              --title "chore: sync main → develop" \
+              --body "$BODY")
+            echo "✅ PR creada: $PR_URL"
+
+            if [ "$HAS_CONFLICTS" = "false" ]; then
+              PR_NUMBER=$(echo "$PR_URL" | grep -oP '\d+$')
+              gh pr merge "$PR_NUMBER" --auto --merge
+              echo "✅ Auto-merge activado en PR #$PR_NUMBER"
+            else
+              echo "⚠️ Conflictos detectados — auto-merge NO activado"
+            fi
+          else
+            echo "PR #$EXISTING ya existe"
           fi
