@@ -2,9 +2,11 @@
 
 > ⚽ App de gestión de equipos de fútbol infantil. Controla minutos, cambios, asistencias y estadísticas en tiempo real. La herramienta esencial para el entrenador.
 
-[![CI](https://github.com/jesuslcorominas/teamflowmanager/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/jesuslcorominas/teamflowmanager/actions/workflows/pr-checks.yml)
+[![CI](https://github.com/jesuslcorominas/teamflowmanager/actions/workflows/pr-checks.yml/badge.svg?branch=develop)](https://github.com/jesuslcorominas/teamflowmanager/actions/workflows/pr-checks.yml)
+[![Version](https://img.shields.io/badge/version-0.5.0--alpha-orange)](https://github.com/jesuslcorominas/teamflowmanager/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-7F52FF?logo=kotlin)
+![KMP](https://img.shields.io/badge/KMP-Android%20%7C%20iOS-blueviolet?logo=kotlin)
 ![Android](https://img.shields.io/badge/Min%20SDK-29-green?logo=android)
 
 ---
@@ -18,6 +20,7 @@
 - **Real-time statistics** — Playing time and participation visualization during the match
 - **Multi-user support** — Google Sign-In authentication with data synced via Firestore
 - **Deep linking** — Direct access to active match (`teamflowmanager://match`) and team invitation (`teamflowmanager://team/accept`)
+- **Cross-platform** — Native Android and iOS apps sharing ~90% of their code via Kotlin Multiplatform
 
 ---
 
@@ -25,13 +28,14 @@
 
 | Layer | Technology |
 |-------|-----------|
-| **Language** | Kotlin 2.1.0 |
-| **UI** | Jetpack Compose + Material 3 |
+| **Language** | Kotlin 2.1.0 (KMP) |
+| **UI — Android** | Jetpack Compose + Material 3 |
+| **UI — iOS** | Compose Multiplatform 1.7.3 (CMP) |
 | **Architecture** | Clean Architecture + MVVM |
 | **DI** | Koin 4.0.0 |
 | **Networking** | Ktor Client 3.0.1 + KtorFit 2.6.0 |
 | **Backend** | Firebase (Auth, Firestore, Storage, Crashlytics, Analytics) |
-| **Authentication** | Google Sign-In (Credential Manager) |
+| **Authentication** | Google Sign-In (Credential Manager on Android, GIDSignIn on iOS) |
 | **Async** | Kotlin Coroutines + Flow |
 | **Images** | Coil |
 | **Animations** | Lottie |
@@ -45,49 +49,72 @@
 The project follows **Clean Architecture** with strict layer separation and the following dependency flow:
 
 ```
-┌─────────────────────────────────────┐
-│            :app  (UI Layer)         │
-│       Jetpack Compose + Material 3  │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│      :viewmodel  (Presentation)     │
-│        ViewModel + StateFlow        │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│    :usecase  (Business Logic)       │
-│     Use Cases + Repository ifaces   │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│     :data:core  (Data Layer)        │
-│     Repository implementations      │
-└──────────┬───────────┬──────────────┘
-           │           │
-┌──────────▼───────┐ ┌─▼────────────────────┐
-│   :data:local    │ │     :data:remote     │
-│  Room database   │ │  Ktor + Firebase/API │
-└──────────────────┘ └──────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│      :app (Android UI)    │    :iosApp (iOS UI)          │
+│     Jetpack Compose       │   Compose Multiplatform      │
+└──────────────┬────────────┴────────────┬─────────────────┘
+               │                         │
+               └────────────┬────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────┐
+│                   :shared-ui                            │
+│        Compose Multiplatform screens (commonMain)       │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────┐
+│                   :viewmodel                            │
+│          ViewModel + StateFlow (commonMain)             │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────┐
+│                   :usecase                              │
+│         Use Cases + Repository interfaces               │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────┐
+│                  :data:core                             │
+│           Repository implementations                    │
+└──────────────┬────────────────────────┬─────────────────┘
+               │                        │
+┌──────────────▼──────────┐  ┌──────────▼──────────────────┐
+│      :data:local        │  │       :data:remote          │
+│  Room (Android)         │  │  Ktor + Firebase (KMP)      │
+│  NSUserDefaults (iOS)   │  │  Auth, Firestore, Storage   │
+└─────────────────────────┘  └─────────────────────────────┘
 
-┌─────────────────────────────────────┐
-│        :domain  (Domain Models)     │
-│  Pure Kotlin — no dependencies      │
-│  All modules depend on this layer   │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    :domain                              │
+│  Pure Kotlin — models, no dependencies                  │
+│  All modules depend on this layer                       │
+└─────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────┐
-│        :di  (Koin DI wiring)        │
-│  Aggregates all Koin modules        │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                     :di                                 │
+│  Koin composition root — aggregates all Koin modules    │
+│  androidMain: ViewModelModule                           │
+│  iosMain: IosModule                                     │
+└─────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────┐
-│        :service                     │
-│  Background services                │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                   :service                              │
+│  Background services (MatchNotificationController)      │
+└─────────────────────────────────────────────────────────┘
 ```
 
-> Repository interfaces are defined in `:usecase`; their implementations live in `:data:core`. Implementations are `internal` to their module. `:data:core` delegates persistence to `:data:local` (Room) and remote operations to `:data:remote` (Ktor + Firebase).
+> Repository interfaces are defined in `:usecase`; their implementations live in `:data:core`. `:data:core` delegates persistence to `:data:local` (Room on Android / NSUserDefaults on iOS) and remote operations to `:data:remote` (Ktor + Firebase via GitLive SDK).
+
+### KMP code sharing
+
+| Module | commonMain share |
+|--------|-----------------|
+| domain + usecase | ~100% |
+| data:core | ~100% |
+| data:local | ~85% |
+| data:remote | ~75% |
+| viewmodel | ~95% |
+| shared-ui | ~90% |
+| di | ~60% |
+| **Total** | **~90%** |
 
 ---
 
@@ -95,9 +122,9 @@ The project follows **Clean Architecture** with strict layer separation and the 
 
 The project uses **Koin 4.0** with a module structure designed to enforce layer boundaries at the dependency graph level.
 
-`:di` is the composition root: it declares a dependency on every other module and is the only place where all Koin module definitions are assembled into the application graph. No other module has visibility into implementation details outside its own layer.
+`:di` is the composition root: it declares a dependency on every other module and is the only place where all Koin module definitions are assembled into the application graph.
 
-`:app` declares compile-time dependencies exclusively on `:viewmodel` and `:di`. This constraint prevents the UI layer from referencing use cases, repositories, or data sources directly — access to lower layers is only possible through the ViewModels and the injected graph.
+`:app` (Android) and `:iosApp` (iOS) declare compile-time dependencies exclusively on `:shared-ui`/`:viewmodel` and `:di`. This prevents the UI layer from referencing use cases, repositories, or data sources directly.
 
 ```
          ┌──────────────────────────────────────────────┐
@@ -105,14 +132,11 @@ The project uses **Koin 4.0** with a module structure designed to enforce layer 
          │  (composition root — depends on all modules) │
          └───┬──────┬──────┬──────┬──────┬──────┬───────┘
              │      │      │      │      │      │
-           :app  :view  :use  :data  :data  :data
-                  model  case  :core  :local :remote
-             │
-         (also depends on :viewmodel for ViewModels
-          and :di to load the Koin graph at startup)
+           :app  :shared :view  :use  :data  :data  :data
+           :ios   -ui   model  case  :core  :local :remote
 ```
 
-Each module exposes its own Koin module definition (e.g., `UseCaseModule`, `DataCoreModule`) which `:di` collects and starts. Adding a new module requires only declaring its Koin module and registering it in `:di` — no changes are needed elsewhere.
+Each module exposes its own Koin module definition (e.g., `UseCaseModule`, `DataCoreModule`) which `:di` collects and starts. Platform-specific bindings are in `ViewModelModule.kt` (Android) and `IosModule.kt` (iOS).
 
 ---
 
@@ -120,16 +144,18 @@ Each module exposes its own Koin module definition (e.g., `UseCaseModule`, `Data
 
 ```
 TeamFlowManager/
-├── app/                    # UI layer — Composables, Activities
-├── viewmodel/              # ViewModels and UI state (StateFlow)
+├── app/                    # Android UI layer — Composables, Activities
+├── iosApp/                 # iOS entry point — SwiftUI wrapper + Kotlin/Swift bridges
+├── shared-ui/              # Compose Multiplatform screens (commonMain)
+├── viewmodel/              # ViewModels and UI state (commonMain, StateFlow)
 ├── usecase/                # Use cases + repository interfaces
 ├── domain/                 # Domain models (pure Kotlin, no dependencies)
 ├── data/
 │   ├── core/               # Repository implementations (DataSource interfaces)
-│   ├── local/              # Room database — DAOs and local DataSource implementations
-│   └── remote/             # Ktor client + KtorFit + Firebase DataSource implementations
-├── di/                     # Koin configuration (AppModule + submodules)
-├── service/                # Background services
+│   ├── local/              # Room (Android) + NSUserDefaults (iOS) datasources
+│   └── remote/             # Ktor + KtorFit + Firebase datasources (KMP)
+├── di/                     # Koin composition root (androidMain + iosMain)
+├── service/                # Android background services
 ├── gradle/
 │   └── libs.versions.toml  # Centralized version catalog
 ├── .github/
@@ -143,10 +169,16 @@ TeamFlowManager/
 
 ## Prerequisites
 
+### Android
 - **Android Studio** Ladybug (2024.2.1) or higher
 - **JDK 17** (recommended: Eclipse Temurin)
 - **Android SDK** with API 29+ installed
-- Firebase project configured with `google-services.json` placed in `app/`
+- Firebase project configured with `google-services.json` placed in `app/src/dev/` and `app/src/prod/`
+
+### iOS
+- **Xcode** 15 or higher
+- **CocoaPods** (`gem install cocoapods`)
+- `GoogleService-Info.plist` placed in `iosApp/iosApp/` (gitignored, download from Firebase Console)
 
 ---
 
@@ -157,12 +189,20 @@ TeamFlowManager/
 git clone https://github.com/jesuslcorominas/teamflowmanager.git
 cd teamflowmanager
 
-# 2. Add the Firebase configuration file
-#    Download it from Firebase Console and place it at:
-cp google-services.json app/
+# 2. Add the Firebase configuration files
+cp google-services-dev.json  app/src/dev/google-services.json
+cp google-services-prod.json app/src/prod/google-services.json
 
 # 3. Open in Android Studio or build from the command line
 ./gradlew assembleDevDebug
+```
+
+For iOS, install CocoaPods dependencies first:
+
+```bash
+cd iosApp
+pod install
+# Then open iosApp.xcworkspace in Xcode (NOT .xcodeproj)
 ```
 
 ---
@@ -290,7 +330,7 @@ ktlint is automatically applied to all subprojects via the root plugin.
 
 ## Continuous Integration
 
-GitHub Actions runs the following checks on every Pull Request to `main`:
+GitHub Actions runs the following checks on every Pull Request to `develop`:
 
 | Check | Command |
 |-------|---------|
