@@ -13,14 +13,47 @@
 
 ## Features
 
-- **Minute tracking** — Individual player stopwatch accumulating real playing time
-- **Substitution management** — Substitution recording with automatic time control
-- **Match timer** — Global stopwatch with pause and resume support
-- **Team management** — Add, edit and remove players and teams
-- **Real-time statistics** — Playing time and participation visualization during the match
-- **Multi-user support** — Google Sign-In authentication with data synced via Firestore
-- **Deep linking** — Direct access to active match (`teamflowmanager://match`) and team invitation (`teamflowmanager://team/accept`)
-- **Cross-platform** — Native Android and iOS apps sharing ~90% of their code via Kotlin Multiplatform
+### Live match tracking
+- **Match clock** — Global stopwatch with pause, resume and timeout support
+- **Player timers** — Individual per-player stopwatch accumulating real on-field time
+- **Goals** — Record goals with scorer, own goals and opponent goals
+- **Substitutions** — Log player in/out substitutions with automatic time tracking
+- **Periods** — Half-time format (2 × 25 min) and quarter-time format (4 × 12:30), covering 5-a-side, 7-a-side, 8-a-side and 11-a-side
+
+### Squad & lineup management
+- **Match wizard** — Step-by-step squad call-up, starting lineup selection and captain assignment
+- **Player positions** — 12 positions from goalkeeper to striker
+- **Captain tracking** — Default captain, current captain and historical captain log
+- **Substitution bench** — Available substitutes with real-time status
+
+### Club & team organisation
+- **Clubs** — Create a club or join one via invitation code
+- **Multiple teams** — Organise several teams under the same club
+- **Role-based access** — President and Coach roles with different views and permissions
+  - *President*: manage members, assign coaches, view all teams, receive notifications
+  - *Coach*: manage their team, players and matches
+- **Coach assignment** — Presidents assign coaches; users can also self-assign to a team
+- **Member management** — Invite, view and expel club members
+
+### Statistics & reports
+- **Match timeline** — Goals, substitutions, timeouts and period breaks in chronological order
+- **Score evolution** — Goal progression chart across the match
+- **Player activity** — Individual on-field time chart per match
+- **Player stats** — Accumulated minutes played and goals across all matches
+- **PDF export** — Full match report and player statistics as a PDF document
+
+### Push notifications
+- **President notifications** — Real-time alerts for coach assignments and member join requests (Firebase Cloud Messaging)
+- **Topic subscriptions** — Automatically subscribed to club-wide notifications on join
+
+### Invitations & deep linking
+- **Team invitations** — Shareable invitation links with regenerable codes (Firebase Cloud Functions short links)
+- **Deep links** — Direct app navigation from notifications and shared links (`teamflowmanager://`)
+
+### Cross-platform & sync
+- **Kotlin Multiplatform** — Android and iOS apps sharing ~90% of their code
+- **Google Sign-In** — Authentication on Android (Credential Manager) and iOS (GIDSignIn)
+- **Firestore sync** — Real-time data synchronisation across devices
 
 ---
 
