@@ -23,6 +23,9 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.MatchEventNotification
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
@@ -66,6 +69,8 @@ class MatchViewModel(
     private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
+    private val notifyPresidentMatchEvent: NotifyPresidentMatchEventUseCase,
+    private val getTeamUseCase: GetTeamUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
@@ -122,6 +127,20 @@ class MatchViewModel(
                     if (it.startingLineupIds.isNotEmpty()) {
                         startPlayerTimersBatchUseCase(it.id, it.startingLineupIds, currentTime)
                     }
+
+                    // Fire-and-forget notification to president
+                    viewModelScope.launch {
+                        runCatching {
+                            val team = getTeamUseCase().first() ?: return@runCatching
+                            val teamRemoteId = team.remoteId ?: return@runCatching
+                            val clubRemoteId = team.clubRemoteId ?: return@runCatching
+                            notifyPresidentMatchEvent(
+                                MatchEventNotification.Start(it.teamName, it.opponent),
+                                teamRemoteId,
+                                clubRemoteId,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -169,6 +188,21 @@ class MatchViewModel(
                             AnalyticsParam.DURATION_MINUTES to (_currentTime.value / 60000).toString(),
                         ),
                     )
+
+                    // Fire-and-forget notification to president
+                    val finishedMatch = currentState.match
+                    viewModelScope.launch {
+                        runCatching {
+                            val team = getTeamUseCase().first() ?: return@runCatching
+                            val teamRemoteId = team.remoteId ?: return@runCatching
+                            val clubRemoteId = team.clubRemoteId ?: return@runCatching
+                            notifyPresidentMatchEvent(
+                                MatchEventNotification.End(finishedMatch.teamName, finishedMatch.opponent, finishedMatch.goals, finishedMatch.opponentGoals),
+                                teamRemoteId,
+                                clubRemoteId,
+                            )
+                        }
+                    }
                 }
 
                 _showPauseConfirmation.value = null
@@ -502,6 +536,24 @@ class MatchViewModel(
                             AnalyticsParam.TEAM_TYPE to (scorerId?.let { "own" } ?: "own_goal"),
                         ).filter { it.value.isNotBlank() },
                     )
+
+                    // Fire-and-forget notification to president
+                    val goalMatch = currentState.match
+                    val elapsedMs = _currentTime.value
+                    viewModelScope.launch {
+                        runCatching {
+                            val team = getTeamUseCase().first() ?: return@runCatching
+                            val teamRemoteId = team.remoteId ?: return@runCatching
+                            val clubRemoteId = team.clubRemoteId ?: return@runCatching
+                            val updatedMatch = getMatchById(goalMatch.id).first() ?: return@runCatching
+                            val minuteOfPlay = if (elapsedMs > 0L) (elapsedMs / 60_000L).toInt() else null
+                            notifyPresidentMatchEvent(
+                                MatchEventNotification.Goal(updatedMatch.teamName, updatedMatch.goals, updatedMatch.opponentGoals, minuteOfPlay),
+                                teamRemoteId,
+                                clubRemoteId,
+                            )
+                        }
+                    }
 
                     _showGoalScorerDialog.value = false
                 }

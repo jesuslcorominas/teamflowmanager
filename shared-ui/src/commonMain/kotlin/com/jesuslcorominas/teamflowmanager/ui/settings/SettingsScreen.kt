@@ -16,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
+import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -38,6 +41,11 @@ import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.cancel
 import teamflowmanager.shared_ui.generated.resources.settings_account_section
+import teamflowmanager.shared_ui.generated.resources.settings_notifications_applies_all_teams
+import teamflowmanager.shared_ui.generated.resources.settings_notifications_goals
+import teamflowmanager.shared_ui.generated.resources.settings_notifications_match_events
+import teamflowmanager.shared_ui.generated.resources.settings_notifications_mixed
+import teamflowmanager.shared_ui.generated.resources.settings_notifications_section
 import teamflowmanager.shared_ui.generated.resources.sign_out
 import teamflowmanager.shared_ui.generated.resources.sign_out_message
 import teamflowmanager.shared_ui.generated.resources.sign_out_title
@@ -52,6 +60,8 @@ fun SettingsScreen(
 
     val currentUser by viewModel.currentUser.collectAsState()
     val signOutComplete by viewModel.signOutComplete.collectAsState()
+    val roleSelectorState by viewModel.roleSelectorState.collectAsState()
+    val notificationPreferences by viewModel.notificationPreferences.collectAsState()
     var showSignOutDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(signOutComplete) {
@@ -117,8 +127,62 @@ fun SettingsScreen(
                 )
             }
 
+            if (roleSelectorState.activeRole == ActiveViewRole.President && roleSelectorState.showRoleSelector) {
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+                Text(
+                    text = stringResource(Res.string.settings_notifications_section),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
+                )
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+                NotificationSwitchItem(
+                    title = stringResource(Res.string.settings_notifications_match_events),
+                    subtitle =
+                        when (notificationPreferences.matchEventsState) {
+                            GlobalNotificationState.MIXED -> stringResource(Res.string.settings_notifications_mixed)
+                            else -> stringResource(Res.string.settings_notifications_applies_all_teams)
+                        },
+                    checked = notificationPreferences.matchEventsState == GlobalNotificationState.ALL_ON,
+                    onCheckedChange = { viewModel.updateGlobalMatchEvents(it) },
+                )
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+                NotificationSwitchItem(
+                    title = stringResource(Res.string.settings_notifications_goals),
+                    subtitle =
+                        when (notificationPreferences.goalsState) {
+                            GlobalNotificationState.MIXED -> stringResource(Res.string.settings_notifications_mixed)
+                            else -> stringResource(Res.string.settings_notifications_applies_all_teams)
+                        },
+                    checked = notificationPreferences.goalsState == GlobalNotificationState.ALL_ON,
+                    onCheckedChange = { viewModel.updateGlobalGoals(it) },
+                )
+            }
+
             Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
         }
+    }
+}
+
+@Composable
+private fun NotificationSwitchItem(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = TFMSpacing.spacing02, vertical = TFMSpacing.spacing01),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 

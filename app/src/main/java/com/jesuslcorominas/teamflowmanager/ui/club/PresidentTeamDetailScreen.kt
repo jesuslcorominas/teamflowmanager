@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.club
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
@@ -83,6 +86,11 @@ fun PresidentTeamDetailScreen(
                         onClick = { viewModel.selectTab(PresidentTeamTab.STATS) },
                         text = stringResource(R.string.president_team_detail_stats_tab),
                     )
+                    TitleMediumTab(
+                        selected = selectedTab == PresidentTeamTab.NOTIFICATIONS,
+                        onClick = { viewModel.selectTab(PresidentTeamTab.NOTIFICATIONS) },
+                        text = stringResource(R.string.president_team_detail_notifications_tab),
+                    )
                 }
 
                 when (selectedTab) {
@@ -90,6 +98,7 @@ fun PresidentTeamDetailScreen(
                     PresidentTeamTab.PLAYERS -> PlayersTab(state)
                     PresidentTeamTab.MATCHES -> MatchesTab(state)
                     PresidentTeamTab.STATS -> StatsTab(state.stats)
+                    PresidentTeamTab.NOTIFICATIONS -> NotificationsTab(viewModel)
                 }
             }
         }
@@ -293,6 +302,72 @@ private fun ScheduledMatchCard(match: Match) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NotificationsTab(viewModel: PresidentTeamDetailViewModel) {
+    val teamNotificationState by viewModel.teamNotificationState.collectAsState()
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item {
+            AppCard {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.president_notifications_match_events),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text =
+                            when (teamNotificationState.globalMatchEventsState) {
+                                GlobalNotificationState.ALL_ON -> stringResource(R.string.president_notifications_global_on)
+                                GlobalNotificationState.ALL_OFF -> stringResource(R.string.president_notifications_global_off)
+                                GlobalNotificationState.MIXED -> stringResource(R.string.president_notifications_global_mixed)
+                            },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Switch(
+                        checked = teamNotificationState.matchEvents,
+                        onCheckedChange = { viewModel.updateTeamMatchEvents(it) },
+                    )
+                }
+            }
+        }
+        item {
+            AppCard {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.president_notifications_goals),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text =
+                            when (teamNotificationState.globalGoalsState) {
+                                GlobalNotificationState.ALL_ON -> stringResource(R.string.president_notifications_global_on)
+                                GlobalNotificationState.ALL_OFF -> stringResource(R.string.president_notifications_global_off)
+                                GlobalNotificationState.MIXED -> stringResource(R.string.president_notifications_global_mixed)
+                            },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Switch(
+                        checked = teamNotificationState.goals,
+                        onCheckedChange = { viewModel.updateTeamGoals(it) },
+                    )
+                }
             }
         }
     }

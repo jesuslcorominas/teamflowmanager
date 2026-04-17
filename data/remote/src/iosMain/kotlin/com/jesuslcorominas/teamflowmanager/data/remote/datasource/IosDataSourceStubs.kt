@@ -3,9 +3,12 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.DynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPreferencesDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PresidentNotificationDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Club
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.PresidentNotification
+import com.jesuslcorominas.teamflowmanager.domain.model.UserNotificationPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -60,4 +63,31 @@ class PresidentNotificationDataSourceStub : PresidentNotificationDataSource {
         clubId: String,
         notificationId: String,
     ): Unit = throw NotImplementedError("deleteNotification not implemented for iOS Phase 2")
+}
+
+class NotificationPreferencesStubDataSourceImpl : NotificationPreferencesDataSource {
+    override fun getPreferences(
+        userId: String,
+        clubId: String,
+    ): Flow<UserNotificationPreferences> = flowOf(UserNotificationPreferences(userId = userId))
+
+    override suspend fun updateGlobalPreference(
+        userId: String,
+        clubId: String,
+        type: NotificationEventType,
+        enabled: Boolean,
+        allTeamRemoteIds: List<String>,
+    ) {
+        // stub — no-op on iOS
+    }
+
+    override suspend fun updateTeamPreference(
+        userId: String,
+        clubId: String,
+        teamRemoteId: String,
+        type: NotificationEventType,
+        enabled: Boolean,
+    ) {
+        // stub — no-op on iOS
+    }
 }

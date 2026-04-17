@@ -2,20 +2,26 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamNotificationPreferenceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-enum class PresidentTeamTab { SUMMARY, PLAYERS, MATCHES, STATS }
+enum class PresidentTeamTab { SUMMARY, PLAYERS, MATCHES, STATS, NOTIFICATIONS }
 
 data class PresidentTeamStats(
     val totalMatches: Int,
@@ -45,12 +51,26 @@ class PresidentTeamDetailViewModel(
     private val getTeamById: GetTeamByIdUseCase,
     private val getPlayersByTeam: GetPlayersByTeamUseCase,
     private val getMatchesByTeam: GetMatchesByTeamUseCase,
+    private val getNotificationPreferences: GetNotificationPreferencesUseCase,
+    private val updateTeamNotificationPreference: UpdateTeamNotificationPreferenceUseCase,
+    private val getUserClubMembership: GetUserClubMembershipUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PresidentTeamDetailUiState>(PresidentTeamDetailUiState.Loading)
     val uiState: StateFlow<PresidentTeamDetailUiState> = _uiState.asStateFlow()
 
     private val _selectedTab = MutableStateFlow(PresidentTeamTab.SUMMARY)
     val selectedTab: StateFlow<PresidentTeamTab> = _selectedTab.asStateFlow()
+
+    data class TeamNotificationPreferencesState(
+        val matchEvents: Boolean = true,
+        val goals: Boolean = true,
+        val globalMatchEventsState: GlobalNotificationState = GlobalNotificationState.ALL_ON,
+        val globalGoalsState: GlobalNotificationState = GlobalNotificationState.ALL_ON,
+        val clubId: String = "",
+    )
+
+    private val _teamNotificationState = MutableStateFlow(TeamNotificationPreferencesState())
+    val teamNotificationState: StateFlow<TeamNotificationPreferencesState> = _teamNotificationState.asStateFlow()
 
     init {
         load()
@@ -92,6 +112,37 @@ class PresidentTeamDetailViewModel(
             }.collect { state ->
                 _uiState.value = state
             }
+        }
+
+        viewModelScope.launch {
+            val clubMember = getUserClubMembership().first() ?: return@launch
+            val clubRemoteId = clubMember.clubRemoteId ?: return@launch
+
+            getNotificationPreferences(clubRemoteId).collect { prefs ->
+                val teamPref = prefs.teamPreferences[teamId]
+                _teamNotificationState.value =
+                    TeamNotificationPreferencesState(
+                        matchEvents = teamPref?.matchEvents ?: prefs.globalMatchEvents,
+                        goals = teamPref?.goals ?: prefs.globalGoals,
+                        globalMatchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
+                        globalGoalsState = prefs.globalStateFor(NotificationEventType.GOALS),
+                        clubId = clubRemoteId,
+                    )
+            }
+        }
+    }
+
+    fun updateTeamMatchEvents(enabled: Boolean) {
+        viewModelScope.launch {
+            val state = _teamNotificationState.value
+            updateTeamNotificationPreference(state.clubId, teamId, NotificationEventType.MATCH_EVENTS, enabled)
+        }
+    }
+
+    fun updateTeamGoals(enabled: Boolean) {
+        viewModelScope.launch {
+            val state = _teamNotificationState.value
+            updateTeamNotificationPreference(state.clubId, teamId, NotificationEventType.GOALS, enabled)
         }
     }
 }

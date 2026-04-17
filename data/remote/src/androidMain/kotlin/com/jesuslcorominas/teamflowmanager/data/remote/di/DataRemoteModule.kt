@@ -16,6 +16,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageData
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPermissionDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPreferencesDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PendingCoachAssignmentDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
@@ -41,6 +42,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.GoalFirestoreD
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchOperationFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NotificationPermissionDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NotificationPreferencesFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PendingCoachAssignmentFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitutionFirestoreDataSourceImpl
@@ -99,6 +101,7 @@ internal val firestoreDataSourceModule =
         singleOf(::PlayerTimeHistoryFirestoreDataSourceImpl) bind PlayerTimeHistoryDataSource::class
         singleOf(::PendingCoachAssignmentFirestoreDataSourceImpl) bind PendingCoachAssignmentDataSource::class
         singleOf(::PresidentNotificationFirestoreDataSourceImpl) bind PresidentNotificationDataSource::class
+        singleOf(::NotificationPreferencesFirestoreDataSourceImpl) bind NotificationPreferencesDataSource::class
     }
 
 internal val ktorfitModule =
