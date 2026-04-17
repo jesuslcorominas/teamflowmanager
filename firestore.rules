@@ -38,6 +38,11 @@ service cloud.firestore {
              ('Presidente' in get(memberPath).data.roles);
     }
 
+    function isClubMember(clubId) {
+      return clubId != null &&
+             exists(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId));
+    }
+
     // =======================================================================
     // CLUBS AND CLUB MEMBERS
     // =======================================================================
@@ -188,6 +193,19 @@ service cloud.firestore {
       allow create, update, delete: if isAuthenticated() &&
         getTeamClubId(teamId) != null &&
         isPresidenteOfClub(getTeamClubId(teamId));
+    }
+
+    // =======================================================================
+    // NOTIFICATION PREFERENCES
+    // =======================================================================
+
+    match /clubs/{clubId}/notificationPreferences/{userId} {
+      // Any club member can read preferences.
+      // Coaches need to read president preferences before dispatching match-event notifications.
+      allow read: if isAuthenticated() && isClubMember(clubId);
+
+      // Only the document owner can write their own preferences.
+      allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 
     // =======================================================================

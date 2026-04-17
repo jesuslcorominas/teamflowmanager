@@ -134,15 +134,19 @@ class PresidentTeamDetailViewModel(
 
     fun updateTeamMatchEvents(enabled: Boolean) {
         viewModelScope.launch {
-            val state = _teamNotificationState.value
-            updateTeamNotificationPreference(state.clubId, teamId, NotificationEventType.MATCH_EVENTS, enabled)
+            runCatching {
+                val state = _teamNotificationState.value
+                updateTeamNotificationPreference(state.clubId, teamId, NotificationEventType.MATCH_EVENTS, enabled)
+            }
         }
     }
 
     fun updateTeamGoals(enabled: Boolean) {
         viewModelScope.launch {
-            val state = _teamNotificationState.value
-            updateTeamNotificationPreference(state.clubId, teamId, NotificationEventType.GOALS, enabled)
+            runCatching {
+                val state = _teamNotificationState.value
+                updateTeamNotificationPreference(state.clubId, teamId, NotificationEventType.GOALS, enabled)
+            }
         }
     }
 }
