@@ -308,6 +308,29 @@ function resolveNotificationText(type, params) {
         title: 'Nuevo miembro esperando asignación',
         body: 'Un miembro de tu club está esperando que le asignes un equipo',
       };
+    case 'MATCH_START':
+      return {
+        title: `Comienza el partido de ${params.teamName || ''}`,
+        body: `${params.teamName || ''} vs ${params.opponent || ''}`,
+      };
+    case 'MATCH_END': {
+      const tg = parseInt(params.teamGoals || '0', 10);
+      const og = parseInt(params.opponentGoals || '0', 10);
+      const result = tg > og ? `a favor de ${params.teamName}` : tg < og ? `a favor de ${params.opponent}` : 'empate';
+      return {
+        title: `Fin del partido — ${params.teamName || ''} ${tg}-${og} ${params.opponent || ''}`,
+        body: `Resultado final: ${tg}-${og} ${result}`,
+      };
+    }
+    case 'GOAL': {
+      const tg = parseInt(params.teamGoals || '0', 10);
+      const og = parseInt(params.opponentGoals || '0', 10);
+      const minute = params.minuteOfPlay ? ` (min. ${params.minuteOfPlay})` : '';
+      return {
+        title: `Gol de ${params.teamName || ''}${minute}`,
+        body: `${params.teamName || ''} ${tg}-${og}`,
+      };
+    }
     default:
       console.warn('[sendNotification] Unknown notification type:', type);
       return { title: type, body: JSON.stringify(params) };
