@@ -25,6 +25,8 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubst
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartPlayerTimersBatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import io.mockk.coVerify
 import io.mockk.every
@@ -124,6 +126,8 @@ class MatchViewModelGoalTest {
         timeTicker = fakeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
+        notifyPresidentMatchEvent = mockk(relaxed = true),
+        getTeamUseCase = mockk(relaxed = true),
     )
 
     @Test

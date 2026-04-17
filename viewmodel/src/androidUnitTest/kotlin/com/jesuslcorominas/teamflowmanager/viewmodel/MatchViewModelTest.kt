@@ -26,6 +26,8 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubst
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartPlayerTimersBatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import io.mockk.coEvery
@@ -77,6 +79,8 @@ class MatchViewModelTest {
     private lateinit var analyticsTracker: AnalyticsTracker
     private lateinit var crashReporter: CrashReporter
     private lateinit var fakeTicker: FakeTimeTicker
+    private lateinit var notifyPresidentMatchEventUseCase: NotifyPresidentMatchEventUseCase
+    private lateinit var getTeamUseCase: GetTeamUseCase
 
     private val testMatch = Match(
         id = MATCH_ID,
@@ -124,6 +128,8 @@ class MatchViewModelTest {
         analyticsTracker = mockk(relaxed = true)
         crashReporter = mockk(relaxed = true)
         fakeTicker = FakeTimeTicker()
+        notifyPresidentMatchEventUseCase = mockk(relaxed = true)
+        getTeamUseCase = mockk(relaxed = true)
 
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(testMatch)
         every { getAllPlayerTimesUseCase(any()) } returns flowOf(playerTimes)
@@ -161,6 +167,8 @@ class MatchViewModelTest {
         timeTicker = fakeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
+        notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
+        getTeamUseCase = getTeamUseCase,
     )
 
     @Test

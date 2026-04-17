@@ -8,8 +8,11 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamNotificationPreferenceUseCase
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -34,6 +37,9 @@ class PresidentTeamDetailViewModelTest {
     private lateinit var getTeamById: GetTeamByIdUseCase
     private lateinit var getPlayersByTeam: GetPlayersByTeamUseCase
     private lateinit var getMatchesByTeam: GetMatchesByTeamUseCase
+    private lateinit var getNotificationPreferences: GetNotificationPreferencesUseCase
+    private lateinit var updateTeamNotificationPreference: UpdateTeamNotificationPreferenceUseCase
+    private lateinit var getUserClubMembership: GetUserClubMembershipUseCase
 
     private val teamId = "team_fs_123"
 
@@ -43,6 +49,11 @@ class PresidentTeamDetailViewModelTest {
         getTeamById = mockk()
         getPlayersByTeam = mockk()
         getMatchesByTeam = mockk()
+        getNotificationPreferences = mockk(relaxed = true)
+        updateTeamNotificationPreference = mockk(relaxed = true)
+        getUserClubMembership = mockk(relaxed = true)
+
+        every { getUserClubMembership() } returns flowOf(null)
     }
 
     @After
@@ -56,6 +67,9 @@ class PresidentTeamDetailViewModelTest {
             getTeamById = getTeamById,
             getPlayersByTeam = getPlayersByTeam,
             getMatchesByTeam = getMatchesByTeam,
+            getNotificationPreferences = getNotificationPreferences,
+            updateTeamNotificationPreference = updateTeamNotificationPreference,
+            getUserClubMembership = getUserClubMembership,
         )
 
     private fun aTeam() =
