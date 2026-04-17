@@ -38,11 +38,13 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MatchViewModel(
@@ -72,6 +74,8 @@ class MatchViewModel(
     private val notifyPresidentMatchEvent: NotifyPresidentMatchEventUseCase,
     private val getTeamUseCase: GetTeamUseCase,
 ) : ViewModel() {
+    private val teamFlow = getTeamUseCase().stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
 
@@ -128,19 +132,7 @@ class MatchViewModel(
                         startPlayerTimersBatchUseCase(it.id, it.startingLineupIds, currentTime)
                     }
 
-                    // Fire-and-forget notification to president
-                    viewModelScope.launch {
-                        runCatching {
-                            val team = getTeamUseCase().first() ?: return@runCatching
-                            val teamRemoteId = team.remoteId ?: return@runCatching
-                            val clubRemoteId = team.clubRemoteId ?: return@runCatching
-                            notifyPresidentMatchEvent(
-                                MatchEventNotification.Start(it.teamName, it.opponent),
-                                teamRemoteId,
-                                clubRemoteId,
-                            )
-                        }
-                    }
+                    fireNotification { MatchEventNotification.Start(it.teamName, it.opponent) }
                 }
             }
         }
@@ -189,19 +181,9 @@ class MatchViewModel(
                         ),
                     )
 
-                    // Fire-and-forget notification to president
                     val finishedMatch = currentState.match
-                    viewModelScope.launch {
-                        runCatching {
-                            val team = getTeamUseCase().first() ?: return@runCatching
-                            val teamRemoteId = team.remoteId ?: return@runCatching
-                            val clubRemoteId = team.clubRemoteId ?: return@runCatching
-                            notifyPresidentMatchEvent(
-                                MatchEventNotification.End(finishedMatch.teamName, finishedMatch.opponent, finishedMatch.goals, finishedMatch.opponentGoals),
-                                teamRemoteId,
-                                clubRemoteId,
-                            )
-                        }
+                    fireNotification {
+                        MatchEventNotification.End(finishedMatch.teamName, finishedMatch.opponent, finishedMatch.goals, finishedMatch.opponentGoals)
                     }
                 }
 
@@ -537,22 +519,12 @@ class MatchViewModel(
                         ).filter { it.value.isNotBlank() },
                     )
 
-                    // Fire-and-forget notification to president
-                    val goalMatch = currentState.match
+                    val goalMatchId = currentState.match.id
                     val elapsedMs = _currentTime.value
-                    viewModelScope.launch {
-                        runCatching {
-                            val team = getTeamUseCase().first() ?: return@runCatching
-                            val teamRemoteId = team.remoteId ?: return@runCatching
-                            val clubRemoteId = team.clubRemoteId ?: return@runCatching
-                            val updatedMatch = getMatchById(goalMatch.id).first() ?: return@runCatching
-                            val minuteOfPlay = if (elapsedMs > 0L) (elapsedMs / 60_000L).toInt() else null
-                            notifyPresidentMatchEvent(
-                                MatchEventNotification.Goal(updatedMatch.teamName, updatedMatch.goals, updatedMatch.opponentGoals, minuteOfPlay),
-                                teamRemoteId,
-                                clubRemoteId,
-                            )
-                        }
+                    fireNotification {
+                        val updatedMatch = getMatchById(goalMatchId).first() ?: return@fireNotification null
+                        val minuteOfPlay = if (elapsedMs > 0L) (elapsedMs / 60_000L).toInt() else null
+                        MatchEventNotification.Goal(updatedMatch.teamName, updatedMatch.goals, updatedMatch.opponentGoals, minuteOfPlay)
                     }
 
                     _showGoalScorerDialog.value = false
@@ -601,6 +573,18 @@ class MatchViewModel(
                 crashReporter.recordException(e)
                 crashReporter.log("Error registering opponent goal: ${e.message}")
                 throw e
+            }
+        }
+    }
+
+    private fun fireNotification(buildEvent: suspend () -> MatchEventNotification?) {
+        viewModelScope.launch {
+            runCatching {
+                val team = teamFlow.value ?: return@runCatching
+                val teamRemoteId = team.remoteId ?: return@runCatching
+                val clubRemoteId = team.clubRemoteId ?: return@runCatching
+                val event = buildEvent() ?: return@runCatching
+                notifyPresidentMatchEvent(event, teamRemoteId, clubRemoteId)
             }
         }
     }

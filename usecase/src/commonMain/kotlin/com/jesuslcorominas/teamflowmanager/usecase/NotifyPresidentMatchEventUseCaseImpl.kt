@@ -8,6 +8,9 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEv
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmNotificationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationPreferencesRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 
 internal class NotifyPresidentMatchEventUseCaseImpl(
@@ -37,18 +40,22 @@ internal class NotifyPresidentMatchEventUseCaseImpl(
 
             val payload = buildPayload(event)
 
-            for (president in presidents) {
-                try {
-                    val prefs =
-                        notificationPreferencesRepository
-                            .getPreferences(president.userId, clubRemoteId)
-                            .first()
-                    if (prefs.isEnabledFor(teamRemoteId, eventType)) {
-                        fcmNotificationRepository.sendNotificationToUser(president.userId, payload)
+            coroutineScope {
+                presidents.map { president ->
+                    async {
+                        try {
+                            val prefs =
+                                notificationPreferencesRepository
+                                    .getPreferences(president.userId, clubRemoteId)
+                                    .first()
+                            if (prefs.isEnabledFor(teamRemoteId, eventType)) {
+                                fcmNotificationRepository.sendNotificationToUser(president.userId, payload)
+                            }
+                        } catch (e: Exception) {
+                            // Don't let one president failure block others
+                        }
                     }
-                } catch (e: Exception) {
-                    // Don't let one president failure block others
-                }
+                }.awaitAll()
             }
         } catch (e: Exception) {
             // Fire-and-forget: notification failures must not affect match flow

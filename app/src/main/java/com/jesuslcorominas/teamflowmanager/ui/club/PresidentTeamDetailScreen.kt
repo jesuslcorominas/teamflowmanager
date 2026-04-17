@@ -98,7 +98,14 @@ fun PresidentTeamDetailScreen(
                     PresidentTeamTab.PLAYERS -> PlayersTab(state)
                     PresidentTeamTab.MATCHES -> MatchesTab(state)
                     PresidentTeamTab.STATS -> StatsTab(state.stats)
-                    PresidentTeamTab.NOTIFICATIONS -> NotificationsTab(viewModel)
+                    PresidentTeamTab.NOTIFICATIONS -> {
+                        val teamNotificationState by viewModel.teamNotificationState.collectAsState()
+                        NotificationsTab(
+                            state = teamNotificationState,
+                            onMatchEventsChanged = viewModel::updateTeamMatchEvents,
+                            onGoalsChanged = viewModel::updateTeamGoals,
+                        )
+                    }
                 }
             }
         }
@@ -308,9 +315,11 @@ private fun ScheduledMatchCard(match: Match) {
 }
 
 @Composable
-private fun NotificationsTab(viewModel: PresidentTeamDetailViewModel) {
-    val teamNotificationState by viewModel.teamNotificationState.collectAsState()
-
+private fun NotificationsTab(
+    state: PresidentTeamDetailViewModel.TeamNotificationPreferencesState,
+    onMatchEventsChanged: (Boolean) -> Unit,
+    onGoalsChanged: (Boolean) -> Unit,
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -328,7 +337,7 @@ private fun NotificationsTab(viewModel: PresidentTeamDetailViewModel) {
                     )
                     Text(
                         text =
-                            when (teamNotificationState.globalMatchEventsState) {
+                            when (state.globalMatchEventsState) {
                                 GlobalNotificationState.ALL_ON -> stringResource(R.string.president_notifications_global_on)
                                 GlobalNotificationState.ALL_OFF -> stringResource(R.string.president_notifications_global_off)
                                 GlobalNotificationState.MIXED -> stringResource(R.string.president_notifications_global_mixed)
@@ -337,8 +346,8 @@ private fun NotificationsTab(viewModel: PresidentTeamDetailViewModel) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Switch(
-                        checked = teamNotificationState.matchEvents,
-                        onCheckedChange = { viewModel.updateTeamMatchEvents(it) },
+                        checked = state.matchEvents,
+                        onCheckedChange = onMatchEventsChanged,
                     )
                 }
             }
@@ -355,7 +364,7 @@ private fun NotificationsTab(viewModel: PresidentTeamDetailViewModel) {
                     )
                     Text(
                         text =
-                            when (teamNotificationState.globalGoalsState) {
+                            when (state.globalGoalsState) {
                                 GlobalNotificationState.ALL_ON -> stringResource(R.string.president_notifications_global_on)
                                 GlobalNotificationState.ALL_OFF -> stringResource(R.string.president_notifications_global_off)
                                 GlobalNotificationState.MIXED -> stringResource(R.string.president_notifications_global_mixed)
@@ -364,8 +373,8 @@ private fun NotificationsTab(viewModel: PresidentTeamDetailViewModel) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Switch(
-                        checked = teamNotificationState.goals,
-                        onCheckedChange = { viewModel.updateTeamGoals(it) },
+                        checked = state.goals,
+                        onCheckedChange = onGoalsChanged,
                     )
                 }
             }

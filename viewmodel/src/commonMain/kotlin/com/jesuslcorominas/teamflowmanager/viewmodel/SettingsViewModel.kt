@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -86,17 +87,19 @@ class SettingsViewModel(
                 )
 
             val clubRemoteId = clubMember?.clubRemoteId ?: return@launch
-            val teams = getTeamsByClub(clubRemoteId).first()
-            val allTeamRemoteIds = teams.mapNotNull { it.remoteId }
 
-            getNotificationPreferences(clubRemoteId).collect { prefs ->
-                _notificationPreferences.value =
-                    NotificationPreferencesState(
-                        matchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
-                        goalsState = prefs.globalStateFor(NotificationEventType.GOALS),
-                        clubId = clubRemoteId,
-                        allTeamRemoteIds = allTeamRemoteIds,
-                    )
+            combine(
+                getTeamsByClub(clubRemoteId),
+                getNotificationPreferences(clubRemoteId),
+            ) { teams, prefs ->
+                NotificationPreferencesState(
+                    matchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
+                    goalsState = prefs.globalStateFor(NotificationEventType.GOALS),
+                    clubId = clubRemoteId,
+                    allTeamRemoteIds = teams.mapNotNull { it.remoteId },
+                )
+            }.collect { state ->
+                _notificationPreferences.value = state
             }
         }
     }
