@@ -50,17 +50,21 @@ sealed class NotificationPayload {
 
         data class GoalScored(
             val teamName: String,
+            val opponentName: String,
             val teamGoals: Int,
             val opponentGoals: Int,
-            val minuteOfPlay: Int?,
+            val minuteOfPlay: String?,
+            val isOpponentGoal: Boolean,
         ) : Typed() {
             override val type = NotificationType.GOAL
             override val params =
                 buildMap {
                     put("teamName", teamName)
+                    put("opponentName", opponentName)
                     put("teamGoals", teamGoals.toString())
                     put("opponentGoals", opponentGoals.toString())
-                    minuteOfPlay?.let { put("minuteOfPlay", it.toString()) }
+                    put("isOpponentGoal", isOpponentGoal.toString())
+                    minuteOfPlay?.let { put("minuteOfPlay", it) }
                 }
         }
     }

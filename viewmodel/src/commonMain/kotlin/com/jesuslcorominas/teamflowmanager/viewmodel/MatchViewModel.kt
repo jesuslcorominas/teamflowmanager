@@ -520,11 +520,18 @@ class MatchViewModel(
                     )
 
                     val goalMatchId = currentState.match.id
-                    val elapsedMs = _currentTime.value
+                    val snapshotTime = _currentTime.value
                     fireNotification {
                         val updatedMatch = getMatchById(goalMatchId).first() ?: return@fireNotification null
-                        val minuteOfPlay = if (elapsedMs > 0L) (elapsedMs / 60_000L).toInt() else null
-                        MatchEventNotification.Goal(updatedMatch.teamName, updatedMatch.goals, updatedMatch.opponentGoals, minuteOfPlay)
+                        val minuteOfPlay = minuteOfPlay(updatedMatch, snapshotTime)
+                        MatchEventNotification.Goal(
+                            teamName = updatedMatch.teamName,
+                            opponentName = updatedMatch.opponent,
+                            teamGoals = updatedMatch.goals,
+                            opponentGoals = updatedMatch.opponentGoals,
+                            minuteOfPlay = minuteOfPlay,
+                            isOpponentGoal = false,
+                        )
                     }
 
                     _showGoalScorerDialog.value = false
@@ -567,6 +574,21 @@ class MatchViewModel(
                         ),
                     )
 
+                    val goalMatchId = currentState.match.id
+                    val snapshotTime = _currentTime.value
+                    fireNotification {
+                        val updatedMatch = getMatchById(goalMatchId).first() ?: return@fireNotification null
+                        val minuteOfPlay = minuteOfPlay(updatedMatch, snapshotTime)
+                        MatchEventNotification.Goal(
+                            teamName = updatedMatch.teamName,
+                            opponentName = updatedMatch.opponent,
+                            teamGoals = updatedMatch.goals,
+                            opponentGoals = updatedMatch.opponentGoals,
+                            minuteOfPlay = minuteOfPlay,
+                            isOpponentGoal = true,
+                        )
+                    }
+
                     _showOpponentGoalDialog.value = false
                 }
             } catch (e: Exception) {
@@ -577,14 +599,32 @@ class MatchViewModel(
         }
     }
 
+    private fun minuteOfPlay(match: Match, currentTimeMs: Long): String? {
+        val currentPeriod = match.periods.firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+            ?: return null
+        val periodDurationMs = currentPeriod.periodDuration
+        val periodDurationMin = (periodDurationMs / 60_000L).toInt()
+        val completedMin = (currentPeriod.periodNumber - 1) * periodDurationMin
+        val elapsedInPeriodMs = (currentTimeMs - currentPeriod.startTimeMillis).coerceAtLeast(0L)
+        val elapsedInPeriodMin = (elapsedInPeriodMs / 60_000L).toInt()
+        return if (elapsedInPeriodMs <= periodDurationMs) {
+            (completedMin + elapsedInPeriodMin).toString()
+        } else {
+            val extraMin = elapsedInPeriodMin - periodDurationMin
+            "${completedMin + periodDurationMin}+$extraMin"
+        }
+    }
+
     private fun fireNotification(buildEvent: suspend () -> MatchEventNotification?) {
         viewModelScope.launch {
             runCatching {
                 val team = teamFlow.value ?: return@runCatching
                 val teamRemoteId = team.remoteId ?: return@runCatching
                 val clubRemoteId = team.clubRemoteId ?: return@runCatching
+                val matchId = (_uiState.value as? MatchUiState.Success)?.match?.id?.toString()
+                    ?: return@runCatching
                 val event = buildEvent() ?: return@runCatching
-                notifyPresidentMatchEvent(event, teamRemoteId, clubRemoteId)
+                notifyPresidentMatchEvent(event, matchId, teamRemoteId, clubRemoteId)
             }
         }
     }

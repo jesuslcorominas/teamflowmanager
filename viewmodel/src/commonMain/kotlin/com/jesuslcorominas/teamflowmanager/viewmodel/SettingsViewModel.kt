@@ -13,7 +13,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
@@ -22,7 +21,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -38,7 +36,6 @@ class SettingsViewModel(
     private val setActiveViewRole: SetActiveViewRoleUseCase,
     private val getNotificationPreferences: GetNotificationPreferencesUseCase,
     private val updateGlobalNotificationPreference: UpdateGlobalNotificationPreferenceUseCase,
-    private val getTeamsByClub: GetTeamsByClubUseCase,
 ) : ViewModel() {
     val currentUser: StateFlow<User?> =
         getCurrentUserUseCase()
@@ -54,7 +51,6 @@ class SettingsViewModel(
         val matchEventsState: GlobalNotificationState = GlobalNotificationState.ALL_ON,
         val goalsState: GlobalNotificationState = GlobalNotificationState.ALL_ON,
         val clubId: String = "",
-        val allTeamRemoteIds: List<String> = emptyList(),
     )
 
     private val _notificationPreferences = MutableStateFlow(NotificationPreferencesState())
@@ -73,48 +69,40 @@ class SettingsViewModel(
 
     private fun loadRoleSelectorState() {
         viewModelScope.launch {
-            val clubMember = getUserClubMembership().first()
-            val isPresident = clubMember != null && clubMember.hasRole(ClubRole.PRESIDENT)
-            if (!isPresident) return@launch
+            val clubMember = getUserClubMembership().first() ?: return@launch
+            val isPresident = clubMember.hasRole(ClubRole.PRESIDENT)
 
-            val team = getTeam().first()
+            if (isPresident) {
+                val team = getTeam().first()
+                _roleSelectorState.value =
+                    RoleSelectorState(
+                        showRoleSelector = true,
+                        isRoleSelectorEnabled = team != null,
+                        activeRole = getActiveViewRole(),
+                    )
+            }
 
-            _roleSelectorState.value =
-                RoleSelectorState(
-                    showRoleSelector = true,
-                    isRoleSelectorEnabled = team != null,
-                    activeRole = getActiveViewRole(),
-                )
+            val clubRemoteId = clubMember.clubRemoteId ?: return@launch
 
-            val clubRemoteId = clubMember?.clubRemoteId ?: return@launch
-
-            combine(
-                getTeamsByClub(clubRemoteId),
-                getNotificationPreferences(clubRemoteId),
-            ) { teams, prefs ->
-                NotificationPreferencesState(
+            getNotificationPreferences(clubRemoteId).collect { prefs ->
+                _notificationPreferences.value = NotificationPreferencesState(
                     matchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
                     goalsState = prefs.globalStateFor(NotificationEventType.GOALS),
                     clubId = clubRemoteId,
-                    allTeamRemoteIds = teams.mapNotNull { it.remoteId },
                 )
-            }.collect { state ->
-                _notificationPreferences.value = state
             }
         }
     }
 
     fun updateGlobalMatchEvents(enabled: Boolean) {
         viewModelScope.launch {
-            val state = _notificationPreferences.value
-            updateGlobalNotificationPreference(state.clubId, NotificationEventType.MATCH_EVENTS, enabled, state.allTeamRemoteIds)
+            updateGlobalNotificationPreference(_notificationPreferences.value.clubId, NotificationEventType.MATCH_EVENTS, enabled)
         }
     }
 
     fun updateGlobalGoals(enabled: Boolean) {
         viewModelScope.launch {
-            val state = _notificationPreferences.value
-            updateGlobalNotificationPreference(state.clubId, NotificationEventType.GOALS, enabled, state.allTeamRemoteIds)
+            updateGlobalNotificationPreference(_notificationPreferences.value.clubId, NotificationEventType.GOALS, enabled)
         }
     }
 

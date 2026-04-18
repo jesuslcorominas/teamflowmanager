@@ -14,9 +14,8 @@ internal class UpdateGlobalNotificationPreferenceUseCaseImpl(
         clubId: String,
         type: NotificationEventType,
         enabled: Boolean,
-        allTeamRemoteIds: List<String>,
     ) {
         val user = authRepository.getCurrentUser().first() ?: return
-        notificationPreferencesRepository.updateGlobalPreference(user.id, clubId, type, enabled, allTeamRemoteIds)
+        notificationPreferencesRepository.updateGlobalPreference(user.id, clubId, type, enabled)
     }
 }

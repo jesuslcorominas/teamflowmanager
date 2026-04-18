@@ -244,7 +244,6 @@ val viewModelModule =
                 setActiveViewRole = get(),
                 getNotificationPreferences = get(),
                 updateGlobalNotificationPreference = get(),
-                getTeamsByClub = get(),
             )
         }
 

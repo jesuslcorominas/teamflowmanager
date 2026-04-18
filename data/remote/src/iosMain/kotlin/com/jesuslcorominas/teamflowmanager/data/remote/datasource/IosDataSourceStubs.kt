@@ -76,7 +76,6 @@ class NotificationPreferencesStubDataSourceImpl : NotificationPreferencesDataSou
         clubId: String,
         type: NotificationEventType,
         enabled: Boolean,
-        allTeamRemoteIds: List<String>,
     ) {
         // stub — no-op on iOS
     }

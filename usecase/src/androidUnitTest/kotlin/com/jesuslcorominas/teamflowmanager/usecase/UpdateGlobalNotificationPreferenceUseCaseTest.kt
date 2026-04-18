@@ -31,12 +31,11 @@ class UpdateGlobalNotificationPreferenceUseCaseTest {
             // Given
             val userId = "user-123"
             val clubId = "club-fs-1"
-            val allTeamIds = listOf("team-1", "team-2")
             val user = User(id = userId, displayName = "Test User", email = "test@test.com", photoUrl = null)
             every { authRepository.getCurrentUser() } returns flowOf(user)
 
             // When
-            useCase(clubId, NotificationEventType.MATCH_EVENTS, true, allTeamIds)
+            useCase(clubId, NotificationEventType.MATCH_EVENTS, true)
 
             // Then
             coVerify {
@@ -45,7 +44,6 @@ class UpdateGlobalNotificationPreferenceUseCaseTest {
                     clubId = clubId,
                     type = NotificationEventType.MATCH_EVENTS,
                     enabled = true,
-                    allTeamRemoteIds = allTeamIds,
                 )
             }
         }
@@ -57,11 +55,11 @@ class UpdateGlobalNotificationPreferenceUseCaseTest {
             every { authRepository.getCurrentUser() } returns flowOf(null)
 
             // When — must not throw
-            useCase("club-1", NotificationEventType.GOALS, false, emptyList())
+            useCase("club-1", NotificationEventType.GOALS, false)
 
             // Then — repository is never called
             coVerify(exactly = 0) {
-                notificationPreferencesRepository.updateGlobalPreference(any(), any(), any(), any(), any())
+                notificationPreferencesRepository.updateGlobalPreference(any(), any(), any(), any())
             }
         }
 }

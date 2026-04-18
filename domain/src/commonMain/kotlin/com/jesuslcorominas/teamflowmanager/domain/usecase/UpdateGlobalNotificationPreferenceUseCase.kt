@@ -7,6 +7,5 @@ interface UpdateGlobalNotificationPreferenceUseCase {
         clubId: String,
         type: NotificationEventType,
         enabled: Boolean,
-        allTeamRemoteIds: List<String>,
     )
 }

@@ -19,8 +19,7 @@ class NotificationPreferencesRepositoryImpl(
         clubId: String,
         type: NotificationEventType,
         enabled: Boolean,
-        allTeamRemoteIds: List<String>,
-    ) = dataSource.updateGlobalPreference(userId, clubId, type, enabled, allTeamRemoteIds)
+    ) = dataSource.updateGlobalPreference(userId, clubId, type, enabled)
 
     override suspend fun updateTeamPreference(
         userId: String,

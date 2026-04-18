@@ -127,7 +127,7 @@ fun SettingsScreen(
                 )
             }
 
-            if (roleSelectorState.activeRole == ActiveViewRole.President && roleSelectorState.showRoleSelector) {
+            if (roleSelectorState.activeRole == ActiveViewRole.President && notificationPreferences.clubId.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
                 Text(
                     text = stringResource(Res.string.settings_notifications_section),

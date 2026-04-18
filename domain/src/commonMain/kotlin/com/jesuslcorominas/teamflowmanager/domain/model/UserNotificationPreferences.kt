@@ -26,23 +26,19 @@ data class UserNotificationPreferences(
     }
 
     fun globalStateFor(type: NotificationEventType): GlobalNotificationState {
+        val global = when (type) {
+            NotificationEventType.MATCH_EVENTS -> globalMatchEvents
+            NotificationEventType.GOALS -> globalGoals
+        }
         if (teamPreferences.isEmpty()) {
-            return when (type) {
-                NotificationEventType.MATCH_EVENTS -> if (globalMatchEvents) GlobalNotificationState.ALL_ON else GlobalNotificationState.ALL_OFF
-                NotificationEventType.GOALS -> if (globalGoals) GlobalNotificationState.ALL_ON else GlobalNotificationState.ALL_OFF
+            return if (global) GlobalNotificationState.ALL_ON else GlobalNotificationState.ALL_OFF
+        }
+        val hasOverride = teamPreferences.values.any { pref ->
+            when (type) {
+                NotificationEventType.MATCH_EVENTS -> pref.matchEvents != global
+                NotificationEventType.GOALS -> pref.goals != global
             }
         }
-        val values =
-            teamPreferences.values.map { pref ->
-                when (type) {
-                    NotificationEventType.MATCH_EVENTS -> pref.matchEvents
-                    NotificationEventType.GOALS -> pref.goals
-                }
-            }
-        return when {
-            values.all { it } -> GlobalNotificationState.ALL_ON
-            values.none { it } -> GlobalNotificationState.ALL_OFF
-            else -> GlobalNotificationState.MIXED
-        }
+        return if (hasOverride) GlobalNotificationState.MIXED else if (global) GlobalNotificationState.ALL_ON else GlobalNotificationState.ALL_OFF
     }
 }

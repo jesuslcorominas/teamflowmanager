@@ -68,7 +68,6 @@ class NotificationPreferencesFirestoreDataSourceImpl(
         clubId: String,
         type: NotificationEventType,
         enabled: Boolean,
-        allTeamRemoteIds: List<String>,
     ) {
         try {
             val fieldName =
@@ -77,18 +76,10 @@ class NotificationPreferencesFirestoreDataSourceImpl(
                     NotificationEventType.GOALS -> FIELD_GOALS
                 }
 
-            val updates = mutableMapOf<String, Any>(fieldName to enabled)
-
-            // Update all team entries as well
-            for (teamId in allTeamRemoteIds) {
-                updates["$FIELD_TEAMS.$teamId.$fieldName"] = enabled
-            }
-
             document(clubId, userId)
-                .set(updates, com.google.firebase.firestore.SetOptions.merge())
+                .set(mapOf(fieldName to enabled), com.google.firebase.firestore.SetOptions.merge())
                 .await()
 
-            Log.d(TAG, "Updated global $fieldName=$enabled for userId=$userId clubId=$clubId, teams=${allTeamRemoteIds.size}")
         } catch (e: Exception) {
             Log.e(TAG, "Error updating global preference for userId=$userId clubId=$clubId", e)
             throw e

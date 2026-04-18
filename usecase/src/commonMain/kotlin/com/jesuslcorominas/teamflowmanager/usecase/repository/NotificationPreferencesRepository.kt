@@ -15,7 +15,6 @@ interface NotificationPreferencesRepository {
         clubId: String,
         type: NotificationEventType,
         enabled: Boolean,
-        allTeamRemoteIds: List<String>,
     )
 
     suspend fun updateTeamPreference(

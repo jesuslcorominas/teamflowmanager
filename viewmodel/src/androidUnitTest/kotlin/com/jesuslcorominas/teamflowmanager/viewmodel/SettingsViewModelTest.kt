@@ -11,7 +11,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
@@ -49,7 +48,6 @@ class SettingsViewModelTest {
     private lateinit var setActiveViewRoleUseCase: SetActiveViewRoleUseCase
     private lateinit var getNotificationPreferencesUseCase: GetNotificationPreferencesUseCase
     private lateinit var updateGlobalNotificationPreferenceUseCase: UpdateGlobalNotificationPreferenceUseCase
-    private lateinit var getTeamsByClubUseCase: GetTeamsByClubUseCase
     private lateinit var viewModel: SettingsViewModel
 
     private val testUser = User(
@@ -72,13 +70,11 @@ class SettingsViewModelTest {
         setActiveViewRoleUseCase = mockk(relaxed = true)
         getNotificationPreferencesUseCase = mockk(relaxed = true)
         updateGlobalNotificationPreferenceUseCase = mockk(relaxed = true)
-        getTeamsByClubUseCase = mockk(relaxed = true)
 
         every { getCurrentUserUseCase() } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(null)
         every { getUserClubMembershipUseCase() } returns flowOf(null)
         every { getActiveViewRoleUseCase() } returns ActiveViewRole.President
-        every { getTeamsByClubUseCase(any()) } returns flowOf(emptyList())
 
         viewModel = SettingsViewModel(
             getCurrentUserUseCase = getCurrentUserUseCase,
@@ -91,7 +87,6 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getTeamsByClub = getTeamsByClubUseCase,
         )
     }
 
@@ -144,7 +139,6 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getTeamsByClub = getTeamsByClubUseCase,
         )
         advanceUntilIdle()
         coEvery { signOutUseCase() } returns Unit
@@ -192,7 +186,6 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getTeamsByClub = getTeamsByClubUseCase,
         )
         advanceUntilIdle()
 
@@ -225,7 +218,6 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getTeamsByClub = getTeamsByClubUseCase,
         )
         advanceUntilIdle()
 
@@ -269,7 +261,6 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getTeamsByClub = getTeamsByClubUseCase,
         )
         advanceUntilIdle()
 

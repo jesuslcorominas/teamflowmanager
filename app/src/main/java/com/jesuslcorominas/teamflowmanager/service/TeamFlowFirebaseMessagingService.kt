@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.service
 
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -8,6 +7,7 @@ import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.TeamFlowManagerApplication
 import java.util.concurrent.atomic.AtomicInteger
 
 class TeamFlowFirebaseMessagingService : FirebaseMessagingService() {
@@ -19,23 +19,18 @@ class TeamFlowFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         val title = message.notification?.title ?: return
         val body = message.notification?.body ?: return
-        showNotification(title, body)
+        val notifId = if (message.notification?.tag != null) MATCH_EVENT_NOTIFICATION_ID
+                      else notificationIdCounter.getAndIncrement()
+        showNotification(title, body, notifId)
     }
 
     private fun showNotification(
         title: String,
         body: String,
+        notifId: Int = notificationIdCounter.getAndIncrement(),
     ) {
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        val channel =
-            NotificationChannel(
-                CHANNEL_ID,
-                "Club Notifications",
-                NotificationManager.IMPORTANCE_HIGH,
-            )
-        notificationManager.createNotificationChannel(channel)
 
         val pendingIntent =
             packageManager
@@ -50,7 +45,7 @@ class TeamFlowFirebaseMessagingService : FirebaseMessagingService() {
                 }
 
         val notification =
-            NotificationCompat.Builder(this, CHANNEL_ID)
+            NotificationCompat.Builder(this, TeamFlowManagerApplication.PUSH_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_black_and_white)
                 .setContentTitle(title)
                 .setContentText(body)
@@ -58,11 +53,11 @@ class TeamFlowFirebaseMessagingService : FirebaseMessagingService() {
                 .apply { if (pendingIntent != null) setContentIntent(pendingIntent) }
                 .build()
 
-        notificationManager.notify(notificationIdCounter.getAndIncrement(), notification)
+        notificationManager.notify(notifId, notification)
     }
 
     companion object {
-        private const val CHANNEL_ID = "push_notifications_channel"
-        private val notificationIdCounter = AtomicInteger(2000)
+        private const val MATCH_EVENT_NOTIFICATION_ID = 3000
+        private val notificationIdCounter = AtomicInteger(3100)
     }
 }
