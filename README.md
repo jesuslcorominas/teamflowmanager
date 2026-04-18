@@ -45,6 +45,11 @@
 ### Push notifications
 - **President notifications** — Real-time alerts for coach assignments and member join requests (Firebase Cloud Messaging)
 - **Topic subscriptions** — Automatically subscribed to club-wide notifications on join
+- **Match event notifications** — Presidents receive push notifications for match start, end, and goals scored by any team in their club
+  - Content: scoring team name, current scoreline, and minute of play (overtime shown as `XX+Y`, e.g. `25+2`)
+  - Per-match collapsing: only the latest event per match appears in the status bar (FCM `tag` + APNS `apns-collapse-id`)
+  - In-app notification list in the president's club section — one entry per match, updated on each event, reset to unread on new events
+- **Notification preferences** — Global toggles for match events and goals, with per-team overrides, configurable from Settings
 
 ### Invitations & deep linking
 - **Team invitations** — Shareable invitation links with regenerable codes (Firebase Cloud Functions short links)
