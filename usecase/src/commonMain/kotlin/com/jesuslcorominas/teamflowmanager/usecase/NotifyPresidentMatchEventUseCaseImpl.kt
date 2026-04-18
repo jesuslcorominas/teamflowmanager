@@ -60,16 +60,18 @@ internal class NotifyPresidentMatchEventUseCaseImpl(
     ): PresidentNotification {
         val (type, title, body) =
             when (event) {
-                is MatchEventNotification.Start -> Triple(
-                    NotificationType.MATCH_START,
-                    "Comienza el partido de ${event.teamName}",
-                    "${event.teamName} vs ${event.opponent}",
-                )
-                is MatchEventNotification.End -> Triple(
-                    NotificationType.MATCH_END,
-                    "Fin del partido — ${event.teamName} ${event.teamGoals}-${event.opponentGoals} ${event.opponent}",
-                    "Resultado final: ${event.teamGoals}-${event.opponentGoals}",
-                )
+                is MatchEventNotification.Start ->
+                    Triple(
+                        NotificationType.MATCH_START,
+                        "Comienza el partido de ${event.teamName}",
+                        "${event.teamName} vs ${event.opponent}",
+                    )
+                is MatchEventNotification.End ->
+                    Triple(
+                        NotificationType.MATCH_END,
+                        "Fin del partido — ${event.teamName} ${event.teamGoals}-${event.opponentGoals} ${event.opponent}",
+                        "Resultado final: ${event.teamGoals}-${event.opponentGoals}",
+                    )
                 is MatchEventNotification.Goal -> {
                     val scoringTeam = if (event.isOpponentGoal) event.opponentName else event.teamName
                     val minute = event.minuteOfPlay?.let { " (min. $it')" } ?: ""

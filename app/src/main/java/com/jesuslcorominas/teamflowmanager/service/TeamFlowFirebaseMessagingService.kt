@@ -19,8 +19,12 @@ class TeamFlowFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         val title = message.notification?.title ?: return
         val body = message.notification?.body ?: return
-        val notifId = if (message.notification?.tag != null) MATCH_EVENT_NOTIFICATION_ID
-                      else notificationIdCounter.getAndIncrement()
+        val notifId =
+            if (message.notification?.tag != null) {
+                MATCH_EVENT_NOTIFICATION_ID
+            } else {
+                notificationIdCounter.getAndIncrement()
+            }
         showNotification(title, body, notifId)
     }
 

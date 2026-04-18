@@ -168,22 +168,24 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
                 NotificationSwitchItem(
                     title = stringResource(R.string.settings_notifications_match_events),
-                    subtitle = when (notificationPreferences.matchEventsState) {
-                        com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.MIXED ->
-                            stringResource(R.string.settings_notifications_mixed)
-                        else -> stringResource(R.string.settings_notifications_applies_all_teams)
-                    },
+                    subtitle =
+                        when (notificationPreferences.matchEventsState) {
+                            com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.MIXED ->
+                                stringResource(R.string.settings_notifications_mixed)
+                            else -> stringResource(R.string.settings_notifications_applies_all_teams)
+                        },
                     checked = notificationPreferences.matchEventsState == com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.ALL_ON,
                     onCheckedChange = { viewModel.updateGlobalMatchEvents(it) },
                 )
                 Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
                 NotificationSwitchItem(
                     title = stringResource(R.string.settings_notifications_goals),
-                    subtitle = when (notificationPreferences.goalsState) {
-                        com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.MIXED ->
-                            stringResource(R.string.settings_notifications_mixed)
-                        else -> stringResource(R.string.settings_notifications_applies_all_teams)
-                    },
+                    subtitle =
+                        when (notificationPreferences.goalsState) {
+                            com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.MIXED ->
+                                stringResource(R.string.settings_notifications_mixed)
+                            else -> stringResource(R.string.settings_notifications_applies_all_teams)
+                        },
                     checked = notificationPreferences.goalsState == com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.ALL_ON,
                     onCheckedChange = { viewModel.updateGlobalGoals(it) },
                 )

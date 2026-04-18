@@ -25,19 +25,21 @@ class TeamFlowManagerApplication : Application(), ImageLoaderFactory {
 
     private fun createNotificationChannels() {
         val notificationManager = getSystemService(NotificationManager::class.java)
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-        val channel = NotificationChannel(
-            PUSH_CHANNEL_ID,
-            "Notificaciones del club",
-            NotificationManager.IMPORTANCE_HIGH,
-        ).apply {
-            description = "Notificaciones de eventos de partido y club"
-            setSound(Settings.System.DEFAULT_NOTIFICATION_URI, audioAttributes)
-            enableVibration(true)
-        }
+        val audioAttributes =
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+        val channel =
+            NotificationChannel(
+                PUSH_CHANNEL_ID,
+                "Notificaciones del club",
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = "Notificaciones de eventos de partido y club"
+                setSound(Settings.System.DEFAULT_NOTIFICATION_URI, audioAttributes)
+                enableVibration(true)
+            }
         notificationManager.createNotificationChannel(channel)
     }
 

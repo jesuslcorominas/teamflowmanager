@@ -85,11 +85,12 @@ class SettingsViewModel(
             val clubRemoteId = clubMember.clubRemoteId ?: return@launch
 
             getNotificationPreferences(clubRemoteId).collect { prefs ->
-                _notificationPreferences.value = NotificationPreferencesState(
-                    matchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
-                    goalsState = prefs.globalStateFor(NotificationEventType.GOALS),
-                    clubId = clubRemoteId,
-                )
+                _notificationPreferences.value =
+                    NotificationPreferencesState(
+                        matchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
+                        goalsState = prefs.globalStateFor(NotificationEventType.GOALS),
+                        clubId = clubRemoteId,
+                    )
             }
         }
     }

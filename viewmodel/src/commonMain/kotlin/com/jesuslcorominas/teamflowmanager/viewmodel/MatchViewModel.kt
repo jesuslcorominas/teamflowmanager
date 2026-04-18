@@ -599,9 +599,13 @@ class MatchViewModel(
         }
     }
 
-    private fun minuteOfPlay(match: Match, currentTimeMs: Long): String? {
-        val currentPeriod = match.periods.firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
-            ?: return null
+    private fun minuteOfPlay(
+        match: Match,
+        currentTimeMs: Long,
+    ): String? {
+        val currentPeriod =
+            match.periods.firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+                ?: return null
         val periodDurationMs = currentPeriod.periodDuration
         val periodDurationMin = (periodDurationMs / 60_000L).toInt()
         val completedMin = (currentPeriod.periodNumber - 1) * periodDurationMin
@@ -621,8 +625,9 @@ class MatchViewModel(
                 val team = teamFlow.value ?: return@runCatching
                 val teamRemoteId = team.remoteId ?: return@runCatching
                 val clubRemoteId = team.clubRemoteId ?: return@runCatching
-                val matchId = (_uiState.value as? MatchUiState.Success)?.match?.id?.toString()
-                    ?: return@runCatching
+                val matchId =
+                    (_uiState.value as? MatchUiState.Success)?.match?.id?.toString()
+                        ?: return@runCatching
                 val event = buildEvent() ?: return@runCatching
                 notifyPresidentMatchEvent(event, matchId, teamRemoteId, clubRemoteId)
             }

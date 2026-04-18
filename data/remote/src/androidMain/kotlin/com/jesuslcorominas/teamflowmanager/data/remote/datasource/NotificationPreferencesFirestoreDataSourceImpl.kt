@@ -79,7 +79,6 @@ class NotificationPreferencesFirestoreDataSourceImpl(
             document(clubId, userId)
                 .set(mapOf(fieldName to enabled), com.google.firebase.firestore.SetOptions.merge())
                 .await()
-
         } catch (e: Exception) {
             Log.e(TAG, "Error updating global preference for userId=$userId clubId=$clubId", e)
             throw e
