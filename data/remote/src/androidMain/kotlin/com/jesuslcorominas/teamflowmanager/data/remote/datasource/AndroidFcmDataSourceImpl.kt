@@ -73,14 +73,12 @@ internal class AndroidFcmDataSourceImpl(
             }
     }
 
-    override suspend fun getTokensByUserId(userId: String): List<String> {
-        val snapshot =
-            firestore.collection(COLLECTION)
-                .whereEqualTo("userId", userId)
-                .get()
-                .await()
-        return snapshot.documents.mapNotNull { it.getString("token") }
-    }
+    override suspend fun getTokensByUserId(userId: String): List<String> =
+        firestore.collection(COLLECTION)
+            .whereEqualTo("userId", userId)
+            .get()
+            .await()
+            .documents.mapNotNull { it.getString("token") }
 
     override suspend fun sendNotification(
         token: String,

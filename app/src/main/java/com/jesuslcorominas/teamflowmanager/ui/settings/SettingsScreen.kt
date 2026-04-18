@@ -22,6 +22,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,6 +57,7 @@ fun SettingsScreen(
     val currentUser by viewModel.currentUser.collectAsState()
     val signOutComplete by viewModel.signOutComplete.collectAsState()
     val roleSelectorState by viewModel.roleSelectorState.collectAsState()
+    val notificationPreferences by viewModel.notificationPreferences.collectAsState()
     var showSignOutDialog by remember { mutableStateOf(false) }
 
     // Handle sign out complete
@@ -150,6 +152,45 @@ fun SettingsScreen(
                 )
             }
 
+            // Notification preferences — visible for any president-view club member
+            if (roleSelectorState.activeRole == com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole.President &&
+                notificationPreferences.clubId.isNotEmpty()
+            ) {
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+                Text(
+                    text = stringResource(R.string.settings_notifications_section),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
+                )
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+                NotificationSwitchItem(
+                    title = stringResource(R.string.settings_notifications_match_events),
+                    subtitle =
+                        when (notificationPreferences.matchEventsState) {
+                            com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.MIXED ->
+                                stringResource(R.string.settings_notifications_mixed)
+                            else -> stringResource(R.string.settings_notifications_applies_all_teams)
+                        },
+                    checked = notificationPreferences.matchEventsState == com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.ALL_ON,
+                    onCheckedChange = { viewModel.updateGlobalMatchEvents(it) },
+                )
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+                NotificationSwitchItem(
+                    title = stringResource(R.string.settings_notifications_goals),
+                    subtitle =
+                        when (notificationPreferences.goalsState) {
+                            com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.MIXED ->
+                                stringResource(R.string.settings_notifications_mixed)
+                            else -> stringResource(R.string.settings_notifications_applies_all_teams)
+                        },
+                    checked = notificationPreferences.goalsState == com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState.ALL_ON,
+                    onCheckedChange = { viewModel.updateGlobalGoals(it) },
+                )
+            }
+
             Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
         }
     }
@@ -215,5 +256,27 @@ private fun UserAccountItem(
             contentDescription = stringResource(R.string.sign_out),
             tint = MaterialTheme.colorScheme.error,
         )
+    }
+}
+
+@Composable
+private fun NotificationSwitchItem(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = TFMSpacing.spacing02, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

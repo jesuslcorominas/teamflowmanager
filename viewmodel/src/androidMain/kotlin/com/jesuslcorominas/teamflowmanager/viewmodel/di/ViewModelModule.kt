@@ -180,6 +180,8 @@ val viewModelModule =
                 timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
+                notifyPresidentMatchEvent = get(),
+                getTeamUseCase = get(),
             )
         }
         viewModel {
@@ -240,6 +242,8 @@ val viewModelModule =
                 getUserClubMembership = get(),
                 getActiveViewRole = get(),
                 setActiveViewRole = get(),
+                getNotificationPreferences = get(),
+                updateGlobalNotificationPreference = get(),
             )
         }
 
@@ -249,6 +253,9 @@ val viewModelModule =
                 getTeamById = get(),
                 getPlayersByTeam = get(),
                 getMatchesByTeam = get(),
+                getNotificationPreferences = get(),
+                updateTeamNotificationPreference = get(),
+                getUserClubMembership = get(),
             )
         }
 

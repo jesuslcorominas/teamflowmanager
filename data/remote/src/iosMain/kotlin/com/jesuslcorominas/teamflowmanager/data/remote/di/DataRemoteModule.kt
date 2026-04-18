@@ -12,6 +12,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.ImageStorageData
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPermissionDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPreferencesDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
@@ -32,6 +33,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestore
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchOperationFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NoOpDynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NoOpImageStorageDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NotificationPreferencesStubDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitutionFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFirestoreDataSourceImpl
@@ -87,4 +89,5 @@ actual val dataRemoteModule: Module =
         singleOf(::IosNotificationPermissionDataSourceImpl) bind NotificationPermissionDataSource::class
         singleOf(::IosFcmSendNotificationDataSourceImpl) bind FcmSendNotificationDataSource::class
         single<PresidentNotificationDataSource> { PresidentNotificationDataSourceStub() }
+        singleOf(::NotificationPreferencesStubDataSourceImpl) bind NotificationPreferencesDataSource::class
     }

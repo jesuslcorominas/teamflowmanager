@@ -362,6 +362,11 @@
     <!-- Settings Strings -->
     <string name="settings_title">Settings</string>
     <string name="settings">Settings</string>
+    <string name="settings_notifications_section">Notificaciones</string>
+    <string name="settings_notifications_match_events">Eventos de partido</string>
+    <string name="settings_notifications_goals">Goles</string>
+    <string name="settings_notifications_applies_all_teams">Se aplica a todos los equipos del club</string>
+    <string name="settings_notifications_mixed">Configuración mixta por equipo</string>
 
     <!-- Club Settings -->
     <string name="nav_club_settings">Club</string>
@@ -423,6 +428,12 @@
     <string name="president_team_stats_goals_scored">Goals scored</string>
     <string name="president_team_stats_goals_conceded">Goals conceded</string>
     <string name="president_team_stats_squad_size">Squad size</string>
+    <string name="president_team_detail_notifications_tab">Notificaciones</string>
+    <string name="president_notifications_match_events">Eventos de partido</string>
+    <string name="president_notifications_goals">Goles</string>
+    <string name="president_notifications_global_on">Configuración global: Activado</string>
+    <string name="president_notifications_global_off">Configuración global: Desactivado</string>
+    <string name="president_notifications_global_mixed">Configuración mixta por equipo</string>
 
     <!-- Expel Member -->
     <string name="expel_member_dialog_title">Expel member</string>

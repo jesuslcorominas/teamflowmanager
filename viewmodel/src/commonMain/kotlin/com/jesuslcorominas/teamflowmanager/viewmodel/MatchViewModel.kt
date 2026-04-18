@@ -6,14 +6,8 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
-import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
-import com.jesuslcorominas.teamflowmanager.domain.model.Player
-import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
-import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
-import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
-import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
@@ -23,6 +17,9 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.MatchEventNotification
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
@@ -35,11 +32,13 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MatchViewModel(
@@ -66,7 +65,12 @@ class MatchViewModel(
     private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
+    private val notifyPresidentMatchEvent: NotifyPresidentMatchEventUseCase,
+    private val getTeamUseCase: GetTeamUseCase,
 ) : ViewModel() {
+    private val teamFlow = getTeamUseCase().stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    private val notificationCoordinator = MatchNotificationCoordinator(notifyPresidentMatchEvent)
+
     private val _uiState = MutableStateFlow<MatchUiState>(MatchUiState.Loading)
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
 
@@ -122,6 +126,12 @@ class MatchViewModel(
                     if (it.startingLineupIds.isNotEmpty()) {
                         startPlayerTimersBatchUseCase(it.id, it.startingLineupIds, currentTime)
                     }
+
+                    notificationCoordinator.fireNotification(
+                        scope = viewModelScope,
+                        team = teamFlow.value,
+                        matchId = it.id.toString(),
+                    ) { MatchEventNotification.Start(it.teamName, it.opponent) }
                 }
             }
         }
@@ -169,6 +179,15 @@ class MatchViewModel(
                             AnalyticsParam.DURATION_MINUTES to (_currentTime.value / 60000).toString(),
                         ),
                     )
+
+                    val finishedMatch = currentState.match
+                    notificationCoordinator.fireNotification(
+                        scope = viewModelScope,
+                        team = teamFlow.value,
+                        matchId = finishedMatch.id.toString(),
+                    ) {
+                        MatchEventNotification.End(finishedMatch.teamName, finishedMatch.opponent, finishedMatch.goals, finishedMatch.opponentGoals)
+                    }
                 }
 
                 _showPauseConfirmation.value = null
@@ -503,6 +522,25 @@ class MatchViewModel(
                         ).filter { it.value.isNotBlank() },
                     )
 
+                    val goalMatchId = currentState.match.id
+                    val snapshotTime = _currentTime.value
+                    notificationCoordinator.fireNotification(
+                        scope = viewModelScope,
+                        team = teamFlow.value,
+                        matchId = goalMatchId.toString(),
+                    ) {
+                        val updatedMatch = getMatchById(goalMatchId).first() ?: return@fireNotification null
+                        val minuteOfPlay = notificationCoordinator.minuteOfPlay(updatedMatch, snapshotTime)
+                        MatchEventNotification.Goal(
+                            teamName = updatedMatch.teamName,
+                            opponentName = updatedMatch.opponent,
+                            teamGoals = updatedMatch.goals,
+                            opponentGoals = updatedMatch.opponentGoals,
+                            minuteOfPlay = minuteOfPlay,
+                            isOpponentGoal = false,
+                        )
+                    }
+
                     _showGoalScorerDialog.value = false
                 }
             } catch (e: Exception) {
@@ -542,6 +580,25 @@ class MatchViewModel(
                             AnalyticsParam.TEAM_TYPE to "opponent",
                         ),
                     )
+
+                    val goalMatchId = currentState.match.id
+                    val snapshotTime = _currentTime.value
+                    notificationCoordinator.fireNotification(
+                        scope = viewModelScope,
+                        team = teamFlow.value,
+                        matchId = goalMatchId.toString(),
+                    ) {
+                        val updatedMatch = getMatchById(goalMatchId).first() ?: return@fireNotification null
+                        val minuteOfPlay = notificationCoordinator.minuteOfPlay(updatedMatch, snapshotTime)
+                        MatchEventNotification.Goal(
+                            teamName = updatedMatch.teamName,
+                            opponentName = updatedMatch.opponent,
+                            teamGoals = updatedMatch.goals,
+                            opponentGoals = updatedMatch.opponentGoals,
+                            minuteOfPlay = minuteOfPlay,
+                            isOpponentGoal = true,
+                        )
+                    }
 
                     _showOpponentGoalDialog.value = false
                 }
@@ -658,51 +715,11 @@ class MatchViewModel(
         }
     }
 
-    private fun List<Player>.toPlayerItems(
-        playerTimes: List<PlayerTime>,
-        currentTime: Long,
-        captainId: Long,
-    ): List<PlayerTimeItem> =
-        this.map { player ->
-            val playerTime = playerTimes.find { it.playerId == player.id }
-            val displayTime =
-                if (playerTime != null) {
-                    calculateCurrentTime(
-                        playerTime.elapsedTimeMillis,
-                        playerTime.isRunning,
-                        playerTime.lastStartTimeMillis,
-                        currentTime,
-                    )
-                } else {
-                    0L
-                }
-            PlayerTimeItem(
-                player = player,
-                timeMillis = displayTime,
-                isRunning = playerTime?.isRunning ?: false,
-                isPaused = playerTime?.status == PlayerTimeStatus.PAUSED,
-                isCaptain = player.id == captainId,
-            )
-        }
-
     private fun observeTime() {
         viewModelScope.launch {
             timeTicker.timeFlow.collect { now ->
                 _currentTime.value = now
             }
-        }
-    }
-
-    private fun calculateCurrentTime(
-        elapsedTimeMillis: Long,
-        isRunning: Boolean,
-        lastStartTimeMillis: Long?,
-        currentTimeMillis: Long,
-    ): Long {
-        return if (isRunning && lastStartTimeMillis != null) {
-            (elapsedTimeMillis + (currentTimeMillis - lastStartTimeMillis)).coerceAtLeast(0L)
-        } else {
-            elapsedTimeMillis.coerceAtLeast(0L)
         }
     }
 
@@ -745,45 +762,3 @@ class MatchViewModel(
 
     companion object
 }
-
-data class PlayerTimeItem(
-    val player: Player,
-    val timeMillis: Long,
-    val isRunning: Boolean,
-    val isPaused: Boolean,
-    val substitutionCount: Int = 0,
-    val isCaptain: Boolean = false,
-)
-
-sealed class MatchUiState {
-    data object Loading : MatchUiState()
-
-    data object NoMatch : MatchUiState()
-
-    data class Success(
-        val match: Match,
-        val currentTime: Long,
-        val playerTimes: List<PlayerTimeItem>,
-        val timelineEvents: List<TimelineEvent> = emptyList(),
-    ) : MatchUiState()
-
-    data class Finished(
-        val match: Match,
-        val currentTime: Long,
-        val playerTimes: List<PlayerTimeItem>,
-        val substitutions: List<SubstitutionItem>,
-        val timelineEvents: List<TimelineEvent> = emptyList(),
-        val scoreEvolution: List<ScorePoint> = emptyList(),
-        val playerActivity: List<PlayerActivityInterval> = emptyList(),
-    ) : MatchUiState()
-}
-
-data class SubstitutionItem(
-    val playerOut: Player,
-    val playerIn: Player,
-    val matchElapsedTimeMillis: Long,
-)
-
-data class EndPeriodState(
-    val isBreak: Boolean,
-)

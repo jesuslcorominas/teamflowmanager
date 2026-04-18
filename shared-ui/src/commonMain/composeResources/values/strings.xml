@@ -361,4 +361,11 @@
     <string name="expel_member_dialog_message">Are you sure you want to expel %1$s from the club? This action cannot be undone.</string>
     <string name="expel_member_confirm">Expel</string>
     <string name="expel_member_cancel">Cancel</string>
+
+    <!-- Notification Preferences (President) -->
+    <string name="settings_notifications_section">Notifications</string>
+    <string name="settings_notifications_match_events">Match events</string>
+    <string name="settings_notifications_goals">Goals</string>
+    <string name="settings_notifications_applies_all_teams">Applies to all club teams</string>
+    <string name="settings_notifications_mixed">Mixed setting per team</string>
 </resources>

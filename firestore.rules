@@ -38,6 +38,11 @@ service cloud.firestore {
              ('Presidente' in get(memberPath).data.roles);
     }
 
+    function isClubMember(clubId) {
+      return clubId != null &&
+             exists(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId));
+    }
+
     // =======================================================================
     // CLUBS AND CLUB MEMBERS
     // =======================================================================
@@ -57,7 +62,8 @@ service cloud.firestore {
         resource == null ||
         resource.data.userId == request.auth.uid ||
         isClubOwner(resource.data.clubId) ||
-        isPresidenteOfClub(resource.data.clubId)
+        isPresidenteOfClub(resource.data.clubId) ||
+        isClubMember(resource.data.clubId)
       );
 
       allow create: if isAuthenticated() && (
@@ -191,17 +197,30 @@ service cloud.firestore {
     }
 
     // =======================================================================
+    // NOTIFICATION PREFERENCES
+    // =======================================================================
+
+    match /clubs/{clubId}/notificationPreferences/{userId} {
+      // Any club member can read preferences.
+      // Coaches need to read president preferences before dispatching match-event notifications.
+      allow read: if isAuthenticated() && isClubMember(clubId);
+
+      // Only the document owner can write their own preferences.
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // =======================================================================
     // PRESIDENT NOTIFICATIONS
     // =======================================================================
 
     match /presidentNotifications/{clubId}/notifications/{notifId} {
-      // Any club member can create a notification for the president
-      // (e.g. a new user notifying the president they are waiting for team assignment)
-      allow create: if isAuthenticated() &&
+      // Any club member can create or overwrite a notification (e.g. goal events overwrite
+      // the same match document that was created on match start)
+      allow create, update: if isAuthenticated() &&
         exists(/databases/$(database)/documents/clubMembers/$(request.auth.uid + '_' + clubId));
 
-      // Only the president can read, update (mark read/unread) and delete
-      allow read, update, delete: if isAuthenticated() && isPresidenteOfClub(clubId);
+      // Only the president can read and delete
+      allow read, delete: if isAuthenticated() && isPresidenteOfClub(clubId);
     }
 
     // =======================================================================

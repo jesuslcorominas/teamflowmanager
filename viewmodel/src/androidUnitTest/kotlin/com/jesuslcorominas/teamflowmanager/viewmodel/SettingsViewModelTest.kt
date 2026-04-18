@@ -9,10 +9,12 @@ import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateGlobalNotificationPreferenceUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -44,6 +46,8 @@ class SettingsViewModelTest {
     private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
     private lateinit var getActiveViewRoleUseCase: GetActiveViewRoleUseCase
     private lateinit var setActiveViewRoleUseCase: SetActiveViewRoleUseCase
+    private lateinit var getNotificationPreferencesUseCase: GetNotificationPreferencesUseCase
+    private lateinit var updateGlobalNotificationPreferenceUseCase: UpdateGlobalNotificationPreferenceUseCase
     private lateinit var viewModel: SettingsViewModel
 
     private val testUser = User(
@@ -64,6 +68,8 @@ class SettingsViewModelTest {
         getUserClubMembershipUseCase = mockk()
         getActiveViewRoleUseCase = mockk()
         setActiveViewRoleUseCase = mockk(relaxed = true)
+        getNotificationPreferencesUseCase = mockk(relaxed = true)
+        updateGlobalNotificationPreferenceUseCase = mockk(relaxed = true)
 
         every { getCurrentUserUseCase() } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(null)
@@ -79,6 +85,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
     }
 
@@ -129,6 +137,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
         advanceUntilIdle()
         coEvery { signOutUseCase() } returns Unit
@@ -174,6 +184,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
         advanceUntilIdle()
 
@@ -204,6 +216,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
         advanceUntilIdle()
 
@@ -245,6 +259,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
         advanceUntilIdle()
 
