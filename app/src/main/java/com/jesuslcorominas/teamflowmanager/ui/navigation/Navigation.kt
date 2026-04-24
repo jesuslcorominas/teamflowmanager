@@ -258,11 +258,12 @@ fun Navigation(
             val context = LocalContext.current
             AnalysisScreen(
                 onShareFile = { uri ->
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "application/pdf"
-                        putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
+                    val intent =
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "application/pdf"
+                            putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
                     context.startActivity(Intent.createChooser(intent, null))
                 },
             )
