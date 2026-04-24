@@ -32,6 +32,8 @@ sealed class Route(
                 AcceptTeamInvitation,
                 ClubSettings,
                 PresidentNotifications,
+                PresidentTeamDetail,
+                PendingTeamAssignment,
             )
         }
 
@@ -172,6 +174,17 @@ sealed class Route(
         showBottomBar = true,
         showSettingsButton = true,
     )
+
+    data object PresidentTeamDetail : Route(path = "president_team_detail", canGoBack = true) {
+        const val ARG_TEAM_ID = "teamId"
+        private const val PATH = "president_team_detail"
+
+        const val FULL_ROUTE = "$PATH/{$ARG_TEAM_ID}"
+
+        fun createRoute(teamId: String): String = "$PATH/$teamId"
+    }
+
+    data object PendingTeamAssignment : Route(path = "pending_team_assignment", showTopBar = false)
 
     data object AcceptTeamInvitation : Route(path = "accept_team_invitation", showTopBar = false) {
         const val ARG_TEAM_ID = "teamId"

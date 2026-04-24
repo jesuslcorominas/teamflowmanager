@@ -45,7 +45,7 @@ private val FabContentGap = 16.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(
+fun AndroidAppShell(
     pendingNavigation: PendingNavigation? = null,
     viewModel: MainViewModel = koinViewModel(),
 ) {
