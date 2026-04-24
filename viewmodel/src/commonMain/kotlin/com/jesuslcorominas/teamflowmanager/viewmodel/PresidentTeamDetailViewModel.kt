@@ -106,7 +106,7 @@ class PresidentTeamDetailViewModel(
                 PresidentTeamDetailUiState.Ready(
                     team = team,
                     players = players,
-                    matches = matches.filter { !it.archived }.sortedByDescending { it.dateTime },
+                    matches = matches.sortedByDescending { it.dateTime },
                     stats = stats,
                 )
             }.collect { state ->

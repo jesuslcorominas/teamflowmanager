@@ -206,6 +206,9 @@ fun Navigation(
             PresidentTeamDetailScreen(
                 teamId = teamId,
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToMatch = { matchId ->
+                    navController.navigate(Route.Match.createRoute(matchId))
+                },
             )
         }
 

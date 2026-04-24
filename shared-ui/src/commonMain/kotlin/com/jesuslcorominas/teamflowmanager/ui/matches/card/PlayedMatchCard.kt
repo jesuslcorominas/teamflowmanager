@@ -36,6 +36,7 @@ fun PlayedMatchCard(
     match: Match,
     onNavigateToDetail: () -> Unit = {},
     onAction: () -> Unit = {},
+    showArchiveButton: Boolean = true,
 ) {
     AppCard(
         modifier =
@@ -77,14 +78,16 @@ fun PlayedMatchCard(
                     fontWeight = FontWeight.Bold,
                 )
 
-                IconButton(onClick = onAction) {
-                    Icon(
-                        imageVector = if (match.archived) Icons.Default.Unarchive else Icons.Default.Archive,
-                        contentDescription =
-                            stringResource(
-                                if (match.archived) Res.string.unarchive_match else Res.string.archive_match,
-                            ),
-                    )
+                if (showArchiveButton) {
+                    IconButton(onClick = onAction) {
+                        Icon(
+                            imageVector = if (match.archived) Icons.Default.Unarchive else Icons.Default.Archive,
+                            contentDescription =
+                                stringResource(
+                                    if (match.archived) Res.string.unarchive_match else Res.string.archive_match,
+                                ),
+                        )
+                    }
                 }
             }
         }

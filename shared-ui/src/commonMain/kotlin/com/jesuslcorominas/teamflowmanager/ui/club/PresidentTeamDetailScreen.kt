@@ -67,6 +67,7 @@ import teamflowmanager.shared_ui.generated.resources.summary_tab
 fun PresidentTeamDetailScreen(
     teamId: String,
     onNavigateBack: () -> Unit = {},
+    onNavigateToMatch: (Long) -> Unit = {},
     viewModel: PresidentTeamDetailViewModel = koinViewModel(parameters = { parametersOf(teamId) }),
 ) {
     TrackScreenView(screenName = ScreenName.PRESIDENT_TEAM_DETAIL, screenClass = "PresidentTeamDetailScreen")
@@ -123,7 +124,7 @@ fun PresidentTeamDetailScreen(
                 when (selectedTab) {
                     PresidentTeamTab.SUMMARY -> SummaryTab(state)
                     PresidentTeamTab.PLAYERS -> PlayersTab(state)
-                    PresidentTeamTab.MATCHES -> MatchesTab(state)
+                    PresidentTeamTab.MATCHES -> MatchesTab(state, onNavigateToMatch)
                     PresidentTeamTab.STATS -> StatsTab(state.stats)
                     PresidentTeamTab.NOTIFICATIONS -> {
                         val teamNotificationState by viewModel.teamNotificationState.collectAsState()
@@ -238,7 +239,10 @@ private fun PlayersTab(state: PresidentTeamDetailUiState.Ready) {
 }
 
 @Composable
-private fun MatchesTab(state: PresidentTeamDetailUiState.Ready) {
+private fun MatchesTab(
+    state: PresidentTeamDetailUiState.Ready,
+    onNavigateToMatch: (Long) -> Unit,
+) {
     if (state.matches.isEmpty()) {
         EmptyContent(stringResource(Res.string.president_team_detail_no_matches))
     } else {
@@ -249,7 +253,11 @@ private fun MatchesTab(state: PresidentTeamDetailUiState.Ready) {
         ) {
             items(state.matches, key = { it.id }) { match ->
                 if (match.status == MatchStatus.FINISHED) {
-                    PlayedMatchCard(match = match)
+                    PlayedMatchCard(
+                        match = match,
+                        onNavigateToDetail = { onNavigateToMatch(match.id) },
+                        showArchiveButton = false,
+                    )
                 } else {
                     ScheduledMatchCard(match = match)
                 }
