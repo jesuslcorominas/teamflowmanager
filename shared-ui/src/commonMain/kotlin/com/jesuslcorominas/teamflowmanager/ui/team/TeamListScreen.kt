@@ -41,8 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
-import com.jesuslcorominas.teamflowmanager.domain.model.Match
-import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
@@ -59,7 +57,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.assign_coach_button
-import teamflowmanager.shared_ui.generated.resources.cancel
 import teamflowmanager.shared_ui.generated.resources.coach_email
 import teamflowmanager.shared_ui.generated.resources.coach_name
 import teamflowmanager.shared_ui.generated.resources.delegate_name
@@ -491,9 +488,18 @@ private fun formatMatchDate(epochMillis: Long): String {
     val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
     val month =
         when (local.monthNumber) {
-            1 -> "Jan"; 2 -> "Feb"; 3 -> "Mar"; 4 -> "Apr"
-            5 -> "May"; 6 -> "Jun"; 7 -> "Jul"; 8 -> "Aug"
-            9 -> "Sep"; 10 -> "Oct"; 11 -> "Nov"; else -> "Dec"
+            1 -> "Jan"
+            2 -> "Feb"
+            3 -> "Mar"
+            4 -> "Apr"
+            5 -> "May"
+            6 -> "Jun"
+            7 -> "Jul"
+            8 -> "Aug"
+            9 -> "Sep"
+            10 -> "Oct"
+            11 -> "Nov"
+            else -> "Dec"
         }
     return "${local.dayOfMonth} $month"
 }
