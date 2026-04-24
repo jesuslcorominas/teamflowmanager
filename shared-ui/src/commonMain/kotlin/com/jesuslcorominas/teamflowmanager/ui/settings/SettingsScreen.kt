@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -46,6 +47,7 @@ import teamflowmanager.shared_ui.generated.resources.settings_notifications_goal
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_match_events
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_mixed
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_section
+import teamflowmanager.shared_ui.generated.resources.settings_role_coach
 import teamflowmanager.shared_ui.generated.resources.sign_out
 import teamflowmanager.shared_ui.generated.resources.sign_out_message
 import teamflowmanager.shared_ui.generated.resources.sign_out_title
@@ -132,6 +134,17 @@ fun SettingsScreen(
                 UserAccountItem(
                     user = user,
                     onClick = { showSignOutDialog = true },
+                )
+            }
+
+            if (roleSelectorState.showRoleSelector) {
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                RoleSelectorSection(
+                    activeRole = roleSelectorState.activeRole,
+                    enabled = roleSelectorState.isRoleSelectorEnabled,
+                    onRoleSelected = { viewModel.onRoleSelected(it) },
                 )
             }
 
@@ -231,5 +244,42 @@ private fun UserAccountItem(
             contentDescription = stringResource(Res.string.sign_out),
             tint = MaterialTheme.colorScheme.error,
         )
+    }
+}
+
+@Composable
+private fun RoleSelectorSection(
+    activeRole: ActiveViewRole,
+    enabled: Boolean,
+    onRoleSelected: (ActiveViewRole) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TFMSpacing.spacing02),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(Res.string.settings_role_coach),
+                style = MaterialTheme.typography.bodyLarge,
+                color =
+                    if (enabled) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    },
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = activeRole == ActiveViewRole.Coach,
+                onCheckedChange = { isCoach ->
+                    onRoleSelected(if (isCoach) ActiveViewRole.Coach else ActiveViewRole.President)
+                },
+                enabled = enabled,
+            )
+        }
     }
 }

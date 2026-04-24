@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
@@ -56,8 +58,8 @@ import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.cancel
 import teamflowmanager.shared_ui.generated.resources.club_name_label
+import teamflowmanager.shared_ui.generated.resources.club_settings_edit_title
 import teamflowmanager.shared_ui.generated.resources.club_settings_saved
-import teamflowmanager.shared_ui.generated.resources.club_settings_title
 import teamflowmanager.shared_ui.generated.resources.copy_invitation_code
 import teamflowmanager.shared_ui.generated.resources.discard
 import teamflowmanager.shared_ui.generated.resources.discard_message
@@ -71,6 +73,9 @@ import teamflowmanager.shared_ui.generated.resources.regenerate_invitation_code
 import teamflowmanager.shared_ui.generated.resources.save
 import teamflowmanager.shared_ui.generated.resources.share_invitation_code
 import teamflowmanager.shared_ui.generated.resources.unsaved_changes_title
+
+private val FabHeight = 56.dp
+private val FabBarGap = 16.dp
 
 @Composable
 fun ClubSettingsScreen(
@@ -86,10 +91,9 @@ fun ClubSettingsScreen(
 
     val savedMessage = stringResource(Res.string.club_settings_saved)
     val copiedMessage = stringResource(Res.string.invitation_code_copied)
-
     var codeCopied by remember { mutableStateOf(false) }
 
-    AppBackHandler(enabled = uiState.isEditing) {
+    AppBackHandler(enabled = uiState.isEditing && !uiState.showExitDialog) {
         viewModel.onCancelEdit()
     }
 
@@ -113,11 +117,11 @@ fun ClubSettingsScreen(
 
     if (uiState.showExitDialog) {
         AlertDialog(
-            onDismissRequest = { viewModel.onDismissExitDialog() },
+            onDismissRequest = viewModel::onDismissExitDialog,
             title = { Text(stringResource(Res.string.unsaved_changes_title)) },
             text = { Text(stringResource(Res.string.discard_message)) },
             confirmButton = {
-                TextButton(onClick = { viewModel.onConfirmExit() }) {
+                TextButton(onClick = viewModel::onConfirmExit) {
                     Text(
                         text = stringResource(Res.string.discard),
                         color = MaterialTheme.colorScheme.error,
@@ -125,134 +129,222 @@ fun ClubSettingsScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.onDismissExitDialog() }) {
+                TextButton(onClick = viewModel::onDismissExitDialog) {
                     Text(stringResource(Res.string.cancel))
                 }
             },
         )
     }
 
-    if (uiState.loading) {
-        Loading()
-        return
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(
-                            start = TFMSpacing.spacing04,
-                            end = TFMSpacing.spacing04,
-                            top = TFMSpacing.spacing04,
-                            bottom = contentBottomPadding + TFMSpacing.spacing04,
-                        ),
-            ) {
-                Text(
-                    text = stringResource(Res.string.club_settings_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
-
-                OutlinedTextField(
-                    value = uiState.name,
-                    onValueChange = viewModel::onNameChange,
-                    label = { Text(stringResource(Res.string.club_name_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    readOnly = !uiState.isEditing,
-                    enabled = uiState.isEditing && !uiState.saving,
-                    keyboardOptions =
-                        KeyboardOptions(
-                            imeAction = ImeAction.Next,
-                            capitalization = KeyboardCapitalization.Words,
-                        ),
-                )
-
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
-
-                OutlinedTextField(
-                    value = uiState.homeGround,
-                    onValueChange = viewModel::onHomeGroundChange,
-                    label = { Text(stringResource(Res.string.home_ground_label)) },
-                    placeholder = { Text(stringResource(Res.string.home_ground_placeholder)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    readOnly = !uiState.isEditing,
-                    enabled = uiState.isEditing && !uiState.saving,
-                    keyboardOptions =
-                        KeyboardOptions(
-                            imeAction = ImeAction.Done,
-                            capitalization = KeyboardCapitalization.Words,
-                        ),
-                )
-
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
-
-                InvitationCodeSection(
-                    code = uiState.invitationCode,
-                    regenerating = uiState.regenerating,
-                    onCopy = {
-                        clipboard.setText(AnnotatedString(uiState.invitationCode))
-                        codeCopied = true
-                    },
-                    onShare = { onShareCode(uiState.invitationCode) },
-                    onRegenerate = { viewModel.onRegenerateCode() },
-                )
-
-                if (uiState.isEditing) {
-                    Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
-
-                    Button(
-                        onClick = viewModel::onSave,
-                        enabled = !uiState.saving && uiState.name.isNotBlank(),
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                        shape = MaterialTheme.shapes.small,
-                    ) {
-                        if (uiState.saving) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.height(24.dp),
-                            )
-                        } else {
-                            Text(
-                                text = stringResource(Res.string.save),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Medium,
-                            )
-                        }
-                    }
-                }
-            }
-
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(bottom = TFMSpacing.spacing02),
-            )
+    val showFab = !uiState.loading && !uiState.isEditing
+    val detailBottomPadding =
+        if (showFab) {
+            contentBottomPadding + FabBarGap + FabHeight + FabBarGap
+        } else {
+            contentBottomPadding
         }
 
-        if (!uiState.isEditing) {
+    val onCopyCode = {
+        clipboard.setText(AnnotatedString(uiState.invitationCode))
+        codeCopied = true
+    }
+    val onRegenerate = viewModel::onRegenerateCode
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            when {
+                uiState.loading -> Loading()
+                uiState.isEditing ->
+                    ClubEditForm(
+                        uiState = uiState,
+                        onNameChange = viewModel::onNameChange,
+                        onHomeGroundChange = viewModel::onHomeGroundChange,
+                        onSave = viewModel::onSave,
+                        contentBottomPadding = contentBottomPadding,
+                        onCopyCode = onCopyCode,
+                        onShareCode = { onShareCode(uiState.invitationCode) },
+                        onRegenerateCode = onRegenerate,
+                    )
+
+                else ->
+                    ClubDetailContent(
+                        uiState = uiState,
+                        contentBottomPadding = detailBottomPadding,
+                        onCopyCode = onCopyCode,
+                        onShareCode = { onShareCode(uiState.invitationCode) },
+                        onRegenerateCode = onRegenerate,
+                    )
+            }
+        }
+
+        if (showFab) {
             FloatingActionButton(
-                onClick = { viewModel.onEnterEdit() },
+                onClick = viewModel::onEnterEdit,
                 modifier =
                     Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(
-                            end = TFMSpacing.spacing04,
-                            bottom = contentBottomPadding + TFMSpacing.spacing04,
-                        ),
+                        .padding(end = TFMSpacing.spacing04, bottom = contentBottomPadding + FabBarGap),
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = null,
+                    contentDescription = stringResource(Res.string.club_settings_edit_title),
+                )
+            }
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = contentBottomPadding),
+        )
+    }
+}
+
+@Composable
+private fun ClubDetailContent(
+    uiState: ClubSettingsViewModel.UiState,
+    contentBottomPadding: Dp,
+    onCopyCode: () -> Unit,
+    onShareCode: () -> Unit,
+    onRegenerateCode: () -> Unit,
+) {
+    var showRegenerateDialog by remember { mutableStateOf(false) }
+
+    if (showRegenerateDialog) {
+        RegenerateConfirmDialog(
+            onConfirm = {
+                showRegenerateDialog = false
+                onRegenerateCode()
+            },
+            onDismiss = { showRegenerateDialog = false },
+        )
+    }
+
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(bottom = contentBottomPadding)
+                .padding(TFMSpacing.spacing04),
+    ) {
+        InfoRow(
+            label = stringResource(Res.string.club_name_label),
+            value = uiState.name,
+        )
+
+        InfoRow(
+            label = stringResource(Res.string.home_ground_label),
+            value = uiState.homeGround.ifEmpty { "—" },
+        )
+
+        InvitationCodeSection(
+            code = uiState.invitationCode,
+            regenerating = uiState.regenerating,
+            onCopy = onCopyCode,
+            onShare = onShareCode,
+            onRegenerate = { showRegenerateDialog = true },
+        )
+    }
+}
+
+@Composable
+private fun ClubEditForm(
+    uiState: ClubSettingsViewModel.UiState,
+    onNameChange: (String) -> Unit,
+    onHomeGroundChange: (String) -> Unit,
+    onSave: () -> Unit,
+    contentBottomPadding: Dp,
+    onCopyCode: () -> Unit,
+    onShareCode: () -> Unit,
+    onRegenerateCode: () -> Unit,
+) {
+    var showRegenerateDialog by remember { mutableStateOf(false) }
+
+    if (showRegenerateDialog) {
+        RegenerateConfirmDialog(
+            onConfirm = {
+                showRegenerateDialog = false
+                onRegenerateCode()
+            },
+            onDismiss = { showRegenerateDialog = false },
+        )
+    }
+
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(bottom = contentBottomPadding)
+                .padding(TFMSpacing.spacing04)
+                .verticalScroll(rememberScrollState()),
+    ) {
+        OutlinedTextField(
+            value = uiState.name,
+            onValueChange = onNameChange,
+            label = { Text(stringResource(Res.string.club_name_label)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            enabled = !uiState.saving,
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
+        )
+
+        Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+
+        OutlinedTextField(
+            value = uiState.homeGround,
+            onValueChange = onHomeGroundChange,
+            label = { Text(stringResource(Res.string.home_ground_label)) },
+            placeholder = { Text(stringResource(Res.string.home_ground_placeholder)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            enabled = !uiState.saving,
+            keyboardOptions =
+                KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    capitalization = KeyboardCapitalization.Words,
+                ),
+        )
+
+        Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+
+        InvitationCodeSection(
+            code = uiState.invitationCode,
+            regenerating = uiState.regenerating,
+            onCopy = onCopyCode,
+            onShare = onShareCode,
+            onRegenerate = { showRegenerateDialog = true },
+        )
+
+        Spacer(modifier = Modifier.height(TFMSpacing.spacing07))
+
+        Button(
+            onClick = onSave,
+            enabled = !uiState.saving && uiState.name.isNotBlank(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            shape = MaterialTheme.shapes.small,
+        ) {
+            if (uiState.saving) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.height(24.dp),
+                )
+            } else {
+                Text(
+                    text = stringResource(Res.string.save),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
                 )
             }
         }
@@ -267,79 +359,101 @@ private fun InvitationCodeSection(
     onShare: () -> Unit,
     onRegenerate: () -> Unit,
 ) {
-    var showRegenerateDialog by remember { mutableStateOf(false) }
-
-    if (showRegenerateDialog) {
-        AlertDialog(
-            onDismissRequest = { showRegenerateDialog = false },
-            title = { Text(stringResource(Res.string.regenerate_code_confirm_title)) },
-            text = { Text(stringResource(Res.string.regenerate_code_confirm_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onRegenerate()
-                        showRegenerateDialog = false
-                    },
-                ) {
-                    Text(
-                        text = stringResource(Res.string.regenerate_invitation_code),
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRegenerateDialog = false }) {
-                    Text(stringResource(Res.string.cancel))
-                }
-            },
-        )
-    }
-
-    Column {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = TFMSpacing.spacing03, horizontal = TFMSpacing.spacing02),
+    ) {
         Text(
             text = stringResource(Res.string.invitation_code_label),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.padding(top = TFMSpacing.spacing01),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (regenerating) {
-                CircularProgressIndicator(modifier = Modifier.height(24.dp))
-            } else {
-                Text(
-                    text = code,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
+            Text(
+                text = code,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.Medium,
+            )
+            IconButton(onClick = onShare) {
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = stringResource(Res.string.share_invitation_code),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Row {
-                IconButton(onClick = onShare) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = stringResource(Res.string.share_invitation_code),
-                        tint = MaterialTheme.colorScheme.primary,
+            IconButton(onClick = onCopy) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = stringResource(Res.string.copy_invitation_code),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconButton(onClick = onRegenerate, enabled = !regenerating) {
+                if (regenerating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.height(20.dp),
+                        strokeWidth = 2.dp,
                     )
-                }
-                IconButton(onClick = onCopy) {
-                    Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = stringResource(Res.string.copy_invitation_code),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                IconButton(onClick = { showRegenerateDialog = true }) {
+                } else {
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = stringResource(Res.string.regenerate_invitation_code),
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun InfoRow(
+    label: String,
+    value: String,
+) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = TFMSpacing.spacing03, horizontal = TFMSpacing.spacing02),
+        verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
+private fun RegenerateConfirmDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.regenerate_code_confirm_title)) },
+        text = { Text(stringResource(Res.string.regenerate_code_confirm_message)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(Res.string.regenerate_invitation_code))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.cancel))
+            }
+        },
+    )
 }

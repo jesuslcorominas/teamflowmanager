@@ -81,6 +81,7 @@ fun MatchCreationWizardScreen(
                                 onDataChanged = { opponent, location, date, time, numberOfPeriods ->
                                     wizardViewModel.setGeneralData(opponent, location, date, time, numberOfPeriods)
                                 },
+                                homeGround = wizardViewModel.getHomeGround(),
                                 onNext = { wizardViewModel.goToNextStep() },
                                 onCancel = { wizardViewModel.requestBack(onNavigateBack) },
                                 modifier =

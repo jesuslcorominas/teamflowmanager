@@ -68,6 +68,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
+import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -702,6 +703,8 @@ private fun FinishedMatchState(
                     StatisticsTabContent(
                         scoreEvolution = state.scoreEvolution,
                         playerActivity = state.playerActivity,
+                        teamName = state.match.teamName,
+                        opponentName = state.match.opponent,
                     )
             }
         }
@@ -893,39 +896,37 @@ private fun SummaryTabContent(
 private fun StatisticsTabContent(
     scoreEvolution: List<ScorePoint>,
     playerActivity: List<PlayerActivityInterval>,
+    teamName: String,
+    opponentName: String,
 ) {
-    // Charts deferred to KMP-28 — show placeholder when data is available
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (scoreEvolution.isEmpty() && playerActivity.isEmpty()) {
+    if (scoreEvolution.isEmpty() && playerActivity.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
                 text = stringResource(Res.string.no_match_message),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        } else {
-            // Statistics summary: substitutions in a lazy column
-            LazyColumn(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = TFMSpacing.spacing04),
-                contentPadding =
-                    PaddingValues(
-                        top = TFMSpacing.spacing03,
-                        bottom = TFMSpacing.spacing04,
-                    ),
-                verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
-            ) {
-                item {
-                    Text(
-                        text = stringResource(Res.string.statistics_tab),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding =
+                PaddingValues(
+                    horizontal = TFMSpacing.spacing04,
+                    vertical = TFMSpacing.spacing03,
+                ),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+        ) {
+            item {
+                PlayerActivityChart(
+                    scoreEvolution = scoreEvolution,
+                    playerActivity = playerActivity,
+                    teamName = teamName,
+                    opponentName = opponentName,
+                )
             }
         }
     }
