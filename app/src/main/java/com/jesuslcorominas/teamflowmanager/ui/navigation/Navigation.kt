@@ -1,6 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.EnterTransition
@@ -37,7 +39,7 @@ import com.jesuslcorominas.teamflowmanager.ui.club.PresidentNotificationsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.PresidentTeamDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
-import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
@@ -253,7 +255,17 @@ fun Navigation(
         }
 
         composable(Route.Analysis.createRoute()) {
-            AnalysisScreen()
+            val context = LocalContext.current
+            AnalysisScreen(
+                onShareFile = { uri ->
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(intent, null))
+                },
+            )
         }
 
         composable(Route.Matches.createRoute()) {
@@ -323,6 +335,11 @@ fun Navigation(
             SettingsScreen(
                 onSignOut = {
                     navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onRoleChanged = {
+                    navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(0) { inclusive = true }
                     }
                 },

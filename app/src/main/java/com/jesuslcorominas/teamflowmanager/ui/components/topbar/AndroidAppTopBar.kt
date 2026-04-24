@@ -34,8 +34,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.jesuslcorominas.teamflowmanager.R
-import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
-import com.jesuslcorominas.teamflowmanager.ui.main.search.SearchState
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalSearchState
+import com.jesuslcorominas.teamflowmanager.ui.main.SearchState
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMAppTheme

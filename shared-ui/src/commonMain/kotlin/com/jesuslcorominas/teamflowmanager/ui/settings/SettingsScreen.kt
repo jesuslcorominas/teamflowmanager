@@ -55,6 +55,7 @@ import teamflowmanager.shared_ui.generated.resources.user_name_unknown
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onSignOut: () -> Unit = {},
+    onRoleChanged: () -> Unit = {},
 ) {
     TrackScreenView(screenName = ScreenName.SETTINGS, screenClass = "SettingsScreen")
 
@@ -68,6 +69,13 @@ fun SettingsScreen(
         if (signOutComplete) {
             viewModel.clearSignOutComplete()
             onSignOut()
+        }
+    }
+
+    LaunchedEffect(roleSelectorState.roleChangedEvent) {
+        if (roleSelectorState.roleChangedEvent) {
+            viewModel.onRoleChangedEventConsumed()
+            onRoleChanged()
         }
     }
 
