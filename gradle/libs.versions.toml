@@ -29,6 +29,7 @@ room = "2.8.3"
 ktor = "3.0.1"
 ktorfit = "2.6.0"
 kotlinxSerialization = "1.7.3"
+kotlinxDatetime = "0.6.1"
 compose-bom = "2025.01.00"
 materialVersion = "1.7.3"
 composeGoogleFonts="1.7.3"
@@ -101,6 +102,7 @@ ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version
 
 # Kotlinx Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 
 # Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
