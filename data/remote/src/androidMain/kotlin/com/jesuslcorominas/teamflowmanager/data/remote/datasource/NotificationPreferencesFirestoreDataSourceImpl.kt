@@ -99,14 +99,25 @@ class NotificationPreferencesFirestoreDataSourceImpl(
                     NotificationEventType.GOALS -> FIELD_GOALS
                 }
 
-            val updates =
-                mapOf<String, Any>(
-                    "$FIELD_TEAMS.$teamRemoteId.$fieldName" to enabled,
-                )
-
-            document(clubId, userId)
-                .set(updates, com.google.firebase.firestore.SetOptions.merge())
-                .await()
+            try {
+                document(clubId, userId)
+                    .update("$FIELD_TEAMS.$teamRemoteId.$fieldName", enabled)
+                    .await()
+            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.NOT_FOUND) {
+                    val nested =
+                        mapOf(
+                            FIELD_TEAMS to mapOf(
+                                teamRemoteId to mapOf(fieldName to enabled),
+                            ),
+                        )
+                    document(clubId, userId)
+                        .set(nested, com.google.firebase.firestore.SetOptions.merge())
+                        .await()
+                } else {
+                    throw e
+                }
+            }
 
             Log.d(TAG, "Updated team $fieldName=$enabled for teamId=$teamRemoteId userId=$userId clubId=$clubId")
         } catch (e: Exception) {

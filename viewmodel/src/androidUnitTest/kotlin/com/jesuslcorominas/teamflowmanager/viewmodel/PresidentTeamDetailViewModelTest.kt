@@ -1,12 +1,16 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamNotificationPreferences
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
+import com.jesuslcorominas.teamflowmanager.domain.model.UserNotificationPreferences
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
@@ -14,6 +18,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamNotificationPreferenceUseCase
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -362,5 +367,132 @@ class PresidentTeamDetailViewModelTest {
                     squadSize = 0,
                 ),
             )
+        }
+
+    private fun aClubMember(clubRemoteId: String = "club_remote_1") =
+        ClubMember(
+            id = 1L,
+            userId = "user_1",
+            name = "Test User",
+            email = "test@test.com",
+            clubId = 1L,
+            roles = listOf("PRESIDENT"),
+            remoteId = "member_1",
+            clubRemoteId = clubRemoteId,
+        )
+
+    private fun prefsWithTeam(
+        teamMatchEvents: Boolean,
+        teamGoals: Boolean,
+        globalMatchEvents: Boolean = true,
+        globalGoals: Boolean = true,
+    ) = UserNotificationPreferences(
+        userId = "user_1",
+        globalMatchEvents = globalMatchEvents,
+        globalGoals = globalGoals,
+        teamPreferences = mapOf(
+            teamId to TeamNotificationPreferences(
+                teamRemoteId = teamId,
+                matchEvents = teamMatchEvents,
+                goals = teamGoals,
+            ),
+        ),
+    )
+
+    @Test
+    fun `when team preference exists teamNotificationState reflects team-specific values`() =
+        runTest {
+            val clubRemoteId = "club_remote_1"
+            val prefs = prefsWithTeam(teamMatchEvents = false, teamGoals = false, globalMatchEvents = true, globalGoals = true)
+            coEvery { getTeamById(any()) } returns aTeam()
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
+            every { getUserClubMembership() } returns flowOf(aClubMember(clubRemoteId))
+            every { getNotificationPreferences(clubRemoteId) } returns flowOf(prefs)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val notifState = viewModel.teamNotificationState.value
+            assertEquals(false, notifState.matchEvents)
+            assertEquals(false, notifState.goals)
+        }
+
+    @Test
+    fun `when team preference absent teamNotificationState falls back to global values`() =
+        runTest {
+            val clubRemoteId = "club_remote_1"
+            val prefs = UserNotificationPreferences(
+                userId = "user_1",
+                globalMatchEvents = false,
+                globalGoals = true,
+                teamPreferences = emptyMap(),
+            )
+            coEvery { getTeamById(any()) } returns aTeam()
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
+            every { getUserClubMembership() } returns flowOf(aClubMember(clubRemoteId))
+            every { getNotificationPreferences(clubRemoteId) } returns flowOf(prefs)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val notifState = viewModel.teamNotificationState.value
+            assertEquals(false, notifState.matchEvents)
+            assertEquals(true, notifState.goals)
+        }
+
+    @Test
+    fun `updateTeamMatchEvents calls use case with correct args`() =
+        runTest {
+            val clubRemoteId = "club_remote_1"
+            val prefs = prefsWithTeam(teamMatchEvents = true, teamGoals = true)
+            coEvery { getTeamById(any()) } returns aTeam()
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
+            every { getUserClubMembership() } returns flowOf(aClubMember(clubRemoteId))
+            every { getNotificationPreferences(clubRemoteId) } returns flowOf(prefs)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateTeamMatchEvents(false)
+            advanceUntilIdle()
+
+            coVerify {
+                updateTeamNotificationPreference(
+                    clubRemoteId,
+                    teamId,
+                    NotificationEventType.MATCH_EVENTS,
+                    false,
+                )
+            }
+        }
+
+    @Test
+    fun `updateTeamGoals calls use case with correct args`() =
+        runTest {
+            val clubRemoteId = "club_remote_1"
+            val prefs = prefsWithTeam(teamMatchEvents = true, teamGoals = true)
+            coEvery { getTeamById(any()) } returns aTeam()
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
+            every { getUserClubMembership() } returns flowOf(aClubMember(clubRemoteId))
+            every { getNotificationPreferences(clubRemoteId) } returns flowOf(prefs)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateTeamGoals(false)
+            advanceUntilIdle()
+
+            coVerify {
+                updateTeamNotificationPreference(
+                    clubRemoteId,
+                    teamId,
+                    NotificationEventType.GOALS,
+                    false,
+                )
+            }
         }
 }
