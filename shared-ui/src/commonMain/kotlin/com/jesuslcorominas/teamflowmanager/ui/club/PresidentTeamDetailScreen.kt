@@ -162,9 +162,10 @@ private fun SummaryTab(state: PresidentTeamDetailUiState.Ready) {
         item {
             AppCard {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
@@ -194,9 +195,10 @@ private fun SummaryTab(state: PresidentTeamDetailUiState.Ready) {
         item {
             AppCard {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
@@ -266,9 +268,10 @@ private fun StatsTab(stats: PresidentTeamStats) {
         item {
             AppCard {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     LabelValueRow(
@@ -309,9 +312,10 @@ private fun StatsTab(stats: PresidentTeamStats) {
 private fun ScheduledMatchCard(match: Match) {
     AppCard {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
@@ -359,11 +363,12 @@ private fun NotificationsTab(
                         style = MaterialTheme.typography.bodyLarge,
                     )
                     Text(
-                        text = when (state.globalMatchEventsState) {
-                            GlobalNotificationState.ALL_ON -> stringResource(Res.string.president_notifications_global_on)
-                            GlobalNotificationState.ALL_OFF -> stringResource(Res.string.president_notifications_global_off)
-                            GlobalNotificationState.MIXED -> stringResource(Res.string.president_notifications_global_mixed)
-                        },
+                        text =
+                            when (state.globalMatchEventsState) {
+                                GlobalNotificationState.ALL_ON -> stringResource(Res.string.president_notifications_global_on)
+                                GlobalNotificationState.ALL_OFF -> stringResource(Res.string.president_notifications_global_off)
+                                GlobalNotificationState.MIXED -> stringResource(Res.string.president_notifications_global_mixed)
+                            },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -385,11 +390,12 @@ private fun NotificationsTab(
                         style = MaterialTheme.typography.bodyLarge,
                     )
                     Text(
-                        text = when (state.globalGoalsState) {
-                            GlobalNotificationState.ALL_ON -> stringResource(Res.string.president_notifications_global_on)
-                            GlobalNotificationState.ALL_OFF -> stringResource(Res.string.president_notifications_global_off)
-                            GlobalNotificationState.MIXED -> stringResource(Res.string.president_notifications_global_mixed)
-                        },
+                        text =
+                            when (state.globalGoalsState) {
+                                GlobalNotificationState.ALL_ON -> stringResource(Res.string.president_notifications_global_on)
+                                GlobalNotificationState.ALL_OFF -> stringResource(Res.string.president_notifications_global_off)
+                                GlobalNotificationState.MIXED -> stringResource(Res.string.president_notifications_global_mixed)
+                            },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
