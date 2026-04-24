@@ -6,7 +6,7 @@
  * using Firebase Hosting + Cloud Functions.
  */
 
-const functions = require('firebase-functions');
+const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
@@ -21,9 +21,7 @@ admin.initializeApp();
  * Body: { teamId: string, teamName: string }
  * Response: { shortLink: string, linkId: string }
  */
-exports.createShortLink = functions
-  .runWith({ timeoutSeconds: 30 })
-  .https.onRequest(async (req, res) => {
+exports.createShortLink = onRequest({ timeoutSeconds: 30 }, async (req, res) => {
     // CORS
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -91,7 +89,7 @@ exports.createShortLink = functions
  *
  * GET /l/:linkId
  */
-exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
+exports.redirectShortLink = onRequest(async (req, res) => {
   try {
     // Extract short ID from path (/l/abc123 -> abc123)
     const pathParts = req.path.split('/');
@@ -235,9 +233,7 @@ exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
  * Body: { token: string, title: string, body: string }
  * Response: { success: true } or error JSON
  */
-exports.sendNotification = functions
-  .runWith({ timeoutSeconds: 30 })
-  .https.onRequest(async (req, res) => {
+exports.sendNotification = onRequest({ timeoutSeconds: 30 }, async (req, res) => {
     // CORS
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
