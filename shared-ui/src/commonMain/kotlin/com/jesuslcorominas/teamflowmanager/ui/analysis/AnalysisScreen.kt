@@ -39,6 +39,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerGoalStats
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStats
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
@@ -158,7 +159,10 @@ fun AnalysisScreen(
             modifier =
                 Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(TFMSpacing.spacing04),
+                    .padding(
+                        end = TFMSpacing.spacing04,
+                        bottom = LocalContentBottomPadding.current + TFMSpacing.spacing04,
+                    ),
         ) {
             Icon(
                 imageVector = Icons.Default.Share,

@@ -214,7 +214,17 @@ fun Navigation(
         }
 
         composable(Route.ClubSettings.createRoute()) {
-            ClubSettingsScreen()
+            val context = LocalContext.current
+            ClubSettingsScreen(
+                onShareCode = { code ->
+                    val intent =
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, code)
+                        }
+                    context.startActivity(Intent.createChooser(intent, null))
+                },
+            )
         }
 
         composable(Route.PresidentNotifications.createRoute()) {
