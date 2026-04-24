@@ -10,6 +10,7 @@
     <string name="club_selection_subtitle">Elige cómo quieres comenzar</string>
     <string name="create_club">Crear un Club</string>
     <string name="join_club">Unirme a un Club</string>
+    <string name="sign_in_with_another_account">Iniciar sesión con otra cuenta</string>
 
     <!-- Create Club -->
     <string name="create_club_title">Crea tu Club</string>
@@ -49,6 +50,7 @@
 
     <!-- Account -->
     <string name="settings_account_section">Cuenta</string>
+    <string name="settings_role_coach">Vista Entrenador</string>
     <string name="sign_out">Cerrar sesión</string>
     <string name="sign_out_title">Cerrar sesión</string>
     <string name="sign_out_message">¿Estás seguro de que quieres cerrar sesión?</string>
@@ -118,6 +120,10 @@
     <string name="team_title">Equipo</string>
     <string name="team_list_title">Equipos del Club</string>
     <string name="no_teams_message">Aún no hay equipos. ¡Crea tu primer equipo!</string>
+    <string name="team_filter_all">Todos</string>
+    <string name="team_filter_with_coach">Con entrenador</string>
+    <string name="team_filter_without_coach">Sin entrenador</string>
+    <string name="search_team_placeholder">Busca equipos por nombre</string>
     <string name="error_loading_teams">No se han podido cargar los equipos. Por favor, comprueba tu conexión e inténtalo de nuevo.</string>
     <string name="no_club_membership_teams_error">Necesitas unirte o crear un club primero para ver los equipos.</string>
     <string name="no_members_message">Aún no hay miembros en tu club. ¡Invita a miembros a unirse!</string>
@@ -130,8 +136,9 @@
     <string name="create_team_title">Crear Equipo</string>
     <string name="team_name">Nombre del Equipo</string>
     <string name="team_name_required">El nombre del equipo es obligatorio</string>
-    <string name="coach_name">Nombre del Entrenador</string>
-    <string name="delegate_name">Nombre del Delegado</string>
+    <string name="coach_name">Entrenador</string>
+    <string name="coach_email">Email</string>
+    <string name="delegate_name">Delegado</string>
     <string name="delegate_name_required">El nombre del delegado es obligatorio</string>
     <string name="team_type">Tipo de Equipo</string>
     <string name="team_type_football">Fútbol</string>
@@ -348,17 +355,80 @@
     <!-- Settings -->
     <string name="settings_title">Ajustes</string>
     <string name="settings">Ajustes</string>
+    <string name="settings_notifications_section">Notificaciones</string>
+    <string name="settings_notifications_match_events">Eventos de partido</string>
+    <string name="settings_notifications_goals">Goles</string>
+    <string name="settings_notifications_applies_all_teams">Se aplica a todos los equipos del club</string>
+    <string name="settings_notifications_mixed">Configuración mixta por equipo</string>
 
     <!-- Club Settings -->
     <string name="nav_club_settings">Club</string>
     <string name="club_settings_title">Ajustes del Club</string>
+    <string name="club_settings_edit_title">Editar Club</string>
     <string name="home_ground_label">Lugar de juego</string>
     <string name="home_ground_placeholder">Ej. Polideportivo Municipal</string>
     <string name="copy_invitation_code">Copiar código</string>
+    <string name="share_invitation_code">Compartir</string>
+    <string name="regenerate_invitation_code">Renovar</string>
+    <string name="regenerate_code_confirm_title">¿Renovar código?</string>
+    <string name="regenerate_code_confirm_message">Las invitaciones anteriores dejarán de ser válidas. ¿Continuar?</string>
     <string name="invitation_code_copied">Código de invitación copiado</string>
     <string name="club_settings_saved">Ajustes del club guardados</string>
     <string name="expel_member_dialog_title">Expulsar miembro</string>
     <string name="expel_member_dialog_message">¿Estás seguro de que quieres expulsar a %1$s del club? Esta acción no se puede deshacer.</string>
     <string name="expel_member_confirm">Expulsar</string>
     <string name="expel_member_cancel">Cancelar</string>
+
+    <!-- Match Notification Channel -->
+    <string name="match_notification_channel_name">Cuenta Atrás del Partido</string>
+    <string name="match_notification_channel_description">Muestra el tiempo restante durante los partidos activos</string>
+
+    <!-- Assign Coach -->
+    <string name="assign_coach_button">Asignar entrenador</string>
+    <string name="pending_coach_assignment">Entrenador pendiente</string>
+    <string name="reassign_coach_button">Reasignar</string>
+    <string name="assign_coach_dialog_title">Asignar entrenador a %1$s</string>
+    <string name="assign_coach_tab_members">Miembros</string>
+    <string name="assign_coach_tab_email">Por email</string>
+    <string name="assign_coach_email_placeholder">Introduce el email</string>
+    <string name="assign_coach_confirm">Asignar</string>
+    <string name="assign_coach_not_member">Este email no está registrado como miembro del club.</string>
+    <string name="assign_coach_error">Error al asignar el entrenador. Inténtalo de nuevo.</string>
+
+    <!-- Remove Coach -->
+    <string name="remove_coach_button">Quitar entrenador</string>
+    <string name="remove_coach_confirm_title">Quitar entrenador</string>
+    <string name="remove_coach_confirm_message">El equipo quedará sin entrenador asignado. Podrás reasignarlo más adelante.</string>
+    <string name="remove_coach_confirm">Quitar</string>
+    <string name="remove_coach_cancel">Cancelar</string>
+
+    <!-- Match status in team card -->
+    <string name="match_live_badge">EN DIRECTO</string>
+    <string name="next_match_label">Próximo:</string>
+
+    <!-- President Team Detail -->
+    <string name="president_team_detail_players_tab">Jugadores</string>
+    <string name="president_team_detail_matches_tab">Partidos</string>
+    <string name="president_team_detail_stats_tab">Estadísticas</string>
+    <string name="president_team_detail_notifications_tab">Notificaciones</string>
+    <string name="president_team_detail_error">No se han podido cargar los datos del equipo</string>
+    <string name="president_team_detail_no_matches">No hay partidos registrados</string>
+    <string name="president_team_detail_no_players">No hay jugadores registrados</string>
+    <string name="president_team_stats_played">Jugados</string>
+    <string name="president_team_stats_wins">Victorias</string>
+    <string name="president_team_stats_draws">Empates</string>
+    <string name="president_team_stats_losses">Derrotas</string>
+    <string name="president_team_stats_goals_scored">Goles a favor</string>
+    <string name="president_team_stats_goals_conceded">Goles en contra</string>
+    <string name="president_team_stats_squad_size">Tamaño de la plantilla</string>
+    <string name="president_notifications_match_events">Eventos de partido</string>
+    <string name="president_notifications_goals">Goles</string>
+    <string name="president_notifications_global_on">Configuración global: Activado</string>
+    <string name="president_notifications_global_off">Configuración global: Desactivado</string>
+    <string name="president_notifications_global_mixed">Configuración mixta por equipo</string>
+
+    <!-- Pending Team Assignment -->
+    <string name="pending_team_title">Asignación de equipo pendiente</string>
+    <string name="pending_team_message">Tu cuenta ha sido verificada. Por favor, espera a que el presidente del club te asigne a un equipo.</string>
+    <string name="pending_team_sign_out">Cerrar sesión</string>
 </resources>

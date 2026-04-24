@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.EnterTransition
@@ -9,6 +10,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,6 +22,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
@@ -70,11 +80,6 @@ fun Navigation(
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
-                onNavigateToCreateTeam = {
-                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
-                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
-                    }
-                },
                 onNavigateToAwaitTeam = {
                     navController.navigate(Route.PendingTeamAssignment.createRoute()) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
@@ -94,7 +99,9 @@ fun Navigation(
         }
 
         composable(Route.Login.createRoute()) {
+            val context = LocalContext.current
             LoginScreen(
+                onSignInWithGoogle = { getGoogleIdToken(context) },
                 onLoginSuccess = {
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.Login.createRoute()) { inclusive = true }
@@ -110,11 +117,6 @@ fun Navigation(
                 },
                 onJoinClub = {
                     navController.navigate(Route.JoinClub.createRoute())
-                },
-                onSignedOut = {
-                    navController.navigate(Route.Login.createRoute()) {
-                        popUpTo(0) { inclusive = true }
-                    }
                 },
             )
         }
@@ -163,7 +165,6 @@ fun Navigation(
                         popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
                     }
                 },
-                currentBackHandler = if (mode == Route.Team.MODE_EDIT) currentBackHandler else null,
             )
         }
 
@@ -296,7 +297,6 @@ fun Navigation(
             MatchCreationWizardScreen(
                 matchId = matchId,
                 onNavigateBack = { navController.popBackStack() },
-                currentBackHandler = currentBackHandler,
             )
         }
 
@@ -323,12 +323,6 @@ fun Navigation(
             SettingsScreen(
                 onSignOut = {
                     navController.navigate(Route.Login.createRoute()) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onRoleChanged = {
-                    onRoleChanged()
-                    navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
@@ -468,5 +462,31 @@ private fun NavHostController.navigateToMatches() {
         popUpTo(graph.startDestinationId) { inclusive = false }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+private suspend fun getGoogleIdToken(context: Context): String {
+    val credentialManager = CredentialManager.create(context)
+    val googleIdOption =
+        GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(context.getString(R.string.default_web_client_id))
+            .setAutoSelectEnabled(true)
+            .build()
+    val request = GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
+    return try {
+        val result = credentialManager.getCredential(request = request, context = context)
+        val credential = result.credential
+        if (credential is CustomCredential &&
+            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+        ) {
+            GoogleIdTokenCredential.createFrom(credential.data).idToken
+        } else {
+            throw IllegalStateException("Unexpected credential type")
+        }
+    } catch (e: GetCredentialException) {
+        throw IllegalStateException("Google sign-in failed: ${e.message}", e)
+    } catch (e: GoogleIdTokenParsingException) {
+        throw IllegalStateException("Failed to parse Google ID token: ${e.message}", e)
     }
 }

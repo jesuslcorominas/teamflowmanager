@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel.UiState
 import kotlinx.coroutines.flow.collectLatest
@@ -59,6 +61,8 @@ fun LoginScreen(
      */
     onRequestNotificationPermission: (() -> Unit)? = null,
 ) {
+    TrackScreenView(screenName = ScreenName.LOGIN, screenClass = "LoginScreen")
+
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

@@ -15,12 +15,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.viewmodel.PendingTeamAssignmentViewModel
-import org.koin.androidx.compose.koinViewModel
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import teamflowmanager.shared_ui.generated.resources.Res
+import teamflowmanager.shared_ui.generated.resources.pending_team_message
+import teamflowmanager.shared_ui.generated.resources.pending_team_sign_out
+import teamflowmanager.shared_ui.generated.resources.pending_team_title
 
 @Composable
 fun PendingTeamAssignmentScreen(
@@ -28,6 +33,8 @@ fun PendingTeamAssignmentScreen(
     onSignOut: () -> Unit,
     viewModel: PendingTeamAssignmentViewModel = koinViewModel(),
 ) {
+    TrackScreenView(screenName = ScreenName.PENDING_TEAM_ASSIGNMENT, screenClass = "PendingTeamAssignmentScreen")
+
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState) {
@@ -39,28 +46,27 @@ fun PendingTeamAssignmentScreen(
     }
 
     Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(32.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = stringResource(R.string.pending_team_title),
+            text = stringResource(Res.string.pending_team_title),
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.pending_team_message),
+            text = stringResource(Res.string.pending_team_message),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(32.dp))
         Button(onClick = viewModel::signOut) {
-            Text(stringResource(R.string.pending_team_sign_out))
+            Text(stringResource(Res.string.pending_team_sign_out))
         }
     }
 }
