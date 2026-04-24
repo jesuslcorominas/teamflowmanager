@@ -1,3 +1,5 @@
+@file:JvmName("AndroidTFMSpacing")
+
 package com.jesuslcorominas.teamflowmanager.ui.theme
 
 import androidx.compose.runtime.staticCompositionLocalOf

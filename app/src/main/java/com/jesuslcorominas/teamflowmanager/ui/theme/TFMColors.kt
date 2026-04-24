@@ -1,3 +1,5 @@
+@file:JvmName("AndroidTFMColors")
+
 package com.jesuslcorominas.teamflowmanager.ui.theme
 
 import androidx.compose.material3.lightColorScheme
