@@ -264,8 +264,8 @@
     <!-- Match Creation Wizard -->
     <string name="wizard_step_general_data">Datos Generales</string>
     <string name="squad_callup_title">Seleccionar Convocatoria</string>
-    <string name="squad_callup_subtitle">Selecciona los jugadores para este partido (mínimo %d)</string>
-    <string name="squad_callup_count">Seleccionados: %d jugadores</string>
+    <string name="squad_callup_subtitle">Selecciona los jugadores para este partido (mínimo %s)</string>
+    <string name="squad_callup_count">Seleccionados: %s jugadores</string>
     <string name="squad_callup_select_all">Seleccionar Todos</string>
     <string name="squad_callup_no_goalkeeper_warning">No hay portero seleccionado</string>
     <string name="squad_callup_no_goalkeeper_message">No has seleccionado ningún portero en la convocatoria. ¿Deseas continuar de todos modos?</string>
@@ -274,9 +274,9 @@
     <string name="make_default_captain_title">¿Hacer Capitán por Defecto?</string>
     <string name="make_default_captain_message">%s ha sido capitán en los últimos 2 partidos. ¿Te gustaría hacerlo capitán por defecto? Se seleccionará automáticamente en futuros partidos.</string>
     <string name="starting_lineup_title">Seleccionar Alineación Inicial</string>
-    <string name="starting_lineup_subtitle">Selecciona exactamente %d jugadores para comenzar</string>
-    <string name="starting_lineup_count">Seleccionados: %d/%d jugadores</string>
-    <string name="starting_lineup_max_error">Solo puedes seleccionar hasta %d jugadores</string>
+    <string name="starting_lineup_subtitle">Selecciona exactamente %s jugadores para comenzar</string>
+    <string name="starting_lineup_count">Seleccionados: %s/%s jugadores</string>
+    <string name="starting_lineup_max_error">Solo puedes seleccionar hasta %s jugadores</string>
     <string name="starting_lineup_no_goalkeeper_warning">No hay portero en la alineación inicial</string>
     <string name="starting_lineup_no_goalkeeper_message">No has seleccionado un portero en la alineación inicial. ¿Deseas continuar de todos modos?</string>
 

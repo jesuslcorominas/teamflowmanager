@@ -207,9 +207,30 @@ fun Navigation(
                 teamId = teamId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToMatch = { matchId ->
-                    navController.navigate(Route.Match.createRoute(matchId))
+                    navController.navigate(Route.PresidentMatchDetail.createRoute(teamId, matchId))
                 },
             )
+        }
+
+        composable(
+            route = Route.PresidentMatchDetail.FULL_ROUTE,
+            arguments =
+                listOf(
+                    navArgument(Route.PresidentMatchDetail.ARG_TEAM_ID) {
+                        type = NavType.StringType
+                    },
+                    navArgument(Route.PresidentMatchDetail.ARG_MATCH_ID) {
+                        type = NavType.LongType
+                    },
+                ),
+        ) { backStackEntry ->
+            val teamId =
+                backStackEntry.arguments?.getString(Route.PresidentMatchDetail.ARG_TEAM_ID)
+                    ?: return@composable
+            val matchId =
+                backStackEntry.arguments?.getLong(Route.PresidentMatchDetail.ARG_MATCH_ID)
+                    ?: return@composable
+            MatchScreen(matchId = matchId, readOnly = true)
         }
 
         composable(Route.ClubMembers.createRoute()) {

@@ -121,6 +121,7 @@ private const val TAB_STATISTICS = 3
 @Composable
 fun MatchScreen(
     matchId: Long,
+    readOnly: Boolean = false,
     onTitleChange: (String?) -> Unit = {},
     onExportReady: (uri: String) -> Unit = {},
     viewModel: MatchViewModel = koinViewModel(key = matchId.toString(), parameters = { parametersOf(matchId) }),
@@ -157,6 +158,7 @@ fun MatchScreen(
                 is MatchUiState.Success ->
                     SuccessState(
                         state = state,
+                        readOnly = readOnly,
                         selectedPlayerOut = selectedPlayerOut,
                         currentSortOrder = currentSortOrder,
                         onSaveMatch = { viewModel.saveMatch() },
@@ -263,6 +265,7 @@ private fun NoMatchState() {
 @Composable
 private fun SuccessState(
     state: MatchUiState.Success,
+    readOnly: Boolean,
     selectedPlayerOut: Long?,
     currentSortOrder: PlayerSortOrderBy,
     onSaveMatch: () -> Unit,
@@ -294,6 +297,7 @@ private fun SuccessState(
     ) {
         MatchDetailContent(
             state = state,
+            readOnly = readOnly,
             selectedPlayerOut = selectedPlayerOut,
             currentSortOrder = currentSortOrder,
             onSaveMatch = onSaveMatch,
@@ -313,6 +317,7 @@ private fun SuccessState(
 @Composable
 private fun MatchDetailContent(
     state: MatchUiState.Success,
+    readOnly: Boolean,
     selectedPlayerOut: Long?,
     currentSortOrder: PlayerSortOrderBy,
     onSaveMatch: () -> Unit,
@@ -378,7 +383,7 @@ private fun MatchDetailContent(
                     showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
                     isSelected = selectedPlayerOut == playerTimeItem.player.id,
                     onClick =
-                        if (state.match.isInProgress) {
+                        if (state.match.isInProgress && !readOnly) {
                             { onPlayerClick(playerTimeItem.player.id) }
                         } else {
                             null
@@ -387,19 +392,21 @@ private fun MatchDetailContent(
             }
         }
 
-        Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+        if (!readOnly) {
+            Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
 
-        BottomButtons(
-            state = state,
-            onSaveMatch = onSaveMatch,
-            onPauseMatch = onPauseMatch,
-            onResumeMatch = onResumeMatch,
-            onStartTimeout = onStartTimeout,
-            onEndTimeout = onEndTimeout,
-            onAddGoal = onAddGoal,
-            onAddOpponentGoal = onAddOpponentGoal,
-            onBeginMatch = onBeginMatch,
-        )
+            BottomButtons(
+                state = state,
+                onSaveMatch = onSaveMatch,
+                onPauseMatch = onPauseMatch,
+                onResumeMatch = onResumeMatch,
+                onStartTimeout = onStartTimeout,
+                onEndTimeout = onEndTimeout,
+                onAddGoal = onAddGoal,
+                onAddOpponentGoal = onAddOpponentGoal,
+                onBeginMatch = onBeginMatch,
+            )
+        }
     }
 }
 

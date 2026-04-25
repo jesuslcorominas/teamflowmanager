@@ -29,7 +29,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -431,7 +431,7 @@ fun GeneralDataStep(
             onDismissRequest = { showTimePicker = false },
             title = { Text(stringResource(Res.string.match_time)) },
             text = {
-                TimeInput(state = timePickerState)
+                TimePicker(state = timePickerState)
             },
             confirmButton = {
                 TextButton(
