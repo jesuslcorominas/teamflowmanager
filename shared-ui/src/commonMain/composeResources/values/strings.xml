@@ -10,6 +10,7 @@
     <string name="club_selection_subtitle">Choose how you want to get started</string>
     <string name="create_club">Create a Club</string>
     <string name="join_club">Join a Club</string>
+    <string name="sign_in_with_another_account">Sign in with another account</string>
 
     <!-- Create Club -->
     <string name="create_club_title">Create Your Club</string>
@@ -49,6 +50,7 @@
 
     <!-- Account -->
     <string name="settings_account_section">Account</string>
+    <string name="settings_role_coach">Coach view</string>
     <string name="sign_out">Logout</string>
     <string name="sign_out_title">Logout</string>
     <string name="sign_out_message">Are you sure you want to close session?</string>
@@ -91,12 +93,12 @@
     <string name="team_captain">Captain</string>
     <string name="captain_confirm_title">Change Team Captain?</string>
     <string name="captain_confirm_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. Continue?</string>
-    <string name="captain_replace_with_matches_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. There are %5$d scheduled matches. Do you want to update them with the new captain?</string>
+    <string name="captain_replace_with_matches_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. There are %5$s scheduled matches. Do you want to update them with the new captain?</string>
     <string name="update_captain_in_matches">Update captain in matches</string>
     <string name="keep_current_captain_in_matches">Keep current captain in matches</string>
     <string name="captain_remove_title">Remove Team Captain?</string>
     <string name="captain_remove_message">By unchecking this, %1$s %2$s will no longer be the team captain. The captain will be selected for each match. Continue?</string>
-    <string name="captain_remove_with_matches_message">By unchecking this, %1$s %2$s will no longer be the team captain. There are %3$d scheduled matches. What do you want to do?</string>
+    <string name="captain_remove_with_matches_message">By unchecking this, %1$s %2$s will no longer be the team captain. There are %3$s scheduled matches. What do you want to do?</string>
     <string name="keep_captain_for_matches">Keep as captain in scheduled matches</string>
     <string name="remove_captain_from_matches">Remove from scheduled matches</string>
 
@@ -118,6 +120,10 @@
     <string name="team_title">Team</string>
     <string name="team_list_title">Club Teams</string>
     <string name="no_teams_message">No teams yet. Create your first team!</string>
+    <string name="team_filter_all">All</string>
+    <string name="team_filter_with_coach">With coach</string>
+    <string name="team_filter_without_coach">Without coach</string>
+    <string name="search_team_placeholder">Search teams by name</string>
     <string name="error_loading_teams">Unable to load teams. Please check your internet connection and try again.</string>
     <string name="no_club_membership_teams_error">You need to join or create a club first to view teams.</string>
     <string name="no_members_message">No staff members in your club yet. Invite members to join!</string>
@@ -130,7 +136,8 @@
     <string name="create_team_title">Create Team</string>
     <string name="team_name">Team Name</string>
     <string name="team_name_required">Team name is required</string>
-    <string name="coach_name">Coach Name</string>
+    <string name="coach_name">Coach</string>
+    <string name="coach_email">Email</string>
     <string name="delegate_name">Delegate Name</string>
     <string name="delegate_name_required">Delegate name is required</string>
     <string name="team_type">Team Type</string>
@@ -182,7 +189,7 @@
     <string name="archived_matches">Archived</string>
     <string name="start_match">Start</string>
     <string name="view_match">View Detail</string>
-    <string name="match_score">%1$d - %2$d</string>
+    <string name="match_score">%1$s - %2$s</string>
     <string name="archive_match">Archive</string>
     <string name="unarchive_match">Unarchive</string>
     <string name="no_archived_matches">No matches archived yet</string>
@@ -212,7 +219,7 @@
     <string name="pause_match_early_message">There is more than 1 minute remaining. Are you sure you want to go to the break now?</string>
 
     <!-- Match Periods -->
-    <string name="period_label">Period %1$d/%2$d</string>
+    <string name="period_label">Period %1$s/%2$s</string>
     <string name="first_quarter">1st Quarter</string>
     <string name="second_quarter">2nd Quarter</string>
     <string name="third_quarter">3rd Quarter</string>
@@ -257,8 +264,8 @@
     <!-- Match Creation Wizard -->
     <string name="wizard_step_general_data">General Data</string>
     <string name="squad_callup_title">Select Squad Call-Up</string>
-    <string name="squad_callup_subtitle">Select players for this match (minimum %d)</string>
-    <string name="squad_callup_count">Selected: %d players</string>
+    <string name="squad_callup_subtitle">Select players for this match (minimum %s)</string>
+    <string name="squad_callup_count">Selected: %s players</string>
     <string name="squad_callup_select_all">Select All</string>
     <string name="squad_callup_no_goalkeeper_warning">No goalkeeper selected</string>
     <string name="squad_callup_no_goalkeeper_message">You haven\'t selected any goalkeeper for the squad. Do you want to continue anyway?</string>
@@ -267,15 +274,15 @@
     <string name="make_default_captain_title">Make Default Captain?</string>
     <string name="make_default_captain_message">%s has been captain for the last 2 matches. Would you like to make them the default captain? This will auto-select them for future matches.</string>
     <string name="starting_lineup_title">Select Initial Lineup</string>
-    <string name="starting_lineup_subtitle">Select exactly %d players to start</string>
-    <string name="starting_lineup_count">Selected: %d/%d players</string>
-    <string name="starting_lineup_max_error">You can only select up to %d players</string>
+    <string name="starting_lineup_subtitle">Select exactly %s players to start</string>
+    <string name="starting_lineup_count">Selected: %s/%s players</string>
+    <string name="starting_lineup_max_error">You can only select up to %s players</string>
     <string name="starting_lineup_no_goalkeeper_warning">No goalkeeper in starting lineup</string>
     <string name="starting_lineup_no_goalkeeper_message">You haven\'t selected a goalkeeper in the starting lineup. Do you want to continue anyway?</string>
 
     <!-- Unsaved changes -->
     <string name="list_single">%1$s</string>
-    <string name="list_multiple">%1$s and %2$d more</string>
+    <string name="list_multiple">%1$s and %2$s more</string>
     <string name="unsaved_changes_title">Unsaved changes</string>
     <string name="discard_message">You have unsaved changes. Are you sure you want to exit?</string>
 
@@ -311,7 +318,7 @@
     <string name="pdf_header_goals">GOALS</string>
     <string name="pdf_scorers_section">Top Scorers</string>
     <string name="pdf_no_goals">No goals recorded</string>
-    <string name="pdf_scorer_format">%1$d. %2$s - %3$d goal(s)</string>
+    <string name="pdf_scorer_format">%1$s. %2$s - %3$s goal(s)</string>
     <string name="pdf_match_results_section">Match Results</string>
     <string name="pdf_no_matches">No finished matches</string>
     <string name="match_report_title">Match Report</string>
@@ -341,6 +348,11 @@
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings">Settings</string>
+    <string name="settings_notifications_section">Notifications</string>
+    <string name="settings_notifications_match_events">Match events</string>
+    <string name="settings_notifications_goals">Goals</string>
+    <string name="settings_notifications_applies_all_teams">Applies to all club teams</string>
+    <string name="settings_notifications_mixed">Mixed setting per team</string>
 
     <!-- President Notifications -->
     <string name="notifications_empty">No notifications yet</string>
@@ -352,9 +364,14 @@
     <!-- Club Settings -->
     <string name="nav_club_settings">Club</string>
     <string name="club_settings_title">Club Settings</string>
+    <string name="club_settings_edit_title">Edit Club</string>
     <string name="home_ground_label">Home Ground</string>
     <string name="home_ground_placeholder">e.g. Municipal Sports Centre</string>
     <string name="copy_invitation_code">Copy Code</string>
+    <string name="share_invitation_code">Share</string>
+    <string name="regenerate_invitation_code">Renew</string>
+    <string name="regenerate_code_confirm_title">Renew code?</string>
+    <string name="regenerate_code_confirm_message">Previous invitations will no longer be valid. Continue?</string>
     <string name="invitation_code_copied">Invitation code copied</string>
     <string name="club_settings_saved">Club settings saved</string>
     <string name="expel_member_dialog_title">Expel member</string>
@@ -362,10 +379,56 @@
     <string name="expel_member_confirm">Expel</string>
     <string name="expel_member_cancel">Cancel</string>
 
-    <!-- Notification Preferences (President) -->
-    <string name="settings_notifications_section">Notifications</string>
-    <string name="settings_notifications_match_events">Match events</string>
-    <string name="settings_notifications_goals">Goals</string>
-    <string name="settings_notifications_applies_all_teams">Applies to all club teams</string>
-    <string name="settings_notifications_mixed">Mixed setting per team</string>
+    <!-- Match Notification Channel -->
+    <string name="match_notification_channel_name">Match Countdown</string>
+    <string name="match_notification_channel_description">Shows remaining time during active matches</string>
+
+    <!-- Assign Coach -->
+    <string name="assign_coach_button">Assign Coach</string>
+    <string name="pending_coach_assignment">Pending coach</string>
+    <string name="reassign_coach_button">Reassign</string>
+    <string name="assign_coach_dialog_title">Assign Coach to %1$s</string>
+    <string name="assign_coach_tab_members">Members</string>
+    <string name="assign_coach_tab_email">By email</string>
+    <string name="assign_coach_email_placeholder">Enter email address</string>
+    <string name="assign_coach_confirm">Assign</string>
+    <string name="assign_coach_not_member">This email is not registered as a club member.</string>
+    <string name="assign_coach_error">Error assigning coach. Please try again.</string>
+
+    <!-- Remove Coach -->
+    <string name="remove_coach_button">Remove coach</string>
+    <string name="remove_coach_confirm_title">Remove coach</string>
+    <string name="remove_coach_confirm_message">The team will have no assigned coach. You can reassign later.</string>
+    <string name="remove_coach_confirm">Remove</string>
+    <string name="remove_coach_cancel">Cancel</string>
+
+    <!-- Match status in team card -->
+    <string name="match_live_badge">LIVE</string>
+    <string name="next_match_label">Next:</string>
+
+    <!-- President Team Detail -->
+    <string name="president_team_detail_players_tab">Players</string>
+    <string name="president_team_detail_matches_tab">Matches</string>
+    <string name="president_team_detail_stats_tab">Stats</string>
+    <string name="president_team_detail_notifications_tab">Notifications</string>
+    <string name="president_team_detail_error">Could not load team data</string>
+    <string name="president_team_detail_no_matches">No matches registered</string>
+    <string name="president_team_detail_no_players">No players registered</string>
+    <string name="president_team_stats_played">Played</string>
+    <string name="president_team_stats_wins">Wins</string>
+    <string name="president_team_stats_draws">Draws</string>
+    <string name="president_team_stats_losses">Losses</string>
+    <string name="president_team_stats_goals_scored">Goals scored</string>
+    <string name="president_team_stats_goals_conceded">Goals conceded</string>
+    <string name="president_team_stats_squad_size">Squad size</string>
+    <string name="president_notifications_match_events">Match events</string>
+    <string name="president_notifications_goals">Goals</string>
+    <string name="president_notifications_global_on">Global setting: On</string>
+    <string name="president_notifications_global_off">Global setting: Off</string>
+    <string name="president_notifications_global_mixed">Mixed setting per team</string>
+
+    <!-- Pending Team Assignment -->
+    <string name="pending_team_title">Pending team assignment</string>
+    <string name="pending_team_message">Your account has been verified. Please wait until the club president assigns you to a team.</string>
+    <string name="pending_team_sign_out">Sign out</string>
 </resources>

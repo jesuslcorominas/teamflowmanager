@@ -15,6 +15,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
@@ -128,6 +129,7 @@ class MatchViewModelGoalTest {
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = mockk(relaxed = true),
         getTeamUseCase = mockk(relaxed = true),
+        getPlayersByTeamUseCase = mockk(relaxed = true),
     )
 
     @Test

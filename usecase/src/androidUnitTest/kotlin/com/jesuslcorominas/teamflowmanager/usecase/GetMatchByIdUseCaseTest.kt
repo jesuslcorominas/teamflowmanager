@@ -39,7 +39,7 @@ class GetMatchByIdUseCaseTest {
                     periodType = PeriodType.HALF_TIME,
                     captainId = 1L,
                 )
-            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
 
             // When
             val result = getMatchByIdUseCase.invoke(matchId).toList()
@@ -47,7 +47,7 @@ class GetMatchByIdUseCaseTest {
             // Then
             assertEquals(1, result.size)
             assertEquals(match, result[0])
-            verify { matchRepository.getMatchById(matchId) }
+            verify { matchRepository.getMatchById(matchId, null) }
         }
 
     @Test
@@ -55,7 +55,7 @@ class GetMatchByIdUseCaseTest {
         runTest {
             // Given
             val matchId = 999L
-            every { matchRepository.getMatchById(matchId) } returns flowOf(null)
+            every { matchRepository.getMatchById(matchId, null) } returns flowOf(null)
 
             // When
             val result = getMatchByIdUseCase.invoke(matchId).toList()
@@ -63,6 +63,6 @@ class GetMatchByIdUseCaseTest {
             // Then
             assertEquals(1, result.size)
             assertEquals(null, result[0])
-            verify { matchRepository.getMatchById(matchId) }
+            verify { matchRepository.getMatchById(matchId, null) }
         }
 }

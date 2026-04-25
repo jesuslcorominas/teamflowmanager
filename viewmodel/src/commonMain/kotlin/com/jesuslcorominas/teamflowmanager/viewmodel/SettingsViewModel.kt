@@ -80,17 +80,17 @@ class SettingsViewModel(
                         isRoleSelectorEnabled = team != null,
                         activeRole = getActiveViewRole(),
                     )
-            }
 
-            val clubRemoteId = clubMember.clubRemoteId ?: return@launch
+                val clubRemoteId = clubMember.clubRemoteId ?: return@launch
 
-            getNotificationPreferences(clubRemoteId).collect { prefs ->
-                _notificationPreferences.value =
-                    NotificationPreferencesState(
-                        matchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
-                        goalsState = prefs.globalStateFor(NotificationEventType.GOALS),
-                        clubId = clubRemoteId,
-                    )
+                getNotificationPreferences(clubRemoteId).collect { prefs ->
+                    _notificationPreferences.value =
+                        NotificationPreferencesState(
+                            matchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
+                            goalsState = prefs.globalStateFor(NotificationEventType.GOALS),
+                            clubId = clubRemoteId,
+                        )
+                }
             }
         }
     }

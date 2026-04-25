@@ -26,6 +26,8 @@ val SubstitutionRed = Color(0xFF960615)
 
 val GoalKeeperBadge = Color(0xFF960615)
 
+val ContentHigh = Color(0xFF7A7A7A)
+
 val ChartTeamColor = Color(0xFF003366)
 val ChartOpponentColor = Color(0xFFFF6B35)
 

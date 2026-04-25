@@ -133,7 +133,10 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
     /**
      * Gets player time history for a specific match as a real-time Flow.
      */
-    override fun getMatchPlayerTimeHistory(matchId: Long): Flow<List<PlayerTimeHistory>> =
+    override fun getMatchPlayerTimeHistory(
+        matchId: Long,
+        teamId: String?,
+    ): Flow<List<PlayerTimeHistory>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -142,7 +145,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = teamId ?: getTeamDocumentId()
             if (teamDocId == null) {
                 trySend(emptyList())
                 awaitClose { }

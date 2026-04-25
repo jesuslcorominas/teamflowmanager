@@ -68,6 +68,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
+import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -120,9 +121,11 @@ private const val TAB_STATISTICS = 3
 @Composable
 fun MatchScreen(
     matchId: Long,
+    teamId: String? = null,
+    readOnly: Boolean = false,
     onTitleChange: (String?) -> Unit = {},
     onExportReady: (uri: String) -> Unit = {},
-    viewModel: MatchViewModel = koinViewModel(key = matchId.toString(), parameters = { parametersOf(matchId) }),
+    viewModel: MatchViewModel = koinViewModel(key = matchId.toString(), parameters = { parametersOf(matchId, teamId) }),
 ) {
     TrackScreenView(screenName = ScreenName.MATCH_DETAIL, screenClass = "MatchScreen")
 
@@ -156,6 +159,7 @@ fun MatchScreen(
                 is MatchUiState.Success ->
                     SuccessState(
                         state = state,
+                        readOnly = readOnly,
                         selectedPlayerOut = selectedPlayerOut,
                         currentSortOrder = currentSortOrder,
                         onSaveMatch = { viewModel.saveMatch() },
@@ -262,6 +266,7 @@ private fun NoMatchState() {
 @Composable
 private fun SuccessState(
     state: MatchUiState.Success,
+    readOnly: Boolean,
     selectedPlayerOut: Long?,
     currentSortOrder: PlayerSortOrderBy,
     onSaveMatch: () -> Unit,
@@ -293,6 +298,7 @@ private fun SuccessState(
     ) {
         MatchDetailContent(
             state = state,
+            readOnly = readOnly,
             selectedPlayerOut = selectedPlayerOut,
             currentSortOrder = currentSortOrder,
             onSaveMatch = onSaveMatch,
@@ -312,6 +318,7 @@ private fun SuccessState(
 @Composable
 private fun MatchDetailContent(
     state: MatchUiState.Success,
+    readOnly: Boolean,
     selectedPlayerOut: Long?,
     currentSortOrder: PlayerSortOrderBy,
     onSaveMatch: () -> Unit,
@@ -377,7 +384,7 @@ private fun MatchDetailContent(
                     showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
                     isSelected = selectedPlayerOut == playerTimeItem.player.id,
                     onClick =
-                        if (state.match.isInProgress) {
+                        if (state.match.isInProgress && !readOnly) {
                             { onPlayerClick(playerTimeItem.player.id) }
                         } else {
                             null
@@ -386,19 +393,21 @@ private fun MatchDetailContent(
             }
         }
 
-        Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+        if (!readOnly) {
+            Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
 
-        BottomButtons(
-            state = state,
-            onSaveMatch = onSaveMatch,
-            onPauseMatch = onPauseMatch,
-            onResumeMatch = onResumeMatch,
-            onStartTimeout = onStartTimeout,
-            onEndTimeout = onEndTimeout,
-            onAddGoal = onAddGoal,
-            onAddOpponentGoal = onAddOpponentGoal,
-            onBeginMatch = onBeginMatch,
-        )
+            BottomButtons(
+                state = state,
+                onSaveMatch = onSaveMatch,
+                onPauseMatch = onPauseMatch,
+                onResumeMatch = onResumeMatch,
+                onStartTimeout = onStartTimeout,
+                onEndTimeout = onEndTimeout,
+                onAddGoal = onAddGoal,
+                onAddOpponentGoal = onAddOpponentGoal,
+                onBeginMatch = onBeginMatch,
+            )
+        }
     }
 }
 
@@ -702,6 +711,8 @@ private fun FinishedMatchState(
                     StatisticsTabContent(
                         scoreEvolution = state.scoreEvolution,
                         playerActivity = state.playerActivity,
+                        teamName = state.match.teamName,
+                        opponentName = state.match.opponent,
                     )
             }
         }
@@ -893,39 +904,37 @@ private fun SummaryTabContent(
 private fun StatisticsTabContent(
     scoreEvolution: List<ScorePoint>,
     playerActivity: List<PlayerActivityInterval>,
+    teamName: String,
+    opponentName: String,
 ) {
-    // Charts deferred to KMP-28 — show placeholder when data is available
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (scoreEvolution.isEmpty() && playerActivity.isEmpty()) {
+    if (scoreEvolution.isEmpty() && playerActivity.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
                 text = stringResource(Res.string.no_match_message),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        } else {
-            // Statistics summary: substitutions in a lazy column
-            LazyColumn(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = TFMSpacing.spacing04),
-                contentPadding =
-                    PaddingValues(
-                        top = TFMSpacing.spacing03,
-                        bottom = TFMSpacing.spacing04,
-                    ),
-                verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
-            ) {
-                item {
-                    Text(
-                        text = stringResource(Res.string.statistics_tab),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding =
+                PaddingValues(
+                    horizontal = TFMSpacing.spacing04,
+                    vertical = TFMSpacing.spacing03,
+                ),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+        ) {
+            item {
+                PlayerActivityChart(
+                    scoreEvolution = scoreEvolution,
+                    playerActivity = playerActivity,
+                    teamName = teamName,
+                    opponentName = opponentName,
+                )
             }
         }
     }

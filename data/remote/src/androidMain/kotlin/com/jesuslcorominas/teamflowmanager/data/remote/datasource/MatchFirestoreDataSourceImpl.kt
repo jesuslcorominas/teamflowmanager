@@ -81,7 +81,10 @@ class MatchFirestoreDataSourceImpl(
     /**
      * Gets a match by its ID as a real-time Flow.
      */
-    override fun getMatchById(matchId: Long): Flow<Match?> =
+    override fun getMatchById(
+        matchId: Long,
+        teamId: String?,
+    ): Flow<Match?> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -90,7 +93,7 @@ class MatchFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = teamId ?: getTeamDocumentId()
             if (teamDocId == null) {
                 trySend(null)
                 awaitClose { }

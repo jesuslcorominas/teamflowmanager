@@ -1,3 +1,5 @@
+@file:JvmName("AndroidTFMFonts")
+
 package com.jesuslcorominas.teamflowmanager.ui.theme
 
 import androidx.compose.ui.text.font.FontFamily

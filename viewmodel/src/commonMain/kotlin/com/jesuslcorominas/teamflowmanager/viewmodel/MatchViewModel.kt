@@ -16,6 +16,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MatchEventNotification
@@ -43,9 +44,11 @@ import kotlinx.coroutines.launch
 
 class MatchViewModel(
     private val matchId: Long,
+    private val teamId: String? = null,
     private val getMatchById: GetMatchByIdUseCase,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
     private val getPlayersUseCase: GetPlayersUseCase,
+    private val getPlayersByTeamUseCase: GetPlayersByTeamUseCase,
     private val finishMatch: FinishMatchUseCase,
     private val pauseMatch: PauseMatchUseCase,
     private val resumeMatchUseCase: ResumeMatchUseCase,
@@ -120,7 +123,7 @@ class MatchViewModel(
                 }
 
                 val currentTime = _currentTime.value
-                getMatchById(matchId).first()?.let {
+                getMatchById(matchId, teamId).first()?.let {
                     startMatchTimerUseCase(matchId = it.id, currentTime)
                     // Start all player timers at once using batch operation
                     if (it.startingLineupIds.isNotEmpty()) {
@@ -281,7 +284,7 @@ class MatchViewModel(
                     // Continue with match resume even if sync fails
                 }
 
-                getMatchById(matchId).first()?.let {
+                getMatchById(matchId, teamId).first()?.let {
                     resumeMatchUseCase(it.id, _currentTime.value)
 
                     analyticsTracker.logEvent(
@@ -529,7 +532,7 @@ class MatchViewModel(
                         team = teamFlow.value,
                         matchId = goalMatchId.toString(),
                     ) {
-                        val updatedMatch = getMatchById(goalMatchId).first() ?: return@fireNotification null
+                        val updatedMatch = getMatchById(goalMatchId, teamId).first() ?: return@fireNotification null
                         val minuteOfPlay = notificationCoordinator.minuteOfPlay(updatedMatch, snapshotTime)
                         MatchEventNotification.Goal(
                             teamName = updatedMatch.teamName,
@@ -588,7 +591,7 @@ class MatchViewModel(
                         team = teamFlow.value,
                         matchId = goalMatchId.toString(),
                     ) {
-                        val updatedMatch = getMatchById(goalMatchId).first() ?: return@fireNotification null
+                        val updatedMatch = getMatchById(goalMatchId, teamId).first() ?: return@fireNotification null
                         val minuteOfPlay = notificationCoordinator.minuteOfPlay(updatedMatch, snapshotTime)
                         MatchEventNotification.Goal(
                             teamName = updatedMatch.teamName,
@@ -613,11 +616,11 @@ class MatchViewModel(
     private fun loadMatchData(matchId: Long) {
         viewModelScope.launch {
             combine(
-                getMatchById(matchId),
-                getAllPlayerTimesUseCase(matchId),
-                getPlayersUseCase(),
+                getMatchById(matchId, teamId),
+                getAllPlayerTimesUseCase(matchId, teamId),
+                if (teamId != null) getPlayersByTeamUseCase(teamId) else getPlayersUseCase(),
                 _currentTime,
-                getMatchTimelineUseCase(matchId),
+                getMatchTimelineUseCase(matchId, teamId),
             ) { match, playerTimes, players, currentTime, timeline ->
                 when {
                     match == null -> MatchUiState.NoMatch
@@ -668,11 +671,11 @@ class MatchViewModel(
                     _uiState.value = state
                 } else {
                     // Load finished match summary and timeline
-                    getMatchById(matchId).collect { match ->
+                    getMatchById(matchId, teamId).collect { match ->
                         if (match != null && match.status == MatchStatus.FINISHED) {
                             combine(
-                                getMatchSummaryUseCase(match.id),
-                                getMatchTimelineUseCase(match.id),
+                                getMatchSummaryUseCase(match.id, teamId),
+                                getMatchTimelineUseCase(match.id, teamId),
                             ) { summary, timeline ->
                                 if (summary != null) {
                                     MatchUiState.Finished(

@@ -22,6 +22,7 @@ kotlin {
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.datetime)
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
             }

@@ -1,3 +1,5 @@
+@file:JvmName("AndroidTFMElevation")
+
 package com.jesuslcorominas.teamflowmanager.ui.theme
 
 import androidx.compose.ui.unit.dp

@@ -4,7 +4,10 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import kotlinx.coroutines.flow.Flow
 
 interface MatchDataSource {
-    fun getMatchById(matchId: Long): Flow<Match?>
+    fun getMatchById(
+        matchId: Long,
+        teamId: String? = null,
+    ): Flow<Match?>
 
     fun getAllMatches(): Flow<List<Match>>
 

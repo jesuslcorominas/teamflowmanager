@@ -31,7 +31,7 @@ class GetAllPlayerTimesUseCaseTest {
                     PlayerTime(playerId = 1L, elapsedTimeMillis = 5000L, isRunning = true),
                     PlayerTime(playerId = 2L, elapsedTimeMillis = 3000L, isRunning = false),
                 )
-            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(playerTimes)
+            every { playerTimeRepository.getPlayerTimesByMatch(any(), any()) } returns flowOf(playerTimes)
 
             // When
             val result = getAllPlayerTimesUseCase.invoke(matchId = 1L).first()

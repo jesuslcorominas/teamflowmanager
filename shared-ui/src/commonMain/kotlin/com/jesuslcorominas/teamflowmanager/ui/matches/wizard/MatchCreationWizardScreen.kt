@@ -69,7 +69,7 @@ fun MatchCreationWizardScreen(
             is MatchCreationWizardUiState.Loading -> Loading()
             is MatchCreationWizardUiState.Saving -> Loading()
             is MatchCreationWizardUiState.Ready -> {
-                Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = TFMSpacing.spacing02)) {
                     when (currentStep) {
                         WizardStep.GENERAL_DATA -> {
                             GeneralDataStep(
@@ -81,6 +81,7 @@ fun MatchCreationWizardScreen(
                                 onDataChanged = { opponent, location, date, time, numberOfPeriods ->
                                     wizardViewModel.setGeneralData(opponent, location, date, time, numberOfPeriods)
                                 },
+                                homeGround = wizardViewModel.getHomeGround(),
                                 onNext = { wizardViewModel.goToNextStep() },
                                 onCancel = { wizardViewModel.requestBack(onNavigateBack) },
                                 modifier =

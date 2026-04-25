@@ -70,6 +70,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared-ui"))
     implementation(project(":viewmodel"))
     implementation(project(":di"))
     implementation(project(":domain"))
