@@ -158,9 +158,11 @@ val viewModelModule =
         viewModel { params ->
             MatchViewModel(
                 matchId = params.get(),
+                teamId = params.getOrNull(),
                 getMatchById = get(),
                 getAllPlayerTimesUseCase = get(),
                 getPlayersUseCase = get(),
+                getPlayersByTeamUseCase = get(),
                 finishMatch = get(),
                 pauseMatch = get(),
                 resumeMatchUseCase = get(),

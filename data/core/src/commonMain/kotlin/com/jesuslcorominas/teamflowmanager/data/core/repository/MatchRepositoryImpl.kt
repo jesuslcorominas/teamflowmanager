@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.first
 internal class MatchRepositoryImpl(
     private val matchDataSource: MatchDataSource,
 ) : MatchRepository {
-    override fun getMatchById(matchId: Long): Flow<Match?> = matchDataSource.getMatchById(matchId)
+    override fun getMatchById(matchId: Long, teamId: String?): Flow<Match?> = matchDataSource.getMatchById(matchId, teamId)
 
     override fun getAllMatches(): Flow<List<Match>> = matchDataSource.getAllMatches()
 

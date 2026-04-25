@@ -16,6 +16,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
@@ -81,6 +82,7 @@ class MatchViewModelTest {
     private lateinit var fakeTicker: FakeTimeTicker
     private lateinit var notifyPresidentMatchEventUseCase: NotifyPresidentMatchEventUseCase
     private lateinit var getTeamUseCase: GetTeamUseCase
+    private lateinit var getPlayersByTeamUseCase: GetPlayersByTeamUseCase
 
     private val testMatch = Match(
         id = MATCH_ID,
@@ -130,6 +132,7 @@ class MatchViewModelTest {
         fakeTicker = FakeTimeTicker()
         notifyPresidentMatchEventUseCase = mockk(relaxed = true)
         getTeamUseCase = mockk(relaxed = true)
+        getPlayersByTeamUseCase = mockk(relaxed = true)
 
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(testMatch)
         every { getAllPlayerTimesUseCase(any()) } returns flowOf(playerTimes)
@@ -169,6 +172,7 @@ class MatchViewModelTest {
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
         getTeamUseCase = getTeamUseCase,
+        getPlayersByTeamUseCase = getPlayersByTeamUseCase,
     )
 
     @Test

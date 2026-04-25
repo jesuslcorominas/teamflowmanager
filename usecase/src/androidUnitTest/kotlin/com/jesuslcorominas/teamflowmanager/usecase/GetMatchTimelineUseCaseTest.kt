@@ -50,9 +50,9 @@ class GetMatchTimelineUseCaseTest {
     fun `invoke should return null when match does not exist`() = runTest {
         // Given
         val matchId = 1L
-        every { matchRepository.getMatchById(matchId) } returns flowOf(null)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(null)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
 
         // When
@@ -73,9 +73,9 @@ class GetMatchTimelineUseCaseTest {
             startingLineupIds = listOf(1L, 2L),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
 
         // When
@@ -100,9 +100,9 @@ class GetMatchTimelineUseCaseTest {
             Goal(id = 3L, matchId = matchId, scorerId = 1L, goalTimeMillis = 900000L, matchElapsedTimeMillis = 900000L, isOpponentGoal = false),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(goals)
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1))
 
         // When
@@ -150,9 +150,9 @@ class GetMatchTimelineUseCaseTest {
             ),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(substitutions)
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
 
         // When
@@ -190,9 +190,9 @@ class GetMatchTimelineUseCaseTest {
             ),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
 
         // When
@@ -232,9 +232,9 @@ class GetMatchTimelineUseCaseTest {
             ),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(goals)
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(substitutions)
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
 
         // When
@@ -276,9 +276,9 @@ class GetMatchTimelineUseCaseTest {
             Goal(id = 3L, matchId = matchId, scorerId = 1L, goalTimeMillis = 2000000L, matchElapsedTimeMillis = 2000000L, isOpponentGoal = false),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(goals)
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1))
 
         // When
@@ -326,9 +326,9 @@ class GetMatchTimelineUseCaseTest {
             ),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
 
         // When
@@ -393,9 +393,9 @@ class GetMatchTimelineUseCaseTest {
             Goal(id = 3L, matchId = matchId, scorerId = null, goalTimeMillis = 900000L, matchElapsedTimeMillis = 900000L, isOpponentGoal = true, isOwnGoal = false),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(goals)
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1))
 
         // When
@@ -437,9 +437,9 @@ class GetMatchTimelineUseCaseTest {
             ),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
 
         // When
@@ -483,9 +483,9 @@ class GetMatchTimelineUseCaseTest {
             ),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId, null) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(substitutions)
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2, player3))
 
         // When

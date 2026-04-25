@@ -123,7 +123,7 @@ class PlayerTimeFirestoreDataSourceImpl(
      *
      * Note: requires a composite Firestore index on playerTimes(teamId ASC, matchId ASC).
      */
-    override fun getPlayerTimesByMatch(matchId: Long): Flow<List<PlayerTime>> =
+    override fun getPlayerTimesByMatch(matchId: Long, teamId: String?): Flow<List<PlayerTime>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -132,7 +132,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = teamId ?: getTeamDocumentId()
             if (teamDocId == null) {
                 trySend(emptyList())
                 awaitClose { }

@@ -4,5 +4,5 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchSummary
 import kotlinx.coroutines.flow.Flow
 
 interface GetMatchSummaryUseCase {
-    operator fun invoke(matchId: Long): Flow<MatchSummary?>
+    operator fun invoke(matchId: Long, teamId: String? = null): Flow<MatchSummary?>
 }

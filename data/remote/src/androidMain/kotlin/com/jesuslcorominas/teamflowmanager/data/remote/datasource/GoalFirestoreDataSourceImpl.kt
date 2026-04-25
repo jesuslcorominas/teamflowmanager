@@ -91,7 +91,7 @@ class GoalFirestoreDataSourceImpl(
     /**
      * Gets all goals for a specific match as a real-time Flow.
      */
-    override fun getMatchGoals(matchId: Long): Flow<List<Goal>> =
+    override fun getMatchGoals(matchId: Long, teamId: String?): Flow<List<Goal>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -100,7 +100,7 @@ class GoalFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = teamId ?: getTeamDocumentId()
             if (teamDocId == null) {
                 trySend(emptyList())
                 awaitClose { }

@@ -48,9 +48,9 @@ class GetMatchSummaryUseCaseTest {
         runTest {
             // Given
             val matchId = 1L
-            every { matchRepository.getMatchById(matchId) } returns flowOf(null)
-            every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
-            every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+            every { matchRepository.getMatchById(matchId, null) } returns flowOf(null)
+            every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId, null) } returns flowOf(emptyList())
+            every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
             every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
 
             // When
@@ -81,9 +81,9 @@ class GetMatchSummaryUseCaseTest {
                 PlayerTimeHistory(id = 2L, playerId = 2L, matchId = matchId, elapsedTimeMillis = 2000000L, savedAtMillis = 0L),
             )
 
-            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-            every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(playerTimes)
-            every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+            every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+            every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId, null) } returns flowOf(playerTimes)
+            every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
             every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
 
             // When
@@ -121,9 +121,9 @@ class GetMatchSummaryUseCaseTest {
                 PlayerSubstitution(id = 2L, matchId = matchId, playerOutId = 2L, playerInId = 3L, substitutionTimeMillis = 0L, matchElapsedTimeMillis = 900000L),
             )
 
-            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-            every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
-            every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+            every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+            every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId, null) } returns flowOf(emptyList())
+            every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(substitutions)
             every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2, player3))
 
             // When
@@ -154,9 +154,9 @@ class GetMatchSummaryUseCaseTest {
             PlayerTimeHistory(playerId = 99L, matchId = matchId, elapsedTimeMillis = 1000L, savedAtMillis = 0L),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(playerTimes)
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId, null) } returns flowOf(playerTimes)
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(emptyList()) // player 99 not found
 
         // When - expects IllegalStateException
@@ -177,9 +177,9 @@ class GetMatchSummaryUseCaseTest {
             PlayerSubstitution(id = 1L, matchId = matchId, playerOutId = 99L, playerInId = 1L, substitutionTimeMillis = 0L, matchElapsedTimeMillis = 1000L),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId, null) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(substitutions)
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1)) // player 99 absent
 
         // When - expects IllegalStateException
@@ -200,9 +200,9 @@ class GetMatchSummaryUseCaseTest {
             PlayerSubstitution(id = 1L, matchId = matchId, playerOutId = 1L, playerInId = 99L, substitutionTimeMillis = 0L, matchElapsedTimeMillis = 1000L),
         )
 
-        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
-        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
-        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+        every { matchRepository.getMatchById(matchId, null) } returns flowOf(match)
+        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId, null) } returns flowOf(emptyList())
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId, null) } returns flowOf(substitutions)
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1)) // player 99 absent
 
         // When - expects IllegalStateException

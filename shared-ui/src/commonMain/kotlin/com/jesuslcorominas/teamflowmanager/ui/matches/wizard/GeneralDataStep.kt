@@ -97,9 +97,9 @@ fun GeneralDataStep(
         remember {
             val now = Clock.System.now()
             val localDate: LocalDate = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
-            // DayOfWeek ordinal: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6
+            // DayOfWeek ordinal: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6. Returns 0 when today is Saturday.
             val ordinal = localDate.dayOfWeek.ordinal
-            val daysUntilSaturday = if (ordinal == 5) 7 else (5 - ordinal + 7) % 7
+            val daysUntilSaturday = (5 - ordinal + 7) % 7
             localDate.plus(daysUntilSaturday, DateTimeUnit.DAY)
                 .atStartOfDayIn(TimeZone.UTC)
                 .toEpochMilliseconds()

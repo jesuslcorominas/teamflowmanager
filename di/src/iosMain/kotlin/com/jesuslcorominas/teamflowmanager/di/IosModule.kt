@@ -218,9 +218,11 @@ val iosModule =
         factory { params ->
             MatchViewModel(
                 matchId = params.get(),
+                teamId = params.getOrNull(),
                 getMatchById = get(),
                 getAllPlayerTimesUseCase = get(),
                 getPlayersUseCase = get(),
+                getPlayersByTeamUseCase = get(),
                 finishMatch = get(),
                 pauseMatch = get(),
                 resumeMatchUseCase = get(),
@@ -240,6 +242,8 @@ val iosModule =
                 timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
+                notifyPresidentMatchEvent = get(),
+                getTeamUseCase = get(),
             )
         }
         factory { params ->

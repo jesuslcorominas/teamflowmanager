@@ -121,10 +121,11 @@ private const val TAB_STATISTICS = 3
 @Composable
 fun MatchScreen(
     matchId: Long,
+    teamId: String? = null,
     readOnly: Boolean = false,
     onTitleChange: (String?) -> Unit = {},
     onExportReady: (uri: String) -> Unit = {},
-    viewModel: MatchViewModel = koinViewModel(key = matchId.toString(), parameters = { parametersOf(matchId) }),
+    viewModel: MatchViewModel = koinViewModel(key = matchId.toString(), parameters = { parametersOf(matchId, teamId) }),
 ) {
     TrackScreenView(screenName = ScreenName.MATCH_DETAIL, screenClass = "MatchScreen")
 

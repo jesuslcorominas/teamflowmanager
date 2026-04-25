@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 internal class GoalRepositoryImpl(
     private val goalDataSource: GoalDataSource,
 ) : GoalRepository {
-    override fun getMatchGoals(matchId: Long): Flow<List<Goal>> = goalDataSource.getMatchGoals(matchId)
+    override fun getMatchGoals(matchId: Long, teamId: String?): Flow<List<Goal>> = goalDataSource.getMatchGoals(matchId, teamId)
 
     override fun getAllTeamGoals(): Flow<List<Goal>> = goalDataSource.getAllTeamGoals()
 

@@ -93,12 +93,12 @@
     <string name="team_captain">Captain</string>
     <string name="captain_confirm_title">Change Team Captain?</string>
     <string name="captain_confirm_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. Continue?</string>
-    <string name="captain_replace_with_matches_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. There are %5$d scheduled matches. Do you want to update them with the new captain?</string>
+    <string name="captain_replace_with_matches_message">%1$s %2$s is currently the team captain. If you save %3$s %4$s as captain, they will replace the current captain. There are %5$s scheduled matches. Do you want to update them with the new captain?</string>
     <string name="update_captain_in_matches">Update captain in matches</string>
     <string name="keep_current_captain_in_matches">Keep current captain in matches</string>
     <string name="captain_remove_title">Remove Team Captain?</string>
     <string name="captain_remove_message">By unchecking this, %1$s %2$s will no longer be the team captain. The captain will be selected for each match. Continue?</string>
-    <string name="captain_remove_with_matches_message">By unchecking this, %1$s %2$s will no longer be the team captain. There are %3$d scheduled matches. What do you want to do?</string>
+    <string name="captain_remove_with_matches_message">By unchecking this, %1$s %2$s will no longer be the team captain. There are %3$s scheduled matches. What do you want to do?</string>
     <string name="keep_captain_for_matches">Keep as captain in scheduled matches</string>
     <string name="remove_captain_from_matches">Remove from scheduled matches</string>
 
@@ -189,7 +189,7 @@
     <string name="archived_matches">Archived</string>
     <string name="start_match">Start</string>
     <string name="view_match">View Detail</string>
-    <string name="match_score">%1$d - %2$d</string>
+    <string name="match_score">%1$s - %2$s</string>
     <string name="archive_match">Archive</string>
     <string name="unarchive_match">Unarchive</string>
     <string name="no_archived_matches">No matches archived yet</string>
@@ -219,7 +219,7 @@
     <string name="pause_match_early_message">There is more than 1 minute remaining. Are you sure you want to go to the break now?</string>
 
     <!-- Match Periods -->
-    <string name="period_label">Period %1$d/%2$d</string>
+    <string name="period_label">Period %1$s/%2$s</string>
     <string name="first_quarter">1st Quarter</string>
     <string name="second_quarter">2nd Quarter</string>
     <string name="third_quarter">3rd Quarter</string>
@@ -282,7 +282,7 @@
 
     <!-- Unsaved changes -->
     <string name="list_single">%1$s</string>
-    <string name="list_multiple">%1$s and %2$d more</string>
+    <string name="list_multiple">%1$s and %2$s more</string>
     <string name="unsaved_changes_title">Unsaved changes</string>
     <string name="discard_message">You have unsaved changes. Are you sure you want to exit?</string>
 
@@ -318,7 +318,7 @@
     <string name="pdf_header_goals">GOALS</string>
     <string name="pdf_scorers_section">Top Scorers</string>
     <string name="pdf_no_goals">No goals recorded</string>
-    <string name="pdf_scorer_format">%1$d. %2$s - %3$d goal(s)</string>
+    <string name="pdf_scorer_format">%1$s. %2$s - %3$s goal(s)</string>
     <string name="pdf_match_results_section">Match Results</string>
     <string name="pdf_no_matches">No finished matches</string>
     <string name="match_report_title">Match Report</string>

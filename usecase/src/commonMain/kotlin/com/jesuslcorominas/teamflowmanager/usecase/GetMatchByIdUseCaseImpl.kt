@@ -8,5 +8,5 @@ import kotlinx.coroutines.flow.Flow
 internal class GetMatchByIdUseCaseImpl(
     private val matchRepository: MatchRepository,
 ) : GetMatchByIdUseCase {
-    override fun invoke(matchId: Long): Flow<Match?> = matchRepository.getMatchById(matchId)
+    override fun invoke(matchId: Long, teamId: String?): Flow<Match?> = matchRepository.getMatchById(matchId, teamId)
 }

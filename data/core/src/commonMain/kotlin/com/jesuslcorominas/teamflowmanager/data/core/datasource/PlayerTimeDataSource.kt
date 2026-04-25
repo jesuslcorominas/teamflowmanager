@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface PlayerTimeDataSource {
     fun getPlayerTime(playerId: Long): Flow<PlayerTime?>
 
-    fun getPlayerTimesByMatch(matchId: Long): Flow<List<PlayerTime>>
+    fun getPlayerTimesByMatch(matchId: Long, teamId: String? = null): Flow<List<PlayerTime>>
 
     suspend fun upsertPlayerTime(playerTime: PlayerTime)
 

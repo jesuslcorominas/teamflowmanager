@@ -230,7 +230,7 @@ fun Navigation(
             val matchId =
                 backStackEntry.arguments?.getLong(Route.PresidentMatchDetail.ARG_MATCH_ID)
                     ?: return@composable
-            MatchScreen(matchId = matchId, readOnly = true)
+            MatchScreen(matchId = matchId, teamId = teamId, readOnly = true)
         }
 
         composable(Route.ClubMembers.createRoute()) {

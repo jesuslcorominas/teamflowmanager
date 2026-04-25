@@ -22,12 +22,12 @@ internal class GetMatchTimelineUseCaseImpl(
     private val playerSubstitutionRepository: PlayerSubstitutionRepository,
     private val playerRepository: PlayerRepository,
 ) : GetMatchTimelineUseCase {
-    override fun invoke(matchId: Long): Flow<MatchTimeline?> {
+    override fun invoke(matchId: Long, teamId: String?): Flow<MatchTimeline?> {
         return combine(
-            matchRepository.getMatchById(matchId),
-            goalRepository.getMatchGoals(matchId),
-            playerSubstitutionRepository.getMatchSubstitutions(matchId),
-            playerRepository.getAllPlayers(),
+            matchRepository.getMatchById(matchId, teamId),
+            goalRepository.getMatchGoals(matchId, teamId),
+            playerSubstitutionRepository.getMatchSubstitutions(matchId, teamId),
+            if (teamId != null) playerRepository.getPlayersByTeam(teamId) else playerRepository.getAllPlayers(),
         ) { match, goals, substitutions, players ->
             if (match == null) {
                 null

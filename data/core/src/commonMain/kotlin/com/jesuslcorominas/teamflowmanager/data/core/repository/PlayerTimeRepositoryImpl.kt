@@ -12,7 +12,7 @@ internal class PlayerTimeRepositoryImpl(
 ) : PlayerTimeRepository {
     override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> = playerTimeDataSource.getPlayerTime(playerId)
 
-    override fun getPlayerTimesByMatch(matchId: Long): Flow<List<PlayerTime>> = playerTimeDataSource.getPlayerTimesByMatch(matchId)
+    override fun getPlayerTimesByMatch(matchId: Long, teamId: String?): Flow<List<PlayerTime>> = playerTimeDataSource.getPlayerTimesByMatch(matchId, teamId)
 
     override suspend fun startTimer(
         matchId: Long,
