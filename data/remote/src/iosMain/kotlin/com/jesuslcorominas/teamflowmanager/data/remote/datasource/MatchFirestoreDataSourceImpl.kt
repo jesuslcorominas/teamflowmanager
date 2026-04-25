@@ -159,7 +159,10 @@ class MatchFirestoreDataSourceImpl(
             )
         }
 
-    override fun getMatchById(matchId: Long, teamId: String?): Flow<Match?> =
+    override fun getMatchById(
+        matchId: Long,
+        teamId: String?,
+    ): Flow<Match?> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {

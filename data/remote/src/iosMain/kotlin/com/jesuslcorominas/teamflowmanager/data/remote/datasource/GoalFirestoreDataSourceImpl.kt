@@ -42,7 +42,10 @@ class GoalFirestoreDataSourceImpl(
         }
     }
 
-    override fun getMatchGoals(matchId: Long, teamId: String?): Flow<List<Goal>> =
+    override fun getMatchGoals(
+        matchId: Long,
+        teamId: String?,
+    ): Flow<List<Goal>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {

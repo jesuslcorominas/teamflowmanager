@@ -6,7 +6,10 @@ import kotlinx.coroutines.flow.Flow
 interface PlayerTimeHistoryRepository {
     fun getPlayerTimeHistory(playerId: Long): Flow<List<PlayerTimeHistory>>
 
-    fun getMatchPlayerTimeHistory(matchId: Long, teamId: String? = null): Flow<List<PlayerTimeHistory>>
+    fun getMatchPlayerTimeHistory(
+        matchId: Long,
+        teamId: String? = null,
+    ): Flow<List<PlayerTimeHistory>>
 
     fun getAllPlayerTimeHistory(): Flow<List<PlayerTimeHistory>>
 

@@ -91,7 +91,10 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
     /**
      * Gets all substitutions for a specific match as a real-time Flow.
      */
-    override fun getMatchSubstitutions(matchId: Long, teamId: String?): Flow<List<PlayerSubstitution>> =
+    override fun getMatchSubstitutions(
+        matchId: Long,
+        teamId: String?,
+    ): Flow<List<PlayerSubstitution>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {

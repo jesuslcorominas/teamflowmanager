@@ -42,7 +42,10 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         }
     }
 
-    override fun getMatchSubstitutions(matchId: Long, teamId: String?): Flow<List<PlayerSubstitution>> =
+    override fun getMatchSubstitutions(
+        matchId: Long,
+        teamId: String?,
+    ): Flow<List<PlayerSubstitution>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {

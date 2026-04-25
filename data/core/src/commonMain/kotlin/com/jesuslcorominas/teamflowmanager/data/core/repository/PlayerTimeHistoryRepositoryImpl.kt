@@ -10,7 +10,14 @@ internal class PlayerTimeHistoryRepositoryImpl(
 ) : PlayerTimeHistoryRepository {
     override fun getPlayerTimeHistory(playerId: Long): Flow<List<PlayerTimeHistory>> = playerTimeHistoryDataSource.getPlayerTimeHistory(playerId)
 
-    override fun getMatchPlayerTimeHistory(matchId: Long, teamId: String?): Flow<List<PlayerTimeHistory>> = playerTimeHistoryDataSource.getMatchPlayerTimeHistory(matchId, teamId)
+    override fun getMatchPlayerTimeHistory(
+        matchId: Long,
+        teamId: String?,
+    ): Flow<List<PlayerTimeHistory>> =
+        playerTimeHistoryDataSource.getMatchPlayerTimeHistory(
+            matchId,
+            teamId,
+        )
 
     override fun getAllPlayerTimeHistory(): Flow<List<PlayerTimeHistory>> = playerTimeHistoryDataSource.getAllPlayerTimeHistory()
 

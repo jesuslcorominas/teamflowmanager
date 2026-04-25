@@ -74,7 +74,10 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             )
         }
 
-    override fun getMatchPlayerTimeHistory(matchId: Long, teamId: String?): Flow<List<PlayerTimeHistory>> =
+    override fun getMatchPlayerTimeHistory(
+        matchId: Long,
+        teamId: String?,
+    ): Flow<List<PlayerTimeHistory>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
