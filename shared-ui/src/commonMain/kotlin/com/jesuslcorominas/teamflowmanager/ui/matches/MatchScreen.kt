@@ -21,10 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.TimerOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -68,6 +65,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
@@ -76,6 +74,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.ExportState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -90,6 +89,9 @@ import teamflowmanager.shared_ui.generated.resources.close
 import teamflowmanager.shared_ui.generated.resources.dont_show_again
 import teamflowmanager.shared_ui.generated.resources.end_timeout_button
 import teamflowmanager.shared_ui.generated.resources.finish_match_button
+import teamflowmanager.shared_ui.generated.resources.ic_goal
+import teamflowmanager.shared_ui.generated.resources.ic_timeout
+import teamflowmanager.shared_ui.generated.resources.ic_whistle
 import teamflowmanager.shared_ui.generated.resources.invalid_substitution_message
 import teamflowmanager.shared_ui.generated.resources.invalid_substitution_title
 import teamflowmanager.shared_ui.generated.resources.no
@@ -479,7 +481,7 @@ private fun BottomButtons(
 ) {
     if (state.match.isStarted) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(bottom = LocalContentBottomPadding.current),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
@@ -547,7 +549,10 @@ private fun BottomButtons(
             }
         }
     } else {
-        Button(onClick = onBeginMatch, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = onBeginMatch,
+            modifier = Modifier.fillMaxWidth().padding(bottom = LocalContentBottomPadding.current),
+        ) {
             Icon(imageVector = Icons.Default.PlayArrow, contentDescription = stringResource(Res.string.begin_match))
             Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
             Text(text = stringResource(Res.string.begin_match))
@@ -563,7 +568,7 @@ private fun TimeoutButton(
 ) {
     AppIconButton(
         internalModifier = Modifier.size(32.dp),
-        imageVector = if (isTimeout) Icons.Default.TimerOff else Icons.Default.Timer,
+        painter = painterResource(if (isTimeout) Res.drawable.ic_whistle else Res.drawable.ic_timeout),
         contentDescription =
             stringResource(
                 if (isTimeout) Res.string.end_timeout_button else Res.string.timeout_button,
@@ -592,7 +597,7 @@ private fun GoalButton(
             Modifier
                 .size(48.dp)
                 .then(if (isOpponent) Modifier.graphicsLayer(scaleX = -1f) else Modifier),
-        imageVector = Icons.Default.SportsSoccer,
+        painter = painterResource(Res.drawable.ic_goal),
         contentDescription = stringResource(Res.string.add_goal_button),
         enabled = enabled,
         tint =
@@ -790,7 +795,7 @@ private fun ScorerRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Default.SportsSoccer,
+                painter = painterResource(Res.drawable.ic_goal),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )
