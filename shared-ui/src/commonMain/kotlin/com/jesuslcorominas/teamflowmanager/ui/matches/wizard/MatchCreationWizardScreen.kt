@@ -55,6 +55,7 @@ fun MatchCreationWizardScreen(
     val uiState by wizardViewModel.uiState.collectAsState()
     val currentStep by wizardViewModel.currentStep.collectAsState()
     val showExitDialog by wizardViewModel.showExitDialog.collectAsState()
+    val homeGround by wizardViewModel.homeGround.collectAsState()
     val scope = rememberCoroutineScope()
 
     var showDefaultCaptainDialog by remember { mutableStateOf(false) }
@@ -81,7 +82,7 @@ fun MatchCreationWizardScreen(
                                 onDataChanged = { opponent, location, date, time, numberOfPeriods ->
                                     wizardViewModel.setGeneralData(opponent, location, date, time, numberOfPeriods)
                                 },
-                                homeGround = wizardViewModel.getHomeGround(),
+                                homeGround = homeGround,
                                 onNext = { wizardViewModel.goToNextStep() },
                                 onCancel = { wizardViewModel.requestBack(onNavigateBack) },
                                 modifier =
