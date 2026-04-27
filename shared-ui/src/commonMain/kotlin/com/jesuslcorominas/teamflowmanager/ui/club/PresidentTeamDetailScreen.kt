@@ -254,15 +254,17 @@ private fun MatchesTab(
         ) {
             items(state.matches, key = { it.id }) { match ->
                 when (match.status) {
-                    MatchStatus.FINISHED -> PlayedMatchCard(
-                        match = match,
-                        onNavigateToDetail = { onNavigateToMatch(match.id) },
-                        showArchiveButton = false,
-                    )
-                    MatchStatus.IN_PROGRESS, MatchStatus.TIMEOUT -> ScheduledMatchCard(
-                        match = match,
-                        onClick = { onNavigateToMatch(match.id) },
-                    )
+                    MatchStatus.FINISHED ->
+                        PlayedMatchCard(
+                            match = match,
+                            onNavigateToDetail = { onNavigateToMatch(match.id) },
+                            showArchiveButton = false,
+                        )
+                    MatchStatus.IN_PROGRESS, MatchStatus.TIMEOUT ->
+                        ScheduledMatchCard(
+                            match = match,
+                            onClick = { onNavigateToMatch(match.id) },
+                        )
                     else -> ScheduledMatchCard(match = match)
                 }
             }
