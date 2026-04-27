@@ -4,12 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +16,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
@@ -31,7 +27,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.form.ExpandableTitle
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.ArchivedMatchesNavigationCard
-import com.jesuslcorominas.teamflowmanager.ui.matches.card.PausedMatchCard
+import com.jesuslcorominas.teamflowmanager.ui.matches.card.LiveMatchCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.PendingMatchCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.PlayedMatchCard
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -42,13 +38,11 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.cancel
-import teamflowmanager.shared_ui.generated.resources.current_match_title
 import teamflowmanager.shared_ui.generated.resources.delete
 import teamflowmanager.shared_ui.generated.resources.delete_match_message
 import teamflowmanager.shared_ui.generated.resources.delete_match_title
 import teamflowmanager.shared_ui.generated.resources.no_matches_message
 import teamflowmanager.shared_ui.generated.resources.no_results
-import teamflowmanager.shared_ui.generated.resources.paused_match_half_time
 import teamflowmanager.shared_ui.generated.resources.pending_matches
 import teamflowmanager.shared_ui.generated.resources.played_matches
 
@@ -110,14 +104,20 @@ private fun MatchesList(
 ) {
     val searchState = LocalSearchState.current
     val bottomPadding = LocalContentBottomPadding.current
+    val currentTime by viewModel.currentTime.collectAsState()
 
     val pendingMatches = state.matches.filter { it.status == MatchStatus.SCHEDULED }.sortedBy { it.dateTime }
-    val activeMatch = state.matches.find { it.status == MatchStatus.IN_PROGRESS }
-    val pausedMatch = state.matches.find { it.status == MatchStatus.PAUSED || it.status == MatchStatus.TIMEOUT }
+    val liveMatches =
+        state.matches
+            .filter {
+                it.status == MatchStatus.IN_PROGRESS ||
+                    it.status == MatchStatus.PAUSED ||
+                    it.status == MatchStatus.TIMEOUT
+            }
+            .sortedByDescending { it.dateTime }
     val playedMatches = state.matches.filter { it.status == MatchStatus.FINISHED }.sortedByDescending { it.dateTime }
 
-    val hasActiveMatch = activeMatch != null
-    val hasPausedMatch = pausedMatch != null
+    val hasLiveMatch = liveMatches.isNotEmpty()
 
     var expandedPendingMatches by remember { mutableStateOf(true) }
     var expandedPlayedMatches by remember { mutableStateOf(true) }
@@ -153,50 +153,19 @@ private fun MatchesList(
     ) {
         item { ArchivedMatchesNavigationCard(onClick = onNavigateToArchivedMatches) }
 
-        if (hasActiveMatch) {
-            item {
-                Text(
-                    text = stringResource(Res.string.current_match_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
-                )
-            }
-            item {
-                PausedMatchCard(
-                    match = activeMatch!!,
-                    onResume = { onNavigateToMatch(activeMatch) },
-                    onNavigateToDetail = { onNavigateToMatch(activeMatch) },
-                )
-            }
-        }
-
-        if (hasPausedMatch) {
-            item {
-                Text(
-                    text = stringResource(Res.string.paused_match_half_time),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = TFMSpacing.spacing02),
-                )
-            }
-            item {
-                PausedMatchCard(
-                    match = pausedMatch!!,
-                    onResume = {
-                        viewModel.resumeMatch(pausedMatch.id)
-                        onNavigateToMatch(pausedMatch)
-                    },
-                    onNavigateToDetail = { onNavigateToMatch(pausedMatch) },
-                )
-            }
+        items(liveMatches) { match ->
+            LiveMatchCard(
+                match = match,
+                currentTime = currentTime,
+                onNavigateToDetail = { onNavigateToMatch(match) },
+            )
         }
 
         if (pendingMatches.isNotEmpty()) {
             pendingMatchesSection(
                 pendingMatches = pendingMatches,
                 expandedPendingMatches = expandedPendingMatches,
-                hasMatchStarted = hasActiveMatch || hasPausedMatch,
+                hasMatchStarted = hasLiveMatch,
                 onNavigateToEditMatch = onNavigateToEditMatch,
                 onNavigateToMatch = onNavigateToMatch,
                 onDeleteMatch = { viewModel.requestDeleteMatch(it) },

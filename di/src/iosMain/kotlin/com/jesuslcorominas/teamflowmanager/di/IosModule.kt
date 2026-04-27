@@ -78,6 +78,7 @@ val iosModule =
                 archiveMatchUseCase = get(),
                 synchronizeTimeUseCase = get(),
                 timeProvider = get(),
+                timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
             )
