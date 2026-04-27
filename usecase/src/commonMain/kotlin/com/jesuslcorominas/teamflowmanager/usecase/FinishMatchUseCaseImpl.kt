@@ -106,14 +106,13 @@ internal class FinishMatchUseCaseImpl(
                 }
             }
 
-            // Step 4: Reset player times in Firestore
+            // Step 4: Reset player times in Firestore (best-effort — match result is already saved)
             try {
                 playerTimeRepository.resetAllPlayerTimes()
                 println("FinishMatchUseCase: Successfully reset all player times")
             } catch (e: Exception) {
-                println("FinishMatchUseCase: Error resetting player times: ${e.message}")
+                println("FinishMatchUseCase: Error resetting player times (non-fatal): ${e.message}")
                 e.printStackTrace()
-                throw IllegalStateException("Failed to reset player times after finishing match", e)
             }
 
             // Step 5: Mark operation as COMPLETED
