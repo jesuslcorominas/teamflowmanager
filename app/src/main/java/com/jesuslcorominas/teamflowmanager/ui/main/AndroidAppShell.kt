@@ -117,8 +117,8 @@ private fun MainScaffold(
     val uiConfig = route?.uiConfig(arguments)
 
     val activity = LocalContext.current as ComponentActivity
-    SideEffect {
-        val navBarColor = if (uiConfig?.showBottomBar == true) BackgroundContrast.toArgb() else BackgroundMain.toArgb()
+    val showBottomBar = uiConfig?.showBottomBar == true
+    LaunchedEffect(showBottomBar) {
         activity.enableEdgeToEdge(
             statusBarStyle =
                 SystemBarStyle.auto(
@@ -126,10 +126,14 @@ private fun MainScaffold(
                     darkScrim = LightColorScheme.primary.toArgb(),
                 ),
             navigationBarStyle =
-                SystemBarStyle.auto(
-                    lightScrim = navBarColor,
-                    darkScrim = navBarColor,
-                ),
+                if (showBottomBar) {
+                    SystemBarStyle.dark(scrim = BackgroundContrast.toArgb())
+                } else {
+                    SystemBarStyle.light(
+                        scrim = BackgroundMain.toArgb(),
+                        darkScrim = BackgroundMain.toArgb(),
+                    )
+                },
         )
     }
 
