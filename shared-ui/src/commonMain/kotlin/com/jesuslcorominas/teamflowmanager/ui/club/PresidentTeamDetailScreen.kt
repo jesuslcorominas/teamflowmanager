@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.club
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -252,14 +253,19 @@ private fun MatchesTab(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(state.matches, key = { it.id }) { match ->
-                if (match.status == MatchStatus.FINISHED) {
-                    PlayedMatchCard(
-                        match = match,
-                        onNavigateToDetail = { onNavigateToMatch(match.id) },
-                        showArchiveButton = false,
-                    )
-                } else {
-                    ScheduledMatchCard(match = match)
+                when (match.status) {
+                    MatchStatus.FINISHED ->
+                        PlayedMatchCard(
+                            match = match,
+                            onNavigateToDetail = { onNavigateToMatch(match.id) },
+                            showArchiveButton = false,
+                        )
+                    MatchStatus.IN_PROGRESS, MatchStatus.TIMEOUT ->
+                        ScheduledMatchCard(
+                            match = match,
+                            onClick = { onNavigateToMatch(match.id) },
+                        )
+                    else -> ScheduledMatchCard(match = match)
                 }
             }
         }
@@ -317,8 +323,11 @@ private fun StatsTab(stats: PresidentTeamStats) {
 }
 
 @Composable
-private fun ScheduledMatchCard(match: Match) {
-    AppCard {
+private fun ScheduledMatchCard(
+    match: Match,
+    onClick: (() -> Unit)? = null,
+) {
+    AppCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
         Column(
             modifier =
                 Modifier
