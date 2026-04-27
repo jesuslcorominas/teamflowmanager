@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -16,6 +15,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,13 +45,13 @@ import com.jesuslcorominas.teamflowmanager.ui.util.localizedName
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import teamflowmanager.shared_ui.generated.resources.Res
-import teamflowmanager.shared_ui.generated.resources.ic_launcher
 import teamflowmanager.shared_ui.generated.resources.captain_selection_title
 import teamflowmanager.shared_ui.generated.resources.coach_name
 import teamflowmanager.shared_ui.generated.resources.create_team_title
 import teamflowmanager.shared_ui.generated.resources.delegate_name
 import teamflowmanager.shared_ui.generated.resources.delegate_name_required
 import teamflowmanager.shared_ui.generated.resources.first_name_required
+import teamflowmanager.shared_ui.generated.resources.ic_launcher
 import teamflowmanager.shared_ui.generated.resources.save
 import teamflowmanager.shared_ui.generated.resources.team_name
 import teamflowmanager.shared_ui.generated.resources.team_name_required

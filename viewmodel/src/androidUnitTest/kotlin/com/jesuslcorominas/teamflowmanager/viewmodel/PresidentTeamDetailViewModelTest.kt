@@ -17,12 +17,14 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCas
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamNotificationPreferenceUseCase
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -45,6 +47,7 @@ class PresidentTeamDetailViewModelTest {
     private lateinit var getNotificationPreferences: GetNotificationPreferencesUseCase
     private lateinit var updateTeamNotificationPreference: UpdateTeamNotificationPreferenceUseCase
     private lateinit var getUserClubMembership: GetUserClubMembershipUseCase
+    private lateinit var timeTicker: TimeTicker
 
     private val teamId = "team_fs_123"
 
@@ -57,8 +60,10 @@ class PresidentTeamDetailViewModelTest {
         getNotificationPreferences = mockk(relaxed = true)
         updateTeamNotificationPreference = mockk(relaxed = true)
         getUserClubMembership = mockk(relaxed = true)
+        timeTicker = mockk(relaxed = true)
 
         every { getUserClubMembership() } returns flowOf(null)
+        every { timeTicker.timeFlow } returns emptyFlow()
     }
 
     @After
@@ -75,6 +80,7 @@ class PresidentTeamDetailViewModelTest {
             getNotificationPreferences = getNotificationPreferences,
             updateTeamNotificationPreference = updateTeamNotificationPreference,
             getUserClubMembership = getUserClubMembership,
+            timeTicker = timeTicker,
         )
 
     private fun aTeam() =

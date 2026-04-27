@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -38,12 +39,10 @@ import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubNameError
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import kotlinx.coroutines.delay
-import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
-import teamflowmanager.shared_ui.generated.resources.ic_launcher
 import teamflowmanager.shared_ui.generated.resources.club_name_error_empty
 import teamflowmanager.shared_ui.generated.resources.club_name_error_too_long
 import teamflowmanager.shared_ui.generated.resources.club_name_error_too_short
@@ -55,6 +54,7 @@ import teamflowmanager.shared_ui.generated.resources.create_club_subtitle
 import teamflowmanager.shared_ui.generated.resources.create_club_success_message
 import teamflowmanager.shared_ui.generated.resources.create_club_success_title
 import teamflowmanager.shared_ui.generated.resources.create_club_title
+import teamflowmanager.shared_ui.generated.resources.ic_launcher
 
 @Composable
 fun CreateClubScreen(
