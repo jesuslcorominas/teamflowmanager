@@ -27,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -38,11 +37,10 @@ import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.viewmodel.InvitationCodeError
 import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.painterResource
+import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
-import teamflowmanager.shared_ui.generated.resources.ic_launcher
 import teamflowmanager.shared_ui.generated.resources.invitation_code_error_empty
 import teamflowmanager.shared_ui.generated.resources.invitation_code_error_invalid_format
 import teamflowmanager.shared_ui.generated.resources.invitation_code_error_too_long
@@ -211,12 +209,7 @@ private fun JoinClubForm(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            modifier = Modifier.size(144.dp),
-            painter = painterResource(Res.drawable.ic_launcher),
-            contentDescription = null,
-            tint = Color.Unspecified,
-        )
+        TeamFlowManagerIcon()
 
         Spacer(modifier = Modifier.height(24.dp))
 

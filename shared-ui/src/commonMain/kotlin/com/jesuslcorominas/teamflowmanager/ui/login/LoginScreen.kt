@@ -41,7 +41,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.app_name
 import teamflowmanager.shared_ui.generated.resources.ic_google
-import teamflowmanager.shared_ui.generated.resources.ic_launcher
+import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import teamflowmanager.shared_ui.generated.resources.login_subtitle
 import teamflowmanager.shared_ui.generated.resources.sign_in_with_google
 
@@ -112,11 +112,7 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Image(
-                    painter = painterResource(Res.drawable.ic_launcher),
-                    contentDescription = null,
-                    modifier = Modifier.size(120.dp),
-                )
+                TeamFlowManagerIcon(size = 120.dp)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
