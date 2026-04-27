@@ -65,6 +65,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
@@ -479,7 +480,7 @@ private fun BottomButtons(
 ) {
     if (state.match.isStarted) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(bottom = LocalContentBottomPadding.current),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
@@ -547,7 +548,10 @@ private fun BottomButtons(
             }
         }
     } else {
-        Button(onClick = onBeginMatch, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = onBeginMatch,
+            modifier = Modifier.fillMaxWidth().padding(bottom = LocalContentBottomPadding.current),
+        ) {
             Icon(imageVector = Icons.Default.PlayArrow, contentDescription = stringResource(Res.string.begin_match))
             Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
             Text(text = stringResource(Res.string.begin_match))

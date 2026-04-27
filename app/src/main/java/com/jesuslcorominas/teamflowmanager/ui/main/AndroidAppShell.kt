@@ -1,7 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.ui.main
 
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -13,12 +18,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -33,6 +41,9 @@ import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Navigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.PendingNavigation
 import com.jesuslcorominas.teamflowmanager.ui.navigation.Route
+import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
+import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundMain
+import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -105,6 +116,23 @@ private fun MainScaffold(
 
     val uiConfig = route?.uiConfig(arguments)
 
+    val activity = LocalContext.current as ComponentActivity
+    SideEffect {
+        val navBarColor = if (uiConfig?.showBottomBar == true) BackgroundContrast.toArgb() else BackgroundMain.toArgb()
+        activity.enableEdgeToEdge(
+            statusBarStyle =
+                SystemBarStyle.auto(
+                    lightScrim = LightColorScheme.primary.toArgb(),
+                    darkScrim = LightColorScheme.primary.toArgb(),
+                ),
+            navigationBarStyle =
+                SystemBarStyle.auto(
+                    lightScrim = navBarColor,
+                    darkScrim = navBarColor,
+                ),
+        )
+    }
+
     var dynamicTitle by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(route) {
         dynamicTitle = null
@@ -149,11 +177,15 @@ private fun MainScaffold(
                 }
             },
         ) { paddingValues ->
+            val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
             val contentBottomPadding: Dp =
-                if (uiConfig?.showFab == true) {
-                    paddingValues.calculateBottomPadding() + FabBarGap + FabHeight + FabContentGap
-                } else {
-                    paddingValues.calculateBottomPadding()
+                when {
+                    uiConfig?.showFab == true ->
+                        paddingValues.calculateBottomPadding() + FabBarGap + FabHeight + FabContentGap
+                    uiConfig?.showBottomBar == true ->
+                        paddingValues.calculateBottomPadding()
+                    else ->
+                        navBarPadding
                 }
             CompositionLocalProvider(
                 LocalContentBottomPadding provides contentBottomPadding,
