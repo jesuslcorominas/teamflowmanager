@@ -29,7 +29,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
-import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppBackHandler
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
@@ -38,6 +37,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.PlayedMatchCard
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
 import com.jesuslcorominas.teamflowmanager.ui.util.DateFormatter
+import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamStats
@@ -48,6 +48,10 @@ import org.koin.core.parameter.parametersOf
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.coach_name
 import teamflowmanager.shared_ui.generated.resources.delegate_name
+import teamflowmanager.shared_ui.generated.resources.first_half
+import teamflowmanager.shared_ui.generated.resources.first_quarter
+import teamflowmanager.shared_ui.generated.resources.fourth_quarter
+import teamflowmanager.shared_ui.generated.resources.match_live_badge
 import teamflowmanager.shared_ui.generated.resources.president_notifications_global_mixed
 import teamflowmanager.shared_ui.generated.resources.president_notifications_global_off
 import teamflowmanager.shared_ui.generated.resources.president_notifications_global_on
@@ -67,10 +71,6 @@ import teamflowmanager.shared_ui.generated.resources.president_team_stats_losses
 import teamflowmanager.shared_ui.generated.resources.president_team_stats_played
 import teamflowmanager.shared_ui.generated.resources.president_team_stats_squad_size
 import teamflowmanager.shared_ui.generated.resources.president_team_stats_wins
-import teamflowmanager.shared_ui.generated.resources.first_half
-import teamflowmanager.shared_ui.generated.resources.first_quarter
-import teamflowmanager.shared_ui.generated.resources.fourth_quarter
-import teamflowmanager.shared_ui.generated.resources.match_live_badge
 import teamflowmanager.shared_ui.generated.resources.second_half
 import teamflowmanager.shared_ui.generated.resources.second_quarter
 import teamflowmanager.shared_ui.generated.resources.summary_tab
@@ -268,16 +268,18 @@ private fun MatchesTab(
         ) {
             items(state.matches, key = { it.id }) { match ->
                 when (match.status) {
-                    MatchStatus.FINISHED -> PlayedMatchCard(
-                        match = match,
-                        onNavigateToDetail = { onNavigateToMatch(match.id) },
-                        showArchiveButton = false,
-                    )
-                    MatchStatus.IN_PROGRESS, MatchStatus.TIMEOUT -> LiveMatchCard(
-                        match = match,
-                        currentTime = currentTime,
-                        onNavigateToDetail = { onNavigateToMatch(match.id) },
-                    )
+                    MatchStatus.FINISHED ->
+                        PlayedMatchCard(
+                            match = match,
+                            onNavigateToDetail = { onNavigateToMatch(match.id) },
+                            showArchiveButton = false,
+                        )
+                    MatchStatus.IN_PROGRESS, MatchStatus.TIMEOUT ->
+                        LiveMatchCard(
+                            match = match,
+                            currentTime = currentTime,
+                            onNavigateToDetail = { onNavigateToMatch(match.id) },
+                        )
                     else -> ScheduledMatchCard(match = match)
                 }
             }
@@ -342,20 +344,23 @@ private fun LiveMatchCard(
     onNavigateToDetail: () -> Unit,
 ) {
     val activePeriod = match.periods.firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
-    val periodLabel = activePeriod?.let { period ->
-        when (match.periodType) {
-            PeriodType.HALF_TIME -> when (period.periodNumber) {
-                1 -> stringResource(Res.string.first_half)
-                else -> stringResource(Res.string.second_half)
+    val periodLabel =
+        activePeriod?.let { period ->
+            when (match.periodType) {
+                PeriodType.HALF_TIME ->
+                    when (period.periodNumber) {
+                        1 -> stringResource(Res.string.first_half)
+                        else -> stringResource(Res.string.second_half)
+                    }
+                PeriodType.QUARTER_TIME ->
+                    when (period.periodNumber) {
+                        1 -> stringResource(Res.string.first_quarter)
+                        2 -> stringResource(Res.string.second_quarter)
+                        3 -> stringResource(Res.string.third_quarter)
+                        else -> stringResource(Res.string.fourth_quarter)
+                    }
             }
-            PeriodType.QUARTER_TIME -> when (period.periodNumber) {
-                1 -> stringResource(Res.string.first_quarter)
-                2 -> stringResource(Res.string.second_quarter)
-                3 -> stringResource(Res.string.third_quarter)
-                else -> stringResource(Res.string.fourth_quarter)
-            }
-        }
-    } ?: ""
+        } ?: ""
     val elapsedMillis = match.getTotalElapsed(currentTime)
 
     AppCard(modifier = Modifier.clickable { onNavigateToDetail() }) {
