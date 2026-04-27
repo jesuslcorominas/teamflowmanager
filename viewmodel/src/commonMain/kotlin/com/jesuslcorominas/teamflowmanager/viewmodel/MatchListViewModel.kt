@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,11 +28,15 @@ class MatchListViewModel(
     private val archiveMatchUseCase: ArchiveMatchUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
     private val timeProvider: TimeProvider,
+    private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
+
+    private val _currentTime = MutableStateFlow(0L)
+    val currentTime: StateFlow<Long> = _currentTime.asStateFlow()
 
     private val _deleteConfirmationState =
         MutableStateFlow<MatchDeleteConfirmationState>(MatchDeleteConfirmationState.None)
@@ -42,6 +47,7 @@ class MatchListViewModel(
 
     init {
         loadMatches()
+        viewModelScope.launch { timeTicker.timeFlow.collect { _currentTime.value = it } }
     }
 
     private fun loadMatches() {

@@ -300,9 +300,9 @@ class FinishMatchUseCaseTest {
         }
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `givenResetPlayerTimesThrows_whenInvoke_thenThrowIllegalStateException`() = runTest {
-        // Given
+    @Test
+    fun `givenResetPlayerTimesThrows_whenInvoke_thenMatchIsStillFinishedSuccessfully`() = runTest {
+        // Given — reset is non-fatal; the match result is already saved before this step
         val matchId = 1L
         val currentTime = System.currentTimeMillis()
         val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
@@ -310,8 +310,11 @@ class FinishMatchUseCaseTest {
         every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
         coEvery { playerTimeRepository.resetAllPlayerTimes() } throws RuntimeException("DB error")
 
-        // When - expects IllegalStateException wrapping the original exception
+        // When - should NOT throw; reset failure is swallowed
         finishMatchUseCase.invoke(matchId, currentTime)
+
+        // Then - the match was still finished and operation completed
+        coVerify { matchRepository.updateMatchWithOperationId(any(), any()) }
     }
 
     private fun createMatch(id: Long, status: MatchStatus, currentTime: Long): Match {

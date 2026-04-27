@@ -10,11 +10,13 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -37,6 +39,7 @@ class MatchListViewModelTest {
     private lateinit var archiveMatchUseCase: ArchiveMatchUseCase
     private lateinit var synchronizeTimeUseCase: SynchronizeTimeUseCase
     private lateinit var timeProvider: TimeProvider
+    private lateinit var timeTicker: TimeTicker
     private lateinit var analyticsTracker: AnalyticsTracker
     private lateinit var crashReporter: CrashReporter
 
@@ -59,9 +62,11 @@ class MatchListViewModelTest {
         archiveMatchUseCase = mockk(relaxed = true)
         synchronizeTimeUseCase = mockk(relaxed = true)
         timeProvider = mockk()
+        timeTicker = mockk(relaxed = true)
         analyticsTracker = mockk(relaxed = true)
         crashReporter = mockk(relaxed = true)
         every { timeProvider.getCurrentTime() } returns System.currentTimeMillis()
+        every { timeTicker.timeFlow } returns emptyFlow()
     }
 
     @After
@@ -76,6 +81,7 @@ class MatchListViewModelTest {
         archiveMatchUseCase = archiveMatchUseCase,
         synchronizeTimeUseCase = synchronizeTimeUseCase,
         timeProvider = timeProvider,
+        timeTicker = timeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
     )
