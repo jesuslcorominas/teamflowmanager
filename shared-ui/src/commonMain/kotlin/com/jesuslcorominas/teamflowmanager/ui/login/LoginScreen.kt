@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel.UiState
@@ -41,7 +42,6 @@ import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.app_name
 import teamflowmanager.shared_ui.generated.resources.ic_google
-import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import teamflowmanager.shared_ui.generated.resources.login_subtitle
 import teamflowmanager.shared_ui.generated.resources.sign_in_with_google
 
