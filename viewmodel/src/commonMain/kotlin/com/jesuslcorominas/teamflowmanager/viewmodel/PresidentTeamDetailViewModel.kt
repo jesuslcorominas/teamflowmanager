@@ -14,6 +14,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCas
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamNotificationPreferenceUseCase
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -54,12 +55,16 @@ class PresidentTeamDetailViewModel(
     private val getNotificationPreferences: GetNotificationPreferencesUseCase,
     private val updateTeamNotificationPreference: UpdateTeamNotificationPreferenceUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
+    private val timeTicker: TimeTicker,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PresidentTeamDetailUiState>(PresidentTeamDetailUiState.Loading)
     val uiState: StateFlow<PresidentTeamDetailUiState> = _uiState.asStateFlow()
 
     private val _selectedTab = MutableStateFlow(PresidentTeamTab.SUMMARY)
     val selectedTab: StateFlow<PresidentTeamTab> = _selectedTab.asStateFlow()
+
+    private val _currentTime = MutableStateFlow(0L)
+    val currentTime: StateFlow<Long> = _currentTime.asStateFlow()
 
     data class TeamNotificationPreferencesState(
         val matchEvents: Boolean = true,
@@ -74,6 +79,11 @@ class PresidentTeamDetailViewModel(
 
     init {
         load()
+        viewModelScope.launch {
+            timeTicker.timeFlow.collect { now ->
+                _currentTime.value = now
+            }
+        }
     }
 
     fun selectTab(tab: PresidentTeamTab) {
