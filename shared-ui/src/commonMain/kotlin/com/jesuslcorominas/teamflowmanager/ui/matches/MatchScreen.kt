@@ -91,6 +91,7 @@ import teamflowmanager.shared_ui.generated.resources.end_timeout_button
 import teamflowmanager.shared_ui.generated.resources.finish_match_button
 import teamflowmanager.shared_ui.generated.resources.ic_goal
 import teamflowmanager.shared_ui.generated.resources.ic_timeout
+import teamflowmanager.shared_ui.generated.resources.ic_whistle
 import teamflowmanager.shared_ui.generated.resources.invalid_substitution_message
 import teamflowmanager.shared_ui.generated.resources.invalid_substitution_title
 import teamflowmanager.shared_ui.generated.resources.no
@@ -567,7 +568,7 @@ private fun TimeoutButton(
 ) {
     AppIconButton(
         internalModifier = Modifier.size(32.dp),
-        painter = painterResource(Res.drawable.ic_timeout),
+        painter = painterResource(if (isTimeout) Res.drawable.ic_whistle else Res.drawable.ic_timeout),
         contentDescription =
             stringResource(
                 if (isTimeout) Res.string.end_timeout_button else Res.string.timeout_button,
