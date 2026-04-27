@@ -112,7 +112,7 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                TeamFlowManagerIcon(size = 120.dp)
+                TeamFlowManagerIcon()
 
                 Spacer(modifier = Modifier.height(16.dp))
 
