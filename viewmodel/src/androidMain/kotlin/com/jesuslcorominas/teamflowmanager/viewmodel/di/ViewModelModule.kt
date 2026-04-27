@@ -258,6 +258,7 @@ val viewModelModule =
                 getNotificationPreferences = get(),
                 updateTeamNotificationPreference = get(),
                 getUserClubMembership = get(),
+                timeTicker = get(),
             )
         }
 

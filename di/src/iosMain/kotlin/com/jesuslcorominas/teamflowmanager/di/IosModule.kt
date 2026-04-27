@@ -269,6 +269,7 @@ val iosModule =
                 getTeamById = get(),
                 getPlayersByTeam = get(),
                 getMatchesByTeam = get(),
+                timeTicker = get(),
             )
         }
 

@@ -1,7 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.ui.club
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,6 +28,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppBackHandler
 import com.jesuslcorominas.teamflowmanager.ui.components.EmptyContent
@@ -33,6 +37,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.card.AppCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.card.PlayedMatchCard
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerList
 import com.jesuslcorominas.teamflowmanager.ui.util.DateFormatter
+import com.jesuslcorominas.teamflowmanager.ui.util.formatTime
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamDetailViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentTeamStats
@@ -43,6 +48,10 @@ import org.koin.core.parameter.parametersOf
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.coach_name
 import teamflowmanager.shared_ui.generated.resources.delegate_name
+import teamflowmanager.shared_ui.generated.resources.first_half
+import teamflowmanager.shared_ui.generated.resources.first_quarter
+import teamflowmanager.shared_ui.generated.resources.fourth_quarter
+import teamflowmanager.shared_ui.generated.resources.match_live_badge
 import teamflowmanager.shared_ui.generated.resources.president_notifications_global_mixed
 import teamflowmanager.shared_ui.generated.resources.president_notifications_global_off
 import teamflowmanager.shared_ui.generated.resources.president_notifications_global_on
@@ -62,7 +71,10 @@ import teamflowmanager.shared_ui.generated.resources.president_team_stats_losses
 import teamflowmanager.shared_ui.generated.resources.president_team_stats_played
 import teamflowmanager.shared_ui.generated.resources.president_team_stats_squad_size
 import teamflowmanager.shared_ui.generated.resources.president_team_stats_wins
+import teamflowmanager.shared_ui.generated.resources.second_half
+import teamflowmanager.shared_ui.generated.resources.second_quarter
 import teamflowmanager.shared_ui.generated.resources.summary_tab
+import teamflowmanager.shared_ui.generated.resources.third_quarter
 
 @Composable
 fun PresidentTeamDetailScreen(
@@ -75,6 +87,7 @@ fun PresidentTeamDetailScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
+    val currentTime by viewModel.currentTime.collectAsState()
 
     AppBackHandler {
         if (selectedTab != PresidentTeamTab.SUMMARY) {
@@ -125,7 +138,7 @@ fun PresidentTeamDetailScreen(
                 when (selectedTab) {
                     PresidentTeamTab.SUMMARY -> SummaryTab(state)
                     PresidentTeamTab.PLAYERS -> PlayersTab(state)
-                    PresidentTeamTab.MATCHES -> MatchesTab(state, onNavigateToMatch)
+                    PresidentTeamTab.MATCHES -> MatchesTab(state, currentTime, onNavigateToMatch)
                     PresidentTeamTab.STATS -> StatsTab(state.stats)
                     PresidentTeamTab.NOTIFICATIONS -> {
                         val teamNotificationState by viewModel.teamNotificationState.collectAsState()
@@ -242,6 +255,7 @@ private fun PlayersTab(state: PresidentTeamDetailUiState.Ready) {
 @Composable
 private fun MatchesTab(
     state: PresidentTeamDetailUiState.Ready,
+    currentTime: Long,
     onNavigateToMatch: (Long) -> Unit,
 ) {
     if (state.matches.isEmpty()) {
@@ -261,9 +275,10 @@ private fun MatchesTab(
                             showArchiveButton = false,
                         )
                     MatchStatus.IN_PROGRESS, MatchStatus.TIMEOUT ->
-                        ScheduledMatchCard(
+                        LiveMatchCard(
                             match = match,
-                            onClick = { onNavigateToMatch(match.id) },
+                            currentTime = currentTime,
+                            onNavigateToDetail = { onNavigateToMatch(match.id) },
                         )
                     else -> ScheduledMatchCard(match = match)
                 }
@@ -315,6 +330,95 @@ private fun StatsTab(stats: PresidentTeamStats) {
                     LabelValueRow(
                         label = stringResource(Res.string.president_team_stats_squad_size),
                         value = stats.squadSize.toString(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LiveMatchCard(
+    match: Match,
+    currentTime: Long,
+    onNavigateToDetail: () -> Unit,
+) {
+    val activePeriod = match.periods.firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
+    val periodLabel =
+        activePeriod?.let { period ->
+            when (match.periodType) {
+                PeriodType.HALF_TIME ->
+                    when (period.periodNumber) {
+                        1 -> stringResource(Res.string.first_half)
+                        else -> stringResource(Res.string.second_half)
+                    }
+                PeriodType.QUARTER_TIME ->
+                    when (period.periodNumber) {
+                        1 -> stringResource(Res.string.first_quarter)
+                        2 -> stringResource(Res.string.second_quarter)
+                        3 -> stringResource(Res.string.third_quarter)
+                        else -> stringResource(Res.string.fourth_quarter)
+                    }
+            }
+        } ?: ""
+    val elapsedMillis = match.getTotalElapsed(currentTime)
+
+    AppCard(modifier = Modifier.clickable { onNavigateToDetail() }) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = match.opponent,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Box(
+                    modifier =
+                        Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.error,
+                                shape = MaterialTheme.shapes.extraSmall,
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                ) {
+                    Text(
+                        text = stringResource(Res.string.match_live_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onError,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+            Text(
+                text = "${match.goals} – ${match.opponentGoals}",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = formatTime(elapsedMillis),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (periodLabel.isNotBlank()) {
+                    Text(
+                        text = "·",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = periodLabel,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
