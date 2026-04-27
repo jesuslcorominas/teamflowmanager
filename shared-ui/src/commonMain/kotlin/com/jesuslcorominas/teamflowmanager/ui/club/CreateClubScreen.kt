@@ -33,15 +33,17 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
-import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubNameError
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
 import kotlinx.coroutines.delay
+import androidx.compose.ui.graphics.Color
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
+import teamflowmanager.shared_ui.generated.resources.ic_launcher
 import teamflowmanager.shared_ui.generated.resources.club_name_error_empty
 import teamflowmanager.shared_ui.generated.resources.club_name_error_too_long
 import teamflowmanager.shared_ui.generated.resources.club_name_error_too_short
@@ -178,7 +180,12 @@ private fun CreateClubForm(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        TeamFlowManagerIcon()
+        Icon(
+            modifier = Modifier.size(144.dp),
+            painter = painterResource(Res.drawable.ic_launcher),
+            contentDescription = null,
+            tint = Color.Unspecified,
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 

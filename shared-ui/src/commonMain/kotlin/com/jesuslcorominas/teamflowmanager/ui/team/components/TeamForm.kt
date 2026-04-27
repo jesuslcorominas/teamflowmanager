@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -25,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -32,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
-import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorHeader
 import com.jesuslcorominas.teamflowmanager.ui.components.form.ClearableRadioSelectorList
@@ -40,8 +42,10 @@ import com.jesuslcorominas.teamflowmanager.ui.components.form.SelectableItem
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.localizedName
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import teamflowmanager.shared_ui.generated.resources.Res
+import teamflowmanager.shared_ui.generated.resources.ic_launcher
 import teamflowmanager.shared_ui.generated.resources.captain_selection_title
 import teamflowmanager.shared_ui.generated.resources.coach_name
 import teamflowmanager.shared_ui.generated.resources.create_team_title
@@ -109,7 +113,12 @@ fun TeamForm(
             ) {
                 if (team == null) {
                     item {
-                        TeamFlowManagerIcon()
+                        Icon(
+                            modifier = Modifier.size(144.dp),
+                            painter = painterResource(Res.drawable.ic_launcher),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                        )
 
                         Text(
                             modifier = Modifier.padding(bottom = TFMSpacing.spacing04),

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -39,6 +40,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.app_name
+import teamflowmanager.shared_ui.generated.resources.ic_google
 import teamflowmanager.shared_ui.generated.resources.ic_launcher
 import teamflowmanager.shared_ui.generated.resources.login_subtitle
 import teamflowmanager.shared_ui.generated.resources.sign_in_with_google
@@ -160,6 +162,12 @@ fun LoginScreen(
                             strokeWidth = 2.dp,
                         )
                     } else {
+                        Image(
+                            painter = painterResource(Res.drawable.ic_google),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = stringResource(Res.string.sign_in_with_google),
                             style = MaterialTheme.typography.labelLarge,
