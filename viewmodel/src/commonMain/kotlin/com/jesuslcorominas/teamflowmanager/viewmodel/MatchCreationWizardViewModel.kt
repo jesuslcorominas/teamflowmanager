@@ -76,7 +76,8 @@ class MatchCreationWizardViewModel(
     private var activeMatchId: Long = matchId
     private var isEditMode = matchId != 0L
     private var teamTypeValue: Int = 5 // Default to Football 5
-    private var homeGround: String? = null
+    private val _homeGround = MutableStateFlow<String?>(null)
+    val homeGround: StateFlow<String?> = _homeGround.asStateFlow()
 
     // Flag to track if match data is loaded for edit mode
     private var matchDataLoaded = false
@@ -131,7 +132,7 @@ class MatchCreationWizardViewModel(
 
         matchDataLoaded = false
         playersLoaded = false
-        homeGround = null
+        _homeGround.value = null
         pendingMatchIdForEdit = if (newMatchId != 0L) newMatchId else null
 
         _uiState.value = MatchCreationWizardUiState.Loading
@@ -147,7 +148,7 @@ class MatchCreationWizardViewModel(
             val team = getTeamUseCase.invoke().first()
             teamTypeValue = team?.teamType?.players ?: 5
             team?.clubRemoteId?.let { remoteId ->
-                homeGround = getClubByIdUseCase.invoke(remoteId)?.homeGround
+                _homeGround.value = getClubByIdUseCase.invoke(remoteId)?.homeGround
             }
         }
     }
@@ -257,8 +258,6 @@ class MatchCreationWizardViewModel(
     fun getStartingLineupIds() = startingLineupIds
 
     fun getTeamTypePlayerCount() = teamTypeValue
-
-    fun getHomeGround() = homeGround
 
     fun goToNextStep() {
         viewModelScope.launch {
