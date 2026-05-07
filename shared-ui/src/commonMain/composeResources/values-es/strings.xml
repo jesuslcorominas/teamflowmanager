@@ -166,6 +166,7 @@
     <string name="matches_title">Partidos</string>
     <string name="no_matches_message">Aún no hay partidos registrados</string>
     <string name="add_match_title">Registrar Partido</string>
+    <string name="edit_match_title">Editar Partido</string>
     <string name="delete_match_title">Eliminar Partido</string>
     <string name="delete_match_message">¿Estás seguro de que quieres eliminar este partido?</string>
     <string name="opponent">Rival</string>

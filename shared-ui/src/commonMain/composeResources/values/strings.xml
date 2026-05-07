@@ -166,6 +166,7 @@
     <string name="matches_title">Matches</string>
     <string name="no_matches_message">No matches registered yet</string>
     <string name="add_match_title">Register Match</string>
+    <string name="edit_match_title">Edit Match</string>
     <string name="delete_match_title">Delete Match</string>
     <string name="delete_match_message">Are you sure you want to delete this match?</string>
     <string name="opponent">Opponent</string>

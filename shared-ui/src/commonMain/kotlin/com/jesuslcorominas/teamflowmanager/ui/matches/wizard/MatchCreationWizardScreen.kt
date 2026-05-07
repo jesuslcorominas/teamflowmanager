@@ -3,7 +3,14 @@ package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -28,9 +35,11 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import teamflowmanager.shared_ui.generated.resources.Res
+import teamflowmanager.shared_ui.generated.resources.add_match_title
 import teamflowmanager.shared_ui.generated.resources.cancel
 import teamflowmanager.shared_ui.generated.resources.discard
 import teamflowmanager.shared_ui.generated.resources.discard_message
+import teamflowmanager.shared_ui.generated.resources.edit_match_title
 import teamflowmanager.shared_ui.generated.resources.make_default_captain_message
 import teamflowmanager.shared_ui.generated.resources.make_default_captain_title
 import teamflowmanager.shared_ui.generated.resources.no
@@ -65,7 +74,29 @@ fun MatchCreationWizardScreen(
         wizardViewModel.requestBack(onNavigateBack)
     }
 
-    Scaffold { paddingValues ->
+    @OptIn(ExperimentalMaterial3Api::class)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        stringResource(
+                            if (matchId != 0L) Res.string.edit_match_title
+                            else Res.string.add_match_title
+                        )
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { wizardViewModel.requestBack(onNavigateBack) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                        )
+                    }
+                },
+            )
+        },
+    ) { paddingValues ->
         when (val state = uiState) {
             is MatchCreationWizardUiState.Loading -> Loading()
             is MatchCreationWizardUiState.Saving -> Loading()
