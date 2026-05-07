@@ -10,6 +10,9 @@ class PendingCoachAssignmentFirestoreDataSourceImpl(
 ) : PendingCoachAssignmentDataSource {
     companion object {
         private const val COLLECTION = "pendingCoachAssignments"
+        private const val FIELD_TEAM_ID = "teamId"
+        private const val FIELD_CLUB_ID = "clubId"
+        private const val FIELD_EMAIL = "email"
     }
 
     override suspend fun create(
@@ -18,7 +21,7 @@ class PendingCoachAssignmentFirestoreDataSourceImpl(
         email: String,
     ) {
         firestore.collection(COLLECTION).document(teamId)
-            .set(mapOf("teamId" to teamId, "clubId" to clubId, "email" to email))
+            .set(mapOf(FIELD_TEAM_ID to teamId, FIELD_CLUB_ID to clubId, FIELD_EMAIL to email))
     }
 
     override suspend fun delete(teamId: String) {
@@ -33,9 +36,9 @@ class PendingCoachAssignmentFirestoreDataSourceImpl(
         return snapshot.documents.mapNotNull { doc ->
             try {
                 val data = doc.data<Map<String, String>>()
-                val teamId = data["teamId"] ?: return@mapNotNull null
-                val clubId = data["clubId"] ?: return@mapNotNull null
-                val docEmail = data["email"] ?: return@mapNotNull null
+                val teamId = data[FIELD_TEAM_ID] ?: return@mapNotNull null
+                val clubId = data[FIELD_CLUB_ID] ?: return@mapNotNull null
+                val docEmail = data[FIELD_EMAIL] ?: return@mapNotNull null
                 PendingCoachAssignment(teamId, clubId, docEmail)
             } catch (_: Exception) {
                 null
