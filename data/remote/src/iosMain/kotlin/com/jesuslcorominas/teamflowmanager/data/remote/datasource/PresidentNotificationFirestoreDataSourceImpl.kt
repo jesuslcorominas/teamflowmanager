@@ -8,13 +8,13 @@ import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.FirebaseFirestoreException
 import dev.gitlive.firebase.firestore.where
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlin.coroutines.cancellation.CancellationException
-import kotlin.uuid.Uuid
 
 class PresidentNotificationFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
@@ -34,108 +34,81 @@ class PresidentNotificationFirestoreDataSourceImpl(
 
     override fun getNotifications(clubId: String): Flow<List<PresidentNotification>> =
         flow {
-            val snapshots =
+            emitAll(
                 notificationsCollection(clubId)
                     .orderBy(FIELD_CREATED_AT, Direction.DESCENDING)
                     .snapshots
-            emitAll(
-                snapshots.map { qs ->
-                    qs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PresidentNotificationFirestoreModel>().copy(id = doc.id).toDomain()
-                        } catch (_: Exception) {
-                            null
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PresidentNotificationFirestoreModel>().copy(id = doc.id).toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
-                }.catch { e ->
-                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
-                },
+                    },
             )
+        }.catch { e ->
+            if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
         }
 
     override fun getUnreadCount(clubId: String): Flow<Int> =
         flow {
-            val snapshots =
+            emitAll(
                 notificationsCollection(clubId)
                     .where { FIELD_READ equalTo false }
                     .snapshots
-            emitAll(
-                snapshots.map { qs ->
-                    qs.documents.size
-                }.catch { e ->
-                    if (e is FirebaseFirestoreException) emit(0) else throw e
-                },
+                    .map { qs -> qs.documents.size },
             )
+        }.catch { e ->
+            if (e is FirebaseFirestoreException) emit(0) else throw e
         }
 
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun createNotification(
         clubId: String,
         notification: PresidentNotification,
     ) {
-        try {
-            val docId = if (notification.id.isNotEmpty()) notification.id else Uuid.random().toString()
-            val model =
-                PresidentNotificationFirestoreModel(
-                    id = docId,
-                    type = notification.type.key,
-                    title = notification.title,
-                    body = notification.body,
-                    userData = notification.userData,
-                    createdAt = notification.createdAt,
-                    read = notification.read,
-                )
-            notificationsCollection(clubId)
-                .document(docId)
-                .set(model)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw e
-        }
+        val docId = if (notification.id.isNotEmpty()) notification.id else Uuid.random().toString()
+        val model =
+            PresidentNotificationFirestoreModel(
+                id = docId,
+                type = notification.type.key,
+                title = notification.title,
+                body = notification.body,
+                userData = notification.userData,
+                createdAt = notification.createdAt,
+                read = notification.read,
+            )
+        notificationsCollection(clubId)
+            .document(docId)
+            .set(model)
     }
 
     override suspend fun markAsRead(
         clubId: String,
         notificationId: String,
     ) {
-        try {
-            notificationsCollection(clubId)
-                .document(notificationId)
-                .update(FIELD_READ to true)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw e
-        }
+        notificationsCollection(clubId)
+            .document(notificationId)
+            .update(FIELD_READ to true)
     }
 
     override suspend fun markAsUnread(
         clubId: String,
         notificationId: String,
     ) {
-        try {
-            notificationsCollection(clubId)
-                .document(notificationId)
-                .update(FIELD_READ to false)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw e
-        }
+        notificationsCollection(clubId)
+            .document(notificationId)
+            .update(FIELD_READ to false)
     }
 
     override suspend fun deleteNotification(
         clubId: String,
         notificationId: String,
     ) {
-        try {
-            notificationsCollection(clubId)
-                .document(notificationId)
-                .delete()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw e
-        }
+        notificationsCollection(clubId)
+            .document(notificationId)
+            .delete()
     }
 }

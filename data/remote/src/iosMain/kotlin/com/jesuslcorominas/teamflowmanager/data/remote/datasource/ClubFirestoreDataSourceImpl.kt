@@ -7,8 +7,8 @@ import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.util.InvitationCodeGenerator
 import com.jesuslcorominas.teamflowmanager.domain.model.Club
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import dev.gitlive.firebase.firestore.FirebaseFirestoreException
 import dev.gitlive.firebase.firestore.where
-import kotlin.coroutines.cancellation.CancellationException
 
 class ClubFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
@@ -33,44 +33,39 @@ class ClubFirestoreDataSourceImpl(
         require(currentUserName.isNotBlank()) { "User name cannot be blank" }
         require(currentUserEmail.isNotBlank()) { "User email cannot be blank" }
 
-        try {
-            val invitationCode = InvitationCodeGenerator.generate()
+        val invitationCode = InvitationCodeGenerator.generate()
 
-            val clubDocRef = firestore.collection(CLUBS_COLLECTION).document
-            val clubId = clubDocRef.id
+        val clubDocRef = firestore.collection(CLUBS_COLLECTION).document
+        val clubId = clubDocRef.id
 
-            val clubModel =
-                ClubFirestoreModel(
-                    id = clubId,
-                    ownerId = currentUserId,
-                    name = clubName,
-                    invitationCode = invitationCode,
-                )
+        val clubModel =
+            ClubFirestoreModel(
+                id = clubId,
+                ownerId = currentUserId,
+                name = clubName,
+                invitationCode = invitationCode,
+            )
 
-            clubDocRef.set(clubModel)
+        clubDocRef.set(clubModel)
 
-            val clubMemberId = "${currentUserId}_$clubId"
-            val clubMemberModel =
-                ClubMemberFirestoreModel(
-                    id = clubMemberId,
-                    userId = currentUserId,
-                    name = currentUserName,
-                    email = currentUserEmail,
-                    clubId = clubId,
-                    roles = listOf(ROLE_PRESIDENTE),
-                )
+        val clubMemberId = "${currentUserId}_$clubId"
+        val clubMemberModel =
+            ClubMemberFirestoreModel(
+                id = clubMemberId,
+                userId = currentUserId,
+                name = currentUserName,
+                email = currentUserEmail,
+                clubId = clubId,
+                roles = listOf(ROLE_PRESIDENTE),
+            )
 
-            firestore.collection(CLUB_MEMBERS_COLLECTION).document(clubMemberId).set(clubMemberModel)
+        firestore.collection(CLUB_MEMBERS_COLLECTION).document(clubMemberId).set(clubMemberModel)
 
-            return clubModel.toDomain()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw e
-        }
+        return clubModel.toDomain()
     }
 
     override suspend fun getClubByInvitationCode(invitationCode: String): Club? {
+        require(invitationCode.isNotBlank()) { "Invitation code cannot be blank" }
         return try {
             val snapshot =
                 firestore.collection(CLUBS_COLLECTION)
@@ -79,9 +74,7 @@ class ClubFirestoreDataSourceImpl(
                     .get()
             val doc = snapshot.documents.firstOrNull() ?: return null
             doc.data<ClubFirestoreModel>().copy(id = doc.id).toDomain()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
+        } catch (e: FirebaseFirestoreException) {
             null
         }
     }
@@ -92,25 +85,17 @@ class ClubFirestoreDataSourceImpl(
             val doc = firestore.collection(CLUBS_COLLECTION).document(id).get()
             if (!doc.exists) return null
             doc.data<ClubFirestoreModel>().copy(id = doc.id).toDomain()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
+        } catch (e: FirebaseFirestoreException) {
             null
         }
     }
 
     override suspend fun regenerateInvitationCode(id: String): String {
         require(id.isNotBlank()) { "ID cannot be blank" }
-        return try {
-            val newCode = InvitationCodeGenerator.generate()
-            firestore.collection(CLUBS_COLLECTION).document(id)
-                .update(INVITATION_CODE_FIELD to newCode)
-            newCode
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw e
-        }
+        val newCode = InvitationCodeGenerator.generate()
+        firestore.collection(CLUBS_COLLECTION).document(id)
+            .update(INVITATION_CODE_FIELD to newCode)
+        return newCode
     }
 
     override suspend fun updateClub(
@@ -120,15 +105,9 @@ class ClubFirestoreDataSourceImpl(
     ): Club {
         require(id.isNotBlank()) { "ID cannot be blank" }
         require(name.isNotBlank()) { "Club name cannot be blank" }
-        return try {
-            firestore.collection(CLUBS_COLLECTION).document(id)
-                .update(NAME_FIELD to name, HOME_GROUND_FIELD to homeGround)
-            getClubById(id)
-                ?: throw IllegalStateException("Club not found after update: $id")
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw e
-        }
+        firestore.collection(CLUBS_COLLECTION).document(id)
+            .update(mapOf(NAME_FIELD to name, HOME_GROUND_FIELD to homeGround))
+        return getClubById(id)
+            ?: throw IllegalStateException("Club not found after update: $id")
     }
 }

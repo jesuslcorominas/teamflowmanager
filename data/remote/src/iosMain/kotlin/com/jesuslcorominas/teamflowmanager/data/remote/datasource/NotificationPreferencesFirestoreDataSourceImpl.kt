@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlin.coroutines.cancellation.CancellationException
 
 class NotificationPreferencesFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
@@ -41,9 +40,8 @@ class NotificationPreferencesFirestoreDataSourceImpl(
         clubId: String,
     ): Flow<UserNotificationPreferences> =
         flow {
-            val snapshots = prefsDocument(clubId, userId).snapshots
             emitAll(
-                snapshots.map { doc ->
+                prefsDocument(clubId, userId).snapshots.map { doc ->
                     if (doc.exists) {
                         try {
                             doc.data<NotificationPreferencesFirestoreModel>().toDomain(userId)
@@ -53,10 +51,10 @@ class NotificationPreferencesFirestoreDataSourceImpl(
                     } else {
                         UserNotificationPreferences(userId = userId)
                     }
-                }.catch { e ->
-                    if (e is FirebaseFirestoreException) emit(UserNotificationPreferences(userId = userId)) else throw e
                 },
             )
+        }.catch { e ->
+            if (e is FirebaseFirestoreException) emit(UserNotificationPreferences(userId = userId)) else throw e
         }
 
     override suspend fun updateGlobalPreference(
@@ -70,13 +68,7 @@ class NotificationPreferencesFirestoreDataSourceImpl(
                 NotificationEventType.MATCH_EVENTS -> FIELD_MATCH_EVENTS
                 NotificationEventType.GOALS -> FIELD_GOALS
             }
-        try {
-            prefsDocument(clubId, userId).set(mapOf(fieldName to enabled), merge = true)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw e
-        }
+        prefsDocument(clubId, userId).set(mapOf(fieldName to enabled), merge = true)
     }
 
     override suspend fun updateTeamPreference(
@@ -92,27 +84,21 @@ class NotificationPreferencesFirestoreDataSourceImpl(
                 NotificationEventType.GOALS -> FIELD_GOALS
             }
         try {
-            try {
-                prefsDocument(clubId, userId)
-                    .update("$FIELD_TEAMS.$teamRemoteId.$fieldName" to enabled)
-            } catch (e: FirebaseFirestoreException) {
-                if (e.code == FirestoreExceptionCode.NOT_FOUND) {
-                    val nested =
-                        mapOf(
-                            FIELD_TEAMS to
-                                mapOf(
-                                    teamRemoteId to mapOf(fieldName to enabled),
-                                ),
-                        )
-                    prefsDocument(clubId, userId).set(nested, merge = true)
-                } else {
-                    throw e
-                }
+            prefsDocument(clubId, userId)
+                .update("$FIELD_TEAMS.$teamRemoteId.$fieldName" to enabled)
+        } catch (e: FirebaseFirestoreException) {
+            if (e.code == FirestoreExceptionCode.NOT_FOUND) {
+                val nested =
+                    mapOf(
+                        FIELD_TEAMS to
+                            mapOf(
+                                teamRemoteId to mapOf(fieldName to enabled),
+                            ),
+                    )
+                prefsDocument(clubId, userId).set(nested, merge = true)
+            } else {
+                throw e
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw e
         }
     }
 }

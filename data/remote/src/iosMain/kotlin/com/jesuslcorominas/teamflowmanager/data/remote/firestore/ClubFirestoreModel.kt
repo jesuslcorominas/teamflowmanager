@@ -22,12 +22,3 @@ fun ClubFirestoreModel.toDomain(): Club =
         remoteId = id,
         homeGround = homeGround,
     )
-
-fun Club.toFirestoreModel(): ClubFirestoreModel =
-    ClubFirestoreModel(
-        id = remoteId ?: "",
-        ownerId = ownerId,
-        name = name,
-        invitationCode = invitationCode,
-        homeGround = homeGround,
-    )
