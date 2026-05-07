@@ -12,11 +12,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -81,7 +88,7 @@ fun PresidentTeamDetailScreen(
     teamId: String,
     onNavigateBack: () -> Unit = {},
     onNavigateToMatch: (Long) -> Unit = {},
-    viewModel: PresidentTeamDetailViewModel = koinViewModel(parameters = { parametersOf(teamId) }),
+    viewModel: PresidentTeamDetailViewModel = koinViewModel(key = teamId, parameters = { parametersOf(teamId) }),
 ) {
     TrackScreenView(screenName = ScreenName.PRESIDENT_TEAM_DETAIL, screenClass = "PresidentTeamDetailScreen")
 
@@ -97,61 +104,83 @@ fun PresidentTeamDetailScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        when (val state = uiState) {
-            is PresidentTeamDetailUiState.Loading -> Loading()
-            is PresidentTeamDetailUiState.Error -> {
-                EmptyContent(stringResource(Res.string.president_team_detail_error))
-            }
-            is PresidentTeamDetailUiState.Ready -> {
-                ScrollableTabRow(
-                    selectedTabIndex = selectedTab.ordinal,
-                    edgePadding = 0.dp,
-                ) {
-                    TitleMediumTab(
-                        selected = selectedTab == PresidentTeamTab.SUMMARY,
-                        onClick = { viewModel.selectTab(PresidentTeamTab.SUMMARY) },
-                        text = stringResource(Res.string.summary_tab),
-                    )
-                    TitleMediumTab(
-                        selected = selectedTab == PresidentTeamTab.PLAYERS,
-                        onClick = { viewModel.selectTab(PresidentTeamTab.PLAYERS) },
-                        text = stringResource(Res.string.president_team_detail_players_tab),
-                    )
-                    TitleMediumTab(
-                        selected = selectedTab == PresidentTeamTab.MATCHES,
-                        onClick = { viewModel.selectTab(PresidentTeamTab.MATCHES) },
-                        text = stringResource(Res.string.president_team_detail_matches_tab),
-                    )
-                    TitleMediumTab(
-                        selected = selectedTab == PresidentTeamTab.STATS,
-                        onClick = { viewModel.selectTab(PresidentTeamTab.STATS) },
-                        text = stringResource(Res.string.president_team_detail_stats_tab),
-                    )
-                    TitleMediumTab(
-                        selected = selectedTab == PresidentTeamTab.NOTIFICATIONS,
-                        onClick = { viewModel.selectTab(PresidentTeamTab.NOTIFICATIONS) },
-                        text = stringResource(Res.string.president_team_detail_notifications_tab),
-                    )
-                }
+    val teamName = (uiState as? PresidentTeamDetailUiState.Ready)?.team?.name ?: ""
 
-                when (selectedTab) {
-                    PresidentTeamTab.SUMMARY -> SummaryTab(state)
-                    PresidentTeamTab.PLAYERS -> PlayersTab(state)
-                    PresidentTeamTab.MATCHES -> MatchesTab(state, currentTime, onNavigateToMatch)
-                    PresidentTeamTab.STATS -> StatsTab(state.stats)
-                    PresidentTeamTab.NOTIFICATIONS -> {
-                        val teamNotificationState by viewModel.teamNotificationState.collectAsState()
-                        NotificationsTab(
-                            state = teamNotificationState,
-                            onMatchEventsChanged = viewModel::updateTeamMatchEvents,
-                            onGoalsChanged = viewModel::updateTeamGoals,
+    @OptIn(ExperimentalMaterial3Api::class)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(teamName) },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        if (selectedTab != PresidentTeamTab.SUMMARY) {
+                            viewModel.selectTab(PresidentTeamTab.SUMMARY)
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                },
+            )
+        },
+    ) { innerPadding ->
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            when (val state = uiState) {
+                is PresidentTeamDetailUiState.Loading -> Loading()
+                is PresidentTeamDetailUiState.Error -> {
+                    EmptyContent(stringResource(Res.string.president_team_detail_error))
+                }
+                is PresidentTeamDetailUiState.Ready -> {
+                    ScrollableTabRow(
+                        selectedTabIndex = selectedTab.ordinal,
+                        edgePadding = 0.dp,
+                    ) {
+                        TitleMediumTab(
+                            selected = selectedTab == PresidentTeamTab.SUMMARY,
+                            onClick = { viewModel.selectTab(PresidentTeamTab.SUMMARY) },
+                            text = stringResource(Res.string.summary_tab),
                         )
+                        TitleMediumTab(
+                            selected = selectedTab == PresidentTeamTab.PLAYERS,
+                            onClick = { viewModel.selectTab(PresidentTeamTab.PLAYERS) },
+                            text = stringResource(Res.string.president_team_detail_players_tab),
+                        )
+                        TitleMediumTab(
+                            selected = selectedTab == PresidentTeamTab.MATCHES,
+                            onClick = { viewModel.selectTab(PresidentTeamTab.MATCHES) },
+                            text = stringResource(Res.string.president_team_detail_matches_tab),
+                        )
+                        TitleMediumTab(
+                            selected = selectedTab == PresidentTeamTab.STATS,
+                            onClick = { viewModel.selectTab(PresidentTeamTab.STATS) },
+                            text = stringResource(Res.string.president_team_detail_stats_tab),
+                        )
+                        TitleMediumTab(
+                            selected = selectedTab == PresidentTeamTab.NOTIFICATIONS,
+                            onClick = { viewModel.selectTab(PresidentTeamTab.NOTIFICATIONS) },
+                            text = stringResource(Res.string.president_team_detail_notifications_tab),
+                        )
+                    }
+
+                    when (selectedTab) {
+                        PresidentTeamTab.SUMMARY -> SummaryTab(state)
+                        PresidentTeamTab.PLAYERS -> PlayersTab(state)
+                        PresidentTeamTab.MATCHES -> MatchesTab(state, currentTime, onNavigateToMatch)
+                        PresidentTeamTab.STATS -> StatsTab(state.stats)
+                        PresidentTeamTab.NOTIFICATIONS -> {
+                            val teamNotificationState by viewModel.teamNotificationState.collectAsState()
+                            NotificationsTab(
+                                state = teamNotificationState,
+                                onMatchEventsChanged = viewModel::updateTeamMatchEvents,
+                                onGoalsChanged = viewModel::updateTeamGoals,
+                            )
+                        }
                     }
                 }
             }
         }
-    }
+    } // closes Scaffold content lambda
 }
 
 @Composable

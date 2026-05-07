@@ -11,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmNotificationRep
 import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationPreferencesRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PresidentNotificationRepository
 import kotlinx.coroutines.flow.first
+import kotlinx.datetime.Clock
 
 internal class NotifyPresidentMatchEventUseCaseImpl(
     private val clubRepository: ClubRepository,
@@ -88,7 +89,7 @@ internal class NotifyPresidentMatchEventUseCaseImpl(
             title = title,
             body = body,
             userData = emptyMap(),
-            createdAt = System.currentTimeMillis(),
+            createdAt = Clock.System.now().toEpochMilliseconds(),
             read = false,
         )
     }

@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PresidentNotification
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentOnMemberWaitingUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.FcmNotificationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PresidentNotificationRepository
+import kotlinx.datetime.Clock
 
 internal class NotifyPresidentOnMemberWaitingUseCaseImpl(
     private val presidentNotificationRepository: PresidentNotificationRepository,
@@ -28,7 +29,7 @@ internal class NotifyPresidentOnMemberWaitingUseCaseImpl(
                         KEY_USER_NAME to userName,
                         KEY_USER_EMAIL to userEmail,
                     ),
-                createdAt = System.currentTimeMillis(),
+                createdAt = Clock.System.now().toEpochMilliseconds(),
                 read = false,
             )
 

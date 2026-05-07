@@ -68,6 +68,7 @@ val iosModule =
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
+                resolvePendingCoachAssignments = get(),
             )
         }
         factory {
@@ -142,6 +143,7 @@ val iosModule =
             ClubMembersViewModel(
                 getClubMembers = get(),
                 getUserClubMembership = get(),
+                removeClubMember = get(),
             )
         }
         factory {
@@ -181,6 +183,8 @@ val iosModule =
                 getUserClubMembership = get(),
                 getActiveViewRole = get(),
                 setActiveViewRole = get(),
+                getNotificationPreferences = get(),
+                updateGlobalNotificationPreference = get(),
             )
         }
 
@@ -271,6 +275,9 @@ val iosModule =
                 getPlayersByTeam = get(),
                 getMatchesByTeam = get(),
                 timeTicker = get(),
+                getNotificationPreferences = get(),
+                updateTeamNotificationPreference = get(),
+                getUserClubMembership = get(),
             )
         }
 

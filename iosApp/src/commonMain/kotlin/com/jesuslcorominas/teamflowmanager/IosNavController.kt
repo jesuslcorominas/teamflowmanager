@@ -40,6 +40,14 @@ sealed class IosDestination {
     data class AcceptTeamInvitation(val teamId: String?) : IosDestination()
 
     data object Analysis : IosDestination()
+
+    data class PresidentTeamDetail(val teamId: String) : IosDestination()
+
+    data class PresidentMatchDetail(val teamId: String, val matchId: Long) : IosDestination()
+
+    data object PresidentNotifications : IosDestination()
+
+    data object ClubSettings : IosDestination()
 }
 
 /**
