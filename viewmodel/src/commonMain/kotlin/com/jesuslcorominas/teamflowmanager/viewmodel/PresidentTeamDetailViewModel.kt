@@ -15,6 +15,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamNotificationPreferenceUseCase
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -92,16 +93,16 @@ class PresidentTeamDetailViewModel(
 
     private fun load() {
         viewModelScope.launch {
-            val team = getTeamById(teamId)
-            if (team == null) {
-                _uiState.value = PresidentTeamDetailUiState.Error
-                return@launch
-            }
+            // Kick off team fetch concurrently with the snapshot listener subscriptions so
+            // all three Firestore round-trips happen in parallel instead of sequentially.
+            val teamDeferred = async { getTeamById(teamId) }
 
             combine(
                 getPlayersByTeam(teamId),
                 getMatchesByTeam(teamId),
             ) { players, matches ->
+                val team = teamDeferred.await()
+                if (team == null) return@combine null
                 val finishedMatches = matches.filter { it.status == MatchStatus.FINISHED }
                 val stats =
                     PresidentTeamStats(
@@ -120,7 +121,7 @@ class PresidentTeamDetailViewModel(
                     stats = stats,
                 )
             }.collect { state ->
-                _uiState.value = state
+                _uiState.value = state ?: PresidentTeamDetailUiState.Error
             }
         }
 

@@ -14,6 +14,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDa
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPermissionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationPreferencesDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.NotificationTopicDataSource
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.PendingCoachAssignmentDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
@@ -33,12 +34,13 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchFirestore
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.MatchOperationFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NoOpDynamicLinkDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NoOpImageStorageDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NotificationPreferencesStubDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.NotificationPreferencesFirestoreDataSourceImpl
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PendingCoachAssignmentFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerSubstitutionFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PlayerTimeHistoryFirestoreDataSourceImpl
-import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PresidentNotificationDataSourceStub
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.PresidentNotificationFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.transaction.FirestoreTransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
@@ -75,8 +77,8 @@ actual val dataRemoteModule: Module =
         singleOf(::PlayerSubstitutionFirestoreDataSourceImpl) bind PlayerSubstitutionDataSource::class
         singleOf(::PlayerTimeHistoryFirestoreDataSourceImpl) bind PlayerTimeHistoryDataSource::class
 
-        // Phase 2 stubs — read operations return empty/null, writes throw NotImplementedError
-        single<ClubDataSource> { ClubFirestoreDataSourceImpl() }
+        // Real Firestore implementations (replaces Phase 2 stubs)
+        singleOf(::ClubFirestoreDataSourceImpl) bind ClubDataSource::class
         singleOf(::PlayerTimeFirestoreDataSourceImpl) bind PlayerTimeDataSource::class
         singleOf(::MatchOperationFirestoreDataSourceImpl) bind MatchOperationDataSource::class
         single<ImageStorageDataSource> { NoOpImageStorageDataSource() }
@@ -88,6 +90,7 @@ actual val dataRemoteModule: Module =
         singleOf(::IosNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
         singleOf(::IosNotificationPermissionDataSourceImpl) bind NotificationPermissionDataSource::class
         singleOf(::IosFcmSendNotificationDataSourceImpl) bind FcmSendNotificationDataSource::class
-        single<PresidentNotificationDataSource> { PresidentNotificationDataSourceStub() }
-        singleOf(::NotificationPreferencesStubDataSourceImpl) bind NotificationPreferencesDataSource::class
+        singleOf(::PresidentNotificationFirestoreDataSourceImpl) bind PresidentNotificationDataSource::class
+        singleOf(::NotificationPreferencesFirestoreDataSourceImpl) bind NotificationPreferencesDataSource::class
+        singleOf(::PendingCoachAssignmentFirestoreDataSourceImpl) bind PendingCoachAssignmentDataSource::class
     }

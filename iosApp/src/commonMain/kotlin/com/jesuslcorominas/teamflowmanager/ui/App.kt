@@ -3,7 +3,14 @@ package com.jesuslcorominas.teamflowmanager.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,8 +22,11 @@ import com.jesuslcorominas.teamflowmanager.IosNavController
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.ClubSettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PresidentNotificationsScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PresidentTeamDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
 import com.jesuslcorominas.teamflowmanager.ui.main.MainScreen
@@ -48,6 +58,9 @@ fun App(
             is IosDestination.Splash ->
                 SplashScreen(
                     onNavigateToLogin = { navController.navigateClearing(IosDestination.Login) },
+                    onNavigateToClubSelection = { navController.navigateClearing(IosDestination.ClubSelection) },
+                    onNavigateToAwaitTeam = { navController.navigateClearing(IosDestination.ClubSelection) },
+                    onNavigateToTeamList = { navController.navigateClearing(IosDestination.TeamList) },
                     onNavigateToMatches = { navController.navigateClearing(IosDestination.Matches) },
                 )
 
@@ -86,6 +99,26 @@ fun App(
                     matchId = dest.matchId,
                     onNavigateBack = { navController.popBackStack() },
                 )
+
+            is IosDestination.PresidentTeamDetail ->
+                PresidentTeamDetailScreen(
+                    teamId = dest.teamId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToMatch = { matchId ->
+                        navController.navigate(IosDestination.PresidentMatchDetail(dest.teamId, matchId))
+                    },
+                )
+
+            is IosDestination.PresidentMatchDetail ->
+                PresidentMatchDetailScaffold(
+                    onNavigateBack = { navController.popBackStack() },
+                ) {
+                    MatchScreen(
+                        matchId = dest.matchId,
+                        teamId = dest.teamId,
+                        readOnly = true,
+                    )
+                }
 
             is IosDestination.AcceptTeamInvitation ->
                 AcceptTeamInvitationScreen(
@@ -166,10 +199,14 @@ fun App(
 
                             is IosDestination.TeamList ->
                                 TeamListScreen(
-                                    onTeamClick = {
-                                        navController.navigate(IosDestination.Team(Route.Team.MODE_VIEW))
+                                    onTeamClick = { team ->
+                                        val remoteId = team.remoteId
+                                        if (remoteId != null) {
+                                            navController.navigate(IosDestination.PresidentTeamDetail(remoteId))
+                                        } else {
+                                            navController.navigate(IosDestination.Team(Route.Team.MODE_VIEW))
+                                        }
                                     },
-                                    onShareTeam = { _, _ -> }, // iOS share sheet: implement in KMP-29
                                 )
 
                             is IosDestination.Team ->
@@ -188,6 +225,12 @@ fun App(
                                 )
 
                             is IosDestination.ClubMembers -> ClubMembersScreen()
+
+                            is IosDestination.PresidentNotifications ->
+                                PresidentNotificationsScreen()
+
+                            is IosDestination.ClubSettings ->
+                                ClubSettingsScreen()
 
                             is IosDestination.Players ->
                                 PlayersScreen(
@@ -208,6 +251,35 @@ fun App(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PresidentMatchDetailScaffold(
+    onNavigateBack: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {},
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                },
+            )
+        },
+    ) { paddingValues ->
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(top = paddingValues.calculateTopPadding()),
+        ) {
+            content()
+        }
+    }
+}
+
 private fun IosDestination.toRouteString(): String =
     when (this) {
         is IosDestination.Matches -> Route.Matches.createRoute()
@@ -219,6 +291,10 @@ private fun IosDestination.toRouteString(): String =
         is IosDestination.ClubMembers -> Route.ClubMembers.createRoute()
         is IosDestination.Players -> Route.Players.createRoute()
         is IosDestination.Analysis -> Route.Analysis.createRoute()
+        is IosDestination.PresidentNotifications -> Route.PresidentNotifications.createRoute()
+        is IosDestination.ClubSettings -> Route.ClubSettings.createRoute()
+        is IosDestination.PresidentTeamDetail -> Route.PresidentTeamDetail.createRoute()
+        is IosDestination.PresidentMatchDetail -> Route.PresidentMatchDetail.createRoute()
         else -> ""
     }
 
@@ -231,6 +307,8 @@ private fun IosNavController.navigateToBottomNav(route: String) {
             Route.ClubMembers -> IosDestination.ClubMembers
             Route.Players -> IosDestination.Players
             Route.Analysis -> IosDestination.Analysis
+            Route.PresidentNotifications -> IosDestination.PresidentNotifications
+            Route.ClubSettings -> IosDestination.ClubSettings
             else -> return
         }
     navigateClearing(dest)

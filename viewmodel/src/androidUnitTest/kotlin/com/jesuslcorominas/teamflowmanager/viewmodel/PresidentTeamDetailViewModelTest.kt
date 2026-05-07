@@ -152,6 +152,8 @@ class PresidentTeamDetailViewModelTest {
     fun `when team is not found state becomes Error`() =
         runTest {
             coEvery { getTeamById(any()) } returns null
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
 
             val viewModel = createViewModel()
             advanceUntilIdle()
