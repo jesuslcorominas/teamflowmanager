@@ -81,9 +81,12 @@ fun MatchCreationWizardScreen(
                 title = {
                     Text(
                         stringResource(
-                            if (matchId != 0L) Res.string.edit_match_title
-                            else Res.string.add_match_title
-                        )
+                            if (matchId != 0L) {
+                                Res.string.edit_match_title
+                            } else {
+                                Res.string.add_match_title
+                            },
+                        ),
                     )
                 },
                 navigationIcon = {

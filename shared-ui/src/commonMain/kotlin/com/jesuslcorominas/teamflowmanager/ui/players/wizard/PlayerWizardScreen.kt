@@ -70,9 +70,12 @@ fun PlayerWizardScreen(
                 title = {
                     Text(
                         stringResource(
-                            if (playerId != 0L) Res.string.edit_player_title
-                            else Res.string.add_player_title
-                        )
+                            if (playerId != 0L) {
+                                Res.string.edit_player_title
+                            } else {
+                                Res.string.add_player_title
+                            },
+                        ),
                     )
                 },
                 navigationIcon = {
