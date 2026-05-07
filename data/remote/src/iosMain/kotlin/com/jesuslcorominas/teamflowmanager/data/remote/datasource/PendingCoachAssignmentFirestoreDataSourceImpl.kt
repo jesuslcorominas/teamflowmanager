@@ -31,7 +31,7 @@ class PendingCoachAssignmentFirestoreDataSourceImpl(
     override suspend fun getByEmail(email: String): List<PendingCoachAssignment> {
         val snapshot =
             firestore.collection(COLLECTION)
-                .where { "email" equalTo email }
+                .where { FIELD_EMAIL equalTo email }
                 .get()
         return snapshot.documents.mapNotNull { doc ->
             try {
