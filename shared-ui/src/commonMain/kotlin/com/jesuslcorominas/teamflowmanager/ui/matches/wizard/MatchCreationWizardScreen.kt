@@ -1,9 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -17,6 +17,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppBackHandler
+import com.jesuslcorominas.teamflowmanager.ui.components.IosBackButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -65,12 +66,12 @@ fun MatchCreationWizardScreen(
         wizardViewModel.requestBack(onNavigateBack)
     }
 
-    Scaffold { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
         when (val state = uiState) {
             is MatchCreationWizardUiState.Loading -> Loading()
             is MatchCreationWizardUiState.Saving -> Loading()
             is MatchCreationWizardUiState.Ready -> {
-                Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = TFMSpacing.spacing02)) {
+                Column(modifier = Modifier.fillMaxSize().padding(horizontal = TFMSpacing.spacing02)) {
                     when (currentStep) {
                         WizardStep.GENERAL_DATA -> {
                             GeneralDataStep(
@@ -169,6 +170,8 @@ fun MatchCreationWizardScreen(
                 }
             }
         }
+
+        IosBackButton(onBack = { wizardViewModel.requestBack(onNavigateBack) })
     }
 
     // Default captain dialog

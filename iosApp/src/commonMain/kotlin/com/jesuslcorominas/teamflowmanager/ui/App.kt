@@ -10,6 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,6 +52,7 @@ fun App(
     MaterialTheme(colorScheme = LightColorScheme) {
         val navController = remember { IosNavController() }
         var matchTitle: String? by remember { mutableStateOf(null) }
+        var presidentMatchTitle: String? by remember { mutableStateOf(null) }
 
         when (val dest = navController.current) {
             // ── Full-screen routes (no MainScreen shell) ──────────────────────
@@ -111,12 +113,14 @@ fun App(
 
             is IosDestination.PresidentMatchDetail ->
                 PresidentMatchDetailScaffold(
+                    title = presidentMatchTitle,
                     onNavigateBack = { navController.popBackStack() },
                 ) {
                     MatchScreen(
                         matchId = dest.matchId,
                         teamId = dest.teamId,
                         readOnly = true,
+                        onTitleChange = { presidentMatchTitle = it },
                     )
                 }
 
@@ -254,13 +258,14 @@ fun App(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PresidentMatchDetailScaffold(
+    title: String?,
     onNavigateBack: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {},
+                title = { if (title != null) Text(title) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)

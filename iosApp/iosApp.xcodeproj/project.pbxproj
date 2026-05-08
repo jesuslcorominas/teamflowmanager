@@ -194,6 +194,7 @@
 		};
 		AA000000000000000000034A /* Inject Google Sign-In URL Scheme */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -301,6 +302,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.jesuslcorominas.teamflowmanager.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REVERSED_CLIENT_ID = com.googleusercontent.apps.960836545640-t78pngnp9fvbkapmpdk4klkmf995v200;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -338,6 +340,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.jesuslcorominas.teamflowmanager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REVERSED_CLIENT_ID = com.googleusercontent.apps.622260891095-r2m0tu21f96s5lf25r2l9b9g64lmsl3d;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

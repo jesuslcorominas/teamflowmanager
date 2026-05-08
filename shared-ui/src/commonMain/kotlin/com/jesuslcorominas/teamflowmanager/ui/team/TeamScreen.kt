@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.team
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppBackHandler
+import com.jesuslcorominas.teamflowmanager.ui.components.IosBackButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.team.components.TeamDetailContent
 import com.jesuslcorominas.teamflowmanager.ui.team.components.TeamForm
@@ -88,20 +90,24 @@ fun TeamScreen(
                         },
                     )
                 } else {
-                    TeamForm(
-                        clubNumericId = state.clubNumericId,
-                        clubId = state.clubId,
-                        isPresident = state.isPresident,
-                        onSave = { team, _ ->
-                            viewModel.createTeam(team) {
-                                if (state.isPresident && onNavigateToTeamList != null) {
-                                    onNavigateToTeamList()
-                                } else {
-                                    onNavigateToMatches(team.name)
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        TeamForm(
+                            clubNumericId = state.clubNumericId,
+                            clubId = state.clubId,
+                            isPresident = state.isPresident,
+                            onSave = { team, _ ->
+                                viewModel.createTeam(team) {
+                                    if (state.isPresident && onNavigateToTeamList != null) {
+                                        onNavigateToTeamList()
+                                    } else {
+                                        onNavigateToMatches(team.name)
+                                    }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+
+                        IosBackButton(onBack = { viewModel.requestBack(onNavigateBackRequest) })
+                    }
                 }
             }
         }

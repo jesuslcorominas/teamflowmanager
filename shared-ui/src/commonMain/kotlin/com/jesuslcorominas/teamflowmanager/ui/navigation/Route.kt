@@ -176,7 +176,7 @@ sealed class Route(
         showSettingsButton = true,
     )
 
-    data object PresidentTeamDetail : Route(path = "president_team_detail", canGoBack = true) {
+    data object PresidentTeamDetail : Route(path = "president_team_detail", showTopBar = false, canGoBack = true) {
         const val ARG_TEAM_ID = "teamId"
         private const val PATH = "president_team_detail"
 
