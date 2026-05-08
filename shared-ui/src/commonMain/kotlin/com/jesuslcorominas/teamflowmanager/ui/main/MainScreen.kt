@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -141,7 +143,12 @@ fun MainScreen(
                 },
                 contentWindowInsets = WindowInsets(0),
             ) { paddingValues ->
-                content(PaddingValues(top = paddingValues.calculateTopPadding()))
+                val topPadding = if (uiConfig?.showTopBar == true) {
+                    paddingValues.calculateTopPadding()
+                } else {
+                    WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding()
+                }
+                content(PaddingValues(top = topPadding))
             }
 
             // Gradient overlay: transparent → surface color, covering the bar zone + FadeHeight above.

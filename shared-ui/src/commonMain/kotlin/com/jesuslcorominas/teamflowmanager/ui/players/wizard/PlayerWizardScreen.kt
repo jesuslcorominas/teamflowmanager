@@ -1,16 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.ui.players.wizard
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,6 +12,7 @@ import androidx.compose.ui.Modifier
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppBackHandler
+import com.jesuslcorominas.teamflowmanager.ui.components.IosBackButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.CaptainConfirmationDialog
@@ -31,11 +25,9 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import teamflowmanager.shared_ui.generated.resources.Res
-import teamflowmanager.shared_ui.generated.resources.add_player_title
 import teamflowmanager.shared_ui.generated.resources.cancel
 import teamflowmanager.shared_ui.generated.resources.discard
 import teamflowmanager.shared_ui.generated.resources.discard_message
-import teamflowmanager.shared_ui.generated.resources.edit_player_title
 import teamflowmanager.shared_ui.generated.resources.unsaved_changes_title
 
 @Composable
@@ -63,39 +55,14 @@ fun PlayerWizardScreen(
         wizardViewModel.requestBack(onNavigateBack)
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(
-                            if (playerId != 0L) {
-                                Res.string.edit_player_title
-                            } else {
-                                Res.string.add_player_title
-                            },
-                        ),
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { wizardViewModel.requestBack(onNavigateBack) }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                        )
-                    }
-                },
-            )
-        },
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
             is PlayerWizardUiState.Loading -> Loading()
             is PlayerWizardUiState.Error -> {
                 LaunchedEffect(Unit) { onNavigateBack() }
             }
             is PlayerWizardUiState.Ready -> {
-                Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                Column(modifier = Modifier.fillMaxSize()) {
                     when (currentStep) {
                         PlayerWizardStep.PLAYER_DATA -> {
                             PlayerDataStep(
@@ -166,15 +133,17 @@ fun PlayerWizardScreen(
             }
         }
 
-        if (showExitDialog) {
-            AppAlertDialog(
-                title = stringResource(Res.string.unsaved_changes_title),
-                message = stringResource(Res.string.discard_message),
-                confirmText = stringResource(Res.string.discard),
-                dismissText = stringResource(Res.string.cancel),
-                onConfirm = { wizardViewModel.discardChanges(onNavigateBack) },
-                onDismiss = { wizardViewModel.dismissExitDialog() },
-            )
-        }
+        IosBackButton(onBack = { wizardViewModel.requestBack(onNavigateBack) })
+    }
+
+    if (showExitDialog) {
+        AppAlertDialog(
+            title = stringResource(Res.string.unsaved_changes_title),
+            message = stringResource(Res.string.discard_message),
+            confirmText = stringResource(Res.string.discard),
+            dismissText = stringResource(Res.string.cancel),
+            onConfirm = { wizardViewModel.discardChanges(onNavigateBack) },
+            onDismiss = { wizardViewModel.dismissExitDialog() },
+        )
     }
 }
