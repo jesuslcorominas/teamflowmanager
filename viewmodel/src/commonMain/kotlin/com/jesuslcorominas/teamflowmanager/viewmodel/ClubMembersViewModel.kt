@@ -7,7 +7,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubMembersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RemoveClubMemberUseCase
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,15 +36,7 @@ class ClubMembersViewModel(
         data object NoClubMembership : UiState
     }
 
-    private var loadJob: Job? = null
-
     init {
-        loadMembers()
-    }
-
-    fun resetState() {
-        loadJob?.cancel()
-        _uiState.value = UiState.Loading
         loadMembers()
     }
 
@@ -63,34 +54,33 @@ class ClubMembersViewModel(
     }
 
     private fun loadMembers() {
-        loadJob =
-            viewModelScope.launch {
-                try {
-                    // Get user's club membership
-                    val clubMember = getUserClubMembership().first()
-                    val clubId = clubMember?.clubRemoteId
+        viewModelScope.launch {
+            try {
+                // Get user's club membership
+                val clubMember = getUserClubMembership().first()
+                val clubId = clubMember?.clubRemoteId
 
-                    if (clubMember == null || clubId == null) {
-                        _uiState.value = UiState.NoClubMembership
-                        return@launch
-                    }
-
-                    val currentUserId = clubMember.userId
-                    val isPresident = clubMember.hasRole(ClubRole.PRESIDENT)
-
-                    // Load members for the club
-                    getClubMembers(clubId).collect { members ->
-                        _uiState.value =
-                            UiState.Success(
-                                members = members,
-                                currentUserId = currentUserId,
-                                currentUserIsPresident = isPresident,
-                                clubRemoteId = clubId,
-                            )
-                    }
-                } catch (e: Exception) {
-                    _uiState.value = UiState.Error
+                if (clubMember == null || clubId == null) {
+                    _uiState.value = UiState.NoClubMembership
+                    return@launch
                 }
+
+                val currentUserId = clubMember.userId
+                val isPresident = clubMember.hasRole(ClubRole.PRESIDENT)
+
+                // Load members for the club
+                getClubMembers(clubId).collect { members ->
+                    _uiState.value =
+                        UiState.Success(
+                            members = members,
+                            currentUserId = currentUserId,
+                            currentUserIsPresident = isPresident,
+                            clubRemoteId = clubId,
+                        )
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error
             }
+        }
     }
 }

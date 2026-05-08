@@ -56,10 +56,6 @@ import teamflowmanager.shared_ui.generated.resources.notifications_no_club
 fun PresidentNotificationsScreen(viewModel: PresidentNotificationsViewModel = koinViewModel()) {
     TrackScreenView(screenName = ScreenName.PRESIDENT_NOTIFICATIONS, screenClass = "PresidentNotificationsScreen")
 
-    LaunchedEffect(Unit) {
-        viewModel.resetState()
-    }
-
     val uiState by viewModel.uiState.collectAsState()
     val bottomPadding = LocalContentBottomPadding.current
     var selectedNotification by remember { mutableStateOf<PresidentNotification?>(null) }

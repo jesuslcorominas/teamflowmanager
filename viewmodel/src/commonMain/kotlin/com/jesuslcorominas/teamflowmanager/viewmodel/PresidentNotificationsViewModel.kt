@@ -9,7 +9,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUnreadPresidentNoti
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsReadUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsUnreadUseCase
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,16 +39,7 @@ class PresidentNotificationsViewModel(
     private val _unreadCount = MutableStateFlow(0)
     val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
 
-    private var loadJob: Job? = null
-
     init {
-        load()
-    }
-
-    fun resetState() {
-        loadJob?.cancel()
-        _uiState.value = UiState.Loading
-        _unreadCount.value = 0
         load()
     }
 
@@ -87,41 +77,40 @@ class PresidentNotificationsViewModel(
     }
 
     private fun load() {
-        loadJob =
-            viewModelScope.launch {
-                val membership =
-                    try {
-                        getUserClubMembership().first()
-                    } catch (_: Exception) {
-                        null
-                    }
-
-                val clubId = membership?.clubRemoteId
-                if (clubId.isNullOrBlank()) {
-                    _uiState.value = UiState.NoClubMembership
-                    return@launch
+        viewModelScope.launch {
+            val membership =
+                try {
+                    getUserClubMembership().first()
+                } catch (_: Exception) {
+                    null
                 }
 
-                launch {
-                    try {
-                        getNotifications(clubId).collect { notifications ->
-                            _uiState.value = UiState.Success(notifications)
-                        }
-                    } catch (_: Exception) {
-                        _uiState.value = UiState.Error
-                    }
-                }
+            val clubId = membership?.clubRemoteId
+            if (clubId.isNullOrBlank()) {
+                _uiState.value = UiState.NoClubMembership
+                return@launch
+            }
 
-                launch {
-                    try {
-                        getUnreadCount(clubId).collect { count ->
-                            _unreadCount.value = count
-                        }
-                    } catch (_: Exception) {
-                        _unreadCount.value = 0
+            launch {
+                try {
+                    getNotifications(clubId).collect { notifications ->
+                        _uiState.value = UiState.Success(notifications)
                     }
+                } catch (_: Exception) {
+                    _uiState.value = UiState.Error
                 }
             }
+
+            launch {
+                try {
+                    getUnreadCount(clubId).collect { count ->
+                        _unreadCount.value = count
+                    }
+                } catch (_: Exception) {
+                    _unreadCount.value = 0
+                }
+            }
+        }
     }
 
     private suspend fun currentClubId(): String? {

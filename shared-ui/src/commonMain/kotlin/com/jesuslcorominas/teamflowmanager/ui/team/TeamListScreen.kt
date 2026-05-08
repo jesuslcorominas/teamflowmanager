@@ -90,10 +90,6 @@ fun TeamListScreen(
 ) {
     TrackScreenView(screenName = ScreenName.TEAM, screenClass = "TeamListScreen")
 
-    LaunchedEffect(Unit) {
-        viewModel.resetState()
-    }
-
     val uiState by viewModel.uiState.collectAsState()
     val assigningCoachToTeamId by viewModel.assigningCoachToTeamId.collectAsState()
     val currentUserRole by viewModel.currentUserRole.collectAsState()
