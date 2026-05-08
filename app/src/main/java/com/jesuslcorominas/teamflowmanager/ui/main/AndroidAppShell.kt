@@ -45,6 +45,9 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundMain
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.statusBars
 import org.koin.androidx.compose.koinViewModel
 
 private val FabHeight = 56.dp
@@ -190,9 +193,25 @@ private fun MainScaffold(
                     else ->
                         navBarPadding
                 }
+            val showTopBar = uiConfig?.showTopBar == true
+            val topPadding =
+                if (showTopBar) {
+                    paddingValues.calculateTopPadding()
+                } else {
+                    WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                }
             CompositionLocalProvider(
                 LocalContentBottomPadding provides contentBottomPadding,
             ) {
+                // When showTopBar=false the shell applies the status-bar inset manually.
+                // Consume it so child Scaffolds with their own TopAppBar don't double-apply it.
+                Box(
+                    modifier = if (!showTopBar) {
+                        Modifier.consumeWindowInsets(WindowInsets.statusBars)
+                    } else {
+                        Modifier
+                    },
+                ) {
                 Navigation(
                     modifier =
                         Modifier
@@ -200,12 +219,13 @@ private fun MainScaffold(
                             // Only apply top padding. The bottomBar is drawn on top of the content
                             // by the Scaffold, so applying bottom padding here creates an empty white
                             // gap. The FAB and bar clearance is exposed via LocalContentBottomPadding.
-                            .padding(top = paddingValues.calculateTopPadding()),
+                            .padding(top = topPadding),
                     navController = navController,
                     currentBackHandler = backHandlerController,
                     onTitleChange = { dynamicTitle = it },
                     onRoleChanged = onRoleChanged,
                 )
+                } // closes consumeWindowInsets Box
             }
         }
     }
