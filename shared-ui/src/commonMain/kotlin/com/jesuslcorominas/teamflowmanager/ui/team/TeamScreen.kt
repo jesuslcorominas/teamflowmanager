@@ -116,9 +116,10 @@ fun TeamScreen(
                         },
                     ) { paddingValues ->
                         Surface(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(paddingValues),
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(paddingValues),
                             color = MaterialTheme.colorScheme.background,
                         ) {
                             TeamForm(
