@@ -1,11 +1,19 @@
 package com.jesuslcorominas.teamflowmanager.ui.team
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +32,7 @@ import org.koin.core.parameter.parametersOf
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.cancel
 import teamflowmanager.shared_ui.generated.resources.close
+import teamflowmanager.shared_ui.generated.resources.create_team_title
 import teamflowmanager.shared_ui.generated.resources.discard
 import teamflowmanager.shared_ui.generated.resources.discard_message
 import teamflowmanager.shared_ui.generated.resources.save_error_message
@@ -34,6 +43,7 @@ import teamflowmanager.shared_ui.generated.resources.team_type_change_blocked_me
 import teamflowmanager.shared_ui.generated.resources.team_type_change_not_allowed
 import teamflowmanager.shared_ui.generated.resources.unsaved_changes_title
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TeamScreen(
     mode: String,
@@ -88,20 +98,45 @@ fun TeamScreen(
                         },
                     )
                 } else {
-                    TeamForm(
-                        clubNumericId = state.clubNumericId,
-                        clubId = state.clubId,
-                        isPresident = state.isPresident,
-                        onSave = { team, _ ->
-                            viewModel.createTeam(team) {
-                                if (state.isPresident && onNavigateToTeamList != null) {
-                                    onNavigateToTeamList()
-                                } else {
-                                    onNavigateToMatches(team.name)
-                                }
-                            }
+                    Scaffold(
+                        topBar = {
+                            TopAppBar(
+                                title = {
+                                    Text(stringResource(Res.string.create_team_title))
+                                },
+                                navigationIcon = {
+                                    IconButton(onClick = { viewModel.requestBack(onNavigateBackRequest) }) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = null,
+                                        )
+                                    }
+                                },
+                            )
                         },
-                    )
+                    ) { paddingValues ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
+                            color = MaterialTheme.colorScheme.background,
+                        ) {
+                            TeamForm(
+                                clubNumericId = state.clubNumericId,
+                                clubId = state.clubId,
+                                isPresident = state.isPresident,
+                                onSave = { team, _ ->
+                                    viewModel.createTeam(team) {
+                                        if (state.isPresident && onNavigateToTeamList != null) {
+                                            onNavigateToTeamList()
+                                        } else {
+                                            onNavigateToMatches(team.name)
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                    }
                 }
             }
         }
