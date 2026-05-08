@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateClubUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +21,8 @@ class ClubSettingsViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    private var loadJob: Job? = null
 
     private var clubId: String? = null
 
@@ -44,8 +47,17 @@ class ClubSettingsViewModel(
         loadClub()
     }
 
+    fun resetState() {
+        loadJob?.cancel()
+        clubId = null
+        savedName = ""
+        savedHomeGround = ""
+        _uiState.value = UiState()
+        loadClub()
+    }
+
     private fun loadClub() {
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             try {
                 val member = getUserClubMembership().first()
                 val remoteId = member?.clubRemoteId

@@ -84,6 +84,10 @@ fun ClubSettingsScreen(
 ) {
     TrackScreenView(screenName = ScreenName.CLUB_SETTINGS, screenClass = "ClubSettingsScreen")
 
+    LaunchedEffect(Unit) {
+        viewModel.resetState()
+    }
+
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val clipboard = LocalClipboardManager.current

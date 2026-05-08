@@ -9,6 +9,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUnreadPresidentNoti
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsReadUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsUnreadUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,7 +40,16 @@ class PresidentNotificationsViewModel(
     private val _unreadCount = MutableStateFlow(0)
     val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
 
+    private var loadJob: Job? = null
+
     init {
+        load()
+    }
+
+    fun resetState() {
+        loadJob?.cancel()
+        _uiState.value = UiState.Loading
+        _unreadCount.value = 0
         load()
     }
 
@@ -77,7 +87,7 @@ class PresidentNotificationsViewModel(
     }
 
     private fun load() {
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             val membership =
                 try {
                     getUserClubMembership().first()
