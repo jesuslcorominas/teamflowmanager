@@ -16,9 +16,10 @@ actual fun IosBackButton(onBack: () -> Unit) {
     IconButton(
         onClick = onBack,
         modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-        colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ),
+        colors =
+            IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ),
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,

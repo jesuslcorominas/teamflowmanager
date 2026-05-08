@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
@@ -143,11 +143,12 @@ fun MainScreen(
                 },
                 contentWindowInsets = WindowInsets(0),
             ) { paddingValues ->
-                val topPadding = if (uiConfig?.showTopBar == true) {
-                    paddingValues.calculateTopPadding()
-                } else {
-                    WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding()
-                }
+                val topPadding =
+                    if (uiConfig?.showTopBar == true) {
+                        paddingValues.calculateTopPadding()
+                    } else {
+                        WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding()
+                    }
                 content(PaddingValues(top = topPadding))
             }
 
