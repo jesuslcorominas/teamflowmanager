@@ -3,11 +3,14 @@ package com.jesuslcorominas.teamflowmanager.ui.main
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
@@ -45,9 +48,6 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundMain
 import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.statusBars
 import org.koin.androidx.compose.koinViewModel
 
 private val FabHeight = 56.dp
@@ -206,25 +206,26 @@ private fun MainScaffold(
                 // When showTopBar=false the shell applies the status-bar inset manually.
                 // Consume it so child Scaffolds with their own TopAppBar don't double-apply it.
                 Box(
-                    modifier = if (!showTopBar) {
-                        Modifier.consumeWindowInsets(WindowInsets.statusBars)
-                    } else {
-                        Modifier
-                    },
-                ) {
-                Navigation(
                     modifier =
-                        Modifier
-                            .fillMaxSize()
-                            // Only apply top padding. The bottomBar is drawn on top of the content
-                            // by the Scaffold, so applying bottom padding here creates an empty white
-                            // gap. The FAB and bar clearance is exposed via LocalContentBottomPadding.
-                            .padding(top = topPadding),
-                    navController = navController,
-                    currentBackHandler = backHandlerController,
-                    onTitleChange = { dynamicTitle = it },
-                    onRoleChanged = onRoleChanged,
-                )
+                        if (!showTopBar) {
+                            Modifier.consumeWindowInsets(WindowInsets.statusBars)
+                        } else {
+                            Modifier
+                        },
+                ) {
+                    Navigation(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                // Only apply top padding. The bottomBar is drawn on top of the content
+                                // by the Scaffold, so applying bottom padding here creates an empty white
+                                // gap. The FAB and bar clearance is exposed via LocalContentBottomPadding.
+                                .padding(top = topPadding),
+                        navController = navController,
+                        currentBackHandler = backHandlerController,
+                        onTitleChange = { dynamicTitle = it },
+                        onRoleChanged = onRoleChanged,
+                    )
                 } // closes consumeWindowInsets Box
             }
         }
