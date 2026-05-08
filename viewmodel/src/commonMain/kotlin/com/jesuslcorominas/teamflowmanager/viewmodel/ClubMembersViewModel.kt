@@ -63,33 +63,34 @@ class ClubMembersViewModel(
     }
 
     private fun loadMembers() {
-        loadJob = viewModelScope.launch {
-            try {
-                // Get user's club membership
-                val clubMember = getUserClubMembership().first()
-                val clubId = clubMember?.clubRemoteId
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    // Get user's club membership
+                    val clubMember = getUserClubMembership().first()
+                    val clubId = clubMember?.clubRemoteId
 
-                if (clubMember == null || clubId == null) {
-                    _uiState.value = UiState.NoClubMembership
-                    return@launch
+                    if (clubMember == null || clubId == null) {
+                        _uiState.value = UiState.NoClubMembership
+                        return@launch
+                    }
+
+                    val currentUserId = clubMember.userId
+                    val isPresident = clubMember.hasRole(ClubRole.PRESIDENT)
+
+                    // Load members for the club
+                    getClubMembers(clubId).collect { members ->
+                        _uiState.value =
+                            UiState.Success(
+                                members = members,
+                                currentUserId = currentUserId,
+                                currentUserIsPresident = isPresident,
+                                clubRemoteId = clubId,
+                            )
+                    }
+                } catch (e: Exception) {
+                    _uiState.value = UiState.Error
                 }
-
-                val currentUserId = clubMember.userId
-                val isPresident = clubMember.hasRole(ClubRole.PRESIDENT)
-
-                // Load members for the club
-                getClubMembers(clubId).collect { members ->
-                    _uiState.value =
-                        UiState.Success(
-                            members = members,
-                            currentUserId = currentUserId,
-                            currentUserIsPresident = isPresident,
-                            clubRemoteId = clubId,
-                        )
-                }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error
             }
-        }
     }
 }

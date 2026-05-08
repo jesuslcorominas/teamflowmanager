@@ -87,40 +87,41 @@ class PresidentNotificationsViewModel(
     }
 
     private fun load() {
-        loadJob = viewModelScope.launch {
-            val membership =
-                try {
-                    getUserClubMembership().first()
-                } catch (_: Exception) {
-                    null
-                }
-
-            val clubId = membership?.clubRemoteId
-            if (clubId.isNullOrBlank()) {
-                _uiState.value = UiState.NoClubMembership
-                return@launch
-            }
-
-            launch {
-                try {
-                    getNotifications(clubId).collect { notifications ->
-                        _uiState.value = UiState.Success(notifications)
+        loadJob =
+            viewModelScope.launch {
+                val membership =
+                    try {
+                        getUserClubMembership().first()
+                    } catch (_: Exception) {
+                        null
                     }
-                } catch (_: Exception) {
-                    _uiState.value = UiState.Error
-                }
-            }
 
-            launch {
-                try {
-                    getUnreadCount(clubId).collect { count ->
-                        _unreadCount.value = count
+                val clubId = membership?.clubRemoteId
+                if (clubId.isNullOrBlank()) {
+                    _uiState.value = UiState.NoClubMembership
+                    return@launch
+                }
+
+                launch {
+                    try {
+                        getNotifications(clubId).collect { notifications ->
+                            _uiState.value = UiState.Success(notifications)
+                        }
+                    } catch (_: Exception) {
+                        _uiState.value = UiState.Error
                     }
-                } catch (_: Exception) {
-                    _unreadCount.value = 0
+                }
+
+                launch {
+                    try {
+                        getUnreadCount(clubId).collect { count ->
+                            _unreadCount.value = count
+                        }
+                    } catch (_: Exception) {
+                        _unreadCount.value = 0
+                    }
                 }
             }
-        }
     }
 
     private suspend fun currentClubId(): String? {

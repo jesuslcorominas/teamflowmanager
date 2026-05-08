@@ -124,91 +124,92 @@ class TeamListViewModel(
     }
 
     private fun loadTeams() {
-        loadJob = viewModelScope.launch {
-            launch {
-                try {
-                    val clubMember = getUserClubMembership().first()
-                    val clubRemoteId = clubMember?.clubRemoteId
+        loadJob =
+            viewModelScope.launch {
+                launch {
+                    try {
+                        val clubMember = getUserClubMembership().first()
+                        val clubRemoteId = clubMember?.clubRemoteId
 
-                    if (clubMember == null || clubRemoteId == null) {
-                        _uiState.value = UiState.NoClubMembership
-                        return@launch
-                    }
-
-                    _currentUserRole.value =
-                        if (clubMember.hasRole(ClubRole.PRESIDENT)) {
-                            ClubRole.PRESIDENT.roleName
-                        } else {
-                            clubMember.roles.firstOrNull() ?: ""
+                        if (clubMember == null || clubRemoteId == null) {
+                            _uiState.value = UiState.NoClubMembership
+                            return@launch
                         }
 
-                    // Load club members in background for the assign coach dialog
-                    launch {
-                        getClubMembers(clubRemoteId).collect { members ->
-                            _clubMembers.value = members
-                        }
-                    }
+                        _currentUserRole.value =
+                            if (clubMember.hasRole(ClubRole.PRESIDENT)) {
+                                ClubRole.PRESIDENT.roleName
+                            } else {
+                                clubMember.roles.firstOrNull() ?: ""
+                            }
 
-                    // Collect raw teams into allTeamsCache
-                    launch {
-                        getTeamsByClub(clubRemoteId).collect { teams ->
-                            allTeamsCache.value = teams
+                        // Load club members in background for the assign coach dialog
+                        launch {
+                            getClubMembers(clubRemoteId).collect { members ->
+                                _clubMembers.value = members
+                            }
                         }
-                    }
 
-                    // Load teams for the club, applying search and filter reactively
-                    combine(
-                        allTeamsCache,
-                        _searchQuery,
-                        _coachFilter,
-                    ) { teams, query, coachFilter ->
-                        val filtered =
-                            teams
-                                .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
-                                .filter {
-                                    when (coachFilter) {
-                                        CoachFilter.ALL -> true
-                                        CoachFilter.WITH_COACH -> it.coachId != null
-                                        CoachFilter.WITHOUT_COACH -> it.coachId == null
+                        // Collect raw teams into allTeamsCache
+                        launch {
+                            getTeamsByClub(clubRemoteId).collect { teams ->
+                                allTeamsCache.value = teams
+                            }
+                        }
+
+                        // Load teams for the club, applying search and filter reactively
+                        combine(
+                            allTeamsCache,
+                            _searchQuery,
+                            _coachFilter,
+                        ) { teams, query, coachFilter ->
+                            val filtered =
+                                teams
+                                    .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
+                                    .filter {
+                                        when (coachFilter) {
+                                            CoachFilter.ALL -> true
+                                            CoachFilter.WITH_COACH -> it.coachId != null
+                                            CoachFilter.WITHOUT_COACH -> it.coachId == null
+                                        }
                                     }
-                                }
-                        UiState.Success(filtered, clubMember.name)
-                    }.collect { state ->
-                        _uiState.value = state
+                            UiState.Success(filtered, clubMember.name)
+                        }.collect { state ->
+                            _uiState.value = state
+                        }
+                    } catch (e: Exception) {
+                        _uiState.value = UiState.Error
                     }
-                } catch (e: Exception) {
-                    _uiState.value = UiState.Error
+                }
+
+                // Reactively subscribe to match status for all teams
+                launch {
+                    allTeamsCache
+                        .flatMapLatest { teams ->
+                            val teamsWithId = teams.filter { !it.remoteId.isNullOrBlank() }
+                            if (teamsWithId.isEmpty()) return@flatMapLatest flowOf(emptyMap())
+                            combine(
+                                teamsWithId.map { team ->
+                                    getMatchesByTeam(team.remoteId!!)
+                                        .map { matches ->
+                                            val current =
+                                                matches.firstOrNull {
+                                                    it.status == MatchStatus.IN_PROGRESS ||
+                                                        it.status == MatchStatus.PAUSED
+                                                }
+                                            val next =
+                                                matches
+                                                    .filter { it.status == MatchStatus.SCHEDULED }
+                                                    .minByOrNull { it.dateTime ?: Long.MAX_VALUE }
+                                            team.remoteId!! to TeamMatchInfo(current, next)
+                                        }
+                                },
+                            ) { pairs -> pairs.toMap() }
+                        }
+                        .catch { emit(emptyMap()) }
+                        .collect { _matchStatusByTeam.value = it }
                 }
             }
-
-            // Reactively subscribe to match status for all teams
-            launch {
-                allTeamsCache
-                    .flatMapLatest { teams ->
-                        val teamsWithId = teams.filter { !it.remoteId.isNullOrBlank() }
-                        if (teamsWithId.isEmpty()) return@flatMapLatest flowOf(emptyMap())
-                        combine(
-                            teamsWithId.map { team ->
-                                getMatchesByTeam(team.remoteId!!)
-                                    .map { matches ->
-                                        val current =
-                                            matches.firstOrNull {
-                                                it.status == MatchStatus.IN_PROGRESS ||
-                                                    it.status == MatchStatus.PAUSED
-                                            }
-                                        val next =
-                                            matches
-                                                .filter { it.status == MatchStatus.SCHEDULED }
-                                                .minByOrNull { it.dateTime ?: Long.MAX_VALUE }
-                                        team.remoteId!! to TeamMatchInfo(current, next)
-                                    }
-                            },
-                        ) { pairs -> pairs.toMap() }
-                    }
-                    .catch { emit(emptyMap()) }
-                    .collect { _matchStatusByTeam.value = it }
-            }
-        }
     }
 
     fun shareTeam(team: Team) {

@@ -57,45 +57,46 @@ class ClubSettingsViewModel(
     }
 
     private fun loadClub() {
-        loadJob = viewModelScope.launch {
-            try {
-                val member = getUserClubMembership().first()
-                val remoteId = member?.clubRemoteId
-                if (remoteId == null) {
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    val member = getUserClubMembership().first()
+                    val remoteId = member?.clubRemoteId
+                    if (remoteId == null) {
+                        _uiState.value =
+                            _uiState.value.copy(
+                                loading = false,
+                                error = "No club membership found",
+                            )
+                        return@launch
+                    }
+                    clubId = remoteId
+                    val club = getClubById(remoteId)
+                    if (club == null) {
+                        _uiState.value =
+                            _uiState.value.copy(
+                                loading = false,
+                                error = "Club not found",
+                            )
+                        return@launch
+                    }
+                    savedName = club.name
+                    savedHomeGround = club.homeGround ?: ""
+                    _uiState.value =
+                        _uiState.value.copy(
+                            name = club.name,
+                            homeGround = club.homeGround ?: "",
+                            invitationCode = club.invitationCode,
+                            loading = false,
+                        )
+                } catch (e: Exception) {
                     _uiState.value =
                         _uiState.value.copy(
                             loading = false,
-                            error = "No club membership found",
+                            error = e.message,
                         )
-                    return@launch
                 }
-                clubId = remoteId
-                val club = getClubById(remoteId)
-                if (club == null) {
-                    _uiState.value =
-                        _uiState.value.copy(
-                            loading = false,
-                            error = "Club not found",
-                        )
-                    return@launch
-                }
-                savedName = club.name
-                savedHomeGround = club.homeGround ?: ""
-                _uiState.value =
-                    _uiState.value.copy(
-                        name = club.name,
-                        homeGround = club.homeGround ?: "",
-                        invitationCode = club.invitationCode,
-                        loading = false,
-                    )
-            } catch (e: Exception) {
-                _uiState.value =
-                    _uiState.value.copy(
-                        loading = false,
-                        error = e.message,
-                    )
             }
-        }
     }
 
     fun onEnterEdit() {
