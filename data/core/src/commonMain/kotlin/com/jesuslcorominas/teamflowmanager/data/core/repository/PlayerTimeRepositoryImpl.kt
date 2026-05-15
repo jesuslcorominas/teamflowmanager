@@ -10,16 +10,13 @@ import kotlinx.coroutines.flow.first
 internal class PlayerTimeRepositoryImpl(
     private val playerTimeDataSource: PlayerTimeDataSource,
 ) : PlayerTimeRepository {
-    override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> = playerTimeDataSource.getPlayerTime(playerId)
+    override fun getPlayerTime(playerId: String): Flow<PlayerTime?> = playerTimeDataSource.getPlayerTime(playerId)
 
-    override fun getPlayerTimesByMatch(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerTime>> = playerTimeDataSource.getPlayerTimesByMatch(matchId, teamId)
+    override fun getPlayerTimesByMatch(matchId: String): Flow<List<PlayerTime>> = playerTimeDataSource.getPlayerTimesByMatch(matchId)
 
     override suspend fun startTimer(
-        matchId: Long,
-        playerId: Long,
+        matchId: String,
+        playerId: String,
         currentTimeMillis: Long,
     ) {
         val currentPlayerTime = playerTimeDataSource.getPlayerTime(playerId).first()
@@ -45,7 +42,7 @@ internal class PlayerTimeRepositoryImpl(
     }
 
     override suspend fun pauseTimer(
-        playerId: Long,
+        playerId: String,
         currentTimeMillis: Long,
     ) {
         val currentPlayerTime = playerTimeDataSource.getPlayerTime(playerId).first()
@@ -64,7 +61,7 @@ internal class PlayerTimeRepositoryImpl(
     }
 
     override suspend fun pauseTimerForMatchPause(
-        playerId: Long,
+        playerId: String,
         currentTimeMillis: Long,
     ) {
         val currentPlayerTime = playerTimeDataSource.getPlayerTime(playerId).first()
@@ -83,8 +80,8 @@ internal class PlayerTimeRepositoryImpl(
     }
 
     override suspend fun startTimersBatch(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
     ) {
         if (playerIds.isEmpty()) return
@@ -115,8 +112,8 @@ internal class PlayerTimeRepositoryImpl(
     }
 
     override suspend fun pauseTimersBatch(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
     ) {
         if (playerIds.isEmpty()) return
@@ -151,8 +148,8 @@ internal class PlayerTimeRepositoryImpl(
     }
 
     override suspend fun startTimersBatchWithOperationId(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
         operationId: String,
     ) {
@@ -199,8 +196,8 @@ internal class PlayerTimeRepositoryImpl(
     }
 
     override suspend fun pauseTimersBatchWithOperationId(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
         operationId: String,
     ) {
@@ -234,8 +231,8 @@ internal class PlayerTimeRepositoryImpl(
     }
 
     override suspend fun substituteOutPlayersBatchWithOperationId(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
         operationId: String,
     ) {

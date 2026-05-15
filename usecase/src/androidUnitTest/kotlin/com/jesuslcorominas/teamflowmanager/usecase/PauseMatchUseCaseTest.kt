@@ -49,7 +49,7 @@ class PauseMatchUseCaseTest {
     fun `givenMatchNotFound_whenInvoke_thenDoNothing`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(null)
 
@@ -65,7 +65,7 @@ class PauseMatchUseCaseTest {
     fun `givenMatchAlreadyPaused_whenInvoke_thenDoNothing`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val match = createMatch(matchId, MatchStatus.PAUSED, currentTime)
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
@@ -82,13 +82,13 @@ class PauseMatchUseCaseTest {
     fun `givenMatchInProgressWithPlayingPlayers_whenInvoke_thenPauseAllPlayersAndMatch`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val match = createMatch(matchId, MatchStatus.IN_PROGRESS, currentTime)
             val playerTimes = listOf(
-                PlayerTime(playerId = 1L, isRunning = true, elapsedTimeMillis = 500L, status = PlayerTimeStatus.PLAYING),
-                PlayerTime(playerId = 2L, isRunning = true, elapsedTimeMillis = 300L, status = PlayerTimeStatus.PLAYING),
-                PlayerTime(playerId = 3L, isRunning = false, elapsedTimeMillis = 200L, status = PlayerTimeStatus.ON_BENCH),
+                PlayerTime(playerId = "1", isRunning = true, elapsedTimeMillis = 500L, status = PlayerTimeStatus.PLAYING),
+                PlayerTime(playerId = "2", isRunning = true, elapsedTimeMillis = 300L, status = PlayerTimeStatus.PLAYING),
+                PlayerTime(playerId = "3", isRunning = false, elapsedTimeMillis = 200L, status = PlayerTimeStatus.ON_BENCH),
             )
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
@@ -97,7 +97,7 @@ class PauseMatchUseCaseTest {
             pauseMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { playerTimeRepository.pauseTimersBatchWithOperationId(matchId, listOf(1L, 2L), currentTime, "op1") }
+            coVerify { playerTimeRepository.pauseTimersBatchWithOperationId(matchId, listOf("1", "2"), currentTime, "op1") }
             coVerify {
                 matchRepository.updateMatch(
                     match { it.status == MatchStatus.PAUSED }
@@ -109,12 +109,12 @@ class PauseMatchUseCaseTest {
     fun `givenMatchInProgressWithNoPlayingPlayers_whenInvoke_thenOnlyPauseMatch`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val match = createMatch(matchId, MatchStatus.IN_PROGRESS, currentTime)
             val playerTimes = listOf(
-                PlayerTime(playerId = 1L, isRunning = false, elapsedTimeMillis = 500L, status = PlayerTimeStatus.ON_BENCH),
-                PlayerTime(playerId = 2L, isRunning = false, elapsedTimeMillis = 300L, status = PlayerTimeStatus.ON_BENCH),
+                PlayerTime(playerId = "1", isRunning = false, elapsedTimeMillis = 500L, status = PlayerTimeStatus.ON_BENCH),
+                PlayerTime(playerId = "2", isRunning = false, elapsedTimeMillis = 300L, status = PlayerTimeStatus.ON_BENCH),
             )
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
@@ -135,7 +135,7 @@ class PauseMatchUseCaseTest {
     fun `givenMatchInProgressWithNoPlayerTimes_whenInvoke_thenOnlyPauseMatch`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val match = createMatch(matchId, MatchStatus.IN_PROGRESS, currentTime)
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
@@ -153,16 +153,16 @@ class PauseMatchUseCaseTest {
             }
         }
 
-    private fun createMatch(id: Long, status: MatchStatus, currentTime: Long): Match {
+    private fun createMatch(id: String, status: MatchStatus, currentTime: Long): Match {
         val startTime = currentTime - 500L
         return Match(
             id = id,
-            teamId = 1L,
+            teamId = "1",
             teamName = "Team A",
             opponent = "Opponent",
             location = "Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
             status = status,
             periods = listOf(
                 MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = startTime, endTimeMillis = 0L),

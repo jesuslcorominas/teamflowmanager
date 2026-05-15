@@ -55,10 +55,10 @@ internal class MatchNotificationCoordinator(
     ) {
         scope.launch {
             runCatching {
-                val teamRemoteId = team?.remoteId ?: return@runCatching
-                val clubRemoteId = team.clubRemoteId ?: return@runCatching
+                val teamId = team?.id ?: return@runCatching
+                val clubId = team.clubId ?: return@runCatching
                 val event = buildEvent() ?: return@runCatching
-                notifyPresidentMatchEvent(event, matchId, teamRemoteId, clubRemoteId)
+                notifyPresidentMatchEvent(event, matchId, teamId, clubId)
             }
         }
     }

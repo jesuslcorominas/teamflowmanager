@@ -45,10 +45,6 @@ internal class JoinClubByCodeUseCaseImpl(
             clubRepository.getClubByInvitationCode(invitationCode)
                 ?: throw IllegalArgumentException("Club not found with invitation code: $invitationCode")
 
-        require(club.remoteId != null) {
-            "Club remote ID is required"
-        }
-
         // Get orphan teams (teams without clubId) for current user
         val orphanTeams = teamRepository.getOrphanTeams(currentUser.id)
         val orphanTeam = orphanTeams.firstOrNull()
@@ -59,13 +55,9 @@ internal class JoinClubByCodeUseCaseImpl(
         try {
             // Step 1: Link orphan team to club if exists
             if (orphanTeam != null) {
-                require(orphanTeam.remoteId != null) {
-                    "Orphan team must have a remote ID"
-                }
                 teamRepository.updateTeamClubId(
-                    teamId = orphanTeam.remoteId!!,
-                    clubNumericId = club.id,
-                    clubId = club.remoteId!!,
+                    teamId = orphanTeam.id,
+                    clubId = club.id,
                 )
             }
 
@@ -75,15 +67,14 @@ internal class JoinClubByCodeUseCaseImpl(
                     userId = currentUser.id,
                     name = currentUser.displayName!!,
                     email = currentUser.email!!,
-                    clubNumericId = club.id,
-                    clubId = club.remoteId!!,
+                    clubId = club.id,
                     roles = roles,
                 )
 
             if (orphanTeam == null) {
                 try {
                     notifyPresidentOnMemberWaiting(
-                        clubId = club.remoteId!!,
+                        clubId = club.id,
                         presidentUserId = club.ownerId,
                         userName = currentUser.displayName!!,
                         userEmail = currentUser.email!!,

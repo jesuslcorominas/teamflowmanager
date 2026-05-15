@@ -1,14 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.google.firebase.firestore.DocumentId
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 
 /**
  * Firestore model for ClubMember document.
- * This model is used for serialization/deserialization with Firestore.
- * The `id` field is automatically populated by Firestore with the document ID.
- * The `clubId` field is used by Firestore security rules to validate access.
  */
 data class ClubMemberFirestoreModel(
     @DocumentId
@@ -32,22 +28,20 @@ data class ClubMemberFirestoreModel(
 
 fun ClubMemberFirestoreModel.toDomain(): ClubMember =
     ClubMember(
-        id = id.toStableId(),
+        id = id,
         userId = userId,
         name = name,
         email = email,
-        clubId = clubId.toStableId(),
+        clubId = clubId,
         roles = roles,
-        remoteId = id,
-        clubRemoteId = clubId,
     )
 
 fun ClubMember.toFirestoreModel(): ClubMemberFirestoreModel =
     ClubMemberFirestoreModel(
-        id = remoteId ?: "", // Will be set when inserting/updating
+        id = id,
         userId = userId,
         name = name,
         email = email,
-        clubId = "", // Will be set by the data source
+        clubId = clubId,
         roles = roles,
     )

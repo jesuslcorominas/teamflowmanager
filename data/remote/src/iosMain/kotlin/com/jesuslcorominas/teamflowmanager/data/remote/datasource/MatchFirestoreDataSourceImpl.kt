@@ -4,7 +4,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -47,29 +46,6 @@ class MatchFirestoreDataSourceImpl(
         model: MatchFirestoreModel,
         teamDocId: String,
     ): Match = model.copy(id = docId, teamId = teamDocId).toDomain()
-
-    /**
-     * Finds the Firestore document ID for a given domain match ID (Long).
-     * Fetches all team matches and returns the document whose stable ID matches.
-     */
-    private suspend fun findDocumentIdByMatchId(
-        teamDocId: String,
-        matchId: Long,
-    ): String? {
-        return try {
-            val snapshot =
-                firestore.collection(MATCHES_COLLECTION)
-                    .where { "teamId" equalTo teamDocId }
-                    .get()
-            snapshot.documents.firstOrNull { doc ->
-                doc.id.toStableId() == matchId
-            }?.id
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            null
-        }
-    }
 
     override fun getMatchesByTeam(teamId: String): Flow<List<Match>> =
         flow {
@@ -159,35 +135,24 @@ class MatchFirestoreDataSourceImpl(
             )
         }
 
-    override fun getMatchById(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<Match?> =
+    override fun getMatchById(matchId: String): Flow<Match?> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 emit(null)
                 return@flow
             }
-            val teamDocId = teamId ?: getTeamDocumentId()
-            if (teamDocId == null) {
-                emit(null)
-                return@flow
-            }
-            val snapshots =
-                firestore.collection(MATCHES_COLLECTION)
-                    .where { "teamId" equalTo teamDocId }
-                    .snapshots
+            val snapshots = firestore.collection(MATCHES_COLLECTION).document(matchId).snapshots
             emitAll(
-                snapshots.map { qs ->
-                    qs.documents.mapNotNull { doc ->
-                        try {
-                            val model = doc.data<MatchFirestoreModel>()
-                            documentToMatch(doc.id, model, teamDocId)
-                        } catch (_: Exception) {
-                            null
-                        }
-                    }.find { it.id == matchId }
+                snapshots.map { doc ->
+                    if (!doc.exists) return@map null
+                    try {
+                        val model = doc.data<MatchFirestoreModel>()
+                        val teamDocId = model.teamId
+                        documentToMatch(doc.id, model, teamDocId)
+                    } catch (_: Exception) {
+                        null
+                    }
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(null) else throw e
                 },
@@ -218,14 +183,14 @@ class MatchFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun insertMatch(match: Match): Long {
+    override suspend fun insertMatch(match: Match): String {
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("No team found for current user")
-        val model = match.toFirestoreModel().copy(teamId = teamDocId)
+        val model = match.toFirestoreModel().copy(id = "", teamId = teamDocId)
         return try {
             val docRef = firestore.collection(MATCHES_COLLECTION).add(model)
-            docRef.id.toStableId()
+            docRef.id
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -237,12 +202,9 @@ class MatchFirestoreDataSourceImpl(
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("No team found for current user")
-        val documentId =
-            findDocumentIdByMatchId(teamDocId, match.id)
-                ?: throw IllegalStateException("Cannot find Firestore document for match ${match.id}")
-        val model = match.toFirestoreModel().copy(id = documentId, teamId = teamDocId)
+        val model = match.toFirestoreModel().copy(id = match.id, teamId = teamDocId)
         try {
-            firestore.collection(MATCHES_COLLECTION).document(documentId).set(model)
+            firestore.collection(MATCHES_COLLECTION).document(match.id).set(model)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -250,15 +212,9 @@ class MatchFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun deleteMatch(matchId: Long) {
-        val teamDocId =
-            getTeamDocumentId()
-                ?: throw IllegalStateException("No team found for current user")
-        val documentId =
-            findDocumentIdByMatchId(teamDocId, matchId)
-                ?: throw IllegalStateException("Cannot find Firestore document for match $matchId")
+    override suspend fun deleteMatch(matchId: String) {
         try {
-            firestore.collection(MATCHES_COLLECTION).document(documentId).delete()
+            firestore.collection(MATCHES_COLLECTION).document(matchId).delete()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -267,18 +223,16 @@ class MatchFirestoreDataSourceImpl(
     }
 
     override suspend fun updateMatchCaptain(
-        matchId: Long,
-        captainId: Long?,
+        matchId: String,
+        captainId: String?,
     ) {
-        val teamDocId = getTeamDocumentId() ?: return
-        val documentId = findDocumentIdByMatchId(teamDocId, matchId) ?: return
         try {
-            firestore.collection(MATCHES_COLLECTION).document(documentId)
-                .update("captainId" to (captainId ?: 0L))
+            firestore.collection(MATCHES_COLLECTION).document(matchId)
+                .update("captainId" to (captainId ?: ""))
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            // Best-effort — not critical if this fails silently
+            // Best-effort
         }
     }
 

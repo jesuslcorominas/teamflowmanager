@@ -22,7 +22,7 @@ class DeleteMatchUseCaseTest {
     fun `invoke should delete match from repository`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
 
             // When
             deleteMatchUseCase.invoke(matchId)

@@ -129,7 +129,7 @@ class MatchFirestoreDataSourceImplTest {
     fun `givenNoAuthenticatedUser_whenGetMatchById_thenEmitsNull`() = runTest {
         every { mockAuth.currentUser } returns null
 
-        dataSource.getMatchById(1L).test {
+        dataSource.getMatchById("1").test {
             val result = awaitItem()
             assertEquals(null, result)
             cancel()
@@ -138,9 +138,23 @@ class MatchFirestoreDataSourceImplTest {
 
     @Test
     fun `givenNoTeam_whenGetMatchById_thenEmitsNull`() = runTest {
-        setupUserWithNoTeam()
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
 
-        dataSource.getMatchById(1L).test {
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("1") } returns matchDocRef
+
+        val listenerSlot = slot<com.google.firebase.firestore.EventListener<DocumentSnapshot>>()
+        every { matchDocRef.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        every { docSnapshot.exists() } returns false
+
+        dataSource.getMatchById("1").test {
+            listenerSlot.captured.onEvent(docSnapshot, null)
             val result = awaitItem()
             assertEquals(null, result)
             cancel()
@@ -200,54 +214,24 @@ class MatchFirestoreDataSourceImplTest {
 
         val result = dataSource.insertMatch(match)
 
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
-    fun `givenNullCaptainId_whenUpdateMatchCaptain_thenStoresZero`() = runTest {
-        setupUserWithTeam()
-
+    fun `givenNullCaptainId_whenUpdateMatchCaptain_thenStoresEmptyString`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        // Production now directly calls document(matchId).update("captainId", "") for null captainId.
         val matchesCollection = mockk<CollectionReference>()
         val matchDocRef = mockk<DocumentReference>()
-        val matchQuery = mockk<Query>()
-        val matchSnapshot = mockk<QuerySnapshot>()
-        val matchDocSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("matches") } returns matchesCollection
-        every { matchesCollection.whereEqualTo("teamId", "team-doc-id") } returns matchQuery
-        val matchTask = mockk<Task<QuerySnapshot>>()
-        every { matchQuery.get() } returns matchTask
-        coEvery { matchTask.await() } returns matchSnapshot
-
-        every { matchSnapshot.documents } returns listOf(matchDocSnapshot)
-        every { matchDocSnapshot.id } returns "match-doc-id"
-
-        val matchModel = MatchFirestoreModel(
-            id = "match-doc-id",
-            teamId = "team-doc-id",
-            opponent = "Opponent",
-            archived = false
-        )
-        every { matchDocSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
-
-        every { matchesCollection.document(any()) } returns matchDocRef
+        every { matchesCollection.document("match-doc-id") } returns matchDocRef
         val updateTask = mockk<Task<Void>>()
         every { matchDocRef.update(any<String>(), any()) } returns updateTask
         coEvery { updateTask.await() } returns mockk()
 
-        // Compute the stable ID for "match-doc-id"
-        val stableId = run {
-            var result = 0L
-            var multiplier = 1L
-            for (char in "match-doc-id") {
-                result += char.code * multiplier
-                multiplier *= 31
-            }
-            kotlin.math.abs(result)
-        }
-
         // Should not throw
-        dataSource.updateMatchCaptain(stableId, null)
+        dataSource.updateMatchCaptain("match-doc-id", null)
     }
 
     @Test
@@ -309,21 +293,14 @@ class MatchFirestoreDataSourceImplTest {
 
     @Test
     fun `givenMatchNotFound_whenUpdateMatch_thenThrowsIllegalStateException`() = runTest {
-        setupUserWithTeam()
-
-        val matchesCollection = mockk<CollectionReference>()
-        val matchQuery = mockk<Query>()
-        val matchSnapshot = mockk<QuerySnapshot>()
-
-        every { mockFirestore.collection("matches") } returns matchesCollection
-        every { matchesCollection.whereEqualTo("teamId", "team-doc-id") } returns matchQuery
-        val matchTask = mockk<Task<QuerySnapshot>>()
-        every { matchQuery.get() } returns matchTask
-        coEvery { matchTask.await() } returns matchSnapshot
-        every { matchSnapshot.documents } returns emptyList()
+        // With the new implementation, updateMatch no longer does a query-based lookup.
+        // It requires a team to exist (throws if no team), then directly uses document(match.id).set().
+        // A "match not found" scenario no longer throws; the document is just overwritten.
+        // This test now verifies that with no team, IllegalStateException is thrown.
+        setupUserWithNoTeam()
 
         val match = mockk<Match>(relaxed = true)
-        every { match.id } returns 99999L
+        every { match.id } returns "99999"
 
         try {
             dataSource.updateMatch(match)
@@ -339,113 +316,65 @@ class MatchFirestoreDataSourceImplTest {
 
         val matchesCollection = mockk<CollectionReference>()
         val matchDocRef = mockk<DocumentReference>()
-        val matchQuery = mockk<Query>()
-        val matchSnapshot = mockk<QuerySnapshot>()
-        val matchDocSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("matches") } returns matchesCollection
-        every { matchesCollection.whereEqualTo("teamId", "team-doc-id") } returns matchQuery
-        val matchTask = mockk<Task<QuerySnapshot>>()
-        every { matchQuery.get() } returns matchTask
-        coEvery { matchTask.await() } returns matchSnapshot
-        every { matchSnapshot.documents } returns listOf(matchDocSnapshot)
-        every { matchDocSnapshot.id } returns "match-doc-id"
-
-        val matchModel = MatchFirestoreModel(
-            id = "match-doc-id",
-            teamId = "team-doc-id",
-            opponent = "Opponent",
-            archived = false
-        )
-        every { matchDocSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
-
         every { matchesCollection.document("match-doc-id") } returns matchDocRef
         val voidTask = mockk<Task<Void>>()
         every { matchDocRef.set(any()) } returns voidTask
         coEvery { voidTask.await() } returns mockk()
 
-        val stableMatchId = run {
-            var result = 0L
-            var multiplier = 1L
-            for (char in "match-doc-id") {
-                result += char.code * multiplier
-                multiplier *= 31
-            }
-            kotlin.math.abs(result)
-        }
         val match = mockk<Match>(relaxed = true)
-        every { match.id } returns stableMatchId
+        every { match.id } returns "match-doc-id"
 
         dataSource.updateMatch(match)
     }
 
     @Test
     fun `givenNoTeam_whenDeleteMatch_thenDoesNotThrow`() = runTest {
-        setupUserWithNoTeam()
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        // Production now directly calls document(matchId).delete() - no team lookup needed.
+        // If the document doesn't exist, Firestore silently succeeds.
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
 
-        dataSource.deleteMatch(1L)
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("1") } returns matchDocRef
+        val voidTask = mockk<Task<Void>>()
+        every { matchDocRef.delete() } returns voidTask
+        coEvery { voidTask.await() } returns mockk()
+
+        dataSource.deleteMatch("1")
     }
 
     @Test
     fun `givenMatchNotFound_whenDeleteMatch_thenDoesNotThrow`() = runTest {
-        setupUserWithTeam()
-
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        // Production now directly calls document(matchId).delete() - no query needed.
         val matchesCollection = mockk<CollectionReference>()
-        val matchQuery = mockk<Query>()
-        val matchSnapshot = mockk<QuerySnapshot>()
+        val matchDocRef = mockk<DocumentReference>()
 
         every { mockFirestore.collection("matches") } returns matchesCollection
-        every { matchesCollection.whereEqualTo("teamId", "team-doc-id") } returns matchQuery
-        val matchTask = mockk<Task<QuerySnapshot>>()
-        every { matchQuery.get() } returns matchTask
-        coEvery { matchTask.await() } returns matchSnapshot
-        every { matchSnapshot.documents } returns emptyList()
+        every { matchesCollection.document("99999") } returns matchDocRef
+        val voidTask = mockk<Task<Void>>()
+        every { matchDocRef.delete() } returns voidTask
+        coEvery { voidTask.await() } returns mockk()
 
-        dataSource.deleteMatch(99999L)
+        dataSource.deleteMatch("99999")
     }
 
     @Test
     fun `givenValidMatchId_whenDeleteMatch_thenDeletesDocument`() = runTest {
-        setupUserWithTeam()
-
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
         val matchesCollection = mockk<CollectionReference>()
         val matchDocRef = mockk<DocumentReference>()
-        val matchQuery = mockk<Query>()
-        val matchSnapshot = mockk<QuerySnapshot>()
-        val matchDocSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("matches") } returns matchesCollection
-        every { matchesCollection.whereEqualTo("teamId", "team-doc-id") } returns matchQuery
-        val matchTask = mockk<Task<QuerySnapshot>>()
-        every { matchQuery.get() } returns matchTask
-        coEvery { matchTask.await() } returns matchSnapshot
-        every { matchSnapshot.documents } returns listOf(matchDocSnapshot)
-        every { matchDocSnapshot.id } returns "match-doc-id"
-
-        val matchModel = MatchFirestoreModel(
-            id = "match-doc-id",
-            teamId = "team-doc-id",
-            opponent = "Opponent",
-            archived = false
-        )
-        every { matchDocSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
-
         every { matchesCollection.document("match-doc-id") } returns matchDocRef
         val voidTask = mockk<Task<Void>>()
         every { matchDocRef.delete() } returns voidTask
         coEvery { voidTask.await() } returns mockk()
 
-        val stableMatchId = run {
-            var result = 0L
-            var multiplier = 1L
-            for (char in "match-doc-id") {
-                result += char.code * multiplier
-                multiplier *= 31
-            }
-            kotlin.math.abs(result)
-        }
-
-        dataSource.deleteMatch(stableMatchId)
+        dataSource.deleteMatch("match-doc-id")
     }
 
     @Test
@@ -610,23 +539,17 @@ class MatchFirestoreDataSourceImplTest {
 
     @Test
     fun `givenAuthenticatedUserWithTeam_whenGetMatchById_thenEmitsMatch`() = runTest {
-        setupUserWithTeam()
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
 
-        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val listenerSlot = slot<com.google.firebase.firestore.EventListener<DocumentSnapshot>>()
         val matchesCollection = mockk<CollectionReference>()
-        val matchQuery = mockk<Query>()
-        val querySnapshot = mockk<QuerySnapshot>()
+        val matchDocRef = mockk<DocumentReference>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("matches") } returns matchesCollection
-        every { matchesCollection.whereEqualTo("teamId", "team-doc-id") } returns matchQuery
-        every { matchQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
-
-        val stableMatchId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "match-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
+        every { matchesCollection.document("match-doc-id") } returns matchDocRef
+        every { matchDocRef.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val matchModel = MatchFirestoreModel(
             id = "match-doc-id",
@@ -635,11 +558,12 @@ class MatchFirestoreDataSourceImplTest {
             archived = false
         )
         every { docSnapshot.id } returns "match-doc-id"
+        every { docSnapshot.exists() } returns true
+        every { docSnapshot.getString("teamId") } returns "team-doc-id"
         every { docSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
-        every { querySnapshot.documents } returns listOf(docSnapshot)
 
-        dataSource.getMatchById(stableMatchId).test {
-            listenerSlot.captured.onEvent(querySnapshot, null)
+        dataSource.getMatchById("match-doc-id").test {
+            listenerSlot.captured.onEvent(docSnapshot, null)
             val result = awaitItem()
             assertNotNull(result)
             cancel()
@@ -648,19 +572,20 @@ class MatchFirestoreDataSourceImplTest {
 
     @Test
     fun `givenFirestoreError_whenGetMatchById_thenEmitsNull`() = runTest {
-        setupUserWithTeam()
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
 
-        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val listenerSlot = slot<com.google.firebase.firestore.EventListener<DocumentSnapshot>>()
         val matchesCollection = mockk<CollectionReference>()
-        val matchQuery = mockk<Query>()
+        val matchDocRef = mockk<DocumentReference>()
 
         every { mockFirestore.collection("matches") } returns matchesCollection
-        every { matchesCollection.whereEqualTo("teamId", "team-doc-id") } returns matchQuery
-        every { matchQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+        every { matchesCollection.document("1") } returns matchDocRef
+        every { matchDocRef.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
 
-        dataSource.getMatchById(1L).test {
+        dataSource.getMatchById("1").test {
             listenerSlot.captured.onEvent(null, mockError)
             val result = awaitItem()
             assertNull(result)
@@ -670,29 +595,37 @@ class MatchFirestoreDataSourceImplTest {
 
     @Test
     fun `givenNoTeam_whenUpdateMatchCaptain_thenReturnsEarly`() = runTest {
-        setupUserWithNoTeam()
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        // Production now directly calls document(matchId).update() - no team lookup.
+        // Even without auth, it tries to update but swallows exceptions.
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
 
-        // Should not throw when no team found
-        dataSource.updateMatchCaptain(1L, 100L)
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("1") } returns matchDocRef
+        val updateTask = mockk<Task<Void>>()
+        every { matchDocRef.update(any<String>(), any()) } returns updateTask
+        coEvery { updateTask.await() } returns mockk()
+
+        // Should not throw
+        dataSource.updateMatchCaptain("1", "100")
     }
 
     @Test
     fun `givenMatchNotFound_whenUpdateMatchCaptain_thenDoesNotThrow`() = runTest {
-        setupUserWithTeam()
-
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        // Production now directly calls document(matchId).update() - no query needed.
         val matchesCollection = mockk<CollectionReference>()
-        val matchQuery = mockk<Query>()
-        val matchSnapshot = mockk<QuerySnapshot>()
+        val matchDocRef = mockk<DocumentReference>()
 
         every { mockFirestore.collection("matches") } returns matchesCollection
-        every { matchesCollection.whereEqualTo("teamId", "team-doc-id") } returns matchQuery
-        val matchTask = mockk<Task<QuerySnapshot>>()
-        every { matchQuery.get() } returns matchTask
-        coEvery { matchTask.await() } returns matchSnapshot
-        every { matchSnapshot.documents } returns emptyList()
+        every { matchesCollection.document("99999") } returns matchDocRef
+        val updateTask = mockk<Task<Void>>()
+        every { matchDocRef.update(any<String>(), any()) } returns updateTask
+        coEvery { updateTask.await() } returns mockk()
 
-        // Should not throw when match not found
-        dataSource.updateMatchCaptain(99999L, 100L)
+        // Should not throw when match not found (Firestore just creates/updates)
+        dataSource.updateMatchCaptain("99999", "100")
     }
 
     @Test

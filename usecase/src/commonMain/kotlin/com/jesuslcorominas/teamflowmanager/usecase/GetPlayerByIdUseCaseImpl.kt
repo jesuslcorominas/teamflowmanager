@@ -7,5 +7,5 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 internal class GetPlayerByIdUseCaseImpl(
     private val playerRepository: PlayerRepository,
 ) : GetPlayerByIdUseCase {
-    override suspend fun invoke(playerId: Long): Player? = playerRepository.getPlayerById(playerId)
+    override suspend fun invoke(playerId: String): Player? = playerRepository.getPlayerById(playerId)
 }

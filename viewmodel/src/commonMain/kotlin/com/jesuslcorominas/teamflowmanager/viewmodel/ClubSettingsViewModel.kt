@@ -48,7 +48,7 @@ class ClubSettingsViewModel(
         viewModelScope.launch {
             try {
                 val member = getUserClubMembership().first()
-                val remoteId = member?.clubRemoteId
+                val remoteId = member?.clubId
                 if (remoteId == null) {
                     _uiState.value =
                         _uiState.value.copy(

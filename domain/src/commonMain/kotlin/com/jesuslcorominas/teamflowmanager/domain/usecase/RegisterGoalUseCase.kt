@@ -2,10 +2,10 @@ package com.jesuslcorominas.teamflowmanager.domain.usecase
 
 interface RegisterGoalUseCase {
     suspend operator fun invoke(
-        matchId: Long,
-        scorerId: Long?,
+        matchId: String,
+        scorerId: String?,
         currentTimeMillis: Long,
         isOpponentGoal: Boolean = false,
         isOwnGoal: Boolean = false,
-    ): Long
+    ): String
 }

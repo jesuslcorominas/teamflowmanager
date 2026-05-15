@@ -22,7 +22,7 @@ class UnarchiveMatchUseCaseTest {
     fun `invoke should call unarchiveMatch on repository`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
 
             // When
             unarchiveMatchUseCase(matchId)

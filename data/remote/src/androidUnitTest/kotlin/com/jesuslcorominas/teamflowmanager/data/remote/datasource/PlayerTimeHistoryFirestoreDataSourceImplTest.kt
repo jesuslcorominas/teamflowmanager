@@ -119,7 +119,7 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
     fun `givenNoAuthenticatedUser_whenGetPlayerTimeHistory_thenEmitsEmptyList`() = runTest {
         every { mockAuth.currentUser } returns null
 
-        dataSource.getPlayerTimeHistory(1L).test {
+        dataSource.getPlayerTimeHistory("1").test {
             val result = awaitItem()
             assertEquals(emptyList<PlayerTimeHistory>(), result)
             cancel()
@@ -130,7 +130,7 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
     fun `givenNoTeam_whenGetPlayerTimeHistory_thenEmitsEmptyList`() = runTest {
         setupUserWithNoTeam()
 
-        dataSource.getPlayerTimeHistory(1L).test {
+        dataSource.getPlayerTimeHistory("1").test {
             val result = awaitItem()
             assertEquals(emptyList<PlayerTimeHistory>(), result)
             cancel()
@@ -141,7 +141,7 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
     fun `givenNoAuthenticatedUser_whenGetMatchPlayerTimeHistory_thenEmitsEmptyList`() = runTest {
         every { mockAuth.currentUser } returns null
 
-        dataSource.getMatchPlayerTimeHistory(1L).test {
+        dataSource.getMatchPlayerTimeHistory("1").test {
             val result = awaitItem()
             assertEquals(emptyList<PlayerTimeHistory>(), result)
             cancel()
@@ -163,7 +163,7 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
     fun `givenNoTeam_whenGetMatchPlayerTimeHistory_thenEmitsEmptyList`() = runTest {
         setupUserWithNoTeam()
 
-        dataSource.getMatchPlayerTimeHistory(1L).test {
+        dataSource.getMatchPlayerTimeHistory("1").test {
             val result = awaitItem()
             assertEquals(emptyList<PlayerTimeHistory>(), result)
             cancel()
@@ -194,21 +194,21 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereEqualTo("playerId", 1L) } returns historyQuery2
+        every { historyQuery.whereEqualTo("playerId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerTimeHistoryFirestoreModel(
             id = "history-doc-id",
             teamId = "team-doc-id",
-            playerId = 1L,
-            matchId = 1L,
+            playerId = "1",
+            matchId = "1",
             elapsedTimeMillis = 45000L,
             savedAtMillis = System.currentTimeMillis()
         )
         every { docSnapshot.toObject(PlayerTimeHistoryFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
-        dataSource.getPlayerTimeHistory(1L).test {
+        dataSource.getPlayerTimeHistory("1").test {
             listenerSlot.captured.onEvent(querySnapshot, null)
             val result = awaitItem()
             assertEquals(1, result.size)
@@ -227,12 +227,12 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereEqualTo("playerId", 1L) } returns historyQuery2
+        every { historyQuery.whereEqualTo("playerId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
 
-        dataSource.getPlayerTimeHistory(1L).test {
+        dataSource.getPlayerTimeHistory("1").test {
             listenerSlot.captured.onEvent(null, mockError)
             val result = awaitItem()
             assertEquals(emptyList<PlayerTimeHistory>(), result)
@@ -253,21 +253,21 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereEqualTo("matchId", 1L) } returns historyQuery2
+        every { historyQuery.whereEqualTo("matchId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerTimeHistoryFirestoreModel(
             id = "history-doc-id",
             teamId = "team-doc-id",
-            playerId = 1L,
-            matchId = 1L,
+            playerId = "1",
+            matchId = "1",
             elapsedTimeMillis = 45000L,
             savedAtMillis = System.currentTimeMillis()
         )
         every { docSnapshot.toObject(PlayerTimeHistoryFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
-        dataSource.getMatchPlayerTimeHistory(1L).test {
+        dataSource.getMatchPlayerTimeHistory("1").test {
             listenerSlot.captured.onEvent(querySnapshot, null)
             val result = awaitItem()
             assertEquals(1, result.size)
@@ -286,12 +286,12 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereEqualTo("matchId", 1L) } returns historyQuery2
+        every { historyQuery.whereEqualTo("matchId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
 
-        dataSource.getMatchPlayerTimeHistory(1L).test {
+        dataSource.getMatchPlayerTimeHistory("1").test {
             listenerSlot.captured.onEvent(null, mockError)
             val result = awaitItem()
             assertEquals(emptyList<PlayerTimeHistory>(), result)
@@ -347,7 +347,7 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } throws RuntimeException("Firestore error")
 
         val history = mockk<PlayerTimeHistory>(relaxed = true)
-        every { history.matchId } returns 1L
+        every { history.matchId } returns "1"
 
         try {
             dataSource.insertPlayerTimeHistory(history)
@@ -398,11 +398,11 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } returns mockk()
 
         val history = mockk<PlayerTimeHistory>(relaxed = true)
-        every { history.matchId } returns 1L
+        every { history.matchId } returns "1"
 
         val result = dataSource.insertPlayerTimeHistory(history)
 
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
@@ -422,8 +422,8 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         val model = PlayerTimeHistoryFirestoreModel(
             id = "history-doc-id",
             teamId = "team-doc-id",
-            playerId = 1L,
-            matchId = 1L,
+            playerId = "1",
+            matchId = "1",
             elapsedTimeMillis = 45000L,
             savedAtMillis = System.currentTimeMillis()
         )
@@ -451,13 +451,6 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         every { mockFirestore.collection("matches") } returns matchesCollection
         every { historyCollection.document() } returns historyDocRef
 
-        // Compute stable ID for "match-doc-id"
-        val stableMatchId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "match-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
-
         val matchQuery = mockk<Query>()
         val matchSnapshot = mockk<QuerySnapshot>()
         val matchDoc = mockk<DocumentSnapshot>()
@@ -473,11 +466,11 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } returns mockk()
 
         val history = mockk<PlayerTimeHistory>(relaxed = true)
-        every { history.matchId } returns stableMatchId
+        every { history.matchId } returns "match-doc-id"
 
         val result = dataSource.insertPlayerTimeHistory(history)
 
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
@@ -507,7 +500,7 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } throws IllegalStateException("Firestore write failed")
 
         val history = mockk<PlayerTimeHistory>(relaxed = true)
-        every { history.matchId } returns 1L
+        every { history.matchId } returns "1"
 
         try {
             dataSource.insertPlayerTimeHistory(history)
@@ -528,10 +521,10 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereEqualTo("playerId", 1L) } returns historyQuery2
+        every { historyQuery.whereEqualTo("playerId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
-        dataSource.getPlayerTimeHistory(1L).test {
+        dataSource.getPlayerTimeHistory("1").test {
             listenerSlot.captured.onEvent(null, null)
             val result = awaitItem()
             assertEquals(emptyList<PlayerTimeHistory>(), result)
@@ -550,10 +543,10 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereEqualTo("matchId", 1L) } returns historyQuery2
+        every { historyQuery.whereEqualTo("matchId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
-        dataSource.getMatchPlayerTimeHistory(1L).test {
+        dataSource.getMatchPlayerTimeHistory("1").test {
             listenerSlot.captured.onEvent(null, null)
             val result = awaitItem()
             assertEquals(emptyList<PlayerTimeHistory>(), result)

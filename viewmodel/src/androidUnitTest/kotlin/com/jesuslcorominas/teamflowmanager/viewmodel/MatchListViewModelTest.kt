@@ -44,13 +44,13 @@ class MatchListViewModelTest {
     private lateinit var crashReporter: CrashReporter
 
     private val testMatch = Match(
-        id = 1L,
-        teamId = 1L,
+        id = "1",
+        teamId = "1",
         teamName = "My Team",
         opponent = "Rival FC",
         location = "Stadium",
         periodType = PeriodType.HALF_TIME,
-        captainId = 1L,
+        captainId = "1",
     )
 
     @Before
@@ -166,7 +166,7 @@ class MatchListViewModelTest {
     fun `onQueryChange should filter matches by opponent name`() = runTest(testDispatcher) {
         val matches = listOf(
             testMatch,
-            testMatch.copy(id = 2L, opponent = "Blue FC"),
+            testMatch.copy(id = "2", opponent = "Blue FC"),
         )
         every { getAllMatchesUseCase() } returns flowOf(matches)
         val viewModel = createViewModel()

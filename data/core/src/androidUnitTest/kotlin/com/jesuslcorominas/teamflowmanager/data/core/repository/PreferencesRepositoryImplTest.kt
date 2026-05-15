@@ -69,7 +69,7 @@ class PreferencesRepositoryImplTest {
 
     @Test
     fun `givenCaptainIdSaved_whenGetDefaultCaptainId_thenReturnsCaptainId`() {
-        val captainId = 5L
+        val captainId = "5"
         every { preferencesDataSource.getDefaultCaptainId() } returns captainId
 
         val result = repository.getDefaultCaptainId()
@@ -91,7 +91,7 @@ class PreferencesRepositoryImplTest {
 
     @Test
     fun `givenCaptainId_whenSetDefaultCaptainId_thenDelegatesToDataSource`() {
-        val captainId = 7L
+        val captainId = "7"
         every { preferencesDataSource.setDefaultCaptainId(captainId) } just runs
 
         repository.setDefaultCaptainId(captainId)

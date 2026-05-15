@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.first
 internal class GetPreviousCaptainsUseCaseImpl(
     private val matchRepository: MatchRepository,
 ) : GetPreviousCaptainsUseCase {
-    override suspend fun invoke(count: Int): List<Long?> {
+    override suspend fun invoke(count: Int): List<String?> {
         val allMatches = matchRepository.getAllMatches().first()
 
         // Filter out matches that haven't been played yet (no elapsed time)

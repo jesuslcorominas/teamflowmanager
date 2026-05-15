@@ -20,7 +20,7 @@ class RemovePlayerAsCaptainUseCaseTest {
 
     @Test
     fun `invoke should call removePlayerAsCaptain on repository`() = runTest {
-        val playerId = 5L
+        val playerId = "5"
 
         useCase.invoke(playerId)
 

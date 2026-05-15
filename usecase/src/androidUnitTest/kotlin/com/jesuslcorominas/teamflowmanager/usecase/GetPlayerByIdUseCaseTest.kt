@@ -24,14 +24,14 @@ class GetPlayerByIdUseCaseTest {
 
     @Test
     fun `invoke should return player when found`() = runTest {
-        val playerId = 1L
+        val playerId = "1"
         val player = Player(
             id = playerId,
             firstName = "John",
             lastName = "Doe",
             number = 10,
             positions = listOf(Position.Forward),
-            teamId = 1L,
+            teamId = "1",
             isCaptain = false,
         )
         coEvery { playerRepository.getPlayerById(playerId) } returns player
@@ -43,7 +43,7 @@ class GetPlayerByIdUseCaseTest {
 
     @Test
     fun `invoke should return null when player not found`() = runTest {
-        val playerId = 99L
+        val playerId = "99"
         coEvery { playerRepository.getPlayerById(playerId) } returns null
 
         val result = useCase.invoke(playerId)

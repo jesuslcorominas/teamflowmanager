@@ -31,22 +31,22 @@ class GetAllMatchesUseCaseTest {
             val matches =
                 listOf(
                     Match(
-                        id = 1L,
-                        teamId = 1L,
+                        id = "1",
+                        teamId = "1",
                         opponent = "Rival FC",
                         location = "Stadium 1",
                         teamName = "Team A",
                         periodType = PeriodType.HALF_TIME,
-                        captainId = 1L,
+                        captainId = "1",
                     ),
                     Match(
-                        id = 2L,
-                        teamId = 1L,
+                        id = "2",
+                        teamId = "1",
                         opponent = "Team B",
                         location = "Stadium 2",
                         teamName = "Team A",
                         periodType = PeriodType.HALF_TIME,
-                        captainId = 1L,
+                        captainId = "1",
                     ),
                 )
             every { matchRepository.getAllMatches() } returns flowOf(matches)

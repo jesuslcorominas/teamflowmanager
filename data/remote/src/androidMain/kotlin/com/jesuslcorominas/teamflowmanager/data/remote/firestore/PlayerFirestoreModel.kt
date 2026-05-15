@@ -2,16 +2,11 @@ package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.PropertyName
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 
 /**
  * Firestore model for Player document.
- * This model is used for serialization/deserialization with Firestore.
- * The `id` field is automatically populated by Firestore with the document ID.
- * The `teamId` field stores the Firestore document ID of the team, which is used by
- * security rules to validate that the authenticated user is the owner of the team.
  */
 data class PlayerFirestoreModel(
     @DocumentId
@@ -43,7 +38,7 @@ data class PlayerFirestoreModel(
 
 fun PlayerFirestoreModel.toDomain(): Player =
     Player(
-        id = id.toStableId(),
+        id = id,
         firstName = firstName,
         lastName = lastName,
         number = number,
@@ -52,7 +47,7 @@ fun PlayerFirestoreModel.toDomain(): Player =
                 .split(",")
                 .filter { it.isNotBlank() }
                 .mapNotNull { Position.fromId(it.trim()) },
-        teamId = teamId.toStableId(),
+        teamId = teamId,
         isCaptain = isCaptain,
         imageUri = imageUri,
         deleted = deleted,
@@ -60,12 +55,12 @@ fun PlayerFirestoreModel.toDomain(): Player =
 
 fun Player.toFirestoreModel(): PlayerFirestoreModel =
     PlayerFirestoreModel(
-        id = "", // Will be set when inserting/updating
+        id = id,
         firstName = firstName,
         lastName = lastName,
         number = number,
         positions = positions.joinToString(",") { it.id },
-        teamId = "", // Will be set by the data source
+        teamId = teamId,
         isCaptain = isCaptain,
         imageUri = imageUri,
         deleted = deleted,

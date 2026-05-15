@@ -7,7 +7,7 @@ internal class PausePlayerTimerForMatchPauseUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
 ) : PausePlayerTimerForMatchPauseUseCase {
     override suspend fun invoke(
-        playerId: Long,
+        playerId: String,
         currentTimeMillis: Long,
     ) {
         playerTimeRepository.pauseTimerForMatchPause(playerId, currentTimeMillis)

@@ -60,7 +60,7 @@ class PlayerTimeFirestoreDataSourceImpl(
     /**
      * Gets player time for a specific player as a real-time Flow.
      */
-    override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> =
+    override fun getPlayerTime(playerId: String): Flow<PlayerTime?> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -123,10 +123,7 @@ class PlayerTimeFirestoreDataSourceImpl(
      *
      * Note: requires a composite Firestore index on playerTimes(teamId ASC, matchId ASC).
      */
-    override fun getPlayerTimesByMatch(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerTime>> =
+    override fun getPlayerTimesByMatch(matchId: String): Flow<List<PlayerTime>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -135,7 +132,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = teamId ?: getTeamDocumentId()
+            val teamDocId = getTeamDocumentId()
             if (teamDocId == null) {
                 trySend(emptyList())
                 awaitClose { }

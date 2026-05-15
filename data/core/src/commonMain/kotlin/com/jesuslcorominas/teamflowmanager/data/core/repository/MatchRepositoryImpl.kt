@@ -10,10 +10,7 @@ import kotlinx.coroutines.flow.first
 internal class MatchRepositoryImpl(
     private val matchDataSource: MatchDataSource,
 ) : MatchRepository {
-    override fun getMatchById(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<Match?> = matchDataSource.getMatchById(matchId, teamId)
+    override fun getMatchById(matchId: String): Flow<Match?> = matchDataSource.getMatchById(matchId)
 
     override fun getAllMatches(): Flow<List<Match>> = matchDataSource.getAllMatches()
 
@@ -24,24 +21,24 @@ internal class MatchRepositoryImpl(
     override suspend fun getScheduledMatches(): List<Match> = matchDataSource.getScheduledMatches()
 
     override suspend fun updateMatchCaptain(
-        matchId: Long,
-        captainId: Long?,
+        matchId: String,
+        captainId: String?,
     ) {
         matchDataSource.updateMatchCaptain(matchId, captainId)
     }
 
-    override suspend fun createMatch(match: Match): Long = matchDataSource.insertMatch(match)
+    override suspend fun createMatch(match: Match): String = matchDataSource.insertMatch(match)
 
     override suspend fun updateMatch(match: Match) {
         matchDataSource.updateMatch(match)
     }
 
-    override suspend fun deleteMatch(matchId: Long) {
+    override suspend fun deleteMatch(matchId: String) {
         matchDataSource.deleteMatch(matchId)
     }
 
     override suspend fun startTimer(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     ) {
         matchDataSource.getMatchById(matchId).first()?.let { currentMatch ->
@@ -65,7 +62,7 @@ internal class MatchRepositoryImpl(
     }
 
     override suspend fun pauseTimer(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     ) {
         val currentMatch = matchDataSource.getMatchById(matchId).first()
@@ -91,7 +88,7 @@ internal class MatchRepositoryImpl(
     }
 
     override suspend fun startTimeout(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     ) {
         val currentMatch = matchDataSource.getMatchById(matchId).first()
@@ -106,7 +103,7 @@ internal class MatchRepositoryImpl(
     }
 
     override suspend fun endTimeout(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     ) {
         val currentMatch = matchDataSource.getMatchById(matchId).first()
@@ -142,14 +139,14 @@ internal class MatchRepositoryImpl(
         }
     }
 
-    override suspend fun archiveMatch(matchId: Long) {
+    override suspend fun archiveMatch(matchId: String) {
         val match = matchDataSource.getMatchById(matchId).first()
         if (match != null) {
             matchDataSource.updateMatch(match.copy(archived = true))
         }
     }
 
-    override suspend fun unarchiveMatch(matchId: Long) {
+    override suspend fun unarchiveMatch(matchId: String) {
         val match = matchDataSource.getMatchById(matchId).first()
         if (match != null) {
             matchDataSource.updateMatch(match.copy(archived = false))

@@ -165,14 +165,12 @@ class SettingsViewModelTest {
     fun `roleSelectorState showRoleSelector is false when user is not a president`() = runTest(testDispatcher) {
         every { getUserClubMembershipUseCase() } returns flowOf(
             ClubMember(
-                id = 1,
+                id = "1",
                 userId = "user123",
                 name = "Test User",
                 email = "test@example.com",
-                clubId = 100,
+                clubId = "club123",
                 roles = listOf("Coach"),
-                remoteId = "clubmember_doc_123",
-                clubRemoteId = "club123",
             ),
         )
         viewModel = SettingsViewModel(
@@ -196,14 +194,12 @@ class SettingsViewModelTest {
     fun `roleSelectorState showRoleSelector is true but disabled when president has no team`() = runTest(testDispatcher) {
         every { getUserClubMembershipUseCase() } returns flowOf(
             ClubMember(
-                id = 1,
+                id = "1",
                 userId = "user123",
                 name = "Test User",
                 email = "test@example.com",
-                clubId = 100,
+                clubId = "club123",
                 roles = listOf("Presidente"),
-                remoteId = "clubmember_doc_123",
-                clubRemoteId = "club123",
             ),
         )
         every { getTeamUseCase() } returns flowOf(null)
@@ -229,25 +225,22 @@ class SettingsViewModelTest {
     fun `roleSelectorState showRoleSelector is true when president has a team`() = runTest(testDispatcher) {
         every { getUserClubMembershipUseCase() } returns flowOf(
             ClubMember(
-                id = 1,
+                id = "1",
                 userId = "user123",
                 name = "Test User",
                 email = "test@example.com",
-                clubId = 100,
+                clubId = "club123",
                 roles = listOf("Presidente"),
-                remoteId = "clubmember_doc_123",
-                clubRemoteId = "club123",
             ),
         )
         every { getTeamUseCase() } returns flowOf(
             Team(
-                id = 1,
+                id = "1",
                 name = "Test Team",
                 coachName = "Coach",
                 delegateName = "Delegate",
                 teamType = TeamType.FOOTBALL_5,
-                clubId = 100L,
-                clubRemoteId = "club123",
+                clubId = "club123",
             ),
         )
         viewModel = SettingsViewModel(

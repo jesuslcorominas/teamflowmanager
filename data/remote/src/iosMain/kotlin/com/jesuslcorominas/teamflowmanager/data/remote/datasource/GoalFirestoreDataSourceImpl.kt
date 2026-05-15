@@ -4,7 +4,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.GoalFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -42,17 +41,14 @@ class GoalFirestoreDataSourceImpl(
         }
     }
 
-    override fun getMatchGoals(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<Goal>> =
+    override fun getMatchGoals(matchId: String): Flow<List<Goal>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val teamDocId = teamId ?: getTeamDocumentId()
+            val teamDocId = getTeamDocumentId()
             if (teamDocId == null) {
                 emit(emptyList())
                 return@flow
@@ -108,14 +104,14 @@ class GoalFirestoreDataSourceImpl(
             )
         }
 
-    override suspend fun insertGoal(goal: Goal): Long {
+    override suspend fun insertGoal(goal: Goal): String {
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("Team must exist to insert goal")
         return try {
             val model = goal.toFirestoreModel().copy(teamId = teamDocId)
             val docRef = firestore.collection(GOALS_COLLECTION).add(model)
-            docRef.id.toStableId()
+            docRef.id
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

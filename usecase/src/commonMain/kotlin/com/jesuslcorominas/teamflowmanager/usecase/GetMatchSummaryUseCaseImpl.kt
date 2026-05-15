@@ -17,15 +17,12 @@ internal class GetMatchSummaryUseCaseImpl(
     private val playerSubstitutionRepository: PlayerSubstitutionRepository,
     private val playerRepository: PlayerRepository,
 ) : GetMatchSummaryUseCase {
-    override fun invoke(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<MatchSummary?> {
+    override fun invoke(matchId: String): Flow<MatchSummary?> {
         return combine(
-            matchRepository.getMatchById(matchId, teamId),
-            playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId, teamId),
-            playerSubstitutionRepository.getMatchSubstitutions(matchId, teamId),
-            if (teamId != null) playerRepository.getPlayersByTeam(teamId) else playerRepository.getAllPlayers(),
+            matchRepository.getMatchById(matchId),
+            playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId),
+            playerSubstitutionRepository.getMatchSubstitutions(matchId),
+            playerRepository.getAllPlayers(),
         ) { match, playerTimes, substitutions, players ->
             if (match == null) {
                 null

@@ -90,19 +90,19 @@ class MatchViewModelTest {
         opponent = "Rival FC",
         location = "Stadium",
         periodType = PeriodType.HALF_TIME,
-        captainId = 1L,
-        squadCallUpIds = listOf(1L, 2L),
+        captainId = "1",
+        squadCallUpIds = listOf("1", "2"),
         status = MatchStatus.IN_PROGRESS,
     )
 
     private val players = listOf(
-        Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L, isCaptain = false),
-        Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = 1L, isCaptain = false),
+        Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false),
+        Player(id = "2", firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = "1", isCaptain = false),
     )
 
     private val playerTimes = listOf(
-        PlayerTime(playerId = 1L, elapsedTimeMillis = 5000L, isRunning = true),
-        PlayerTime(playerId = 2L, elapsedTimeMillis = 0L, isRunning = false),
+        PlayerTime(playerId = "1", elapsedTimeMillis = 5000L, isRunning = true),
+        PlayerTime(playerId = "2", elapsedTimeMillis = 0L, isRunning = false),
     )
 
     @Before
@@ -233,15 +233,15 @@ class MatchViewModelTest {
     fun `selectPlayerOut should select running player`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.selectPlayerOut(1L)
-        assertEquals(1L, viewModel.selectedPlayerOut.value)
+        viewModel.selectPlayerOut("1")
+        assertEquals("1", viewModel.selectedPlayerOut.value)
     }
 
     @Test
     fun `selectPlayerOut should show invalid substitution alert when player is not running`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.selectPlayerOut(2L)
+        viewModel.selectPlayerOut("2")
         assertTrue(viewModel.showInvalidSubstitutionAlert.value)
         assertNull(viewModel.selectedPlayerOut.value)
     }
@@ -250,8 +250,8 @@ class MatchViewModelTest {
     fun `clearPlayerOutSelection should clear the selected player`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.selectPlayerOut(1L)
-        assertEquals(1L, viewModel.selectedPlayerOut.value)
+        viewModel.selectPlayerOut("1")
+        assertEquals("1", viewModel.selectedPlayerOut.value)
         viewModel.clearPlayerOutSelection()
         assertNull(viewModel.selectedPlayerOut.value)
     }
@@ -260,16 +260,16 @@ class MatchViewModelTest {
     fun `substitutePlayer should call RegisterPlayerSubstitutionUseCase and clear selection`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.selectPlayerOut(1L)
+        viewModel.selectPlayerOut("1")
 
-        viewModel.substitutePlayer(2L)
+        viewModel.substitutePlayer("2")
         advanceUntilIdle()
 
         coVerify {
             registerPlayerSubstitutionUseCase(
                 matchId = MATCH_ID,
-                playerOutId = 1L,
-                playerInId = 2L,
+                playerOutId = "1",
+                playerInId = "2",
                 currentTimeMillis = any(),
             )
         }
@@ -281,14 +281,14 @@ class MatchViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.substitutePlayerDirect(playerInId = 2L, playerOutId = 1L)
+        viewModel.substitutePlayerDirect(playerInId = "2", playerOutId = "1")
         advanceUntilIdle()
 
         coVerify {
             registerPlayerSubstitutionUseCase(
                 matchId = MATCH_ID,
-                playerOutId = 1L,
-                playerInId = 2L,
+                playerOutId = "1",
+                playerInId = "2",
                 currentTimeMillis = any(),
             )
         }
@@ -298,7 +298,7 @@ class MatchViewModelTest {
     fun `dismissInvalidSubstitutionAlert should hide the alert`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.selectPlayerOut(2L)
+        viewModel.selectPlayerOut("2")
         assertTrue(viewModel.showInvalidSubstitutionAlert.value)
 
         viewModel.dismissInvalidSubstitutionAlert()
@@ -345,7 +345,7 @@ class MatchViewModelTest {
         runTest(testDispatcher) {
             val scheduledMatch = testMatch.copy(
                 status = MatchStatus.SCHEDULED,
-                startingLineupIds = listOf(1L, 2L),
+                startingLineupIds = listOf("1", "2"),
             )
             every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(scheduledMatch)
             val viewModel = createViewModel()
@@ -354,7 +354,7 @@ class MatchViewModelTest {
             viewModel.beginMatch(MATCH_ID)
             advanceUntilIdle()
 
-            coVerify { startPlayerTimersBatchUseCase(MATCH_ID, listOf(1L, 2L), any()) }
+            coVerify { startPlayerTimersBatchUseCase(MATCH_ID, listOf("1", "2"), any()) }
         }
 
     @Test
@@ -475,7 +475,7 @@ class MatchViewModelTest {
     }
 
     companion object {
-        private const val MATCH_ID = 1L
+        private const val MATCH_ID = "1"
     }
 }
 

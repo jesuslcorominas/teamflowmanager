@@ -7,8 +7,8 @@ internal class StartPlayerTimersBatchUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
 ) : StartPlayerTimersBatchUseCase {
     override suspend fun invoke(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
     ) {
         playerTimeRepository.startTimersBatch(matchId, playerIds, currentTimeMillis)

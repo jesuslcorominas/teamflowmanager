@@ -6,7 +6,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 internal class DeletePlayerUseCaseImpl(
     private val playerRepository: PlayerRepository,
 ) : DeletePlayerUseCase {
-    override suspend fun invoke(playerId: Long) {
+    override suspend fun invoke(playerId: String) {
         playerRepository.deletePlayer(playerId)
     }
 }

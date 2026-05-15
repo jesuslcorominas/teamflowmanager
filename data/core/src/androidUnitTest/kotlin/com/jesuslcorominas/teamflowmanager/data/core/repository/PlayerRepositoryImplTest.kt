@@ -29,12 +29,12 @@ class PlayerRepositoryImplTest {
     }
 
     private fun createPlayer(
-        id: Long = 1L,
+        id: String = "1",
         firstName: String = "John",
         lastName: String = "Doe",
         number: Int = 10,
         positions: List<Position> = listOf(Position.Forward),
-        teamId: Long = 1L,
+        teamId: String = "1",
         isCaptain: Boolean = false,
     ) = Player(
         id = id,
@@ -51,8 +51,8 @@ class PlayerRepositoryImplTest {
     @Test
     fun `givenPlayers_whenGetAllPlayers_thenDelegatesToDataSource`() = runTest {
         val players = listOf(
-            createPlayer(id = 1L, firstName = "John"),
-            createPlayer(id = 2L, firstName = "Jane", positions = listOf(Position.Midfielder)),
+            createPlayer(id = "1", firstName = "John"),
+            createPlayer(id = "2", firstName = "Jane", positions = listOf(Position.Midfielder)),
         )
         every { playerDataSource.getAllPlayers() } returns flowOf(players)
 
@@ -74,19 +74,19 @@ class PlayerRepositoryImplTest {
 
     @Test
     fun `givenExistingPlayerId_whenGetPlayerById_thenReturnsPlayer`() = runTest {
-        val player = createPlayer(id = 1L)
-        coEvery { playerDataSource.getPlayerById(1L) } returns player
+        val player = createPlayer(id = "1")
+        coEvery { playerDataSource.getPlayerById("1") } returns player
 
-        val result = repository.getPlayerById(1L)
+        val result = repository.getPlayerById("1")
 
         assertEquals(player, result)
     }
 
     @Test
     fun `givenUnknownPlayerId_whenGetPlayerById_thenReturnsNull`() = runTest {
-        coEvery { playerDataSource.getPlayerById(99L) } returns null
+        coEvery { playerDataSource.getPlayerById("99") } returns null
 
-        val result = repository.getPlayerById(99L)
+        val result = repository.getPlayerById("99")
 
         assertNull(result)
     }
@@ -95,7 +95,7 @@ class PlayerRepositoryImplTest {
 
     @Test
     fun `givenCaptainExists_whenGetCaptainPlayer_thenReturnsCaptain`() = runTest {
-        val captain = createPlayer(id = 3L, isCaptain = true)
+        val captain = createPlayer(id = "3", isCaptain = true)
         coEvery { playerDataSource.getCaptainPlayer() } returns captain
 
         val result = repository.getCaptainPlayer()
@@ -116,12 +116,12 @@ class PlayerRepositoryImplTest {
 
     @Test
     fun `givenNewPlayer_whenAddPlayer_thenReturnsInsertedId`() = runTest {
-        val player = createPlayer(id = 0L)
-        coEvery { playerDataSource.insertPlayer(player) } returns 1L
+        val player = createPlayer(id = "")
+        coEvery { playerDataSource.insertPlayer(player) } returns "1"
 
         val result = repository.addPlayer(player)
 
-        assertEquals(1L, result)
+        assertEquals("1", result)
         coVerify { playerDataSource.insertPlayer(player) }
     }
 
@@ -129,18 +129,18 @@ class PlayerRepositoryImplTest {
 
     @Test
     fun `givenPlayerId_whenDeletePlayer_thenDelegatesToDataSource`() = runTest {
-        coEvery { playerDataSource.deletePlayer(1L) } just runs
+        coEvery { playerDataSource.deletePlayer("1") } just runs
 
-        repository.deletePlayer(1L)
+        repository.deletePlayer("1")
 
-        coVerify { playerDataSource.deletePlayer(1L) }
+        coVerify { playerDataSource.deletePlayer("1") }
     }
 
     // --- updatePlayer ---
 
     @Test
     fun `givenPlayer_whenUpdatePlayer_thenDelegatesToDataSource`() = runTest {
-        val player = createPlayer(id = 1L, firstName = "Updated")
+        val player = createPlayer(id = "1", firstName = "Updated")
         coEvery { playerDataSource.updatePlayer(player) } just runs
 
         repository.updatePlayer(player)
@@ -152,17 +152,17 @@ class PlayerRepositoryImplTest {
 
     @Test
     fun `givenPlayerId_whenSetPlayerAsCaptain_thenDelegatesToDataSource`() = runTest {
-        repository.setPlayerAsCaptain(1L)
+        repository.setPlayerAsCaptain("1")
 
-        coVerify { playerDataSource.setPlayerAsCaptain(1L) }
+        coVerify { playerDataSource.setPlayerAsCaptain("1") }
     }
 
     // --- removePlayerAsCaptain ---
 
     @Test
     fun `givenPlayerId_whenRemovePlayerAsCaptain_thenDelegatesToDataSource`() = runTest {
-        repository.removePlayerAsCaptain(1L)
+        repository.removePlayerAsCaptain("1")
 
-        coVerify { playerDataSource.removePlayerAsCaptain(1L) }
+        coVerify { playerDataSource.removePlayerAsCaptain("1") }
     }
 }

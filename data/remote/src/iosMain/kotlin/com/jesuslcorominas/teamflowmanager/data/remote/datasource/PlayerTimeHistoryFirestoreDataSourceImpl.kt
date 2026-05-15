@@ -4,7 +4,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistor
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeHistoryFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -42,7 +41,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
         }
     }
 
-    override fun getPlayerTimeHistory(playerId: Long): Flow<List<PlayerTimeHistory>> =
+    override fun getPlayerTimeHistory(playerId: String): Flow<List<PlayerTimeHistory>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -74,17 +73,14 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             )
         }
 
-    override fun getMatchPlayerTimeHistory(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerTimeHistory>> =
+    override fun getMatchPlayerTimeHistory(matchId: String): Flow<List<PlayerTimeHistory>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val teamDocId = teamId ?: getTeamDocumentId()
+            val teamDocId = getTeamDocumentId()
             if (teamDocId == null) {
                 emit(emptyList())
                 return@flow
@@ -140,14 +136,14 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             )
         }
 
-    override suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): Long {
+    override suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): String {
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("Team must exist to insert player time history")
         return try {
             val model = playerTimeHistory.toFirestoreModel().copy(teamId = teamDocId)
             val docRef = firestore.collection(PLAYER_TIME_HISTORY_COLLECTION).add(model)
-            docRef.id.toStableId()
+            docRef.id
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

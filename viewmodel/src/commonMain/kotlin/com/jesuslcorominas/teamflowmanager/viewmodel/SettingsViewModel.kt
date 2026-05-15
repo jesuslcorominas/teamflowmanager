@@ -81,7 +81,7 @@ class SettingsViewModel(
                         activeRole = getActiveViewRole(),
                     )
 
-                val clubRemoteId = clubMember.clubRemoteId ?: return@launch
+                val clubRemoteId = clubMember.clubId.takeIf { it.isNotBlank() } ?: return@launch
 
                 getNotificationPreferences(clubRemoteId).collect { prefs ->
                     _notificationPreferences.value =

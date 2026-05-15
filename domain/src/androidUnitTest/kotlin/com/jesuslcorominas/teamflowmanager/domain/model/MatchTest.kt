@@ -14,7 +14,7 @@ class MatchTest {
         opponent = "Opponent",
         location = "Stadium",
         periodType = periodType,
-        captainId = 0L,
+        captainId = "",
         pauseCount = pauseCount,
         periods = periods ?: (1..periodType.numberOfPeriods).map {
             MatchPeriod(periodNumber = it, periodDuration = periodType.duration)

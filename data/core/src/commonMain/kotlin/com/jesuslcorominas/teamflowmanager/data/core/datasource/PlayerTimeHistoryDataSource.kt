@@ -4,16 +4,13 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import kotlinx.coroutines.flow.Flow
 
 interface PlayerTimeHistoryDataSource {
-    fun getPlayerTimeHistory(playerId: Long): Flow<List<PlayerTimeHistory>>
+    fun getPlayerTimeHistory(playerId: String): Flow<List<PlayerTimeHistory>>
 
-    fun getMatchPlayerTimeHistory(
-        matchId: Long,
-        teamId: String? = null,
-    ): Flow<List<PlayerTimeHistory>>
+    fun getMatchPlayerTimeHistory(matchId: String): Flow<List<PlayerTimeHistory>>
 
     fun getAllPlayerTimeHistory(): Flow<List<PlayerTimeHistory>>
 
-    suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): Long
+    suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): String
 
     /**
      * Get all player time history directly (not as a Flow) for migration purposes.

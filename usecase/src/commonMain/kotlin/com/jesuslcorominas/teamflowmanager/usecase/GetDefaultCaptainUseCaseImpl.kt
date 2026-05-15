@@ -6,5 +6,5 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesReposit
 internal class GetDefaultCaptainUseCaseImpl(
     private val preferencesRepository: PreferencesRepository,
 ) : GetDefaultCaptainUseCase {
-    override suspend fun invoke(): Long? = preferencesRepository.getDefaultCaptainId()
+    override suspend fun invoke(): String? = preferencesRepository.getDefaultCaptainId()
 }

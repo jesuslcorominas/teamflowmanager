@@ -87,7 +87,7 @@ import teamflowmanager.shared_ui.generated.resources.third_quarter
 fun PresidentTeamDetailScreen(
     teamId: String,
     onNavigateBack: () -> Unit = {},
-    onNavigateToMatch: (Long) -> Unit = {},
+    onNavigateToMatch: (String) -> Unit = {},
     viewModel: PresidentTeamDetailViewModel = koinViewModel(key = teamId, parameters = { parametersOf(teamId) }),
 ) {
     TrackScreenView(screenName = ScreenName.PRESIDENT_TEAM_DETAIL, screenClass = "PresidentTeamDetailScreen")
@@ -285,7 +285,7 @@ private fun PlayersTab(state: PresidentTeamDetailUiState.Ready) {
 private fun MatchesTab(
     state: PresidentTeamDetailUiState.Ready,
     currentTime: Long,
-    onNavigateToMatch: (Long) -> Unit,
+    onNavigateToMatch: (String) -> Unit,
 ) {
     if (state.matches.isEmpty()) {
         EmptyContent(stringResource(Res.string.president_team_detail_no_matches))

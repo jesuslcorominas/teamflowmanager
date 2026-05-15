@@ -135,7 +135,7 @@ class TeamFirestoreDataSourceImpl(
 
     override suspend fun updateTeam(team: Team) {
         val docId =
-            team.remoteId ?: findTeamDocumentId()
+            team.id.takeIf { it.isNotBlank() } ?: findTeamDocumentId()
                 ?: throw IllegalStateException("Cannot find team document to update")
         val model = team.toFirestoreModel()
         firestore.collection(TEAMS_COLLECTION).document(docId).set(model)
@@ -143,7 +143,6 @@ class TeamFirestoreDataSourceImpl(
 
     override suspend fun updateTeamClubId(
         teamId: String,
-        clubNumericId: Long,
         clubId: String,
     ) = throw NotImplementedError("updateTeamClubId not implemented for iOS Phase 2")
 

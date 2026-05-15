@@ -122,12 +122,11 @@ private const val TAB_STATISTICS = 3
 
 @Composable
 fun MatchScreen(
-    matchId: Long,
-    teamId: String? = null,
+    matchId: String,
     readOnly: Boolean = false,
     onTitleChange: (String?) -> Unit = {},
     onExportReady: (uri: String) -> Unit = {},
-    viewModel: MatchViewModel = koinViewModel(key = matchId.toString(), parameters = { parametersOf(matchId, teamId) }),
+    viewModel: MatchViewModel = koinViewModel(key = matchId, parameters = { parametersOf(matchId) }),
 ) {
     TrackScreenView(screenName = ScreenName.MATCH_DETAIL, screenClass = "MatchScreen")
 
@@ -269,14 +268,14 @@ private fun NoMatchState() {
 private fun SuccessState(
     state: MatchUiState.Success,
     readOnly: Boolean,
-    selectedPlayerOut: Long?,
+    selectedPlayerOut: String?,
     currentSortOrder: PlayerSortOrderBy,
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
     onStartTimeout: () -> Unit,
     onEndTimeout: () -> Unit,
-    onPlayerClick: (Long) -> Unit,
+    onPlayerClick: (String) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
@@ -321,14 +320,14 @@ private fun SuccessState(
 private fun MatchDetailContent(
     state: MatchUiState.Success,
     readOnly: Boolean,
-    selectedPlayerOut: Long?,
+    selectedPlayerOut: String?,
     currentSortOrder: PlayerSortOrderBy,
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
     onStartTimeout: () -> Unit,
     onEndTimeout: () -> Unit,
-    onPlayerClick: (Long) -> Unit,
+    onPlayerClick: (String) -> Unit,
     onSortOrderChange: (PlayerSortOrderBy) -> Unit,
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
@@ -727,7 +726,7 @@ private fun FinishedMatchState(
 private data class ScorerEntry(val name: String, val count: Int)
 
 private fun aggregateScorers(events: List<TimelineEvent>): Pair<List<ScorerEntry>, Int> {
-    val scorerMap = mutableMapOf<Long, ScorerEntry>()
+    val scorerMap = mutableMapOf<String, ScorerEntry>()
     var ownGoalCount = 0
     events.filterIsInstance<TimelineEvent.GoalScored>()
         .filter { !it.isOpponentGoal }
@@ -1039,7 +1038,7 @@ private fun PauseMatchEarlyConfirmationDialog(
 @Composable
 private fun GoalScorerSelectionDialog(
     players: List<Player>,
-    onGoal: (Long?) -> Unit,
+    onGoal: (String?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(

@@ -77,7 +77,6 @@ class ClubMemberFirestoreDataSourceImpl(
         userId: String,
         name: String,
         email: String,
-        clubNumericId: Long,
         clubId: String,
         roles: List<String>,
     ): ClubMember = throw NotImplementedError("createOrUpdateClubMember not implemented for iOS Phase 2")

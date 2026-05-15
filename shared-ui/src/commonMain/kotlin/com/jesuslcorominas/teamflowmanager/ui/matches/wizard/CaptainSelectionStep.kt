@@ -13,7 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -31,13 +31,13 @@ import teamflowmanager.shared_ui.generated.resources.previous
 @Composable
 fun CaptainSelectionStep(
     players: List<Player>,
-    selectedCaptainId: Long?,
-    onCaptainChanged: (Long) -> Unit,
+    selectedCaptainId: String?,
+    onCaptainChanged: (String) -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var currentCaptainId by remember(selectedCaptainId) { mutableLongStateOf(selectedCaptainId ?: 0L) }
+    var currentCaptainId by remember(selectedCaptainId) { mutableStateOf(selectedCaptainId ?: "") }
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -87,7 +87,7 @@ fun CaptainSelectionStep(
                     onCaptainChanged(currentCaptainId)
                     onNext()
                 },
-                enabled = currentCaptainId != 0L,
+                enabled = currentCaptainId.isNotEmpty(),
                 modifier = Modifier.weight(1f),
             ) {
                 Text(stringResource(Res.string.next))

@@ -4,14 +4,11 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import kotlinx.coroutines.flow.Flow
 
 interface GoalDataSource {
-    fun getMatchGoals(
-        matchId: Long,
-        teamId: String? = null,
-    ): Flow<List<Goal>>
+    fun getMatchGoals(matchId: String): Flow<List<Goal>>
 
     fun getAllTeamGoals(): Flow<List<Goal>>
 
-    suspend fun insertGoal(goal: Goal): Long
+    suspend fun insertGoal(goal: Goal): String
 
     /**
      * Get all goals directly (not as a Flow) for migration purposes.

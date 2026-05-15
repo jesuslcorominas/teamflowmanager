@@ -21,7 +21,7 @@ internal class ResumeMatchUseCaseImpl(
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
 ) : ResumeMatchUseCase {
     override suspend fun invoke(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     ) {
         // Get the match first to validate it exists

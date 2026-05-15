@@ -40,7 +40,7 @@ import teamflowmanager.shared_ui.generated.resources.yes
 
 @Composable
 fun MatchCreationWizardScreen(
-    matchId: Long,
+    matchId: String,
     onNavigateBack: () -> Unit,
     wizardViewModel: MatchCreationWizardViewModel = koinViewModel(parameters = { parametersOf(matchId) }),
 ) {

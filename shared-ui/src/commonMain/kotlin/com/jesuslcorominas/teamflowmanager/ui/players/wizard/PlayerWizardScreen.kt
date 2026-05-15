@@ -32,10 +32,10 @@ import teamflowmanager.shared_ui.generated.resources.unsaved_changes_title
 
 @Composable
 fun PlayerWizardScreen(
-    playerId: Long,
+    playerId: String,
     onNavigateBack: () -> Unit,
     wizardViewModel: PlayerWizardViewModel =
-        koinViewModel(key = playerId.toString(), parameters = { parametersOf(playerId) }),
+        koinViewModel(key = playerId, parameters = { parametersOf(playerId) }),
 ) {
     TrackScreenView(screenName = ScreenName.PLAYER_WIZARD, screenClass = "PlayerWizardScreen")
 

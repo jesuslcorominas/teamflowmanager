@@ -5,7 +5,7 @@ data class SkeletonMatch(
     val location: String,
     val dateTime: Long?,
     val numberOfPeriods: Int,
-    val squadCallUpIds: List<Long>,
-    val captainId: Long,
-    val startingLineupIds: List<Long>,
+    val squadCallUpIds: List<String>,
+    val captainId: String,
+    val startingLineupIds: List<String>,
 )

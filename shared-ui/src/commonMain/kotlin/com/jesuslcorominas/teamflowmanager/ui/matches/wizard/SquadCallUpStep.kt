@@ -43,8 +43,8 @@ import teamflowmanager.shared_ui.generated.resources.yes
 @Composable
 fun SquadCallUpStep(
     players: List<Player>,
-    selectedPlayerIds: Set<Long>,
-    onSelectionChanged: (Set<Long>) -> Unit,
+    selectedPlayerIds: Set<String>,
+    onSelectionChanged: (Set<String>) -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     modifier: Modifier = Modifier,

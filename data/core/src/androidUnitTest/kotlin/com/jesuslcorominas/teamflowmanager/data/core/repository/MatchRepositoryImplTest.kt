@@ -28,7 +28,7 @@ class MatchRepositoryImplTest {
     }
 
     private fun createMatch(
-        id: Long = 1L,
+        id: String = "1",
         status: MatchStatus = MatchStatus.SCHEDULED,
         pauseCount: Int = 0,
         timeoutStartTimeMillis: Long = 0L,
@@ -43,7 +43,7 @@ class MatchRepositoryImplTest {
         opponent = "Team B",
         location = "Home",
         periodType = PeriodType.HALF_TIME,
-        captainId = 1L,
+        captainId = "1",
         status = status,
         pauseCount = pauseCount,
         timeoutStartTimeMillis = timeoutStartTimeMillis,
@@ -55,19 +55,19 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenExistingMatch_whenGetMatchById_thenDelegatesToDataSource`() = runTest {
-        val match = createMatch(id = 1L)
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        val match = createMatch(id = "1")
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        val result = repository.getMatchById(1L).first()
+        val result = repository.getMatchById("1").first()
 
         assertEquals(match, result)
     }
 
     @Test
     fun `givenNoMatch_whenGetMatchById_thenReturnsNull`() = runTest {
-        every { matchDataSource.getMatchById(99L) } returns flowOf(null)
+        every { matchDataSource.getMatchById("99") } returns flowOf(null)
 
-        val result = repository.getMatchById(99L).first()
+        val result = repository.getMatchById("99").first()
 
         assertEquals(null, result)
     }
@@ -76,7 +76,7 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenMultipleMatches_whenGetAllMatches_thenDelegatesToDataSource`() = runTest {
-        val matches = listOf(createMatch(id = 1L), createMatch(id = 2L))
+        val matches = listOf(createMatch(id = "1"), createMatch(id = "2"))
         every { matchDataSource.getAllMatches() } returns flowOf(matches)
 
         val result = repository.getAllMatches().first()
@@ -97,7 +97,7 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenArchivedMatches_whenGetArchivedMatches_thenDelegatesToDataSource`() = runTest {
-        val matches = listOf(createMatch(id = 1L, archived = true))
+        val matches = listOf(createMatch(id = "1", archived = true))
         every { matchDataSource.getArchivedMatches() } returns flowOf(matches)
 
         val result = repository.getArchivedMatches().first()
@@ -109,7 +109,7 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenScheduledMatches_whenGetScheduledMatches_thenDelegatesToDataSource`() = runTest {
-        val matches = listOf(createMatch(id = 1L, status = MatchStatus.SCHEDULED))
+        val matches = listOf(createMatch(id = "1", status = MatchStatus.SCHEDULED))
         coEvery { matchDataSource.getScheduledMatches() } returns matches
 
         val result = repository.getScheduledMatches()
@@ -121,28 +121,28 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenMatchIdAndCaptainId_whenUpdateMatchCaptain_thenDelegatesToDataSource`() = runTest {
-        repository.updateMatchCaptain(1L, 5L)
+        repository.updateMatchCaptain("1", "5")
 
-        coVerify { matchDataSource.updateMatchCaptain(1L, 5L) }
+        coVerify { matchDataSource.updateMatchCaptain("1", "5") }
     }
 
     @Test
     fun `givenMatchIdAndNullCaptainId_whenUpdateMatchCaptain_thenDelegatesToDataSource`() = runTest {
-        repository.updateMatchCaptain(1L, null)
+        repository.updateMatchCaptain("1", null)
 
-        coVerify { matchDataSource.updateMatchCaptain(1L, null) }
+        coVerify { matchDataSource.updateMatchCaptain("1", null) }
     }
 
     // --- createMatch ---
 
     @Test
     fun `givenMatch_whenCreateMatch_thenReturnsInsertedId`() = runTest {
-        val match = createMatch(id = 0L)
-        coEvery { matchDataSource.insertMatch(match) } returns 42L
+        val match = createMatch(id = "")
+        coEvery { matchDataSource.insertMatch(match) } returns "42"
 
         val result = repository.createMatch(match)
 
-        assertEquals(42L, result)
+        assertEquals("42", result)
         coVerify { matchDataSource.insertMatch(match) }
     }
 
@@ -161,18 +161,18 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenMatchId_whenDeleteMatch_thenDelegatesToDataSource`() = runTest {
-        repository.deleteMatch(1L)
+        repository.deleteMatch("1")
 
-        coVerify { matchDataSource.deleteMatch(1L) }
+        coVerify { matchDataSource.deleteMatch("1") }
     }
 
     // --- startTimer ---
 
     @Test
     fun `givenMatchDoesNotExist_whenStartTimer_thenDoesNothing`() = runTest {
-        every { matchDataSource.getMatchById(1L) } returns flowOf(null)
+        every { matchDataSource.getMatchById("1") } returns flowOf(null)
 
-        repository.startTimer(1L, 1000L)
+        repository.startTimer("1", 1000L)
 
         coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
     }
@@ -187,9 +187,9 @@ class MatchRepositoryImplTest {
                 MatchPeriod(periodNumber = 2, startTimeMillis = 0L),
             ),
         )
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.startTimer(1L, currentTime)
+        repository.startTimer("1", currentTime)
 
         coVerify {
             matchDataSource.updateMatch(
@@ -212,9 +212,9 @@ class MatchRepositoryImplTest {
                 MatchPeriod(periodNumber = 2, startTimeMillis = 0L),
             ),
         )
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.startTimer(1L, currentTime)
+        repository.startTimer("1", currentTime)
 
         coVerify {
             matchDataSource.updateMatch(
@@ -231,9 +231,9 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenMatchDoesNotExist_whenPauseTimer_thenDoesNothing`() = runTest {
-        every { matchDataSource.getMatchById(1L) } returns flowOf(null)
+        every { matchDataSource.getMatchById("1") } returns flowOf(null)
 
-        repository.pauseTimer(1L, 3000L)
+        repository.pauseTimer("1", 3000L)
 
         coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
     }
@@ -241,9 +241,9 @@ class MatchRepositoryImplTest {
     @Test
     fun `givenMatchNotInProgress_whenPauseTimer_thenDoesNothing`() = runTest {
         val match = createMatch(status = MatchStatus.PAUSED)
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.pauseTimer(1L, 3000L)
+        repository.pauseTimer("1", 3000L)
 
         coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
     }
@@ -259,9 +259,9 @@ class MatchRepositoryImplTest {
                 MatchPeriod(periodNumber = 2, startTimeMillis = 0L, endTimeMillis = 0L),
             ),
         )
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.pauseTimer(1L, pauseTime)
+        repository.pauseTimer("1", pauseTime)
 
         coVerify {
             matchDataSource.updateMatch(
@@ -286,9 +286,9 @@ class MatchRepositoryImplTest {
                 MatchPeriod(periodNumber = 2, startTimeMillis = 5000L, endTimeMillis = 0L),
             ),
         )
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.pauseTimer(1L, pauseTime)
+        repository.pauseTimer("1", pauseTime)
 
         coVerify {
             matchDataSource.updateMatch(
@@ -306,9 +306,9 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenMatchDoesNotExist_whenStartTimeout_thenDoesNothing`() = runTest {
-        every { matchDataSource.getMatchById(1L) } returns flowOf(null)
+        every { matchDataSource.getMatchById("1") } returns flowOf(null)
 
-        repository.startTimeout(1L, 2000L)
+        repository.startTimeout("1", 2000L)
 
         coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
     }
@@ -316,9 +316,9 @@ class MatchRepositoryImplTest {
     @Test
     fun `givenMatchNotInProgress_whenStartTimeout_thenDoesNothing`() = runTest {
         val match = createMatch(status = MatchStatus.PAUSED)
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.startTimeout(1L, 2000L)
+        repository.startTimeout("1", 2000L)
 
         coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
     }
@@ -327,9 +327,9 @@ class MatchRepositoryImplTest {
     fun `givenMatchInProgress_whenStartTimeout_thenSetsStatusTimeoutAndSavesStartTime`() = runTest {
         val timeoutStart = 3000L
         val match = createMatch(status = MatchStatus.IN_PROGRESS)
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.startTimeout(1L, timeoutStart)
+        repository.startTimeout("1", timeoutStart)
 
         coVerify {
             matchDataSource.updateMatch(
@@ -345,9 +345,9 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenMatchDoesNotExist_whenEndTimeout_thenDoesNothing`() = runTest {
-        every { matchDataSource.getMatchById(1L) } returns flowOf(null)
+        every { matchDataSource.getMatchById("1") } returns flowOf(null)
 
-        repository.endTimeout(1L, 5000L)
+        repository.endTimeout("1", 5000L)
 
         coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
     }
@@ -355,9 +355,9 @@ class MatchRepositoryImplTest {
     @Test
     fun `givenMatchNotInTimeout_whenEndTimeout_thenDoesNothing`() = runTest {
         val match = createMatch(status = MatchStatus.IN_PROGRESS)
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.endTimeout(1L, 5000L)
+        repository.endTimeout("1", 5000L)
 
         coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
     }
@@ -376,9 +376,9 @@ class MatchRepositoryImplTest {
                 MatchPeriod(periodNumber = 2, startTimeMillis = 0L, endTimeMillis = 0L),
             ),
         )
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.endTimeout(1L, endTime)
+        repository.endTimeout("1", endTime)
 
         coVerify {
             matchDataSource.updateMatch(
@@ -404,9 +404,9 @@ class MatchRepositoryImplTest {
                 MatchPeriod(periodNumber = 2, startTimeMillis = 0L, endTimeMillis = 0L),
             ),
         )
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.endTimeout(1L, endTime)
+        repository.endTimeout("1", endTime)
 
         coVerify {
             matchDataSource.updateMatch(
@@ -432,9 +432,9 @@ class MatchRepositoryImplTest {
                 MatchPeriod(periodNumber = 2, startTimeMillis = 0L, endTimeMillis = 0L),
             ),
         )
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.endTimeout(1L, endTime)
+        repository.endTimeout("1", endTime)
 
         coVerify {
             matchDataSource.updateMatch(
@@ -452,9 +452,9 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenMatchDoesNotExist_whenArchiveMatch_thenDoesNothing`() = runTest {
-        every { matchDataSource.getMatchById(1L) } returns flowOf(null)
+        every { matchDataSource.getMatchById("1") } returns flowOf(null)
 
-        repository.archiveMatch(1L)
+        repository.archiveMatch("1")
 
         coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
     }
@@ -462,9 +462,9 @@ class MatchRepositoryImplTest {
     @Test
     fun `givenUnarchivedMatch_whenArchiveMatch_thenSetsArchivedToTrue`() = runTest {
         val match = createMatch(archived = false)
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.archiveMatch(1L)
+        repository.archiveMatch("1")
 
         coVerify {
             matchDataSource.updateMatch(match { it.archived })
@@ -475,9 +475,9 @@ class MatchRepositoryImplTest {
 
     @Test
     fun `givenMatchDoesNotExist_whenUnarchiveMatch_thenDoesNothing`() = runTest {
-        every { matchDataSource.getMatchById(1L) } returns flowOf(null)
+        every { matchDataSource.getMatchById("1") } returns flowOf(null)
 
-        repository.unarchiveMatch(1L)
+        repository.unarchiveMatch("1")
 
         coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
     }
@@ -485,9 +485,9 @@ class MatchRepositoryImplTest {
     @Test
     fun `givenArchivedMatch_whenUnarchiveMatch_thenSetsArchivedToFalse`() = runTest {
         val match = createMatch(archived = true)
-        every { matchDataSource.getMatchById(1L) } returns flowOf(match)
+        every { matchDataSource.getMatchById("1") } returns flowOf(match)
 
-        repository.unarchiveMatch(1L)
+        repository.unarchiveMatch("1")
 
         coVerify {
             matchDataSource.updateMatch(match { !it.archived })

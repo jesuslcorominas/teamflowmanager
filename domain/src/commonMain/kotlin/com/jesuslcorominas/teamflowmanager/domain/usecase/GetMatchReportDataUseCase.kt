@@ -4,5 +4,5 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
 import kotlinx.coroutines.flow.Flow
 
 interface GetMatchReportDataUseCase {
-    operator fun invoke(matchId: Long): Flow<MatchReportData?>
+    operator fun invoke(matchId: String): Flow<MatchReportData?>
 }

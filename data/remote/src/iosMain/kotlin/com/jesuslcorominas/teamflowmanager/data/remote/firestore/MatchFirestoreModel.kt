@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
@@ -8,11 +7,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
-/**
- * iOS Firestore model for Match — uses @Serializable (kotlinx.serialization) instead
- * of @DocumentId/@PropertyName (Android Firebase SDK only).
- * The document ID is injected externally from DocumentSnapshot.id.
- */
 @Serializable
 data class MatchFirestoreModel(
     @Transient val id: String = "",
@@ -22,9 +16,9 @@ data class MatchFirestoreModel(
     val location: String = "",
     val dateTime: Long? = null,
     val numberOfPeriods: Int = 2,
-    val squadCallUpIds: List<Long> = emptyList(),
-    val captainId: Long = 0L,
-    val startingLineupIds: List<Long> = emptyList(),
+    val squadCallUpIds: List<String> = emptyList(),
+    val captainId: String = "",
+    val startingLineupIds: List<String> = emptyList(),
     val status: String = MatchStatus.SCHEDULED.name,
     val archived: Boolean = false,
     val pauseCount: Int = 0,
@@ -46,8 +40,8 @@ data class MatchPeriodFirestoreModel(
 fun MatchFirestoreModel.toDomain(): Match {
     val periodType = PeriodType.fromNumberOfPeriods(numberOfPeriods)
     return Match(
-        id = id.toStableId(),
-        teamId = teamId.toStableId(),
+        id = id,
+        teamId = teamId,
         teamName = teamName,
         opponent = opponent,
         location = location,
@@ -92,8 +86,8 @@ fun MatchPeriodFirestoreModel.toDomain(): MatchPeriod =
 
 fun Match.toFirestoreModel(): MatchFirestoreModel =
     MatchFirestoreModel(
-        id = "", // set by data source from document ID
-        teamId = "", // set by data source
+        id = id,
+        teamId = teamId,
         teamName = teamName,
         opponent = opponent,
         location = location,

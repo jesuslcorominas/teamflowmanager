@@ -273,9 +273,9 @@ private fun TeamsListContent(
                 onDeletePendingAssignment = { onDeletePendingAssignment(team) },
                 onRemoveCoach = { onRemoveCoach(team) },
                 coachEmail = team.coachId?.let { coachEmailMap[it] },
-                isAssigning = team.remoteId == assigningCoachToTeamId,
+                isAssigning = team.id == assigningCoachToTeamId,
                 isPresident = isPresident,
-                matchInfo = team.remoteId?.let { matchStatusByTeam[it] },
+                matchInfo = matchStatusByTeam[team.id],
             )
         }
     }

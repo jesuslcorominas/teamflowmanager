@@ -106,7 +106,7 @@ class GoalFirestoreDataSourceImplTest {
     fun `givenNoAuthenticatedUser_whenGetMatchGoals_thenEmitsEmptyList`() = runTest {
         every { mockAuth.currentUser } returns null
 
-        dataSource.getMatchGoals(1L).test {
+        dataSource.getMatchGoals("1").test {
             val result = awaitItem()
             assertEquals(emptyList<Goal>(), result)
             cancel()
@@ -117,7 +117,7 @@ class GoalFirestoreDataSourceImplTest {
     fun `givenNoTeam_whenGetMatchGoals_thenEmitsEmptyList`() = runTest {
         setupUserWithNoTeam()
 
-        dataSource.getMatchGoals(1L).test {
+        dataSource.getMatchGoals("1").test {
             val result = awaitItem()
             assertEquals(emptyList<Goal>(), result)
             cancel()
@@ -173,18 +173,18 @@ class GoalFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("goals") } returns goalsCollection
         every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereEqualTo("matchId", 1L) } returns goalsQuery2
+        every { goalsQuery.whereEqualTo("matchId", "1") } returns goalsQuery2
         every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = GoalFirestoreModel(
             id = "goal-doc-id",
             teamId = "team-doc-id",
-            matchId = 1L
+            matchId = "1"
         )
         every { docSnapshot.toObject(GoalFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
-        dataSource.getMatchGoals(1L).test {
+        dataSource.getMatchGoals("1").test {
             listenerSlot.captured.onEvent(querySnapshot, null)
             val result = awaitItem()
             assertEquals(1, result.size)
@@ -203,12 +203,12 @@ class GoalFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("goals") } returns goalsCollection
         every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereEqualTo("matchId", 1L) } returns goalsQuery2
+        every { goalsQuery.whereEqualTo("matchId", "1") } returns goalsQuery2
         every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
 
-        dataSource.getMatchGoals(1L).test {
+        dataSource.getMatchGoals("1").test {
             listenerSlot.captured.onEvent(null, mockError)
             val result = awaitItem()
             assertEquals(emptyList<Goal>(), result)
@@ -233,7 +233,7 @@ class GoalFirestoreDataSourceImplTest {
         val model = GoalFirestoreModel(
             id = "goal-doc-id",
             teamId = "team-doc-id",
-            matchId = 1L
+            matchId = "1"
         )
         every { docSnapshot.toObject(GoalFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
@@ -294,7 +294,7 @@ class GoalFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } throws RuntimeException("Firestore error")
 
         val goal = mockk<Goal>(relaxed = true)
-        every { goal.matchId } returns 1L
+        every { goal.matchId } returns "1"
 
         try {
             dataSource.insertGoal(goal)
@@ -330,11 +330,11 @@ class GoalFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } returns mockk()
 
         val goal = mockk<Goal>(relaxed = true)
-        every { goal.matchId } returns 1L
+        every { goal.matchId } returns "1"
 
         val result = dataSource.insertGoal(goal)
 
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
@@ -349,13 +349,6 @@ class GoalFirestoreDataSourceImplTest {
         every { mockFirestore.collection("goals") } returns goalsCollection
         every { mockFirestore.collection("matches") } returns matchesCollection
         every { goalsCollection.document() } returns goalDocRef
-
-        // Compute stable ID for "match-doc-id"
-        val stableMatchId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "match-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val matchQuery = mockk<Query>()
         val matchSnapshot = mockk<QuerySnapshot>()
@@ -372,11 +365,11 @@ class GoalFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } returns mockk()
 
         val goal = mockk<Goal>(relaxed = true)
-        every { goal.matchId } returns stableMatchId
+        every { goal.matchId } returns "match-doc-id"
 
         val result = dataSource.insertGoal(goal)
 
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
@@ -406,7 +399,7 @@ class GoalFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } throws IllegalStateException("Firestore write failed")
 
         val goal = mockk<Goal>(relaxed = true)
-        every { goal.matchId } returns 1L
+        every { goal.matchId } returns "1"
 
         try {
             dataSource.insertGoal(goal)
@@ -427,10 +420,10 @@ class GoalFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("goals") } returns goalsCollection
         every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereEqualTo("matchId", 1L) } returns goalsQuery2
+        every { goalsQuery.whereEqualTo("matchId", "1") } returns goalsQuery2
         every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
-        dataSource.getMatchGoals(1L).test {
+        dataSource.getMatchGoals("1").test {
             listenerSlot.captured.onEvent(null, null)
             val result = awaitItem()
             assertEquals(emptyList<Goal>(), result)

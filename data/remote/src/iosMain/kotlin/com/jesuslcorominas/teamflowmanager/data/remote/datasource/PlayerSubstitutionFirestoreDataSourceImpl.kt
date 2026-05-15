@@ -4,7 +4,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstituti
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerSubstitutionFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -42,17 +41,14 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         }
     }
 
-    override fun getMatchSubstitutions(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerSubstitution>> =
+    override fun getMatchSubstitutions(matchId: String): Flow<List<PlayerSubstitution>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val teamDocId = teamId ?: getTeamDocumentId()
+            val teamDocId = getTeamDocumentId()
             if (teamDocId == null) {
                 emit(emptyList())
                 return@flow
@@ -77,14 +73,14 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
             )
         }
 
-    override suspend fun insertSubstitution(substitution: PlayerSubstitution): Long {
+    override suspend fun insertSubstitution(substitution: PlayerSubstitution): String {
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("Team must exist to insert substitution")
         return try {
             val model = substitution.toFirestoreModel().copy(teamId = teamDocId)
             val docRef = firestore.collection(SUBSTITUTIONS_COLLECTION).add(model)
-            docRef.id.toStableId()
+            docRef.id
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

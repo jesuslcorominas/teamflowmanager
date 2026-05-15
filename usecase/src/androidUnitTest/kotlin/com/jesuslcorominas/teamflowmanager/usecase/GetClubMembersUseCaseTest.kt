@@ -26,8 +26,8 @@ class GetClubMembersUseCaseTest {
     fun `invoke should return club members for valid club id`() = runTest {
         val clubId = "club123"
         val members = listOf(
-            ClubMember(id = 1L, userId = "user1", name = "Alice", email = "alice@test.com", clubId = 10L, roles = listOf("PRESIDENT")),
-            ClubMember(id = 2L, userId = "user2", name = "Bob", email = "bob@test.com", clubId = 10L, roles = listOf("COACH")),
+            ClubMember(id = "1", userId = "user1", name = "Alice", email = "alice@test.com", clubId = "10", roles = listOf("PRESIDENT")),
+            ClubMember(id = "2", userId = "user2", name = "Bob", email = "bob@test.com", clubId = "10", roles = listOf("COACH")),
         )
         every { clubMemberRepository.getClubMembers(clubId) } returns flowOf(members)
 

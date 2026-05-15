@@ -22,15 +22,12 @@ internal class GetMatchTimelineUseCaseImpl(
     private val playerSubstitutionRepository: PlayerSubstitutionRepository,
     private val playerRepository: PlayerRepository,
 ) : GetMatchTimelineUseCase {
-    override fun invoke(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<MatchTimeline?> {
+    override fun invoke(matchId: String): Flow<MatchTimeline?> {
         return combine(
-            matchRepository.getMatchById(matchId, teamId),
-            goalRepository.getMatchGoals(matchId, teamId),
-            playerSubstitutionRepository.getMatchSubstitutions(matchId, teamId),
-            if (teamId != null) playerRepository.getPlayersByTeam(teamId) else playerRepository.getAllPlayers(),
+            matchRepository.getMatchById(matchId),
+            goalRepository.getMatchGoals(matchId),
+            playerSubstitutionRepository.getMatchSubstitutions(matchId),
+            playerRepository.getAllPlayers(),
         ) { match, goals, substitutions, players ->
             if (match == null) {
                 null
@@ -208,7 +205,7 @@ internal class GetMatchTimelineUseCaseImpl(
         val totalElapsedTime = calculateTotalElapsedTime(match)
 
         // Track which players are currently active and their start time
-        val activePlayerStartTimes = mutableMapOf<Long, Long>()
+        val activePlayerStartTimes = mutableMapOf<String, Long>()
 
         // Starting lineup players are active from time 0
         match.startingLineupIds.forEach { playerId ->

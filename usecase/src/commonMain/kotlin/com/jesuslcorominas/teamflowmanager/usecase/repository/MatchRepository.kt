@@ -4,10 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import kotlinx.coroutines.flow.Flow
 
 interface MatchRepository {
-    fun getMatchById(
-        matchId: Long,
-        teamId: String? = null,
-    ): Flow<Match?>
+    fun getMatchById(matchId: String): Flow<Match?>
 
     fun getAllMatches(): Flow<List<Match>>
 
@@ -18,39 +15,39 @@ interface MatchRepository {
     suspend fun getScheduledMatches(): List<Match>
 
     suspend fun updateMatchCaptain(
-        matchId: Long,
-        captainId: Long?,
+        matchId: String,
+        captainId: String?,
     )
 
-    suspend fun createMatch(match: Match): Long
+    suspend fun createMatch(match: Match): String
 
     suspend fun updateMatch(match: Match)
 
-    suspend fun deleteMatch(matchId: Long)
+    suspend fun deleteMatch(matchId: String)
 
     suspend fun startTimer(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     )
 
     suspend fun pauseTimer(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     )
 
     suspend fun startTimeout(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     )
 
     suspend fun endTimeout(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     )
 
-    suspend fun archiveMatch(matchId: Long)
+    suspend fun archiveMatch(matchId: String)
 
-    suspend fun unarchiveMatch(matchId: Long)
+    suspend fun unarchiveMatch(matchId: String)
 
     /**
      * Updates the match with a specific operation ID to track atomic operations

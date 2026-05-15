@@ -118,7 +118,6 @@ fun App(
                 ) {
                     MatchScreen(
                         matchId = dest.matchId,
-                        teamId = dest.teamId,
                         readOnly = true,
                         onTitleChange = { presidentMatchTitle = it },
                     )
@@ -154,9 +153,9 @@ fun App(
                             is IosDestination.TeamList ->
                                 navController.navigate(IosDestination.Team(Route.Team.MODE_CREATE))
                             is IosDestination.Players ->
-                                navController.navigate(IosDestination.PlayerWizard(0L))
+                                navController.navigate(IosDestination.PlayerWizard(""))
                             is IosDestination.Matches ->
-                                navController.navigate(IosDestination.MatchWizard(0L))
+                                navController.navigate(IosDestination.MatchWizard(""))
                             else -> {}
                         }
                     },
@@ -204,9 +203,8 @@ fun App(
                             is IosDestination.TeamList ->
                                 TeamListScreen(
                                     onTeamClick = { team ->
-                                        val remoteId = team.remoteId
-                                        if (remoteId != null) {
-                                            navController.navigate(IosDestination.PresidentTeamDetail(remoteId))
+                                        if (team.id.isNotEmpty()) {
+                                            navController.navigate(IosDestination.PresidentTeamDetail(team.id))
                                         } else {
                                             navController.navigate(IosDestination.Team(Route.Team.MODE_VIEW))
                                         }
@@ -239,7 +237,7 @@ fun App(
                             is IosDestination.Players ->
                                 PlayersScreen(
                                     onNavigateToCreatePlayer = {
-                                        navController.navigate(IosDestination.PlayerWizard(0L))
+                                        navController.navigate(IosDestination.PlayerWizard(""))
                                     },
                                     onNavigateToEditPlayer = { playerId ->
                                         navController.navigate(IosDestination.PlayerWizard(playerId))
