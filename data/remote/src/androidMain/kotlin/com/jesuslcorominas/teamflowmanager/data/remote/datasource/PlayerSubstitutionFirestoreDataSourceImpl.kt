@@ -34,6 +34,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
     companion object {
         private const val SUBSTITUTIONS_COLLECTION = "substitutions"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     private suspend fun getTeamDocumentId(): String? {
@@ -53,6 +54,16 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         }
     }
 
+    // For non-coach roles (e.g. president), derive teamId from the match document.
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                firestore.collection(MATCHES_COLLECTION).document(matchId).get().await()
+                    .getString("teamId")
+            } catch (_: Exception) {
+                null
+            }
+
     override fun getMatchSubstitutions(matchId: String): Flow<List<PlayerSubstitution>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
@@ -62,7 +73,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 trySend(emptyList())
                 awaitClose { }

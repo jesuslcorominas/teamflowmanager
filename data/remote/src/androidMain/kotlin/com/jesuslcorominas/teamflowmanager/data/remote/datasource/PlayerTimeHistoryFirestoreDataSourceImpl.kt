@@ -34,6 +34,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
     companion object {
         private const val PLAYER_TIME_HISTORY_COLLECTION = "playerTimeHistory"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     private suspend fun getTeamDocumentId(): String? {
@@ -52,6 +53,16 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             null
         }
     }
+
+    // For non-coach roles (e.g. president), derive teamId from the match document.
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                firestore.collection(MATCHES_COLLECTION).document(matchId).get().await()
+                    .getString("teamId")
+            } catch (_: Exception) {
+                null
+            }
 
     override fun getPlayerTimeHistory(playerId: String): Flow<List<PlayerTimeHistory>> =
         callbackFlow {
@@ -126,7 +137,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 trySend(emptyList())
                 awaitClose { }
