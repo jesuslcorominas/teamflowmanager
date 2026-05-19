@@ -423,7 +423,7 @@ class PlayerTimeFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQueryWithMatch
+        every { playerTimesQuery.whereIn("matchId", listOf(MATCH_ID, 49L)) } returns playerTimesQueryWithMatch
         every { playerTimesQueryWithMatch.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
@@ -477,7 +477,7 @@ class PlayerTimeFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQueryWithMatch
+        every { playerTimesQuery.whereIn("matchId", listOf(MATCH_ID, 49L)) } returns playerTimesQueryWithMatch
         every { playerTimesQueryWithMatch.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerTimeFirestoreModel(
@@ -487,6 +487,9 @@ class PlayerTimeFirestoreDataSourceImplTest {
             elapsedTimeMillis = 5000L,
             isRunning = false,
             status = PlayerTimeStatus.ON_BENCH.name
+        )
+        every { docSnapshot.data } returns mapOf(
+            "playerId" to "1", "matchId" to MATCH_ID, "teamId" to "team-doc-id",
         )
         every { docSnapshot.id } returns "player_1"
         every { docSnapshot.toObject(PlayerTimeFirestoreModel::class.java) } returns model
@@ -512,7 +515,7 @@ class PlayerTimeFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQueryWithMatch
+        every { playerTimesQuery.whereIn("matchId", listOf(MATCH_ID, 49L)) } returns playerTimesQueryWithMatch
         every { playerTimesQueryWithMatch.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         dataSource.getPlayerTimesByMatch(MATCH_ID).test {

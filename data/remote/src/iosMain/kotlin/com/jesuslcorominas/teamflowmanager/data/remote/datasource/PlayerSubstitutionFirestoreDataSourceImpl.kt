@@ -16,6 +16,16 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.coroutines.cancellation.CancellationException
 
+private fun String.toLegacyId(): Long {
+    var result = 0L
+    var multiplier = 1L
+    for (char in this) {
+        result += char.code.toLong() * multiplier
+        multiplier *= 31L
+    }
+    return kotlin.math.abs(result)
+}
+
 class PlayerSubstitutionFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
@@ -56,13 +66,15 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
             val snapshots =
                 firestore.collection(SUBSTITUTIONS_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
-                    .where { "matchId" equalTo matchId }
+                    .where { "matchId" inArray listOf(matchId, matchId.toLegacyId()) }
                     .snapshots
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
                         try {
-                            doc.data<PlayerSubstitutionFirestoreModel>().copy(id = doc.id).toDomain()
+                            doc.data<PlayerSubstitutionFirestoreModel>()
+                                .copy(id = doc.id, matchId = matchId)
+                                .toDomain()
                         } catch (_: Exception) {
                             null
                         }

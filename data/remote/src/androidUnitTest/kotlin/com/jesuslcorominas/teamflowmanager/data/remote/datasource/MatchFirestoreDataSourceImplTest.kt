@@ -269,6 +269,11 @@ class MatchFirestoreDataSourceImplTest {
             status = "SCHEDULED"
         )
         every { matchDocSnapshot.id } returns "match-doc-id"
+        every { matchDocSnapshot.data } returns mapOf(
+            "teamId" to "team-doc-id", "opponent" to "Opponent", "archived" to false,
+            "squadCallUpIds" to emptyList<String>(), "startingLineupIds" to emptyList<String>(),
+            "captainId" to "",
+        )
         every { matchDocSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
         every { matchSnapshot.documents } returns listOf(matchDocSnapshot)
 
@@ -400,6 +405,11 @@ class MatchFirestoreDataSourceImplTest {
             archived = false
         )
         every { docSnapshot.id } returns "match-doc-id"
+        every { docSnapshot.data } returns mapOf(
+            "teamId" to "team-doc-id", "opponent" to "Opponent", "archived" to false,
+            "squadCallUpIds" to emptyList<String>(), "startingLineupIds" to emptyList<String>(),
+            "captainId" to "",
+        )
         every { docSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
@@ -480,6 +490,11 @@ class MatchFirestoreDataSourceImplTest {
             archived = true
         )
         every { docSnapshot.id } returns "match-doc-id"
+        every { docSnapshot.data } returns mapOf(
+            "teamId" to "team-doc-id", "opponent" to "Opponent", "archived" to true,
+            "squadCallUpIds" to emptyList<String>(), "startingLineupIds" to emptyList<String>(),
+            "captainId" to "",
+        )
         every { docSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
@@ -560,6 +575,11 @@ class MatchFirestoreDataSourceImplTest {
         every { docSnapshot.id } returns "match-doc-id"
         every { docSnapshot.exists() } returns true
         every { docSnapshot.getString("teamId") } returns "team-doc-id"
+        every { docSnapshot.data } returns mapOf(
+            "teamId" to "team-doc-id", "opponent" to "Opponent", "archived" to false,
+            "squadCallUpIds" to emptyList<String>(), "startingLineupIds" to emptyList<String>(),
+            "captainId" to "",
+        )
         every { docSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
 
         dataSource.getMatchById("match-doc-id").test {

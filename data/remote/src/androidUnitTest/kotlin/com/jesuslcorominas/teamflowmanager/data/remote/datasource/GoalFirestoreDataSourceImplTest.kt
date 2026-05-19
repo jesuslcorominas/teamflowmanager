@@ -173,7 +173,7 @@ class GoalFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("goals") } returns goalsCollection
         every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereEqualTo("matchId", "1") } returns goalsQuery2
+        every { goalsQuery.whereIn("matchId", listOf("1", 49L)) } returns goalsQuery2
         every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = GoalFirestoreModel(
@@ -181,6 +181,8 @@ class GoalFirestoreDataSourceImplTest {
             teamId = "team-doc-id",
             matchId = "1"
         )
+        every { docSnapshot.data } returns mapOf("matchId" to "1", "teamId" to "team-doc-id", "scorerId" to null)
+        every { docSnapshot.id } returns "goal-doc-id"
         every { docSnapshot.toObject(GoalFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
@@ -203,7 +205,7 @@ class GoalFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("goals") } returns goalsCollection
         every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereEqualTo("matchId", "1") } returns goalsQuery2
+        every { goalsQuery.whereIn("matchId", listOf("1", 49L)) } returns goalsQuery2
         every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
@@ -420,7 +422,7 @@ class GoalFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("goals") } returns goalsCollection
         every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereEqualTo("matchId", "1") } returns goalsQuery2
+        every { goalsQuery.whereIn("matchId", listOf("1", 49L)) } returns goalsQuery2
         every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         dataSource.getMatchGoals("1").test {

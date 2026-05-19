@@ -13,6 +13,17 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
+// Pre-migration documents stored matchId/playerOutId/playerInId as Long (hash of Firestore doc ID).
+private fun String.toLegacyId(): Long {
+    var result = 0L
+    var multiplier = 1L
+    for (char in this) {
+        result += char.code.toLong() * multiplier
+        multiplier *= 31L
+    }
+    return kotlin.math.abs(result)
+}
+
 /**
  * Firestore-based implementation of PlayerSubstitutionDataSource.
  */
@@ -61,7 +72,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
             val listenerRegistration =
                 firestore.collection(SUBSTITUTIONS_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
-                    .whereEqualTo("matchId", matchId)
+                    .whereIn("matchId", listOf(matchId, matchId.toLegacyId()))
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
@@ -69,7 +80,38 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                         }
                         val substitutions =
                             snapshot?.documents?.mapNotNull { document ->
-                                document.toObject(PlayerSubstitutionFirestoreModel::class.java)?.toDomain()
+                                try {
+                                    val rawData = document.data ?: return@mapNotNull null
+                                    val rawPlayerOutId = rawData["playerOutId"]?.toString() ?: ""
+                                    val rawPlayerInId = rawData["playerInId"]?.toString() ?: ""
+                                    val model =
+                                        try {
+                                            document.toObject(
+                                                PlayerSubstitutionFirestoreModel::class.java,
+                                            ) ?: return@mapNotNull null
+                                        } catch (_: Exception) {
+                                            PlayerSubstitutionFirestoreModel(
+                                                teamId = rawData["teamId"] as? String ?: teamDocId,
+                                                matchId = matchId,
+                                                playerOutId = rawPlayerOutId,
+                                                playerInId = rawPlayerInId,
+                                                substitutionTimeMillis =
+                                                    rawData["substitutionTimeMillis"] as? Long ?: 0L,
+                                                matchElapsedTimeMillis =
+                                                    rawData["matchElapsedTimeMillis"] as? Long ?: 0L,
+                                            )
+                                        }
+                                    model
+                                        .copy(
+                                            id = document.id,
+                                            matchId = matchId,
+                                            playerOutId = rawPlayerOutId,
+                                            playerInId = rawPlayerInId,
+                                        )
+                                        .toDomain()
+                                } catch (_: Exception) {
+                                    null
+                                }
                             } ?: emptyList()
                         trySend(substitutions)
                     }

@@ -13,6 +13,17 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
+// Pre-migration documents stored matchId/playerId as Long (hash of Firestore doc ID).
+private fun String.toLegacyId(): Long {
+    var result = 0L
+    var multiplier = 1L
+    for (char in this) {
+        result += char.code.toLong() * multiplier
+        multiplier *= 31L
+    }
+    return kotlin.math.abs(result)
+}
+
 /**
  * Firestore-based implementation of PlayerTimeDataSource.
  * This implementation stores current player time data in Firebase Firestore as a remote data source.
@@ -142,7 +153,7 @@ class PlayerTimeFirestoreDataSourceImpl(
             val listenerRegistration =
                 firestore.collection(PLAYER_TIMES_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
-                    .whereEqualTo("matchId", matchId)
+                    .whereIn("matchId", listOf(matchId, matchId.toLegacyId()))
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
@@ -157,8 +168,37 @@ class PlayerTimeFirestoreDataSourceImpl(
                         val playerTimes =
                             snapshot.documents.mapNotNull { document ->
                                 try {
-                                    document.toObject(PlayerTimeFirestoreModel::class.java)?.toDomain()
-                                } catch (e: Exception) {
+                                    val rawData = document.data ?: return@mapNotNull null
+                                    val rawPlayerId = rawData["playerId"]?.toString() ?: ""
+                                    val model =
+                                        try {
+                                            document.toObject(PlayerTimeFirestoreModel::class.java)
+                                                ?: return@mapNotNull null
+                                        } catch (_: Exception) {
+                                            PlayerTimeFirestoreModel(
+                                                teamId = rawData["teamId"] as? String ?: teamDocId,
+                                                matchId = matchId,
+                                                playerId = rawPlayerId,
+                                                elapsedTimeMillis =
+                                                    rawData["elapsedTimeMillis"] as? Long ?: 0L,
+                                                isRunning = rawData["running"] as? Boolean ?: false,
+                                                lastStartTimeMillis =
+                                                    rawData["lastStartTimeMillis"] as? Long,
+                                                status =
+                                                    rawData["status"] as? String
+                                                        ?: "ON_BENCH",
+                                                lastOperationId =
+                                                    rawData["lastOperationId"] as? String,
+                                            )
+                                        }
+                                    model
+                                        .copy(
+                                            id = document.id,
+                                            matchId = matchId,
+                                            playerId = rawPlayerId,
+                                        )
+                                        .toDomain()
+                                } catch (_: Exception) {
                                     null
                                 }
                             }

@@ -13,6 +13,18 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
+// Pre-migration documents stored matchId/scorerId/playerId as Long (hash of Firestore doc ID).
+// This function reimplements the deleted toStableId() so we can query both old and new formats.
+private fun String.toLegacyId(): Long {
+    var result = 0L
+    var multiplier = 1L
+    for (char in this) {
+        result += char.code.toLong() * multiplier
+        multiplier *= 31L
+    }
+    return kotlin.math.abs(result)
+}
+
 /**
  * Firestore-based implementation of GoalDataSource.
  */
@@ -61,7 +73,7 @@ class GoalFirestoreDataSourceImpl(
             val listenerRegistration =
                 firestore.collection(GOALS_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
-                    .whereEqualTo("matchId", matchId)
+                    .whereIn("matchId", listOf(matchId, matchId.toLegacyId()))
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
@@ -69,7 +81,40 @@ class GoalFirestoreDataSourceImpl(
                         }
                         val goals =
                             snapshot?.documents?.mapNotNull { document ->
-                                document.toObject(GoalFirestoreModel::class.java)?.toDomain()
+                                try {
+                                    val rawData = document.data ?: return@mapNotNull null
+                                    val rawMatchId = rawData["matchId"]?.toString() ?: ""
+                                    val rawScorerId = rawData["scorerId"]?.toString()
+                                    val model =
+                                        try {
+                                            document.toObject(GoalFirestoreModel::class.java)
+                                                ?: return@mapNotNull null
+                                        } catch (_: Exception) {
+                                            GoalFirestoreModel(
+                                                teamId = rawData["teamId"] as? String ?: teamDocId,
+                                                matchId = rawMatchId,
+                                                scorerId = rawScorerId,
+                                                goalTimeMillis =
+                                                    rawData["goalTimeMillis"] as? Long
+                                                        ?: 0L,
+                                                matchElapsedTimeMillis =
+                                                    rawData["matchElapsedTimeMillis"] as? Long
+                                                        ?: 0L,
+                                                isOpponentGoal =
+                                                    rawData["opponentGoal"] as? Boolean ?: false,
+                                                isOwnGoal = rawData["ownGoal"] as? Boolean ?: false,
+                                            )
+                                        }
+                                    model
+                                        .copy(
+                                            id = document.id,
+                                            matchId = matchId,
+                                            scorerId = rawScorerId,
+                                        )
+                                        .toDomain()
+                                } catch (_: Exception) {
+                                    null
+                                }
                             } ?: emptyList()
                         trySend(goals)
                     }

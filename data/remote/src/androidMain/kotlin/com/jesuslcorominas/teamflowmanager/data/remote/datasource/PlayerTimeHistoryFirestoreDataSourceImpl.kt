@@ -13,6 +13,17 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
+// Pre-migration documents stored playerId/matchId as Long (hash of Firestore doc ID).
+private fun String.toLegacyId(): Long {
+    var result = 0L
+    var multiplier = 1L
+    for (char in this) {
+        result += char.code.toLong() * multiplier
+        multiplier *= 31L
+    }
+    return kotlin.math.abs(result)
+}
+
 /**
  * Firestore-based implementation of PlayerTimeHistoryDataSource.
  */
@@ -61,7 +72,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             val listenerRegistration =
                 firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
-                    .whereEqualTo("playerId", playerId)
+                    .whereIn("playerId", listOf(playerId, playerId.toLegacyId()))
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
@@ -69,7 +80,36 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         }
                         val history =
                             snapshot?.documents?.mapNotNull { document ->
-                                document.toObject(PlayerTimeHistoryFirestoreModel::class.java)?.toDomain()
+                                try {
+                                    val rawData = document.data ?: return@mapNotNull null
+                                    val rawPlayerId = rawData["playerId"]?.toString() ?: ""
+                                    val rawMatchId = rawData["matchId"]?.toString() ?: ""
+                                    val model =
+                                        try {
+                                            document.toObject(
+                                                PlayerTimeHistoryFirestoreModel::class.java,
+                                            ) ?: return@mapNotNull null
+                                        } catch (_: Exception) {
+                                            PlayerTimeHistoryFirestoreModel(
+                                                teamId = rawData["teamId"] as? String ?: teamDocId,
+                                                playerId = rawPlayerId,
+                                                matchId = rawMatchId,
+                                                elapsedTimeMillis =
+                                                    rawData["elapsedTimeMillis"] as? Long ?: 0L,
+                                                savedAtMillis =
+                                                    rawData["savedAtMillis"] as? Long ?: 0L,
+                                            )
+                                        }
+                                    model
+                                        .copy(
+                                            id = document.id,
+                                            playerId = rawPlayerId,
+                                            matchId = rawMatchId,
+                                        )
+                                        .toDomain()
+                                } catch (_: Exception) {
+                                    null
+                                }
                             } ?: emptyList()
                         trySend(history)
                     }
@@ -96,7 +136,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             val listenerRegistration =
                 firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
-                    .whereEqualTo("matchId", matchId)
+                    .whereIn("matchId", listOf(matchId, matchId.toLegacyId()))
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
@@ -104,7 +144,35 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         }
                         val history =
                             snapshot?.documents?.mapNotNull { document ->
-                                document.toObject(PlayerTimeHistoryFirestoreModel::class.java)?.toDomain()
+                                try {
+                                    val rawData = document.data ?: return@mapNotNull null
+                                    val rawPlayerId = rawData["playerId"]?.toString() ?: ""
+                                    val model =
+                                        try {
+                                            document.toObject(
+                                                PlayerTimeHistoryFirestoreModel::class.java,
+                                            ) ?: return@mapNotNull null
+                                        } catch (_: Exception) {
+                                            PlayerTimeHistoryFirestoreModel(
+                                                teamId = rawData["teamId"] as? String ?: teamDocId,
+                                                playerId = rawPlayerId,
+                                                matchId = matchId,
+                                                elapsedTimeMillis =
+                                                    rawData["elapsedTimeMillis"] as? Long ?: 0L,
+                                                savedAtMillis =
+                                                    rawData["savedAtMillis"] as? Long ?: 0L,
+                                            )
+                                        }
+                                    model
+                                        .copy(
+                                            id = document.id,
+                                            matchId = matchId,
+                                            playerId = rawPlayerId,
+                                        )
+                                        .toDomain()
+                                } catch (_: Exception) {
+                                    null
+                                }
                             } ?: emptyList()
                         trySend(history)
                     }

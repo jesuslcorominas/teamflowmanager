@@ -16,6 +16,16 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.coroutines.cancellation.CancellationException
 
+private fun String.toLegacyId(): Long {
+    var result = 0L
+    var multiplier = 1L
+    for (char in this) {
+        result += char.code.toLong() * multiplier
+        multiplier *= 31L
+    }
+    return kotlin.math.abs(result)
+}
+
 class PlayerTimeHistoryFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
@@ -56,13 +66,15 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             val snapshots =
                 firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
-                    .where { "playerId" equalTo playerId }
+                    .where { "playerId" inArray listOf(playerId, playerId.toLegacyId()) }
                     .snapshots
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
                         try {
-                            doc.data<PlayerTimeHistoryFirestoreModel>().copy(id = doc.id).toDomain()
+                            doc.data<PlayerTimeHistoryFirestoreModel>()
+                                .copy(id = doc.id, playerId = playerId)
+                                .toDomain()
                         } catch (_: Exception) {
                             null
                         }
@@ -88,13 +100,15 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             val snapshots =
                 firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
-                    .where { "matchId" equalTo matchId }
+                    .where { "matchId" inArray listOf(matchId, matchId.toLegacyId()) }
                     .snapshots
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
                         try {
-                            doc.data<PlayerTimeHistoryFirestoreModel>().copy(id = doc.id).toDomain()
+                            doc.data<PlayerTimeHistoryFirestoreModel>()
+                                .copy(id = doc.id, matchId = matchId)
+                                .toDomain()
                         } catch (_: Exception) {
                             null
                         }

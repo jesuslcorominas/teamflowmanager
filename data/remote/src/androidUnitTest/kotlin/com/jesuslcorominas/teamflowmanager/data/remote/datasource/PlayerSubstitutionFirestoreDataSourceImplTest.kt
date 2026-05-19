@@ -232,7 +232,7 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("substitutions") } returns subsCollection
         every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
-        every { subsQuery.whereEqualTo("matchId", "1") } returns subQuery2
+        every { subsQuery.whereIn("matchId", listOf("1", 49L)) } returns subQuery2
         every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
@@ -258,7 +258,7 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("substitutions") } returns subsCollection
         every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
-        every { subsQuery.whereEqualTo("matchId", "1") } returns subQuery2
+        every { subsQuery.whereIn("matchId", listOf("1", 49L)) } returns subQuery2
         every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerSubstitutionFirestoreModel(
@@ -269,6 +269,11 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
             playerOutId = "20",
             substitutionTimeMillis = 45000L
         )
+        every { docSnapshot.data } returns mapOf(
+            "matchId" to "1", "teamId" to "team-doc-id",
+            "playerOutId" to "20", "playerInId" to "10",
+        )
+        every { docSnapshot.id } returns "sub-doc-id"
         every { docSnapshot.toObject(PlayerSubstitutionFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
@@ -363,7 +368,7 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("substitutions") } returns subsCollection
         every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
-        every { subsQuery.whereEqualTo("matchId", "1") } returns subQuery2
+        every { subsQuery.whereIn("matchId", listOf("1", 49L)) } returns subQuery2
         every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         dataSource.getMatchSubstitutions("1").test {
