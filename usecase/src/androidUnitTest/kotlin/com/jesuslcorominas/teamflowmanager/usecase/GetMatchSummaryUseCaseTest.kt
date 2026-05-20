@@ -141,9 +141,9 @@ class GetMatchSummaryUseCaseTest {
             assertEquals("2", result?.substitutions?.get(1)?.playerIn?.id)
         }
 
-    @Test(expected = IllegalStateException::class)
-    fun `givenPlayerTimeReferencingUnknownPlayer_whenInvoke_thenThrowIllegalStateException`() = runTest {
-        // Given
+    @Test
+    fun `givenPlayerTimeReferencingUnknownPlayer_whenInvoke_thenSkipsEntry`() = runTest {
+        // Given — pre-migration playerTime with a Long ID that has no matching player
         val matchId = "1"
         val match = Match(
             id = matchId, opponent = "Team A", location = "Stadium",
@@ -159,13 +159,14 @@ class GetMatchSummaryUseCaseTest {
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
         every { playerRepository.getAllPlayers() } returns flowOf(emptyList()) // player 99 not found
 
-        // When - expects IllegalStateException
-        getMatchSummaryUseCase(matchId).first()
+        // When — should not throw; entry is skipped
+        val result = getMatchSummaryUseCase(matchId).first()
+        assertEquals(0, result?.playerTimes?.size)
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `givenSubstitutionReferencingUnknownPlayerOut_whenInvoke_thenThrowIllegalStateException`() = runTest {
-        // Given
+    @Test
+    fun `givenSubstitutionReferencingUnknownPlayerOut_whenInvoke_thenSkipsEntry`() = runTest {
+        // Given — pre-migration substitution where playerOut has a Long ID with no match
         val matchId = "1"
         val player1 = Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false)
         val match = Match(
@@ -182,13 +183,14 @@ class GetMatchSummaryUseCaseTest {
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1)) // player 99 absent
 
-        // When - expects IllegalStateException
-        getMatchSummaryUseCase(matchId).first()
+        // When — should not throw; entry is skipped
+        val result = getMatchSummaryUseCase(matchId).first()
+        assertEquals(0, result?.substitutions?.size)
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `givenSubstitutionReferencingUnknownPlayerIn_whenInvoke_thenThrowIllegalStateException`() = runTest {
-        // Given
+    @Test
+    fun `givenSubstitutionReferencingUnknownPlayerIn_whenInvoke_thenSkipsEntry`() = runTest {
+        // Given — pre-migration substitution where playerIn has a Long ID with no match
         val matchId = "1"
         val player1 = Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false)
         val match = Match(
@@ -205,8 +207,9 @@ class GetMatchSummaryUseCaseTest {
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1)) // player 99 absent
 
-        // When - expects IllegalStateException
-        getMatchSummaryUseCase(matchId).first()
+        // When — should not throw; entry is skipped
+        val result = getMatchSummaryUseCase(matchId).first()
+        assertEquals(0, result?.substitutions?.size)
     }
 
     @Test

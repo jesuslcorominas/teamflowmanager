@@ -378,4 +378,51 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
             cancel()
         }
     }
+
+    @Test
+    fun `givenPresidentUser_whenGetMatchSubstitutions_thenUsesMatchDocumentTeamId`() = runTest {
+        // President: getTeamDocumentId() returns null, but match document has teamId
+        setupUserWithNoTeam()
+
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val matchDocTask = mockk<Task<DocumentSnapshot>>()
+        val matchDocSnapshot = mockk<DocumentSnapshot>()
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("1") } returns matchDocRef
+        every { matchDocRef.get() } returns matchDocTask
+        coEvery { matchDocTask.await() } returns matchDocSnapshot
+        every { matchDocSnapshot.getString("teamId") } returns "team-doc-id"
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val subsCollection = mockk<CollectionReference>()
+        val subsQuery = mockk<Query>()
+        val subQuery2 = mockk<Query>()
+        val querySnapshot = mockk<QuerySnapshot>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("substitutions") } returns subsCollection
+        every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
+        every { subsQuery.whereIn("matchId", listOf("1", 49L)) } returns subQuery2
+        every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val model = PlayerSubstitutionFirestoreModel(
+            id = "sub-doc-id", teamId = "team-doc-id", matchId = "1",
+            playerInId = "10", playerOutId = "20", substitutionTimeMillis = 0L,
+        )
+        every { docSnapshot.data } returns mapOf(
+            "matchId" to "1", "teamId" to "team-doc-id",
+            "playerOutId" to "20", "playerInId" to "10",
+        )
+        every { docSnapshot.id } returns "sub-doc-id"
+        every { docSnapshot.toObject(PlayerSubstitutionFirestoreModel::class.java) } returns model
+        every { querySnapshot.documents } returns listOf(docSnapshot)
+
+        dataSource.getMatchSubstitutions("1").test {
+            listenerSlot.captured.onEvent(querySnapshot, null)
+            val result = awaitItem()
+            assertEquals(1, result.size)
+            cancel()
+        }
+    }
 }

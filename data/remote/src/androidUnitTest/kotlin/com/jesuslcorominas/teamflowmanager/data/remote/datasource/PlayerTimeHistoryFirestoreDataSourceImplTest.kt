@@ -585,4 +585,51 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
             cancel()
         }
     }
+
+    @Test
+    fun `givenPresidentUser_whenGetMatchPlayerTimeHistory_thenUsesMatchDocumentTeamId`() = runTest {
+        // President: getTeamDocumentId() returns null, but match document has teamId
+        setupUserWithNoTeam()
+
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val matchDocTask = mockk<Task<DocumentSnapshot>>()
+        val matchDocSnapshot = mockk<DocumentSnapshot>()
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("1") } returns matchDocRef
+        every { matchDocRef.get() } returns matchDocTask
+        coEvery { matchDocTask.await() } returns matchDocSnapshot
+        every { matchDocSnapshot.getString("teamId") } returns "team-doc-id"
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val historyCollection = mockk<CollectionReference>()
+        val historyQuery = mockk<Query>()
+        val historyQuery2 = mockk<Query>()
+        val querySnapshot = mockk<QuerySnapshot>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
+        every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
+        every { historyQuery.whereIn("matchId", listOf("1", 49L)) } returns historyQuery2
+        every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val model = PlayerTimeHistoryFirestoreModel(
+            id = "hist-doc-id", teamId = "team-doc-id", matchId = "1",
+            playerId = "player-1", elapsedTimeMillis = 5000L, savedAtMillis = 0L,
+        )
+        every { docSnapshot.data } returns mapOf(
+            "playerId" to "player-1", "matchId" to "1",
+            "teamId" to "team-doc-id", "elapsedTimeMillis" to 5000L,
+        )
+        every { docSnapshot.id } returns "hist-doc-id"
+        every { docSnapshot.toObject(PlayerTimeHistoryFirestoreModel::class.java) } returns model
+        every { querySnapshot.documents } returns listOf(docSnapshot)
+
+        dataSource.getMatchPlayerTimeHistory("1").test {
+            listenerSlot.captured.onEvent(querySnapshot, null)
+            val result = awaitItem()
+            assertEquals(1, result.size)
+            cancel()
+        }
+    }
 }

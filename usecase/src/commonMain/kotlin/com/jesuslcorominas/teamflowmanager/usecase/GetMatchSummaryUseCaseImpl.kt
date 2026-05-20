@@ -28,30 +28,29 @@ internal class GetMatchSummaryUseCaseImpl(
                 null
             } else {
                 val playerTimeSummaries =
-                    playerTimes.map { playerTime ->
+                    playerTimes.mapNotNull { playerTime ->
                         val player = players.find { it.id == playerTime.playerId }
+                            ?: return@mapNotNull null // pre-migration Long player ID — skip
                         val substitutionCount =
                             substitutions.count {
                                 it.playerOutId == playerTime.playerId || it.playerInId == playerTime.playerId
                             }
                         PlayerTimeSummary(
-                            player = player ?: throw IllegalStateException("Player not found: ${playerTime.playerId}"),
+                            player = player,
                             elapsedTimeMillis = playerTime.elapsedTimeMillis,
                             substitutionCount = substitutionCount,
                         )
                     }.sortedByDescending { it.elapsedTimeMillis }
 
                 val substitutionSummaries =
-                    substitutions.map { substitution ->
+                    substitutions.mapNotNull { substitution ->
                         val playerOut = players.find { it.id == substitution.playerOutId }
+                            ?: return@mapNotNull null // pre-migration Long player ID — skip
                         val playerIn = players.find { it.id == substitution.playerInId }
+                            ?: return@mapNotNull null // pre-migration Long player ID — skip
                         SubstitutionSummary(
-                            playerOut =
-                                playerOut
-                                    ?: throw IllegalStateException("Player not found: ${substitution.playerOutId}"),
-                            playerIn =
-                                playerIn
-                                    ?: throw IllegalStateException("Player not found: ${substitution.playerInId}"),
+                            playerOut = playerOut,
+                            playerIn = playerIn,
                             matchElapsedTimeMillis = substitution.matchElapsedTimeMillis,
                         )
                     }.sortedBy { it.matchElapsedTimeMillis }

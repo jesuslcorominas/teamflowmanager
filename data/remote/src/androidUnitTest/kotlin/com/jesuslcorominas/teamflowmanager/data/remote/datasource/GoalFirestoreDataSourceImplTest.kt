@@ -467,4 +467,45 @@ class GoalFirestoreDataSourceImplTest {
             // expected
         }
     }
+
+    @Test
+    fun `givenPresidentUser_whenGetMatchGoals_thenUsesMatchDocumentTeamId`() = runTest {
+        // President: getTeamDocumentId() returns null, but match document has teamId
+        setupUserWithNoTeam()
+
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val matchDocTask = mockk<Task<DocumentSnapshot>>()
+        val matchDocSnapshot = mockk<DocumentSnapshot>()
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("1") } returns matchDocRef
+        every { matchDocRef.get() } returns matchDocTask
+        coEvery { matchDocTask.await() } returns matchDocSnapshot
+        every { matchDocSnapshot.getString("teamId") } returns "team-doc-id"
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val goalsCollection = mockk<CollectionReference>()
+        val goalsQuery = mockk<Query>()
+        val goalsQuery2 = mockk<Query>()
+        val querySnapshot = mockk<QuerySnapshot>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("goals") } returns goalsCollection
+        every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
+        every { goalsQuery.whereIn("matchId", listOf("1", 49L)) } returns goalsQuery2
+        every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val model = GoalFirestoreModel(id = "goal-doc-id", teamId = "team-doc-id", matchId = "1")
+        every { docSnapshot.data } returns mapOf("matchId" to "1", "teamId" to "team-doc-id", "scorerId" to null)
+        every { docSnapshot.id } returns "goal-doc-id"
+        every { docSnapshot.toObject(GoalFirestoreModel::class.java) } returns model
+        every { querySnapshot.documents } returns listOf(docSnapshot)
+
+        dataSource.getMatchGoals("1").test {
+            listenerSlot.captured.onEvent(querySnapshot, null)
+            val result = awaitItem()
+            assertEquals(1, result.size)
+            cancel()
+        }
+    }
 }

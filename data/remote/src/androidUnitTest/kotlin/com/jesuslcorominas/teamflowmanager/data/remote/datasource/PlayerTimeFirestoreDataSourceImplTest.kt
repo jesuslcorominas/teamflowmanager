@@ -604,6 +604,49 @@ class PlayerTimeFirestoreDataSourceImplTest {
         }
     }
 
+    @Test
+    fun `givenPresidentUser_whenGetPlayerTimesByMatch_thenUsesMatchDocumentTeamId`() = runTest {
+        // President: getTeamDocumentId() returns null, but match document has teamId
+        setupUserWithNoTeam()
+
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val matchDocTask = mockk<Task<DocumentSnapshot>>()
+        val matchDocSnapshot = mockk<DocumentSnapshot>()
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document(MATCH_ID) } returns matchDocRef
+        every { matchDocRef.get() } returns matchDocTask
+        coEvery { matchDocTask.await() } returns matchDocSnapshot
+        every { matchDocSnapshot.getString("teamId") } returns "team-doc-id"
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val playerTimesCollection = mockk<CollectionReference>()
+        val playerTimesQuery = mockk<Query>()
+        val playerTimesQuery2 = mockk<Query>()
+        val querySnapshot = mockk<QuerySnapshot>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
+        every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
+        every { playerTimesQuery.whereIn("matchId", listOf(MATCH_ID, 49L)) } returns playerTimesQuery2
+        every { playerTimesQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val model = PlayerTimeFirestoreModel(
+            id = "pt-doc-id", teamId = "team-doc-id", matchId = MATCH_ID, playerId = "player-1",
+        )
+        every { docSnapshot.data } returns mapOf("playerId" to "player-1", "matchId" to MATCH_ID, "teamId" to "team-doc-id")
+        every { docSnapshot.id } returns "pt-doc-id"
+        every { docSnapshot.toObject(PlayerTimeFirestoreModel::class.java) } returns model
+        every { querySnapshot.documents } returns listOf(docSnapshot)
+
+        dataSource.getPlayerTimesByMatch(MATCH_ID).test {
+            listenerSlot.captured.onEvent(querySnapshot, null)
+            val result = awaitItem()
+            assertEquals(1, result.size)
+            cancel()
+        }
+    }
+
     companion object {
         private const val MATCH_ID = "1"
     }
