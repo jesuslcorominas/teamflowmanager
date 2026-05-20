@@ -242,13 +242,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -302,7 +298,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.jesuslcorominas.teamflowmanager.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REVERSED_CLIENT_ID = com.googleusercontent.apps.960836545640-t78pngnp9fvbkapmpdk4klkmf995v200;
+				REVERSED_CLIENT_ID = "com.googleusercontent.apps.960836545640-t78pngnp9fvbkapmpdk4klkmf995v200";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -340,7 +336,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.jesuslcorominas.teamflowmanager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REVERSED_CLIENT_ID = com.googleusercontent.apps.622260891095-r2m0tu21f96s5lf25r2l9b9g64lmsl3d;
+				REVERSED_CLIENT_ID = "com.googleusercontent.apps.622260891095-r2m0tu21f96s5lf25r2l9b9g64lmsl3d";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
