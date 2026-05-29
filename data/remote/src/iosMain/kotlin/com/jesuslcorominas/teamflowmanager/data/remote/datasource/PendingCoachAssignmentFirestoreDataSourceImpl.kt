@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PendingCoachAssignmentDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toPendingCoachAssignment
 import com.jesuslcorominas.teamflowmanager.domain.model.PendingCoachAssignment
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where
@@ -35,11 +36,7 @@ class PendingCoachAssignmentFirestoreDataSourceImpl(
                 .get()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val data = doc.data<Map<String, String>>()
-                val teamId = data[FIELD_TEAM_ID] ?: return@mapNotNull null
-                val clubId = data[FIELD_CLUB_ID] ?: return@mapNotNull null
-                val docEmail = data[FIELD_EMAIL] ?: return@mapNotNull null
-                PendingCoachAssignment(teamId, clubId, docEmail)
+                doc.data<Map<String, String>>()?.toPendingCoachAssignment()
             } catch (_: Exception) {
                 null
             }

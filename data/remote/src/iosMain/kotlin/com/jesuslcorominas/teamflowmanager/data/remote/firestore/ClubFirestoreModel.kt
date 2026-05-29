@@ -5,12 +5,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ClubFirestoreModel(
-    val id: String = "",
-    val ownerId: String = "",
-    val name: String = "",
-    val invitationCode: String = "",
-    val homeGround: String? = null,
-)
+    override val id: String = "",
+    override val ownerId: String = "",
+    override val name: String = "",
+    override val invitationCode: String = "",
+    override val homeGround: String? = null,
+) : ClubFields
 
 fun ClubFirestoreModel.toDomain(): Club =
     Club(

@@ -8,12 +8,12 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Club
  */
 data class ClubFirestoreModel(
     @DocumentId
-    val id: String = "",
-    val ownerId: String = "",
-    val name: String = "",
-    val invitationCode: String = "",
-    val homeGround: String? = null,
-) {
+    override val id: String = "",
+    override val ownerId: String = "",
+    override val name: String = "",
+    override val invitationCode: String = "",
+    override val homeGround: String? = null,
+) : ClubFields {
     // No-arg constructor required by Firestore
     constructor() : this(
         id = "",
