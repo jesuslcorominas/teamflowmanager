@@ -19,7 +19,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MatchEventNotification
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
@@ -58,7 +57,6 @@ class MatchViewModelNotificationTest {
 
     private lateinit var getMatchByIdUseCase: GetMatchByIdUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
-    private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var getMatchTimelineUseCase: GetMatchTimelineUseCase
     private lateinit var registerGoalUseCase: RegisterGoalUseCase
     private lateinit var notifyPresidentMatchEventUseCase: NotifyPresidentMatchEventUseCase
@@ -124,7 +122,6 @@ class MatchViewModelNotificationTest {
         Dispatchers.setMain(testDispatcher)
         getMatchByIdUseCase = mockk()
         getAllPlayerTimesUseCase = mockk()
-        getPlayersUseCase = mockk()
         getMatchTimelineUseCase = mockk()
         registerGoalUseCase = mockk(relaxed = true)
         notifyPresidentMatchEventUseCase = mockk(relaxed = true)
@@ -134,7 +131,6 @@ class MatchViewModelNotificationTest {
         fakeTicker = FakeTimeTicker()
 
         every { getAllPlayerTimesUseCase(any()) } returns flowOf(emptyList())
-        every { getPlayersUseCase() } returns flowOf(players)
         every { getMatchTimelineUseCase(any()) } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(team)
     }
@@ -148,7 +144,6 @@ class MatchViewModelNotificationTest {
         matchId = MATCH_ID,
         getMatchById = getMatchByIdUseCase,
         getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-        getPlayersUseCase = getPlayersUseCase,
         finishMatch = mockk(relaxed = true),
         pauseMatch = mockk(relaxed = true),
         resumeMatchUseCase = mockk(relaxed = true),
@@ -170,7 +165,7 @@ class MatchViewModelNotificationTest {
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
         getTeamUseCase = getTeamUseCase,
-        getPlayersByTeamUseCase = mockk(relaxed = true),
+        getPlayersByTeamUseCase = mockk { every { this@mockk(any()) } returns flowOf(players) },
     )
 
     // ── fireNotification – integration with notifyPresidentMatchEventUseCase ──

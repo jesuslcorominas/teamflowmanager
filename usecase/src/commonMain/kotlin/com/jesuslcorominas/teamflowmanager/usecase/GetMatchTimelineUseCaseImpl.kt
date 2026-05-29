@@ -15,6 +15,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 
 internal class GetMatchTimelineUseCaseImpl(
     private val matchRepository: MatchRepository,
@@ -23,23 +25,24 @@ internal class GetMatchTimelineUseCaseImpl(
     private val playerRepository: PlayerRepository,
 ) : GetMatchTimelineUseCase {
     override fun invoke(matchId: String): Flow<MatchTimeline?> {
-        return combine(
-            matchRepository.getMatchById(matchId),
-            goalRepository.getMatchGoals(matchId),
-            playerSubstitutionRepository.getMatchSubstitutions(matchId),
-            playerRepository.getAllPlayers(),
-        ) { match, goals, substitutions, players ->
+        return matchRepository.getMatchById(matchId).flatMapLatest { match ->
             if (match == null) {
-                null
+                flowOf(null)
             } else {
-                val events = buildTimelineEvents(match, goals, substitutions, players)
-                val scoreEvolution = buildScoreEvolution(match, goals)
-                val playerActivity = buildPlayerActivity(match, substitutions, players)
-                MatchTimeline(
-                    events = events,
-                    scoreEvolution = scoreEvolution,
-                    playerActivity = playerActivity,
-                )
+                combine(
+                    goalRepository.getMatchGoals(matchId),
+                    playerSubstitutionRepository.getMatchSubstitutions(matchId),
+                    playerRepository.getPlayersByTeam(match.teamId),
+                ) { goals, substitutions, players ->
+                    val events = buildTimelineEvents(match, goals, substitutions, players)
+                    val scoreEvolution = buildScoreEvolution(match, goals)
+                    val playerActivity = buildPlayerActivity(match, substitutions, players)
+                    MatchTimeline(
+                        events = events,
+                        scoreEvolution = scoreEvolution,
+                        playerActivity = playerActivity,
+                    )
+                }
             }
         }
     }

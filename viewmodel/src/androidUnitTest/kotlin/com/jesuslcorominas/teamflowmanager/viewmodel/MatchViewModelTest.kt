@@ -17,7 +17,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
@@ -60,7 +59,6 @@ class MatchViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getMatchByIdUseCase: GetMatchByIdUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
-    private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var finishMatchUseCase: FinishMatchUseCase
     private lateinit var pauseMatchUseCase: PauseMatchUseCase
     private lateinit var resumeMatchUseCase: ResumeMatchUseCase
@@ -110,7 +108,6 @@ class MatchViewModelTest {
         Dispatchers.setMain(testDispatcher)
         getMatchByIdUseCase = mockk()
         getAllPlayerTimesUseCase = mockk()
-        getPlayersUseCase = mockk()
         finishMatchUseCase = mockk(relaxed = true)
         pauseMatchUseCase = mockk(relaxed = true)
         resumeMatchUseCase = mockk(relaxed = true)
@@ -136,7 +133,7 @@ class MatchViewModelTest {
 
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(testMatch)
         every { getAllPlayerTimesUseCase(any()) } returns flowOf(playerTimes)
-        every { getPlayersUseCase() } returns flowOf(players)
+        every { getPlayersByTeamUseCase(any()) } returns flowOf(players)
         every { getMatchTimelineUseCase(any()) } returns flowOf(null)
         every { shouldShowInvalidSubstitutionAlertUseCase() } returns true
     }
@@ -150,7 +147,6 @@ class MatchViewModelTest {
         matchId = MATCH_ID,
         getMatchById = getMatchByIdUseCase,
         getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-        getPlayersUseCase = getPlayersUseCase,
         finishMatch = finishMatchUseCase,
         pauseMatch = pauseMatchUseCase,
         resumeMatchUseCase = resumeMatchUseCase,

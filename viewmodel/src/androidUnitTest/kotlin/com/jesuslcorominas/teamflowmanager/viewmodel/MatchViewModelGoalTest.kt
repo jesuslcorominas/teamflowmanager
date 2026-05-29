@@ -16,7 +16,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
@@ -52,7 +51,6 @@ class MatchViewModelGoalTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getMatchByIdUseCase: GetMatchByIdUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
-    private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var registerGoalUseCase: RegisterGoalUseCase
     private lateinit var shouldShowInvalidSubstitutionAlertUseCase: ShouldShowInvalidSubstitutionAlertUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
@@ -80,7 +78,6 @@ class MatchViewModelGoalTest {
         Dispatchers.setMain(testDispatcher)
         getMatchByIdUseCase = mockk()
         getAllPlayerTimesUseCase = mockk()
-        getPlayersUseCase = mockk()
         registerGoalUseCase = mockk(relaxed = true)
         shouldShowInvalidSubstitutionAlertUseCase = mockk()
         analyticsTracker = mockk(relaxed = true)
@@ -91,7 +88,6 @@ class MatchViewModelGoalTest {
 
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(match)
         every { getAllPlayerTimesUseCase(any()) } returns flowOf(emptyList())
-        every { getPlayersUseCase() } returns flowOf(players)
     }
 
     private val getMatchTimelineUseCaseStub: GetMatchTimelineUseCase = mockk {
@@ -107,7 +103,6 @@ class MatchViewModelGoalTest {
         matchId = MATCH_ID,
         getMatchById = getMatchByIdUseCase,
         getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-        getPlayersUseCase = getPlayersUseCase,
         finishMatch = mockk(relaxed = true),
         pauseMatch = mockk(relaxed = true),
         resumeMatchUseCase = mockk(relaxed = true),
@@ -129,7 +124,7 @@ class MatchViewModelGoalTest {
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = mockk(relaxed = true),
         getTeamUseCase = mockk(relaxed = true),
-        getPlayersByTeamUseCase = mockk(relaxed = true),
+        getPlayersByTeamUseCase = mockk { every { this@mockk(any()) } returns flowOf(players) },
     )
 
     @Test

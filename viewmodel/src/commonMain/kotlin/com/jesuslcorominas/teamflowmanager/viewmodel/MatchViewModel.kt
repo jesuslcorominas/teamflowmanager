@@ -17,7 +17,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MatchEventNotification
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
@@ -39,6 +38,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -46,7 +47,6 @@ class MatchViewModel(
     private val matchId: String,
     private val getMatchById: GetMatchByIdUseCase,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
-    private val getPlayersUseCase: GetPlayersUseCase,
     private val getPlayersByTeamUseCase: GetPlayersByTeamUseCase,
     private val finishMatch: FinishMatchUseCase,
     private val pauseMatch: PauseMatchUseCase,
@@ -617,7 +617,9 @@ class MatchViewModel(
             combine(
                 getMatchById(matchId),
                 getAllPlayerTimesUseCase(matchId),
-                getPlayersUseCase(),
+                getMatchById(matchId).flatMapLatest { match ->
+                    if (match == null) flowOf(emptyList()) else getPlayersByTeamUseCase(match.teamId)
+                },
                 _currentTime,
                 getMatchTimelineUseCase(matchId),
             ) { match, playerTimes, players, currentTime, timeline ->

@@ -51,7 +51,7 @@ class GetMatchSummaryUseCaseTest {
             every { matchRepository.getMatchById(matchId) } returns flowOf(null)
             every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
             every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-            every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
+            every { playerRepository.getPlayersByTeam(any()) } returns flowOf(emptyList())
 
             // When
             val result = getMatchSummaryUseCase(matchId).first()
@@ -84,7 +84,7 @@ class GetMatchSummaryUseCaseTest {
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
             every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(playerTimes)
             every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-            every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
+            every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2))
 
             // When
             val result = getMatchSummaryUseCase(matchId).first()
@@ -124,7 +124,7 @@ class GetMatchSummaryUseCaseTest {
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
             every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
             every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
-            every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2, player3))
+            every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2, player3))
 
             // When
             val result = getMatchSummaryUseCase(matchId).first()
@@ -157,7 +157,7 @@ class GetMatchSummaryUseCaseTest {
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(playerTimes)
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(emptyList()) // player 99 not found
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(emptyList()) // player 99 not found
 
         // When — should not throw; entry is skipped
         val result = getMatchSummaryUseCase(matchId).first()
@@ -181,7 +181,7 @@ class GetMatchSummaryUseCaseTest {
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1)) // player 99 absent
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1)) // player 99 absent
 
         // When — should not throw; entry is skipped
         val result = getMatchSummaryUseCase(matchId).first()
@@ -205,7 +205,7 @@ class GetMatchSummaryUseCaseTest {
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1)) // player 99 absent
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1)) // player 99 absent
 
         // When — should not throw; entry is skipped
         val result = getMatchSummaryUseCase(matchId).first()
@@ -230,7 +230,7 @@ class GetMatchSummaryUseCaseTest {
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
             every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
             every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-            every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
+            every { playerRepository.getPlayersByTeam(any()) } returns flowOf(emptyList())
 
             // When
             val result = getMatchSummaryUseCase(matchId).first()

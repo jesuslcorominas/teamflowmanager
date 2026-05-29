@@ -225,7 +225,6 @@ val iosModule =
                 matchId = params.get(),
                 getMatchById = get(),
                 getAllPlayerTimesUseCase = get(),
-                getPlayersUseCase = get(),
                 getPlayersByTeamUseCase = get(),
                 finishMatch = get(),
                 pauseMatch = get(),

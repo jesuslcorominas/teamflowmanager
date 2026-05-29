@@ -10,6 +10,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 
 internal class GetMatchSummaryUseCaseImpl(
     private val matchRepository: MatchRepository,
@@ -18,51 +20,52 @@ internal class GetMatchSummaryUseCaseImpl(
     private val playerRepository: PlayerRepository,
 ) : GetMatchSummaryUseCase {
     override fun invoke(matchId: String): Flow<MatchSummary?> {
-        return combine(
-            matchRepository.getMatchById(matchId),
-            playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId),
-            playerSubstitutionRepository.getMatchSubstitutions(matchId),
-            playerRepository.getAllPlayers(),
-        ) { match, playerTimes, substitutions, players ->
+        return matchRepository.getMatchById(matchId).flatMapLatest { match ->
             if (match == null) {
-                null
+                flowOf(null)
             } else {
-                val playerTimeSummaries =
-                    playerTimes.mapNotNull { playerTime ->
-                        val player =
-                            players.find { it.id == playerTime.playerId }
-                                ?: return@mapNotNull null // pre-migration Long player ID — skip
-                        val substitutionCount =
-                            substitutions.count {
-                                it.playerOutId == playerTime.playerId || it.playerInId == playerTime.playerId
-                            }
-                        PlayerTimeSummary(
-                            player = player,
-                            elapsedTimeMillis = playerTime.elapsedTimeMillis,
-                            substitutionCount = substitutionCount,
-                        )
-                    }.sortedByDescending { it.elapsedTimeMillis }
+                combine(
+                    playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId),
+                    playerSubstitutionRepository.getMatchSubstitutions(matchId),
+                    playerRepository.getPlayersByTeam(match.teamId),
+                ) { playerTimes, substitutions, players ->
+                    val playerTimeSummaries =
+                        playerTimes.mapNotNull { playerTime ->
+                            val player =
+                                players.find { it.id == playerTime.playerId }
+                                    ?: return@mapNotNull null // pre-migration Long player ID — skip
+                            val substitutionCount =
+                                substitutions.count {
+                                    it.playerOutId == playerTime.playerId || it.playerInId == playerTime.playerId
+                                }
+                            PlayerTimeSummary(
+                                player = player,
+                                elapsedTimeMillis = playerTime.elapsedTimeMillis,
+                                substitutionCount = substitutionCount,
+                            )
+                        }.sortedByDescending { it.elapsedTimeMillis }
 
-                val substitutionSummaries =
-                    substitutions.mapNotNull { substitution ->
-                        val playerOut =
-                            players.find { it.id == substitution.playerOutId }
-                                ?: return@mapNotNull null // pre-migration Long player ID — skip
-                        val playerIn =
-                            players.find { it.id == substitution.playerInId }
-                                ?: return@mapNotNull null // pre-migration Long player ID — skip
-                        SubstitutionSummary(
-                            playerOut = playerOut,
-                            playerIn = playerIn,
-                            matchElapsedTimeMillis = substitution.matchElapsedTimeMillis,
-                        )
-                    }.sortedBy { it.matchElapsedTimeMillis }
+                    val substitutionSummaries =
+                        substitutions.mapNotNull { substitution ->
+                            val playerOut =
+                                players.find { it.id == substitution.playerOutId }
+                                    ?: return@mapNotNull null // pre-migration Long player ID — skip
+                            val playerIn =
+                                players.find { it.id == substitution.playerInId }
+                                    ?: return@mapNotNull null // pre-migration Long player ID — skip
+                            SubstitutionSummary(
+                                playerOut = playerOut,
+                                playerIn = playerIn,
+                                matchElapsedTimeMillis = substitution.matchElapsedTimeMillis,
+                            )
+                        }.sortedBy { it.matchElapsedTimeMillis }
 
-                MatchSummary(
-                    match = match,
-                    playerTimes = playerTimeSummaries,
-                    substitutions = substitutionSummaries,
-                )
+                    MatchSummary(
+                        match = match,
+                        playerTimes = playerTimeSummaries,
+                        substitutions = substitutionSummaries,
+                    )
+                }
             }
         }
     }
