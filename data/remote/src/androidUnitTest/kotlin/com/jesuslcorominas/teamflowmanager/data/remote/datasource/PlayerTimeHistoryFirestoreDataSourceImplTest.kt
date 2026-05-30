@@ -188,13 +188,20 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val historyCollection = mockk<CollectionReference>()
         val historyQuery = mockk<Query>()
+        val historyQueryLegacy = mockk<Query>()
         val historyQuery2 = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereIn("playerId", listOf("1", 49L)) } returns historyQuery2
+        every { historyQuery.whereEqualTo("playerId", 49L) } returns historyQueryLegacy
+        every { historyQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { historyQuery.whereEqualTo("playerId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerTimeHistoryFirestoreModel(
@@ -209,7 +216,6 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
             "playerId" to "1", "matchId" to "1", "teamId" to "team-doc-id",
         )
         every { docSnapshot.id } returns "history-doc-id"
-        every { docSnapshot.toObject(PlayerTimeHistoryFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
         dataSource.getPlayerTimeHistory("1").test {
@@ -227,11 +233,18 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val historyCollection = mockk<CollectionReference>()
         val historyQuery = mockk<Query>()
+        val historyQueryLegacy = mockk<Query>()
         val historyQuery2 = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereIn("playerId", listOf("1", 49L)) } returns historyQuery2
+        every { historyQuery.whereEqualTo("playerId", 49L) } returns historyQueryLegacy
+        every { historyQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { historyQuery.whereEqualTo("playerId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
@@ -251,13 +264,20 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val historyCollection = mockk<CollectionReference>()
         val historyQuery = mockk<Query>()
+        val historyQueryLegacy = mockk<Query>()
         val historyQuery2 = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereIn("matchId", listOf("1", 49L)) } returns historyQuery2
+        every { historyQuery.whereEqualTo("matchId", 49L) } returns historyQueryLegacy
+        every { historyQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { historyQuery.whereEqualTo("matchId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerTimeHistoryFirestoreModel(
@@ -272,7 +292,6 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
             "playerId" to "1", "matchId" to "1", "teamId" to "team-doc-id",
         )
         every { docSnapshot.id } returns "history-doc-id"
-        every { docSnapshot.toObject(PlayerTimeHistoryFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
         dataSource.getMatchPlayerTimeHistory("1").test {
@@ -290,11 +309,18 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val historyCollection = mockk<CollectionReference>()
         val historyQuery = mockk<Query>()
+        val historyQueryLegacy = mockk<Query>()
         val historyQuery2 = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereIn("matchId", listOf("1", 49L)) } returns historyQuery2
+        every { historyQuery.whereEqualTo("matchId", 49L) } returns historyQueryLegacy
+        every { historyQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { historyQuery.whereEqualTo("matchId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
@@ -529,11 +555,18 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val historyCollection = mockk<CollectionReference>()
         val historyQuery = mockk<Query>()
+        val historyQueryLegacy = mockk<Query>()
         val historyQuery2 = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereIn("playerId", listOf("1", 49L)) } returns historyQuery2
+        every { historyQuery.whereEqualTo("playerId", 49L) } returns historyQueryLegacy
+        every { historyQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { historyQuery.whereEqualTo("playerId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         dataSource.getPlayerTimeHistory("1").test {
@@ -551,11 +584,18 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val historyCollection = mockk<CollectionReference>()
         val historyQuery = mockk<Query>()
+        val historyQueryLegacy = mockk<Query>()
         val historyQuery2 = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
 
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereIn("matchId", listOf("1", 49L)) } returns historyQuery2
+        every { historyQuery.whereEqualTo("matchId", 49L) } returns historyQueryLegacy
+        every { historyQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { historyQuery.whereEqualTo("matchId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         dataSource.getMatchPlayerTimeHistory("1").test {
@@ -608,9 +648,16 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
+        val historyQueryLegacy = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
         every { mockFirestore.collection("playerTimeHistory") } returns historyCollection
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
-        every { historyQuery.whereIn("matchId", listOf("1", 49L)) } returns historyQuery2
+        every { historyQuery.whereEqualTo("matchId", 49L) } returns historyQueryLegacy
+        every { historyQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { historyQuery.whereEqualTo("matchId", "1") } returns historyQuery2
         every { historyQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerTimeHistoryFirestoreModel(
@@ -622,7 +669,6 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
             "teamId" to "team-doc-id", "elapsedTimeMillis" to 5000L,
         )
         every { docSnapshot.id } returns "hist-doc-id"
-        every { docSnapshot.toObject(PlayerTimeHistoryFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
         dataSource.getMatchPlayerTimeHistory("1").test {

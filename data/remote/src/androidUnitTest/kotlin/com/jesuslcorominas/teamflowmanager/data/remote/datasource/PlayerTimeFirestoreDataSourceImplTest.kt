@@ -419,11 +419,18 @@ class PlayerTimeFirestoreDataSourceImplTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val playerTimesCollection = mockk<CollectionReference>()
         val playerTimesQuery = mockk<Query>()
+        val playerTimesQueryLegacy = mockk<Query>()
         val playerTimesQueryWithMatch = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
 
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.whereIn("matchId", listOf(MATCH_ID, 49L)) } returns playerTimesQueryWithMatch
+        every { playerTimesQuery.whereEqualTo("matchId", 49L) } returns playerTimesQueryLegacy
+        every { playerTimesQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQueryWithMatch
         every { playerTimesQueryWithMatch.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
@@ -471,13 +478,20 @@ class PlayerTimeFirestoreDataSourceImplTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val playerTimesCollection = mockk<CollectionReference>()
         val playerTimesQuery = mockk<Query>()
+        val playerTimesQueryLegacy = mockk<Query>()
         val playerTimesQueryWithMatch = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.whereIn("matchId", listOf(MATCH_ID, 49L)) } returns playerTimesQueryWithMatch
+        every { playerTimesQuery.whereEqualTo("matchId", 49L) } returns playerTimesQueryLegacy
+        every { playerTimesQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQueryWithMatch
         every { playerTimesQueryWithMatch.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerTimeFirestoreModel(
@@ -492,7 +506,6 @@ class PlayerTimeFirestoreDataSourceImplTest {
             "playerId" to "1", "matchId" to MATCH_ID, "teamId" to "team-doc-id",
         )
         every { docSnapshot.id } returns "player_1"
-        every { docSnapshot.toObject(PlayerTimeFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
         dataSource.getPlayerTimesByMatch(MATCH_ID).test {
@@ -511,11 +524,18 @@ class PlayerTimeFirestoreDataSourceImplTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val playerTimesCollection = mockk<CollectionReference>()
         val playerTimesQuery = mockk<Query>()
+        val playerTimesQueryLegacy = mockk<Query>()
         val playerTimesQueryWithMatch = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
 
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.whereIn("matchId", listOf(MATCH_ID, 49L)) } returns playerTimesQueryWithMatch
+        every { playerTimesQuery.whereEqualTo("matchId", 49L) } returns playerTimesQueryLegacy
+        every { playerTimesQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQueryWithMatch
         every { playerTimesQueryWithMatch.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         dataSource.getPlayerTimesByMatch(MATCH_ID).test {
@@ -626,9 +646,16 @@ class PlayerTimeFirestoreDataSourceImplTest {
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
+        val playerTimesQueryLegacy = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
         every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
         every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
-        every { playerTimesQuery.whereIn("matchId", listOf(MATCH_ID, 49L)) } returns playerTimesQuery2
+        every { playerTimesQuery.whereEqualTo("matchId", 49L) } returns playerTimesQueryLegacy
+        every { playerTimesQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQuery2
         every { playerTimesQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val model = PlayerTimeFirestoreModel(
@@ -636,7 +663,6 @@ class PlayerTimeFirestoreDataSourceImplTest {
         )
         every { docSnapshot.data } returns mapOf("playerId" to "player-1", "matchId" to MATCH_ID, "teamId" to "team-doc-id")
         every { docSnapshot.id } returns "pt-doc-id"
-        every { docSnapshot.toObject(PlayerTimeFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
         dataSource.getPlayerTimesByMatch(MATCH_ID).test {

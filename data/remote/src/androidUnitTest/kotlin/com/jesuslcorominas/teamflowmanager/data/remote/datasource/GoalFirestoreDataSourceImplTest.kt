@@ -166,24 +166,25 @@ class GoalFirestoreDataSourceImplTest {
 
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val goalsCollection = mockk<CollectionReference>()
-        val goalsQuery = mockk<Query>()
-        val goalsQuery2 = mockk<Query>()
+        val goalsQueryByTeam = mockk<Query>()
+        val goalsQueryLegacy = mockk<Query>()
+        val goalsQueryNew = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("goals") } returns goalsCollection
-        every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereIn("matchId", listOf("1", 49L)) } returns goalsQuery2
-        every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+        every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQueryByTeam
+        every { goalsQueryByTeam.whereEqualTo("matchId", 49L) } returns goalsQueryLegacy
+        every { goalsQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { goalsQueryByTeam.whereEqualTo("matchId", "1") } returns goalsQueryNew
+        every { goalsQueryNew.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
-        val model = GoalFirestoreModel(
-            id = "goal-doc-id",
-            teamId = "team-doc-id",
-            matchId = "1"
-        )
         every { docSnapshot.data } returns mapOf("matchId" to "1", "teamId" to "team-doc-id", "scorerId" to null)
         every { docSnapshot.id } returns "goal-doc-id"
-        every { docSnapshot.toObject(GoalFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
         dataSource.getMatchGoals("1").test {
@@ -200,13 +201,20 @@ class GoalFirestoreDataSourceImplTest {
 
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val goalsCollection = mockk<CollectionReference>()
-        val goalsQuery = mockk<Query>()
-        val goalsQuery2 = mockk<Query>()
+        val goalsQueryByTeam = mockk<Query>()
+        val goalsQueryLegacy = mockk<Query>()
+        val goalsQueryNew = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
 
         every { mockFirestore.collection("goals") } returns goalsCollection
-        every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereIn("matchId", listOf("1", 49L)) } returns goalsQuery2
-        every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+        every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQueryByTeam
+        every { goalsQueryByTeam.whereEqualTo("matchId", 49L) } returns goalsQueryLegacy
+        every { goalsQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { goalsQueryByTeam.whereEqualTo("matchId", "1") } returns goalsQueryNew
+        every { goalsQueryNew.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
 
@@ -417,13 +425,20 @@ class GoalFirestoreDataSourceImplTest {
 
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val goalsCollection = mockk<CollectionReference>()
-        val goalsQuery = mockk<Query>()
-        val goalsQuery2 = mockk<Query>()
+        val goalsQueryByTeam = mockk<Query>()
+        val goalsQueryLegacy = mockk<Query>()
+        val goalsQueryNew = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
 
         every { mockFirestore.collection("goals") } returns goalsCollection
-        every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereIn("matchId", listOf("1", 49L)) } returns goalsQuery2
-        every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+        every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQueryByTeam
+        every { goalsQueryByTeam.whereEqualTo("matchId", 49L) } returns goalsQueryLegacy
+        every { goalsQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { goalsQueryByTeam.whereEqualTo("matchId", "1") } returns goalsQueryNew
+        every { goalsQueryNew.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         dataSource.getMatchGoals("1").test {
             listenerSlot.captured.onEvent(null, null)
@@ -485,20 +500,25 @@ class GoalFirestoreDataSourceImplTest {
 
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val goalsCollection = mockk<CollectionReference>()
-        val goalsQuery = mockk<Query>()
-        val goalsQuery2 = mockk<Query>()
+        val goalsQueryByTeam = mockk<Query>()
+        val goalsQueryLegacy = mockk<Query>()
+        val goalsQueryNew = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val legacySnapshot = mockk<QuerySnapshot>()
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("goals") } returns goalsCollection
-        every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
-        every { goalsQuery.whereIn("matchId", listOf("1", 49L)) } returns goalsQuery2
-        every { goalsQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+        every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQueryByTeam
+        every { goalsQueryByTeam.whereEqualTo("matchId", 49L) } returns goalsQueryLegacy
+        every { goalsQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } returns legacySnapshot
+        every { legacySnapshot.documents } returns emptyList()
+        every { goalsQueryByTeam.whereEqualTo("matchId", "1") } returns goalsQueryNew
+        every { goalsQueryNew.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
-        val model = GoalFirestoreModel(id = "goal-doc-id", teamId = "team-doc-id", matchId = "1")
         every { docSnapshot.data } returns mapOf("matchId" to "1", "teamId" to "team-doc-id", "scorerId" to null)
         every { docSnapshot.id } returns "goal-doc-id"
-        every { docSnapshot.toObject(GoalFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
         dataSource.getMatchGoals("1").test {
