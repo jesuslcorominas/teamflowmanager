@@ -10,6 +10,7 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -364,7 +365,18 @@ fun Navigation(
             val matchId =
                 backStackEntry.arguments?.getString(Route.Match.ARG_MATCH_ID)
                     ?: error("matchId required")
-            MatchScreen(matchId = matchId, onTitleChange = onTitleChange)
+            // Pre-migration deep links in notifications stored a Long hash as the matchId.
+            // The hash is not reversible, so we cannot locate the original Firestore document.
+            // Redirect to the matches list instead of showing an empty screen.
+            if (matchId.all { it.isDigit() }) {
+                LaunchedEffect(matchId) {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Match.FULL_ROUTE) { inclusive = true }
+                    }
+                }
+            } else {
+                MatchScreen(matchId = matchId, onTitleChange = onTitleChange)
+            }
         }
 
         composable(route = Route.Settings.createRoute()) {

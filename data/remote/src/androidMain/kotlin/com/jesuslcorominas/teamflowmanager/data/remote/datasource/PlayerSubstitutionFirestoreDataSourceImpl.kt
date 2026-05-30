@@ -6,23 +6,13 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstituti
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerSubstitutionFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
-
-// Pre-migration documents stored matchId/playerOutId/playerInId as Long (hash of Firestore doc ID).
-private fun String.toLegacyId(): Long {
-    var result = 0L
-    var multiplier = 1L
-    for (char in this) {
-        result += char.code.toLong() * multiplier
-        multiplier *= 31L
-    }
-    return kotlin.math.abs(result)
-}
 
 /**
  * Firestore-based implementation of PlayerSubstitutionDataSource.
@@ -64,6 +54,30 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 null
             }
 
+    private fun parseSubstitutionDocument(
+        rawData: Map<String, Any?>?,
+        docId: String,
+        teamDocId: String,
+        matchId: String,
+    ): PlayerSubstitution? {
+        if (rawData == null) return null
+        return try {
+            val rawPlayerOutId = rawData["playerOutId"]?.toString() ?: ""
+            val rawPlayerInId = rawData["playerInId"]?.toString() ?: ""
+            PlayerSubstitutionFirestoreModel(
+                id = docId,
+                teamId = rawData["teamId"] as? String ?: teamDocId,
+                matchId = matchId,
+                playerOutId = rawPlayerOutId,
+                playerInId = rawPlayerInId,
+                substitutionTimeMillis = rawData["substitutionTimeMillis"] as? Long ?: 0L,
+                matchElapsedTimeMillis = rawData["matchElapsedTimeMillis"] as? Long ?: 0L,
+            ).toDomain()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     override fun getMatchSubstitutions(matchId: String): Flow<List<PlayerSubstitution>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
@@ -80,51 +94,37 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
+            // One-time fetch for legacy Long-ID docs (pre-migration).
+            // TODO: remove after backward-compat window closes.
+            val legacySubstitutions =
+                try {
+                    firestore.collection(SUBSTITUTIONS_COLLECTION)
+                        .whereEqualTo("teamId", teamDocId)
+                        .whereEqualTo("matchId", matchId.toLegacyId())
+                        .get()
+                        .await()
+                        .documents.mapNotNull { document ->
+                            parseSubstitutionDocument(document.data, document.id, teamDocId, matchId)
+                        }
+                } catch (_: Exception) {
+                    emptyList()
+                }
+
+            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(SUBSTITUTIONS_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
-                    .whereIn("matchId", listOf(matchId, matchId.toLegacyId()))
+                    .whereEqualTo("matchId", matchId)
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
                             return@addSnapshotListener
                         }
-                        val substitutions =
+                        val newSubstitutions =
                             snapshot?.documents?.mapNotNull { document ->
-                                try {
-                                    val rawData = document.data ?: return@mapNotNull null
-                                    val rawPlayerOutId = rawData["playerOutId"]?.toString() ?: ""
-                                    val rawPlayerInId = rawData["playerInId"]?.toString() ?: ""
-                                    val model =
-                                        try {
-                                            document.toObject(
-                                                PlayerSubstitutionFirestoreModel::class.java,
-                                            ) ?: return@mapNotNull null
-                                        } catch (_: Exception) {
-                                            PlayerSubstitutionFirestoreModel(
-                                                teamId = rawData["teamId"] as? String ?: teamDocId,
-                                                matchId = matchId,
-                                                playerOutId = rawPlayerOutId,
-                                                playerInId = rawPlayerInId,
-                                                substitutionTimeMillis =
-                                                    rawData["substitutionTimeMillis"] as? Long ?: 0L,
-                                                matchElapsedTimeMillis =
-                                                    rawData["matchElapsedTimeMillis"] as? Long ?: 0L,
-                                            )
-                                        }
-                                    model
-                                        .copy(
-                                            id = document.id,
-                                            matchId = matchId,
-                                            playerOutId = rawPlayerOutId,
-                                            playerInId = rawPlayerInId,
-                                        )
-                                        .toDomain()
-                                } catch (_: Exception) {
-                                    null
-                                }
+                                parseSubstitutionDocument(document.data, document.id, teamDocId, matchId)
                             } ?: emptyList()
-                        trySend(substitutions)
+                        trySend(legacySubstitutions + newSubstitutions)
                     }
 
             awaitClose { listenerRegistration.remove() }

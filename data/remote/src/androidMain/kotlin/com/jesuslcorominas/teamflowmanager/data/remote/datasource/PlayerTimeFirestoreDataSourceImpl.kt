@@ -6,23 +6,13 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSo
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
-
-// Pre-migration documents stored matchId/playerId as Long (hash of Firestore doc ID).
-private fun String.toLegacyId(): Long {
-    var result = 0L
-    var multiplier = 1L
-    for (char in this) {
-        result += char.code.toLong() * multiplier
-        multiplier *= 31L
-    }
-    return kotlin.math.abs(result)
-}
 
 /**
  * Firestore-based implementation of PlayerTimeDataSource.
@@ -138,6 +128,31 @@ class PlayerTimeFirestoreDataSourceImpl(
                 null
             }
 
+    private fun parsePlayerTimeDocument(
+        rawData: Map<String, Any?>?,
+        docId: String,
+        teamDocId: String,
+        matchId: String,
+    ): PlayerTime? {
+        if (rawData == null) return null
+        return try {
+            val rawPlayerId = rawData["playerId"]?.toString() ?: ""
+            PlayerTimeFirestoreModel(
+                id = docId,
+                teamId = rawData["teamId"] as? String ?: teamDocId,
+                matchId = matchId,
+                playerId = rawPlayerId,
+                elapsedTimeMillis = rawData["elapsedTimeMillis"] as? Long ?: 0L,
+                isRunning = rawData["running"] as? Boolean ?: false,
+                lastStartTimeMillis = rawData["lastStartTimeMillis"] as? Long,
+                status = rawData["status"] as? String ?: "ON_BENCH",
+                lastOperationId = rawData["lastOperationId"] as? String,
+            ).toDomain()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     /**
      * Gets player times scoped to a specific match from Firestore as a real-time Flow.
      * Documents from previous matches (matchId mismatch) are ignored automatically,
@@ -161,65 +176,40 @@ class PlayerTimeFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
+            // One-time fetch for legacy Long-ID docs (pre-migration).
+            // TODO: remove after backward-compat window closes.
+            val legacyPlayerTimes =
+                try {
+                    firestore.collection(PLAYER_TIMES_COLLECTION)
+                        .whereEqualTo("teamId", teamDocId)
+                        .whereEqualTo("matchId", matchId.toLegacyId())
+                        .get()
+                        .await()
+                        .documents.mapNotNull { document ->
+                            parsePlayerTimeDocument(document.data, document.id, teamDocId, matchId)
+                        }
+                } catch (_: Exception) {
+                    emptyList()
+                }
+
+            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(PLAYER_TIMES_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
-                    .whereIn("matchId", listOf(matchId, matchId.toLegacyId()))
+                    .whereEqualTo("matchId", matchId)
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
                             return@addSnapshotListener
                         }
-
-                        if (snapshot == null) {
-                            trySend(emptyList())
-                            return@addSnapshotListener
-                        }
-
-                        val playerTimes =
-                            snapshot.documents.mapNotNull { document ->
-                                try {
-                                    val rawData = document.data ?: return@mapNotNull null
-                                    val rawPlayerId = rawData["playerId"]?.toString() ?: ""
-                                    val model =
-                                        try {
-                                            document.toObject(PlayerTimeFirestoreModel::class.java)
-                                                ?: return@mapNotNull null
-                                        } catch (_: Exception) {
-                                            PlayerTimeFirestoreModel(
-                                                teamId = rawData["teamId"] as? String ?: teamDocId,
-                                                matchId = matchId,
-                                                playerId = rawPlayerId,
-                                                elapsedTimeMillis =
-                                                    rawData["elapsedTimeMillis"] as? Long ?: 0L,
-                                                isRunning = rawData["running"] as? Boolean ?: false,
-                                                lastStartTimeMillis =
-                                                    rawData["lastStartTimeMillis"] as? Long,
-                                                status =
-                                                    rawData["status"] as? String
-                                                        ?: "ON_BENCH",
-                                                lastOperationId =
-                                                    rawData["lastOperationId"] as? String,
-                                            )
-                                        }
-                                    model
-                                        .copy(
-                                            id = document.id,
-                                            matchId = matchId,
-                                            playerId = rawPlayerId,
-                                        )
-                                        .toDomain()
-                                } catch (_: Exception) {
-                                    null
-                                }
-                            }
-
-                        trySend(playerTimes)
+                        val newPlayerTimes =
+                            snapshot?.documents?.mapNotNull { document ->
+                                parsePlayerTimeDocument(document.data, document.id, teamDocId, matchId)
+                            } ?: emptyList()
+                        trySend(legacyPlayerTimes + newPlayerTimes)
                     }
 
-            awaitClose {
-                listenerRegistration.remove()
-            }
+            awaitClose { listenerRegistration.remove() }
         }
 
     /**

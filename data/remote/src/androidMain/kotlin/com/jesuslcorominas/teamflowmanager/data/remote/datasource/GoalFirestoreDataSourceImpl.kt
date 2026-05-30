@@ -6,24 +6,13 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.GoalFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
-
-// Pre-migration documents stored matchId/scorerId/playerId as Long (hash of Firestore doc ID).
-// This function reimplements the deleted toStableId() so we can query both old and new formats.
-private fun String.toLegacyId(): Long {
-    var result = 0L
-    var multiplier = 1L
-    for (char in this) {
-        result += char.code.toLong() * multiplier
-        multiplier *= 31L
-    }
-    return kotlin.math.abs(result)
-}
 
 /**
  * Firestore-based implementation of GoalDataSource.
@@ -65,6 +54,36 @@ class GoalFirestoreDataSourceImpl(
                 null
             }
 
+    private fun parseGoalDocument(
+        rawData: Map<String, Any?>?,
+        docId: String,
+        teamDocId: String,
+        matchId: String,
+    ): Goal? {
+        if (rawData == null) return null
+        return try {
+            val rawScorerId = rawData["scorerId"]?.toString()
+            val model =
+                try {
+                    GoalFirestoreModel(
+                        id = docId,
+                        teamId = rawData["teamId"] as? String ?: teamDocId,
+                        matchId = matchId,
+                        scorerId = rawScorerId,
+                        goalTimeMillis = rawData["goalTimeMillis"] as? Long ?: 0L,
+                        matchElapsedTimeMillis = rawData["matchElapsedTimeMillis"] as? Long ?: 0L,
+                        isOpponentGoal = rawData["opponentGoal"] as? Boolean ?: false,
+                        isOwnGoal = rawData["ownGoal"] as? Boolean ?: false,
+                    )
+                } catch (_: Exception) {
+                    return null
+                }
+            model.toDomain()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     override fun getMatchGoals(matchId: String): Flow<List<Goal>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
@@ -81,53 +100,37 @@ class GoalFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
+            // One-time fetch for legacy Long-ID docs (pre-migration).
+            // TODO: remove after backward-compat window closes.
+            val legacyGoals =
+                try {
+                    firestore.collection(GOALS_COLLECTION)
+                        .whereEqualTo("teamId", teamDocId)
+                        .whereEqualTo("matchId", matchId.toLegacyId())
+                        .get()
+                        .await()
+                        .documents.mapNotNull { document ->
+                            parseGoalDocument(document.data, document.id, teamDocId, matchId)
+                        }
+                } catch (_: Exception) {
+                    emptyList()
+                }
+
+            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(GOALS_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
-                    .whereIn("matchId", listOf(matchId, matchId.toLegacyId()))
+                    .whereEqualTo("matchId", matchId)
                     .addSnapshotListener { snapshot, error ->
                         if (error != null) {
                             trySend(emptyList())
                             return@addSnapshotListener
                         }
-                        val goals =
+                        val newGoals =
                             snapshot?.documents?.mapNotNull { document ->
-                                try {
-                                    val rawData = document.data ?: return@mapNotNull null
-                                    val rawMatchId = rawData["matchId"]?.toString() ?: ""
-                                    val rawScorerId = rawData["scorerId"]?.toString()
-                                    val model =
-                                        try {
-                                            document.toObject(GoalFirestoreModel::class.java)
-                                                ?: return@mapNotNull null
-                                        } catch (_: Exception) {
-                                            GoalFirestoreModel(
-                                                teamId = rawData["teamId"] as? String ?: teamDocId,
-                                                matchId = rawMatchId,
-                                                scorerId = rawScorerId,
-                                                goalTimeMillis =
-                                                    rawData["goalTimeMillis"] as? Long
-                                                        ?: 0L,
-                                                matchElapsedTimeMillis =
-                                                    rawData["matchElapsedTimeMillis"] as? Long
-                                                        ?: 0L,
-                                                isOpponentGoal =
-                                                    rawData["opponentGoal"] as? Boolean ?: false,
-                                                isOwnGoal = rawData["ownGoal"] as? Boolean ?: false,
-                                            )
-                                        }
-                                    model
-                                        .copy(
-                                            id = document.id,
-                                            matchId = matchId,
-                                            scorerId = rawScorerId,
-                                        )
-                                        .toDomain()
-                                } catch (_: Exception) {
-                                    null
-                                }
+                                parseGoalDocument(document.data, document.id, teamDocId, matchId)
                             } ?: emptyList()
-                        trySend(goals)
+                        trySend(legacyGoals + newGoals)
                     }
 
             awaitClose { listenerRegistration.remove() }
@@ -173,6 +176,7 @@ class GoalFirestoreDataSourceImpl(
                 ?: throw IllegalStateException("Team must exist to create a goal")
 
         val docRef = firestore.collection(GOALS_COLLECTION).document()
+        // id is overridden with the Firestore-assigned doc ID so the stored field matches the document path.
         val firestoreModel = goal.toFirestoreModel().copy(id = docRef.id, teamId = teamDocId)
 
         try {

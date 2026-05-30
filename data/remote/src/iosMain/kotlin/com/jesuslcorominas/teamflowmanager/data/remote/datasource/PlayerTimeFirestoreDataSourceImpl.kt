@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSo
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -11,20 +12,11 @@ import dev.gitlive.firebase.firestore.FirebaseFirestoreException
 import dev.gitlive.firebase.firestore.where
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.coroutines.cancellation.CancellationException
-
-private fun String.toLegacyId(): Long {
-    var result = 0L
-    var multiplier = 1L
-    for (char in this) {
-        result += char.code.toLong() * multiplier
-        multiplier *= 31L
-    }
-    return kotlin.math.abs(result)
-}
 
 class PlayerTimeFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
@@ -102,20 +94,35 @@ class PlayerTimeFirestoreDataSourceImpl(
                 emit(emptyList())
                 return@flow
             }
-            val snapshots =
+            // Combine two real-time listeners: one for new String-ID docs, one for legacy Long-ID docs.
+            // TODO: remove legacy branch after backward-compat window closes.
+            val newSnapshots =
                 firestore.collection(PLAYER_TIMES_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
-                    .where { "matchId" inArray listOf(matchId, matchId.toLegacyId()) }
+                    .where { "matchId" equalTo matchId }
+                    .snapshots
+            val legacySnapshots =
+                firestore.collection(PLAYER_TIMES_COLLECTION)
+                    .where { "teamId" equalTo teamDocId }
+                    .where { "matchId" equalTo matchId.toLegacyId() }
                     .snapshots
             emitAll(
-                snapshots.map { qs ->
-                    qs.documents.mapNotNull { doc ->
+                combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
+                    val newTimes = newQs.documents.mapNotNull { doc ->
                         try {
                             doc.data<PlayerTimeFirestoreModel>().copy(matchId = matchId).toDomain()
                         } catch (_: Exception) {
                             null
                         }
                     }
+                    val legacyTimes = legacyQs.documents.mapNotNull { doc ->
+                        try {
+                            doc.data<PlayerTimeFirestoreModel>().copy(matchId = matchId).toDomain()
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
+                    newTimes + legacyTimes
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                 },
