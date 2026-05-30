@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlin.coroutines.cancellation.CancellationException
 
 class PlayerSubstitutionFirestoreDataSourceImpl(
@@ -69,24 +68,26 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                     .snapshots
             emitAll(
                 combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
-                    val newSubs = newQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerSubstitutionFirestoreModel>()
-                                .copy(id = doc.id, matchId = matchId)
-                                .toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val newSubs =
+                        newQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerSubstitutionFirestoreModel>()
+                                    .copy(id = doc.id, matchId = matchId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
-                    val legacySubs = legacyQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerSubstitutionFirestoreModel>()
-                                .copy(id = doc.id, matchId = matchId)
-                                .toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val legacySubs =
+                        legacyQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerSubstitutionFirestoreModel>()
+                                    .copy(id = doc.id, matchId = matchId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
                     newSubs + legacySubs
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e

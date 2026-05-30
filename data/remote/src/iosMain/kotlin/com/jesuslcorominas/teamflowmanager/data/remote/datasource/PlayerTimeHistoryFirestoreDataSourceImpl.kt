@@ -69,24 +69,26 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                     .snapshots
             emitAll(
                 combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
-                    val newHistory = newQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerTimeHistoryFirestoreModel>()
-                                .copy(id = doc.id, playerId = playerId)
-                                .toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val newHistory =
+                        newQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeHistoryFirestoreModel>()
+                                    .copy(id = doc.id, playerId = playerId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
-                    val legacyHistory = legacyQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerTimeHistoryFirestoreModel>()
-                                .copy(id = doc.id, playerId = playerId)
-                                .toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val legacyHistory =
+                        legacyQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeHistoryFirestoreModel>()
+                                    .copy(id = doc.id, playerId = playerId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
                     newHistory + legacyHistory
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -120,24 +122,26 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                     .snapshots
             emitAll(
                 combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
-                    val newHistory = newQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerTimeHistoryFirestoreModel>()
-                                .copy(id = doc.id, matchId = matchId)
-                                .toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val newHistory =
+                        newQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeHistoryFirestoreModel>()
+                                    .copy(id = doc.id, matchId = matchId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
-                    val legacyHistory = legacyQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerTimeHistoryFirestoreModel>()
-                                .copy(id = doc.id, matchId = matchId)
-                                .toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val legacyHistory =
+                        legacyQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeHistoryFirestoreModel>()
+                                    .copy(id = doc.id, matchId = matchId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
                     newHistory + legacyHistory
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e

@@ -108,20 +108,22 @@ class PlayerTimeFirestoreDataSourceImpl(
                     .snapshots
             emitAll(
                 combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
-                    val newTimes = newQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerTimeFirestoreModel>().copy(matchId = matchId).toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val newTimes =
+                        newQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeFirestoreModel>().copy(matchId = matchId).toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
-                    val legacyTimes = legacyQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerTimeFirestoreModel>().copy(matchId = matchId).toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val legacyTimes =
+                        legacyQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeFirestoreModel>().copy(matchId = matchId).toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
                     newTimes + legacyTimes
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e

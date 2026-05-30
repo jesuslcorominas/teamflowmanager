@@ -69,22 +69,24 @@ class GoalFirestoreDataSourceImpl(
                     .snapshots
             emitAll(
                 combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
-                    val newGoals = newQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<GoalFirestoreModel>().copy(id = doc.id, matchId = matchId)
-                                .toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val newGoals =
+                        newQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<GoalFirestoreModel>().copy(id = doc.id, matchId = matchId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
-                    val legacyGoals = legacyQs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<GoalFirestoreModel>().copy(id = doc.id, matchId = matchId)
-                                .toDomain()
-                        } catch (_: Exception) {
-                            null
+                    val legacyGoals =
+                        legacyQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<GoalFirestoreModel>().copy(id = doc.id, matchId = matchId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
                     newGoals + legacyGoals
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
