@@ -24,6 +24,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
     companion object {
         private const val SUBSTITUTIONS_COLLECTION = "substitutions"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     private suspend fun getTeamDocumentId(): String? {
@@ -42,6 +43,21 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         }
     }
 
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                val doc = firestore.collection(MATCHES_COLLECTION).document(matchId).get()
+                if (!doc.exists) {
+                    null
+                } else {
+                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+
     override fun getMatchSubstitutions(matchId: String): Flow<List<PlayerSubstitution>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
@@ -49,7 +65,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 emit(emptyList())
                 return@flow
             }
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 emit(emptyList())
                 return@flow

@@ -25,6 +25,7 @@ class PlayerTimeFirestoreDataSourceImpl(
     companion object {
         private const val PLAYER_TIMES_COLLECTION = "playerTimes"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     private suspend fun getTeamDocumentId(): String? {
@@ -82,6 +83,21 @@ class PlayerTimeFirestoreDataSourceImpl(
      *
      * Note: requires a composite Firestore index on playerTimes(teamId ASC, matchId ASC).
      */
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                val doc = firestore.collection(MATCHES_COLLECTION).document(matchId).get()
+                if (!doc.exists) {
+                    null
+                } else {
+                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+
     override fun getPlayerTimesByMatch(matchId: String): Flow<List<PlayerTime>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
@@ -89,7 +105,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                 emit(emptyList())
                 return@flow
             }
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 emit(emptyList())
                 return@flow

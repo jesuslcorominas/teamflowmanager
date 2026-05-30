@@ -692,4 +692,412 @@ class MatchFirestoreDataSourceImplTest {
             // expected
         }
     }
+
+    @Test
+    fun `givenGetMatchesByTeam_whenFirestoreReturnsMatches_thenEmitsMatches`() = runTest {
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val matchesCollection = mockk<CollectionReference>()
+        val matchQuery = mockk<Query>()
+        val querySnapshot = mockk<QuerySnapshot>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.whereEqualTo("teamId", "team-123") } returns matchQuery
+        every { matchQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val matchModel = MatchFirestoreModel(
+            id = "match-id",
+            teamId = "team-123",
+            opponent = "Opponent",
+            archived = false
+        )
+        every { docSnapshot.id } returns "match-id"
+        every { docSnapshot.data } returns mapOf(
+            "teamId" to "team-123",
+            "opponent" to "Opponent",
+            "archived" to false,
+            "squadCallUpIds" to emptyList<String>(),
+            "startingLineupIds" to emptyList<String>(),
+            "captainId" to "",
+        )
+        every { docSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
+        every { querySnapshot.documents } returns listOf(docSnapshot)
+
+        dataSource.getMatchesByTeam("team-123").test {
+            listenerSlot.captured.onEvent(querySnapshot, null)
+            val result = awaitItem()
+            assertEquals(1, result.size)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenGetMatchesByTeam_whenFirestoreError_thenEmitsEmptyList`() = runTest {
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val matchesCollection = mockk<CollectionReference>()
+        val matchQuery = mockk<Query>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.whereEqualTo("teamId", "team-123") } returns matchQuery
+        every { matchQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
+
+        dataSource.getMatchesByTeam("team-123").test {
+            listenerSlot.captured.onEvent(null, mockError)
+            val result = awaitItem()
+            assertEquals(emptyList<Match>(), result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenGetMatchesByTeam_whenNullSnapshot_thenEmitsEmptyList`() = runTest {
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val matchesCollection = mockk<CollectionReference>()
+        val matchQuery = mockk<Query>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.whereEqualTo("teamId", "team-123") } returns matchQuery
+        every { matchQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        dataSource.getMatchesByTeam("team-123").test {
+            listenerSlot.captured.onEvent(null, null)
+            val result = awaitItem()
+            assertEquals(emptyList<Match>(), result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenGetTeamDocumentId_whenCancellationException_thenRethrows`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+        val teamsCollection = mockk<CollectionReference>()
+        val teamQuery = mockk<Query>()
+        val teamTask = mockk<Task<QuerySnapshot>>()
+
+        every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
+        every { teamQuery.limit(1) } returns teamQuery
+        every { teamQuery.get() } returns teamTask
+        coEvery { teamTask.await() } throws kotlinx.coroutines.CancellationException("Cancelled")
+
+        // getScheduledMatches internally calls getTeamDocumentId which should rethrow
+        try {
+            dataSource.getScheduledMatches()
+            fail("Expected CancellationException")
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // expected
+        }
+    }
+
+    @Test
+    fun `givenUpdateMatch_whenCancellationException_thenRethrows`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+        val teamsCollection = mockk<CollectionReference>()
+        val teamQuery = mockk<Query>()
+        val teamTask = mockk<Task<QuerySnapshot>>()
+
+        every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
+        every { teamQuery.limit(1) } returns teamQuery
+        every { teamQuery.get() } returns teamTask
+        coEvery { teamTask.await() } throws kotlinx.coroutines.CancellationException("Cancelled")
+
+        val match = mockk<Match>(relaxed = true)
+
+        try {
+            dataSource.updateMatch(match)
+            fail("Expected CancellationException")
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // expected
+        }
+    }
+
+    @Test
+    fun `givenInsertMatch_whenCancellationException_thenRethrows`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+        val teamsCollection = mockk<CollectionReference>()
+        val teamQuery = mockk<Query>()
+        val teamTask = mockk<Task<QuerySnapshot>>()
+
+        every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
+        every { teamQuery.limit(1) } returns teamQuery
+        every { teamQuery.get() } returns teamTask
+        coEvery { teamTask.await() } throws kotlinx.coroutines.CancellationException("Cancelled")
+
+        val match = mockk<Match>(relaxed = true)
+
+        try {
+            dataSource.insertMatch(match)
+            fail("Expected CancellationException")
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // expected
+        }
+    }
+
+    @Test
+    fun `givenGetScheduledMatches_whenCancellationException_thenRethrows`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+        val teamsCollection = mockk<CollectionReference>()
+        val teamQuery = mockk<Query>()
+        val teamTask = mockk<Task<QuerySnapshot>>()
+
+        every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
+        every { teamQuery.limit(1) } returns teamQuery
+        every { teamQuery.get() } returns teamTask
+        coEvery { teamTask.await() } throws kotlinx.coroutines.CancellationException("Cancelled")
+
+        try {
+            dataSource.getScheduledMatches()
+            fail("Expected CancellationException")
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // expected
+        }
+    }
+
+    @Test
+    fun `givenDeleteMatch_whenExceptionThrown_thenSwallowsException`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("1") } returns matchDocRef
+        val voidTask = mockk<Task<Void>>()
+        every { matchDocRef.delete() } returns voidTask
+        coEvery { voidTask.await() } throws RuntimeException("Firestore error")
+
+        // Should not rethrow
+        dataSource.deleteMatch("1")
+    }
+
+    @Test
+    fun `givenUpdateMatchCaptain_whenExceptionThrown_thenSwallowsException`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("1") } returns matchDocRef
+        val updateTask = mockk<Task<Void>>()
+        every { matchDocRef.update(any<String>(), any()) } returns updateTask
+        coEvery { updateTask.await() } throws RuntimeException("Firestore error")
+
+        // Should not rethrow
+        dataSource.updateMatchCaptain("1", "captain-123")
+    }
+
+    @Test
+    fun `givenDocumentToMatch_whenPreMigrationDocument_thenHandlesLongValues`() = runTest {
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+
+        val listenerSlot = slot<com.google.firebase.firestore.EventListener<DocumentSnapshot>>()
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("match-id") } returns matchDocRef
+        every { matchDocRef.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        every { docSnapshot.id } returns "match-id"
+        every { docSnapshot.exists() } returns true
+        every { docSnapshot.getString("teamId") } returns "team-123"
+        every { docSnapshot.data } returns mapOf(
+            "teamId" to "team-123",
+            "opponent" to "Opponent",
+            "archived" to false,
+            "location" to "Home",
+            "squadCallUpIds" to listOf(1L, 2L), // Long values (pre-migration) will be filtered to empty
+            "startingLineupIds" to listOf(3L, 4L), // Long values (pre-migration) will be filtered to empty
+            "captainId" to 5L, // Long value (pre-migration) will be converted to empty string
+            "numberOfPeriods" to 2L,
+            "pauseCount" to 0L,
+            "goals" to 1L,
+            "opponentGoals" to 0L,
+            "timeoutStartTimeMillis" to 0L,
+            "status" to "SCHEDULED",
+            "periods" to emptyList<Any>(),
+        )
+        // Simulate the exception that occurs during deserialization - triggers slow path
+        every { docSnapshot.toObject(MatchFirestoreModel::class.java) } throws ClassCastException("Long cannot be cast to String")
+
+        dataSource.getMatchById("match-id").test {
+            listenerSlot.captured.onEvent(docSnapshot, null)
+            val result = awaitItem()
+            // The slow path handles this gracefully by extracting String fields and filtering lists
+            assertNotNull(result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenDocumentToMatch_whenNullData_thenReturnsNull`() = runTest {
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+
+        val listenerSlot = slot<com.google.firebase.firestore.EventListener<DocumentSnapshot>>()
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("match-id") } returns matchDocRef
+        every { matchDocRef.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        every { docSnapshot.exists() } returns true
+        every { docSnapshot.getString("teamId") } returns "team-123"
+        every { docSnapshot.data } returns null // Null data
+
+        dataSource.getMatchById("match-id").test {
+            listenerSlot.captured.onEvent(docSnapshot, null)
+            val result = awaitItem()
+            assertNull(result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenDocumentToMatch_whenExceptionDuringConversion_thenReturnsNull`() = runTest {
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+
+        val listenerSlot = slot<com.google.firebase.firestore.EventListener<DocumentSnapshot>>()
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("match-id") } returns matchDocRef
+        every { matchDocRef.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        every { docSnapshot.exists() } returns true
+        every { docSnapshot.getString("teamId") } returns "team-123"
+        every { docSnapshot.data } returns mapOf(
+            "teamId" to "team-123",
+            "opponent" to "Opponent",
+        )
+        every { docSnapshot.toObject(MatchFirestoreModel::class.java) } throws RuntimeException("Unexpected error")
+
+        dataSource.getMatchById("match-id").test {
+            listenerSlot.captured.onEvent(docSnapshot, null)
+            val result = awaitItem()
+            assertNull(result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenUpdateMatch_whenExceptionThrown_thenRethrows`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        setupUserWithTeam()
+
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("match-doc-id") } returns matchDocRef
+        val voidTask = mockk<Task<Void>>()
+        every { matchDocRef.set(any()) } returns voidTask
+        coEvery { voidTask.await() } throws RuntimeException("Firestore write failed")
+
+        val match = mockk<Match>(relaxed = true)
+        every { match.id } returns "match-doc-id"
+
+        try {
+            dataSource.updateMatch(match)
+            fail("Expected exception")
+        } catch (e: RuntimeException) {
+            assertEquals("Firestore write failed", e.message)
+        }
+    }
+
+    @Test
+    fun `givenGetMatchById_whenSnapshotHasNoTeamId_thenUsesEmptyString`() = runTest {
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+
+        val listenerSlot = slot<com.google.firebase.firestore.EventListener<DocumentSnapshot>>()
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document("match-id") } returns matchDocRef
+        every { matchDocRef.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val matchModel = MatchFirestoreModel(
+            id = "match-id",
+            teamId = "match-team-id",
+            opponent = "Opponent",
+            archived = false
+        )
+        every { docSnapshot.id } returns "match-id"
+        every { docSnapshot.exists() } returns true
+        every { docSnapshot.getString("teamId") } returns null // Null teamId in snapshot - will use "" in documentToMatch
+        every { docSnapshot.data } returns mapOf(
+            "opponent" to "Opponent",
+            "archived" to false,
+            "squadCallUpIds" to emptyList<String>(),
+            "startingLineupIds" to emptyList<String>(),
+            "captainId" to "",
+            "teamId" to "match-team-id", // raw data fallback
+        )
+        every { docSnapshot.toObject(MatchFirestoreModel::class.java) } returns matchModel
+
+        dataSource.getMatchById("match-id").test {
+            listenerSlot.captured.onEvent(docSnapshot, null)
+            val result = awaitItem()
+            assertNotNull(result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenGetTeamDocumentId_whenNoAuthUser_thenReturnsNull`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        every { mockAuth.currentUser } returns null
+
+        // getAllMatches internally calls getTeamDocumentId
+        dataSource.getAllMatches().test {
+            val result = awaitItem()
+            assertEquals(emptyList<Match>(), result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenGetTeamDocumentId_whenException_thenReturnsNull`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+        val teamsCollection = mockk<CollectionReference>()
+        val teamQuery = mockk<Query>()
+        val teamTask = mockk<Task<QuerySnapshot>>()
+
+        every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
+        every { teamQuery.limit(1) } returns teamQuery
+        every { teamQuery.get() } returns teamTask
+        coEvery { teamTask.await() } throws RuntimeException("Network error")
+
+        // getAllMatches internally calls getTeamDocumentId which should catch exception and return null
+        dataSource.getAllMatches().test {
+            val result = awaitItem()
+            assertEquals(emptyList<Match>(), result)
+            cancel()
+        }
+    }
 }

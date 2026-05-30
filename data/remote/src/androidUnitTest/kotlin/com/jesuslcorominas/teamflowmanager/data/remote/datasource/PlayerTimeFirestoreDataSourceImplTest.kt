@@ -673,6 +673,116 @@ class PlayerTimeFirestoreDataSourceImplTest {
         }
     }
 
+    @Test
+    fun `givenPresidentUserWithMatchDocException_whenGetPlayerTimesByMatch_thenEmitsEmptyList`() = runTest {
+        // President: match document fetch fails
+        setupUserWithNoTeam()
+
+        val matchesCollection = mockk<CollectionReference>()
+        val matchDocRef = mockk<DocumentReference>()
+        val matchDocTask = mockk<Task<DocumentSnapshot>>()
+        every { mockFirestore.collection("matches") } returns matchesCollection
+        every { matchesCollection.document(MATCH_ID) } returns matchDocRef
+        every { matchDocRef.get() } returns matchDocTask
+        coEvery { matchDocTask.await() } throws RuntimeException("Match fetch failed")
+
+        dataSource.getPlayerTimesByMatch(MATCH_ID).test {
+            val result = awaitItem()
+            assertEquals(emptyList<PlayerTime>(), result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenLegacyFetchThrowsException_whenGetPlayerTimesByMatch_thenContinuesWithRealTime`() = runTest {
+        setupUserWithTeam()
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val playerTimesCollection = mockk<CollectionReference>()
+        val playerTimesQuery = mockk<Query>()
+        val playerTimesQueryLegacy = mockk<Query>()
+        val playerTimesQuery2 = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val querySnapshot = mockk<QuerySnapshot>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
+        every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
+        every { playerTimesQuery.whereEqualTo("matchId", 49L) } returns playerTimesQueryLegacy
+        every { playerTimesQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } throws RuntimeException("Legacy fetch error")
+        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQuery2
+        every { playerTimesQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val model = PlayerTimeFirestoreModel(
+            id = "pt-doc-id", teamId = "team-doc-id", matchId = MATCH_ID, playerId = "player-1",
+        )
+        every { docSnapshot.data } returns mapOf("playerId" to "player-1", "matchId" to MATCH_ID, "teamId" to "team-doc-id")
+        every { docSnapshot.id } returns "pt-doc-id"
+        every { querySnapshot.documents } returns listOf(docSnapshot)
+
+        dataSource.getPlayerTimesByMatch(MATCH_ID).test {
+            listenerSlot.captured.onEvent(querySnapshot, null)
+            val result = awaitItem()
+            assertEquals(1, result.size)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenExceptionDuringSnapshot_whenGetPlayerTime_thenEmitsNull`() = runTest {
+        setupUserWithTeam()
+
+        val listenerSlot = slot<EventListener<DocumentSnapshot>>()
+        val playerTimesCollection = mockk<CollectionReference>()
+        val docRef = mockk<DocumentReference>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
+        every { playerTimesCollection.document("player_1") } returns docRef
+        every { docRef.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        every { docSnapshot.exists() } returns true
+        every { docSnapshot.toObject(PlayerTimeFirestoreModel::class.java) } throws RuntimeException("Parsing error")
+
+        dataSource.getPlayerTime("1").test {
+            listenerSlot.captured.onEvent(docSnapshot, null)
+            val result = awaitItem()
+            assertNull(result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenExceptionDuringLegacyPlayerTimeFetch_whenGetPlayerTimesByMatch_thenContinuesWithRealTime`() = runTest {
+        setupUserWithTeam()
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val playerTimesCollection = mockk<CollectionReference>()
+        val playerTimesQuery = mockk<Query>()
+        val playerTimesQueryLegacy = mockk<Query>()
+        val playerTimesQuery2 = mockk<Query>()
+        val legacyTask = mockk<Task<QuerySnapshot>>()
+        val querySnapshot = mockk<QuerySnapshot>()
+
+        every { mockFirestore.collection("playerTimes") } returns playerTimesCollection
+        every { playerTimesCollection.whereEqualTo("teamId", "team-doc-id") } returns playerTimesQuery
+        every { playerTimesQuery.whereEqualTo("matchId", 49L) } returns playerTimesQueryLegacy
+        every { playerTimesQueryLegacy.get() } returns legacyTask
+        coEvery { legacyTask.await() } throws RuntimeException("Legacy data error")
+        every { playerTimesQuery.whereEqualTo("matchId", MATCH_ID) } returns playerTimesQuery2
+        every { playerTimesQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        every { querySnapshot.documents } returns emptyList()
+
+        dataSource.getPlayerTimesByMatch(MATCH_ID).test {
+            listenerSlot.captured.onEvent(querySnapshot, null)
+            val result = awaitItem()
+            assertEquals(emptyList<PlayerTime>(), result)
+            cancel()
+        }
+    }
+
     companion object {
         private const val MATCH_ID = "1"
     }
