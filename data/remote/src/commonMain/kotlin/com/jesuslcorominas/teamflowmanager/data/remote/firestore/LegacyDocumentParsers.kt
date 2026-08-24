@@ -28,10 +28,21 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
  */
 private fun Map<String, Any?>.asLong(key: String): Long? = (this[key] as? Number)?.toLong()
 
+/**
+ * Reads a boolean Firestore field regardless of the concrete type the platform SDK produced.
+ * iOS/GitLive may surface booleans as NSNumber-backed [Number] (0/1) rather than [Boolean];
+ * a plain `as? Boolean` would then yield null and silently default to false.
+ */
+private fun Map<String, Any?>.asBoolean(key: String): Boolean? =
+    when (val value = this[key]) {
+        is Boolean -> value
+        is Number -> value.toInt() != 0
+        else -> null
+    }
+
 fun parseGoalDocument(
     rawData: Map<String, Any?>?,
     docId: String,
-    teamDocId: String,
     matchId: String,
 ): Goal? {
     if (rawData == null) return null
@@ -42,8 +53,8 @@ fun parseGoalDocument(
             scorerId = rawData["scorerId"]?.toString(),
             goalTimeMillis = rawData.asLong("goalTimeMillis") ?: 0L,
             matchElapsedTimeMillis = rawData.asLong("matchElapsedTimeMillis") ?: 0L,
-            isOpponentGoal = rawData["opponentGoal"] as? Boolean ?: false,
-            isOwnGoal = rawData["ownGoal"] as? Boolean ?: false,
+            isOpponentGoal = rawData.asBoolean("opponentGoal") ?: false,
+            isOwnGoal = rawData.asBoolean("ownGoal") ?: false,
         )
     } catch (_: Exception) {
         null
@@ -53,7 +64,6 @@ fun parseGoalDocument(
 fun parseSubstitutionDocument(
     rawData: Map<String, Any?>?,
     docId: String,
-    teamDocId: String,
     matchId: String,
 ): PlayerSubstitution? {
     if (rawData == null) return null
@@ -73,23 +83,21 @@ fun parseSubstitutionDocument(
 
 fun parsePlayerTimeDocument(
     rawData: Map<String, Any?>?,
-    docId: String,
-    teamDocId: String,
     matchId: String,
 ): PlayerTime? {
     if (rawData == null) return null
     return try {
         val rawPlayerId = rawData["playerId"]?.toString() ?: ""
-        val rawStatus = rawData["status"] as? String ?: PlayerTimeStatus.ON_BENCH.name
+        val rawStatus = rawData["status"] as? String
         PlayerTime(
             playerId = rawPlayerId,
             matchId = matchId,
             elapsedTimeMillis = rawData.asLong("elapsedTimeMillis") ?: 0L,
-            isRunning = rawData["running"] as? Boolean ?: false,
+            isRunning = rawData.asBoolean("running") ?: false,
             lastStartTimeMillis = rawData.asLong("lastStartTimeMillis"),
             status =
                 try {
-                    PlayerTimeStatus.valueOf(rawStatus)
+                    rawStatus?.let { PlayerTimeStatus.valueOf(it) } ?: PlayerTimeStatus.ON_BENCH
                 } catch (_: Exception) {
                     PlayerTimeStatus.ON_BENCH
                 },
@@ -103,7 +111,6 @@ fun parsePlayerTimeDocument(
 fun parsePlayerTimeHistoryDocument(
     rawData: Map<String, Any?>?,
     docId: String,
-    teamDocId: String,
     playerId: String,
     matchId: String,
 ): PlayerTimeHistory? {

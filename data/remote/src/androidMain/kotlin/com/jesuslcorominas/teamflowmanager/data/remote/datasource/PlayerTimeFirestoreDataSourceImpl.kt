@@ -162,7 +162,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                         .get()
                         .await()
                         .documents.mapNotNull { document ->
-                            parsePlayerTimeDocument(document.data, document.id, teamDocId, matchId)
+                            parsePlayerTimeDocument(document.data, matchId)
                         }
                 } catch (_: Exception) {
                     emptyList()
@@ -180,7 +180,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                         }
                         val newPlayerTimes =
                             snapshot?.documents?.mapNotNull { document ->
-                                parsePlayerTimeDocument(document.data, document.id, teamDocId, matchId)
+                                parsePlayerTimeDocument(document.data, matchId)
                             } ?: emptyList()
                         trySend(legacyPlayerTimes + newPlayerTimes)
                     }

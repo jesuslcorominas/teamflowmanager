@@ -82,7 +82,11 @@ class GoalFirestoreDataSourceImpl(
                     .snapshots
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
-                            parseGoalDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
+                            try {
+                                parseGoalDocument(doc.data<Map<String, Any?>>(), doc.id, matchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
                     }.catch { e ->
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -94,7 +98,11 @@ class GoalFirestoreDataSourceImpl(
                     .snapshots
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
-                            parseGoalDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
+                            try {
+                                parseGoalDocument(doc.data<Map<String, Any?>>(), doc.id, matchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
                     }.catch { e ->
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -121,9 +129,13 @@ class GoalFirestoreDataSourceImpl(
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
-                        val rawData = doc.data<Map<String, Any?>>()
-                        val rawMatchId = rawData["matchId"]?.toString() ?: ""
-                        parseGoalDocument(rawData, doc.id, teamDocId, rawMatchId)
+                        try {
+                            val rawData = doc.data<Map<String, Any?>>()
+                            val rawMatchId = rawData["matchId"]?.toString() ?: ""
+                            parseGoalDocument(rawData, doc.id, rawMatchId)
+                        } catch (_: Exception) {
+                            null
+                        }
                     }
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e

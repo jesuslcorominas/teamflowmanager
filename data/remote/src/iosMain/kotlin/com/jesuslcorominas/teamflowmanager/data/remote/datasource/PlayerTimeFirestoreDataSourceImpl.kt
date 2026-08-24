@@ -122,7 +122,11 @@ class PlayerTimeFirestoreDataSourceImpl(
                     .snapshots
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
-                            parsePlayerTimeDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
+                            try {
+                                parsePlayerTimeDocument(doc.data<Map<String, Any?>>(), matchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
                     }.catch { e ->
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -134,7 +138,11 @@ class PlayerTimeFirestoreDataSourceImpl(
                     .snapshots
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
-                            parsePlayerTimeDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
+                            try {
+                                parsePlayerTimeDocument(doc.data<Map<String, Any?>>(), matchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
                     }.catch { e ->
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e

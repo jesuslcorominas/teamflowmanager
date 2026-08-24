@@ -80,7 +80,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         .await()
                         .documents.mapNotNull { document ->
                             val rawMatchId = document.data?.get("matchId")?.toString() ?: ""
-                            parsePlayerTimeHistoryDocument(document.data, document.id, teamDocId, playerId, rawMatchId)
+                            parsePlayerTimeHistoryDocument(document.data, document.id, playerId, rawMatchId)
                         }
                 } catch (_: Exception) {
                     emptyList()
@@ -99,7 +99,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         val newHistory =
                             snapshot?.documents?.mapNotNull { document ->
                                 val rawMatchId = document.data?.get("matchId")?.toString() ?: ""
-                                parsePlayerTimeHistoryDocument(document.data, document.id, teamDocId, playerId, rawMatchId)
+                                parsePlayerTimeHistoryDocument(document.data, document.id, playerId, rawMatchId)
                             } ?: emptyList()
                         trySend(legacyHistory + newHistory)
                     }
@@ -134,7 +134,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         .await()
                         .documents.mapNotNull { document ->
                             val rawPlayerId = document.data?.get("playerId")?.toString() ?: ""
-                            parsePlayerTimeHistoryDocument(document.data, document.id, teamDocId, rawPlayerId, matchId)
+                            parsePlayerTimeHistoryDocument(document.data, document.id, rawPlayerId, matchId)
                         }
                 } catch (_: Exception) {
                     emptyList()
@@ -153,7 +153,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         val newHistory =
                             snapshot?.documents?.mapNotNull { document ->
                                 val rawPlayerId = document.data?.get("playerId")?.toString() ?: ""
-                                parsePlayerTimeHistoryDocument(document.data, document.id, teamDocId, rawPlayerId, matchId)
+                                parsePlayerTimeHistoryDocument(document.data, document.id, rawPlayerId, matchId)
                             } ?: emptyList()
                         trySend(legacyHistory + newHistory)
                     }
@@ -192,7 +192,6 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                                 parsePlayerTimeHistoryDocument(
                                     document.data,
                                     document.id,
-                                    teamDocId,
                                     rawPlayerId,
                                     rawMatchId,
                                 )

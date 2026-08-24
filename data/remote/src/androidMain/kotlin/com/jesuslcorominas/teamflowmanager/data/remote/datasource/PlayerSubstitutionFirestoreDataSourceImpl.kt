@@ -79,7 +79,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                         .get()
                         .await()
                         .documents.mapNotNull { document ->
-                            parseSubstitutionDocument(document.data, document.id, teamDocId, matchId)
+                            parseSubstitutionDocument(document.data, document.id, matchId)
                         }
                 } catch (_: Exception) {
                     emptyList()
@@ -97,7 +97,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                         }
                         val newSubstitutions =
                             snapshot?.documents?.mapNotNull { document ->
-                                parseSubstitutionDocument(document.data, document.id, teamDocId, matchId)
+                                parseSubstitutionDocument(document.data, document.id, matchId)
                             } ?: emptyList()
                         trySend(legacySubstitutions + newSubstitutions)
                     }

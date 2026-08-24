@@ -66,9 +66,13 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                     .snapshots
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
-                            val rawData = doc.data<Map<String, Any?>>()
-                            val rawMatchId = rawData["matchId"]?.toString() ?: ""
-                            parsePlayerTimeHistoryDocument(rawData, doc.id, teamDocId, playerId, rawMatchId)
+                            try {
+                                val rawData = doc.data<Map<String, Any?>>()
+                                val rawMatchId = rawData["matchId"]?.toString() ?: ""
+                                parsePlayerTimeHistoryDocument(rawData, doc.id, playerId, rawMatchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
                     }.catch { e ->
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -80,9 +84,13 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                     .snapshots
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
-                            val rawData = doc.data<Map<String, Any?>>()
-                            val rawMatchId = rawData["matchId"]?.toString() ?: ""
-                            parsePlayerTimeHistoryDocument(rawData, doc.id, teamDocId, playerId, rawMatchId)
+                            try {
+                                val rawData = doc.data<Map<String, Any?>>()
+                                val rawMatchId = rawData["matchId"]?.toString() ?: ""
+                                parsePlayerTimeHistoryDocument(rawData, doc.id, playerId, rawMatchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
                     }.catch { e ->
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -128,9 +136,13 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                     .snapshots
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
-                            val rawData = doc.data<Map<String, Any?>>()
-                            val rawPlayerId = rawData["playerId"]?.toString() ?: ""
-                            parsePlayerTimeHistoryDocument(rawData, doc.id, teamDocId, rawPlayerId, matchId)
+                            try {
+                                val rawData = doc.data<Map<String, Any?>>()
+                                val rawPlayerId = rawData["playerId"]?.toString() ?: ""
+                                parsePlayerTimeHistoryDocument(rawData, doc.id, rawPlayerId, matchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
                     }.catch { e ->
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -142,9 +154,13 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                     .snapshots
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
-                            val rawData = doc.data<Map<String, Any?>>()
-                            val rawPlayerId = rawData["playerId"]?.toString() ?: ""
-                            parsePlayerTimeHistoryDocument(rawData, doc.id, teamDocId, rawPlayerId, matchId)
+                            try {
+                                val rawData = doc.data<Map<String, Any?>>()
+                                val rawPlayerId = rawData["playerId"]?.toString() ?: ""
+                                parsePlayerTimeHistoryDocument(rawData, doc.id, rawPlayerId, matchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
                     }.catch { e ->
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -171,10 +187,14 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
-                        val rawData = doc.data<Map<String, Any?>>()
-                        val rawPlayerId = rawData["playerId"]?.toString() ?: ""
-                        val rawMatchId = rawData["matchId"]?.toString() ?: ""
-                        parsePlayerTimeHistoryDocument(rawData, doc.id, teamDocId, rawPlayerId, rawMatchId)
+                        try {
+                            val rawData = doc.data<Map<String, Any?>>()
+                            val rawPlayerId = rawData["playerId"]?.toString() ?: ""
+                            val rawMatchId = rawData["matchId"]?.toString() ?: ""
+                            parsePlayerTimeHistoryDocument(rawData, doc.id, rawPlayerId, rawMatchId)
+                        } catch (_: Exception) {
+                            null
+                        }
                     }
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e

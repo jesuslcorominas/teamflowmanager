@@ -79,7 +79,7 @@ class GoalFirestoreDataSourceImpl(
                         .get()
                         .await()
                         .documents.mapNotNull { document ->
-                            parseGoalDocument(document.data, document.id, teamDocId, matchId)
+                            parseGoalDocument(document.data, document.id, matchId)
                         }
                 } catch (_: Exception) {
                     emptyList()
@@ -97,7 +97,7 @@ class GoalFirestoreDataSourceImpl(
                         }
                         val newGoals =
                             snapshot?.documents?.mapNotNull { document ->
-                                parseGoalDocument(document.data, document.id, teamDocId, matchId)
+                                parseGoalDocument(document.data, document.id, matchId)
                             } ?: emptyList()
                         trySend(legacyGoals + newGoals)
                     }
@@ -132,7 +132,7 @@ class GoalFirestoreDataSourceImpl(
                         val goals =
                             snapshot?.documents?.mapNotNull { document ->
                                 val rawMatchId = document.data?.get("matchId")?.toString() ?: ""
-                                parseGoalDocument(document.data, document.id, teamDocId, rawMatchId)
+                                parseGoalDocument(document.data, document.id, rawMatchId)
                             } ?: emptyList()
                         trySend(goals)
                     }
