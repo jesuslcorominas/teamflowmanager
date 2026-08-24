@@ -3,8 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeHistoryFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeHistoryDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
@@ -54,28 +53,6 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                 null
             }
 
-    private fun parseHistoryDocument(
-        rawData: Map<String, Any?>?,
-        docId: String,
-        teamDocId: String,
-        playerId: String,
-        matchId: String,
-    ): PlayerTimeHistory? {
-        if (rawData == null) return null
-        return try {
-            PlayerTimeHistoryFirestoreModel(
-                id = docId,
-                teamId = rawData["teamId"] as? String ?: teamDocId,
-                playerId = playerId,
-                matchId = matchId,
-                elapsedTimeMillis = rawData["elapsedTimeMillis"] as? Long ?: 0L,
-                savedAtMillis = rawData["savedAtMillis"] as? Long ?: 0L,
-            ).toDomain()
-        } catch (_: Exception) {
-            null
-        }
-    }
-
     override fun getPlayerTimeHistory(playerId: String): Flow<List<PlayerTimeHistory>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
@@ -103,7 +80,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         .await()
                         .documents.mapNotNull { document ->
                             val rawMatchId = document.data?.get("matchId")?.toString() ?: ""
-                            parseHistoryDocument(document.data, document.id, teamDocId, playerId, rawMatchId)
+                            parsePlayerTimeHistoryDocument(document.data, document.id, playerId, rawMatchId)
                         }
                 } catch (_: Exception) {
                     emptyList()
@@ -122,7 +99,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         val newHistory =
                             snapshot?.documents?.mapNotNull { document ->
                                 val rawMatchId = document.data?.get("matchId")?.toString() ?: ""
-                                parseHistoryDocument(document.data, document.id, teamDocId, playerId, rawMatchId)
+                                parsePlayerTimeHistoryDocument(document.data, document.id, playerId, rawMatchId)
                             } ?: emptyList()
                         trySend(legacyHistory + newHistory)
                     }
@@ -157,7 +134,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         .await()
                         .documents.mapNotNull { document ->
                             val rawPlayerId = document.data?.get("playerId")?.toString() ?: ""
-                            parseHistoryDocument(document.data, document.id, teamDocId, rawPlayerId, matchId)
+                            parsePlayerTimeHistoryDocument(document.data, document.id, rawPlayerId, matchId)
                         }
                 } catch (_: Exception) {
                     emptyList()
@@ -176,7 +153,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         val newHistory =
                             snapshot?.documents?.mapNotNull { document ->
                                 val rawPlayerId = document.data?.get("playerId")?.toString() ?: ""
-                                parseHistoryDocument(document.data, document.id, teamDocId, rawPlayerId, matchId)
+                                parsePlayerTimeHistoryDocument(document.data, document.id, rawPlayerId, matchId)
                             } ?: emptyList()
                         trySend(legacyHistory + newHistory)
                     }
@@ -210,7 +187,14 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                         }
                         val history =
                             snapshot?.documents?.mapNotNull { document ->
-                                document.toObject(PlayerTimeHistoryFirestoreModel::class.java)?.toDomain()
+                                val rawPlayerId = document.data?.get("playerId")?.toString() ?: ""
+                                val rawMatchId = document.data?.get("matchId")?.toString() ?: ""
+                                parsePlayerTimeHistoryDocument(
+                                    document.data,
+                                    document.id,
+                                    rawPlayerId,
+                                    rawMatchId,
+                                )
                             } ?: emptyList()
                         trySend(history)
                     }

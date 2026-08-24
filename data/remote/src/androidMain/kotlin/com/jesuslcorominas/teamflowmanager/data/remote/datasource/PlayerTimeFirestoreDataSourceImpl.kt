@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
@@ -128,31 +129,6 @@ class PlayerTimeFirestoreDataSourceImpl(
                 null
             }
 
-    private fun parsePlayerTimeDocument(
-        rawData: Map<String, Any?>?,
-        docId: String,
-        teamDocId: String,
-        matchId: String,
-    ): PlayerTime? {
-        if (rawData == null) return null
-        return try {
-            val rawPlayerId = rawData["playerId"]?.toString() ?: ""
-            PlayerTimeFirestoreModel(
-                id = docId,
-                teamId = rawData["teamId"] as? String ?: teamDocId,
-                matchId = matchId,
-                playerId = rawPlayerId,
-                elapsedTimeMillis = rawData["elapsedTimeMillis"] as? Long ?: 0L,
-                isRunning = rawData["running"] as? Boolean ?: false,
-                lastStartTimeMillis = rawData["lastStartTimeMillis"] as? Long,
-                status = rawData["status"] as? String ?: "ON_BENCH",
-                lastOperationId = rawData["lastOperationId"] as? String,
-            ).toDomain()
-        } catch (_: Exception) {
-            null
-        }
-    }
-
     /**
      * Gets player times scoped to a specific match from Firestore as a real-time Flow.
      * Documents from previous matches (matchId mismatch) are ignored automatically,
@@ -186,7 +162,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                         .get()
                         .await()
                         .documents.mapNotNull { document ->
-                            parsePlayerTimeDocument(document.data, document.id, teamDocId, matchId)
+                            parsePlayerTimeDocument(document.data, matchId)
                         }
                 } catch (_: Exception) {
                     emptyList()
@@ -204,7 +180,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                         }
                         val newPlayerTimes =
                             snapshot?.documents?.mapNotNull { document ->
-                                parsePlayerTimeDocument(document.data, document.id, teamDocId, matchId)
+                                parsePlayerTimeDocument(document.data, matchId)
                             } ?: emptyList()
                         trySend(legacyPlayerTimes + newPlayerTimes)
                     }
