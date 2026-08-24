@@ -249,6 +249,7 @@
     <string name="statistics_tab">Statistics</string>
     <string name="scorers_dialog_title">Scorers</string>
     <string name="own_goal_scorer_label">Own Goal</string>
+    <string name="unknown_scorer_label">Unknown scorer</string>
     <string name="no_scorers_label">No goals scored</string>
     <string name="timeline_starting_lineup">Starting Lineup</string>
     <string name="timeline_goal">Goal</string>
