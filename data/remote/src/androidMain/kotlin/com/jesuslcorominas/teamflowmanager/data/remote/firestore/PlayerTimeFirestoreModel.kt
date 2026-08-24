@@ -7,17 +7,13 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 
 /**
  * Firestore model for PlayerTime document.
- * This model is used for serialization/deserialization with Firestore.
- * PlayerTime represents the current playing time state for a player during an active match.
- * The `teamId` field stores the Firestore document ID of the team, which is used by
- * security rules to validate that the authenticated user is the owner of the team.
  */
 data class PlayerTimeFirestoreModel(
     @DocumentId
     val id: String = "",
     val teamId: String = "",
-    val matchId: Long = 0L,
-    val playerId: Long = 0L,
+    val matchId: String = "",
+    val playerId: String = "",
     val elapsedTimeMillis: Long = 0L,
     @get:PropertyName("running")
     @set:PropertyName("running")
@@ -30,8 +26,8 @@ data class PlayerTimeFirestoreModel(
     constructor() : this(
         id = "",
         teamId = "",
-        matchId = 0L,
-        playerId = 0L,
+        matchId = "",
+        playerId = "",
         elapsedTimeMillis = 0L,
         isRunning = false,
         lastStartTimeMillis = null,
@@ -58,8 +54,8 @@ fun PlayerTimeFirestoreModel.toDomain(): PlayerTime =
 
 fun PlayerTime.toFirestoreModel(): PlayerTimeFirestoreModel =
     PlayerTimeFirestoreModel(
-        id = "", // Will be set by the data source using playerId
-        teamId = "", // Will be set by the data source
+        id = playerId,
+        teamId = "",
         matchId = matchId,
         playerId = playerId,
         elapsedTimeMillis = elapsedTimeMillis,

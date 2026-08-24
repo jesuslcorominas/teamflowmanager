@@ -19,7 +19,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MatchEventNotification
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
@@ -58,7 +57,6 @@ class MatchViewModelNotificationTest {
 
     private lateinit var getMatchByIdUseCase: GetMatchByIdUseCase
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
-    private lateinit var getPlayersUseCase: GetPlayersUseCase
     private lateinit var getMatchTimelineUseCase: GetMatchTimelineUseCase
     private lateinit var registerGoalUseCase: RegisterGoalUseCase
     private lateinit var notifyPresidentMatchEventUseCase: NotifyPresidentMatchEventUseCase
@@ -71,18 +69,16 @@ class MatchViewModelNotificationTest {
     private val clubRemoteId = "club-fs-1"
 
     private val team = Team(
-        id = 1L,
+        id = teamRemoteId,
         name = "Test Team",
         coachName = "Coach",
         delegateName = "Delegate",
         teamType = TeamType.FOOTBALL_5,
-        clubId = 100L,
-        remoteId = teamRemoteId,
-        clubRemoteId = clubRemoteId,
+        clubId = clubRemoteId,
     )
 
     private val players = listOf(
-        Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L, isCaptain = false),
+        Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false),
     )
 
     // Base match for period calculations. HALF_TIME = 2 × 25 min.
@@ -100,8 +96,8 @@ class MatchViewModelNotificationTest {
         opponent = "Rival FC",
         location = "Stadium",
         periodType = PeriodType.HALF_TIME,
-        captainId = 1L,
-        squadCallUpIds = listOf(1L),
+        captainId = "1",
+        squadCallUpIds = listOf("1"),
         status = MatchStatus.IN_PROGRESS,
         goals = goals,
         opponentGoals = opponentGoals,
@@ -126,7 +122,6 @@ class MatchViewModelNotificationTest {
         Dispatchers.setMain(testDispatcher)
         getMatchByIdUseCase = mockk()
         getAllPlayerTimesUseCase = mockk()
-        getPlayersUseCase = mockk()
         getMatchTimelineUseCase = mockk()
         registerGoalUseCase = mockk(relaxed = true)
         notifyPresidentMatchEventUseCase = mockk(relaxed = true)
@@ -136,7 +131,6 @@ class MatchViewModelNotificationTest {
         fakeTicker = FakeTimeTicker()
 
         every { getAllPlayerTimesUseCase(any()) } returns flowOf(emptyList())
-        every { getPlayersUseCase() } returns flowOf(players)
         every { getMatchTimelineUseCase(any()) } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(team)
     }
@@ -150,7 +144,6 @@ class MatchViewModelNotificationTest {
         matchId = MATCH_ID,
         getMatchById = getMatchByIdUseCase,
         getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
-        getPlayersUseCase = getPlayersUseCase,
         finishMatch = mockk(relaxed = true),
         pauseMatch = mockk(relaxed = true),
         resumeMatchUseCase = mockk(relaxed = true),
@@ -172,7 +165,7 @@ class MatchViewModelNotificationTest {
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
         getTeamUseCase = getTeamUseCase,
-        getPlayersByTeamUseCase = mockk(relaxed = true),
+        getPlayersByTeamUseCase = mockk { every { this@mockk(any()) } returns flowOf(players) },
     )
 
     // ── fireNotification – integration with notifyPresidentMatchEventUseCase ──
@@ -187,7 +180,7 @@ class MatchViewModelNotificationTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.registerGoal(1L)
+        viewModel.registerGoal("1")
         advanceUntilIdle()
 
         coVerify {
@@ -221,30 +214,29 @@ class MatchViewModelNotificationTest {
     }
 
     @Test
-    fun `registerGoal does not fire notification when team has no remoteId`() = runTest(testDispatcher) {
-        val teamWithoutRemoteId = team.copy(remoteId = null)
-        every { getTeamUseCase() } returns flowOf(teamWithoutRemoteId)
+    fun `registerGoal does not fire notification when team has no id`() = runTest(testDispatcher) {
+        every { getTeamUseCase() } returns flowOf(null)
         val match = matchWithActivePeriod()
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(match)
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.registerGoal(1L)
+        viewModel.registerGoal("1")
         advanceUntilIdle()
 
         coVerify(exactly = 0) { notifyPresidentMatchEventUseCase(any(), any(), any(), any()) }
     }
 
     @Test
-    fun `registerGoal does not fire notification when team has no clubRemoteId`() = runTest(testDispatcher) {
-        val teamWithoutClub = team.copy(clubRemoteId = null)
+    fun `registerGoal does not fire notification when team has no clubId`() = runTest(testDispatcher) {
+        val teamWithoutClub = team.copy(clubId = null)
         every { getTeamUseCase() } returns flowOf(teamWithoutClub)
         val match = matchWithActivePeriod()
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(match)
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.registerGoal(1L)
+        viewModel.registerGoal("1")
         advanceUntilIdle()
 
         coVerify(exactly = 0) { notifyPresidentMatchEventUseCase(any(), any(), any(), any()) }
@@ -263,7 +255,7 @@ class MatchViewModelNotificationTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.registerGoal(1L)
+        viewModel.registerGoal("1")
         advanceUntilIdle()
 
         // The notification event should carry minuteOfPlay. Since the VM reads _currentTime,
@@ -296,7 +288,7 @@ class MatchViewModelNotificationTest {
         fakeTicker.emit(currentTimeMs)
         advanceUntilIdle()
 
-        viewModel.registerGoal(1L)
+        viewModel.registerGoal("1")
         advanceUntilIdle()
 
         coVerify {
@@ -318,8 +310,8 @@ class MatchViewModelNotificationTest {
             opponent = "Rival FC",
             location = "Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
-            squadCallUpIds = listOf(1L),
+            captainId = "1",
+            squadCallUpIds = listOf("1"),
             status = MatchStatus.IN_PROGRESS,
             goals = 1,
             periods = listOf(
@@ -331,7 +323,7 @@ class MatchViewModelNotificationTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.registerGoal(1L)
+        viewModel.registerGoal("1")
         advanceUntilIdle()
 
         // Notification should still be fired, with minuteOfPlay = null
@@ -356,8 +348,8 @@ class MatchViewModelNotificationTest {
             opponent = "Rival FC",
             location = "Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
-            squadCallUpIds = listOf(1L),
+            captainId = "1",
+            squadCallUpIds = listOf("1"),
             status = MatchStatus.IN_PROGRESS,
             goals = 1,
             periods = listOf(
@@ -370,7 +362,7 @@ class MatchViewModelNotificationTest {
         fakeTicker.emit(currentTimeMs)
         advanceUntilIdle()
 
-        viewModel.registerGoal(1L)
+        viewModel.registerGoal("1")
         advanceUntilIdle()
 
         coVerify {
@@ -384,6 +376,6 @@ class MatchViewModelNotificationTest {
     }
 
     companion object {
-        private const val MATCH_ID = 1L
+        private const val MATCH_ID = "1"
     }
 }

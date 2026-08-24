@@ -10,6 +10,7 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -178,8 +179,8 @@ fun Navigation(
         ) {
             TeamListScreen(
                 onTeamClick = { team ->
-                    team.remoteId?.let { remoteId ->
-                        navController.navigate(Route.PresidentTeamDetail.createRoute(remoteId))
+                    if (team.id.isNotEmpty()) {
+                        navController.navigate(Route.PresidentTeamDetail.createRoute(team.id))
                     }
                 },
             )
@@ -220,7 +221,7 @@ fun Navigation(
                         type = NavType.StringType
                     },
                     navArgument(Route.PresidentMatchDetail.ARG_MATCH_ID) {
-                        type = NavType.LongType
+                        type = NavType.StringType
                     },
                 ),
         ) { backStackEntry ->
@@ -228,9 +229,9 @@ fun Navigation(
                 backStackEntry.arguments?.getString(Route.PresidentMatchDetail.ARG_TEAM_ID)
                     ?: return@composable
             val matchId =
-                backStackEntry.arguments?.getLong(Route.PresidentMatchDetail.ARG_MATCH_ID)
+                backStackEntry.arguments?.getString(Route.PresidentMatchDetail.ARG_MATCH_ID)
                     ?: return@composable
-            MatchScreen(matchId = matchId, teamId = teamId, readOnly = true)
+            MatchScreen(matchId = matchId, readOnly = true)
         }
 
         composable(Route.ClubMembers.createRoute()) {
@@ -258,7 +259,7 @@ fun Navigation(
         composable(Route.Players.createRoute()) {
             PlayersScreen(
                 onNavigateToCreatePlayer = {
-                    navController.navigate(Route.PlayerWizard.createRoute(0L))
+                    navController.navigate(Route.PlayerWizard.createRoute(""))
                 },
                 onNavigateToEditPlayer = { playerId ->
                     navController.navigate(Route.PlayerWizard.createRoute(playerId))
@@ -271,7 +272,8 @@ fun Navigation(
             arguments =
                 listOf(
                     navArgument(Route.PlayerWizard.ARG_PLAYER_ID) {
-                        type = NavType.LongType
+                        type = NavType.StringType
+                        defaultValue = ""
                     },
                 ),
             // Instant transitions: wizard changes topBar/bottomBar visibility, so we switch
@@ -281,7 +283,7 @@ fun Navigation(
             popEnterTransition = { EnterTransition.None },
             popExitTransition = { ExitTransition.None },
         ) { backStackEntry ->
-            val playerId = backStackEntry.arguments?.getLong(Route.PlayerWizard.ARG_PLAYER_ID) ?: 0L
+            val playerId = backStackEntry.arguments?.getString(Route.PlayerWizard.ARG_PLAYER_ID) ?: ""
             PlayerWizardScreen(
                 playerId = playerId,
                 onNavigateBack = { navController.popBackStack() },
@@ -330,8 +332,8 @@ fun Navigation(
             arguments =
                 listOf(
                     navArgument(Route.CreateMatch.ARG_MATCH_ID) {
-                        type = NavType.LongType
-                        defaultValue = 0L
+                        type = NavType.StringType
+                        defaultValue = ""
                     },
                 ),
             // Instant transitions: same reason as PlayerWizard.
@@ -340,7 +342,7 @@ fun Navigation(
             popEnterTransition = { EnterTransition.None },
             popExitTransition = { ExitTransition.None },
         ) { backStackEntry ->
-            val matchId = backStackEntry.arguments?.getLong(Route.CreateMatch.ARG_MATCH_ID) ?: 0L
+            val matchId = backStackEntry.arguments?.getString(Route.CreateMatch.ARG_MATCH_ID) ?: ""
             MatchCreationWizardScreen(
                 matchId = matchId,
                 onNavigateBack = { navController.popBackStack() },
@@ -351,7 +353,7 @@ fun Navigation(
             route = Route.Match.FULL_ROUTE,
             arguments =
                 listOf(
-                    navArgument(Route.Match.ARG_MATCH_ID) { type = NavType.LongType },
+                    navArgument(Route.Match.ARG_MATCH_ID) { type = NavType.StringType },
                 ),
             deepLinks =
                 listOf(
@@ -361,9 +363,20 @@ fun Navigation(
                 ),
         ) { backStackEntry ->
             val matchId =
-                backStackEntry.arguments?.getLong(Route.Match.ARG_MATCH_ID)
+                backStackEntry.arguments?.getString(Route.Match.ARG_MATCH_ID)
                     ?: error("matchId required")
-            MatchScreen(matchId = matchId, onTitleChange = onTitleChange)
+            // Pre-migration deep links in notifications stored a Long hash as the matchId.
+            // The hash is not reversible, so we cannot locate the original Firestore document.
+            // Redirect to the matches list instead of showing an empty screen.
+            if (matchId.all { it.isDigit() }) {
+                LaunchedEffect(matchId) {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Match.FULL_ROUTE) { inclusive = true }
+                    }
+                }
+            } else {
+                MatchScreen(matchId = matchId, onTitleChange = onTitleChange)
+            }
         }
 
         composable(route = Route.Settings.createRoute()) {

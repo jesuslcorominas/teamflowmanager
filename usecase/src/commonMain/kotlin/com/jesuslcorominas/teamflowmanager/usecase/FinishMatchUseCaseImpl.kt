@@ -19,7 +19,7 @@ internal class FinishMatchUseCaseImpl(
     private val playerTimeHistoryRepository: PlayerTimeHistoryRepository,
 ) : FinishMatchUseCase {
     override suspend fun invoke(
-        matchId: Long,
+        matchId: String,
         currentTime: Long,
     ) {
         try {

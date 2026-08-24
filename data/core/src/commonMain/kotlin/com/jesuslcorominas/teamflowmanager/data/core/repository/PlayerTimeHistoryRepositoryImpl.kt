@@ -8,19 +8,12 @@ import kotlinx.coroutines.flow.Flow
 internal class PlayerTimeHistoryRepositoryImpl(
     private val playerTimeHistoryDataSource: PlayerTimeHistoryDataSource,
 ) : PlayerTimeHistoryRepository {
-    override fun getPlayerTimeHistory(playerId: Long): Flow<List<PlayerTimeHistory>> = playerTimeHistoryDataSource.getPlayerTimeHistory(playerId)
+    override fun getPlayerTimeHistory(playerId: String): Flow<List<PlayerTimeHistory>> = playerTimeHistoryDataSource.getPlayerTimeHistory(playerId)
 
-    override fun getMatchPlayerTimeHistory(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerTimeHistory>> =
-        playerTimeHistoryDataSource.getMatchPlayerTimeHistory(
-            matchId,
-            teamId,
-        )
+    override fun getMatchPlayerTimeHistory(matchId: String): Flow<List<PlayerTimeHistory>> = playerTimeHistoryDataSource.getMatchPlayerTimeHistory(matchId)
 
     override fun getAllPlayerTimeHistory(): Flow<List<PlayerTimeHistory>> = playerTimeHistoryDataSource.getAllPlayerTimeHistory()
 
-    override suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): Long =
+    override suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): String =
         playerTimeHistoryDataSource.insertPlayerTimeHistory(playerTimeHistory)
 }

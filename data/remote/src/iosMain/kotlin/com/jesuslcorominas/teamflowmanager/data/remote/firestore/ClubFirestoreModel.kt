@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
+import com.jesuslcorominas.teamflowmanager.domain.model.Club
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,3 +11,12 @@ data class ClubFirestoreModel(
     override val invitationCode: String = "",
     override val homeGround: String? = null,
 ) : ClubFields
+
+fun ClubFirestoreModel.toDomain(): Club =
+    Club(
+        id = id,
+        ownerId = ownerId,
+        name = name,
+        invitationCode = invitationCode,
+        homeGround = homeGround,
+    )

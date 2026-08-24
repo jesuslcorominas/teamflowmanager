@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 internal class GetMatchSubstitutionsUseCaseImpl(
     private val playerSubstitutionRepository: PlayerSubstitutionRepository,
 ) : GetMatchSubstitutionsUseCase {
-    override fun invoke(matchId: Long): Flow<List<PlayerSubstitution>> {
+    override fun invoke(matchId: String): Flow<List<PlayerSubstitution>> {
         return playerSubstitutionRepository.getMatchSubstitutions(matchId)
     }
 }

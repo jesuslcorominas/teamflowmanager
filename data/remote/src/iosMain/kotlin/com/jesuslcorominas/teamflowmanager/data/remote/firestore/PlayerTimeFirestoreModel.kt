@@ -5,19 +5,12 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
-/**
- * iOS Firestore model for PlayerTime — uses @Serializable (kotlinx.serialization).
- * Note: Android uses @PropertyName("running") for isRunning, so the Firestore field is "running".
- * We mirror that field name directly here.
- * PlayerTime documents use "player_{playerId}" as document ID (not auto-generated).
- * The document ID is injected externally.
- */
 @Serializable
 data class PlayerTimeFirestoreModel(
     @Transient val id: String = "",
     val teamId: String = "",
-    val matchId: Long = 0L,
-    val playerId: Long = 0L,
+    val matchId: String = "",
+    val playerId: String = "",
     val elapsedTimeMillis: Long = 0L,
     val running: Boolean = false,
     val lastStartTimeMillis: Long? = null,
@@ -43,6 +36,7 @@ fun PlayerTimeFirestoreModel.toDomain(): PlayerTime =
 
 fun PlayerTime.toFirestoreModel(): PlayerTimeFirestoreModel =
     PlayerTimeFirestoreModel(
+        id = playerId,
         teamId = "",
         matchId = matchId,
         playerId = playerId,

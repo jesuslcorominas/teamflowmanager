@@ -58,18 +58,16 @@ import teamflowmanager.shared_ui.generated.resources.team_type
 fun TeamForm(
     team: Team? = null,
     players: List<Player> = listOf(),
-    clubNumericId: Long? = null,
     clubId: String? = null,
     isPresident: Boolean = false,
     onShowTeamTypeChangeError: () -> Unit = {},
-    onSave: (Team, Long?) -> Unit,
+    onSave: (Team, String?) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     var formState by remember {
         val baseState = team.toTeamFormState()
         mutableStateOf(
             baseState.copy(
-                clubNumericId = clubNumericId ?: baseState.clubNumericId,
                 clubId = clubId ?: baseState.clubId,
             ),
         )
@@ -335,13 +333,12 @@ private data class FormErrors(
 }
 
 private data class TeamFormState(
-    val id: Long = 0,
+    val id: String = "",
     val name: String = "",
     val coachName: String = "",
     val delegateName: String = "",
     val teamType: TeamType = TeamType.FOOTBALL_5,
     val coachId: String? = null,
-    val clubNumericId: Long? = null,
     val clubId: String? = null,
     val errors: FormErrors = FormErrors(),
 )
@@ -354,8 +351,7 @@ private fun TeamFormState.toTeam(): Team =
         delegateName = delegateName.trimEnd(),
         teamType = teamType,
         coachId = coachId,
-        clubId = clubNumericId,
-        clubRemoteId = clubId,
+        clubId = clubId,
     )
 
 private fun Team?.toTeamFormState() =
@@ -367,7 +363,6 @@ private fun Team?.toTeamFormState() =
             delegateName = it.delegateName,
             teamType = it.teamType,
             coachId = it.coachId,
-            clubNumericId = it.clubId,
-            clubId = it.clubRemoteId,
+            clubId = it.clubId,
         )
     } ?: TeamFormState()

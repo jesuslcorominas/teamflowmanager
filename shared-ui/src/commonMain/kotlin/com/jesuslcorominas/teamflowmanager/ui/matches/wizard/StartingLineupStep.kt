@@ -40,10 +40,10 @@ import teamflowmanager.shared_ui.generated.resources.yes
 @Composable
 fun StartingLineupStep(
     players: List<Player>,
-    selectedPlayerIds: Set<Long>,
-    captainId: Long?,
+    selectedPlayerIds: Set<String>,
+    captainId: String?,
     hasGoalkeepersInSquad: Boolean,
-    onSelectionChanged: (Set<Long>) -> Unit,
+    onSelectionChanged: (Set<String>) -> Unit,
     onCreate: () -> Unit,
     onPrevious: () -> Unit,
     modifier: Modifier = Modifier,

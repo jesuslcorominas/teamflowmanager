@@ -30,10 +30,9 @@ internal class TeamRepositoryImpl(
 
     override suspend fun updateTeamClubId(
         teamId: String,
-        clubNumericId: Long,
         clubId: String,
     ) {
-        teamDataSource.updateTeamClubId(teamId, clubNumericId, clubId)
+        teamDataSource.updateTeamClubId(teamId, clubId)
     }
 
     override suspend fun getTeamById(teamId: String): Team? {

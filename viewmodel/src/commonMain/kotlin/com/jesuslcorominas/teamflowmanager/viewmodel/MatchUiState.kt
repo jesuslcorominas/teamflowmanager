@@ -53,7 +53,7 @@ data class EndPeriodState(
 internal fun List<Player>.toPlayerItems(
     playerTimes: List<PlayerTime>,
     currentTime: Long,
-    captainId: Long,
+    captainId: String,
 ): List<PlayerTimeItem> =
     this.map { player ->
         val playerTime = playerTimes.find { it.playerId == player.id }

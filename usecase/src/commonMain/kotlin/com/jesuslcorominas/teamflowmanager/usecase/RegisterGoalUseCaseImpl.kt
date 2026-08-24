@@ -11,12 +11,12 @@ internal class RegisterGoalUseCaseImpl(
     private val goalRepository: GoalRepository,
 ) : RegisterGoalUseCase {
     override suspend fun invoke(
-        matchId: Long,
-        scorerId: Long?,
+        matchId: String,
+        scorerId: String?,
         currentTimeMillis: Long,
         isOpponentGoal: Boolean,
         isOwnGoal: Boolean,
-    ): Long {
+    ): String {
         // Get match to calculate elapsed time
         val match = matchRepository.getMatchById(matchId).first()
         requireNotNull(match) { "No active match found" }

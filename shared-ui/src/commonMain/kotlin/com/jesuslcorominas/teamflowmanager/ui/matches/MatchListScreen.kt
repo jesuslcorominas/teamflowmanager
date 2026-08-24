@@ -49,7 +49,7 @@ import teamflowmanager.shared_ui.generated.resources.played_matches
 @Composable
 fun MatchListScreen(
     onNavigateToMatch: (Match) -> Unit = {},
-    onNavigateToEditMatch: (Long) -> Unit = {},
+    onNavigateToEditMatch: (String) -> Unit = {},
     onNavigateToArchivedMatches: () -> Unit = {},
     viewModel: MatchListViewModel = koinViewModel(),
 ) {
@@ -98,7 +98,7 @@ fun MatchListScreen(
 private fun MatchesList(
     state: MatchListUiState.Success,
     onNavigateToArchivedMatches: () -> Unit,
-    onNavigateToEditMatch: (Long) -> Unit,
+    onNavigateToEditMatch: (String) -> Unit,
     onNavigateToMatch: (Match) -> Unit,
     viewModel: MatchListViewModel,
 ) {
@@ -189,7 +189,7 @@ private fun LazyListScope.pendingMatchesSection(
     pendingMatches: List<Match>,
     expandedPendingMatches: Boolean,
     hasMatchStarted: Boolean,
-    onNavigateToEditMatch: (Long) -> Unit,
+    onNavigateToEditMatch: (String) -> Unit,
     onNavigateToMatch: (Match) -> Unit,
     onDeleteMatch: (Match) -> Unit,
     onExpandToggle: () -> Unit,
@@ -218,7 +218,7 @@ private fun LazyListScope.playedMatchesSection(
     playedMatches: List<Match>,
     expandedPlayedMatches: Boolean,
     onNavigateToMatch: (Match) -> Unit,
-    onArchiveMatch: (Long) -> Unit,
+    onArchiveMatch: (String) -> Unit,
     onExpandToggle: () -> Unit,
 ) {
     item {

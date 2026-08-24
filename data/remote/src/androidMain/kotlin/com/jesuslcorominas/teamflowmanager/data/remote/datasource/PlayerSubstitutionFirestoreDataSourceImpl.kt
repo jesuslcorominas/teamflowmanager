@@ -6,7 +6,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstituti
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerSubstitutionFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -16,10 +16,6 @@ import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Firestore-based implementation of PlayerSubstitutionDataSource.
- * This implementation stores player substitution data in Firebase Firestore as a remote data source.
- * Substitution documents are stored in the "substitutions" collection with auto-generated document IDs.
- * The teamId field stores the Firestore document ID of the team, which is used by
- * security rules to validate that the authenticated user is the owner of the team.
  */
 class PlayerSubstitutionFirestoreDataSourceImpl(
     private val firestore: FirebaseFirestore,
@@ -31,17 +27,8 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         private const val MATCHES_COLLECTION = "matches"
     }
 
-    /**
-     * Gets the team's Firestore document ID for the current authenticated user.
-     * This is needed because security rules validate substitution access based on team ownership.
-     */
     private suspend fun getTeamDocumentId(): String? {
-        val currentUserId = firebaseAuth.currentUser?.uid
-
-        if (currentUserId == null) {
-            return null
-        }
-
+        val currentUserId = firebaseAuth.currentUser?.uid ?: return null
         return try {
             val snapshot =
                 firestore.collection(TEAMS_COLLECTION)
@@ -49,9 +36,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                     .limit(1)
                     .get()
                     .await()
-
-            val teamDocId = snapshot.documents.firstOrNull()?.id
-            teamDocId
+            snapshot.documents.firstOrNull()?.id
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -59,42 +44,41 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         }
     }
 
-    /**
-     * Helper function to find the Firestore document ID for a match based on the Long match ID.
-     */
-    private suspend fun findMatchDocumentId(
-        teamDocId: String,
-        matchId: Long,
-    ): String? {
-        return try {
-            val snapshot =
-                firestore.collection(MATCHES_COLLECTION)
-                    .whereEqualTo("teamId", teamDocId)
-                    .get()
-                    .await()
-
-            for (document in snapshot.documents) {
-                // Check if this match's stable ID matches
-                val docId = document.id
-                if (docId.toStableId() == matchId) {
-                    return docId
-                }
+    // For non-coach roles (e.g. president), derive teamId from the match document.
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                firestore.collection(MATCHES_COLLECTION).document(matchId).get().await()
+                    .getString("teamId")
+            } catch (_: Exception) {
+                null
             }
-            null
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+
+    private fun parseSubstitutionDocument(
+        rawData: Map<String, Any?>?,
+        docId: String,
+        teamDocId: String,
+        matchId: String,
+    ): PlayerSubstitution? {
+        if (rawData == null) return null
+        return try {
+            val rawPlayerOutId = rawData["playerOutId"]?.toString() ?: ""
+            val rawPlayerInId = rawData["playerInId"]?.toString() ?: ""
+            PlayerSubstitutionFirestoreModel(
+                id = docId,
+                teamId = rawData["teamId"] as? String ?: teamDocId,
+                matchId = matchId,
+                playerOutId = rawPlayerOutId,
+                playerInId = rawPlayerInId,
+                substitutionTimeMillis = rawData["substitutionTimeMillis"] as? Long ?: 0L,
+                matchElapsedTimeMillis = rawData["matchElapsedTimeMillis"] as? Long ?: 0L,
+            ).toDomain()
+        } catch (_: Exception) {
             null
         }
     }
 
-    /**
-     * Gets all substitutions for a specific match as a real-time Flow.
-     */
-    override fun getMatchSubstitutions(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerSubstitution>> =
+    override fun getMatchSubstitutions(matchId: String): Flow<List<PlayerSubstitution>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -103,13 +87,30 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = teamId ?: getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 trySend(emptyList())
                 awaitClose { }
                 return@callbackFlow
             }
 
+            // One-time fetch for legacy Long-ID docs (pre-migration).
+            // TODO: remove after backward-compat window closes.
+            val legacySubstitutions =
+                try {
+                    firestore.collection(SUBSTITUTIONS_COLLECTION)
+                        .whereEqualTo("teamId", teamDocId)
+                        .whereEqualTo("matchId", matchId.toLegacyId())
+                        .get()
+                        .await()
+                        .documents.mapNotNull { document ->
+                            parseSubstitutionDocument(document.data, document.id, teamDocId, matchId)
+                        }
+                } catch (_: Exception) {
+                    emptyList()
+                }
+
+            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(SUBSTITUTIONS_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
@@ -119,67 +120,36 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                             trySend(emptyList())
                             return@addSnapshotListener
                         }
-
-                        val substitutions =
+                        val newSubstitutions =
                             snapshot?.documents?.mapNotNull { document ->
-                                document.toObject(PlayerSubstitutionFirestoreModel::class.java)?.toDomain()
+                                parseSubstitutionDocument(document.data, document.id, teamDocId, matchId)
                             } ?: emptyList()
-
-                        trySend(substitutions)
+                        trySend(legacySubstitutions + newSubstitutions)
                     }
 
-            awaitClose {
-                listenerRegistration.remove()
-            }
+            awaitClose { listenerRegistration.remove() }
         }
 
-    /**
-     * Inserts a new substitution into Firestore.
-     * Returns a stable Long ID derived from the Firestore document ID.
-     */
-    override suspend fun insertSubstitution(substitution: PlayerSubstitution): Long {
-        val teamDocId = getTeamDocumentId()
-
-        if (teamDocId == null) {
-            throw IllegalStateException("Team must exist to create a substitution")
-        }
-
-        // Find the match document ID for security rules
-        // If we can't find it, use empty string and rely on teamId validation in security rules
-        val matchDocId = findMatchDocumentId(teamDocId, substitution.matchId)
+    override suspend fun insertSubstitution(substitution: PlayerSubstitution): String {
+        val teamDocId =
+            getTeamDocumentId()
+                ?: throw IllegalStateException("Team must exist to create a substitution")
 
         val docRef = firestore.collection(SUBSTITUTIONS_COLLECTION).document()
-
-        val firestoreModel = substitution.toFirestoreModel()
-        val modelWithTeam =
-            firestoreModel.copy(
-                id = docRef.id,
-                teamId = teamDocId,
-                matchDocId = matchDocId ?: "",
-            )
+        val firestoreModel = substitution.toFirestoreModel().copy(id = docRef.id, teamId = teamDocId)
 
         try {
-            docRef.set(modelWithTeam).await()
-            return docRef.id.toStableId()
+            docRef.set(firestoreModel).await()
+            return docRef.id
         } catch (e: CancellationException) {
-            throw e
-        } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
             throw e
         } catch (e: Exception) {
             throw e
         }
     }
 
-    /**
-     * This method is not applicable for remote Firestore data source.
-     * @return empty list as direct access is not needed for remote storage
-     */
     override suspend fun getAllPlayerSubstitutionsDirect(): List<PlayerSubstitution> = emptyList()
 
-    /**
-     * This method is not applicable for remote Firestore data source.
-     * Only relevant for local Room database cleanup.
-     */
     override suspend fun clearLocalData() {
         // No-op for remote data source
     }

@@ -31,11 +31,10 @@ class NotifyPresidentMatchEventUseCaseTest {
     private val matchId = "match-id-1"
 
     private val club = Club(
-        id = 1L,
+        id = clubRemoteId,
         ownerId = presidentUserId,
         name = "Test Club",
         invitationCode = "ABC123",
-        remoteId = clubRemoteId,
     )
 
     @Before

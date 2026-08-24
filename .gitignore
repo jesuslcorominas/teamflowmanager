@@ -53,6 +53,9 @@ iosApp/iosApp.xcodeproj/xcuserdata/
 .DS_Store
 **/.DS_Store
 
+# Claude Code specs (internal planning docs, not for VCS)
+.claude/specs/
+
 # Kotlin build cache
 .kotlin/
 

@@ -26,14 +26,14 @@ class UpdateMatchUseCaseTest {
             // Given
             val match =
                 Match(
-                    id = 1L,
-                    teamId = 1L,
+                    id = "1",
+                    teamId = "1",
                     opponent = "Updated Rival FC",
                     location = "New Stadium",
-                    startingLineupIds = listOf(1L, 2L, 3L),
+                    startingLineupIds = listOf("1", "2", "3"),
                     teamName = "Team B",
                     periodType = PeriodType.HALF_TIME,
-                    captainId = 1L,
+                    captainId = "1",
                 )
 
             // When

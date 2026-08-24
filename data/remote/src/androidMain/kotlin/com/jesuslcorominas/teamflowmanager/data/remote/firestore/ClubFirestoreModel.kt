@@ -5,9 +5,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Club
 
 /**
  * Firestore model for Club document.
- * This model is used for serialization/deserialization with Firestore.
- * The `id` field is automatically populated by Firestore with the document ID.
- * The `ownerId` field is required by Firestore security rules to identify the owner.
  */
 data class ClubFirestoreModel(
     @DocumentId
@@ -27,9 +24,18 @@ data class ClubFirestoreModel(
     )
 }
 
+fun ClubFirestoreModel.toDomain(): Club =
+    Club(
+        id = id,
+        ownerId = ownerId,
+        name = name,
+        invitationCode = invitationCode,
+        homeGround = homeGround,
+    )
+
 fun Club.toFirestoreModel(): ClubFirestoreModel =
     ClubFirestoreModel(
-        id = remoteId ?: "",
+        id = id,
         ownerId = ownerId,
         name = name,
         invitationCode = invitationCode,

@@ -73,7 +73,7 @@ class MatchListViewModel(
         }
     }
 
-    fun resumeMatch(matchId: Long) {
+    fun resumeMatch(matchId: String) {
         viewModelScope.launch {
             try {
                 crashReporter.log("Resuming match: $matchId")
@@ -137,7 +137,7 @@ class MatchListViewModel(
         _deleteConfirmationState.value = MatchDeleteConfirmationState.None
     }
 
-    fun archiveMatch(matchId: Long) {
+    fun archiveMatch(matchId: String) {
         viewModelScope.launch {
             try {
                 crashReporter.log("Archiving match: $matchId")

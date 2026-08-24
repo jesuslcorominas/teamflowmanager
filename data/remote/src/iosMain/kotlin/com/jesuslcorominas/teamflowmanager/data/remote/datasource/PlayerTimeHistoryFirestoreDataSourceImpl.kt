@@ -4,7 +4,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistor
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeHistoryFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -12,6 +12,7 @@ import dev.gitlive.firebase.firestore.FirebaseFirestoreException
 import dev.gitlive.firebase.firestore.where
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -24,6 +25,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
     companion object {
         private const val PLAYER_TIME_HISTORY_COLLECTION = "playerTimeHistory"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     private suspend fun getTeamDocumentId(): String? {
@@ -42,7 +44,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
         }
     }
 
-    override fun getPlayerTimeHistory(playerId: Long): Flow<List<PlayerTimeHistory>> =
+    override fun getPlayerTimeHistory(playerId: String): Flow<List<PlayerTimeHistory>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -54,55 +56,109 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                 emit(emptyList())
                 return@flow
             }
-            val snapshots =
+            // Combine two real-time listeners: one for new String-ID docs, one for legacy Long-ID docs.
+            // TODO: remove legacy branch after backward-compat window closes.
+            val newSnapshots =
                 firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "playerId" equalTo playerId }
                     .snapshots
+            val legacySnapshots =
+                firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
+                    .where { "teamId" equalTo teamDocId }
+                    .where { "playerId" equalTo playerId.toLegacyId() }
+                    .snapshots
             emitAll(
-                snapshots.map { qs ->
-                    qs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerTimeHistoryFirestoreModel>().copy(id = doc.id).toDomain()
-                        } catch (_: Exception) {
-                            null
+                combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
+                    val newHistory =
+                        newQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeHistoryFirestoreModel>()
+                                    .copy(id = doc.id, playerId = playerId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
+                    val legacyHistory =
+                        legacyQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeHistoryFirestoreModel>()
+                                    .copy(id = doc.id, playerId = playerId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
+                        }
+                    newHistory + legacyHistory
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                 },
             )
         }
 
-    override fun getMatchPlayerTimeHistory(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerTimeHistory>> =
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                val doc = firestore.collection(MATCHES_COLLECTION).document(matchId).get()
+                if (!doc.exists) {
+                    null
+                } else {
+                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+
+    override fun getMatchPlayerTimeHistory(matchId: String): Flow<List<PlayerTimeHistory>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val teamDocId = teamId ?: getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val snapshots =
+            // Combine two real-time listeners: one for new String-ID docs, one for legacy Long-ID docs.
+            // TODO: remove legacy branch after backward-compat window closes.
+            val newSnapshots =
                 firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId }
                     .snapshots
+            val legacySnapshots =
+                firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
+                    .where { "teamId" equalTo teamDocId }
+                    .where { "matchId" equalTo matchId.toLegacyId() }
+                    .snapshots
             emitAll(
-                snapshots.map { qs ->
-                    qs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerTimeHistoryFirestoreModel>().copy(id = doc.id).toDomain()
-                        } catch (_: Exception) {
-                            null
+                combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
+                    val newHistory =
+                        newQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeHistoryFirestoreModel>()
+                                    .copy(id = doc.id, matchId = matchId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
+                    val legacyHistory =
+                        legacyQs.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<PlayerTimeHistoryFirestoreModel>()
+                                    .copy(id = doc.id, matchId = matchId)
+                                    .toDomain()
+                            } catch (_: Exception) {
+                                null
+                            }
+                        }
+                    newHistory + legacyHistory
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                 },
@@ -140,14 +196,14 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             )
         }
 
-    override suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): Long {
+    override suspend fun insertPlayerTimeHistory(playerTimeHistory: PlayerTimeHistory): String {
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("Team must exist to insert player time history")
         return try {
             val model = playerTimeHistory.toFirestoreModel().copy(teamId = teamDocId)
             val docRef = firestore.collection(PLAYER_TIME_HISTORY_COLLECTION).add(model)
-            docRef.id.toStableId()
+            docRef.id
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

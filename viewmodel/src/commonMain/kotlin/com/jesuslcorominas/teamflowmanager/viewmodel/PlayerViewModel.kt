@@ -132,7 +132,7 @@ class PlayerViewModel(
     private fun savePlayerDirectly(player: Player) {
         viewModelScope.launch {
             try {
-                val isNewPlayer = player.id == 0L
+                val isNewPlayer = player.id.isBlank()
 
                 if (isNewPlayer) {
                     crashReporter.log("Creating new player: ${player.firstName} ${player.lastName}")
@@ -206,7 +206,7 @@ class PlayerViewModel(
         _deleteConfirmationState.value = DeleteConfirmationState.None
     }
 
-    fun deletePlayer(playerId: Long) {
+    fun deletePlayer(playerId: String) {
         viewModelScope.launch {
             try {
                 crashReporter.log("Deleting player: $playerId")

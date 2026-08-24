@@ -2,8 +2,8 @@ package com.jesuslcorominas.teamflowmanager.domain.usecase
 
 interface StartPlayerTimersBatchUseCase {
     suspend operator fun invoke(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
     )
 }

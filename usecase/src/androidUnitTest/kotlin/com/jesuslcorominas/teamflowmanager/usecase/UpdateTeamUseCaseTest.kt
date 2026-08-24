@@ -24,7 +24,7 @@ class UpdateTeamUseCaseTest {
     fun `invoke should call repository updateTeam with correct team`() =
         runTest {
             // Given
-            val team = Team(1, "Updated Team", "Updated Coach", "Updated Delegate", teamType = TeamType.FOOTBALL_5)
+            val team = Team("1", "Updated Team", "Updated Coach", "Updated Delegate", teamType = TeamType.FOOTBALL_5)
 
             // When
             updateTeamUseCase.invoke(team)

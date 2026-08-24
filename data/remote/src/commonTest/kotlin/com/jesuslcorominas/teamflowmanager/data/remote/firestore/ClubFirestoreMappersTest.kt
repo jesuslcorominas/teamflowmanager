@@ -39,23 +39,21 @@ class ClubFirestoreMappersTest {
     }
 
     @Test
-    fun `toDomain maps remoteId to id string`() {
+    fun `toDomain maps id string directly`() {
         val result = clubFields(id = "remote-id-xyz").toDomain()
-        assertEquals("remote-id-xyz", result.remoteId)
+        assertEquals("remote-id-xyz", result.id)
     }
 
     @Test
-    fun `toDomain converts id via toStableId`() {
-        val id = "abc"
-        val result = clubFields(id = id).toDomain()
-        // toStableId of "abc": a=97*1 + b=98*31 + c=99*961 = 97 + 3038 + 95139 = 98274
-        assertEquals(98274L, result.id)
+    fun `toDomain maps id string without conversion`() {
+        val result = clubFields(id = "abc").toDomain()
+        assertEquals("abc", result.id)
     }
 
     @Test
-    fun `toDomain empty id produces zero stable id`() {
+    fun `toDomain empty id produces empty string`() {
         val result = clubFields(id = "").toDomain()
-        assertEquals(0L, result.id)
+        assertEquals("", result.id)
     }
 
     @Test

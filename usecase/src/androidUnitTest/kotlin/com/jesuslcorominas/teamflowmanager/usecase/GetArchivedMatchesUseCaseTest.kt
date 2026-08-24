@@ -31,24 +31,24 @@ class GetArchivedMatchesUseCaseTest {
             val archivedMatches =
                 listOf(
                     Match(
-                        id = 1L,
+                        id = "1",
                         opponent = "Team A",
                         location = "Stadium",
                         status = MatchStatus.FINISHED,
                         archived = true,
                         teamName = "Team A",
                         periodType = PeriodType.HALF_TIME,
-                        captainId = 1L,
+                        captainId = "1",
                     ),
                     Match(
-                        id = 2L,
+                        id = "2",
                         opponent = "Team B",
                         location = "Stadium",
                         status = MatchStatus.FINISHED,
                         archived = true,
                         teamName = "Team A",
                         periodType = PeriodType.HALF_TIME,
-                        captainId = 1L,
+                        captainId = "1",
                     ),
                 )
             every { matchRepository.getArchivedMatches() } returns flowOf(archivedMatches)

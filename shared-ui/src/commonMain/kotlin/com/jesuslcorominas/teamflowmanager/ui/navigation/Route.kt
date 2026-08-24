@@ -154,7 +154,7 @@ sealed class Route(
     )
 
     data object CreateMatch : Route(path = "create_match", showTopBar = false) {
-        const val DEFAULT_MATCH_ID = 0L
+        const val DEFAULT_MATCH_ID = ""
         const val ARG_MATCH_ID = "matchId"
         private const val PATH = "create_match"
 
@@ -194,7 +194,7 @@ sealed class Route(
 
         fun createRoute(
             teamId: String,
-            matchId: Long,
+            matchId: String,
         ): String = "$PATH/$teamId/$matchId"
     }
 

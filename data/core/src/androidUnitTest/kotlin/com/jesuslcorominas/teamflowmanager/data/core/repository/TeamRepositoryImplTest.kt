@@ -32,12 +32,10 @@ class TeamRepositoryImplTest {
     }
 
     private fun createTeam(
-        id: Long = 1L,
+        id: String = "1",
         name: String = "Test Team",
         coachId: String? = null,
-        clubId: Long? = null,
-        clubRemoteId: String? = null,
-        remoteId: String? = null,
+        clubId: String? = null,
     ) = Team(
         id = id,
         name = name,
@@ -46,8 +44,6 @@ class TeamRepositoryImplTest {
         teamType = TeamType.FOOTBALL_5,
         coachId = coachId,
         clubId = clubId,
-        clubRemoteId = clubRemoteId,
-        remoteId = remoteId,
     )
 
     // --- getTeam ---
@@ -75,7 +71,7 @@ class TeamRepositoryImplTest {
 
     @Test
     fun `givenTeam_whenCreateTeam_thenDelegatesToDataSource`() = runTest {
-        val team = createTeam(id = 0L)
+        val team = createTeam(id = "")
         coEvery { teamDataSource.insertTeam(team) } just runs
 
         repository.createTeam(team)
@@ -85,7 +81,7 @@ class TeamRepositoryImplTest {
 
     @Test
     fun `givenTeamWithClubId_whenCreateTeam_thenDelegatesToDataSource`() = runTest {
-        val team = createTeam(id = 0L, clubId = 123L, clubRemoteId = "club-abc")
+        val team = createTeam(id = "", clubId = "club-abc")
         coEvery { teamDataSource.insertTeam(team) } just runs
 
         repository.createTeam(team)
@@ -95,7 +91,7 @@ class TeamRepositoryImplTest {
 
     @Test
     fun `givenOrphanTeamWithNullClubId_whenCreateTeam_thenDelegatesToDataSource`() = runTest {
-        val team = createTeam(id = 0L, clubId = null, clubRemoteId = null)
+        val team = createTeam(id = "", clubId = null)
         coEvery { teamDataSource.insertTeam(team) } just runs
 
         repository.createTeam(team)
@@ -107,7 +103,7 @@ class TeamRepositoryImplTest {
 
     @Test
     fun `givenTeam_whenUpdateTeam_thenDelegatesToDataSource`() = runTest {
-        val team = createTeam(id = 1L, name = "Updated Team")
+        val team = createTeam(id = "1", name = "Updated Team")
         coEvery { teamDataSource.updateTeam(team) } just runs
 
         repository.updateTeam(team)
@@ -143,7 +139,7 @@ class TeamRepositoryImplTest {
     @Test
     fun `givenClubFirestoreId_whenGetTeamsByClub_thenReturnsTeams`() = runTest {
         val clubRemoteId = "club-123"
-        val teams = listOf(createTeam(id = 1L), createTeam(id = 2L))
+        val teams = listOf(createTeam(id = "1"), createTeam(id = "2"))
         every { teamDataSource.getTeamsByClub(clubRemoteId) } returns flowOf(teams)
 
         val result = repository.getTeamsByClub(clubRemoteId).first()
@@ -166,7 +162,7 @@ class TeamRepositoryImplTest {
     @Test
     fun `givenOwnerIdWithOrphanTeams_whenGetOrphanTeams_thenReturnsOrphanTeams`() = runTest {
         val ownerId = "owner-123"
-        val orphanTeams = listOf(createTeam(id = 1L, clubId = null))
+        val orphanTeams = listOf(createTeam(id = "1", clubId = null))
         coEvery { teamDataSource.getOrphanTeams(ownerId) } returns orphanTeams
 
         val result = repository.getOrphanTeams(ownerId)
@@ -189,20 +185,20 @@ class TeamRepositoryImplTest {
 
     @Test
     fun `givenTeamAndClubIds_whenUpdateTeamClubId_thenDelegatesToDataSource`() = runTest {
-        repository.updateTeamClubId("firestore-team-id", 123L, "firestore-club-id")
+        repository.updateTeamClubId("firestore-team-id", "firestore-club-id")
 
-        coVerify { teamDataSource.updateTeamClubId("firestore-team-id", 123L, "firestore-club-id") }
+        coVerify { teamDataSource.updateTeamClubId("firestore-team-id", "firestore-club-id") }
     }
 
     // --- getTeamById ---
 
     @Test
     fun `givenTeamFirestoreId_whenGetTeamByFirestoreId_thenReturnsTeam`() = runTest {
-        val remoteId = "firestore-team-123"
-        val team = createTeam(remoteId = remoteId)
-        coEvery { teamDataSource.getTeamById(remoteId) } returns team
+        val teamId = "firestore-team-123"
+        val team = createTeam(id = teamId)
+        coEvery { teamDataSource.getTeamById(teamId) } returns team
 
-        val result = repository.getTeamById(remoteId)
+        val result = repository.getTeamById(teamId)
 
         assertEquals(team, result)
     }

@@ -23,17 +23,15 @@ class ClubRepositoryImplTest {
     }
 
     private fun createClub(
-        id: Long = 1L,
+        id: String = "club-firestore-id",
         ownerId: String = "owner-123",
         name: String = "Test Club",
         invitationCode: String = "ABCD1234",
-        remoteId: String? = "club-firestore-id",
     ) = Club(
         id = id,
         ownerId = ownerId,
         name = name,
         invitationCode = invitationCode,
-        remoteId = remoteId,
     )
 
     // --- createClubWithOwner ---

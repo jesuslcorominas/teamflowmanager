@@ -8,8 +8,5 @@ import kotlinx.coroutines.flow.Flow
 internal class GetAllPlayerTimesUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
 ) : GetAllPlayerTimesUseCase {
-    override fun invoke(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerTime>> = playerTimeRepository.getPlayerTimesByMatch(matchId, teamId)
+    override fun invoke(matchId: String): Flow<List<PlayerTime>> = playerTimeRepository.getPlayerTimesByMatch(matchId)
 }

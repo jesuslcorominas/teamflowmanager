@@ -7,8 +7,5 @@ import kotlinx.coroutines.flow.Flow
  * Use case to get all timeline events for a finished match.
  */
 interface GetMatchTimelineUseCase {
-    operator fun invoke(
-        matchId: Long,
-        teamId: String? = null,
-    ): Flow<MatchTimeline?>
+    operator fun invoke(matchId: String): Flow<MatchTimeline?>
 }

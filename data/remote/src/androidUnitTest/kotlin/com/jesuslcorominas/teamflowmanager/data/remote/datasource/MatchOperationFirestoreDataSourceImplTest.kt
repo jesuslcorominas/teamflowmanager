@@ -186,7 +186,7 @@ class MatchOperationFirestoreDataSourceImplTest {
         val operationModel = MatchOperationFirestoreModel(
             id = "op-id",
             teamId = "team-doc-id",
-            matchId = 1L
+            matchId = "1"
         )
         every { docSnapshot.toObject(MatchOperationFirestoreModel::class.java) } returns operationModel
 

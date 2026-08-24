@@ -24,16 +24,15 @@ class CreateTeamUseCaseTest {
     private lateinit var createTeamUseCase: CreateTeamUseCase
 
     private val currentUser = User(id = "user123", email = "user@test.com", displayName = "User", photoUrl = null)
-    private val baseTeam = Team(0, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
+    private val baseTeam = Team("", "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
 
     private val presidentMember = ClubMember(
-        id = 1L,
+        id = "1",
         userId = "user123",
         name = "President",
         email = "user@test.com",
-        clubId = 10L,
+        clubId = "10",
         roles = listOf(ClubRole.PRESIDENT.roleName),
-        clubRemoteId = "club_fs_1",
     )
 
     @Before

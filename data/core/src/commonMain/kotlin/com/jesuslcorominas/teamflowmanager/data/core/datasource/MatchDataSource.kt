@@ -4,10 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import kotlinx.coroutines.flow.Flow
 
 interface MatchDataSource {
-    fun getMatchById(
-        matchId: Long,
-        teamId: String? = null,
-    ): Flow<Match?>
+    fun getMatchById(matchId: String): Flow<Match?>
 
     fun getAllMatches(): Flow<List<Match>>
 
@@ -18,15 +15,15 @@ interface MatchDataSource {
     suspend fun getScheduledMatches(): List<Match>
 
     suspend fun updateMatchCaptain(
-        matchId: Long,
-        captainId: Long?,
+        matchId: String,
+        captainId: String?,
     )
 
-    suspend fun insertMatch(match: Match): Long
+    suspend fun insertMatch(match: Match): String
 
     suspend fun updateMatch(match: Match)
 
-    suspend fun deleteMatch(matchId: Long)
+    suspend fun deleteMatch(matchId: String)
 
     /**
      * Get all matches directly (not as a Flow) for migration purposes.

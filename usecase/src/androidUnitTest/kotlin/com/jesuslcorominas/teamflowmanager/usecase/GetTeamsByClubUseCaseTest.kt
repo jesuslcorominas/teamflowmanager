@@ -28,16 +28,16 @@ class GetTeamsByClubUseCaseTest {
     fun `invoke should return teams for given club`() = runTest {
         val clubId = "club123"
         val teams = listOf(
-            Team(id = 1L, name = "Team A", coachName = "Coach A", delegateName = "Delegate A", teamType = TeamType.FOOTBALL_7),
-            Team(id = 2L, name = "Team B", coachName = "Coach B", delegateName = "Delegate B", teamType = TeamType.FOOTBALL_11),
+            Team(id = "1", name = "Team A", coachName = "Coach A", delegateName = "Delegate A", teamType = TeamType.FOOTBALL_7),
+            Team(id = "2", name = "Team B", coachName = "Coach B", delegateName = "Delegate B", teamType = TeamType.FOOTBALL_11),
         )
         every { teamRepository.getTeamsByClub(clubId) } returns flowOf(teams)
 
         val result = useCase.invoke(clubId).first()
 
         assertEquals(2, result.size)
-        assertEquals(1L, result[0].id)
-        assertEquals(2L, result[1].id)
+        assertEquals("1", result[0].id)
+        assertEquals("2", result[1].id)
     }
 
     @Test

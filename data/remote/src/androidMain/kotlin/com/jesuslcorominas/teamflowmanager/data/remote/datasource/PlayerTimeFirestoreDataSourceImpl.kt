@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSo
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,7 @@ class PlayerTimeFirestoreDataSourceImpl(
     companion object {
         private const val PLAYER_TIMES_COLLECTION = "playerTimes"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     /**
@@ -60,7 +62,7 @@ class PlayerTimeFirestoreDataSourceImpl(
     /**
      * Gets player time for a specific player as a real-time Flow.
      */
-    override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> =
+    override fun getPlayerTime(playerId: String): Flow<PlayerTime?> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -116,6 +118,41 @@ class PlayerTimeFirestoreDataSourceImpl(
             }
         }
 
+    // For non-coach roles (e.g. president), derive teamId from the match document.
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                firestore.collection(MATCHES_COLLECTION).document(matchId).get().await()
+                    .getString("teamId")
+            } catch (_: Exception) {
+                null
+            }
+
+    private fun parsePlayerTimeDocument(
+        rawData: Map<String, Any?>?,
+        docId: String,
+        teamDocId: String,
+        matchId: String,
+    ): PlayerTime? {
+        if (rawData == null) return null
+        return try {
+            val rawPlayerId = rawData["playerId"]?.toString() ?: ""
+            PlayerTimeFirestoreModel(
+                id = docId,
+                teamId = rawData["teamId"] as? String ?: teamDocId,
+                matchId = matchId,
+                playerId = rawPlayerId,
+                elapsedTimeMillis = rawData["elapsedTimeMillis"] as? Long ?: 0L,
+                isRunning = rawData["running"] as? Boolean ?: false,
+                lastStartTimeMillis = rawData["lastStartTimeMillis"] as? Long,
+                status = rawData["status"] as? String ?: "ON_BENCH",
+                lastOperationId = rawData["lastOperationId"] as? String,
+            ).toDomain()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     /**
      * Gets player times scoped to a specific match from Firestore as a real-time Flow.
      * Documents from previous matches (matchId mismatch) are ignored automatically,
@@ -123,10 +160,7 @@ class PlayerTimeFirestoreDataSourceImpl(
      *
      * Note: requires a composite Firestore index on playerTimes(teamId ASC, matchId ASC).
      */
-    override fun getPlayerTimesByMatch(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerTime>> =
+    override fun getPlayerTimesByMatch(matchId: String): Flow<List<PlayerTime>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -135,13 +169,30 @@ class PlayerTimeFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = teamId ?: getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 trySend(emptyList())
                 awaitClose { }
                 return@callbackFlow
             }
 
+            // One-time fetch for legacy Long-ID docs (pre-migration).
+            // TODO: remove after backward-compat window closes.
+            val legacyPlayerTimes =
+                try {
+                    firestore.collection(PLAYER_TIMES_COLLECTION)
+                        .whereEqualTo("teamId", teamDocId)
+                        .whereEqualTo("matchId", matchId.toLegacyId())
+                        .get()
+                        .await()
+                        .documents.mapNotNull { document ->
+                            parsePlayerTimeDocument(document.data, document.id, teamDocId, matchId)
+                        }
+                } catch (_: Exception) {
+                    emptyList()
+                }
+
+            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(PLAYER_TIMES_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
@@ -151,27 +202,14 @@ class PlayerTimeFirestoreDataSourceImpl(
                             trySend(emptyList())
                             return@addSnapshotListener
                         }
-
-                        if (snapshot == null) {
-                            trySend(emptyList())
-                            return@addSnapshotListener
-                        }
-
-                        val playerTimes =
-                            snapshot.documents.mapNotNull { document ->
-                                try {
-                                    document.toObject(PlayerTimeFirestoreModel::class.java)?.toDomain()
-                                } catch (e: Exception) {
-                                    null
-                                }
-                            }
-
-                        trySend(playerTimes)
+                        val newPlayerTimes =
+                            snapshot?.documents?.mapNotNull { document ->
+                                parsePlayerTimeDocument(document.data, document.id, teamDocId, matchId)
+                            } ?: emptyList()
+                        trySend(legacyPlayerTimes + newPlayerTimes)
                     }
 
-            awaitClose {
-                listenerRegistration.remove()
-            }
+            awaitClose { listenerRegistration.remove() }
         }
 
     /**

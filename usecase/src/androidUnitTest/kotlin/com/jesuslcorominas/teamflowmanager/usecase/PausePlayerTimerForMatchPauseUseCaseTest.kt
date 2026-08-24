@@ -20,7 +20,7 @@ class PausePlayerTimerForMatchPauseUseCaseTest {
 
     @Test
     fun `invoke should call pauseTimerForMatchPause on repository`() = runTest {
-        val playerId = 3L
+        val playerId = "3"
         val currentTimeMillis = 5000L
 
         useCase.invoke(playerId, currentTimeMillis)

@@ -40,13 +40,13 @@ class GetPlayerGoalStatsUseCaseTest {
 
     @Test
     fun `invoke should return correct goal count and matches for each player`() = runTest {
-        val player1 = createPlayer(1L, 10)
-        val player2 = createPlayer(2L, 7)
+        val player1 = createPlayer("1", 10)
+        val player2 = createPlayer("2", 7)
         val goals = listOf(
-            Goal(id = 1L, matchId = 1L, scorerId = 1L, goalTimeMillis = 100L, matchElapsedTimeMillis = 100L, isOpponentGoal = false),
-            Goal(id = 2L, matchId = 1L, scorerId = 1L, goalTimeMillis = 200L, matchElapsedTimeMillis = 200L, isOpponentGoal = false),
-            Goal(id = 3L, matchId = 2L, scorerId = 1L, goalTimeMillis = 300L, matchElapsedTimeMillis = 300L, isOpponentGoal = false),
-            Goal(id = 4L, matchId = 1L, scorerId = 2L, goalTimeMillis = 400L, matchElapsedTimeMillis = 400L, isOpponentGoal = false),
+            Goal(id = "1", matchId = "1", scorerId = "1", goalTimeMillis = 100L, matchElapsedTimeMillis = 100L, isOpponentGoal = false),
+            Goal(id = "2", matchId = "1", scorerId = "1", goalTimeMillis = 200L, matchElapsedTimeMillis = 200L, isOpponentGoal = false),
+            Goal(id = "3", matchId = "2", scorerId = "1", goalTimeMillis = 300L, matchElapsedTimeMillis = 300L, isOpponentGoal = false),
+            Goal(id = "4", matchId = "1", scorerId = "2", goalTimeMillis = 400L, matchElapsedTimeMillis = 400L, isOpponentGoal = false),
         )
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
         every { goalRepository.getAllTeamGoals() } returns flowOf(goals)
@@ -55,18 +55,18 @@ class GetPlayerGoalStatsUseCaseTest {
 
         assertEquals(2, result.size)
         // Sorted descending by total goals: player1 (3 goals) first
-        val stats1 = result.find { it.player.id == 1L }!!
+        val stats1 = result.find { it.player.id == "1" }!!
         assertEquals(3, stats1.totalGoals)
         assertEquals(2, stats1.matchesWithGoals) // distinct matches: 1, 2
 
-        val stats2 = result.find { it.player.id == 2L }!!
+        val stats2 = result.find { it.player.id == "2" }!!
         assertEquals(1, stats2.totalGoals)
         assertEquals(1, stats2.matchesWithGoals)
     }
 
     @Test
     fun `invoke should return zero goals for player with no goals`() = runTest {
-        val player = createPlayer(1L, 10)
+        val player = createPlayer("1", 10)
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player))
         every { goalRepository.getAllTeamGoals() } returns flowOf(emptyList())
 
@@ -77,13 +77,13 @@ class GetPlayerGoalStatsUseCaseTest {
         assertEquals(0, result[0].matchesWithGoals)
     }
 
-    private fun createPlayer(id: Long, number: Int) = Player(
+    private fun createPlayer(id: String, number: Int) = Player(
         id = id,
         firstName = "Player",
         lastName = "Test",
         number = number,
         positions = listOf(Position.Forward),
-        teamId = 1L,
+        teamId = "1",
         isCaptain = false,
     )
 }

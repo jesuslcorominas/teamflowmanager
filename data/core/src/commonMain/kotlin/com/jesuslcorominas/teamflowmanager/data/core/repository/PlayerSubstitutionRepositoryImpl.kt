@@ -8,10 +8,7 @@ import kotlinx.coroutines.flow.Flow
 internal class PlayerSubstitutionRepositoryImpl(
     private val playerSubstitutionDataSource: PlayerSubstitutionDataSource,
 ) : PlayerSubstitutionRepository {
-    override fun getMatchSubstitutions(
-        matchId: Long,
-        teamId: String?,
-    ): Flow<List<PlayerSubstitution>> = playerSubstitutionDataSource.getMatchSubstitutions(matchId, teamId)
+    override fun getMatchSubstitutions(matchId: String): Flow<List<PlayerSubstitution>> = playerSubstitutionDataSource.getMatchSubstitutions(matchId)
 
-    override suspend fun insertSubstitution(substitution: PlayerSubstitution): Long = playerSubstitutionDataSource.insertSubstitution(substitution)
+    override suspend fun insertSubstitution(substitution: PlayerSubstitution): String = playerSubstitutionDataSource.insertSubstitution(substitution)
 }

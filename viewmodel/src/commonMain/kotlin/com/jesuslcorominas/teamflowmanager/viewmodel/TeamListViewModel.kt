@@ -111,7 +111,7 @@ class TeamListViewModel(
         viewModelScope.launch {
             try {
                 val clubMember = getUserClubMembership().first()
-                val clubRemoteId = clubMember?.clubRemoteId
+                val clubRemoteId = clubMember?.clubId
 
                 if (clubMember == null || clubRemoteId == null) {
                     _uiState.value = UiState.NoClubMembership
@@ -168,11 +168,10 @@ class TeamListViewModel(
         viewModelScope.launch {
             allTeamsCache
                 .flatMapLatest { teams ->
-                    val teamsWithId = teams.filter { !it.remoteId.isNullOrBlank() }
-                    if (teamsWithId.isEmpty()) return@flatMapLatest flowOf(emptyMap())
+                    if (teams.isEmpty()) return@flatMapLatest flowOf(emptyMap())
                     combine(
-                        teamsWithId.map { team ->
-                            getMatchesByTeam(team.remoteId!!)
+                        teams.map { team ->
+                            getMatchesByTeam(team.id)
                                 .map { matches ->
                                     val current =
                                         matches.firstOrNull {
@@ -183,7 +182,7 @@ class TeamListViewModel(
                                         matches
                                             .filter { it.status == MatchStatus.SCHEDULED }
                                             .minByOrNull { it.dateTime ?: Long.MAX_VALUE }
-                                    team.remoteId!! to TeamMatchInfo(current, next)
+                                    team.id to TeamMatchInfo(current, next)
                                 }
                         },
                     ) { pairs -> pairs.toMap() }
@@ -194,10 +193,10 @@ class TeamListViewModel(
     }
 
     fun shareTeam(team: Team) {
-        if (_sharingTeamId.value == team.remoteId) return
+        if (_sharingTeamId.value == team.id) return
 
         viewModelScope.launch {
-            val teamFirestoreId = team.remoteId ?: return@launch
+            val teamFirestoreId = team.id
             _sharingTeamId.value = teamFirestoreId
             try {
                 val invitationLink = generateTeamInvitation(teamFirestoreId, team.name)
@@ -230,7 +229,7 @@ class TeamListViewModel(
 
     fun assignCoachByMember(member: ClubMember) {
         val team = _assignCoachDialogTeam.value ?: return
-        val teamId = team.remoteId ?: return
+        val teamId = team.id
 
         viewModelScope.launch {
             _assigningCoachToTeamId.value = teamId
@@ -248,7 +247,7 @@ class TeamListViewModel(
 
     fun assignCoachByEmail(email: String) {
         val team = _assignCoachDialogTeam.value ?: return
-        val teamId = team.remoteId ?: return
+        val teamId = team.id
         val trimmedEmail = email.trim()
         val existingMember =
             _clubMembers.value.firstOrNull {
@@ -275,7 +274,7 @@ class TeamListViewModel(
     }
 
     fun removeCoach(team: Team) {
-        val teamId = team.remoteId ?: return
+        val teamId = team.id
         viewModelScope.launch {
             try {
                 clearTeamCoachUseCase(teamId)
@@ -286,7 +285,7 @@ class TeamListViewModel(
     }
 
     fun deletePendingAssignment(team: Team) {
-        val teamId = team.remoteId ?: return
+        val teamId = team.id
         viewModelScope.launch {
             try {
                 deletePendingCoachAssignment(teamId)
@@ -305,10 +304,10 @@ class TeamListViewModel(
     }
 
     fun selfAssignAsCoachToTeam(team: Team) {
-        if (_assigningCoachToTeamId.value == team.remoteId) return
+        if (_assigningCoachToTeamId.value == team.id) return
 
         viewModelScope.launch {
-            val teamFirestoreId = team.remoteId ?: return@launch
+            val teamFirestoreId = team.id
             _assigningCoachToTeamId.value = teamFirestoreId
             try {
                 selfAssignAsCoach(teamFirestoreId)

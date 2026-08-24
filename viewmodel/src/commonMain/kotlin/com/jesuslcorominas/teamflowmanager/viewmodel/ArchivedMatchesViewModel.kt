@@ -41,7 +41,7 @@ class ArchivedMatchesViewModel(
         }
     }
 
-    fun unarchiveMatch(matchId: Long) {
+    fun unarchiveMatch(matchId: String) {
         viewModelScope.launch {
             try {
                 crashReporter.log("Unarchiving match: $matchId")

@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class PlayerWizardViewModel(
-    private val playerId: Long,
+    private val playerId: String,
     private val getPlayerByIdUseCase: GetPlayerByIdUseCase,
     private val addPlayerUseCase: AddPlayerUseCase,
     private val updatePlayerUseCase: UpdatePlayerUseCase,
@@ -63,14 +63,14 @@ class PlayerWizardViewModel(
     private var originalPositions: List<Position> = emptyList()
 
     init {
-        if (playerId > 0L) {
+        if (playerId.isNotEmpty()) {
             initializeForEdit(playerId)
         } else {
             initializeForCreate()
         }
     }
 
-    private fun initializeForEdit(playerId: Long) {
+    private fun initializeForEdit(playerId: String) {
         viewModelScope.launch {
             val player = getPlayerByIdUseCase.invoke(playerId)
             if (player != null) {
@@ -145,7 +145,7 @@ class PlayerWizardViewModel(
 
     fun getSelectedPositions() = selectedPositions
 
-    fun isEditMode() = playerId != 0L
+    fun isEditMode() = playerId.isNotEmpty()
 
     fun hasUnsavedChanges(): Boolean {
         return firstName != originalFirstName ||
@@ -202,7 +202,7 @@ class PlayerWizardViewModel(
                     lastName = lastName,
                     number = number.toInt(),
                     positions = selectedPositions,
-                    teamId = 1, // TODO: Get team ID properly
+                    teamId = "", // resolved server-side on insert
                     isCaptain = isCaptain,
                     imageUri = imageUri,
                 )
@@ -286,7 +286,7 @@ class PlayerWizardViewModel(
     ) {
         viewModelScope.launch {
             try {
-                val isNewPlayer = player.id == 0L
+                val isNewPlayer = player.id.isEmpty()
 
                 crashReporter.log(
                     "Saving player via wizard: ${player.firstName} ${player.lastName}, isNew: $isNewPlayer",

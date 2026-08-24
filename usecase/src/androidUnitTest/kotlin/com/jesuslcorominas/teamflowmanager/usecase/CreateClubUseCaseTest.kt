@@ -50,11 +50,10 @@ class CreateClubUseCaseTest {
         )
         val clubName = "Test Club"
         val expectedClub = Club(
-            id = 1L,
+            id = "club123",
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            remoteId = "club123"
         )
         every { getCurrentUser() } returns flowOf(user)
         every { getTeam() } returns flowOf(null)
@@ -93,22 +92,20 @@ class CreateClubUseCaseTest {
             photoUrl = "https://example.com/photo.jpg"
         )
         val existingTeam = Team(
-            id = 1L,
+            id = "team1",
             name = "Test Team",
             coachName = "Test User",
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_7,
             coachId = "user123",
             clubId = null,
-            clubRemoteId = null
         )
         val clubName = "Test Club"
         val expectedClub = Club(
-            id = 1L,
+            id = "club123",
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            remoteId = "club123"
         )
         every { getCurrentUser() } returns flowOf(user)
         every { getTeam() } returns flowOf(existingTeam)
@@ -129,7 +126,7 @@ class CreateClubUseCaseTest {
         assertEquals(expectedClub, result)
         coVerify {
             updateTeam(
-                existingTeam.copy(clubRemoteId = "club123")
+                existingTeam.copy(clubId = "club123")
             )
         }
     }

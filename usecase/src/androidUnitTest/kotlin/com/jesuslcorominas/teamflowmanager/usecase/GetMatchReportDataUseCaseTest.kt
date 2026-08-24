@@ -55,7 +55,7 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `invoke should return null when match does not exist`() = runTest {
         // Given
-        val matchId = 1L
+        val matchId = "1"
         every { matchRepository.getMatchById(matchId) } returns flowOf(null)
         every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
         every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
@@ -72,18 +72,18 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `invoke should return match report data with player reports`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10, isGoalkeeper = false, isCaptain = true)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7, isGoalkeeper = true)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10, isGoalkeeper = false, isCaptain = true)
+        val player2 = createPlayer("2", "Jane", "Smith", 7, isGoalkeeper = true)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L, 2L),
-            squadCallUpIds = listOf(1L, 2L),
-            captainId = 1L,
+            startingLineupIds = listOf("1", "2"),
+            squadCallUpIds = listOf("1", "2"),
+            captainId = "1",
         )
         val playerTimes = listOf(
-            PlayerTimeHistory(playerId = 1L, matchId = matchId, elapsedTimeMillis = 3000000L, savedAtMillis = 0L),
-            PlayerTimeHistory(playerId = 2L, matchId = matchId, elapsedTimeMillis = 3000000L, savedAtMillis = 0L),
+            PlayerTimeHistory(playerId = "1", matchId = matchId, elapsedTimeMillis = 3000000L, savedAtMillis = 0L),
+            PlayerTimeHistory(playerId = "2", matchId = matchId, elapsedTimeMillis = 3000000L, savedAtMillis = 0L),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
@@ -98,11 +98,11 @@ class GetMatchReportDataUseCaseTest {
         // Then
         assertNotNull(result)
         assertEquals(2, result?.playerReports?.size)
-        
+
         // Player reports should be sorted by number
         val firstReport = result?.playerReports?.get(0)
         assertEquals(7, firstReport?.number) // Jane Smith
-        
+
         val secondReport = result?.playerReports?.get(1)
         assertEquals(10, secondReport?.number) // John Doe
         assertTrue(secondReport?.isCaptain == true)
@@ -112,17 +112,17 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `invoke should include timeline events in report data`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L, 2L),
-            squadCallUpIds = listOf(1L, 2L),
+            startingLineupIds = listOf("1", "2"),
+            squadCallUpIds = listOf("1", "2"),
         )
         val goals = listOf(
-            Goal(id = 1L, matchId = matchId, scorerId = 1L, goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false),
-            Goal(id = 2L, matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = true),
+            Goal(id = "1", matchId = matchId, scorerId = "1", goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false),
+            Goal(id = "2", matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = true),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
@@ -137,19 +137,19 @@ class GetMatchReportDataUseCaseTest {
         // Then
         assertNotNull(result)
         assertTrue(result!!.timelineEvents.isNotEmpty())
-        
+
         // Should have starting lineup + 2 goals
         val startingLineupEvents = result.timelineEvents.filterIsInstance<TimelineEvent.StartingLineup>()
         assertEquals(1, startingLineupEvents.size)
-        
+
         val goalEvents = result.timelineEvents.filterIsInstance<TimelineEvent.GoalScored>()
         assertEquals(2, goalEvents.size)
-        
+
         // Verify goal running scores
         val firstGoal = goalEvents.find { it.matchElapsedTimeMillis == 300000L }
         assertEquals(1, firstGoal?.teamScore)
         assertEquals(0, firstGoal?.opponentScore)
-        
+
         val secondGoal = goalEvents.find { it.matchElapsedTimeMillis == 600000L }
         assertEquals(1, secondGoal?.teamScore)
         assertEquals(1, secondGoal?.opponentScore)
@@ -158,11 +158,11 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `invoke should include score evolution in report data`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
         val match = createFinishedMatch(
             id = matchId,
-            squadCallUpIds = listOf(1L),
+            squadCallUpIds = listOf("1"),
             periods = listOf(
                 MatchPeriod(
                     periodNumber = 1,
@@ -173,9 +173,9 @@ class GetMatchReportDataUseCaseTest {
             ),
         )
         val goals = listOf(
-            Goal(id = 1L, matchId = matchId, scorerId = 1L, goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false),
-            Goal(id = 2L, matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = true),
-            Goal(id = 3L, matchId = matchId, scorerId = 1L, goalTimeMillis = 900000L, matchElapsedTimeMillis = 900000L, isOpponentGoal = false),
+            Goal(id = "1", matchId = matchId, scorerId = "1", goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false),
+            Goal(id = "2", matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = true),
+            Goal(id = "3", matchId = matchId, scorerId = "1", goalTimeMillis = 900000L, matchElapsedTimeMillis = 900000L, isOpponentGoal = false),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
@@ -190,25 +190,25 @@ class GetMatchReportDataUseCaseTest {
         // Then
         assertNotNull(result)
         assertTrue(result!!.scoreEvolution.isNotEmpty())
-        
+
         // Should have: start (0-0), 3 goals, and final point
         assertTrue(result.scoreEvolution.size >= 4)
-        
+
         // Start point
         assertEquals(0L, result.scoreEvolution[0].timeMillis)
         assertEquals(0, result.scoreEvolution[0].teamScore)
         assertEquals(0, result.scoreEvolution[0].opponentScore)
-        
+
         // First goal
         assertEquals(300000L, result.scoreEvolution[1].timeMillis)
         assertEquals(1, result.scoreEvolution[1].teamScore)
         assertEquals(0, result.scoreEvolution[1].opponentScore)
-        
+
         // Second goal (opponent)
         assertEquals(600000L, result.scoreEvolution[2].timeMillis)
         assertEquals(1, result.scoreEvolution[2].teamScore)
         assertEquals(1, result.scoreEvolution[2].opponentScore)
-        
+
         // Third goal
         assertEquals(900000L, result.scoreEvolution[3].timeMillis)
         assertEquals(2, result.scoreEvolution[3].teamScore)
@@ -218,21 +218,21 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `invoke should include substitution events in timeline`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
-        val player3 = createPlayer(3L, "Mike", "Johnson", 9)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
+        val player3 = createPlayer("3", "Mike", "Johnson", 9)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L, 2L),
-            squadCallUpIds = listOf(1L, 2L, 3L),
+            startingLineupIds = listOf("1", "2"),
+            squadCallUpIds = listOf("1", "2", "3"),
         )
         val substitutions = listOf(
             PlayerSubstitution(
-                id = 1L,
+                id = "1",
                 matchId = matchId,
-                playerOutId = 1L,
-                playerInId = 3L,
+                playerOutId = "1",
+                playerInId = "3",
                 substitutionTimeMillis = 2500000L,
                 matchElapsedTimeMillis = 1500000L,
             ),
@@ -249,20 +249,20 @@ class GetMatchReportDataUseCaseTest {
 
         // Then
         assertNotNull(result)
-        
+
         val substitutionEvents = result!!.timelineEvents.filterIsInstance<TimelineEvent.Substitution>()
         assertEquals(1, substitutionEvents.size)
-        
+
         val subEvent = substitutionEvents.first()
         assertEquals(1500000L, subEvent.matchElapsedTimeMillis)
-        assertEquals(1L, subEvent.playerOut.id)
-        assertEquals(3L, subEvent.playerIn.id)
+        assertEquals("1", subEvent.playerOut.id)
+        assertEquals("3", subEvent.playerIn.id)
     }
 
     @Test
     fun `invoke should return empty timeline and score evolution when match has no events`() = runTest {
         // Given
-        val matchId = 1L
+        val matchId = "1"
         val match = createFinishedMatch(
             id = matchId,
             squadCallUpIds = emptyList(),
@@ -290,14 +290,14 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `invoke should include player activity intervals`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
-        val player3 = createPlayer(3L, "Mike", "Johnson", 9)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
+        val player3 = createPlayer("3", "Mike", "Johnson", 9)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L, 2L),
-            squadCallUpIds = listOf(1L, 2L, 3L),
+            startingLineupIds = listOf("1", "2"),
+            squadCallUpIds = listOf("1", "2", "3"),
             periods = listOf(
                 MatchPeriod(
                     periodNumber = 1,
@@ -309,10 +309,10 @@ class GetMatchReportDataUseCaseTest {
         )
         val substitutions = listOf(
             PlayerSubstitution(
-                id = 1L,
+                id = "1",
                 matchId = matchId,
-                playerOutId = 1L,
-                playerInId = 3L,
+                playerOutId = "1",
+                playerInId = "3",
                 substitutionTimeMillis = 2500000L,
                 matchElapsedTimeMillis = 1500000L,
             ),
@@ -330,21 +330,21 @@ class GetMatchReportDataUseCaseTest {
         // Then
         assertNotNull(result)
         assertEquals(3, result!!.playerActivity.size)
-        
+
         // Player 1 should have played from 0 to 1500000 (substitution time)
-        val player1Activity = result.playerActivity.find { it.player.id == 1L }
+        val player1Activity = result.playerActivity.find { it.player.id == "1" }
         assertNotNull(player1Activity)
         assertEquals(0L, player1Activity!!.startTimeMillis)
         assertEquals(1500000L, player1Activity.endTimeMillis)
-        
+
         // Player 2 should have played full match
-        val player2Activity = result.playerActivity.find { it.player.id == 2L }
+        val player2Activity = result.playerActivity.find { it.player.id == "2" }
         assertNotNull(player2Activity)
         assertEquals(0L, player2Activity!!.startTimeMillis)
         assertEquals(3000000L, player2Activity.endTimeMillis)
-        
+
         // Player 3 should have played from 1500000 to end
-        val player3Activity = result.playerActivity.find { it.player.id == 3L }
+        val player3Activity = result.playerActivity.find { it.player.id == "3" }
         assertNotNull(player3Activity)
         assertEquals(1500000L, player3Activity!!.startTimeMillis)
         assertEquals(3000000L, player3Activity.endTimeMillis)
@@ -353,7 +353,7 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `givenMultiPeriodMatchWithCompletedPeriods_whenInvoke_thenIncludePeriodBreakEventsInTimeline`() = runTest {
         // Given
-        val matchId = 1L
+        val matchId = "1"
         val match = createFinishedMatch(
             id = matchId,
             periodType = PeriodType.HALF_TIME,
@@ -383,20 +383,20 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `givenSubstitutionWithUnknownPlayer_whenInvoke_thenSkipSubstitutionTimelineEvent`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L, 2L),
-            squadCallUpIds = listOf(1L, 2L),
+            startingLineupIds = listOf("1", "2"),
+            squadCallUpIds = listOf("1", "2"),
         )
         val substitutions = listOf(
             PlayerSubstitution(
-                id = 1L,
+                id = "1",
                 matchId = matchId,
-                playerOutId = 1L,
-                playerInId = 99L, // unknown player
+                playerOutId = "1",
+                playerInId = "99", // unknown player
                 substitutionTimeMillis = 1000L,
                 matchElapsedTimeMillis = 1000L,
             ),
@@ -420,18 +420,18 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `givenLastGoalAtExactMatchEndTime_whenInvoke_thenScoreEvolutionHasNoDuplicateFinalPoint`() = runTest {
         // Given
-        val matchId = 1L
+        val matchId = "1"
         val totalElapsed = 1500000L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val player1 = createPlayer("1", "John", "Doe", 10)
         val match = createFinishedMatch(
             id = matchId,
-            squadCallUpIds = listOf(1L),
+            squadCallUpIds = listOf("1"),
             periods = listOf(
                 MatchPeriod(periodNumber = 1, periodDuration = totalElapsed, startTimeMillis = 1000L, endTimeMillis = 1000L + totalElapsed),
             ),
         )
         val goals = listOf(
-            Goal(id = 1L, matchId = matchId, scorerId = 1L, goalTimeMillis = totalElapsed, matchElapsedTimeMillis = totalElapsed, isOpponentGoal = false),
+            Goal(id = "1", matchId = matchId, scorerId = "1", goalTimeMillis = totalElapsed, matchElapsedTimeMillis = totalElapsed, isOpponentGoal = false),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
@@ -453,24 +453,24 @@ class GetMatchReportDataUseCaseTest {
     @Test
     fun `givenSubstitutedOutPlayerNotInStartingLineup_whenInvoke_thenNoActivityIntervalForThatPlayer`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
-        val player3 = createPlayer(3L, "Mike", "Jones", 9)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
+        val player3 = createPlayer("3", "Mike", "Jones", 9)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L, 2L), // player3 NOT in starting lineup
-            squadCallUpIds = listOf(1L, 2L, 3L),
+            startingLineupIds = listOf("1", "2"), // player3 NOT in starting lineup
+            squadCallUpIds = listOf("1", "2", "3"),
             periods = listOf(
                 MatchPeriod(periodNumber = 1, periodDuration = 3000000L, startTimeMillis = 1000L, endTimeMillis = 3001000L),
             ),
         )
         val substitutions = listOf(
             PlayerSubstitution(
-                id = 1L,
+                id = "1",
                 matchId = matchId,
-                playerOutId = 3L, // not in starting lineup
-                playerInId = 2L,
+                playerOutId = "3", // not in starting lineup
+                playerInId = "2",
                 substitutionTimeMillis = 1500000L,
                 matchElapsedTimeMillis = 1500000L,
             ),
@@ -488,12 +488,12 @@ class GetMatchReportDataUseCaseTest {
         // Then
         assertNotNull(result)
         // player3 was not active (not in starting lineup), so no OUT interval is created for them
-        val player3Activity = result!!.playerActivity.find { it.player.id == 3L }
+        val player3Activity = result!!.playerActivity.find { it.player.id == "3" }
         assertNull(player3Activity)
     }
 
     private fun createPlayer(
-        id: Long,
+        id: String,
         firstName: String,
         lastName: String,
         number: Int,
@@ -505,15 +505,15 @@ class GetMatchReportDataUseCaseTest {
         lastName = lastName,
         number = number,
         positions = if (isGoalkeeper) listOf(Position.Goalkeeper) else listOf(Position.Forward),
-        teamId = 1L,
+        teamId = "1",
         isCaptain = isCaptain,
     )
 
     private fun createFinishedMatch(
-        id: Long,
-        startingLineupIds: List<Long> = emptyList(),
-        squadCallUpIds: List<Long> = emptyList(),
-        captainId: Long = 1L,
+        id: String,
+        startingLineupIds: List<String> = emptyList(),
+        squadCallUpIds: List<String> = emptyList(),
+        captainId: String = "1",
         periodType: PeriodType = PeriodType.HALF_TIME,
         periods: List<MatchPeriod> = listOf(
             MatchPeriod(

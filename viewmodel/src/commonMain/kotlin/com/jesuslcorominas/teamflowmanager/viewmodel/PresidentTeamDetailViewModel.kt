@@ -127,9 +127,9 @@ class PresidentTeamDetailViewModel(
 
         viewModelScope.launch {
             val clubMember = getUserClubMembership().first() ?: return@launch
-            val clubRemoteId = clubMember.clubRemoteId ?: return@launch
+            val clubId = clubMember.clubId
 
-            getNotificationPreferences(clubRemoteId).collect { prefs ->
+            getNotificationPreferences(clubId).collect { prefs ->
                 val teamPref = prefs.teamPreferences[teamId]
                 _teamNotificationState.value =
                     TeamNotificationPreferencesState(
@@ -137,7 +137,7 @@ class PresidentTeamDetailViewModel(
                         goals = teamPref?.goals ?: prefs.globalGoals,
                         globalMatchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
                         globalGoalsState = prefs.globalStateFor(NotificationEventType.GOALS),
-                        clubId = clubRemoteId,
+                        clubId = clubId,
                     )
             }
         }
