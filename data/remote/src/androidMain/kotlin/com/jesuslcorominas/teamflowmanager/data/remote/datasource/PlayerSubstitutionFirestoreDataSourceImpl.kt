@@ -3,8 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerSubstitutionFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseSubstitutionDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
@@ -53,30 +52,6 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
             } catch (_: Exception) {
                 null
             }
-
-    private fun parseSubstitutionDocument(
-        rawData: Map<String, Any?>?,
-        docId: String,
-        teamDocId: String,
-        matchId: String,
-    ): PlayerSubstitution? {
-        if (rawData == null) return null
-        return try {
-            val rawPlayerOutId = rawData["playerOutId"]?.toString() ?: ""
-            val rawPlayerInId = rawData["playerInId"]?.toString() ?: ""
-            PlayerSubstitutionFirestoreModel(
-                id = docId,
-                teamId = rawData["teamId"] as? String ?: teamDocId,
-                matchId = matchId,
-                playerOutId = rawPlayerOutId,
-                playerInId = rawPlayerInId,
-                substitutionTimeMillis = rawData["substitutionTimeMillis"] as? Long ?: 0L,
-                matchElapsedTimeMillis = rawData["matchElapsedTimeMillis"] as? Long ?: 0L,
-            ).toDomain()
-        } catch (_: Exception) {
-            null
-        }
-    }
 
     override fun getMatchSubstitutions(matchId: String): Flow<List<PlayerSubstitution>> =
         callbackFlow {

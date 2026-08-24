@@ -3,8 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.GoalFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseGoalDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
@@ -53,36 +52,6 @@ class GoalFirestoreDataSourceImpl(
             } catch (_: Exception) {
                 null
             }
-
-    private fun parseGoalDocument(
-        rawData: Map<String, Any?>?,
-        docId: String,
-        teamDocId: String,
-        matchId: String,
-    ): Goal? {
-        if (rawData == null) return null
-        return try {
-            val rawScorerId = rawData["scorerId"]?.toString()
-            val model =
-                try {
-                    GoalFirestoreModel(
-                        id = docId,
-                        teamId = rawData["teamId"] as? String ?: teamDocId,
-                        matchId = matchId,
-                        scorerId = rawScorerId,
-                        goalTimeMillis = rawData["goalTimeMillis"] as? Long ?: 0L,
-                        matchElapsedTimeMillis = rawData["matchElapsedTimeMillis"] as? Long ?: 0L,
-                        isOpponentGoal = rawData["opponentGoal"] as? Boolean ?: false,
-                        isOwnGoal = rawData["ownGoal"] as? Boolean ?: false,
-                    )
-                } catch (_: Exception) {
-                    return null
-                }
-            model.toDomain()
-        } catch (_: Exception) {
-            null
-        }
-    }
 
     override fun getMatchGoals(matchId: String): Flow<List<Goal>> =
         callbackFlow {
@@ -162,7 +131,8 @@ class GoalFirestoreDataSourceImpl(
                         }
                         val goals =
                             snapshot?.documents?.mapNotNull { document ->
-                                document.toObject(GoalFirestoreModel::class.java)?.toDomain()
+                                val rawMatchId = document.data?.get("matchId")?.toString() ?: ""
+                                parseGoalDocument(document.data, document.id, teamDocId, rawMatchId)
                             } ?: emptyList()
                         trySend(goals)
                     }

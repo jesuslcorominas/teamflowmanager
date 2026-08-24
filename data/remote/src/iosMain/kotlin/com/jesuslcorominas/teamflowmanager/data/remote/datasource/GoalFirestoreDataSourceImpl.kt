@@ -1,8 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.GoalFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseGoalDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
@@ -72,42 +71,35 @@ class GoalFirestoreDataSourceImpl(
                 return@flow
             }
             // Combine two real-time listeners: one for new String-ID docs, one for legacy Long-ID docs.
+            // Each source is mapped to a List and given its own .catch BEFORE the combine, so a
+            // failure on the legacy query (e.g. missing composite index) does not blank out
+            // valid new-doc data (#385.3).
             // TODO: remove legacy branch after backward-compat window closes.
-            val newSnapshots =
+            val newGoals =
                 firestore.collection(GOALS_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId }
                     .snapshots
-            val legacySnapshots =
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            parseGoalDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
+                        }
+                    }.catch { e ->
+                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
+                    }
+            val legacyGoals =
                 firestore.collection(GOALS_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId.toLegacyId() }
                     .snapshots
-            emitAll(
-                combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
-                    val newGoals =
-                        newQs.documents.mapNotNull { doc ->
-                            try {
-                                doc.data<GoalFirestoreModel>().copy(id = doc.id, matchId = matchId)
-                                    .toDomain()
-                            } catch (_: Exception) {
-                                null
-                            }
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            parseGoalDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
                         }
-                    val legacyGoals =
-                        legacyQs.documents.mapNotNull { doc ->
-                            try {
-                                doc.data<GoalFirestoreModel>().copy(id = doc.id, matchId = matchId)
-                                    .toDomain()
-                            } catch (_: Exception) {
-                                null
-                            }
-                        }
-                    newGoals + legacyGoals
-                }.catch { e ->
-                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
-                },
-            )
+                    }.catch { e ->
+                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
+                    }
+            emitAll(combine(newGoals, legacyGoals) { a, b -> a + b })
         }
 
     override fun getAllTeamGoals(): Flow<List<Goal>> =
@@ -129,11 +121,9 @@ class GoalFirestoreDataSourceImpl(
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<GoalFirestoreModel>().copy(id = doc.id).toDomain()
-                        } catch (_: Exception) {
-                            null
-                        }
+                        val rawData = doc.data<Map<String, Any?>>()
+                        val rawMatchId = rawData["matchId"]?.toString() ?: ""
+                        parseGoalDocument(rawData, doc.id, teamDocId, rawMatchId)
                     }
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e

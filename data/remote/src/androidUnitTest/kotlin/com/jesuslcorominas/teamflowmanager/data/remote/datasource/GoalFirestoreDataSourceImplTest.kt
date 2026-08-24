@@ -26,7 +26,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.GoalFirestoreModel
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -240,12 +239,8 @@ class GoalFirestoreDataSourceImplTest {
         every { goalsCollection.whereEqualTo("teamId", "team-doc-id") } returns goalsQuery
         every { goalsQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
-        val model = GoalFirestoreModel(
-            id = "goal-doc-id",
-            teamId = "team-doc-id",
-            matchId = "1"
-        )
-        every { docSnapshot.toObject(GoalFirestoreModel::class.java) } returns model
+        every { docSnapshot.data } returns mapOf("matchId" to "1", "teamId" to "team-doc-id", "scorerId" to null)
+        every { docSnapshot.id } returns "goal-doc-id"
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
         dataSource.getAllTeamGoals().test {

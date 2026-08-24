@@ -1,8 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerSubstitutionFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseSubstitutionDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
@@ -15,6 +14,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlin.coroutines.cancellation.CancellationException
 
 class PlayerSubstitutionFirestoreDataSourceImpl(
@@ -71,44 +71,34 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 return@flow
             }
             // Combine two real-time listeners: one for new String-ID docs, one for legacy Long-ID docs.
+            // Each source is mapped to a List and given its own .catch BEFORE the combine, so a
+            // failure on the legacy query does not blank out valid new-doc data (#385.3).
             // TODO: remove legacy branch after backward-compat window closes.
-            val newSnapshots =
+            val newSubs =
                 firestore.collection(SUBSTITUTIONS_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId }
                     .snapshots
-            val legacySnapshots =
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            parseSubstitutionDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
+                        }
+                    }.catch { e ->
+                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
+                    }
+            val legacySubs =
                 firestore.collection(SUBSTITUTIONS_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId.toLegacyId() }
                     .snapshots
-            emitAll(
-                combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
-                    val newSubs =
-                        newQs.documents.mapNotNull { doc ->
-                            try {
-                                doc.data<PlayerSubstitutionFirestoreModel>()
-                                    .copy(id = doc.id, matchId = matchId)
-                                    .toDomain()
-                            } catch (_: Exception) {
-                                null
-                            }
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            parseSubstitutionDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
                         }
-                    val legacySubs =
-                        legacyQs.documents.mapNotNull { doc ->
-                            try {
-                                doc.data<PlayerSubstitutionFirestoreModel>()
-                                    .copy(id = doc.id, matchId = matchId)
-                                    .toDomain()
-                            } catch (_: Exception) {
-                                null
-                            }
-                        }
-                    newSubs + legacySubs
-                }.catch { e ->
-                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
-                },
-            )
+                    }.catch { e ->
+                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
+                    }
+            emitAll(combine(newSubs, legacySubs) { a, b -> a + b })
         }
 
     override suspend fun insertSubstitution(substitution: PlayerSubstitution): String {

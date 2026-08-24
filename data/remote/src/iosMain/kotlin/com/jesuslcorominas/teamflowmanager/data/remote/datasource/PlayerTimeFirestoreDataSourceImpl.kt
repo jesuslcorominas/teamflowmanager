@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
@@ -111,40 +112,34 @@ class PlayerTimeFirestoreDataSourceImpl(
                 return@flow
             }
             // Combine two real-time listeners: one for new String-ID docs, one for legacy Long-ID docs.
+            // Each source is mapped to a List and given its own .catch BEFORE the combine, so a
+            // failure on the legacy query does not blank out valid new-doc data (#385.3).
             // TODO: remove legacy branch after backward-compat window closes.
-            val newSnapshots =
+            val newTimes =
                 firestore.collection(PLAYER_TIMES_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId }
                     .snapshots
-            val legacySnapshots =
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            parsePlayerTimeDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
+                        }
+                    }.catch { e ->
+                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
+                    }
+            val legacyTimes =
                 firestore.collection(PLAYER_TIMES_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId.toLegacyId() }
                     .snapshots
-            emitAll(
-                combine(newSnapshots, legacySnapshots) { newQs, legacyQs ->
-                    val newTimes =
-                        newQs.documents.mapNotNull { doc ->
-                            try {
-                                doc.data<PlayerTimeFirestoreModel>().copy(matchId = matchId).toDomain()
-                            } catch (_: Exception) {
-                                null
-                            }
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            parsePlayerTimeDocument(doc.data<Map<String, Any?>>(), doc.id, teamDocId, matchId)
                         }
-                    val legacyTimes =
-                        legacyQs.documents.mapNotNull { doc ->
-                            try {
-                                doc.data<PlayerTimeFirestoreModel>().copy(matchId = matchId).toDomain()
-                            } catch (_: Exception) {
-                                null
-                            }
-                        }
-                    newTimes + legacyTimes
-                }.catch { e ->
-                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
-                },
-            )
+                    }.catch { e ->
+                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
+                    }
+            emitAll(combine(newTimes, legacyTimes) { a, b -> a + b })
         }
 
     override suspend fun upsertPlayerTime(playerTime: PlayerTime) {

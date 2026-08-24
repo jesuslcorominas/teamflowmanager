@@ -453,19 +453,11 @@ class PlayerTimeHistoryFirestoreDataSourceImplTest {
         every { historyCollection.whereEqualTo("teamId", "team-doc-id") } returns historyQuery
         every { historyQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
-        val model = PlayerTimeHistoryFirestoreModel(
-            id = "history-doc-id",
-            teamId = "team-doc-id",
-            playerId = "1",
-            matchId = "1",
-            elapsedTimeMillis = 45000L,
-            savedAtMillis = System.currentTimeMillis()
-        )
         every { docSnapshot.data } returns mapOf(
             "playerId" to "1", "matchId" to "1", "teamId" to "team-doc-id",
+            "elapsedTimeMillis" to 45000L, "savedAtMillis" to System.currentTimeMillis(),
         )
         every { docSnapshot.id } returns "history-doc-id"
-        every { docSnapshot.toObject(PlayerTimeHistoryFirestoreModel::class.java) } returns model
         every { querySnapshot.documents } returns listOf(docSnapshot)
 
         dataSource.getAllPlayerTimeHistory().test {
