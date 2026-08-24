@@ -388,10 +388,14 @@ private fun getCurrentPeriodName(match: Match): String {
  * Defensive fix for legacy/malformed periods that have a configured [MatchPeriod.periodDuration]
  * but zero start/end timestamps: falls back to the configured duration instead of rendering
  * nothing, so HALF_TIME still shows e.g. 25'/25' and QUARTER_TIME shows 12:30 x4.
+ *
+ * Only trusts the timestamp delta when both timestamps are present; a period that was started
+ * but never closed (`endTimeMillis == 0`) or with an inverted delta falls back to the configured
+ * duration and is clamped to be non-negative, mirroring the guard in `Match`.
  */
 internal fun calculateFinishedPeriodElapsedTime(period: MatchPeriod): Long =
     if (period.startTimeMillis != 0L && period.endTimeMillis != 0L) {
-        period.endTimeMillis - period.startTimeMillis
+        (period.endTimeMillis - period.startTimeMillis).coerceAtLeast(0L)
     } else {
         period.periodDuration
     }
