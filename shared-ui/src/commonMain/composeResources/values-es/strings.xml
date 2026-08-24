@@ -249,6 +249,7 @@
     <string name="statistics_tab">Estadísticas</string>
     <string name="scorers_dialog_title">Goleadores</string>
     <string name="own_goal_scorer_label">Gol en propia</string>
+    <string name="unknown_scorer_label">Goleador desconocido</string>
     <string name="no_scorers_label">Sin goles marcados</string>
     <string name="timeline_starting_lineup">Alineación Inicial</string>
     <string name="timeline_goal">Gol</string>

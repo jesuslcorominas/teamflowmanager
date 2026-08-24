@@ -113,6 +113,7 @@ import teamflowmanager.shared_ui.generated.resources.stop_match_early_title
 import teamflowmanager.shared_ui.generated.resources.summary_tab
 import teamflowmanager.shared_ui.generated.resources.timeline_tab
 import teamflowmanager.shared_ui.generated.resources.timeout_button
+import teamflowmanager.shared_ui.generated.resources.unknown_scorer_label
 import teamflowmanager.shared_ui.generated.resources.yes
 
 private const val TAB_SCORERS = 0
@@ -723,18 +724,28 @@ private fun FinishedMatchState(
     }
 }
 
-private data class ScorerEntry(val name: String, val count: Int)
+internal data class ScorerEntry(val name: String, val count: Int)
 
-private fun aggregateScorers(events: List<TimelineEvent>): Pair<List<ScorerEntry>, Int> {
+internal data class ScorerAggregation(
+    val scorers: List<ScorerEntry>,
+    val ownGoalCount: Int,
+    val unknownScorerCount: Int,
+)
+
+internal fun aggregateScorers(events: List<TimelineEvent>): ScorerAggregation {
     val scorerMap = mutableMapOf<String, ScorerEntry>()
     var ownGoalCount = 0
+    var unknownScorerCount = 0
     events.filterIsInstance<TimelineEvent.GoalScored>()
         .filter { !it.isOpponentGoal }
         .forEach { goal ->
             if (goal.isOwnGoal) {
                 ownGoalCount++
             } else {
-                goal.scorer?.let { player ->
+                val player = goal.scorer
+                if (player == null) {
+                    unknownScorerCount++
+                } else {
                     val name = "${player.firstName} ${player.lastName}"
                     val current = scorerMap[player.id]
                     scorerMap[player.id] = ScorerEntry(name, (current?.count ?: 0) + 1)
@@ -742,13 +753,13 @@ private fun aggregateScorers(events: List<TimelineEvent>): Pair<List<ScorerEntry
             }
         }
     val scorers = scorerMap.values.sortedByDescending { it.count }
-    return scorers to ownGoalCount
+    return ScorerAggregation(scorers, ownGoalCount, unknownScorerCount)
 }
 
 @Composable
 private fun ScorersTabContent(events: List<TimelineEvent>) {
-    val (scorers, ownGoalCount) = remember(events) { aggregateScorers(events) }
-    val noGoals = scorers.isEmpty() && ownGoalCount == 0
+    val (scorers, ownGoalCount, unknownScorerCount) = remember(events) { aggregateScorers(events) }
+    val noGoals = scorers.isEmpty() && ownGoalCount == 0 && unknownScorerCount == 0
 
     if (noGoals) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -770,6 +781,11 @@ private fun ScorersTabContent(events: List<TimelineEvent>) {
             if (ownGoalCount > 0) {
                 item(key = "own_goal") {
                     ScorerRow(name = stringResource(Res.string.own_goal_scorer_label), count = ownGoalCount)
+                }
+            }
+            if (unknownScorerCount > 0) {
+                item(key = "unknown_scorer") {
+                    ScorerRow(name = stringResource(Res.string.unknown_scorer_label), count = unknownScorerCount)
                 }
             }
         }
@@ -814,7 +830,7 @@ private fun ScorersDialog(
     events: List<TimelineEvent>,
     onDismiss: () -> Unit,
 ) {
-    val (scorers, ownGoalCount) = remember(events) { aggregateScorers(events) }
+    val (scorers, ownGoalCount, unknownScorerCount) = remember(events) { aggregateScorers(events) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -825,7 +841,7 @@ private fun ScorersDialog(
             )
         },
         text = {
-            if (scorers.isEmpty() && ownGoalCount == 0) {
+            if (scorers.isEmpty() && ownGoalCount == 0 && unknownScorerCount == 0) {
                 Text(
                     text = stringResource(Res.string.no_scorers_label),
                     style = MaterialTheme.typography.bodyMedium,
@@ -845,6 +861,15 @@ private fun ScorersDialog(
                             ScorerItem(
                                 number = ownGoalCount.toString(),
                                 name = stringResource(Res.string.own_goal_scorer_label),
+                                onScorerSelected = {},
+                            )
+                        }
+                    }
+                    if (unknownScorerCount > 0) {
+                        item(key = "unknown_scorer") {
+                            ScorerItem(
+                                number = unknownScorerCount.toString(),
+                                name = stringResource(Res.string.unknown_scorer_label),
                                 onScorerSelected = {},
                             )
                         }
