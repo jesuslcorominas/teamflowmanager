@@ -32,15 +32,16 @@ Build flavors: **dev** (suffix `.dev`, `-dev`) and **prod**.
 This is a Clean Architecture Android app with strict module boundaries:
 
 ```
-domain      →  Pure Kotlin. Models, repository interfaces, use case interfaces.
-usecase     →  Pure Kotlin. Use case implementations. Defines repository interfaces (not data layer's).
+domain      →  Pure Kotlin (KMP). Models, repository interfaces, use case interfaces.
+usecase     →  Pure Kotlin (KMP). Use case implementations. Defines repository interfaces (not data layer's).
 data/core   →  Repository implementations. Bridges usecase interfaces to DataSource abstractions.
 data/local  →  Room database DAOs and datasource implementations.
 data/remote →  KtorFit + Firebase (Firestore, Storage, Auth) datasource implementations.
-service     →  Android services and cross-cutting concerns (MatchNotificationController).
-viewmodel   →  Jetpack ViewModel + Flow-based UI state management.
+viewmodel   →  ViewModel + Flow-based UI state management (KMP, commonMain).
+shared-ui   →  Compose Multiplatform screens and components shared by Android and iOS.
 di          →  Koin DI composition root — all modules wired here.
-app         →  Jetpack Compose UI, MainActivity, app initialization.
+app         →  Android entry point: MainActivity, navigation host, Android-only integrations.
+iosApp      →  iOS entry point: navigation host and platform bridges.
 ```
 
 **Critical interface layering**: `usecase/` defines its own repository interfaces (e.g., `MatchRepository`). `data/core/` implements those interfaces using DataSources. `data/local/` and `data/remote/` implement those DataSources. This means the use case layer has zero dependency on the data layer.

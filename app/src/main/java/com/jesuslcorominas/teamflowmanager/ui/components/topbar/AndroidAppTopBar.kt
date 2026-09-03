@@ -1,5 +1,3 @@
-@file:JvmName("AndroidAppTopBar")
-
 package com.jesuslcorominas.teamflowmanager.ui.components.topbar
 
 import androidx.activity.compose.BackHandler

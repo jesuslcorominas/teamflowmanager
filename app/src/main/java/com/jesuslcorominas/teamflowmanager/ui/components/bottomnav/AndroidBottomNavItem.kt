@@ -1,5 +1,3 @@
-@file:JvmName("AndroidBottomNavItem")
-
 package com.jesuslcorominas.teamflowmanager.ui.components.bottomnav
 
 import androidx.compose.animation.core.Spring
