@@ -71,6 +71,7 @@ fun PlayerWizardScreen(
                                 initialNumber = wizardViewModel.getNumber(),
                                 initialIsCaptain = wizardViewModel.getIsCaptain(),
                                 initialImageUri = wizardViewModel.getImageUri(),
+                                isImageUploadEnabled = wizardViewModel.isImageUploadEnabled,
                                 onDataChanged = { firstName, lastName, number, isCaptain, imageUri ->
                                     wizardViewModel.setPlayerData(firstName, lastName, number, isCaptain, imageUri)
                                 },

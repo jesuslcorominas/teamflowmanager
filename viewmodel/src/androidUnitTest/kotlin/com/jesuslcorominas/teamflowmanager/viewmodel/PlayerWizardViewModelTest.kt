@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
+import com.jesuslcorominas.teamflowmanager.domain.config.FeatureFlags
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
@@ -15,6 +16,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
@@ -47,6 +49,7 @@ class PlayerWizardViewModelTest {
     private lateinit var getScheduledMatchesUseCase: GetScheduledMatchesUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
     private lateinit var crashReporter: CrashReporter
+    private lateinit var featureFlags: FeatureFlags
 
     @Before
     fun setup() {
@@ -61,6 +64,7 @@ class PlayerWizardViewModelTest {
         getScheduledMatchesUseCase = mockk()
         analyticsTracker = mockk(relaxed = true)
         crashReporter = mockk(relaxed = true)
+        featureFlags = mockk(relaxed = true)
     }
 
     @After
@@ -80,6 +84,7 @@ class PlayerWizardViewModelTest {
         getScheduledMatchesUseCase = getScheduledMatchesUseCase,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
+        featureFlags = featureFlags,
     )
 
     private fun createViewModelForEdit(playerId: String) = PlayerWizardViewModel(
@@ -94,6 +99,7 @@ class PlayerWizardViewModelTest {
         getScheduledMatchesUseCase = getScheduledMatchesUseCase,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
+        featureFlags = featureFlags,
     )
 
     private fun makePlayer(
@@ -502,4 +508,18 @@ class PlayerWizardViewModelTest {
             assertTrue(saved)
             coVerify { removePlayerAsCaptainUseCase.invoke(any()) }
         }
+
+    @Test
+    fun `givenImageUploadFlagDisabled_whenIsImageUploadEnabled_thenReturnsFalse`() {
+        every { featureFlags.isPlayerImageUploadEnabled } returns false
+
+        assertFalse(createViewModelForCreate().isImageUploadEnabled)
+    }
+
+    @Test
+    fun `givenImageUploadFlagEnabled_whenIsImageUploadEnabled_thenReturnsTrue`() {
+        every { featureFlags.isPlayerImageUploadEnabled } returns true
+
+        assertTrue(createViewModelForCreate().isImageUploadEnabled)
+    }
 }

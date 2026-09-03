@@ -109,6 +109,7 @@ val viewModelModule =
                 getScheduledMatchesUseCase = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
+                featureFlags = get(),
             )
         }
         viewModel { params ->

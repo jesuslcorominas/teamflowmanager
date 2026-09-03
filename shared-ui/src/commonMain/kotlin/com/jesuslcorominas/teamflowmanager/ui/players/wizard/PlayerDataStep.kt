@@ -10,6 +10,7 @@ expect fun PlayerDataStep(
     initialNumber: String,
     initialIsCaptain: Boolean,
     initialImageUri: String?,
+    isImageUploadEnabled: Boolean,
     onDataChanged: (String, String, String, Boolean, String?) -> Unit,
     onNext: () -> Unit,
     onCancel: () -> Unit,
