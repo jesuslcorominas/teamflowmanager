@@ -44,15 +44,17 @@ The two flavors are **separate Firebase projects**, so every flag has to exist i
 
 ## Changing a flag
 
-Preferred — edit the template and deploy, so the repo stays the source of truth:
+Edit `remoteconfig.template.json` and open a PR. **Merging publishes it** — the `Remote Config`
+workflow (`.github/workflows/remoteconfig.yml`) deploys on any push that touches the template:
 
-```bash
-firebase deploy --only remoteconfig --project teamflow-manager-dev
-```
+| Branch | Project | When it lands |
+|---|---|---|
+| `develop` | `teamflow-manager-dev` | as soon as the PR is merged |
+| `main` | `teamflow-manager-897a3` | with the release, at the same moment as the app version that uses it |
 
-```bash
-firebase deploy --only remoteconfig --project teamflow-manager-897a3
-```
+So a flag can never be "merged but not live", and prod only changes when a release does. The
+workflow can also be run by hand from the Actions tab (`workflow_dispatch`) to re-publish the
+template as-is.
 
 Read back what a project currently has:
 
@@ -60,12 +62,34 @@ Read back what a project currently has:
 firebase remoteconfig:get --project teamflow-manager-dev
 ```
 
+Deploying by hand is still possible as an escape hatch:
+
+```bash
+firebase deploy --only remoteconfig --project teamflow-manager-dev
+```
+
 Flipping a value straight from the Firebase console (Remote Config → parameter → Publish) also
 works and needs no release — but the repo template then no longer matches what is published, and
-the next `firebase deploy --only remoteconfig` **replaces the whole template**, undoing it. Use the
-console for a quick test, the template for anything that should stick.
+the next deploy, **whether run by CI or by hand, replaces the whole template** and undoes it. Use
+the console for a quick test, the template for anything that should stick.
 
-No release is needed either way. The app picks the change up on the next fetch.
+No release is needed for a dev change. The app picks it up on the next fetch.
+
+### CI credentials
+
+The workflow authenticates with a Google service account per project, following the same pattern as
+the Play Store deploy in `release.yml`:
+
+| Secret | Project |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT_DEV` | `teamflow-manager-dev` |
+| `FIREBASE_SERVICE_ACCOUNT_PROD` | `teamflow-manager-897a3` |
+
+Each holds the full JSON key of a service account with the **Firebase Remote Config Admin**
+(`roles/firebaseremoteconfig.admin`) role on that project — no broader role is needed. Create them
+in Google Cloud console → IAM & Admin → Service Accounts → Keys, and paste each JSON into the
+matching GitHub repository secret. Without the secret the workflow fails with an explicit message
+rather than silently skipping, so a template change is never merged believing it was published.
 
 ## Propagation timing
 

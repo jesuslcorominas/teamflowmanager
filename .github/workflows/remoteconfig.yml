@@ -1,0 +1,77 @@
+name: Remote Config
+
+# Keeps the Firebase Remote Config template in sync with the repo: merging a change to
+# remoteconfig.template.json publishes it, so a flag can never be "merged but not live".
+#
+#   develop → teamflow-manager-dev       (dev flavor)
+#   main    → teamflow-manager-897a3     (prod flavor — reaches production with the release)
+#
+# A deploy replaces the WHOLE template, so a value flipped by hand in the Firebase console is
+# undone by the next run. Use the console for a quick test, the template for anything permanent.
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - 'remoteconfig.template.json'
+      - '.github/workflows/remoteconfig.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remoteconfig-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Remote Config template
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve target project
+        id: target
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "project=teamflow-manager-897a3" >> $GITHUB_OUTPUT
+            echo "env_name=prod" >> $GITHUB_OUTPUT
+          else
+            echo "project=teamflow-manager-dev" >> $GITHUB_OUTPUT
+            echo "env_name=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check credentials are configured
+        env:
+          SA_JSON: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+        run: |
+          if [ -z "$SA_JSON" ]; then
+            echo "::error::Missing service account secret for ${{ steps.target.outputs.env_name }}."
+            echo "Add FIREBASE_SERVICE_ACCOUNT_DEV / FIREBASE_SERVICE_ACCOUNT_PROD — see docs/FEATURE_FLAGS.md."
+            exit 1
+          fi
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@15
+
+      - name: Show what is currently published
+        run: firebase remoteconfig:get --project ${{ steps.target.outputs.project }}
+
+      - name: Deploy template
+        # The commit message is passed through the environment, never interpolated into the shell.
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || 'manual dispatch' }}
+        run: |
+          SUBJECT=$(printf '%s' "$COMMIT_MESSAGE" | head -1)
+          firebase deploy --only remoteconfig \
+            --project ${{ steps.target.outputs.project }} \
+            --non-interactive \
+            --message "${GITHUB_SHA:0:7} — ${SUBJECT}"
+
+      - name: Verify what is published now
+        run: firebase remoteconfig:get --project ${{ steps.target.outputs.project }}
