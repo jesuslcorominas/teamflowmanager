@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
+import com.jesuslcorominas.teamflowmanager.domain.config.FeatureFlags
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
@@ -33,7 +34,12 @@ class PlayerWizardViewModel(
     private val getScheduledMatchesUseCase: GetScheduledMatchesUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
+    private val featureFlags: FeatureFlags,
 ) : ViewModel() {
+    /** Whether the photo picker is offered in the wizard. Remotely switchable. */
+    val isImageUploadEnabled: Boolean
+        get() = featureFlags.isPlayerImageUploadEnabled
+
     private val _uiState = MutableStateFlow<PlayerWizardUiState>(PlayerWizardUiState.Loading)
     val uiState: StateFlow<PlayerWizardUiState> = _uiState.asStateFlow()
 
