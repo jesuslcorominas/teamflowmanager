@@ -1,5 +1,3 @@
-@file:JvmName("AndroidBottomNavigationBar")
-
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
 import androidx.compose.foundation.layout.WindowInsets

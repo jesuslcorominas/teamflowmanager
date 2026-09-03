@@ -118,9 +118,18 @@ La versión Android usa `navController: NavController` directamente para la nave
 
 La versión Android tiene rutas adicionales (`PresidentTeamDetail`, `PendingTeamAssignment`) y usa `R.string.*` en `toTitleRes()`. La versión shared-ui tiene las rutas comunes sin las Android-specific. Las dos coexisten y la versión de `app/` shadea la de `shared-ui` en compilación Android.
 
-### 5. `app/ui/theme/` (TFMColors, TFMFonts, TFMSpacing, TFMElevation, TFMAppTheme) — **No migrados**
+### 5. `app/ui/theme/` — ~~No migrados~~ **Corregido en #388 (2026-09)**
 
-Los archivos de tema en app/ contienen fuentes Android-específicas (Google Fonts via `compose.google.fonts`), valores de color específicos para Android, y la definición de `TFMAppTheme` que envuelve `MaterialTheme`. La versión shared-ui tiene equivalentes adaptados a KMP pero son implementaciones diferentes.
+> Esta justificación resultó ser incorrecta. `TFMElevation` y `TFMSpacing` son `object`, y
+> `@file:JvmName` no renombra objects — solo facades de funciones top-level. Las dos copias
+> colisionaban en el mismo classpath y **R8 abortaba la build de release**
+> (`Type ...TFMElevation is defined multiple times`). No se detectó antes porque debug no pasa por
+> R8 y la Release CI solo se dispara en PRs hacia `main`.
+>
+> En #388 se eliminaron las cuatro copias de `app/` (TFMColors, TFMElevation, TFMFonts, TFMSpacing)
+> y los tokens que solo existían allí se consolidaron en `shared-ui/commonMain`
+> (`LocalSpacing`, `AccentEmphasis10`, `PublicSansFontFamily` como `expect`/`actual`).
+> `TFMAppTheme` y `TFMTypographyStyles` sí permanecen en `app/`: no estaban duplicados.
 
 ### 6. `app/ui/util/MatchReportPdfExporterImpl.kt` + `PdfExporterImpl.kt` — **No migrados** (ya son Android-specific)
 
@@ -154,3 +163,35 @@ Al migrar `SettingsScreen` a shared-ui, la callback `onRoleChanged` desapareció
 - **Después**: 0 duplicados injustificados. Solo permanecen en `app/` los archivos que tienen razones técnicas válidas (Android-specific APIs, plataforma específica).
 - El build compila correctamente (`BUILD SUCCESSFUL`)
 - Todos los tests pasan (`BUILD SUCCESSFUL`)
+
+---
+
+## Estado de los puntos pendientes (#357)
+
+Revisión hecha en 2026-09 sobre `develop`. El spec `.claude/specs/migration-gap-analysis.md` que
+referenciaba la issue **no existe en el repo**, así que la verificación se hizo contra este informe
+y contra el checklist de la propia issue.
+
+| Punto | Estado |
+|---|---|
+| `PresidentMatchDetailScreen` / `ViewModel` eliminados, sin referencias muertas | ✅ Sin referencias. Lo que queda son rutas de navegación (`Route.PresidentMatchDetail` en Android e `IosDestination.PresidentMatchDetail` en iOS) que resuelven a `MatchScreen(readOnly = true)` — es el diseño correcto, no código muerto. |
+| `@file:JvmName` revisados | ✅ Cerrado en #356. Las 4 anotaciones del tema se fueron con #388; las 3 restantes (`AndroidBottomNavItem`, `AndroidBottomNavigationBar`, `AndroidAppTopBar`) se eliminan aquí: sus ficheros ya no comparten nombre con ninguno de `shared-ui`, así que no había colisión que evitar. Verificado con `:app:minifyProdReleaseWithR8`. |
+| `dp` y `Color` hardcodeados | ⏳ Sigue en #352, sin cambios. |
+| Carpetas vacías de la migración | ✅ Ninguna: `find */src */*/src -type d -empty` no devuelve nada. |
+| iOS compila sin regresiones | ✅ `:iosApp:compileKotlinIosSimulatorArm64` correcto. |
+| `expect`/`actual` innecesarios | ✅ Las 10 declaraciones `expect` restantes tienen uso real: `UserAvatar`, `DateFormatter`, `PlayerDataStep`, `IosBackButton`, `AppBackHandler`, `BebasNeueFontFamily`, `PublicSansFontFamily`, `currentTimeMillis`, `dataLocalModule`, `dataRemoteModule`. |
+| Grafo de dependencias sin ciclos | ✅ Acíclico y respetando Clean Architecture: `domain ← usecase ← data:core ← data:{local,remote}`, `viewmodel → domain`, `shared-ui → {domain, viewmodel}`, `di → todos`, `app`/`iosApp → di`. `usecase` no depende de ninguna capa de datos. |
+| Issues diferidas (#275 drag & drop, #262 notificaciones iOS) | ⏳ Siguen abiertas y diferidas; ninguna bloquea el cierre del epic. |
+
+### Corregido de paso
+
+- `CLAUDE.md` describía un módulo `service` con un `MatchNotificationController`. Ninguno de los dos
+  existe: no hay directorio `service/` ni entrada en `settings.gradle.kts`. El diagrama de
+  arquitectura se ha actualizado con los módulos reales, incluyendo `shared-ui` e `iosApp`, que
+  faltaban.
+
+### Pendiente con issue propia
+
+- **Pérdida funcional de `onRoleChanged`** (sección 7 de este informe, ahora #392): al migrar `SettingsScreen`
+  a shared-ui se perdió el refresco de UI tras cambiar de rol, que ahora requiere reabrir la app.
+  Era el único punto abierto de este informe sin issue asociada.
