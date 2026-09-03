@@ -4,7 +4,11 @@ name: Remote Config
 # remoteconfig.template.json publishes it, so a flag can never be "merged but not live".
 #
 #   develop → teamflow-manager-dev       (dev flavor)
-#   main    → teamflow-manager-897a3     (prod flavor — reaches production with the release)
+#   main    → teamflow-manager-897a3     (prod flavor)
+#
+# This is independent of publishing a release: a PR to main touching only the template skips the
+# build and the Play upload (see the `scope` job in release.yml), so a flag can be flipped in
+# production at any time and still leave a reviewed history of who changed what and why.
 #
 # A deploy replaces the WHOLE template, so a value flipped by hand in the Firebase console is
 # undone by the next run. Use the console for a quick test, the template for anything permanent.

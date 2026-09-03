@@ -47,13 +47,27 @@ The two flavors are **separate Firebase projects**, so every flag has to exist i
 Edit `remoteconfig.template.json` and open a PR. **Merging publishes it** — the `Remote Config`
 workflow (`.github/workflows/remoteconfig.yml`) deploys on any push that touches the template:
 
-| Branch | Project | When it lands |
-|---|---|---|
-| `develop` | `teamflow-manager-dev` | as soon as the PR is merged |
-| `main` | `teamflow-manager-897a3` | with the release, at the same moment as the app version that uses it |
+| Branch | Project |
+|---|---|
+| `develop` | `teamflow-manager-dev` |
+| `main` | `teamflow-manager-897a3` |
 
-So a flag can never be "merged but not live", and prod only changes when a release does. The
-workflow can also be run by hand from the Actions tab (`workflow_dispatch`) to re-publish the
+**This is independent of releasing.** A PR to `main` that touches *only*
+`remoteconfig.template.json` skips the build and the Play upload — the `scope` job in `release.yml`
+detects it and short-circuits the pipeline, while still reporting the required `Tests & Lint`
+check — so production flags can be flipped at any time without shipping a version. The point of
+going through a PR is the history: who changed which flag, when, and why.
+
+To flip a flag in production:
+
+1. Branch off `main`, edit `remoteconfig.template.json`, open the PR **against `main`**.
+2. Merge it. The `Remote Config` workflow publishes to `teamflow-manager-897a3`.
+3. `Post-Release` opens the usual `main → develop` sync PR, so the template does not drift between
+   branches. No GitHub Release is created: that only happens for `release/*` branches.
+
+For dev, the normal PR to `develop` is enough.
+
+The workflow can also be run by hand from the Actions tab (`workflow_dispatch`) to re-publish the
 template as-is.
 
 Read back what a project currently has:
