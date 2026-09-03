@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
+import com.jesuslcorominas.teamflowmanager.domain.utils.toLegacyId
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
@@ -240,4 +241,54 @@ class GetMatchSummaryUseCaseTest {
             assertEquals(0, result?.playerTimes?.size)
             assertEquals(0, result?.substitutions?.size)
         }
+
+    @Test
+    fun `givenLegacyPlayerReferences_whenInvoke_thenResolvesThemInsteadOfEmptySummary`() = runTest {
+        // Given — a pre-migration match: player references are Long hashes of the document ID
+        val matchId = "1"
+        val player1 = Player(
+            id = "abc123", firstName = "John", lastName = "Doe", number = 10,
+            positions = listOf(Position.Forward), teamId = "team1", isCaptain = false,
+        )
+        val player2 = Player(
+            id = "def456", firstName = "Jane", lastName = "Roe", number = 7,
+            positions = listOf(Position.Midfielder), teamId = "team1", isCaptain = false,
+        )
+        val match = Match(
+            id = matchId, opponent = "Team A", location = "Stadium",
+            status = MatchStatus.FINISHED, teamName = "Team B",
+            periodType = PeriodType.HALF_TIME, captainId = "abc123",
+        )
+        val playerTimes = listOf(
+            PlayerTimeHistory(
+                playerId = "abc123".toLegacyId().toString(), matchId = matchId,
+                elapsedTimeMillis = 1_500_000L, savedAtMillis = 0L,
+            ),
+        )
+        val substitutions = listOf(
+            PlayerSubstitution(
+                id = "1", matchId = matchId,
+                playerOutId = "abc123".toLegacyId().toString(),
+                playerInId = "def456".toLegacyId().toString(),
+                substitutionTimeMillis = 0L, matchElapsedTimeMillis = 900_000L,
+            ),
+        )
+
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(playerTimes)
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2))
+
+        // When
+        val result = getMatchSummaryUseCase(matchId).first()
+
+        // Then — the Summary tab is populated (#382) and the substitution resolves (#383)
+        assertEquals(1, result?.playerTimes?.size)
+        assertEquals("abc123", result?.playerTimes?.get(0)?.player?.id)
+        assertEquals(1_500_000L, result?.playerTimes?.get(0)?.elapsedTimeMillis)
+        assertEquals(1, result?.playerTimes?.get(0)?.substitutionCount)
+        assertEquals(1, result?.substitutions?.size)
+        assertEquals("abc123", result?.substitutions?.get(0)?.playerOut?.id)
+        assertEquals("def456", result?.substitutions?.get(0)?.playerIn?.id)
+    }
 }

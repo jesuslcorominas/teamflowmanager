@@ -5,6 +5,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchPeriodFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -27,6 +28,25 @@ class MatchFirestoreDataSourceImpl(
         private const val TEAMS_COLLECTION = "teams"
     }
 
+    /**
+     * Reads `periods` from the raw document map.
+     *
+     * The periods array holds no String fields, so it survives the Long→String ID migration
+     * untouched — but the slow path used to discard it, leaving finished legacy matches with
+     * zero-timestamp default periods. That blanked the per-period times on the header card and
+     * collapsed the score-evolution chart's X axis to 0 (#380, #384).
+     */
+    private fun parsePeriods(rawData: Map<String, Any?>): List<MatchPeriodFirestoreModel> =
+        (rawData["periods"] as? List<*>)?.mapNotNull { entry ->
+            val period = entry as? Map<*, *> ?: return@mapNotNull null
+            MatchPeriodFirestoreModel(
+                periodNumber = (period["periodNumber"] as? Number)?.toInt() ?: 0,
+                periodDuration = (period["periodDuration"] as? Number)?.toLong() ?: 0L,
+                startTimeMillis = (period["startTimeMillis"] as? Number)?.toLong() ?: 0L,
+                endTimeMillis = (period["endTimeMillis"] as? Number)?.toLong() ?: 0L,
+            )
+        } ?: emptyList()
+
     private fun documentToMatch(
         document: DocumentSnapshot,
         teamDocId: String,
@@ -38,14 +58,16 @@ class MatchFirestoreDataSourceImpl(
             // startingLineupIds as List<Long>. Firestore's class mapper throws a
             // ClassCastException when it encounters a Long value for a String field.
             // Read these fields directly from the raw map first so we can safely override
-            // them after calling toObject().
+            // them after calling toObject(). Those Long values are hashes of the player document
+            // ID, so they are kept in String form rather than dropped: the use case layer resolves
+            // them back to a player (see `findByIdOrLegacy`).
             val squadCallUpIds =
-                (rawData["squadCallUpIds"] as? List<*>)?.filterIsInstance<String>()
+                (rawData["squadCallUpIds"] as? List<*>)?.mapNotNull { it?.toString() }
                     ?: emptyList()
             val startingLineupIds =
-                (rawData["startingLineupIds"] as? List<*>)?.filterIsInstance<String>()
+                (rawData["startingLineupIds"] as? List<*>)?.mapNotNull { it?.toString() }
                     ?: emptyList()
-            val captainId = rawData["captainId"] as? String ?: ""
+            val captainId = rawData["captainId"]?.toString() ?: ""
 
             // Try the fast path: new documents (post-migration) deserialize cleanly.
             val model =
@@ -70,7 +92,7 @@ class MatchFirestoreDataSourceImpl(
                         goals = (rawData["goals"] as? Long)?.toInt() ?: 0,
                         opponentGoals = (rawData["opponentGoals"] as? Long)?.toInt() ?: 0,
                         timeoutStartTimeMillis = rawData["timeoutStartTimeMillis"] as? Long ?: 0L,
-                        periods = emptyList(),
+                        periods = parsePeriods(rawData),
                         lastCompletedOperationId = rawData["lastCompletedOperationId"] as? String,
                     )
                 }

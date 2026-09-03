@@ -10,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.domain.utils.toLegacyId
 import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
@@ -508,5 +509,75 @@ class GetMatchTimelineUseCaseTest {
         val player3Activity = result?.playerActivity?.find { it.player.id == "3" }
         assertEquals(1500000L, player3Activity?.startTimeMillis)
         assertEquals(3000000L, player3Activity?.endTimeMillis)
+    }
+
+    @Test
+    fun `givenLegacyPlayerReferences_whenInvoke_thenTimelineKeepsSubstitutionsAndScorers`() = runTest {
+        // Given — a pre-migration match: every player reference is a Long hash of the document ID
+        val matchId = "1"
+        val player1 = Player(
+            id = "abc123", firstName = "John", lastName = "Doe", number = 10,
+            positions = listOf(Position.Forward), teamId = "team1", isCaptain = false,
+        )
+        val player2 = Player(
+            id = "def456", firstName = "Jane", lastName = "Roe", number = 7,
+            positions = listOf(Position.Midfielder), teamId = "team1", isCaptain = false,
+        )
+        val match = Match(
+            id = matchId, opponent = "Team A", location = "Stadium",
+            status = MatchStatus.FINISHED, teamName = "Team B",
+            periodType = PeriodType.HALF_TIME,
+            captainId = "abc123".toLegacyId().toString(),
+            startingLineupIds = listOf("abc123".toLegacyId().toString()),
+            periods = listOf(
+                MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 0L, endTimeMillis = 1500000L),
+                MatchPeriod(periodNumber = 2, periodDuration = 1500000L, startTimeMillis = 2000000L, endTimeMillis = 3500000L),
+            ),
+        )
+        val goals = listOf(
+            Goal(
+                id = "1", matchId = matchId, scorerId = "def456".toLegacyId().toString(),
+                goalTimeMillis = 0L, matchElapsedTimeMillis = 600000L,
+                isOpponentGoal = false, isOwnGoal = false,
+            ),
+        )
+        val substitutions = listOf(
+            PlayerSubstitution(
+                id = "1", matchId = matchId,
+                playerOutId = "abc123".toLegacyId().toString(),
+                playerInId = "def456".toLegacyId().toString(),
+                substitutionTimeMillis = 0L, matchElapsedTimeMillis = 900000L,
+            ),
+        )
+
+        every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+        every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
+        every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2))
+
+        // When
+        val result = getMatchTimelineUseCase(matchId).first()
+
+        // Then — the substitution is no longer dropped (#383)
+        val substitutionEvents = result?.events?.filterIsInstance<TimelineEvent.Substitution>()
+        assertEquals(1, substitutionEvents?.size)
+        assertEquals("abc123", substitutionEvents?.get(0)?.playerOut?.id)
+        assertEquals("def456", substitutionEvents?.get(0)?.playerIn?.id)
+
+        // And the scorer resolves instead of showing as unknown (#381)
+        val goalEvents = result?.events?.filterIsInstance<TimelineEvent.GoalScored>()
+        assertEquals(1, goalEvents?.size)
+        assertEquals("def456", goalEvents?.get(0)?.scorer?.id)
+
+        // And the starting lineup event is emitted from legacy references
+        val lineupEvents = result?.events?.filterIsInstance<TimelineEvent.StartingLineup>()
+        assertEquals(1, lineupEvents?.size)
+        assertEquals(listOf("abc123"), lineupEvents?.get(0)?.players?.map { it.id })
+
+        // And player activity is keyed by the canonical document ID
+        assertEquals(
+            listOf("def456", "abc123"),
+            result?.playerActivity?.sortedBy { it.player.number }?.map { it.player.id },
+        )
     }
 }

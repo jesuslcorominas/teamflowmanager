@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
+import com.jesuslcorominas.teamflowmanager.usecase.util.findByIdOrLegacy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -32,11 +33,12 @@ internal class GetMatchSummaryUseCaseImpl(
                     val playerTimeSummaries =
                         playerTimes.mapNotNull { playerTime ->
                             val player =
-                                players.find { it.id == playerTime.playerId }
-                                    ?: return@mapNotNull null // pre-migration Long player ID — skip
+                                players.findByIdOrLegacy(playerTime.playerId)
+                                    ?: return@mapNotNull null // unknown player (e.g. deleted) — skip
                             val substitutionCount =
                                 substitutions.count {
-                                    it.playerOutId == playerTime.playerId || it.playerInId == playerTime.playerId
+                                    players.findByIdOrLegacy(it.playerOutId)?.id == player.id ||
+                                        players.findByIdOrLegacy(it.playerInId)?.id == player.id
                                 }
                             PlayerTimeSummary(
                                 player = player,
@@ -48,11 +50,11 @@ internal class GetMatchSummaryUseCaseImpl(
                     val substitutionSummaries =
                         substitutions.mapNotNull { substitution ->
                             val playerOut =
-                                players.find { it.id == substitution.playerOutId }
-                                    ?: return@mapNotNull null // pre-migration Long player ID — skip
+                                players.findByIdOrLegacy(substitution.playerOutId)
+                                    ?: return@mapNotNull null // unknown player (e.g. deleted) — skip
                             val playerIn =
-                                players.find { it.id == substitution.playerInId }
-                                    ?: return@mapNotNull null // pre-migration Long player ID — skip
+                                players.findByIdOrLegacy(substitution.playerInId)
+                                    ?: return@mapNotNull null // unknown player (e.g. deleted) — skip
                             SubstitutionSummary(
                                 playerOut = playerOut,
                                 playerIn = playerIn,

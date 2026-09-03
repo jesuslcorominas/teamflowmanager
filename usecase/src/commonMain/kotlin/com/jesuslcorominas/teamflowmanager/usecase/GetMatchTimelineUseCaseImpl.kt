@@ -13,6 +13,8 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.GoalRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
+import com.jesuslcorominas.teamflowmanager.usecase.util.filterByIdsOrLegacy
+import com.jesuslcorominas.teamflowmanager.usecase.util.findByIdOrLegacy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -56,7 +58,7 @@ internal class GetMatchTimelineUseCaseImpl(
         val events = mutableListOf<TimelineEvent>()
 
         // 1. Add starting lineup event
-        val startingPlayers = players.filter { it.id in match.startingLineupIds }
+        val startingPlayers = players.filterByIdsOrLegacy(match.startingLineupIds)
         if (startingPlayers.isNotEmpty()) {
             events.add(
                 TimelineEvent.StartingLineup(
@@ -78,7 +80,7 @@ internal class GetMatchTimelineUseCaseImpl(
             events.add(
                 TimelineEvent.GoalScored(
                     matchElapsedTimeMillis = goal.matchElapsedTimeMillis,
-                    scorer = if (goal.scorerId != null) players.find { it.id == goal.scorerId } else null,
+                    scorer = players.findByIdOrLegacy(goal.scorerId),
                     isOpponentGoal = goal.isOpponentGoal,
                     isOwnGoal = goal.isOwnGoal,
                     teamScore = teamScore,
@@ -89,8 +91,8 @@ internal class GetMatchTimelineUseCaseImpl(
 
         // 3. Add substitution events
         substitutions.forEach { substitution ->
-            val playerIn = players.find { it.id == substitution.playerInId }
-            val playerOut = players.find { it.id == substitution.playerOutId }
+            val playerIn = players.findByIdOrLegacy(substitution.playerInId)
+            val playerOut = players.findByIdOrLegacy(substitution.playerOutId)
             if (playerIn != null && playerOut != null) {
                 events.add(
                     TimelineEvent.Substitution(
@@ -210,31 +212,31 @@ internal class GetMatchTimelineUseCaseImpl(
         // Track which players are currently active and their start time
         val activePlayerStartTimes = mutableMapOf<String, Long>()
 
-        // Starting lineup players are active from time 0
-        match.startingLineupIds.forEach { playerId ->
-            activePlayerStartTimes[playerId] = 0L
+        // Starting lineup players are active from time 0.
+        // Legacy references are resolved so the map is always keyed by the canonical document ID.
+        players.filterByIdsOrLegacy(match.startingLineupIds).forEach { player ->
+            activePlayerStartTimes[player.id] = 0L
         }
 
         // Process substitutions in chronological order
         substitutions.sortedBy { it.matchElapsedTimeMillis }.forEach { substitution ->
             // Player out: end their interval
-            val playerOutId = substitution.playerOutId
-            val playerOutStartTime = activePlayerStartTimes.remove(playerOutId)
-            if (playerOutStartTime != null) {
-                val player = players.find { it.id == playerOutId }
-                if (player != null) {
-                    intervals.add(
-                        PlayerActivityInterval(
-                            player = player,
-                            startTimeMillis = playerOutStartTime,
-                            endTimeMillis = substitution.matchElapsedTimeMillis,
-                        ),
-                    )
-                }
+            val playerOut = players.findByIdOrLegacy(substitution.playerOutId)
+            val playerOutStartTime = playerOut?.let { activePlayerStartTimes.remove(it.id) }
+            if (playerOut != null && playerOutStartTime != null) {
+                intervals.add(
+                    PlayerActivityInterval(
+                        player = playerOut,
+                        startTimeMillis = playerOutStartTime,
+                        endTimeMillis = substitution.matchElapsedTimeMillis,
+                    ),
+                )
             }
 
             // Player in: start their interval
-            activePlayerStartTimes[substitution.playerInId] = substitution.matchElapsedTimeMillis
+            players.findByIdOrLegacy(substitution.playerInId)?.let { playerIn ->
+                activePlayerStartTimes[playerIn.id] = substitution.matchElapsedTimeMillis
+            }
         }
 
         // End intervals for players still active at match end
