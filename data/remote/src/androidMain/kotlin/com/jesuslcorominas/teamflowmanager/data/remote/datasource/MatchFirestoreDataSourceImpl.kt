@@ -30,62 +30,14 @@ class MatchFirestoreDataSourceImpl(
     private fun documentToMatch(
         document: DocumentSnapshot,
         teamDocId: String,
-    ): Match? {
-        return try {
-            val rawData = document.data ?: return null
-
-            // Pre-migration documents store captainId as Long and squadCallUpIds /
-            // startingLineupIds as List<Long>. Firestore's class mapper throws a
-            // ClassCastException when it encounters a Long value for a String field.
-            // Read these fields directly from the raw map first so we can safely override
-            // them after calling toObject().
-            val squadCallUpIds =
-                (rawData["squadCallUpIds"] as? List<*>)?.filterIsInstance<String>()
-                    ?: emptyList()
-            val startingLineupIds =
-                (rawData["startingLineupIds"] as? List<*>)?.filterIsInstance<String>()
-                    ?: emptyList()
-            val captainId = rawData["captainId"] as? String ?: ""
-
-            // Try the fast path: new documents (post-migration) deserialize cleanly.
-            val model =
-                try {
-                    document.toObject(MatchFirestoreModel::class.java) ?: return null
-                } catch (_: Exception) {
-                    // Slow path: pre-migration document has Long values in String fields.
-                    // Build the model manually from the raw map.
-                    MatchFirestoreModel(
-                        teamId = rawData["teamId"] as? String ?: teamDocId,
-                        teamName = rawData["teamName"] as? String ?: "",
-                        opponent = rawData["opponent"] as? String ?: "",
-                        location = rawData["location"] as? String ?: "",
-                        dateTime = rawData["dateTime"] as? Long,
-                        numberOfPeriods = (rawData["numberOfPeriods"] as? Long)?.toInt() ?: 2,
-                        squadCallUpIds = squadCallUpIds,
-                        captainId = captainId,
-                        startingLineupIds = startingLineupIds,
-                        status = rawData["status"] as? String ?: MatchStatus.SCHEDULED.name,
-                        archived = rawData["archived"] as? Boolean ?: false,
-                        pauseCount = (rawData["pauseCount"] as? Long)?.toInt() ?: 0,
-                        goals = (rawData["goals"] as? Long)?.toInt() ?: 0,
-                        opponentGoals = (rawData["opponentGoals"] as? Long)?.toInt() ?: 0,
-                        timeoutStartTimeMillis = rawData["timeoutStartTimeMillis"] as? Long ?: 0L,
-                        periods = emptyList(),
-                        lastCompletedOperationId = rawData["lastCompletedOperationId"] as? String,
-                    )
-                }
-
-            model.copy(
-                id = document.id,
-                teamId = teamDocId,
-                squadCallUpIds = squadCallUpIds,
-                startingLineupIds = startingLineupIds,
-                captainId = captainId,
-            ).toDomain()
+    ): Match? =
+        try {
+            document.toObject(MatchFirestoreModel::class.java)
+                ?.copy(id = document.id, teamId = teamDocId)
+                ?.toDomain()
         } catch (_: Exception) {
             null
         }
-    }
 
     private suspend fun getTeamDocumentId(): String? {
         val currentUserId = firebaseAuth.currentUser?.uid ?: return null

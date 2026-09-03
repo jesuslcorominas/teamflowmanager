@@ -5,7 +5,6 @@ import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFires
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -13,7 +12,6 @@ import dev.gitlive.firebase.firestore.FirebaseFirestoreException
 import dev.gitlive.firebase.firestore.where
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -111,10 +109,6 @@ class PlayerTimeFirestoreDataSourceImpl(
                 emit(emptyList())
                 return@flow
             }
-            // Combine two real-time listeners: one for new String-ID docs, one for legacy Long-ID docs.
-            // Each source is mapped to a List and given its own .catch BEFORE the combine, so a
-            // failure on the legacy query does not blank out valid new-doc data (#385.3).
-            // TODO: remove legacy branch after backward-compat window closes.
             val newTimes =
                 firestore.collection(PLAYER_TIMES_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
@@ -131,23 +125,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                     }.catch { e ->
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                     }
-            val legacyTimes =
-                firestore.collection(PLAYER_TIMES_COLLECTION)
-                    .where { "teamId" equalTo teamDocId }
-                    .where { "matchId" equalTo matchId.toLegacyId() }
-                    .snapshots
-                    .map { qs ->
-                        qs.documents.mapNotNull { doc ->
-                            try {
-                                parsePlayerTimeDocument(doc.data<Map<String, Any?>>(), matchId)
-                            } catch (_: Exception) {
-                                null
-                            }
-                        }
-                    }.catch { e ->
-                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
-                    }
-            emitAll(combine(newTimes, legacyTimes) { a, b -> a + b })
+            emitAll(newTimes)
         }
 
     override suspend fun upsertPlayerTime(playerTime: PlayerTime) {

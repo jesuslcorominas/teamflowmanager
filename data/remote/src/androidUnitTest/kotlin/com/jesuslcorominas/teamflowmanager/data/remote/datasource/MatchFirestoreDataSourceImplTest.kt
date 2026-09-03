@@ -899,51 +899,6 @@ class MatchFirestoreDataSourceImplTest {
     }
 
     @Test
-    fun `givenDocumentToMatch_whenPreMigrationDocument_thenHandlesLongValues`() = runTest {
-        every { mockAuth.currentUser } returns mockUser
-        every { mockUser.uid } returns "user-123"
-
-        val listenerSlot = slot<com.google.firebase.firestore.EventListener<DocumentSnapshot>>()
-        val matchesCollection = mockk<CollectionReference>()
-        val matchDocRef = mockk<DocumentReference>()
-        val docSnapshot = mockk<DocumentSnapshot>()
-
-        every { mockFirestore.collection("matches") } returns matchesCollection
-        every { matchesCollection.document("match-id") } returns matchDocRef
-        every { matchDocRef.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
-
-        every { docSnapshot.id } returns "match-id"
-        every { docSnapshot.exists() } returns true
-        every { docSnapshot.getString("teamId") } returns "team-123"
-        every { docSnapshot.data } returns mapOf(
-            "teamId" to "team-123",
-            "opponent" to "Opponent",
-            "archived" to false,
-            "location" to "Home",
-            "squadCallUpIds" to listOf(1L, 2L), // Long values (pre-migration) will be filtered to empty
-            "startingLineupIds" to listOf(3L, 4L), // Long values (pre-migration) will be filtered to empty
-            "captainId" to 5L, // Long value (pre-migration) will be converted to empty string
-            "numberOfPeriods" to 2L,
-            "pauseCount" to 0L,
-            "goals" to 1L,
-            "opponentGoals" to 0L,
-            "timeoutStartTimeMillis" to 0L,
-            "status" to "SCHEDULED",
-            "periods" to emptyList<Any>(),
-        )
-        // Simulate the exception that occurs during deserialization - triggers slow path
-        every { docSnapshot.toObject(MatchFirestoreModel::class.java) } throws ClassCastException("Long cannot be cast to String")
-
-        dataSource.getMatchById("match-id").test {
-            listenerSlot.captured.onEvent(docSnapshot, null)
-            val result = awaitItem()
-            // The slow path handles this gracefully by extracting String fields and filtering lists
-            assertNotNull(result)
-            cancel()
-        }
-    }
-
-    @Test
     fun `givenDocumentToMatch_whenNullData_thenReturnsNull`() = runTest {
         every { mockAuth.currentUser } returns mockUser
         every { mockUser.uid } returns "user-123"

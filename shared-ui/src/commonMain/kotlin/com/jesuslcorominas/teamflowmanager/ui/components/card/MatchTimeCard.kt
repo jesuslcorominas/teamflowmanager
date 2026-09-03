@@ -385,7 +385,7 @@ private fun getCurrentPeriodName(match: Match): String {
 /**
  * Computes the elapsed time to display for a finished [MatchPeriod].
  *
- * Defensive fix for legacy/malformed periods that have a configured [MatchPeriod.periodDuration]
+ * Defensive fix for malformed periods that have a configured [MatchPeriod.periodDuration]
  * but zero start/end timestamps: falls back to the configured duration instead of rendering
  * nothing, so HALF_TIME still shows e.g. 25'/25' and QUARTER_TIME shows 12:30 x4.
  *
