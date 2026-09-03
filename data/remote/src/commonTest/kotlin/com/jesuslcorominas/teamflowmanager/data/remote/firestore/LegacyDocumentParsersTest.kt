@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -374,4 +375,96 @@ class LegacyDocumentParsersTest {
     }
 
     // endregion
+}
+
+class ParseMatchDocumentTest {
+    private val legacyMatch =
+        mapOf<String, Any?>(
+            "teamId" to "team1",
+            "teamName" to "Team B",
+            "opponent" to "Team A",
+            "location" to "Stadium",
+            "dateTime" to 1_700_000_000_000L,
+            "numberOfPeriods" to 2L,
+            // Pre-migration: player references are Long hashes of the document ID
+            "captainId" to 9_876_543L,
+            "squadCallUpIds" to listOf(9_876_543L, 1_234_567L),
+            "startingLineupIds" to listOf(9_876_543L),
+            "status" to "FINISHED",
+            "archived" to false,
+            "pauseCount" to 1L,
+            "goals" to 2L,
+            "opponentGoals" to 1L,
+            "timeoutStartTimeMillis" to 0L,
+            "periods" to
+                listOf(
+                    mapOf(
+                        "periodNumber" to 1L,
+                        "periodDuration" to 1_500_000L,
+                        "startTimeMillis" to 1_000L,
+                        "endTimeMillis" to 1_501_000L,
+                    ),
+                    mapOf(
+                        "periodNumber" to 2L,
+                        "periodDuration" to 1_500_000L,
+                        "startTimeMillis" to 2_000_000L,
+                        "endTimeMillis" to 3_500_000L,
+                    ),
+                ),
+            "lastCompletedOperationId" to "op1",
+        )
+
+    @Test
+    fun `parseMatchDocument returns null for null map`() {
+        assertNull(parseMatchDocument(null, "match1", "team1"))
+    }
+
+    @Test
+    fun `parseMatchDocument parses a legacy document instead of failing`() {
+        val result = parseMatchDocument(legacyMatch, "match1", "team1")
+
+        assertEquals("match1", result?.id)
+        assertEquals("team1", result?.teamId)
+        assertEquals("Team A", result?.opponent)
+        assertEquals(MatchStatus.FINISHED, result?.status)
+        assertEquals(2, result?.goals)
+        assertEquals(1, result?.opponentGoals)
+        assertEquals("op1", result?.lastCompletedOperationId)
+    }
+
+    @Test
+    fun `parseMatchDocument keeps legacy player references as strings`() {
+        val result = parseMatchDocument(legacyMatch, "match1", "team1")
+
+        assertEquals("9876543", result?.captainId)
+        assertEquals(listOf("9876543", "1234567"), result?.squadCallUpIds)
+        assertEquals(listOf("9876543"), result?.startingLineupIds)
+    }
+
+    @Test
+    fun `parseMatchDocument preserves period timestamps`() {
+        val result = parseMatchDocument(legacyMatch, "match1", "team1")
+
+        assertEquals(2, result?.periods?.size)
+        assertEquals(1_000L, result?.periods?.get(0)?.startTimeMillis)
+        assertEquals(1_501_000L, result?.periods?.get(0)?.endTimeMillis)
+        assertEquals(2_000_000L, result?.periods?.get(1)?.startTimeMillis)
+        assertEquals(3_500_000L, result?.periods?.get(1)?.endTimeMillis)
+    }
+
+    @Test
+    fun `parseMatchDocument falls back to default periods when the array is missing`() {
+        val result = parseMatchDocument(legacyMatch - "periods", "match1", "team1")
+
+        assertEquals(2, result?.periods?.size)
+        assertEquals(0L, result?.periods?.get(0)?.startTimeMillis)
+        assertTrue((result?.periods?.get(0)?.periodDuration ?: 0L) > 0L)
+    }
+
+    @Test
+    fun `parseMatchDocument defaults an unknown status to SCHEDULED`() {
+        val result = parseMatchDocument(legacyMatch + ("status" to "NOT_A_STATUS"), "match1", "team1")
+
+        assertEquals(MatchStatus.SCHEDULED, result?.status)
+    }
 }

@@ -1,6 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
+import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
@@ -27,6 +31,12 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
  * would then yield `null` and silently zero the value (this is what kept #384's chart flat).
  */
 private fun Map<String, Any?>.asLong(key: String): Long? = (this[key] as? Number)?.toLong()
+
+/**
+ * Reads a list-of-references field, keeping legacy Long entries in their String form so they can
+ * still be resolved by the use case layer instead of being silently dropped.
+ */
+private fun Map<String, Any?>.asStringList(key: String): List<String> = (this[key] as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
 
 /**
  * Reads a boolean Firestore field regardless of the concrete type the platform SDK produced.
@@ -127,3 +137,79 @@ fun parsePlayerTimeHistoryDocument(
         null
     }
 }
+
+/**
+ * Builds a [Match] from the raw document map.
+ *
+ * Pre-migration match documents store `captainId` as a Long and `squadCallUpIds` /
+ * `startingLineupIds` as `List<Long>`, so typed deserialization throws on the whole document:
+ * on Android the class mapper raises a ClassCastException, and on iOS
+ * `doc.data<MatchFirestoreModel>()` fails and the match resolves to `null` — the match cannot even
+ * be opened. Reading field-by-field tolerates both shapes.
+ *
+ * The Long player references are kept in their String form rather than dropped: the use case layer
+ * resolves them back to a player through the same hash (`findByIdOrLegacy`).
+ *
+ * TODO: remove after backward-compat window closes.
+ */
+fun parseMatchDocument(
+    rawData: Map<String, Any?>?,
+    docId: String,
+    teamDocId: String,
+): Match? {
+    if (rawData == null) return null
+    return try {
+        val numberOfPeriods = rawData.asLong("numberOfPeriods")?.toInt() ?: 2
+        val periodType = PeriodType.fromNumberOfPeriods(numberOfPeriods)
+        val periods = parseMatchPeriods(rawData)
+        Match(
+            id = docId,
+            teamId = teamDocId,
+            teamName = rawData["teamName"] as? String ?: "",
+            opponent = rawData["opponent"] as? String ?: "",
+            location = rawData["location"] as? String ?: "",
+            dateTime = rawData.asLong("dateTime"),
+            periodType = periodType,
+            squadCallUpIds = rawData.asStringList("squadCallUpIds"),
+            captainId = rawData["captainId"]?.toString() ?: "",
+            startingLineupIds = rawData.asStringList("startingLineupIds"),
+            status =
+                try {
+                    MatchStatus.valueOf(rawData["status"] as? String ?: MatchStatus.SCHEDULED.name)
+                } catch (_: Exception) {
+                    MatchStatus.SCHEDULED
+                },
+            archived = rawData.asBoolean("archived") ?: false,
+            pauseCount = rawData.asLong("pauseCount")?.toInt() ?: 0,
+            goals = rawData.asLong("goals")?.toInt() ?: 0,
+            opponentGoals = rawData.asLong("opponentGoals")?.toInt() ?: 0,
+            timeoutStartTimeMillis = rawData.asLong("timeoutStartTimeMillis") ?: 0L,
+            periods =
+                periods.ifEmpty {
+                    (1..periodType.numberOfPeriods).map {
+                        MatchPeriod(periodNumber = it, periodDuration = periodType.duration)
+                    }
+                },
+            lastCompletedOperationId = rawData["lastCompletedOperationId"] as? String,
+        )
+    } catch (_: Exception) {
+        null
+    }
+}
+
+/**
+ * Reads the embedded `periods` array. It holds no String fields, so it survives the Long→String ID
+ * migration untouched — but discarding it leaves a finished legacy match with zero-timestamp
+ * default periods, which blanks the per-period times on the header card and collapses the
+ * score-evolution chart's X axis to 0 (#380, #384).
+ */
+fun parseMatchPeriods(rawData: Map<String, Any?>?): List<MatchPeriod> =
+    (rawData?.get("periods") as? List<*>)?.mapNotNull { entry ->
+        val period = (entry as? Map<*, *>)?.mapKeys { it.key.toString() } ?: return@mapNotNull null
+        MatchPeriod(
+            periodNumber = period.asLong("periodNumber")?.toInt() ?: 0,
+            periodDuration = period.asLong("periodDuration") ?: 0L,
+            startTimeMillis = period.asLong("startTimeMillis") ?: 0L,
+            endTimeMillis = period.asLong("endTimeMillis") ?: 0L,
+        )
+    } ?: emptyList()

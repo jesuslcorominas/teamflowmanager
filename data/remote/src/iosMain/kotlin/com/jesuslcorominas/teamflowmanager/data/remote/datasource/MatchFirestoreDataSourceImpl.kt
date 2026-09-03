@@ -2,10 +2,12 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseMatchDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import dev.gitlive.firebase.auth.FirebaseAuth
+import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.FirebaseFirestoreException
 import dev.gitlive.firebase.firestore.where
@@ -41,11 +43,32 @@ class MatchFirestoreDataSourceImpl(
         }
     }
 
+    /**
+     * Typed deserialization first, raw-map parsing as a fallback.
+     *
+     * A pre-migration document stores `captainId` as a Long and `squadCallUpIds` /
+     * `startingLineupIds` as `List<Long>`, so `doc.data<MatchFirestoreModel>()` throws and the
+     * whole match used to resolve to `null` — the president could not even open a legacy match.
+     *
+     * TODO: remove the legacy fallback after the backward-compat window closes.
+     */
     private fun documentToMatch(
-        docId: String,
-        model: MatchFirestoreModel,
+        doc: DocumentSnapshot,
         teamDocId: String,
-    ): Match = model.copy(id = docId, teamId = teamDocId).toDomain()
+    ): Match? =
+        try {
+            doc.data<MatchFirestoreModel>().copy(id = doc.id, teamId = teamDocId).toDomain()
+        } catch (_: Exception) {
+            parseMatchDocument(rawDataOrNull(doc), doc.id, teamDocId)
+        }
+
+    /** Reads the document as a raw map; returns null when even that fails. */
+    private fun rawDataOrNull(doc: DocumentSnapshot): Map<String, Any?>? =
+        try {
+            doc.data<Map<String, Any?>>()
+        } catch (_: Exception) {
+            null
+        }
 
     override fun getMatchesByTeam(teamId: String): Flow<List<Match>> =
         flow {
@@ -56,12 +79,7 @@ class MatchFirestoreDataSourceImpl(
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
-                        try {
-                            val model = doc.data<MatchFirestoreModel>()
-                            documentToMatch(doc.id, model, teamId)
-                        } catch (_: Exception) {
-                            null
-                        }
+                        documentToMatch(doc, teamId)
                     }
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -89,12 +107,7 @@ class MatchFirestoreDataSourceImpl(
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
-                        try {
-                            val model = doc.data<MatchFirestoreModel>()
-                            documentToMatch(doc.id, model, teamDocId)
-                        } catch (_: Exception) {
-                            null
-                        }
+                        documentToMatch(doc, teamDocId)
                     }
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -122,12 +135,7 @@ class MatchFirestoreDataSourceImpl(
             emitAll(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
-                        try {
-                            val model = doc.data<MatchFirestoreModel>()
-                            documentToMatch(doc.id, model, teamDocId)
-                        } catch (_: Exception) {
-                            null
-                        }
+                        documentToMatch(doc, teamDocId)
                     }
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
@@ -146,13 +154,8 @@ class MatchFirestoreDataSourceImpl(
             emitAll(
                 snapshots.map { doc ->
                     if (!doc.exists) return@map null
-                    try {
-                        val model = doc.data<MatchFirestoreModel>()
-                        val teamDocId = model.teamId
-                        documentToMatch(doc.id, model, teamDocId)
-                    } catch (_: Exception) {
-                        null
-                    }
+                    val teamDocId = rawDataOrNull(doc)?.get("teamId") as? String ?: ""
+                    documentToMatch(doc, teamDocId)
                 }.catch { e ->
                     if (e is FirebaseFirestoreException) emit(null) else throw e
                 },
@@ -169,12 +172,7 @@ class MatchFirestoreDataSourceImpl(
                     .where { "status" equalTo "SCHEDULED" }
                     .get()
             snapshot.documents.mapNotNull { doc ->
-                try {
-                    val model = doc.data<MatchFirestoreModel>()
-                    documentToMatch(doc.id, model, teamDocId)
-                } catch (_: Exception) {
-                    null
-                }
+                documentToMatch(doc, teamDocId)
             }
         } catch (e: CancellationException) {
             throw e

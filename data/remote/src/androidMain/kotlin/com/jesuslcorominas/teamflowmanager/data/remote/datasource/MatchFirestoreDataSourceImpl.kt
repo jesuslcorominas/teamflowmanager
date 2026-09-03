@@ -5,7 +5,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchPeriodFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseMatchDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -27,25 +27,6 @@ class MatchFirestoreDataSourceImpl(
         private const val MATCHES_COLLECTION = "matches"
         private const val TEAMS_COLLECTION = "teams"
     }
-
-    /**
-     * Reads `periods` from the raw document map.
-     *
-     * The periods array holds no String fields, so it survives the Long→String ID migration
-     * untouched — but the slow path used to discard it, leaving finished legacy matches with
-     * zero-timestamp default periods. That blanked the per-period times on the header card and
-     * collapsed the score-evolution chart's X axis to 0 (#380, #384).
-     */
-    private fun parsePeriods(rawData: Map<String, Any?>): List<MatchPeriodFirestoreModel> =
-        (rawData["periods"] as? List<*>)?.mapNotNull { entry ->
-            val period = entry as? Map<*, *> ?: return@mapNotNull null
-            MatchPeriodFirestoreModel(
-                periodNumber = (period["periodNumber"] as? Number)?.toInt() ?: 0,
-                periodDuration = (period["periodDuration"] as? Number)?.toLong() ?: 0L,
-                startTimeMillis = (period["startTimeMillis"] as? Number)?.toLong() ?: 0L,
-                endTimeMillis = (period["endTimeMillis"] as? Number)?.toLong() ?: 0L,
-            )
-        } ?: emptyList()
 
     private fun documentToMatch(
         document: DocumentSnapshot,
@@ -75,26 +56,8 @@ class MatchFirestoreDataSourceImpl(
                     document.toObject(MatchFirestoreModel::class.java) ?: return null
                 } catch (_: Exception) {
                     // Slow path: pre-migration document has Long values in String fields.
-                    // Build the model manually from the raw map.
-                    MatchFirestoreModel(
-                        teamId = rawData["teamId"] as? String ?: teamDocId,
-                        teamName = rawData["teamName"] as? String ?: "",
-                        opponent = rawData["opponent"] as? String ?: "",
-                        location = rawData["location"] as? String ?: "",
-                        dateTime = rawData["dateTime"] as? Long,
-                        numberOfPeriods = (rawData["numberOfPeriods"] as? Long)?.toInt() ?: 2,
-                        squadCallUpIds = squadCallUpIds,
-                        captainId = captainId,
-                        startingLineupIds = startingLineupIds,
-                        status = rawData["status"] as? String ?: MatchStatus.SCHEDULED.name,
-                        archived = rawData["archived"] as? Boolean ?: false,
-                        pauseCount = (rawData["pauseCount"] as? Long)?.toInt() ?: 0,
-                        goals = (rawData["goals"] as? Long)?.toInt() ?: 0,
-                        opponentGoals = (rawData["opponentGoals"] as? Long)?.toInt() ?: 0,
-                        timeoutStartTimeMillis = rawData["timeoutStartTimeMillis"] as? Long ?: 0L,
-                        periods = parsePeriods(rawData),
-                        lastCompletedOperationId = rawData["lastCompletedOperationId"] as? String,
-                    )
+                    // Build the match manually from the raw map (shared with iOS).
+                    return parseMatchDocument(rawData, document.id, teamDocId)
                 }
 
             model.copy(
