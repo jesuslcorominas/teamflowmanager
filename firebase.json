@@ -27,5 +27,8 @@
         "function": "sendNotification"
       }
     ]
+  },
+  "remoteconfig": {
+    "template": "remoteconfig.template.json"
   }
 }

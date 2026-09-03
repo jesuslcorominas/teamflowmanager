@@ -29,14 +29,43 @@ class PlayerWizardViewModel(
 |---|---|---|
 | `player_image_upload_enabled` | `false` | The player wizard shows the avatar read-only: no tap target, no camera/gallery dialog, no "tap to add photo" hint. Existing photos are still displayed. |
 
-## Changing a flag from the Firebase console
+## Where the flags live
 
-1. Firebase console → **Remote Config** → the project for the flavor you are targeting
-   (dev and prod are separate Firebase projects — check `app/src/{dev,prod}/google-services.json`).
-2. **Add parameter** with the exact key from the table, type Boolean.
-3. Set the value and **Publish changes**.
+The Remote Config template is versioned in the repo as
+[`remoteconfig.template.json`](../remoteconfig.template.json) and wired through `firebase.json`, so
+a flag and its default are reviewable in a PR instead of only existing in a console.
 
-No release is needed. The app picks the change up on the next fetch.
+The two flavors are **separate Firebase projects**, so every flag has to exist in both:
+
+| Flavor | Project |
+|---|---|
+| dev | `teamflow-manager-dev` |
+| prod | `teamflow-manager-897a3` |
+
+## Changing a flag
+
+Preferred — edit the template and deploy, so the repo stays the source of truth:
+
+```bash
+firebase deploy --only remoteconfig --project teamflow-manager-dev
+```
+
+```bash
+firebase deploy --only remoteconfig --project teamflow-manager-897a3
+```
+
+Read back what a project currently has:
+
+```bash
+firebase remoteconfig:get --project teamflow-manager-dev
+```
+
+Flipping a value straight from the Firebase console (Remote Config → parameter → Publish) also
+works and needs no release — but the repo template then no longer matches what is published, and
+the next `firebase deploy --only remoteconfig` **replaces the whole template**, undoing it. Use the
+console for a quick test, the template for anything that should stick.
+
+No release is needed either way. The app picks the change up on the next fetch.
 
 ## Propagation timing
 
@@ -56,7 +85,7 @@ launch**, not instantly:
 2. Add the key to `RemoteConfigFeatureFlags.Keys` and its default to `defaults`.
 3. Give the iOS `StaticFeatureFlags` a value (iOS has no Remote Config binding yet).
 4. Expose it through the ViewModel that owns the screen, not by reading Koin from a composable.
-5. Create the parameter in the Firebase console for **both** dev and prod.
+5. Add the parameter to `remoteconfig.template.json` and deploy it to **both** projects.
 
 ## Scope
 
