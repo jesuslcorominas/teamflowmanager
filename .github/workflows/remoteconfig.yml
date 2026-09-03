@@ -1,24 +1,32 @@
 name: Remote Config
 
-# Keeps the Firebase Remote Config template in sync with the repo: merging a change to
-# remoteconfig.template.json publishes it, so a flag can never be "merged but not live".
+# Publishes the Firebase Remote Config templates, one per environment:
 #
-#   develop → teamflow-manager-dev       (dev flavor)
-#   main    → teamflow-manager-897a3     (prod flavor)
+#   push to develop → remoteconfig/dev.template.json  → teamflow-manager-dev
+#   push to main    → remoteconfig/prod.template.json → teamflow-manager-897a3
 #
-# This is independent of publishing a release: a PR to main touching only the template skips the
-# build and the Play upload (see the `scope` job in release.yml), so a flag can be flipped in
-# production at any time and still leave a reviewed history of who changed what and why.
+# Both files live on both branches and sync through git like any other file — what differs is
+# which one each branch publishes. That is why a value can be true in dev and false in prod
+# without the two branches ever diverging.
 #
-# A deploy replaces the WHOLE template, so a value flipped by hand in the Firebase console is
-# undone by the next run. Use the console for a quick test, the template for anything permanent.
+# The deploy is independent of publishing a release: a PR to main touching only these templates
+# skips the build and the Play upload (see the `scope` job in release.yml), so a production flag
+# can be flipped at any time and still leave a reviewed history of who changed what and why.
+#
+# A deploy replaces the WHOLE template for that project, so a value flipped by hand in the Firebase
+# console is undone by the next run. Use the console for a quick test, the template for anything
+# permanent.
 
 on:
   push:
     branches: [develop, main]
     paths:
-      - 'remoteconfig.template.json'
+      - 'remoteconfig/**'
       - '.github/workflows/remoteconfig.yml'
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'remoteconfig/**'
   workflow_dispatch:
 
 permissions:
@@ -29,24 +37,89 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy Remote Config template
+  # Runs on PRs too, and needs no credentials: catches a flag added to one environment and
+  # forgotten in the other, which would otherwise only surface as a missing flag at runtime.
+  validate:
+    name: Validate templates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Resolve target project
+      - name: Both templates parse and declare the same parameters
+        run: |
+          python3 - <<'PY'
+          import json, sys
+
+          templates = {
+              env: json.load(open(f"remoteconfig/{env}.template.json"))
+              for env in ("dev", "prod")
+          }
+          keys = {env: set(t.get("parameters", {})) for env, t in templates.items()}
+
+          if keys["dev"] != keys["prod"]:
+              only_dev = sorted(keys["dev"] - keys["prod"])
+              only_prod = sorted(keys["prod"] - keys["dev"])
+              if only_dev:
+                  print(f"::error::Only in dev: {', '.join(only_dev)}")
+              if only_prod:
+                  print(f"::error::Only in prod: {', '.join(only_prod)}")
+              print("::error::Both templates must declare the same parameters. Values may differ.")
+              sys.exit(1)
+
+          for env, t in templates.items():
+              for key, param in t.get("parameters", {}).items():
+                  value = param.get("defaultValue", {}).get("value")
+                  print(f"{env:>4}  {key} = {value}")
+          PY
+
+  deploy:
+    name: Deploy template
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve target
         id: target
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "project=teamflow-manager-897a3" >> $GITHUB_OUTPUT
             echo "env_name=prod" >> $GITHUB_OUTPUT
+            echo "project=teamflow-manager-897a3" >> $GITHUB_OUTPUT
+            echo "config=firebase.prod.json" >> $GITHUB_OUTPUT
+            echo "template=remoteconfig/prod.template.json" >> $GITHUB_OUTPUT
           else
-            echo "project=teamflow-manager-dev" >> $GITHUB_OUTPUT
             echo "env_name=dev" >> $GITHUB_OUTPUT
+            echo "project=teamflow-manager-dev" >> $GITHUB_OUTPUT
+            echo "config=firebase.json" >> $GITHUB_OUTPUT
+            echo "template=remoteconfig/dev.template.json" >> $GITHUB_OUTPUT
+          fi
+
+      # The main → develop sync PR carries prod template changes into develop. Without this check
+      # that push would republish dev's template for no reason, and any divergence would look like
+      # it had been overwritten.
+      - name: Skip when this environment's template did not change
+        id: changed
+        run: |
+          TEMPLATE="${{ steps.target.outputs.template }}"
+          BEFORE="${{ github.event.before }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || \
+             [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Manual run or no diff base — deploying."
+            exit 0
+          fi
+          if git diff --name-only "$BEFORE" "${{ github.sha }}" | grep -qx "$TEMPLATE"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "::notice::$TEMPLATE unchanged in this push — nothing to deploy for ${{ steps.target.outputs.env_name }}."
           fi
 
       - name: Check credentials are configured
+        if: steps.changed.outputs.changed == 'true'
         env:
           SA_JSON: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
         run: |
@@ -57,25 +130,31 @@ jobs:
           fi
 
       - uses: google-github-actions/auth@v2
+        if: steps.changed.outputs.changed == 'true'
         with:
           credentials_json: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
 
       - name: Install Firebase CLI
+        if: steps.changed.outputs.changed == 'true'
         run: npm install -g firebase-tools@15
 
       - name: Show what is currently published
+        if: steps.changed.outputs.changed == 'true'
         run: firebase remoteconfig:get --project ${{ steps.target.outputs.project }}
 
       - name: Deploy template
+        if: steps.changed.outputs.changed == 'true'
         # The commit message is passed through the environment, never interpolated into the shell.
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message || 'manual dispatch' }}
         run: |
           SUBJECT=$(printf '%s' "$COMMIT_MESSAGE" | head -1)
           firebase deploy --only remoteconfig \
+            --config ${{ steps.target.outputs.config }} \
             --project ${{ steps.target.outputs.project }} \
             --non-interactive \
             --message "${GITHUB_SHA:0:7} — ${SUBJECT}"
 
       - name: Verify what is published now
+        if: steps.changed.outputs.changed == 'true'
         run: firebase remoteconfig:get --project ${{ steps.target.outputs.project }}

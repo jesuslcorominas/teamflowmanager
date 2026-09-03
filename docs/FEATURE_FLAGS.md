@@ -31,44 +31,47 @@ class PlayerWizardViewModel(
 
 ## Where the flags live
 
-The Remote Config template is versioned in the repo as
-[`remoteconfig.template.json`](../remoteconfig.template.json) and wired through `firebase.json`, so
-a flag and its default are reviewable in a PR instead of only existing in a console.
+One template per environment, both versioned in the repo:
 
-The two flavors are **separate Firebase projects**, so every flag has to exist in both:
+| File | Project | Published on |
+|---|---|---|
+| [`remoteconfig/dev.template.json`](../remoteconfig/dev.template.json) | `teamflow-manager-dev` | push to `develop` |
+| [`remoteconfig/prod.template.json`](../remoteconfig/prod.template.json) | `teamflow-manager-897a3` | push to `main` |
 
-| Flavor | Project |
-|---|---|
-| dev | `teamflow-manager-dev` |
-| prod | `teamflow-manager-897a3` |
+**Both files exist on both branches** and sync through git like any other file — what differs is
+which one each branch publishes. That is the point: a flag can be `true` in dev while it is still
+`false` in prod, without the two branches ever diverging.
+
+Keeping a single file per branch instead (letting `main` and `develop` hold different content for
+the same path) would fight git: every `main → develop` sync would conflict, forever, and the
+"resolution" would always be to discard one side. Two files, one per environment, is the shape that
+works with git rather than against it.
+
+`firebase.json` points at the dev template, so a plain `firebase deploy --only remoteconfig` from a
+laptop targets dev. `firebase.prod.json` is a minimal config that points at the prod template.
 
 ## Changing a flag
 
-Edit `remoteconfig.template.json` and open a PR. **Merging publishes it** — the `Remote Config`
-workflow (`.github/workflows/remoteconfig.yml`) deploys on any push that touches the template:
+Edit the template for the environment you are targeting and open a PR. **Merging publishes it** —
+the `Remote Config` workflow (`.github/workflows/remoteconfig.yml`) deploys the template belonging
+to the branch that was pushed.
 
-| Branch | Project |
-|---|---|
-| `develop` | `teamflow-manager-dev` |
-| `main` | `teamflow-manager-897a3` |
+**This is independent of releasing.** A PR to `main` that touches *only* the templates skips the
+build and the Play upload — the `scope` job in `release.yml` detects it and short-circuits the
+pipeline, while still reporting the required `Tests & Lint` check — so production flags can be
+flipped at any time without shipping a version. The point of going through a PR is the history:
+who changed which flag, when, and why.
 
-**This is independent of releasing.** A PR to `main` that touches *only*
-`remoteconfig.template.json` skips the build and the Play upload — the `scope` job in `release.yml`
-detects it and short-circuits the pipeline, while still reporting the required `Tests & Lint`
-check — so production flags can be flipped at any time without shipping a version. The point of
-going through a PR is the history: who changed which flag, when, and why.
+To turn a flag on in **dev**: edit `remoteconfig/dev.template.json`, PR to `develop`, merge.
 
-To flip a flag in production:
+To turn it on in **prod**: branch off `main`, edit `remoteconfig/prod.template.json`, PR **against
+`main`**, merge. `Post-Release` then opens the usual `main → develop` sync PR so both branches keep
+both files; merging that sync does **not** redeploy dev, because the workflow only deploys when the
+template for *that* environment changed in the push.
 
-1. Branch off `main`, edit `remoteconfig.template.json`, open the PR **against `main`**.
-2. Merge it. The `Remote Config` workflow publishes to `teamflow-manager-897a3`.
-3. `Post-Release` opens the usual `main → develop` sync PR, so the template does not drift between
-   branches. No GitHub Release is created: that only happens for `release/*` branches.
-
-For dev, the normal PR to `develop` is enough.
-
-The workflow can also be run by hand from the Actions tab (`workflow_dispatch`) to re-publish the
-template as-is.
+A PR touching the templates also runs a parity check: both files must declare the same parameter
+keys (values may differ). It catches a flag added to one environment and forgotten in the other,
+which would otherwise only show up as a missing flag at runtime.
 
 Read back what a project currently has:
 
@@ -82,12 +85,16 @@ Deploying by hand is still possible as an escape hatch:
 firebase deploy --only remoteconfig --project teamflow-manager-dev
 ```
 
+```bash
+firebase deploy --only remoteconfig --config firebase.prod.json --project teamflow-manager-897a3
+```
+
 Flipping a value straight from the Firebase console (Remote Config → parameter → Publish) also
 works and needs no release — but the repo template then no longer matches what is published, and
 the next deploy, **whether run by CI or by hand, replaces the whole template** and undoes it. Use
 the console for a quick test, the template for anything that should stick.
 
-No release is needed for a dev change. The app picks it up on the next fetch.
+No release is needed either way. The app picks the change up on the next fetch.
 
 ### CI credentials
 
@@ -123,7 +130,8 @@ launch**, not instantly:
 2. Add the key to `RemoteConfigFeatureFlags.Keys` and its default to `defaults`.
 3. Give the iOS `StaticFeatureFlags` a value (iOS has no Remote Config binding yet).
 4. Expose it through the ViewModel that owns the screen, not by reading Koin from a composable.
-5. Add the parameter to `remoteconfig.template.json` and deploy it to **both** projects.
+5. Add the parameter to **both** `remoteconfig/dev.template.json` and
+   `remoteconfig/prod.template.json` (the parity check enforces this); the values may differ.
 
 ## Scope
 

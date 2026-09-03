@@ -19,7 +19,7 @@ env:
 jobs:
   # ─────────────────────────────────────────────────────────────
   # 0. Change scope
-  # A PR to main that only touches remoteconfig.template.json is a feature-flag
+  # A PR to main that only touches remoteconfig/*.template.json is a feature-flag
   # change, not a release: it must reach Firebase (see remoteconfig.yml) without
   # building or uploading anything to Play. Anything else runs the full pipeline.
   # ─────────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ jobs:
             --paginate --jq '.[].filename')
           echo "Changed files:"
           echo "$FILES"
-          if [ -n "$FILES" ] && [ -z "$(echo "$FILES" | grep -v '^remoteconfig.template.json$')" ]; then
+          if [ -n "$FILES" ] && [ -z "$(echo "$FILES" | grep -v '^remoteconfig/.*\.template\.json$')" ]; then
             echo "config_only=true" >> $GITHUB_OUTPUT
             echo "::notice::Remote Config template only — skipping build and Play upload."
           else
