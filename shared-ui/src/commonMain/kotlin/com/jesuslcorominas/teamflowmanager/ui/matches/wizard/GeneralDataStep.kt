@@ -26,6 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -50,6 +51,13 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.ui.util.DateFormatter
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.cancel
@@ -80,13 +88,38 @@ fun GeneralDataStep(
     onNext: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    homeGround: String? = null,
 ) {
     val focusManager = LocalFocusManager.current
 
+    // Smart defaults: next Saturday and next quarter-hour (only used for new matches)
+    val defaultDateMillis =
+        remember {
+            val now = Clock.System.now()
+            val localDate: LocalDate = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
+            // DayOfWeek ordinal: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6. Returns 0 when today is Saturday.
+            val ordinal = localDate.dayOfWeek.ordinal
+            val daysUntilSaturday = (5 - ordinal + 7) % 7
+            localDate.plus(daysUntilSaturday, DateTimeUnit.DAY)
+                .atStartOfDayIn(TimeZone.UTC)
+                .toEpochMilliseconds()
+        }
+
+    val defaultTimeMillis =
+        remember {
+            val now = Clock.System.now()
+            val localTime = now.toLocalDateTime(TimeZone.currentSystemDefault()).time
+            val totalMinutes = localTime.hour * 60 + localTime.minute
+            val nextQuarterMinutes = ((totalMinutes / 15) + 1) * 15
+            val hours = (nextQuarterMinutes / 60) % 24
+            val minutes = nextQuarterMinutes % 60
+            (hours * 60L * 60 * 1000) + (minutes * 60L * 1000)
+        }
+
     var opponent by remember { mutableStateOf(initialOpponent) }
     var location by remember { mutableStateOf(initialLocation) }
-    var selectedDateMillis by remember { mutableLongStateOf(initialDate ?: 0L) }
-    var selectedTimeMillis by remember { mutableStateOf<Long?>(initialTime) }
+    var selectedDateMillis by remember { mutableLongStateOf(initialDate ?: defaultDateMillis) }
+    var selectedTimeMillis by remember { mutableStateOf<Long?>(initialTime ?: defaultTimeMillis) }
     var numberOfPeriods by remember { mutableIntStateOf(initialNumberOfPeriods) }
     var opponentError by remember { mutableStateOf<String?>(null) }
     var locationError by remember { mutableStateOf<String?>(null) }
@@ -166,6 +199,17 @@ fun GeneralDataStep(
                 ),
             keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() }),
         )
+
+        if (homeGround != null) {
+            SuggestionChip(
+                onClick = {
+                    location = homeGround
+                    locationError = null
+                    focusManager.clearFocus()
+                },
+                label = { Text(homeGround) },
+            )
+        }
 
         // Date Picker
         OutlinedTextField(
@@ -387,10 +431,7 @@ fun GeneralDataStep(
             onDismissRequest = { showTimePicker = false },
             title = { Text(stringResource(Res.string.match_time)) },
             text = {
-                TimePicker(
-                    state = timePickerState,
-                    modifier = Modifier.padding(16.dp),
-                )
+                TimePicker(state = timePickerState)
             },
             confirmButton = {
                 TextButton(

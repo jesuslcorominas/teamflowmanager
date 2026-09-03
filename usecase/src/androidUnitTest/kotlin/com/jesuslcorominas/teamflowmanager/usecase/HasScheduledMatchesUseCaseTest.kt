@@ -35,12 +35,12 @@ class HasScheduledMatchesUseCaseTest {
     @Test
     fun `invoke should return true when scheduled matches exist`() = runTest {
         val match = Match(
-            id = 1L,
+            id = "1",
             teamName = "Team A",
             opponent = "Opponent",
             location = "Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
             periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L)),
         )
         coEvery { matchRepository.getScheduledMatches() } returns listOf(match)

@@ -6,6 +6,7 @@
 name: android-testing
 description: Deterministic test writer
 tools: all
+model: haiku
 ---
 
 # STRICT EXECUTION MODE

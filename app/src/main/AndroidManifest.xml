@@ -81,6 +81,9 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_launcher_black_and_white" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="push_notifications_v3" />
 
         <service
             android:name=".service.TeamFlowFirebaseMessagingService"

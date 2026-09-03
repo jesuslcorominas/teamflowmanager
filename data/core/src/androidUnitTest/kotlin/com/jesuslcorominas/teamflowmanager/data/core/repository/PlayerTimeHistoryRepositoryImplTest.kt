@@ -27,20 +27,20 @@ class PlayerTimeHistoryRepositoryImplTest {
     fun `getPlayerTimeHistory should return player time history from local data source`() =
         runTest {
             // Given
-            val playerId = 1L
+            val playerId = "1"
             val history =
                 listOf(
                     PlayerTimeHistory(
-                        id = 1L,
+                        id = "1",
                         playerId = playerId,
-                        matchId = 1L,
+                        matchId = "1",
                         elapsedTimeMillis = 5000L,
                         savedAtMillis = 1000L,
                     ),
                     PlayerTimeHistory(
-                        id = 2L,
+                        id = "2",
                         playerId = playerId,
-                        matchId = 2L,
+                        matchId = "2",
                         elapsedTimeMillis = 3000L,
                         savedAtMillis = 2000L,
                     ),
@@ -58,19 +58,19 @@ class PlayerTimeHistoryRepositoryImplTest {
     fun `getMatchPlayerTimeHistory should return match player time history from local data source`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val history =
                 listOf(
                     PlayerTimeHistory(
-                        id = 1L,
-                        playerId = 1L,
+                        id = "1",
+                        playerId = "1",
                         matchId = matchId,
                         elapsedTimeMillis = 5000L,
                         savedAtMillis = 1000L,
                     ),
                     PlayerTimeHistory(
-                        id = 2L,
-                        playerId = 2L,
+                        id = "2",
+                        playerId = "2",
                         matchId = matchId,
                         elapsedTimeMillis = 3000L,
                         savedAtMillis = 1000L,
@@ -92,16 +92,16 @@ class PlayerTimeHistoryRepositoryImplTest {
             val history =
                 listOf(
                     PlayerTimeHistory(
-                        id = 1L,
-                        playerId = 1L,
-                        matchId = 1L,
+                        id = "1",
+                        playerId = "1",
+                        matchId = "1",
                         elapsedTimeMillis = 5000L,
                         savedAtMillis = 1000L,
                     ),
                     PlayerTimeHistory(
-                        id = 2L,
-                        playerId = 2L,
-                        matchId = 1L,
+                        id = "2",
+                        playerId = "2",
+                        matchId = "1",
                         elapsedTimeMillis = 3000L,
                         savedAtMillis = 1000L,
                     ),
@@ -121,19 +121,19 @@ class PlayerTimeHistoryRepositoryImplTest {
             // Given
             val history =
                 PlayerTimeHistory(
-                    id = 0L,
-                    playerId = 1L,
-                    matchId = 1L,
+                    id = "",
+                    playerId = "1",
+                    matchId = "1",
                     elapsedTimeMillis = 5000L,
                     savedAtMillis = 1000L,
                 )
-            coEvery { playerTimeHistoryDataSource.insertPlayerTimeHistory(history) } returns 1L
+            coEvery { playerTimeHistoryDataSource.insertPlayerTimeHistory(history) } returns "history-1"
 
             // When
             val result = repository.insertPlayerTimeHistory(history)
 
             // Then
-            assertEquals(1L, result)
+            assertEquals("history-1", result)
             coVerify { playerTimeHistoryDataSource.insertPlayerTimeHistory(history) }
         }
 }

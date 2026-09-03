@@ -34,9 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.PresidentNotification
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
+import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -52,6 +54,8 @@ import teamflowmanager.shared_ui.generated.resources.notifications_no_club
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PresidentNotificationsScreen(viewModel: PresidentNotificationsViewModel = koinViewModel()) {
+    TrackScreenView(screenName = ScreenName.PRESIDENT_NOTIFICATIONS, screenClass = "PresidentNotificationsScreen")
+
     val uiState by viewModel.uiState.collectAsState()
     val bottomPadding = LocalContentBottomPadding.current
     var selectedNotification by remember { mutableStateOf<PresidentNotification?>(null) }
@@ -154,7 +158,7 @@ private fun NotificationItem(
             Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = TFMSpacing.spacing06, vertical = TFMSpacing.spacing03),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {

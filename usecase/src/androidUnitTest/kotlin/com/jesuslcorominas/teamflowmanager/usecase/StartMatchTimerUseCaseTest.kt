@@ -47,7 +47,7 @@ class StartMatchTimerUseCaseTest {
     fun `givenMatchNotFound_whenInvoke_thenDoNothing`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(null)
 
@@ -64,9 +64,9 @@ class StartMatchTimerUseCaseTest {
     fun `givenMatchWithStartingLineup_whenInvoke_thenStartMatchAndTimers`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
-            val startingLineup = listOf(10L, 11L, 12L)
+            val startingLineup = listOf("10", "11", "12")
             val match = createScheduledMatch(matchId, startingLineupIds = startingLineup)
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
 
@@ -86,7 +86,7 @@ class StartMatchTimerUseCaseTest {
     fun `givenMatchWithNoStartingLineup_whenInvoke_thenOnlyStartMatch`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val match = createScheduledMatch(matchId, startingLineupIds = emptyList())
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
@@ -107,16 +107,16 @@ class StartMatchTimerUseCaseTest {
     fun `givenAllPeriodsAlreadyStarted_whenInvoke_thenDoNotUpdateMatch`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 3000L
             val match = Match(
                 id = matchId,
-                teamId = 1L,
+                teamId = "1",
                 teamName = "Team A",
                 opponent = "Opponent",
                 location = "Stadium",
                 periodType = PeriodType.HALF_TIME,
-                captainId = 1L,
+                captainId = "1",
                 status = MatchStatus.IN_PROGRESS,
                 periods = listOf(
                     MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 1000L, endTimeMillis = 1501000L),
@@ -133,15 +133,15 @@ class StartMatchTimerUseCaseTest {
             coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
-    private fun createScheduledMatch(id: Long, startingLineupIds: List<Long> = emptyList()): Match {
+    private fun createScheduledMatch(id: String, startingLineupIds: List<String> = emptyList()): Match {
         return Match(
             id = id,
-            teamId = 1L,
+            teamId = "1",
             teamName = "Team A",
             opponent = "Opponent",
             location = "Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
             status = MatchStatus.SCHEDULED,
             startingLineupIds = startingLineupIds,
             periods = listOf(

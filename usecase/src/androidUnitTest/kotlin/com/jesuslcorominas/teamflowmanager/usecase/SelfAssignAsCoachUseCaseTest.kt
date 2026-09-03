@@ -26,24 +26,21 @@ class SelfAssignAsCoachUseCaseTest {
 
     private val president = User(id = "user1", email = "pres@test.com", displayName = "President", photoUrl = null)
     private val team = Team(
-        id = 1L,
+        id = "team_fs_1",
         name = "Team A",
         coachName = "",
         delegateName = "Del",
         teamType = TeamType.FOOTBALL_7,
-        remoteId = "team_fs_1",
-        clubRemoteId = "club_fs_1",
-        clubId = 10L,
+        clubId = "club_fs_1",
         coachId = null,
     )
     private val presidentMember = ClubMember(
-        id = 1L,
+        id = "1",
         userId = "user1",
         name = "President",
         email = "pres@test.com",
-        clubId = 10L,
+        clubId = "club_fs_1",
         roles = listOf(ClubRole.PRESIDENT.roleName),
-        clubRemoteId = "club_fs_1",
     )
 
     @Before
@@ -74,7 +71,7 @@ class SelfAssignAsCoachUseCaseTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `givenTeamNotInClub_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val teamWithoutClub = team.copy(clubRemoteId = null)
+        val teamWithoutClub = team.copy(clubId = null)
         coEvery { getCurrentUser() } returns flowOf(president)
         coEvery { teamRepository.getTeamById("team_fs_1") } returns teamWithoutClub
         useCase.invoke("team_fs_1")
@@ -107,7 +104,7 @@ class SelfAssignAsCoachUseCaseTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `givenPresidentFromDifferentClub_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val differentClubMember = presidentMember.copy(clubRemoteId = "other_club_fs")
+        val differentClubMember = presidentMember.copy(clubId = "other_club_fs")
         coEvery { getCurrentUser() } returns flowOf(president)
         coEvery { teamRepository.getTeamById("team_fs_1") } returns team
         coEvery { clubMemberRepository.getClubMemberByUserId("user1") } returns flowOf(differentClubMember)

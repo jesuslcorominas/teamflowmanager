@@ -25,9 +25,9 @@ class GoalRepositoryImplTest {
     }
 
     private fun createGoal(
-        id: Long = 0L,
-        matchId: Long = 1L,
-        scorerId: Long? = 10L,
+        id: String = "",
+        matchId: String = "1",
+        scorerId: String? = "10",
         isOpponentGoal: Boolean = false,
     ) = Goal(
         id = id,
@@ -42,8 +42,8 @@ class GoalRepositoryImplTest {
 
     @Test
     fun `givenMatchWithGoals_whenGetMatchGoals_thenDelegatesToDataSource`() = runTest {
-        val matchId = 1L
-        val goals = listOf(createGoal(id = 1L, matchId = matchId), createGoal(id = 2L, matchId = matchId))
+        val matchId = "1"
+        val goals = listOf(createGoal(id = "1", matchId = matchId), createGoal(id = "2", matchId = matchId))
         every { goalDataSource.getMatchGoals(matchId) } returns flowOf(goals)
 
         val result = repository.getMatchGoals(matchId).first()
@@ -53,7 +53,7 @@ class GoalRepositoryImplTest {
 
     @Test
     fun `givenMatchWithNoGoals_whenGetMatchGoals_thenReturnsEmptyList`() = runTest {
-        val matchId = 99L
+        val matchId = "99"
         every { goalDataSource.getMatchGoals(matchId) } returns flowOf(emptyList())
 
         val result = repository.getMatchGoals(matchId).first()
@@ -63,10 +63,10 @@ class GoalRepositoryImplTest {
 
     @Test
     fun `givenMatchWithOpponentGoal_whenGetMatchGoals_thenIncludesOpponentGoal`() = runTest {
-        val matchId = 1L
+        val matchId = "1"
         val goals = listOf(
-            createGoal(id = 1L, isOpponentGoal = false),
-            createGoal(id = 2L, isOpponentGoal = true, scorerId = null),
+            createGoal(id = "1", isOpponentGoal = false),
+            createGoal(id = "2", isOpponentGoal = true, scorerId = null),
         )
         every { goalDataSource.getMatchGoals(matchId) } returns flowOf(goals)
 
@@ -81,8 +81,8 @@ class GoalRepositoryImplTest {
     @Test
     fun `givenTeamGoals_whenGetAllTeamGoals_thenDelegatesToDataSource`() = runTest {
         val goals = listOf(
-            createGoal(id = 1L, matchId = 1L),
-            createGoal(id = 2L, matchId = 2L),
+            createGoal(id = "1", matchId = "1"),
+            createGoal(id = "2", matchId = "2"),
         )
         every { goalDataSource.getAllTeamGoals() } returns flowOf(goals)
 
@@ -105,11 +105,11 @@ class GoalRepositoryImplTest {
     @Test
     fun `givenGoal_whenInsertGoal_thenReturnsInsertedId`() = runTest {
         val goal = createGoal()
-        coEvery { goalDataSource.insertGoal(goal) } returns 5L
+        coEvery { goalDataSource.insertGoal(goal) } returns "goal-5"
 
         val result = repository.insertGoal(goal)
 
-        assertEquals(5L, result)
+        assertEquals("goal-5", result)
         coVerify { goalDataSource.insertGoal(goal) }
     }
 }

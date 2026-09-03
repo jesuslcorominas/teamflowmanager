@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.di
 
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
+import com.jesuslcorominas.teamflowmanager.domain.config.FeatureFlags
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
 import com.jesuslcorominas.teamflowmanager.domain.utils.MatchReportPdfExporter
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
@@ -38,12 +39,14 @@ import platform.posix.time
 /**
  * iOS-specific Koin module that provides:
  * - No-op AnalyticsTracker and CrashReporter (Firebase Analytics/Crashlytics for iOS is KMP-17+)
+ * - Compile-time FeatureFlags (Firebase Remote Config for iOS is not wired yet)
  * - iOS TimeProvider backed by POSIX time()
  * - Factory registrations for all ViewModels (no viewModel {} DSL on iOS — uses factory {})
  */
 val iosModule =
     module {
         single<AnalyticsTracker> { NoOpAnalyticsTracker() }
+        single<FeatureFlags> { StaticFeatureFlags() }
         single<CrashReporter> { NoOpCrashReporter() }
         single<TimeProvider> { IosTimeProvider() }
         single<MatchReportPdfExporter> { IosMatchReportPdfExporterImpl() }
@@ -68,6 +71,7 @@ val iosModule =
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
+                resolvePendingCoachAssignments = get(),
             )
         }
         factory {
@@ -78,6 +82,7 @@ val iosModule =
                 archiveMatchUseCase = get(),
                 synchronizeTimeUseCase = get(),
                 timeProvider = get(),
+                timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
             )
@@ -141,6 +146,7 @@ val iosModule =
             ClubMembersViewModel(
                 getClubMembers = get(),
                 getUserClubMembership = get(),
+                removeClubMember = get(),
             )
         }
         factory {
@@ -180,6 +186,8 @@ val iosModule =
                 getUserClubMembership = get(),
                 getActiveViewRole = get(),
                 setActiveViewRole = get(),
+                getNotificationPreferences = get(),
+                updateGlobalNotificationPreference = get(),
             )
         }
 
@@ -198,6 +206,7 @@ val iosModule =
                 getScheduledMatchesUseCase = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
+                featureFlags = get(),
             )
         }
         factory { params ->
@@ -220,7 +229,7 @@ val iosModule =
                 matchId = params.get(),
                 getMatchById = get(),
                 getAllPlayerTimesUseCase = get(),
-                getPlayersUseCase = get(),
+                getPlayersByTeamUseCase = get(),
                 finishMatch = get(),
                 pauseMatch = get(),
                 resumeMatchUseCase = get(),
@@ -240,6 +249,8 @@ val iosModule =
                 timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
+                notifyPresidentMatchEvent = get(),
+                getTeamUseCase = get(),
             )
         }
         factory { params ->
@@ -265,6 +276,10 @@ val iosModule =
                 getTeamById = get(),
                 getPlayersByTeam = get(),
                 getMatchesByTeam = get(),
+                timeTicker = get(),
+                getNotificationPreferences = get(),
+                updateTeamNotificationPreference = get(),
+                getUserClubMembership = get(),
             )
         }
 
@@ -318,6 +333,14 @@ private class IosTimeProvider : TimeProvider {
     override suspend fun synchronize() = Unit
 
     override fun getOffset(): Long = 0L
+}
+
+/**
+ * Flags fixed at build time. iOS has no Remote Config binding yet, and its player wizard shows the
+ * photo read-only (there is no picker), so the upload flag is simply off.
+ */
+private class StaticFeatureFlags : FeatureFlags {
+    override val isPlayerImageUploadEnabled: Boolean = false
 }
 
 private class NoOpAnalyticsTracker : AnalyticsTracker {

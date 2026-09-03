@@ -100,8 +100,8 @@ class PlayerViewModelTest {
     fun `uiState should be Success when players are loaded`() = runTest(testDispatcher) {
         // Given
         val players = listOf(
-            Player(1L, "John", "Doe", 10, listOf(Position.Forward), teamId = 1L, isCaptain = false),
-            Player(2L, "Jane", "Smith", 8, listOf(Position.Midfielder), teamId = 1L, isCaptain = false),
+            Player("1", "John", "Doe", 10, listOf(Position.Forward), teamId = "1", isCaptain = false),
+            Player("2", "Jane", "Smith", 8, listOf(Position.Midfielder), teamId = "1", isCaptain = false),
         )
         every { getPlayersUseCase.invoke() } returns flowOf(players)
 
@@ -131,12 +131,12 @@ class PlayerViewModelTest {
     fun `addPlayer should call addPlayerUseCase`() = runTest(testDispatcher) {
         // Given
         val player = Player(
-            id = 0L,
+            id = "",
             firstName = "John",
             lastName = "Doe",
             number = 2,
             positions = listOf(Position.Forward),
-            teamId = 1L,
+            teamId = "1",
             isCaptain = false,
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
@@ -154,7 +154,7 @@ class PlayerViewModelTest {
     @Test
     fun `showDeleteConfirmation should update deleteConfirmationState`() = runTest(testDispatcher) {
         // Given
-        val player = Player(1L, "John", "Doe", 10, listOf(Position.Forward), teamId = 1L, isCaptain = false)
+        val player = Player("1", "John", "Doe", 10, listOf(Position.Forward), teamId = "1", isCaptain = false)
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         viewModel = createViewModel()
 
@@ -168,7 +168,7 @@ class PlayerViewModelTest {
     @Test
     fun `dismissDeleteConfirmation should reset deleteConfirmationState`() = runTest(testDispatcher) {
         // Given
-        val player = Player(1L, "John", "Doe", 10, listOf(Position.Forward), teamId = 1L, isCaptain = false)
+        val player = Player("1", "John", "Doe", 10, listOf(Position.Forward), teamId = "1", isCaptain = false)
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         viewModel = createViewModel()
         viewModel.showDeleteConfirmation(player)
@@ -183,7 +183,7 @@ class PlayerViewModelTest {
     @Test
     fun `deletePlayer should call deletePlayerUseCase and reset confirmation state`() = runTest(testDispatcher) {
         // Given
-        val playerId = 1L
+        val playerId = "1"
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())
         coEvery { deletePlayerUseCase(playerId) } just runs
         viewModel = createViewModel()
@@ -201,12 +201,12 @@ class PlayerViewModelTest {
     fun `updatePlayer should call updatePlayerUseCase`() = runTest(testDispatcher) {
         // Given
         val player = Player(
-            id = 1L,
+            id = "1",
             firstName = "John",
             lastName = "Doe",
             number = 2,
             positions = listOf(Position.Forward),
-            teamId = 1L,
+            teamId = "1",
             isCaptain = false,
         )
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList())

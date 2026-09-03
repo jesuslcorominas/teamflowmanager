@@ -38,7 +38,7 @@ internal class AssignCoachToTeamUseCaseImpl(
                 ?: throw IllegalArgumentException("Team not found: $teamId")
 
         // Verify team belongs to a club
-        require(team.clubRemoteId != null) {
+        require(team.clubId != null) {
             "Team must belong to a club to assign a coach"
         }
 
@@ -53,7 +53,7 @@ internal class AssignCoachToTeamUseCaseImpl(
         }
 
         // Verify they are in the same club
-        require(currentUserMembership.clubRemoteId == team.clubRemoteId) {
+        require(currentUserMembership.clubId == team.clubId) {
             "User and team must be in the same club"
         }
 
@@ -61,7 +61,7 @@ internal class AssignCoachToTeamUseCaseImpl(
         val coachMembership =
             clubMemberRepository.getClubMemberByUserIdAndClub(
                 userId = coachUserId,
-                clubId = team.clubRemoteId!!,
+                clubId = team.clubId!!,
             ) ?: throw IllegalArgumentException("Coach must be a member of the club")
 
         try {
@@ -80,7 +80,7 @@ internal class AssignCoachToTeamUseCaseImpl(
             if (!coachMembership.hasRole(ClubRole.COACH)) {
                 clubMemberRepository.addClubMemberRole(
                     userId = coachUserId,
-                    clubId = team.clubRemoteId!!,
+                    clubId = team.clubId!!,
                     role = ClubRole.COACH.roleName,
                 )
             }

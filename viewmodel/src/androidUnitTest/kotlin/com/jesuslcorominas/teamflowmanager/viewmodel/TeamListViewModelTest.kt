@@ -82,14 +82,12 @@ class TeamListViewModelTest {
     )
 
     private fun presidentMember() = ClubMember(
-        id = 1L,
+        id = "1",
         userId = "user1",
         name = "John Doe",
         email = "john@test.com",
-        clubId = 100L,
+        clubId = "club_fs_1",
         roles = listOf("Presidente"),
-        remoteId = "member1",
-        clubRemoteId = "club_fs_1",
     )
 
     @Test
@@ -124,12 +122,11 @@ class TeamListViewModelTest {
             // Given
             val member = presidentMember()
             val team = Team(
-                id = 1L,
+                id = "team_fs_1",
                 name = "Team A",
                 coachName = "Coach",
                 delegateName = "Delegate",
                 teamType = TeamType.FOOTBALL_5,
-                remoteId = "team_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
             every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -165,14 +162,12 @@ class TeamListViewModelTest {
         runTest(testDispatcher) {
             // Given
             val member = ClubMember(
-                id = 1L,
+                id = "1",
                 userId = "user1",
                 name = "John",
                 email = "john@test.com",
-                clubId = 100L,
+                clubId = "club_fs_1",
                 roles = listOf("Coach"),
-                remoteId = "member1",
-                clubRemoteId = "club_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
             every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(emptyList())
@@ -191,12 +186,11 @@ class TeamListViewModelTest {
             // Given
             val member = presidentMember()
             val team = Team(
-                id = 1L,
+                id = "team_fs_1",
                 name = "Team A",
                 coachName = "Coach",
                 delegateName = "Delegate",
                 teamType = TeamType.FOOTBALL_5,
-                remoteId = "team_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
             every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -224,12 +218,11 @@ class TeamListViewModelTest {
         // Given
         val member = presidentMember()
         val team = Team(
-            id = 1L,
+            id = "team_fs_1",
             name = "Team A",
             coachName = "Coach",
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
-            remoteId = "team_fs_1",
         )
         every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
         every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -251,12 +244,11 @@ class TeamListViewModelTest {
             // Given
             val member = presidentMember()
             val team = Team(
-                id = 1L,
+                id = "team_fs_1",
                 name = "Team A",
                 coachName = "",
                 delegateName = "Delegate",
                 teamType = TeamType.FOOTBALL_5,
-                remoteId = "team_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
             every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -490,8 +482,8 @@ class TeamListViewModelTest {
         val member = presidentMember()
         val team = teamWithName("Team A", remoteId = "t1")
         val coachMember = ClubMember(
-            id = 2L, userId = "coach1", name = "Coach", email = "coach@test.com",
-            clubId = 100L, roles = listOf("Coach"), remoteId = "cm1", clubRemoteId = "club_fs_1",
+            id = "2", userId = "coach1", name = "Coach", email = "coach@test.com",
+            clubId = "club_fs_1", roles = listOf("Coach"),
         )
         every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
         every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -516,8 +508,8 @@ class TeamListViewModelTest {
         val member = presidentMember()
         val team = teamWithName("Team A", remoteId = "t1")
         val coachMember = ClubMember(
-            id = 2L, userId = "coach1", name = "Coach", email = "coach@test.com",
-            clubId = 100L, roles = listOf("Coach"), remoteId = "cm1", clubRemoteId = "club_fs_1",
+            id = "2", userId = "coach1", name = "Coach", email = "coach@test.com",
+            clubId = "club_fs_1", roles = listOf("Coach"),
         )
         every { getUserClubMembershipUseCase.invoke() } returns flowOf(member)
         every { getTeamsByClubUseCase.invoke("club_fs_1") } returns flowOf(listOf(team))
@@ -598,12 +590,11 @@ class TeamListViewModelTest {
         remoteId: String,
         coachId: String? = null,
     ) = Team(
-        id = remoteId.hashCode().toLong(),
+        id = remoteId,
         name = name,
         coachName = if (coachId != null) "Coach" else "",
         delegateName = "",
         teamType = TeamType.FOOTBALL_5,
-        remoteId = remoteId,
         coachId = coachId,
     )
 

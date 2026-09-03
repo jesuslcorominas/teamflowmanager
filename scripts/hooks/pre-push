@@ -18,6 +18,35 @@ while read local_ref local_sha remote_ref remote_sha; do
   fi
 done
 
+# ── 0. Credential leak scan ──────────────────────────────────────────────────
+echo "🔐 Scanning for credential leaks..."
+
+if [[ "$remote_sha" == "0000000000000000000000000000000000000000" ]]; then
+  DIFF_OUTPUT=$(git log -p --not --remotes=origin "$local_sha" 2>/dev/null)
+else
+  DIFF_OUTPUT=$(git diff "$remote_sha..$local_sha" 2>/dev/null)
+fi
+
+CREDENTIAL_PATTERNS=(
+  'AIza[0-9A-Za-z_\-]{35}'
+  '-----BEGIN[[:space:]]+(RSA[[:space:]]+|EC[[:space:]]+|OPENSSH[[:space:]]+)?PRIVATE KEY'
+  '"private_key"[[:space:]]*:[[:space:]]*"-----BEGIN'
+)
+
+LEAK_FOUND=0
+for pattern in "${CREDENTIAL_PATTERNS[@]}"; do
+  if echo "$DIFF_OUTPUT" | grep -qE "^\+.*${pattern}"; then
+    echo "❌ Potential credential leak — pattern: ${pattern}"
+    LEAK_FOUND=1
+  fi
+done
+
+if [ $LEAK_FOUND -ne 0 ]; then
+  echo "   Remove sensitive data before pushing. Use Secret Manager or GitHub Secrets instead."
+  exit 1
+fi
+echo "✅ No credential leaks detected"
+
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
 
 # Skip protected integration branches — CI handles them

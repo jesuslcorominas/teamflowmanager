@@ -27,7 +27,7 @@ import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.clear
 
 interface SelectableItem {
-    val id: Long
+    val id: String
     val label: String
 }
 
@@ -36,8 +36,8 @@ fun <T : SelectableItem> ClearableRadioSelector(
     titleModifier: Modifier = Modifier,
     modifier: Modifier = Modifier,
     title: String? = null,
-    selectedOption: Long?,
-    onSelect: (Long) -> Unit,
+    selectedOption: String?,
+    onSelect: (String) -> Unit,
     onClear: () -> Unit,
     items: List<T>,
 ) {
@@ -63,7 +63,7 @@ fun <T : SelectableItem> ClearableRadioSelector(
 @Composable
 fun ClearableRadioSelectorHeader(
     title: String,
-    selectedOption: Long?,
+    selectedOption: String?,
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -93,8 +93,8 @@ fun ClearableRadioSelectorHeader(
 @Composable
 fun <T : SelectableItem> ClearableRadioSelectorList(
     items: List<T>,
-    selectedOption: Long?,
-    onSelect: (Long) -> Unit,
+    selectedOption: String?,
+    onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {

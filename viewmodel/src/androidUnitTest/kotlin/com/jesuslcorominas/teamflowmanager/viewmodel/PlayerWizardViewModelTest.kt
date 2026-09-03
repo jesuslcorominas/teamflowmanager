@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
+import com.jesuslcorominas.teamflowmanager.domain.config.FeatureFlags
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
@@ -15,6 +16,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
@@ -47,6 +49,7 @@ class PlayerWizardViewModelTest {
     private lateinit var getScheduledMatchesUseCase: GetScheduledMatchesUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
     private lateinit var crashReporter: CrashReporter
+    private lateinit var featureFlags: FeatureFlags
 
     @Before
     fun setup() {
@@ -61,6 +64,7 @@ class PlayerWizardViewModelTest {
         getScheduledMatchesUseCase = mockk()
         analyticsTracker = mockk(relaxed = true)
         crashReporter = mockk(relaxed = true)
+        featureFlags = mockk(relaxed = true)
     }
 
     @After
@@ -69,7 +73,7 @@ class PlayerWizardViewModelTest {
     }
 
     private fun createViewModelForCreate() = PlayerWizardViewModel(
-        playerId = 0L,
+        playerId = "",
         getPlayerByIdUseCase = getPlayerByIdUseCase,
         addPlayerUseCase = addPlayerUseCase,
         updatePlayerUseCase = updatePlayerUseCase,
@@ -80,9 +84,10 @@ class PlayerWizardViewModelTest {
         getScheduledMatchesUseCase = getScheduledMatchesUseCase,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
+        featureFlags = featureFlags,
     )
 
-    private fun createViewModelForEdit(playerId: Long) = PlayerWizardViewModel(
+    private fun createViewModelForEdit(playerId: String) = PlayerWizardViewModel(
         playerId = playerId,
         getPlayerByIdUseCase = getPlayerByIdUseCase,
         addPlayerUseCase = addPlayerUseCase,
@@ -94,10 +99,11 @@ class PlayerWizardViewModelTest {
         getScheduledMatchesUseCase = getScheduledMatchesUseCase,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
+        featureFlags = featureFlags,
     )
 
     private fun makePlayer(
-        id: Long = 1L,
+        id: String = "1",
         firstName: String = "John",
         lastName: String = "Doe",
         number: Int = 10,
@@ -108,7 +114,7 @@ class PlayerWizardViewModelTest {
         lastName = lastName,
         number = number,
         positions = listOf(Position.Forward),
-        teamId = 1L,
+        teamId = "1",
         isCaptain = isCaptain,
     )
 
@@ -128,11 +134,11 @@ class PlayerWizardViewModelTest {
     @Test
     fun `initial state should be Ready for existing player (edit mode)`() = runTest(testDispatcher) {
         // Given
-        val player = makePlayer(id = 5L)
-        coEvery { getPlayerByIdUseCase.invoke(5L) } returns player
+        val player = makePlayer(id = "5")
+        coEvery { getPlayerByIdUseCase.invoke("5") } returns player
 
         // When
-        val viewModel = createViewModelForEdit(5L)
+        val viewModel = createViewModelForEdit("5")
         advanceUntilIdle()
 
         // Then
@@ -146,10 +152,10 @@ class PlayerWizardViewModelTest {
     @Test
     fun `initial state should be Error when player not found`() = runTest(testDispatcher) {
         // Given
-        coEvery { getPlayerByIdUseCase.invoke(99L) } returns null
+        coEvery { getPlayerByIdUseCase.invoke("99") } returns null
 
         // When
-        val viewModel = createViewModelForEdit(99L)
+        val viewModel = createViewModelForEdit("99")
         advanceUntilIdle()
 
         // Then
@@ -334,10 +340,10 @@ class PlayerWizardViewModelTest {
     @Test
     fun `savePlayer should update existing player when in edit mode`() = runTest(testDispatcher) {
         // Given
-        val player = makePlayer(id = 5L, firstName = "John")
-        coEvery { getPlayerByIdUseCase.invoke(5L) } returns player
+        val player = makePlayer(id = "5", firstName = "John")
+        coEvery { getPlayerByIdUseCase.invoke("5") } returns player
         coEvery { getCaptainPlayerUseCase.invoke() } returns null
-        val viewModel = createViewModelForEdit(5L)
+        val viewModel = createViewModelForEdit("5")
         advanceUntilIdle()
         var saved = false
 
@@ -354,7 +360,7 @@ class PlayerWizardViewModelTest {
     fun `savePlayer should show ConfirmReplace when setting new captain and one already exists`() =
         runTest(testDispatcher) {
             // Given
-            val existingCaptain = makePlayer(id = 2L, isCaptain = true)
+            val existingCaptain = makePlayer(id = "2", isCaptain = true)
             coEvery { getCaptainPlayerUseCase.invoke() } returns existingCaptain
             coEvery { getScheduledMatchesUseCase.invoke() } returns emptyList()
             val viewModel = createViewModelForCreate()
@@ -374,7 +380,7 @@ class PlayerWizardViewModelTest {
     fun `savePlayer should show ConfirmReplaceWithMatches when captain exists and matches scheduled`() =
         runTest(testDispatcher) {
             // Given
-            val existingCaptain = makePlayer(id = 2L, isCaptain = true)
+            val existingCaptain = makePlayer(id = "2", isCaptain = true)
             val scheduledMatch = mockk<Match>()
             coEvery { getCaptainPlayerUseCase.invoke() } returns existingCaptain
             coEvery { getScheduledMatchesUseCase.invoke() } returns listOf(scheduledMatch)
@@ -396,11 +402,11 @@ class PlayerWizardViewModelTest {
     fun `savePlayer should show ConfirmRemove when removing captain from player with no matches`() =
         runTest(testDispatcher) {
             // Given
-            val player = makePlayer(id = 5L, isCaptain = true)
-            coEvery { getPlayerByIdUseCase.invoke(5L) } returns player
+            val player = makePlayer(id = "5", isCaptain = true)
+            coEvery { getPlayerByIdUseCase.invoke("5") } returns player
             coEvery { getCaptainPlayerUseCase.invoke() } returns player
             coEvery { getScheduledMatchesUseCase.invoke() } returns emptyList()
-            val viewModel = createViewModelForEdit(5L)
+            val viewModel = createViewModelForEdit("5")
             advanceUntilIdle()
             viewModel.setPlayerData("John", "Doe", "10", false, null)
 
@@ -417,7 +423,7 @@ class PlayerWizardViewModelTest {
     fun `confirmCaptainChange for ConfirmReplace should save player directly`() =
         runTest(testDispatcher) {
             // Given
-            val existingCaptain = makePlayer(id = 2L, isCaptain = true)
+            val existingCaptain = makePlayer(id = "2", isCaptain = true)
             coEvery { getCaptainPlayerUseCase.invoke() } returns existingCaptain
             coEvery { getScheduledMatchesUseCase.invoke() } returns emptyList()
             val viewModel = createViewModelForCreate()
@@ -440,7 +446,7 @@ class PlayerWizardViewModelTest {
     fun `cancelCaptainChange should reset captainConfirmationState to None`() =
         runTest(testDispatcher) {
             // Given
-            val existingCaptain = makePlayer(id = 2L, isCaptain = true)
+            val existingCaptain = makePlayer(id = "2", isCaptain = true)
             coEvery { getCaptainPlayerUseCase.invoke() } returns existingCaptain
             coEvery { getScheduledMatchesUseCase.invoke() } returns emptyList()
             val viewModel = createViewModelForCreate()
@@ -477,11 +483,11 @@ class PlayerWizardViewModelTest {
     fun `savePlayer should call removePlayerAsCaptainUseCase when player was captain and is no longer`() =
         runTest(testDispatcher) {
             // Given - edit mode, player was captain, now setting isCaptain=false
-            val player = makePlayer(id = 5L, isCaptain = false)
-            coEvery { getPlayerByIdUseCase.invoke(5L) } returns player
-            val captain = makePlayer(id = 5L, isCaptain = true)
+            val player = makePlayer(id = "5", isCaptain = false)
+            coEvery { getPlayerByIdUseCase.invoke("5") } returns player
+            val captain = makePlayer(id = "5", isCaptain = true)
             coEvery { getCaptainPlayerUseCase.invoke() } returns captain
-            val viewModel = createViewModelForEdit(5L)
+            val viewModel = createViewModelForEdit("5")
             advanceUntilIdle()
             // Player loaded with isCaptain=false, current captain is id=5
             // So player.id == captain.id, and !player.isCaptain — should call confirmRemove or directly remove
@@ -502,4 +508,18 @@ class PlayerWizardViewModelTest {
             assertTrue(saved)
             coVerify { removePlayerAsCaptainUseCase.invoke(any()) }
         }
+
+    @Test
+    fun `givenImageUploadFlagDisabled_whenIsImageUploadEnabled_thenReturnsFalse`() {
+        every { featureFlags.isPlayerImageUploadEnabled } returns false
+
+        assertFalse(createViewModelForCreate().isImageUploadEnabled)
+    }
+
+    @Test
+    fun `givenImageUploadFlagEnabled_whenIsImageUploadEnabled_thenReturnsTrue`() {
+        every { featureFlags.isPlayerImageUploadEnabled } returns true
+
+        assertTrue(createViewModelForCreate().isImageUploadEnabled)
+    }
 }

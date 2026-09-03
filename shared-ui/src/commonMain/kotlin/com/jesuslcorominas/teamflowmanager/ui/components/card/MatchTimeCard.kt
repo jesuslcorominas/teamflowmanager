@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.ui.components.AppTitle
@@ -214,9 +215,9 @@ private fun TimeBoard(
                         verticalArrangement = Arrangement.spacedBy(space = TFMSpacing.spacing02),
                     ) {
                         match.periods
-                            .filter { it.startTimeMillis != 0L && it.endTimeMillis != 0L }
+                            .filter { it.periodDuration > 0L }
                             .forEach { period ->
-                                val elapsedTime = period.endTimeMillis - period.startTimeMillis
+                                val elapsedTime = calculateFinishedPeriodElapsedTime(period)
                                 val displayTime =
                                     if (elapsedTime < period.periodDuration) elapsedTime else period.periodDuration
                                 val additionalTime =
@@ -380,3 +381,21 @@ private fun getCurrentPeriodName(match: Match): String {
         else -> stringResource(Res.string.period_label, currentPeriod.periodNumber, numberOfPeriods)
     }
 }
+
+/**
+ * Computes the elapsed time to display for a finished [MatchPeriod].
+ *
+ * Defensive fix for malformed periods that have a configured [MatchPeriod.periodDuration]
+ * but zero start/end timestamps: falls back to the configured duration instead of rendering
+ * nothing, so HALF_TIME still shows e.g. 25'/25' and QUARTER_TIME shows 12:30 x4.
+ *
+ * Only trusts the timestamp delta when both timestamps are present; a period that was started
+ * but never closed (`endTimeMillis == 0`) or with an inverted delta falls back to the configured
+ * duration and is clamped to be non-negative, mirroring the guard in `Match`.
+ */
+internal fun calculateFinishedPeriodElapsedTime(period: MatchPeriod): Long =
+    if (period.startTimeMillis != 0L && period.endTimeMillis != 0L) {
+        (period.endTimeMillis - period.startTimeMillis).coerceAtLeast(0L)
+    } else {
+        period.periodDuration
+    }

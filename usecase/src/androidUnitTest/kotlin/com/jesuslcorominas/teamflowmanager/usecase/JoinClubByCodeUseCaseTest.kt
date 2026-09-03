@@ -30,8 +30,8 @@ class JoinClubByCodeUseCaseTest {
     private lateinit var useCase: JoinClubByCodeUseCase
 
     private val authenticatedUser = User(id = "user1", email = "alice@test.com", displayName = "Alice", photoUrl = null)
-    private val club = Club(id = 10L, ownerId = "owner1", name = "Club A", invitationCode = "ABC123", remoteId = "club_fs_1")
-    private val clubMember = ClubMember(id = 1L, userId = "user1", name = "Alice", email = "alice@test.com", clubId = 10L, roles = listOf("Staff"))
+    private val club = Club(id = "club_fs_1", ownerId = "owner1", name = "Club A", invitationCode = "ABC123")
+    private val clubMember = ClubMember(id = "1", userId = "user1", name = "Alice", email = "alice@test.com", clubId = "club_fs_1", roles = listOf("Staff"))
 
     @Before
     fun setup() {
@@ -89,56 +89,36 @@ class JoinClubByCodeUseCaseTest {
         useCase.invoke("ABC123")
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun `givenClubWithNullFirestoreId_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val clubWithNullFirestoreId = club.copy(remoteId = null)
-        coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
-        coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns clubWithNullFirestoreId
-        useCase.invoke("ABC123")
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `givenOrphanTeamWithNullFirestoreId_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val orphanTeamWithNullFirestoreId = Team(
-            id = 5L, name = "My Team", coachName = "Coach", delegateName = "Del",
-            teamType = TeamType.FOOTBALL_7, remoteId = null,
-        )
-        coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
-        coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
-        coEvery { teamRepository.getOrphanTeams("user1") } returns listOf(orphanTeamWithNullFirestoreId)
-        useCase.invoke("ABC123")
-    }
-
     @Test
     fun `givenValidCodeAndNoOrphanTeam_whenInvoke_thenJoinWithStaffRole`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
         coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
         coEvery { teamRepository.getOrphanTeams("user1") } returns emptyList()
-        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns clubMember
+        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any()) } returns clubMember
 
         val result = useCase.invoke("ABC123")
 
         assertEquals(club, result.club)
         assertNull(result.orphanTeam)
         assertEquals(clubMember, result.clubMember)
-        coVerify { clubMemberRepository.createOrUpdateClubMember("user1", "Alice", "alice@test.com", 10L, "club_fs_1", listOf("Staff")) }
+        coVerify { clubMemberRepository.createOrUpdateClubMember("user1", "Alice", "alice@test.com", "club_fs_1", listOf("Staff")) }
     }
 
     @Test
     fun `givenValidCodeWithOrphanTeam_whenInvoke_thenJoinWithCoachRoleAndLinkTeam`() = runTest {
-        val orphanTeam = Team(id = 5L, name = "My Team", coachName = "Coach", delegateName = "Del", teamType = TeamType.FOOTBALL_7, remoteId = "team_fs_1")
-        val memberWithCoach = ClubMember(id = 1L, userId = "user1", name = "Alice", email = "alice@test.com", clubId = 10L, roles = listOf("Coach"))
+        val orphanTeam = Team(id = "team_fs_1", name = "My Team", coachName = "Coach", delegateName = "Del", teamType = TeamType.FOOTBALL_7)
+        val memberWithCoach = ClubMember(id = "1", userId = "user1", name = "Alice", email = "alice@test.com", clubId = "club_fs_1", roles = listOf("Coach"))
 
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
         coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
         coEvery { teamRepository.getOrphanTeams("user1") } returns listOf(orphanTeam)
-        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns memberWithCoach
+        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any()) } returns memberWithCoach
 
         val result = useCase.invoke("ABC123")
 
         assertEquals(orphanTeam, result.orphanTeam)
-        coVerify { teamRepository.updateTeamClubId("team_fs_1", 10L, "club_fs_1") }
-        coVerify { clubMemberRepository.createOrUpdateClubMember("user1", "Alice", "alice@test.com", 10L, "club_fs_1", listOf("Coach")) }
+        coVerify { teamRepository.updateTeamClubId("team_fs_1", "club_fs_1") }
+        coVerify { clubMemberRepository.createOrUpdateClubMember("user1", "Alice", "alice@test.com", "club_fs_1", listOf("Coach")) }
     }
 
     @Test
@@ -146,7 +126,7 @@ class JoinClubByCodeUseCaseTest {
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
         coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
         coEvery { teamRepository.getOrphanTeams("user1") } returns emptyList()
-        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns clubMember
+        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any()) } returns clubMember
 
         useCase.invoke("ABC123")
 
@@ -162,13 +142,13 @@ class JoinClubByCodeUseCaseTest {
 
     @Test
     fun `givenValidCodeWithOrphanTeam_whenInvoke_thenDoesNotNotifyPresident`() = runTest {
-        val orphanTeam = Team(id = 5L, name = "My Team", coachName = "Coach", delegateName = "Del", teamType = TeamType.FOOTBALL_7, remoteId = "team_fs_1")
-        val memberWithCoach = ClubMember(id = 1L, userId = "user1", name = "Alice", email = "alice@test.com", clubId = 10L, roles = listOf("Coach"))
+        val orphanTeam = Team(id = "team_fs_1", name = "My Team", coachName = "Coach", delegateName = "Del", teamType = TeamType.FOOTBALL_7)
+        val memberWithCoach = ClubMember(id = "1", userId = "user1", name = "Alice", email = "alice@test.com", clubId = "club_fs_1", roles = listOf("Coach"))
 
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
         coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
         coEvery { teamRepository.getOrphanTeams("user1") } returns listOf(orphanTeam)
-        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns memberWithCoach
+        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any()) } returns memberWithCoach
 
         useCase.invoke("ABC123")
 
@@ -180,7 +160,7 @@ class JoinClubByCodeUseCaseTest {
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
         coEvery { clubRepository.getClubByInvitationCode("ABC123") } returns club
         coEvery { teamRepository.getOrphanTeams("user1") } returns emptyList()
-        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns clubMember
+        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any()) } returns clubMember
         coEvery { notifyPresidentOnMemberWaiting(any(), any(), any(), any()) } throws RuntimeException("Notification failed")
 
         val result = useCase.invoke("ABC123")

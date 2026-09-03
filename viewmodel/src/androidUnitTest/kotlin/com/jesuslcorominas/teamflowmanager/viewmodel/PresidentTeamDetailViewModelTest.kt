@@ -1,20 +1,30 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamNotificationPreferences
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
+import com.jesuslcorominas.teamflowmanager.domain.model.UserNotificationPreferences
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamNotificationPreferenceUseCase
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -34,6 +44,10 @@ class PresidentTeamDetailViewModelTest {
     private lateinit var getTeamById: GetTeamByIdUseCase
     private lateinit var getPlayersByTeam: GetPlayersByTeamUseCase
     private lateinit var getMatchesByTeam: GetMatchesByTeamUseCase
+    private lateinit var getNotificationPreferences: GetNotificationPreferencesUseCase
+    private lateinit var updateTeamNotificationPreference: UpdateTeamNotificationPreferenceUseCase
+    private lateinit var getUserClubMembership: GetUserClubMembershipUseCase
+    private lateinit var timeTicker: TimeTicker
 
     private val teamId = "team_fs_123"
 
@@ -43,6 +57,13 @@ class PresidentTeamDetailViewModelTest {
         getTeamById = mockk()
         getPlayersByTeam = mockk()
         getMatchesByTeam = mockk()
+        getNotificationPreferences = mockk(relaxed = true)
+        updateTeamNotificationPreference = mockk(relaxed = true)
+        getUserClubMembership = mockk(relaxed = true)
+        timeTicker = mockk(relaxed = true)
+
+        every { getUserClubMembership() } returns flowOf(null)
+        every { timeTicker.timeFlow } returns emptyFlow()
     }
 
     @After
@@ -56,19 +77,22 @@ class PresidentTeamDetailViewModelTest {
             getTeamById = getTeamById,
             getPlayersByTeam = getPlayersByTeam,
             getMatchesByTeam = getMatchesByTeam,
+            getNotificationPreferences = getNotificationPreferences,
+            updateTeamNotificationPreference = updateTeamNotificationPreference,
+            getUserClubMembership = getUserClubMembership,
+            timeTicker = timeTicker,
         )
 
     private fun aTeam() =
         Team(
-            id = 1L,
+            id = teamId,
             name = "FC Test",
             coachName = "Coach Name",
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
-            remoteId = teamId,
         )
 
-    private fun aPlayer(id: Long = 1L) =
+    private fun aPlayer(id: String = "1") =
         Player(
             id = id,
             firstName = "John",
@@ -76,24 +100,24 @@ class PresidentTeamDetailViewModelTest {
             number = id.toInt(),
             positions = listOf(Position.Forward),
             isCaptain = false,
-            teamId = 1L,
+            teamId = "1",
         )
 
     private fun aMatch(
-        id: Long = 1L,
+        id: String = "1",
         status: MatchStatus = MatchStatus.SCHEDULED,
         goals: Int = 0,
         opponentGoals: Int = 0,
         archived: Boolean = false,
-        dateTime: Long? = id * 1000L,
+        dateTime: Long? = id.toLong() * 1000L,
     ) = Match(
         id = id,
-        teamId = 1L,
+        teamId = "1",
         teamName = "FC Test",
         opponent = "Opponent $id",
         location = "Field",
         periodType = PeriodType.HALF_TIME,
-        captainId = 0L,
+        captainId = "0",
         status = status,
         goals = goals,
         opponentGoals = opponentGoals,
@@ -127,6 +151,8 @@ class PresidentTeamDetailViewModelTest {
     fun `when team is not found state becomes Error`() =
         runTest {
             coEvery { getTeamById(any()) } returns null
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
 
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -152,7 +178,7 @@ class PresidentTeamDetailViewModelTest {
     @Test
     fun `players are exposed in Ready state`() =
         runTest {
-            val players = listOf(aPlayer(1L), aPlayer(2L))
+            val players = listOf(aPlayer("1"), aPlayer("2"))
             coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(players)
             every { getMatchesByTeam(any()) } returns flowOf(emptyList())
@@ -168,7 +194,7 @@ class PresidentTeamDetailViewModelTest {
     fun `squadSize in stats equals player count`() =
         runTest {
             coEvery { getTeamById(any()) } returns aTeam()
-            every { getPlayersByTeam(any()) } returns flowOf(listOf(aPlayer(1L), aPlayer(2L), aPlayer(3L)))
+            every { getPlayersByTeam(any()) } returns flowOf(listOf(aPlayer("1"), aPlayer("2"), aPlayer("3")))
             every { getMatchesByTeam(any()) } returns flowOf(emptyList())
 
             val viewModel = createViewModel()
@@ -234,9 +260,9 @@ class PresidentTeamDetailViewModelTest {
         runTest {
             val matches =
                 listOf(
-                    aMatch(id = 1L, status = MatchStatus.FINISHED, goals = 3, opponentGoals = 1),
-                    aMatch(id = 2L, status = MatchStatus.FINISHED, goals = 1, opponentGoals = 1),
-                    aMatch(id = 3L, status = MatchStatus.FINISHED, goals = 0, opponentGoals = 2),
+                    aMatch(id = "1", status = MatchStatus.FINISHED, goals = 3, opponentGoals = 1),
+                    aMatch(id = "2", status = MatchStatus.FINISHED, goals = 1, opponentGoals = 1),
+                    aMatch(id = "3", status = MatchStatus.FINISHED, goals = 0, opponentGoals = 2),
                 )
             coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
@@ -257,7 +283,7 @@ class PresidentTeamDetailViewModelTest {
     @Test
     fun `scheduled match is not counted in stats but appears in matches list`() =
         runTest {
-            val match = aMatch(id = 1L, status = MatchStatus.SCHEDULED)
+            val match = aMatch(id = "1", status = MatchStatus.SCHEDULED)
             coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(listOf(match))
@@ -273,8 +299,8 @@ class PresidentTeamDetailViewModelTest {
     @Test
     fun `archived matches are excluded from matches list`() =
         runTest {
-            val active = aMatch(id = 1L, archived = false)
-            val archived = aMatch(id = 2L, archived = true)
+            val active = aMatch(id = "1", archived = false)
+            val archived = aMatch(id = "2", archived = true)
             coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(listOf(active, archived))
@@ -284,15 +310,15 @@ class PresidentTeamDetailViewModelTest {
 
             val state = viewModel.uiState.value as PresidentTeamDetailUiState.Ready
             assertEquals(1, state.matches.size)
-            assertEquals(1L, state.matches.first().id)
+            assertEquals("1", state.matches.first().id)
         }
 
     @Test
     fun `matches are sorted newest first by dateTime`() =
         runTest {
-            val older = aMatch(id = 1L, dateTime = 1000L)
-            val newer = aMatch(id = 2L, dateTime = 3000L)
-            val middle = aMatch(id = 3L, dateTime = 2000L)
+            val older = aMatch(id = "1", dateTime = 1000L)
+            val newer = aMatch(id = "2", dateTime = 3000L)
+            val middle = aMatch(id = "3", dateTime = 2000L)
             coEvery { getTeamById(any()) } returns aTeam()
             every { getPlayersByTeam(any()) } returns flowOf(emptyList())
             every { getMatchesByTeam(any()) } returns flowOf(listOf(older, newer, middle))
@@ -301,7 +327,7 @@ class PresidentTeamDetailViewModelTest {
             advanceUntilIdle()
 
             val state = viewModel.uiState.value as PresidentTeamDetailUiState.Ready
-            assertEquals(listOf(2L, 3L, 1L), state.matches.map { it.id })
+            assertEquals(listOf("2", "3", "1"), state.matches.map { it.id })
         }
 
     @Test
@@ -348,5 +374,130 @@ class PresidentTeamDetailViewModelTest {
                     squadSize = 0,
                 ),
             )
+        }
+
+    private fun aClubMember(clubId: String = "club_remote_1") =
+        ClubMember(
+            id = "1",
+            userId = "user_1",
+            name = "Test User",
+            email = "test@test.com",
+            clubId = clubId,
+            roles = listOf("PRESIDENT"),
+        )
+
+    private fun prefsWithTeam(
+        teamMatchEvents: Boolean,
+        teamGoals: Boolean,
+        globalMatchEvents: Boolean = true,
+        globalGoals: Boolean = true,
+    ) = UserNotificationPreferences(
+        userId = "user_1",
+        globalMatchEvents = globalMatchEvents,
+        globalGoals = globalGoals,
+        teamPreferences = mapOf(
+            teamId to TeamNotificationPreferences(
+                teamRemoteId = teamId,
+                matchEvents = teamMatchEvents,
+                goals = teamGoals,
+            ),
+        ),
+    )
+
+    @Test
+    fun `when team preference exists teamNotificationState reflects team-specific values`() =
+        runTest {
+            val clubRemoteId = "club_remote_1"
+            val prefs = prefsWithTeam(teamMatchEvents = false, teamGoals = false, globalMatchEvents = true, globalGoals = true)
+            coEvery { getTeamById(any()) } returns aTeam()
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
+            every { getUserClubMembership() } returns flowOf(aClubMember(clubRemoteId))
+            every { getNotificationPreferences(clubRemoteId) } returns flowOf(prefs)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val notifState = viewModel.teamNotificationState.value
+            assertEquals(false, notifState.matchEvents)
+            assertEquals(false, notifState.goals)
+        }
+
+    @Test
+    fun `when team preference absent teamNotificationState falls back to global values`() =
+        runTest {
+            val clubRemoteId = "club_remote_1"
+            val prefs = UserNotificationPreferences(
+                userId = "user_1",
+                globalMatchEvents = false,
+                globalGoals = true,
+                teamPreferences = emptyMap(),
+            )
+            coEvery { getTeamById(any()) } returns aTeam()
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
+            every { getUserClubMembership() } returns flowOf(aClubMember(clubRemoteId))
+            every { getNotificationPreferences(clubRemoteId) } returns flowOf(prefs)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val notifState = viewModel.teamNotificationState.value
+            assertEquals(false, notifState.matchEvents)
+            assertEquals(true, notifState.goals)
+        }
+
+    @Test
+    fun `updateTeamMatchEvents calls use case with correct args`() =
+        runTest {
+            val clubRemoteId = "club_remote_1"
+            val prefs = prefsWithTeam(teamMatchEvents = true, teamGoals = true)
+            coEvery { getTeamById(any()) } returns aTeam()
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
+            every { getUserClubMembership() } returns flowOf(aClubMember(clubRemoteId))
+            every { getNotificationPreferences(clubRemoteId) } returns flowOf(prefs)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateTeamMatchEvents(false)
+            advanceUntilIdle()
+
+            coVerify {
+                updateTeamNotificationPreference(
+                    clubRemoteId,
+                    teamId,
+                    NotificationEventType.MATCH_EVENTS,
+                    false,
+                )
+            }
+        }
+
+    @Test
+    fun `updateTeamGoals calls use case with correct args`() =
+        runTest {
+            val clubRemoteId = "club_remote_1"
+            val prefs = prefsWithTeam(teamMatchEvents = true, teamGoals = true)
+            coEvery { getTeamById(any()) } returns aTeam()
+            every { getPlayersByTeam(any()) } returns flowOf(emptyList())
+            every { getMatchesByTeam(any()) } returns flowOf(emptyList())
+            every { getUserClubMembership() } returns flowOf(aClubMember(clubRemoteId))
+            every { getNotificationPreferences(clubRemoteId) } returns flowOf(prefs)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateTeamGoals(false)
+            advanceUntilIdle()
+
+            coVerify {
+                updateTeamNotificationPreference(
+                    clubRemoteId,
+                    teamId,
+                    NotificationEventType.GOALS,
+                    false,
+                )
+            }
         }
 }

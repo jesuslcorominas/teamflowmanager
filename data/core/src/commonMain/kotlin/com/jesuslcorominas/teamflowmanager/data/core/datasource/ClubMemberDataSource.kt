@@ -23,7 +23,6 @@ interface ClubMemberDataSource {
      * @param userId The Firebase user ID
      * @param name The user's display name
      * @param email The user's email
-     * @param clubNumericId The club's local numeric ID
      * @param clubId The club's string identifier
      * @param roles The member's roles in the club
      * @return The created or updated ClubMember
@@ -32,7 +31,6 @@ interface ClubMemberDataSource {
         userId: String,
         name: String,
         email: String,
-        clubNumericId: Long,
         clubId: String,
         roles: List<String>,
     ): ClubMember

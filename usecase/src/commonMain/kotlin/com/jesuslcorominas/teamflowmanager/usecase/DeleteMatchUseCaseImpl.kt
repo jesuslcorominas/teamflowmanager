@@ -6,7 +6,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 internal class DeleteMatchUseCaseImpl(
     private val matchRepository: MatchRepository,
 ) : DeleteMatchUseCase {
-    override suspend fun invoke(matchId: Long) {
+    override suspend fun invoke(matchId: String) {
         matchRepository.deleteMatch(matchId)
     }
 }

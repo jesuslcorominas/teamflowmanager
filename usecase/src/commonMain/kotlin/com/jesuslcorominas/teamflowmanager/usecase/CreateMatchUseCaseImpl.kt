@@ -13,7 +13,7 @@ internal class CreateMatchUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val teamRepository: TeamRepository,
 ) : CreateMatchUseCase {
-    override suspend fun invoke(skeleton: SkeletonMatch): Long {
+    override suspend fun invoke(skeleton: SkeletonMatch): String {
         val team = teamRepository.getTeam().first() ?: throw IllegalStateException("Cannot create match without a team")
 
         return matchRepository.createMatch(skeleton.toMatch(team))

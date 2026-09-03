@@ -50,7 +50,8 @@ class IosNotificationTopicDataSourceImpl : NotificationTopicDataSource {
     override suspend fun unsubscribe(topic: String) {}
 }
 
-// iOS stub — APNs not configured yet; always returns false
+// iOS stub — APNs not configured yet. Return true so the login flow proceeds without
+// blocking on the Android-only POST_NOTIFICATIONS permission dialog.
 class IosNotificationPermissionDataSourceImpl : NotificationPermissionDataSource {
-    override fun isGranted(): Boolean = false
+    override fun isGranted(): Boolean = true
 }

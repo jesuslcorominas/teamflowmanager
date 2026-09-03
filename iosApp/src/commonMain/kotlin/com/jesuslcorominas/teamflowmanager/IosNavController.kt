@@ -13,7 +13,7 @@ sealed class IosDestination {
 
     data object Matches : IosDestination()
 
-    data class Match(val matchId: Long) : IosDestination()
+    data class Match(val matchId: String) : IosDestination()
 
     data object ArchivedMatches : IosDestination()
 
@@ -33,13 +33,21 @@ sealed class IosDestination {
 
     data object Players : IosDestination()
 
-    data class PlayerWizard(val playerId: Long) : IosDestination()
+    data class PlayerWizard(val playerId: String) : IosDestination()
 
-    data class MatchWizard(val matchId: Long) : IosDestination()
+    data class MatchWizard(val matchId: String) : IosDestination()
 
     data class AcceptTeamInvitation(val teamId: String?) : IosDestination()
 
     data object Analysis : IosDestination()
+
+    data class PresidentTeamDetail(val teamId: String) : IosDestination()
+
+    data class PresidentMatchDetail(val teamId: String, val matchId: String) : IosDestination()
+
+    data object PresidentNotifications : IosDestination()
+
+    data object ClubSettings : IosDestination()
 }
 
 /**

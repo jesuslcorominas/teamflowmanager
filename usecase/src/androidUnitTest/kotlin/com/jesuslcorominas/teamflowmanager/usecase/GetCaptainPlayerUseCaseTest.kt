@@ -26,12 +26,12 @@ class GetCaptainPlayerUseCaseTest {
     fun `invoke should return captain player when exists`() = runTest {
         // Given
         val captain = Player(
-            id = 1L,
+            id = "1",
             firstName = "John",
             lastName = "Doe",
             number = 10,
             positions = listOf(Position.Forward),
-            teamId = 1L,
+            teamId = "1",
             isCaptain = true,
         )
         coEvery { playerRepository.getCaptainPlayer() } returns captain

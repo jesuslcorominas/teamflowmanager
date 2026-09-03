@@ -13,7 +13,7 @@ internal class EndTimeoutUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
 ) : EndTimeoutUseCase {
     override suspend fun invoke(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     ) {
         // Get all player times for this match and resume only the ones that were in PAUSED state

@@ -4,23 +4,23 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import kotlinx.coroutines.flow.Flow
 
 interface PlayerTimeRepository {
-    fun getPlayerTime(playerId: Long): Flow<PlayerTime?>
+    fun getPlayerTime(playerId: String): Flow<PlayerTime?>
 
-    fun getPlayerTimesByMatch(matchId: Long): Flow<List<PlayerTime>>
+    fun getPlayerTimesByMatch(matchId: String): Flow<List<PlayerTime>>
 
     suspend fun startTimer(
-        matchId: Long,
-        playerId: Long,
+        matchId: String,
+        playerId: String,
         currentTimeMillis: Long,
     )
 
     suspend fun pauseTimer(
-        playerId: Long,
+        playerId: String,
         currentTimeMillis: Long,
     )
 
     suspend fun pauseTimerForMatchPause(
-        playerId: Long,
+        playerId: String,
         currentTimeMillis: Long,
     )
 
@@ -32,8 +32,8 @@ interface PlayerTimeRepository {
      * @param currentTimeMillis The current time in milliseconds
      */
     suspend fun startTimersBatch(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
     )
 
@@ -45,8 +45,8 @@ interface PlayerTimeRepository {
      * @param currentTimeMillis The current time in milliseconds
      */
     suspend fun pauseTimersBatch(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
     )
 
@@ -58,8 +58,8 @@ interface PlayerTimeRepository {
      * @param operationId The operation ID to track atomic operations
      */
     suspend fun startTimersBatchWithOperationId(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
         operationId: String,
     )
@@ -72,8 +72,8 @@ interface PlayerTimeRepository {
      * @param operationId The operation ID to track atomic operations
      */
     suspend fun pauseTimersBatchWithOperationId(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
         operationId: String,
     )
@@ -87,8 +87,8 @@ interface PlayerTimeRepository {
      * @param operationId The operation ID to track atomic operations
      */
     suspend fun substituteOutPlayersBatchWithOperationId(
-        matchId: Long,
-        playerIds: List<Long>,
+        matchId: String,
+        playerIds: List<String>,
         currentTimeMillis: Long,
         operationId: String,
     )

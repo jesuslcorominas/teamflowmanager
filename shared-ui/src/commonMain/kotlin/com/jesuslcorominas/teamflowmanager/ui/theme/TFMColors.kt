@@ -7,6 +7,7 @@ val Primary = Color(0xFF003366)
 val PrimaryLight = Color(0xFF4F7BBF)
 
 val AccentEmphasis = Color(0xFF960615)
+val AccentEmphasis10 = Color(0xFFFBECEA)
 val AccentAffirmative = Color(0xFF3BC15B)
 val AccentDanger = Color(0xFF960615)
 
@@ -26,6 +27,8 @@ val SubstitutionRed = Color(0xFF960615)
 
 val GoalKeeperBadge = Color(0xFF960615)
 
+val ContentHigh = Color(0xFF7A7A7A)
+
 val ChartTeamColor = Color(0xFF003366)
 val ChartOpponentColor = Color(0xFFFF6B35)
 
@@ -37,7 +40,7 @@ val LightColorScheme =
         onPrimaryContainer = ContentMain,
         secondary = AccentEmphasis,
         onSecondary = White,
-        secondaryContainer = Color(0xFFFBECEA),
+        secondaryContainer = AccentEmphasis10,
         onSecondaryContainer = ContentMain,
         tertiary = AccentAffirmative,
         onTertiary = White,

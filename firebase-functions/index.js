@@ -6,7 +6,7 @@
  * using Firebase Hosting + Cloud Functions.
  */
 
-const functions = require('firebase-functions');
+const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
@@ -21,9 +21,7 @@ admin.initializeApp();
  * Body: { teamId: string, teamName: string }
  * Response: { shortLink: string, linkId: string }
  */
-exports.createShortLink = functions
-  .runWith({ timeoutSeconds: 30 })
-  .https.onRequest(async (req, res) => {
+exports.createShortLink = onRequest({ timeoutSeconds: 30 }, async (req, res) => {
     // CORS
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -91,7 +89,7 @@ exports.createShortLink = functions
  *
  * GET /l/:linkId
  */
-exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
+exports.redirectShortLink = onRequest(async (req, res) => {
   try {
     // Extract short ID from path (/l/abc123 -> abc123)
     const pathParts = req.path.split('/');
@@ -235,9 +233,7 @@ exports.redirectShortLink = functions.https.onRequest(async (req, res) => {
  * Body: { token: string, title: string, body: string }
  * Response: { success: true } or error JSON
  */
-exports.sendNotification = functions
-  .runWith({ timeoutSeconds: 30 })
-  .https.onRequest(async (req, res) => {
+exports.sendNotification = onRequest({ timeoutSeconds: 30 }, async (req, res) => {
     // CORS
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -265,8 +261,11 @@ exports.sendNotification = functions
         // Typed notification: resolve default text server-side (Spanish fallback),
         // and include type + params in the data payload for client-side i18n.
         const defaultText = resolveNotificationText(type, params || {});
+        const isMatchEvent = ['MATCH_START', 'MATCH_END', 'GOAL'].includes(type);
         message = {
           notification: { title: defaultText.title, body: defaultText.body },
+          android: isMatchEvent ? { notification: { tag: 'match_event' } } : undefined,
+          apns: isMatchEvent ? { headers: { 'apns-collapse-id': 'match_event' } } : undefined,
           data: { notificationType: type, ...flattenParams(params) },
           token,
         };
@@ -308,6 +307,31 @@ function resolveNotificationText(type, params) {
         title: 'Nuevo miembro esperando asignación',
         body: 'Un miembro de tu club está esperando que le asignes un equipo',
       };
+    case 'MATCH_START':
+      return {
+        title: `Comienza el partido de ${params.teamName || ''}`,
+        body: `${params.teamName || ''} vs ${params.opponent || ''}`,
+      };
+    case 'MATCH_END': {
+      const tg = parseInt(params.teamGoals || '0', 10);
+      const og = parseInt(params.opponentGoals || '0', 10);
+      const result = tg > og ? `a favor de ${params.teamName}` : tg < og ? `a favor de ${params.opponent}` : 'empate';
+      return {
+        title: `Fin del partido — ${params.teamName || ''} ${tg}-${og} ${params.opponent || ''}`,
+        body: `Resultado final: ${tg}-${og} ${result}`,
+      };
+    }
+    case 'GOAL': {
+      const tg = parseInt(params.teamGoals || '0', 10);
+      const og = parseInt(params.opponentGoals || '0', 10);
+      const minute = params.minuteOfPlay ? ` (min. ${params.minuteOfPlay}')` : '';
+      const isOpponentGoal = params.isOpponentGoal === 'true';
+      const scoringTeam = isOpponentGoal ? (params.opponentName || 'Rival') : (params.teamName || '');
+      return {
+        title: `Gol de ${scoringTeam}${minute}`,
+        body: `${params.teamName || ''} ${tg}-${og} ${params.opponentName || ''}`,
+      };
+    }
     default:
       console.warn('[sendNotification] Unknown notification type:', type);
       return { title: type, body: JSON.stringify(params) };

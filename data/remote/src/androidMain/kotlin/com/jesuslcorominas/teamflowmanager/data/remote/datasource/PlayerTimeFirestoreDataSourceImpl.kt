@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
@@ -27,6 +28,7 @@ class PlayerTimeFirestoreDataSourceImpl(
     companion object {
         private const val PLAYER_TIMES_COLLECTION = "playerTimes"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     /**
@@ -60,7 +62,7 @@ class PlayerTimeFirestoreDataSourceImpl(
     /**
      * Gets player time for a specific player as a real-time Flow.
      */
-    override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> =
+    override fun getPlayerTime(playerId: String): Flow<PlayerTime?> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -116,6 +118,16 @@ class PlayerTimeFirestoreDataSourceImpl(
             }
         }
 
+    // For non-coach roles (e.g. president), derive teamId from the match document.
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                firestore.collection(MATCHES_COLLECTION).document(matchId).get().await()
+                    .getString("teamId")
+            } catch (_: Exception) {
+                null
+            }
+
     /**
      * Gets player times scoped to a specific match from Firestore as a real-time Flow.
      * Documents from previous matches (matchId mismatch) are ignored automatically,
@@ -123,7 +135,7 @@ class PlayerTimeFirestoreDataSourceImpl(
      *
      * Note: requires a composite Firestore index on playerTimes(teamId ASC, matchId ASC).
      */
-    override fun getPlayerTimesByMatch(matchId: Long): Flow<List<PlayerTime>> =
+    override fun getPlayerTimesByMatch(matchId: String): Flow<List<PlayerTime>> =
         callbackFlow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -132,7 +144,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 trySend(emptyList())
                 awaitClose { }
@@ -148,27 +160,14 @@ class PlayerTimeFirestoreDataSourceImpl(
                             trySend(emptyList())
                             return@addSnapshotListener
                         }
-
-                        if (snapshot == null) {
-                            trySend(emptyList())
-                            return@addSnapshotListener
-                        }
-
-                        val playerTimes =
-                            snapshot.documents.mapNotNull { document ->
-                                try {
-                                    document.toObject(PlayerTimeFirestoreModel::class.java)?.toDomain()
-                                } catch (e: Exception) {
-                                    null
-                                }
-                            }
-
-                        trySend(playerTimes)
+                        val newPlayerTimes =
+                            snapshot?.documents?.mapNotNull { document ->
+                                parsePlayerTimeDocument(document.data, matchId)
+                            } ?: emptyList()
+                        trySend(newPlayerTimes)
                     }
 
-            awaitClose {
-                listenerRegistration.remove()
-            }
+            awaitClose { listenerRegistration.remove() }
         }
 
     /**

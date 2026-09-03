@@ -135,7 +135,7 @@ class TeamFirestoreDataSourceImpl(
 
     override suspend fun updateTeam(team: Team) {
         val docId =
-            team.remoteId ?: findTeamDocumentId()
+            team.id.takeIf { it.isNotBlank() } ?: findTeamDocumentId()
                 ?: throw IllegalStateException("Cannot find team document to update")
         val model = team.toFirestoreModel()
         firestore.collection(TEAMS_COLLECTION).document(docId).set(model)
@@ -143,7 +143,6 @@ class TeamFirestoreDataSourceImpl(
 
     override suspend fun updateTeamClubId(
         teamId: String,
-        clubNumericId: Long,
         clubId: String,
     ) = throw NotImplementedError("updateTeamClubId not implemented for iOS Phase 2")
 
@@ -151,4 +150,17 @@ class TeamFirestoreDataSourceImpl(
         teamId: String,
         coachId: String,
     ) = throw NotImplementedError("updateTeamCoachId not implemented for iOS Phase 2")
+
+    override suspend fun updateTeamPendingCoachEmail(
+        teamId: String,
+        email: String?,
+    ) {
+        require(teamId.isNotBlank()) { "Team ID cannot be blank" }
+        firestore.collection("teams").document(teamId).update("pendingCoachEmail" to email)
+    }
+
+    override suspend fun clearTeamCoach(teamId: String) {
+        require(teamId.isNotBlank()) { "Team ID cannot be blank" }
+        firestore.collection("teams").document(teamId).update("coachId" to null, "pendingCoachEmail" to null)
+    }
 }

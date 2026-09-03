@@ -59,12 +59,12 @@ class MatchCreationWizardViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val testPlayers = listOf(
-        Player(1L, "John", "Doe", 1, listOf(Position.Goalkeeper), teamId = 1L, isCaptain = false),
-        Player(2L, "Jane", "Smith", 2, listOf(Position.Defender), teamId = 1L, isCaptain = false),
-        Player(3L, "Bob", "Johnson", 3, listOf(Position.Midfielder), teamId = 1L, isCaptain = false),
-        Player(4L, "Alice", "Brown", 4, listOf(Position.Forward), teamId = 1L, isCaptain = false),
-        Player(5L, "Charlie", "Wilson", 5, listOf(Position.Defender), teamId = 1L, isCaptain = false),
-        Player(6L, "David", "Lee", 6, listOf(Position.Midfielder), teamId = 1L, isCaptain = false),
+        Player("1", "John", "Doe", 1, listOf(Position.Goalkeeper), teamId = "1", isCaptain = false),
+        Player("2", "Jane", "Smith", 2, listOf(Position.Defender), teamId = "1", isCaptain = false),
+        Player("3", "Bob", "Johnson", 3, listOf(Position.Midfielder), teamId = "1", isCaptain = false),
+        Player("4", "Alice", "Brown", 4, listOf(Position.Forward), teamId = "1", isCaptain = false),
+        Player("5", "Charlie", "Wilson", 5, listOf(Position.Defender), teamId = "1", isCaptain = false),
+        Player("6", "David", "Lee", 6, listOf(Position.Midfielder), teamId = "1", isCaptain = false),
     )
 
     @Before
@@ -93,7 +93,7 @@ class MatchCreationWizardViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(matchId: Long = 0L): MatchCreationWizardViewModel {
+    private fun createViewModel(matchId: String = ""): MatchCreationWizardViewModel {
         return MatchCreationWizardViewModel(
             matchId = matchId,
             getPlayersUseCase = getPlayersUseCase,
@@ -189,7 +189,7 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        viewModel.setSquadCallUp(setOf(1L, 2L, 3L, 4L, 5L)) // Player 1 is goalkeeper
+        viewModel.setSquadCallUp(setOf("1", "2", "3", "4", "5")) // Player 1 is goalkeeper
 
         // When
         val result = viewModel.hasGoalkeepersInSquad()
@@ -203,7 +203,7 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        viewModel.setSquadCallUp(setOf(2L, 3L, 4L, 5L, 6L)) // No goalkeeper
+        viewModel.setSquadCallUp(setOf("2", "3", "4", "5", "6")) // No goalkeeper
 
         // When
         val result = viewModel.hasGoalkeepersInSquad()
@@ -217,16 +217,16 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        viewModel.setCaptain(2L)
+        viewModel.setCaptain("2")
         coEvery { getDefaultCaptainUseCase.invoke() } returns null
-        coEvery { getPreviousCaptainsUseCase.invoke(2) } returns listOf(2L, 2L)
+        coEvery { getPreviousCaptainsUseCase.invoke(2) } returns listOf("2", "2")
 
         // When
         val (shouldAsk, player) = viewModel.checkIfShouldAskForDefaultCaptain()
 
         // Then
         assertTrue(shouldAsk)
-        assertEquals(2L, player?.id)
+        assertEquals("2", player?.id)
     }
 
     @Test
@@ -234,9 +234,9 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        viewModel.setCaptain(2L)
+        viewModel.setCaptain("2")
         coEvery { getDefaultCaptainUseCase.invoke() } returns null
-        coEvery { getPreviousCaptainsUseCase.invoke(2) } returns listOf(3L, 4L)
+        coEvery { getPreviousCaptainsUseCase.invoke(2) } returns listOf("3", "4")
 
         // When
         val (shouldAsk, _) = viewModel.checkIfShouldAskForDefaultCaptain()
@@ -250,13 +250,13 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        every { saveDefaultCaptainUseCase.invoke(2L) } just runs
+        every { saveDefaultCaptainUseCase.invoke("2") } just runs
 
         // When
-        viewModel.setDefaultCaptain(2L)
+        viewModel.setDefaultCaptain("2")
 
         // Then
-        coVerify { saveDefaultCaptainUseCase.invoke(2L) }
+        coVerify { saveDefaultCaptainUseCase.invoke("2") }
     }
 
     @Test
@@ -265,9 +265,9 @@ class MatchCreationWizardViewModelTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
         viewModel.setGeneralData("Opponent", "Location", 1000L, 3600000L, 2)
-        viewModel.setSquadCallUp(setOf(1L, 2L, 3L, 4L, 5L, 6L))
-        viewModel.setCaptain(2L)
-        viewModel.setStartingLineup(setOf(1L, 2L, 3L, 4L, 5L))
+        viewModel.setSquadCallUp(setOf("1", "2", "3", "4", "5", "6"))
+        viewModel.setCaptain("2")
+        viewModel.setStartingLineup(setOf("1", "2", "3", "4", "5"))
 
         // When
         val match = viewModel.buildMatch()
@@ -277,7 +277,7 @@ class MatchCreationWizardViewModelTest {
         assertEquals("Location", match.location)
         assertEquals(1000L + 3600000L, match.dateTime)
         assertEquals(6, match.squadCallUpIds.size)
-        assertEquals(2L, match.captainId)
+        assertEquals("2", match.captainId)
         assertEquals(5, match.startingLineupIds.size)
     }
 
@@ -304,9 +304,9 @@ class MatchCreationWizardViewModelTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
         viewModel.setGeneralData("Opponent", "Location", 1000L, 0L, 2) // 00:00 time
-        viewModel.setSquadCallUp(setOf(1L, 2L, 3L, 4L, 5L, 6L))
-        viewModel.setCaptain(2L)
-        viewModel.setStartingLineup(setOf(1L, 2L, 3L, 4L, 5L))
+        viewModel.setSquadCallUp(setOf("1", "2", "3", "4", "5", "6"))
+        viewModel.setCaptain("2")
+        viewModel.setStartingLineup(setOf("1", "2", "3", "4", "5"))
 
         // When
         val match = viewModel.buildMatch()
@@ -316,7 +316,7 @@ class MatchCreationWizardViewModelTest {
         assertEquals("Location", match.location)
         assertEquals(1000L + 0L, match.dateTime) // dateTime = date + time = 1000L
         assertEquals(6, match.squadCallUpIds.size)
-        assertEquals(2L, match.captainId)
+        assertEquals("2", match.captainId)
         assertEquals(5, match.startingLineupIds.size)
     }
 
@@ -361,14 +361,14 @@ class MatchCreationWizardViewModelTest {
     @Test
     fun `updateMatch success should update match and call onComplete`() = runTest(testDispatcher) {
         // Given
-        val matchId = 42L
+        val matchId = "42"
         val existingMatch = Match(
             id = matchId,
             teamName = "Team",
             opponent = "Old Opponent",
             location = "Old Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
         )
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(existingMatch)
         viewModel = createViewModel(matchId)
@@ -387,14 +387,14 @@ class MatchCreationWizardViewModelTest {
     @Test
     fun `updateMatch error should restore Ready state and call onComplete`() = runTest(testDispatcher) {
         // Given
-        val matchId = 42L
+        val matchId = "42"
         val existingMatch = Match(
             id = matchId,
             teamName = "Team",
             opponent = "Old Opponent",
             location = "Old Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
         )
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(existingMatch)
         coEvery { updateMatchUseCase.invoke(any()) } throws RuntimeException("error")
@@ -416,7 +416,7 @@ class MatchCreationWizardViewModelTest {
     @Test
     fun `edit mode should load match data and populate fields`() = runTest(testDispatcher) {
         // Given
-        val matchId = 99L
+        val matchId = "99"
         val match = Match(
             id = matchId,
             teamName = "Team",
@@ -424,9 +424,9 @@ class MatchCreationWizardViewModelTest {
             location = "Home Ground",
             dateTime = 86400000L + 3600000L,
             periodType = PeriodType.HALF_TIME,
-            squadCallUpIds = listOf(1L, 2L, 3L),
-            captainId = 2L,
-            startingLineupIds = listOf(1L, 2L),
+            squadCallUpIds = listOf("1", "2", "3"),
+            captainId = "2",
+            startingLineupIds = listOf("1", "2"),
         )
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(match)
 
@@ -438,9 +438,9 @@ class MatchCreationWizardViewModelTest {
         assertTrue(viewModel.isEditMode())
         assertEquals("FC Test", viewModel.getOpponent())
         assertEquals("Home Ground", viewModel.getLocation())
-        assertEquals(2L, viewModel.getCaptainId())
-        assertEquals(setOf(1L, 2L, 3L), viewModel.getSquadCallUpIds())
-        assertEquals(setOf(1L, 2L), viewModel.getStartingLineupIds())
+        assertEquals("2", viewModel.getCaptainId())
+        assertEquals(setOf("1", "2", "3"), viewModel.getSquadCallUpIds())
+        assertEquals(setOf("1", "2"), viewModel.getStartingLineupIds())
     }
 
     // ── hasUnsavedChanges ─────────────────────────────────────────────────────
@@ -469,14 +469,14 @@ class MatchCreationWizardViewModelTest {
     @Test
     fun `hasUnsavedChanges in edit mode returns false when nothing changed`() = runTest(testDispatcher) {
         // Given
-        val matchId = 55L
+        val matchId = "55"
         val match = Match(
             id = matchId,
             teamName = "Team",
             opponent = "Same",
             location = "Same",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
         )
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(match)
         viewModel = createViewModel(matchId)
@@ -489,14 +489,14 @@ class MatchCreationWizardViewModelTest {
     @Test
     fun `hasUnsavedChanges in edit mode returns true when opponent changed`() = runTest(testDispatcher) {
         // Given
-        val matchId = 55L
+        val matchId = "55"
         val match = Match(
             id = matchId,
             teamName = "Team",
             opponent = "Original",
             location = "Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
         )
         coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(match)
         viewModel = createViewModel(matchId)
@@ -583,7 +583,7 @@ class MatchCreationWizardViewModelTest {
         coEvery { getCaptainPlayerUseCase.invoke() } returns fixedCaptain
         viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.setSquadCallUp(setOf(1L, 2L, 3L))
+        viewModel.setSquadCallUp(setOf("1", "2", "3"))
 
         // When - advance from GENERAL_DATA to SQUAD_CALLUP
         viewModel.goToNextStep()
@@ -594,7 +594,7 @@ class MatchCreationWizardViewModelTest {
         viewModel.goToNextStep()
         advanceUntilIdle()
         assertEquals(WizardStep.STARTING_LINEUP, viewModel.currentStep.value)
-        assertEquals(1L, viewModel.getCaptainId())
+        assertEquals("1", viewModel.getCaptainId())
     }
 
     @Test
@@ -605,7 +605,7 @@ class MatchCreationWizardViewModelTest {
             coEvery { getCaptainPlayerUseCase.invoke() } returns fixedCaptain
             viewModel = createViewModel()
             advanceUntilIdle()
-            viewModel.setSquadCallUp(setOf(1L, 2L, 3L))
+            viewModel.setSquadCallUp(setOf("1", "2", "3"))
             // Navigate to STARTING_LINEUP (skipping CAPTAIN)
             viewModel.goToNextStep()
             advanceUntilIdle()
@@ -628,14 +628,14 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.setSquadCallUp(setOf(1L, 2L, 3L))
-        coEvery { getDefaultCaptainUseCase.invoke() } returns 2L
+        viewModel.setSquadCallUp(setOf("1", "2", "3"))
+        coEvery { getDefaultCaptainUseCase.invoke() } returns "2"
 
         // When
         viewModel.loadDefaultCaptainIfExists()
 
         // Then
-        assertEquals(2L, viewModel.getCaptainId())
+        assertEquals("2", viewModel.getCaptainId())
     }
 
     @Test
@@ -643,14 +643,14 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.setSquadCallUp(setOf(1L, 2L, 3L))
-        coEvery { getDefaultCaptainUseCase.invoke() } returns 99L // not in squad
+        viewModel.setSquadCallUp(setOf("1", "2", "3"))
+        coEvery { getDefaultCaptainUseCase.invoke() } returns "99" // not in squad
 
         // When
         viewModel.loadDefaultCaptainIfExists()
 
         // Then
-        assertEquals(0L, viewModel.getCaptainId())
+        assertEquals("", viewModel.getCaptainId())
     }
 
     // ── checkIfShouldAskForDefaultCaptain ─────────────────────────────────────
@@ -660,7 +660,7 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         advanceUntilIdle()
-        coEvery { getDefaultCaptainUseCase.invoke() } returns 1L // already has default
+        coEvery { getDefaultCaptainUseCase.invoke() } returns "1" // already has default
 
         // When
         val (shouldAsk, _) = viewModel.checkIfShouldAskForDefaultCaptain()
@@ -676,15 +676,15 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.setSquadCallUp(setOf(1L, 2L, 3L))
-        viewModel.setCaptain(2L)
-        assertEquals(2L, viewModel.getCaptainId())
+        viewModel.setSquadCallUp(setOf("1", "2", "3"))
+        viewModel.setCaptain("2")
+        assertEquals("2", viewModel.getCaptainId())
 
         // When - remove player 2 from squad
-        viewModel.setSquadCallUp(setOf(1L, 3L))
+        viewModel.setSquadCallUp(setOf("1", "3"))
 
         // Then
-        assertEquals(0L, viewModel.getCaptainId())
+        assertEquals("", viewModel.getCaptainId())
     }
 
     @Test
@@ -692,14 +692,14 @@ class MatchCreationWizardViewModelTest {
         // Given
         viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.setSquadCallUp(setOf(1L, 2L, 3L, 4L, 5L))
-        viewModel.setStartingLineup(setOf(1L, 2L, 3L, 4L, 5L))
+        viewModel.setSquadCallUp(setOf("1", "2", "3", "4", "5"))
+        viewModel.setStartingLineup(setOf("1", "2", "3", "4", "5"))
 
         // When
-        viewModel.setSquadCallUp(setOf(1L, 3L, 5L))
+        viewModel.setSquadCallUp(setOf("1", "3", "5"))
 
         // Then
-        assertEquals(setOf(1L, 3L, 5L), viewModel.getStartingLineupIds())
+        assertEquals(setOf("1", "3", "5"), viewModel.getStartingLineupIds())
     }
 
     // ── getters ───────────────────────────────────────────────────────────────
@@ -737,5 +737,382 @@ class MatchCreationWizardViewModelTest {
         // Then
         assertNull(match.dateTime)
         assertEquals(4, match.numberOfPeriods)
+    }
+
+    // ── resetForMatchId ───────────────────────────────────────────────────────
+
+    @Test
+    fun `resetForMatchId with empty string resets to create mode`() = runTest(testDispatcher) {
+        // Given
+        viewModel = createViewModel("some-match-id")
+        advanceUntilIdle()
+        viewModel.setGeneralData("Opponent", "Stadium", 1000L, 3600000L, 2)
+        assertEquals("Opponent", viewModel.getOpponent())
+
+        // When
+        viewModel.resetForMatchId("")
+        advanceUntilIdle()
+
+        // Then
+        assertFalse(viewModel.isEditMode())
+        assertEquals("", viewModel.getOpponent())
+        assertEquals("", viewModel.getLocation())
+        assertEquals(WizardStep.GENERAL_DATA, viewModel.currentStep.value)
+    }
+
+    @Test
+    fun `resetForMatchId with new match id loads new match data`() = runTest(testDispatcher) {
+        // Given
+        val newMatchId = "new-match-123"
+        val newMatch = Match(
+            id = newMatchId,
+            teamName = "Team",
+            opponent = "New Opponent",
+            location = "New Stadium",
+            periodType = PeriodType.QUARTER_TIME,
+            captainId = "3",
+        )
+        coEvery { getMatchByIdUseCase.invoke(newMatchId) } returns flowOf(newMatch)
+        viewModel = createViewModel("")
+        advanceUntilIdle()
+
+        // When
+        viewModel.resetForMatchId(newMatchId)
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.isEditMode())
+        assertEquals("New Opponent", viewModel.getOpponent())
+        assertEquals("New Stadium", viewModel.getLocation())
+        assertEquals("3", viewModel.getCaptainId())
+    }
+
+    @Test
+    fun `resetForMatchId clears unsaved changes`() = runTest(testDispatcher) {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.setGeneralData("Opponent", "Stadium", 1000L, null, 2)
+        assertTrue(viewModel.hasUnsavedChanges())
+
+        // When
+        viewModel.resetForMatchId("")
+        advanceUntilIdle()
+
+        // Then
+        assertFalse(viewModel.hasUnsavedChanges())
+    }
+
+    @Test
+    fun `resetForMatchId clears exit dialog state`() = runTest(testDispatcher) {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.setGeneralData("Opponent", "", null, null, 2)
+        viewModel.requestBack {}
+        assertTrue(viewModel.showExitDialog.value)
+
+        // When
+        viewModel.resetForMatchId("")
+        advanceUntilIdle()
+
+        // Then
+        assertFalse(viewModel.showExitDialog.value)
+    }
+
+    // ── checkIfShouldAskForDefaultCaptain edge cases ──────────────────────────
+
+    @Test
+    fun `checkIfShouldAskForDefaultCaptain returns false and null when captain not found in players`() =
+        runTest(testDispatcher) {
+            // Given
+            viewModel = createViewModel()
+            advanceUntilIdle()
+            viewModel.setCaptain("99999") // Non-existent player
+            coEvery { getDefaultCaptainUseCase.invoke() } returns null
+            coEvery { getPreviousCaptainsUseCase.invoke(2) } returns listOf("99999", "99999")
+
+            // When
+            val (shouldAsk, player) = viewModel.checkIfShouldAskForDefaultCaptain()
+
+            // Then
+            assertTrue(shouldAsk)
+            assertNull(player)
+        }
+
+    @Test
+    fun `checkIfShouldAskForDefaultCaptain returns false when only 1 match with same captain`() =
+        runTest(testDispatcher) {
+            // Given
+            viewModel = createViewModel()
+            advanceUntilIdle()
+            viewModel.setCaptain("2")
+            coEvery { getDefaultCaptainUseCase.invoke() } returns null
+            coEvery { getPreviousCaptainsUseCase.invoke(2) } returns listOf("2") // Only 1 match
+
+            // When
+            val (shouldAsk, _) = viewModel.checkIfShouldAskForDefaultCaptain()
+
+            // Then
+            assertFalse(shouldAsk)
+        }
+
+    // ── goToPreviousStep at first step ─────────────────────────────────────────
+
+    @Test
+    fun `goToPreviousStep from GENERAL_DATA stays at GENERAL_DATA`() = runTest(testDispatcher) {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        assertEquals(WizardStep.GENERAL_DATA, viewModel.currentStep.value)
+
+        // When
+        viewModel.goToPreviousStep()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(WizardStep.GENERAL_DATA, viewModel.currentStep.value)
+    }
+
+    @Test
+    fun `goToNextStep from STARTING_LINEUP stays at STARTING_LINEUP`() = runTest(testDispatcher) {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        // Navigate to final step
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+        assertEquals(WizardStep.STARTING_LINEUP, viewModel.currentStep.value)
+
+        // When
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(WizardStep.STARTING_LINEUP, viewModel.currentStep.value)
+    }
+
+    // ── updateMatch edge cases ───────────────────────────────────────────────────
+
+    @Test
+    fun `updateMatch with empty matchId should not call updateMatchUseCase`() = runTest(testDispatcher) {
+        // Given
+        viewModel = createViewModel("")
+        advanceUntilIdle()
+        val onComplete = mockk<() -> Unit>(relaxed = true)
+        viewModel.setGeneralData("New Opponent", "New Stadium", 1000L, null, 2)
+
+        // When
+        viewModel.updateMatch(onComplete)
+        advanceUntilIdle()
+
+        // Then
+        coVerify(exactly = 0) { updateMatchUseCase.invoke(any()) }
+        coVerify { onComplete() }
+    }
+
+    @Test
+    fun `updateMatch when match not found should call onComplete without error`() = runTest(testDispatcher) {
+        // Given
+        val matchId = "nonexistent"
+        coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(null)
+        viewModel = createViewModel(matchId)
+        advanceUntilIdle()
+        val onComplete = mockk<() -> Unit>(relaxed = true)
+
+        // When
+        viewModel.updateMatch(onComplete)
+        advanceUntilIdle()
+
+        // Then
+        coVerify(exactly = 0) { updateMatchUseCase.invoke(any()) }
+        coVerify { onComplete() }
+    }
+
+    // ── setSquadCallUp with empty initial state ──────────────────────────────────
+
+    @Test
+    fun `setSquadCallUp when captain is not in squad leaves captain unchanged if empty`() =
+        runTest(testDispatcher) {
+            // Given
+            viewModel = createViewModel()
+            advanceUntilIdle()
+            assertEquals("", viewModel.getCaptainId())
+
+            // When
+            viewModel.setSquadCallUp(setOf("1", "2", "3"))
+
+            // Then
+            assertEquals("", viewModel.getCaptainId())
+        }
+
+    // ── loadDefaultCaptainIfExists with no default captain ────────────────────────
+
+    @Test
+    fun `loadDefaultCaptainIfExists when no default is set does not set captain`() = runTest(testDispatcher) {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.setSquadCallUp(setOf("1", "2", "3"))
+        coEvery { getDefaultCaptainUseCase.invoke() } returns null
+
+        // When
+        viewModel.loadDefaultCaptainIfExists()
+
+        // Then
+        assertEquals("", viewModel.getCaptainId())
+    }
+
+    // ── goToNextStep skips CAPTAIN when fixed captain not in squad ─────────────────
+
+    @Test
+    fun `goToNextStep goes to CAPTAIN when fixed captain not in squad`() = runTest(testDispatcher) {
+        // Given
+        val fixedCaptain = testPlayers[0] // id = 1
+        coEvery { getCaptainPlayerUseCase.invoke() } returns fixedCaptain
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.setSquadCallUp(setOf("2", "3", "4")) // Fixed captain NOT in squad
+
+        // When
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+        assertEquals(WizardStep.SQUAD_CALLUP, viewModel.currentStep.value)
+
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+
+        // Then - should go to CAPTAIN, not skip it
+        assertEquals(WizardStep.CAPTAIN, viewModel.currentStep.value)
+    }
+
+    @Test
+    fun `goToPreviousStep from STARTING_LINEUP goes to CAPTAIN when fixed captain not auto-assigned`() =
+        runTest(testDispatcher) {
+            // Given
+            val fixedCaptain = testPlayers[0] // id = 1
+            coEvery { getCaptainPlayerUseCase.invoke() } returns fixedCaptain
+            viewModel = createViewModel()
+            advanceUntilIdle()
+            viewModel.setSquadCallUp(setOf("2", "3", "4")) // Fixed captain NOT in squad
+            // Navigate manually to STARTING_LINEUP without skipping CAPTAIN
+            viewModel.goToNextStep()
+            advanceUntilIdle()
+            viewModel.goToNextStep()
+            advanceUntilIdle()
+            viewModel.setCaptain("2")
+            viewModel.goToNextStep()
+            advanceUntilIdle()
+            assertEquals(WizardStep.STARTING_LINEUP, viewModel.currentStep.value)
+
+            // When
+            viewModel.goToPreviousStep()
+            advanceUntilIdle()
+
+            // Then - should go to CAPTAIN
+            assertEquals(WizardStep.CAPTAIN, viewModel.currentStep.value)
+        }
+
+    // ── Multiple step transitions ──────────────────────────────────────────────────
+
+    @Test
+    fun `complete wizard flow from GENERAL_DATA to STARTING_LINEUP`() = runTest(testDispatcher) {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When & Then - step through entire wizard
+        assertEquals(WizardStep.GENERAL_DATA, viewModel.currentStep.value)
+        viewModel.setGeneralData("Opponent", "Stadium", 1000L, 3600000L, 2)
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+
+        assertEquals(WizardStep.SQUAD_CALLUP, viewModel.currentStep.value)
+        viewModel.setSquadCallUp(setOf("1", "2", "3", "4", "5"))
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+
+        assertEquals(WizardStep.CAPTAIN, viewModel.currentStep.value)
+        viewModel.setCaptain("2")
+        viewModel.goToNextStep()
+        advanceUntilIdle()
+
+        assertEquals(WizardStep.STARTING_LINEUP, viewModel.currentStep.value)
+        viewModel.setStartingLineup(setOf("1", "2", "3", "4", "5"))
+
+        // Verify all data is preserved
+        assertEquals("Opponent", viewModel.getOpponent())
+        assertEquals(5, viewModel.getSquadCallUpIds().size)
+        assertEquals("2", viewModel.getCaptainId())
+        assertEquals(5, viewModel.getStartingLineupIds().size)
+    }
+
+    // ── Match creation with various period types ────────────────────────────────────
+
+    @Test
+    fun `buildMatch with 4 periods creates QUARTER_TIME match`() = runTest(testDispatcher) {
+        // Given
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.setGeneralData("Opponent", "Stadium", 1000L, 3600000L, 4)
+
+        // When
+        val match = viewModel.buildMatch()
+
+        // Then
+        assertEquals(4, match.numberOfPeriods)
+    }
+
+    // ── Team type and home ground ──────────────────────────────────────────────────
+
+    @Test
+    fun `homeGround is loaded from club when team has clubId`() = runTest(testDispatcher) {
+        // Given
+        val mockTeam = mockk<com.jesuslcorominas.teamflowmanager.domain.model.Team>()
+        every { mockTeam.teamType } returns mockk()
+        every { mockTeam.teamType.players } returns 7
+        every { mockTeam.clubId } returns "club-123"
+        coEvery { getClubByIdUseCase.invoke("club-123") } returns mockk {
+            every { homeGround } returns "Bernabéu"
+        }
+        every { getTeamUseCase.invoke() } returns flowOf(mockTeam)
+
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(7, viewModel.getTeamTypePlayerCount())
+        assertEquals("Bernabéu", viewModel.homeGround.value)
+    }
+
+    @Test
+    fun `hasUnsavedChanges returns true when startingLineupIds changed`() = runTest(testDispatcher) {
+        // Given
+        val matchId = "55"
+        val match = Match(
+            id = matchId,
+            teamName = "Team",
+            opponent = "Same",
+            location = "Same",
+            periodType = PeriodType.HALF_TIME,
+            captainId = "1",
+            startingLineupIds = listOf("1", "2"),
+        )
+        coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(match)
+        viewModel = createViewModel(matchId)
+        advanceUntilIdle()
+
+        // When
+        viewModel.setStartingLineup(setOf("1", "2", "3")) // Changed
+
+        // Then
+        assertTrue(viewModel.hasUnsavedChanges())
     }
 }

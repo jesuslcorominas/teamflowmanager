@@ -81,6 +81,7 @@ actual fun PlayerDataStep(
     initialNumber: String,
     initialIsCaptain: Boolean,
     initialImageUri: String?,
+    isImageUploadEnabled: Boolean,
     onDataChanged: (String, String, String, Boolean, String?) -> Unit,
     onNext: () -> Unit,
     onCancel: () -> Unit,
@@ -156,7 +157,7 @@ actual fun PlayerDataStep(
                         .size(120.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { showImageOptions = true },
+                        .let { if (isImageUploadEnabled) it.clickable { showImageOptions = true } else it },
                 contentAlignment = Alignment.Center,
             ) {
                 val contentDescription = "${stringResource(Res.string.player_image)} $firstName $lastName"
@@ -184,12 +185,14 @@ actual fun PlayerDataStep(
                 }
             }
 
-            Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
-            Text(
-                text = stringResource(Res.string.tap_to_add_photo),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (isImageUploadEnabled) {
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
+                Text(
+                    text = stringResource(Res.string.tap_to_add_photo),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
@@ -279,7 +282,7 @@ actual fun PlayerDataStep(
         }
     }
 
-    if (showImageOptions) {
+    if (showImageOptions && isImageUploadEnabled) {
         AppAlertDialog(
             title = stringResource(Res.string.select_image_source),
             message = "",

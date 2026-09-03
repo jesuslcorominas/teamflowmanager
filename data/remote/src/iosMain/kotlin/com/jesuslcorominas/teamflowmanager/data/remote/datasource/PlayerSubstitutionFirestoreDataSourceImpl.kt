@@ -1,10 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerSubstitutionFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseSubstitutionDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -24,6 +22,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
     companion object {
         private const val SUBSTITUTIONS_COLLECTION = "substitutions"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     private suspend fun getTeamDocumentId(): String? {
@@ -42,46 +41,60 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
         }
     }
 
-    override fun getMatchSubstitutions(matchId: Long): Flow<List<PlayerSubstitution>> =
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                val doc = firestore.collection(MATCHES_COLLECTION).document(matchId).get()
+                if (!doc.exists) {
+                    null
+                } else {
+                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+
+    override fun getMatchSubstitutions(matchId: String): Flow<List<PlayerSubstitution>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val snapshots =
+            val newSubs =
                 firestore.collection(SUBSTITUTIONS_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId }
                     .snapshots
-            emitAll(
-                snapshots.map { qs ->
-                    qs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerSubstitutionFirestoreModel>().copy(id = doc.id).toDomain()
-                        } catch (_: Exception) {
-                            null
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            try {
+                                parseSubstitutionDocument(doc.data<Map<String, Any?>>(), doc.id, matchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
+                    }.catch { e ->
+                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                     }
-                }.catch { e ->
-                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
-                },
-            )
+            emitAll(newSubs)
         }
 
-    override suspend fun insertSubstitution(substitution: PlayerSubstitution): Long {
+    override suspend fun insertSubstitution(substitution: PlayerSubstitution): String {
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("Team must exist to insert substitution")
         return try {
             val model = substitution.toFirestoreModel().copy(teamId = teamDocId)
             val docRef = firestore.collection(SUBSTITUTIONS_COLLECTION).add(model)
-            docRef.id.toStableId()
+            docRef.id
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

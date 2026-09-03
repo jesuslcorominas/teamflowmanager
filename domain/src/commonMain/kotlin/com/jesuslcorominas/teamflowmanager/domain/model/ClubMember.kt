@@ -1,14 +1,12 @@
 package com.jesuslcorominas.teamflowmanager.domain.model
 
 data class ClubMember(
-    val id: Long,
+    val id: String,
     val userId: String,
     val name: String,
     val email: String,
-    val clubId: Long,
+    val clubId: String,
     val roles: List<String>,
-    val remoteId: String? = null,
-    val clubRemoteId: String? = null,
 ) {
     /**
      * Helper function to check if the member has a specific role.

@@ -25,6 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationState
 import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -49,6 +51,8 @@ fun AcceptTeamInvitationScreen(
     viewModel: AcceptTeamInvitationViewModel =
         koinViewModel(key = teamId.orEmpty(), parameters = { parametersOf(teamId) }),
 ) {
+    TrackScreenView(screenName = ScreenName.ACCEPT_TEAM_INVITATION, screenClass = "AcceptTeamInvitationScreen")
+
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(state) {

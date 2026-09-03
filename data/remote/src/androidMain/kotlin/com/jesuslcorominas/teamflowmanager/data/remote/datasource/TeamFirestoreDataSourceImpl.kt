@@ -96,9 +96,9 @@ class TeamFirestoreDataSourceImpl(
         }
 
         try {
-            val documentId = team.remoteId
-            if (documentId.isNullOrEmpty()) {
-                throw IllegalStateException("Cannot update team without remote document ID")
+            val documentId = team.id
+            if (documentId.isBlank()) {
+                throw IllegalStateException("Cannot update team without document ID")
             }
 
             val firestoreModel = team.toFirestoreModel()
@@ -218,7 +218,6 @@ class TeamFirestoreDataSourceImpl(
 
     override suspend fun updateTeamClubId(
         teamId: String,
-        clubNumericId: Long,
         clubId: String,
     ) {
         require(teamId.isNotBlank()) { "Team ID cannot be blank" }

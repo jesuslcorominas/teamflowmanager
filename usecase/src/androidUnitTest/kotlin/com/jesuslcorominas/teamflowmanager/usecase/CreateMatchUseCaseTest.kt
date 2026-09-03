@@ -31,17 +31,17 @@ class CreateMatchUseCaseTest {
     fun `invoke should create match in repository and return id`() =
         runTest {
             // Given
-            val team = Team(id = 1L, name = "Team A", coachName = "Coach", delegateName = "Delegate", teamType = TeamType.FOOTBALL_7)
+            val team = Team(id = "1", name = "Team A", coachName = "Coach", delegateName = "Delegate", teamType = TeamType.FOOTBALL_7)
             val skeleton = SkeletonMatch(
                 opponent = "Rival FC",
                 location = "Stadium",
                 dateTime = null,
                 numberOfPeriods = 2,
-                squadCallUpIds = listOf(1L, 2L, 3L),
-                captainId = 1L,
-                startingLineupIds = listOf(1L, 2L),
+                squadCallUpIds = listOf("1", "2", "3"),
+                captainId = "1",
+                startingLineupIds = listOf("1", "2"),
             )
-            val expectedId = 123L
+            val expectedId = "123"
             coEvery { teamRepository.getTeam() } returns flowOf(team)
             coEvery { matchRepository.createMatch(any()) } returns expectedId
 
@@ -63,7 +63,7 @@ class CreateMatchUseCaseTest {
                 dateTime = null,
                 numberOfPeriods = 2,
                 squadCallUpIds = emptyList(),
-                captainId = 1L,
+                captainId = "1",
                 startingLineupIds = emptyList(),
             )
             coEvery { teamRepository.getTeam() } returns flowOf(null)

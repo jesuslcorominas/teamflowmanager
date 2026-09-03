@@ -21,7 +21,7 @@ internal class PauseMatchUseCaseImpl(
     private val getMatchByIdUseCase: GetMatchByIdUseCase,
 ) : PauseMatchUseCase {
     override suspend fun invoke(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     ) {
         // Get the match first to validate it exists and is in correct state

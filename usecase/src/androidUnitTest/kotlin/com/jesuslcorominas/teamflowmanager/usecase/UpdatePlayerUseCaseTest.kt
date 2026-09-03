@@ -28,12 +28,12 @@ class UpdatePlayerUseCaseTest {
     fun `invoke should call repository updatePlayer`() = runTest {
         // Given
         val player = Player(
-            id = 1,
+            id = "1",
             firstName = "John",
             lastName = "Doe",
             number = 10,
             positions = listOf(Position.Forward),
-            teamId = 1L,
+            teamId = "1",
             isCaptain = false,
         )
         coEvery { playerRepository.updatePlayer(player) } just runs
@@ -49,12 +49,12 @@ class UpdatePlayerUseCaseTest {
     fun `invoke should update player with multiple positions`() = runTest {
         // Given
         val player = Player(
-            id = 2,
+            id = "2",
             firstName = "Jane",
             lastName = "Smith",
             number = 8,
             positions = listOf(Position.Midfielder, Position.Defender),
-            teamId = 1L,
+            teamId = "1",
             isCaptain = false,
         )
         coEvery { playerRepository.updatePlayer(player) } just runs

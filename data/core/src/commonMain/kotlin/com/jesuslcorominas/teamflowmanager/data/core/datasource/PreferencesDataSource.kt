@@ -5,9 +5,9 @@ interface PreferencesDataSource {
 
     fun setShouldShowInvalidSubstitutionAlert(shouldShow: Boolean)
 
-    fun getDefaultCaptainId(): Long?
+    fun getDefaultCaptainId(): String?
 
-    fun setDefaultCaptainId(playerId: Long?)
+    fun setDefaultCaptainId(playerId: String?)
 
     fun hasNotificationPermissionBeenRequested(): Boolean
 

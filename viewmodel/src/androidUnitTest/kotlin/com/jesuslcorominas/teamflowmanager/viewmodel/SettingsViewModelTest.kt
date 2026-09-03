@@ -9,10 +9,12 @@ import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateGlobalNotificationPreferenceUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -44,6 +46,8 @@ class SettingsViewModelTest {
     private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
     private lateinit var getActiveViewRoleUseCase: GetActiveViewRoleUseCase
     private lateinit var setActiveViewRoleUseCase: SetActiveViewRoleUseCase
+    private lateinit var getNotificationPreferencesUseCase: GetNotificationPreferencesUseCase
+    private lateinit var updateGlobalNotificationPreferenceUseCase: UpdateGlobalNotificationPreferenceUseCase
     private lateinit var viewModel: SettingsViewModel
 
     private val testUser = User(
@@ -64,6 +68,8 @@ class SettingsViewModelTest {
         getUserClubMembershipUseCase = mockk()
         getActiveViewRoleUseCase = mockk()
         setActiveViewRoleUseCase = mockk(relaxed = true)
+        getNotificationPreferencesUseCase = mockk(relaxed = true)
+        updateGlobalNotificationPreferenceUseCase = mockk(relaxed = true)
 
         every { getCurrentUserUseCase() } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(null)
@@ -79,6 +85,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
     }
 
@@ -129,6 +137,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
         advanceUntilIdle()
         coEvery { signOutUseCase() } returns Unit
@@ -155,14 +165,12 @@ class SettingsViewModelTest {
     fun `roleSelectorState showRoleSelector is false when user is not a president`() = runTest(testDispatcher) {
         every { getUserClubMembershipUseCase() } returns flowOf(
             ClubMember(
-                id = 1,
+                id = "1",
                 userId = "user123",
                 name = "Test User",
                 email = "test@example.com",
-                clubId = 100,
+                clubId = "club123",
                 roles = listOf("Coach"),
-                remoteId = "clubmember_doc_123",
-                clubRemoteId = "club123",
             ),
         )
         viewModel = SettingsViewModel(
@@ -174,6 +182,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
         advanceUntilIdle()
 
@@ -184,14 +194,12 @@ class SettingsViewModelTest {
     fun `roleSelectorState showRoleSelector is true but disabled when president has no team`() = runTest(testDispatcher) {
         every { getUserClubMembershipUseCase() } returns flowOf(
             ClubMember(
-                id = 1,
+                id = "1",
                 userId = "user123",
                 name = "Test User",
                 email = "test@example.com",
-                clubId = 100,
+                clubId = "club123",
                 roles = listOf("Presidente"),
-                remoteId = "clubmember_doc_123",
-                clubRemoteId = "club123",
             ),
         )
         every { getTeamUseCase() } returns flowOf(null)
@@ -204,6 +212,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
         advanceUntilIdle()
 
@@ -215,25 +225,22 @@ class SettingsViewModelTest {
     fun `roleSelectorState showRoleSelector is true when president has a team`() = runTest(testDispatcher) {
         every { getUserClubMembershipUseCase() } returns flowOf(
             ClubMember(
-                id = 1,
+                id = "1",
                 userId = "user123",
                 name = "Test User",
                 email = "test@example.com",
-                clubId = 100,
+                clubId = "club123",
                 roles = listOf("Presidente"),
-                remoteId = "clubmember_doc_123",
-                clubRemoteId = "club123",
             ),
         )
         every { getTeamUseCase() } returns flowOf(
             Team(
-                id = 1,
+                id = "1",
                 name = "Test Team",
                 coachName = "Coach",
                 delegateName = "Delegate",
                 teamType = TeamType.FOOTBALL_5,
-                clubId = 100L,
-                clubRemoteId = "club123",
+                clubId = "club123",
             ),
         )
         viewModel = SettingsViewModel(
@@ -245,6 +252,8 @@ class SettingsViewModelTest {
             getUserClubMembership = getUserClubMembershipUseCase,
             getActiveViewRole = getActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
         )
         advanceUntilIdle()
 

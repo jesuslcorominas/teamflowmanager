@@ -6,7 +6,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 internal class RemovePlayerAsCaptainUseCaseImpl(
     private val playerRepository: PlayerRepository,
 ) : RemovePlayerAsCaptainUseCase {
-    override suspend fun invoke(playerId: Long) {
+    override suspend fun invoke(playerId: String) {
         playerRepository.removePlayerAsCaptain(playerId)
     }
 }

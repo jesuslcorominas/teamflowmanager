@@ -15,6 +15,7 @@
 | **Fase 2** | iOS MVP — login Firebase (Google Sign-In nativo) + listado de partidos | ✅ **COMPLETADA** |
 | **Fase 3** | iOS con UI completa igual a la de Android (Compose Multiplatform) | ✅ **COMPLETADA** — 18/18 pantallas; ver nota KMP-27 |
 | **Post-Fase 3** | Pulido de UI/UX iOS+Android (barra flotante, clearance FAB, botón Save) | ✅ **COMPLETADA** |
+| **Limpieza #320** | Eliminar duplicidades entre `app/` y `shared-ui/` — solo queda `shared-ui` | ✅ **COMPLETADA** — ver informe en docs/MIGRATION_CLEANUP_REPORT.md |
 
 > **Nota Fase 3**: 18/18 pantallas migradas a `:shared-ui`. Pendiente opcional:
 > - **KMP-27** (issue #275) — Drag & drop en `MatchScreen`: la pantalla existe y funciona, pero los jugadores no se pueden reorganizar arrastrando (funcionalidad de confort, no crítica).

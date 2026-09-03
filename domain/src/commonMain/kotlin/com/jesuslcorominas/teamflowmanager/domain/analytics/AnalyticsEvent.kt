@@ -141,4 +141,10 @@ object ScreenName {
     const val CLUB_SELECTION = "Club Selection"
     const val CREATE_CLUB = "Create Club"
     const val JOIN_CLUB = "Join Club"
+    const val CLUB_SETTINGS = "Club Settings"
+    const val TEAM_LIST = "Team List"
+    const val PRESIDENT_NOTIFICATIONS = "President Notifications"
+    const val PRESIDENT_TEAM_DETAIL = "President Team Detail"
+    const val PENDING_TEAM_ASSIGNMENT = "Pending Team Assignment"
+    const val ACCEPT_TEAM_INVITATION = "Accept Team Invitation"
 }

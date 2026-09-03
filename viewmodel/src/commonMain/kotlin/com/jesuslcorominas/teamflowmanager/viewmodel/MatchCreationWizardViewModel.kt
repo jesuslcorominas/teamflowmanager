@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class MatchCreationWizardViewModel(
-    private val matchId: Long,
+    private val matchId: String,
     private val getPlayersUseCase: GetPlayersUseCase,
     private val getPreviousCaptainsUseCase: GetPreviousCaptainsUseCase,
     private val getDefaultCaptainUseCase: GetDefaultCaptainUseCase,
@@ -58,9 +58,9 @@ class MatchCreationWizardViewModel(
     private var date: Long? = null
     private var time: Long? = null
     private var numberOfPeriods: Int = 2
-    private var squadCallUpIds: Set<Long> = emptySet()
-    private var captainId: Long = 0L
-    private var startingLineupIds: Set<Long> = emptySet()
+    private var squadCallUpIds: Set<String> = emptySet()
+    private var captainId: String = ""
+    private var startingLineupIds: Set<String> = emptySet()
 
     // Track original values for unsaved changes detection
     private var originalOpponent: String = ""
@@ -68,20 +68,21 @@ class MatchCreationWizardViewModel(
     private var originalDate: Long? = null
     private var originalTime: Long? = null
     private var originalNumberOfPeriods: Int = 2
-    private var originalSquadCallUpIds: Set<Long> = emptySet()
-    private var originalCaptainId: Long = 0L
-    private var originalStartingLineupIds: Set<Long> = emptySet()
+    private var originalSquadCallUpIds: Set<String> = emptySet()
+    private var originalCaptainId: String = ""
+    private var originalStartingLineupIds: Set<String> = emptySet()
 
     private var allPlayers: List<Player> = emptyList()
-    private var activeMatchId: Long = matchId
-    private var isEditMode = matchId != 0L
+    private var activeMatchId: String = matchId
+    private var isEditMode = matchId.isNotEmpty()
     private var teamTypeValue: Int = 5 // Default to Football 5
-    private var homeGround: String? = null
+    private val _homeGround = MutableStateFlow<String?>(null)
+    val homeGround: StateFlow<String?> = _homeGround.asStateFlow()
 
     // Flag to track if match data is loaded for edit mode
     private var matchDataLoaded = false
     private var playersLoaded = false
-    private var pendingMatchIdForEdit: Long? = if (matchId != 0L) matchId else null
+    private var pendingMatchIdForEdit: String? = if (matchId.isNotEmpty()) matchId else null
 
     init {
         loadPlayers()
@@ -104,9 +105,9 @@ class MatchCreationWizardViewModel(
      * Call via LaunchedEffect(Unit) { wizardViewModel.resetForMatchId(matchId) }
      * in the screen composable.
      */
-    fun resetForMatchId(newMatchId: Long) {
+    fun resetForMatchId(newMatchId: String) {
         activeMatchId = newMatchId
-        isEditMode = newMatchId != 0L
+        isEditMode = newMatchId.isNotEmpty()
 
         opponent = ""
         location = ""
@@ -114,7 +115,7 @@ class MatchCreationWizardViewModel(
         time = null
         numberOfPeriods = 2
         squadCallUpIds = emptySet()
-        captainId = 0L
+        captainId = ""
         startingLineupIds = emptySet()
 
         originalOpponent = ""
@@ -123,7 +124,7 @@ class MatchCreationWizardViewModel(
         originalTime = null
         originalNumberOfPeriods = 2
         originalSquadCallUpIds = emptySet()
-        originalCaptainId = 0L
+        originalCaptainId = ""
         originalStartingLineupIds = emptySet()
 
         _currentStep.value = WizardStep.GENERAL_DATA
@@ -131,8 +132,8 @@ class MatchCreationWizardViewModel(
 
         matchDataLoaded = false
         playersLoaded = false
-        homeGround = null
-        pendingMatchIdForEdit = if (newMatchId != 0L) newMatchId else null
+        _homeGround.value = null
+        pendingMatchIdForEdit = if (newMatchId.isNotEmpty()) newMatchId else null
 
         _uiState.value = MatchCreationWizardUiState.Loading
         loadPlayers()
@@ -146,13 +147,13 @@ class MatchCreationWizardViewModel(
         viewModelScope.launch {
             val team = getTeamUseCase.invoke().first()
             teamTypeValue = team?.teamType?.players ?: 5
-            team?.clubRemoteId?.let { remoteId ->
-                homeGround = getClubByIdUseCase.invoke(remoteId)?.homeGround
+            team?.clubId?.let { clubId ->
+                _homeGround.value = getClubByIdUseCase.invoke(clubId)?.homeGround
             }
         }
     }
 
-    private fun loadMatchForEdit(matchId: Long) {
+    private fun loadMatchForEdit(matchId: String) {
         viewModelScope.launch {
             val match = getMatchByIdUseCase.invoke(matchId).firstOrNull()
             if (match != null) {
@@ -220,23 +221,23 @@ class MatchCreationWizardViewModel(
         this.numberOfPeriods = numberOfPeriods
     }
 
-    fun setSquadCallUp(playerIds: Set<Long>) {
+    fun setSquadCallUp(playerIds: Set<String>) {
         this.squadCallUpIds = playerIds
 
         // If captain is not in the squad anymore, clear captain selection
-        if (captainId != 0L && captainId !in playerIds) {
-            captainId = 0L
+        if (captainId.isNotEmpty() && captainId !in playerIds) {
+            captainId = ""
         }
 
         // Remove players from starting lineup if they're not in the squad anymore
         startingLineupIds = startingLineupIds.filter { it in playerIds }.toSet()
     }
 
-    fun setCaptain(playerId: Long) {
+    fun setCaptain(playerId: String) {
         this.captainId = playerId
     }
 
-    fun setStartingLineup(playerIds: Set<Long>) {
+    fun setStartingLineup(playerIds: Set<String>) {
         this.startingLineupIds = playerIds
     }
 
@@ -257,8 +258,6 @@ class MatchCreationWizardViewModel(
     fun getStartingLineupIds() = startingLineupIds
 
     fun getTeamTypePlayerCount() = teamTypeValue
-
-    fun getHomeGround() = homeGround
 
     fun goToNextStep() {
         viewModelScope.launch {
@@ -330,7 +329,7 @@ class MatchCreationWizardViewModel(
         return Pair(false, null)
     }
 
-    fun setDefaultCaptain(playerId: Long) {
+    fun setDefaultCaptain(playerId: String) {
         saveDefaultCaptainUseCase.invoke(playerId)
     }
 
@@ -394,7 +393,7 @@ class MatchCreationWizardViewModel(
         _uiState.value = MatchCreationWizardUiState.Saving
         viewModelScope.launch {
             try {
-                activeMatchId.takeIf { it != 0L }?.let { id ->
+                activeMatchId.takeIf { it.isNotEmpty() }?.let { id ->
                     crashReporter.log("Updating match via wizard: $id")
                     val existingMatch = getMatchByIdUseCase.invoke(id).firstOrNull()
                     existingMatch?.let { match ->
@@ -413,7 +412,7 @@ class MatchCreationWizardViewModel(
                         analyticsTracker.logEvent(
                             AnalyticsEvent.MATCH_UPDATED,
                             mapOf(
-                                AnalyticsParam.MATCH_ID to id.toString(),
+                                AnalyticsParam.MATCH_ID to id,
                                 AnalyticsParam.WIZARD_TYPE to "match_wizard",
                             ),
                         )
@@ -450,7 +449,7 @@ class MatchCreationWizardViewModel(
             date != null ||
             time != null ||
             squadCallUpIds.isNotEmpty() ||
-            captainId != 0L ||
+            captainId.isNotEmpty() ||
             startingLineupIds.isNotEmpty()
     }
 

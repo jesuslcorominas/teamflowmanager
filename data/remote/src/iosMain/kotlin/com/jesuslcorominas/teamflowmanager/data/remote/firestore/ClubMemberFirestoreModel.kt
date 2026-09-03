@@ -1,6 +1,5 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import kotlinx.serialization.Serializable
 
@@ -16,12 +15,10 @@ data class ClubMemberFirestoreModel(
 
 fun ClubMemberFirestoreModel.toDomain(): ClubMember =
     ClubMember(
-        id = id.toStableId(),
+        id = id,
         userId = userId,
         name = name,
         email = email,
-        clubId = clubId.toStableId(),
+        clubId = clubId,
         roles = roles,
-        remoteId = id,
-        clubRemoteId = clubId,
     )

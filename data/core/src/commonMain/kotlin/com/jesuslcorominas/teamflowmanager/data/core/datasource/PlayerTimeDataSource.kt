@@ -4,9 +4,9 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import kotlinx.coroutines.flow.Flow
 
 interface PlayerTimeDataSource {
-    fun getPlayerTime(playerId: Long): Flow<PlayerTime?>
+    fun getPlayerTime(playerId: String): Flow<PlayerTime?>
 
-    fun getPlayerTimesByMatch(matchId: Long): Flow<List<PlayerTime>>
+    fun getPlayerTimesByMatch(matchId: String): Flow<List<PlayerTime>>
 
     suspend fun upsertPlayerTime(playerTime: PlayerTime)
 

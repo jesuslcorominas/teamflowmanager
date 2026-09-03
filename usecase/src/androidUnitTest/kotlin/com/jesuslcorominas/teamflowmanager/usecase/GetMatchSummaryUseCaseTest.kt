@@ -47,11 +47,11 @@ class GetMatchSummaryUseCaseTest {
     fun `invoke should return null when match does not exist`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             every { matchRepository.getMatchById(matchId) } returns flowOf(null)
             every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
             every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-            every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
+            every { playerRepository.getPlayersByTeam(any()) } returns flowOf(emptyList())
 
             // When
             val result = getMatchSummaryUseCase(matchId).first()
@@ -64,7 +64,7 @@ class GetMatchSummaryUseCaseTest {
     fun `invoke should return match summary with player times sorted by time descending`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val match = Match(
                 id = matchId,
                 opponent = "Team A",
@@ -72,19 +72,19 @@ class GetMatchSummaryUseCaseTest {
                 status = MatchStatus.FINISHED,
                 teamName = "Team B",
                 periodType = PeriodType.HALF_TIME,
-                captainId = 1L,
+                captainId = "1",
             )
-            val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L, isCaptain = false)
-            val player2 = Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = 1L, isCaptain = false)
+            val player1 = Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false)
+            val player2 = Player(id = "2", firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = "1", isCaptain = false)
             val playerTimes = listOf(
-                PlayerTimeHistory(id = 1L, playerId = 1L, matchId = matchId, elapsedTimeMillis = 1500000L, savedAtMillis = 0L),
-                PlayerTimeHistory(id = 2L, playerId = 2L, matchId = matchId, elapsedTimeMillis = 2000000L, savedAtMillis = 0L),
+                PlayerTimeHistory(id = "1", playerId = "1", matchId = matchId, elapsedTimeMillis = 1500000L, savedAtMillis = 0L),
+                PlayerTimeHistory(id = "2", playerId = "2", matchId = matchId, elapsedTimeMillis = 2000000L, savedAtMillis = 0L),
             )
 
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
             every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(playerTimes)
             every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-            every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
+            every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2))
 
             // When
             val result = getMatchSummaryUseCase(matchId).first()
@@ -93,9 +93,9 @@ class GetMatchSummaryUseCaseTest {
             assertEquals(matchId, result?.match?.id)
             assertEquals(2, result?.playerTimes?.size)
             // Sorted by elapsed time descending
-            assertEquals(2L, result?.playerTimes?.get(0)?.player?.id)
+            assertEquals("2", result?.playerTimes?.get(0)?.player?.id)
             assertEquals(2000000L, result?.playerTimes?.get(0)?.elapsedTimeMillis)
-            assertEquals(1L, result?.playerTimes?.get(1)?.player?.id)
+            assertEquals("1", result?.playerTimes?.get(1)?.player?.id)
             assertEquals(1500000L, result?.playerTimes?.get(1)?.elapsedTimeMillis)
         }
 
@@ -103,7 +103,7 @@ class GetMatchSummaryUseCaseTest {
     fun `invoke should return match summary with substitutions sorted by time ascending`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val match = Match(
                 id = matchId,
                 opponent = "Team A",
@@ -111,20 +111,20 @@ class GetMatchSummaryUseCaseTest {
                 status = MatchStatus.FINISHED,
                 teamName = "Team B",
                 periodType = PeriodType.HALF_TIME,
-                captainId = 1L,
+                captainId = "1",
             )
-            val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L, isCaptain = false)
-            val player2 = Player(id = 2L, firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = 1L, isCaptain = false)
-            val player3 = Player(id = 3L, firstName = "Bob", lastName = "Johnson", number = 7, positions = listOf(Position.Midfielder), teamId = 1L, isCaptain = false)
+            val player1 = Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false)
+            val player2 = Player(id = "2", firstName = "Jane", lastName = "Smith", number = 5, positions = listOf(Position.Defender), teamId = "1", isCaptain = false)
+            val player3 = Player(id = "3", firstName = "Bob", lastName = "Johnson", number = 7, positions = listOf(Position.Midfielder), teamId = "1", isCaptain = false)
             val substitutions = listOf(
-                PlayerSubstitution(id = 1L, matchId = matchId, playerOutId = 1L, playerInId = 2L, substitutionTimeMillis = 0L, matchElapsedTimeMillis = 1500000L),
-                PlayerSubstitution(id = 2L, matchId = matchId, playerOutId = 2L, playerInId = 3L, substitutionTimeMillis = 0L, matchElapsedTimeMillis = 900000L),
+                PlayerSubstitution(id = "1", matchId = matchId, playerOutId = "1", playerInId = "2", substitutionTimeMillis = 0L, matchElapsedTimeMillis = 1500000L),
+                PlayerSubstitution(id = "2", matchId = matchId, playerOutId = "2", playerInId = "3", substitutionTimeMillis = 0L, matchElapsedTimeMillis = 900000L),
             )
 
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
             every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
             every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
-            every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2, player3))
+            every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2, player3))
 
             // When
             val result = getMatchSummaryUseCase(matchId).first()
@@ -134,86 +134,89 @@ class GetMatchSummaryUseCaseTest {
             assertEquals(2, result?.substitutions?.size)
             // Sorted by match elapsed time ascending
             assertEquals(900000L, result?.substitutions?.get(0)?.matchElapsedTimeMillis)
-            assertEquals(2L, result?.substitutions?.get(0)?.playerOut?.id)
-            assertEquals(3L, result?.substitutions?.get(0)?.playerIn?.id)
+            assertEquals("2", result?.substitutions?.get(0)?.playerOut?.id)
+            assertEquals("3", result?.substitutions?.get(0)?.playerIn?.id)
             assertEquals(1500000L, result?.substitutions?.get(1)?.matchElapsedTimeMillis)
-            assertEquals(1L, result?.substitutions?.get(1)?.playerOut?.id)
-            assertEquals(2L, result?.substitutions?.get(1)?.playerIn?.id)
+            assertEquals("1", result?.substitutions?.get(1)?.playerOut?.id)
+            assertEquals("2", result?.substitutions?.get(1)?.playerIn?.id)
         }
 
-    @Test(expected = IllegalStateException::class)
-    fun `givenPlayerTimeReferencingUnknownPlayer_whenInvoke_thenThrowIllegalStateException`() = runTest {
-        // Given
-        val matchId = 1L
+    @Test
+    fun `givenPlayerTimeReferencingUnknownPlayer_whenInvoke_thenSkipsEntry`() = runTest {
+        // Given — a playerTime referencing a player that is no longer in the team
+        val matchId = "1"
         val match = Match(
             id = matchId, opponent = "Team A", location = "Stadium",
             status = MatchStatus.FINISHED, teamName = "Team B",
-            periodType = PeriodType.HALF_TIME, captainId = 1L,
+            periodType = PeriodType.HALF_TIME, captainId = "1",
         )
         val playerTimes = listOf(
-            PlayerTimeHistory(playerId = 99L, matchId = matchId, elapsedTimeMillis = 1000L, savedAtMillis = 0L),
+            PlayerTimeHistory(playerId = "99", matchId = matchId, elapsedTimeMillis = 1000L, savedAtMillis = 0L),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(playerTimes)
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(emptyList()) // player 99 not found
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(emptyList()) // player 99 not found
 
-        // When - expects IllegalStateException
-        getMatchSummaryUseCase(matchId).first()
+        // When — should not throw; entry is skipped
+        val result = getMatchSummaryUseCase(matchId).first()
+        assertEquals(0, result?.playerTimes?.size)
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `givenSubstitutionReferencingUnknownPlayerOut_whenInvoke_thenThrowIllegalStateException`() = runTest {
-        // Given
-        val matchId = 1L
-        val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L, isCaptain = false)
+    @Test
+    fun `givenSubstitutionReferencingUnknownPlayerOut_whenInvoke_thenSkipsEntry`() = runTest {
+        // Given — a substitution whose playerOut is no longer in the team
+        val matchId = "1"
+        val player1 = Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false)
         val match = Match(
             id = matchId, opponent = "Team A", location = "Stadium",
             status = MatchStatus.FINISHED, teamName = "Team B",
-            periodType = PeriodType.HALF_TIME, captainId = 1L,
+            periodType = PeriodType.HALF_TIME, captainId = "1",
         )
         val substitutions = listOf(
-            PlayerSubstitution(id = 1L, matchId = matchId, playerOutId = 99L, playerInId = 1L, substitutionTimeMillis = 0L, matchElapsedTimeMillis = 1000L),
+            PlayerSubstitution(id = "1", matchId = matchId, playerOutId = "99", playerInId = "1", substitutionTimeMillis = 0L, matchElapsedTimeMillis = 1000L),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1)) // player 99 absent
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1)) // player 99 absent
 
-        // When - expects IllegalStateException
-        getMatchSummaryUseCase(matchId).first()
+        // When — should not throw; entry is skipped
+        val result = getMatchSummaryUseCase(matchId).first()
+        assertEquals(0, result?.substitutions?.size)
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `givenSubstitutionReferencingUnknownPlayerIn_whenInvoke_thenThrowIllegalStateException`() = runTest {
-        // Given
-        val matchId = 1L
-        val player1 = Player(id = 1L, firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = 1L, isCaptain = false)
+    @Test
+    fun `givenSubstitutionReferencingUnknownPlayerIn_whenInvoke_thenSkipsEntry`() = runTest {
+        // Given — a substitution whose playerIn is no longer in the team
+        val matchId = "1"
+        val player1 = Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false)
         val match = Match(
             id = matchId, opponent = "Team A", location = "Stadium",
             status = MatchStatus.FINISHED, teamName = "Team B",
-            periodType = PeriodType.HALF_TIME, captainId = 1L,
+            periodType = PeriodType.HALF_TIME, captainId = "1",
         )
         val substitutions = listOf(
-            PlayerSubstitution(id = 1L, matchId = matchId, playerOutId = 1L, playerInId = 99L, substitutionTimeMillis = 0L, matchElapsedTimeMillis = 1000L),
+            PlayerSubstitution(id = "1", matchId = matchId, playerOutId = "1", playerInId = "99", substitutionTimeMillis = 0L, matchElapsedTimeMillis = 1000L),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1)) // player 99 absent
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1)) // player 99 absent
 
-        // When - expects IllegalStateException
-        getMatchSummaryUseCase(matchId).first()
+        // When — should not throw; entry is skipped
+        val result = getMatchSummaryUseCase(matchId).first()
+        assertEquals(0, result?.substitutions?.size)
     }
 
     @Test
     fun `invoke should return match summary with empty lists when no player times or substitutions`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val match = Match(
                 id = matchId,
                 opponent = "Team A",
@@ -221,13 +224,13 @@ class GetMatchSummaryUseCaseTest {
                 status = MatchStatus.FINISHED,
                 teamName = "Team B",
                 periodType = PeriodType.HALF_TIME,
-                captainId = 1L,
+                captainId = "1",
             )
 
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
             every { playerTimeHistoryRepository.getMatchPlayerTimeHistory(matchId) } returns flowOf(emptyList())
             every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-            every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
+            every { playerRepository.getPlayersByTeam(any()) } returns flowOf(emptyList())
 
             // When
             val result = getMatchSummaryUseCase(matchId).first()

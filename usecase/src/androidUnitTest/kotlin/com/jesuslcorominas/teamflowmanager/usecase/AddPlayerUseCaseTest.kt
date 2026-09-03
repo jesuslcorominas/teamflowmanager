@@ -25,12 +25,12 @@ class AddPlayerUseCaseTest {
     fun `invoke should add player to repository`() = runTest {
         // Given
         val player = Player(
-            id = 0,
+            id = "",
             firstName = "John",
             lastName = "Doe",
             number = 10,
             positions = listOf(Position.Forward),
-            teamId = 1L,
+            teamId = "1",
             isCaptain = false,
         )
 

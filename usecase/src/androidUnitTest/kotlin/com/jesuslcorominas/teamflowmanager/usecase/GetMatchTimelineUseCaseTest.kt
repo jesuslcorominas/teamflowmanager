@@ -49,11 +49,11 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should return null when match does not exist`() = runTest {
         // Given
-        val matchId = 1L
+        val matchId = "1"
         every { matchRepository.getMatchById(matchId) } returns flowOf(null)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(emptyList())
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -65,18 +65,18 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should return timeline with starting lineup event`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L, 2L),
+            startingLineupIds = listOf("1", "2"),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2))
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -91,19 +91,19 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should return timeline with goal events and correct running score`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
         val match = createFinishedMatch(id = matchId)
         val goals = listOf(
-            Goal(id = 1L, matchId = matchId, scorerId = 1L, goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false),
-            Goal(id = 2L, matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = true),
-            Goal(id = 3L, matchId = matchId, scorerId = 1L, goalTimeMillis = 900000L, matchElapsedTimeMillis = 900000L, isOpponentGoal = false),
+            Goal(id = "1", matchId = matchId, scorerId = "1", goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false),
+            Goal(id = "2", matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = true),
+            Goal(id = "3", matchId = matchId, scorerId = "1", goalTimeMillis = 900000L, matchElapsedTimeMillis = 900000L, isOpponentGoal = false),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1))
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1))
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -135,16 +135,16 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should return timeline with substitution events`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
         val match = createFinishedMatch(id = matchId)
         val substitutions = listOf(
             PlayerSubstitution(
-                id = 1L,
+                id = "1",
                 matchId = matchId,
-                playerOutId = 1L,
-                playerInId = 2L,
+                playerOutId = "1",
+                playerInId = "2",
                 substitutionTimeMillis = 1500000L,
                 matchElapsedTimeMillis = 1500000L,
             ),
@@ -153,7 +153,7 @@ class GetMatchTimelineUseCaseTest {
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2))
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -163,14 +163,14 @@ class GetMatchTimelineUseCaseTest {
         assertEquals(1, substitutionEvents?.size)
         val subEvent = substitutionEvents?.first()
         assertEquals(1500000L, subEvent?.matchElapsedTimeMillis)
-        assertEquals(1L, subEvent?.playerOut?.id)
-        assertEquals(2L, subEvent?.playerIn?.id)
+        assertEquals("1", subEvent?.playerOut?.id)
+        assertEquals("2", subEvent?.playerIn?.id)
     }
 
     @Test
     fun `invoke should return timeline with period break events`() = runTest {
         // Given
-        val matchId = 1L
+        val matchId = "1"
         val match = createFinishedMatch(
             id = matchId,
             periodType = PeriodType.HALF_TIME,
@@ -193,7 +193,7 @@ class GetMatchTimelineUseCaseTest {
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(emptyList())
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -211,22 +211,22 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should return timeline events sorted by time ascending`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L),
+            startingLineupIds = listOf("1"),
         )
         val goals = listOf(
-            Goal(id = 1L, matchId = matchId, scorerId = 1L, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = false),
+            Goal(id = "1", matchId = matchId, scorerId = "1", goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = false),
         )
         val substitutions = listOf(
             PlayerSubstitution(
-                id = 1L,
+                id = "1",
                 matchId = matchId,
-                playerOutId = 1L,
-                playerInId = 2L,
+                playerOutId = "1",
+                playerInId = "2",
                 substitutionTimeMillis = 900000L,
                 matchElapsedTimeMillis = 900000L,
             ),
@@ -235,7 +235,7 @@ class GetMatchTimelineUseCaseTest {
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2))
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -251,8 +251,8 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should return score evolution with all goal points`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
         val match = createFinishedMatch(
             id = matchId,
             periods = listOf(
@@ -271,15 +271,15 @@ class GetMatchTimelineUseCaseTest {
             ),
         )
         val goals = listOf(
-            Goal(id = 1L, matchId = matchId, scorerId = 1L, goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false),
-            Goal(id = 2L, matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = true),
-            Goal(id = 3L, matchId = matchId, scorerId = 1L, goalTimeMillis = 2000000L, matchElapsedTimeMillis = 2000000L, isOpponentGoal = false),
+            Goal(id = "1", matchId = matchId, scorerId = "1", goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false),
+            Goal(id = "2", matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = true),
+            Goal(id = "3", matchId = matchId, scorerId = "1", goalTimeMillis = 2000000L, matchElapsedTimeMillis = 2000000L, isOpponentGoal = false),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1))
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1))
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -313,7 +313,7 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should return score evolution starting at 0-0 even with no goals`() = runTest {
         // Given
-        val matchId = 1L
+        val matchId = "1"
         val match = createFinishedMatch(
             id = matchId,
             periods = listOf(
@@ -329,7 +329,7 @@ class GetMatchTimelineUseCaseTest {
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(emptyList())
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -343,7 +343,7 @@ class GetMatchTimelineUseCaseTest {
     }
 
     private fun createPlayer(
-        id: Long,
+        id: String,
         firstName: String,
         lastName: String,
         number: Int,
@@ -353,13 +353,13 @@ class GetMatchTimelineUseCaseTest {
         lastName = lastName,
         number = number,
         positions = listOf(Position.Forward),
-        teamId = 1L,
+        teamId = "1",
         isCaptain = false,
     )
 
     private fun createFinishedMatch(
-        id: Long,
-        startingLineupIds: List<Long> = emptyList(),
+        id: String,
+        startingLineupIds: List<String> = emptyList(),
         periodType: PeriodType = PeriodType.HALF_TIME,
         periods: List<MatchPeriod> = listOf(
             MatchPeriod(
@@ -376,7 +376,7 @@ class GetMatchTimelineUseCaseTest {
         location = "Stadium",
         status = MatchStatus.FINISHED,
         periodType = periodType,
-        captainId = 1L,
+        captainId = "1",
         startingLineupIds = startingLineupIds,
         periods = periods,
     )
@@ -384,19 +384,19 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should propagate isOwnGoal from Goal to GoalScored timeline event`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
         val match = createFinishedMatch(id = matchId)
         val goals = listOf(
-            Goal(id = 1L, matchId = matchId, scorerId = 1L, goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false, isOwnGoal = false),
-            Goal(id = 2L, matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = false, isOwnGoal = true),
-            Goal(id = 3L, matchId = matchId, scorerId = null, goalTimeMillis = 900000L, matchElapsedTimeMillis = 900000L, isOpponentGoal = true, isOwnGoal = false),
+            Goal(id = "1", matchId = matchId, scorerId = "1", goalTimeMillis = 300000L, matchElapsedTimeMillis = 300000L, isOpponentGoal = false, isOwnGoal = false),
+            Goal(id = "2", matchId = matchId, scorerId = null, goalTimeMillis = 600000L, matchElapsedTimeMillis = 600000L, isOpponentGoal = false, isOwnGoal = true),
+            Goal(id = "3", matchId = matchId, scorerId = null, goalTimeMillis = 900000L, matchElapsedTimeMillis = 900000L, isOpponentGoal = true, isOwnGoal = false),
         )
 
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(goals)
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1))
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1))
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -421,12 +421,12 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should return player activity intervals for starting lineup`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L, 2L),
+            startingLineupIds = listOf("1", "2"),
             periods = listOf(
                 MatchPeriod(
                     periodNumber = 1,
@@ -440,7 +440,7 @@ class GetMatchTimelineUseCaseTest {
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2))
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
@@ -448,7 +448,7 @@ class GetMatchTimelineUseCaseTest {
         // Then
         assertEquals(2, result?.playerActivity?.size)
         // Both players should have played from 0 to end of match
-        val player1Activity = result?.playerActivity?.find { it.player.id == 1L }
+        val player1Activity = result?.playerActivity?.find { it.player.id == "1" }
         assertEquals(0L, player1Activity?.startTimeMillis)
         assertEquals(1500000L, player1Activity?.endTimeMillis)
     }
@@ -456,13 +456,13 @@ class GetMatchTimelineUseCaseTest {
     @Test
     fun `invoke should return player activity intervals with substitutions`() = runTest {
         // Given
-        val matchId = 1L
-        val player1 = createPlayer(1L, "John", "Doe", 10)
-        val player2 = createPlayer(2L, "Jane", "Smith", 7)
-        val player3 = createPlayer(3L, "Mike", "Johnson", 9)
+        val matchId = "1"
+        val player1 = createPlayer("1", "John", "Doe", 10)
+        val player2 = createPlayer("2", "Jane", "Smith", 7)
+        val player3 = createPlayer("3", "Mike", "Johnson", 9)
         val match = createFinishedMatch(
             id = matchId,
-            startingLineupIds = listOf(1L, 2L),
+            startingLineupIds = listOf("1", "2"),
             periods = listOf(
                 MatchPeriod(
                     periodNumber = 1,
@@ -474,10 +474,10 @@ class GetMatchTimelineUseCaseTest {
         )
         val substitutions = listOf(
             PlayerSubstitution(
-                id = 1L,
+                id = "1",
                 matchId = matchId,
-                playerOutId = 1L,
-                playerInId = 3L,
+                playerOutId = "1",
+                playerInId = "3",
                 substitutionTimeMillis = 2500000L,
                 matchElapsedTimeMillis = 1500000L, // Halfway through match
             ),
@@ -486,26 +486,26 @@ class GetMatchTimelineUseCaseTest {
         every { matchRepository.getMatchById(matchId) } returns flowOf(match)
         every { goalRepository.getMatchGoals(matchId) } returns flowOf(emptyList())
         every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
-        every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2, player3))
+        every { playerRepository.getPlayersByTeam(any()) } returns flowOf(listOf(player1, player2, player3))
 
         // When
         val result = getMatchTimelineUseCase(matchId).first()
 
         // Then
         assertEquals(3, result?.playerActivity?.size)
-        
+
         // Player 1 should have played from 0 to 1500000 (substitution time)
-        val player1Activity = result?.playerActivity?.find { it.player.id == 1L }
+        val player1Activity = result?.playerActivity?.find { it.player.id == "1" }
         assertEquals(0L, player1Activity?.startTimeMillis)
         assertEquals(1500000L, player1Activity?.endTimeMillis)
-        
+
         // Player 2 should have played full match
-        val player2Activity = result?.playerActivity?.find { it.player.id == 2L }
+        val player2Activity = result?.playerActivity?.find { it.player.id == "2" }
         assertEquals(0L, player2Activity?.startTimeMillis)
         assertEquals(3000000L, player2Activity?.endTimeMillis)
-        
+
         // Player 3 should have played from 1500000 to end
-        val player3Activity = result?.playerActivity?.find { it.player.id == 3L }
+        val player3Activity = result?.playerActivity?.find { it.player.id == "3" }
         assertEquals(1500000L, player3Activity?.startTimeMillis)
         assertEquals(3000000L, player3Activity?.endTimeMillis)
     }

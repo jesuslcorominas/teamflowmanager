@@ -35,6 +35,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSubstitutionsU
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerGoalStatsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayerTimeStatsUseCase
@@ -55,6 +56,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsReadUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificationAsUnreadUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentOnMemberWaitingUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
@@ -83,9 +85,11 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UnarchiveMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UnsubscribeFromClubNotificationsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateClubUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateGlobalNotificationPreferenceUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdatePlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateScheduledMatchesCaptainUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamNotificationPreferenceUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.AcceptTeamInvitationUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.AddPlayerUseCaseImpl
@@ -122,6 +126,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSubstitutionsUseCaseI
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchSummaryUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchTimelineUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetMatchesByTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetNotificationPreferencesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerGoalStatsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPlayerTimeStatsUseCaseImpl
@@ -142,6 +147,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.JoinClubByCodeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.MarkPresidentNotificationAsReadUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.MarkPresidentNotificationAsUnreadUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyCoachAssignedOnTeamAssignmentUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.NotifyPresidentMatchEventUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyPresidentOnMemberWaitingUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
@@ -170,9 +176,11 @@ import com.jesuslcorominas.teamflowmanager.usecase.SynchronizeTimeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UnarchiveMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UnsubscribeFromClubNotificationsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateClubUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.UpdateGlobalNotificationPreferenceUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdatePlayerUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateScheduledMatchesCaptainUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamNotificationPreferenceUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.UpdateTeamUseCaseImpl
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -278,6 +286,12 @@ internal val useCaseInternalModule =
         // Role selector (president acting as coach)
         singleOf(::GetActiveViewRoleUseCaseImpl) bind GetActiveViewRoleUseCase::class
         singleOf(::SetActiveViewRoleUseCaseImpl) bind SetActiveViewRoleUseCase::class
+
+        // Notification preferences
+        singleOf(::GetNotificationPreferencesUseCaseImpl) bind GetNotificationPreferencesUseCase::class
+        singleOf(::UpdateGlobalNotificationPreferenceUseCaseImpl) bind UpdateGlobalNotificationPreferenceUseCase::class
+        singleOf(::UpdateTeamNotificationPreferenceUseCaseImpl) bind UpdateTeamNotificationPreferenceUseCase::class
+        singleOf(::NotifyPresidentMatchEventUseCaseImpl) bind NotifyPresidentMatchEventUseCase::class
 
         // President notification center
         singleOf(::GetPresidentNotificationsUseCaseImpl) bind GetPresidentNotificationsUseCase::class
