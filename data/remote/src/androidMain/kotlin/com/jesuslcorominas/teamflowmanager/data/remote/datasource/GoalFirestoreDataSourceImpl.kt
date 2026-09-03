@@ -5,7 +5,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseGoalDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -69,23 +68,6 @@ class GoalFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            // One-time fetch for legacy Long-ID docs (pre-migration).
-            // TODO: remove after backward-compat window closes.
-            val legacyGoals =
-                try {
-                    firestore.collection(GOALS_COLLECTION)
-                        .whereEqualTo("teamId", teamDocId)
-                        .whereEqualTo("matchId", matchId.toLegacyId())
-                        .get()
-                        .await()
-                        .documents.mapNotNull { document ->
-                            parseGoalDocument(document.data, document.id, matchId)
-                        }
-                } catch (_: Exception) {
-                    emptyList()
-                }
-
-            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(GOALS_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
@@ -99,7 +81,7 @@ class GoalFirestoreDataSourceImpl(
                             snapshot?.documents?.mapNotNull { document ->
                                 parseGoalDocument(document.data, document.id, matchId)
                             } ?: emptyList()
-                        trySend(legacyGoals + newGoals)
+                        trySend(newGoals)
                     }
 
             awaitClose { listenerRegistration.remove() }

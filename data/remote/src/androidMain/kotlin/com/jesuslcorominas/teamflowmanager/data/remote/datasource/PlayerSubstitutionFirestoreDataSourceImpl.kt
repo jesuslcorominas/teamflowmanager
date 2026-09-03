@@ -5,7 +5,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseSubstitutionDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -69,23 +68,6 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            // One-time fetch for legacy Long-ID docs (pre-migration).
-            // TODO: remove after backward-compat window closes.
-            val legacySubstitutions =
-                try {
-                    firestore.collection(SUBSTITUTIONS_COLLECTION)
-                        .whereEqualTo("teamId", teamDocId)
-                        .whereEqualTo("matchId", matchId.toLegacyId())
-                        .get()
-                        .await()
-                        .documents.mapNotNull { document ->
-                            parseSubstitutionDocument(document.data, document.id, matchId)
-                        }
-                } catch (_: Exception) {
-                    emptyList()
-                }
-
-            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(SUBSTITUTIONS_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
@@ -99,7 +81,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                             snapshot?.documents?.mapNotNull { document ->
                                 parseSubstitutionDocument(document.data, document.id, matchId)
                             } ?: emptyList()
-                        trySend(legacySubstitutions + newSubstitutions)
+                        trySend(newSubstitutions)
                     }
 
             awaitClose { listenerRegistration.remove() }

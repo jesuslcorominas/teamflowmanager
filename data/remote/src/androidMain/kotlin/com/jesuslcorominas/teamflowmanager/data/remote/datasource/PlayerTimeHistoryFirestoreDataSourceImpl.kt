@@ -5,7 +5,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeHistoryDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -69,24 +68,6 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            // One-time fetch for legacy Long-ID docs (pre-migration).
-            // TODO: remove after backward-compat window closes.
-            val legacyHistory =
-                try {
-                    firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
-                        .whereEqualTo("teamId", teamDocId)
-                        .whereEqualTo("playerId", playerId.toLegacyId())
-                        .get()
-                        .await()
-                        .documents.mapNotNull { document ->
-                            val rawMatchId = document.data?.get("matchId")?.toString() ?: ""
-                            parsePlayerTimeHistoryDocument(document.data, document.id, playerId, rawMatchId)
-                        }
-                } catch (_: Exception) {
-                    emptyList()
-                }
-
-            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
@@ -101,7 +82,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                                 val rawMatchId = document.data?.get("matchId")?.toString() ?: ""
                                 parsePlayerTimeHistoryDocument(document.data, document.id, playerId, rawMatchId)
                             } ?: emptyList()
-                        trySend(legacyHistory + newHistory)
+                        trySend(newHistory)
                     }
 
             awaitClose { listenerRegistration.remove() }
@@ -123,24 +104,6 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            // One-time fetch for legacy Long-ID docs (pre-migration).
-            // TODO: remove after backward-compat window closes.
-            val legacyHistory =
-                try {
-                    firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
-                        .whereEqualTo("teamId", teamDocId)
-                        .whereEqualTo("matchId", matchId.toLegacyId())
-                        .get()
-                        .await()
-                        .documents.mapNotNull { document ->
-                            val rawPlayerId = document.data?.get("playerId")?.toString() ?: ""
-                            parsePlayerTimeHistoryDocument(document.data, document.id, rawPlayerId, matchId)
-                        }
-                } catch (_: Exception) {
-                    emptyList()
-                }
-
-            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(PLAYER_TIME_HISTORY_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
@@ -155,7 +118,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                                 val rawPlayerId = document.data?.get("playerId")?.toString() ?: ""
                                 parsePlayerTimeHistoryDocument(document.data, document.id, rawPlayerId, matchId)
                             } ?: emptyList()
-                        trySend(legacyHistory + newHistory)
+                        trySend(newHistory)
                     }
 
             awaitClose { listenerRegistration.remove() }

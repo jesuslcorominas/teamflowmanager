@@ -7,7 +7,6 @@ import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFires
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toLegacyId
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -152,23 +151,6 @@ class PlayerTimeFirestoreDataSourceImpl(
                 return@callbackFlow
             }
 
-            // One-time fetch for legacy Long-ID docs (pre-migration).
-            // TODO: remove after backward-compat window closes.
-            val legacyPlayerTimes =
-                try {
-                    firestore.collection(PLAYER_TIMES_COLLECTION)
-                        .whereEqualTo("teamId", teamDocId)
-                        .whereEqualTo("matchId", matchId.toLegacyId())
-                        .get()
-                        .await()
-                        .documents.mapNotNull { document ->
-                            parsePlayerTimeDocument(document.data, matchId)
-                        }
-                } catch (_: Exception) {
-                    emptyList()
-                }
-
-            // Real-time listener for new String-ID docs.
             val listenerRegistration =
                 firestore.collection(PLAYER_TIMES_COLLECTION)
                     .whereEqualTo("teamId", teamDocId)
@@ -182,7 +164,7 @@ class PlayerTimeFirestoreDataSourceImpl(
                             snapshot?.documents?.mapNotNull { document ->
                                 parsePlayerTimeDocument(document.data, matchId)
                             } ?: emptyList()
-                        trySend(legacyPlayerTimes + newPlayerTimes)
+                        trySend(newPlayerTimes)
                     }
 
             awaitClose { listenerRegistration.remove() }

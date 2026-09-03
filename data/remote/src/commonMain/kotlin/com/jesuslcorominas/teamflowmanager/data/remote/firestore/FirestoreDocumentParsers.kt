@@ -7,17 +7,14 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 
 /*
- * Pure, platform-agnostic field-by-field parsers for Firestore documents that may still be
- * stored in the pre-migration (legacy) Long-ID format. kotlinx-serialization / typed
- * deserialization throws on the whole document when a field's runtime type doesn't match the
- * declared model (e.g. a legacy `Long` where the model declares `String`), silently dropping the
- * entire result set. Reading from a raw `Map<String, Any?>` field-by-field tolerates both the
- * legacy and the current document shapes.
+ * Pure, platform-agnostic field-by-field parsers for Firestore documents.
+ *
+ * Typed deserialization throws on the whole document when a single field's runtime type doesn't
+ * match the declared model, silently dropping the entire result set. Reading from a raw
+ * `Map<String, Any?>` field-by-field degrades per field instead.
  *
  * Shared between the Android (`androidMain`) and iOS (`iosMain`) Firestore datasources so the
  * parsing logic has a single source of truth (#385.4).
- *
- * TODO: remove after backward-compat window closes.
  */
 
 /**

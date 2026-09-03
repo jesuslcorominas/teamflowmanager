@@ -143,7 +143,7 @@ class GetMatchSummaryUseCaseTest {
 
     @Test
     fun `givenPlayerTimeReferencingUnknownPlayer_whenInvoke_thenSkipsEntry`() = runTest {
-        // Given — pre-migration playerTime with a Long ID that has no matching player
+        // Given — a playerTime referencing a player that is no longer in the team
         val matchId = "1"
         val match = Match(
             id = matchId, opponent = "Team A", location = "Stadium",
@@ -166,7 +166,7 @@ class GetMatchSummaryUseCaseTest {
 
     @Test
     fun `givenSubstitutionReferencingUnknownPlayerOut_whenInvoke_thenSkipsEntry`() = runTest {
-        // Given — pre-migration substitution where playerOut has a Long ID with no match
+        // Given — a substitution whose playerOut is no longer in the team
         val matchId = "1"
         val player1 = Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false)
         val match = Match(
@@ -190,7 +190,7 @@ class GetMatchSummaryUseCaseTest {
 
     @Test
     fun `givenSubstitutionReferencingUnknownPlayerIn_whenInvoke_thenSkipsEntry`() = runTest {
-        // Given — pre-migration substitution where playerIn has a Long ID with no match
+        // Given — a substitution whose playerIn is no longer in the team
         val matchId = "1"
         val player1 = Player(id = "1", firstName = "John", lastName = "Doe", number = 10, positions = listOf(Position.Forward), teamId = "1", isCaptain = false)
         val match = Match(

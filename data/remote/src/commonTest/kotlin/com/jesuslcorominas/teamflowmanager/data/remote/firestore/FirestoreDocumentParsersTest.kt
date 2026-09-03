@@ -7,7 +7,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class LegacyDocumentParsersTest {
+class FirestoreDocumentParsersTest {
 
     // region parseGoalDocument
 
@@ -24,7 +24,7 @@ class LegacyDocumentParsersTest {
     }
 
     @Test
-    fun `parseGoalDocument tolerates legacy Long scorerId and overrides matchId with the passed String`() {
+    fun `parseGoalDocument tolerates a Long scorerId and overrides matchId with the passed String`() {
         val rawData = mapOf("scorerId" to 123456789L)
         val result = parseGoalDocument(rawData, "doc1", "match-string-id")
         assertEquals("match-string-id", result?.matchId)
@@ -139,7 +139,7 @@ class LegacyDocumentParsersTest {
     }
 
     @Test
-    fun `parseSubstitutionDocument tolerates legacy Long cross-ref fields`() {
+    fun `parseSubstitutionDocument tolerates Long cross-ref fields`() {
         val rawData =
             mapOf(
                 "playerOutId" to 111L,
@@ -216,7 +216,7 @@ class LegacyDocumentParsersTest {
     }
 
     @Test
-    fun `parsePlayerTimeDocument tolerates legacy Long playerId`() {
+    fun `parsePlayerTimeDocument tolerates a Long playerId`() {
         val rawData = mapOf("playerId" to 999L)
         val result = parsePlayerTimeDocument(rawData, "match1")
         assertEquals("999", result?.playerId)

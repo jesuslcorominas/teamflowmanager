@@ -232,13 +232,6 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("substitutions") } returns subsCollection
         every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
-        val subsQueryLegacy = mockk<Query>()
-        val legacyTask = mockk<Task<QuerySnapshot>>()
-        val legacySnapshot = mockk<QuerySnapshot>()
-        every { subsQuery.whereEqualTo("matchId", 49L) } returns subsQueryLegacy
-        every { subsQueryLegacy.get() } returns legacyTask
-        coEvery { legacyTask.await() } returns legacySnapshot
-        every { legacySnapshot.documents } returns emptyList()
         every { subsQuery.whereEqualTo("matchId", "1") } returns subQuery2
         every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
@@ -265,13 +258,6 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("substitutions") } returns subsCollection
         every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
-        val subsQueryLegacy = mockk<Query>()
-        val legacyTask = mockk<Task<QuerySnapshot>>()
-        val legacySnapshot = mockk<QuerySnapshot>()
-        every { subsQuery.whereEqualTo("matchId", 49L) } returns subsQueryLegacy
-        every { subsQueryLegacy.get() } returns legacyTask
-        coEvery { legacyTask.await() } returns legacySnapshot
-        every { legacySnapshot.documents } returns emptyList()
         every { subsQuery.whereEqualTo("matchId", "1") } returns subQuery2
         every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
@@ -382,13 +368,6 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("substitutions") } returns subsCollection
         every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
-        val subsQueryLegacy = mockk<Query>()
-        val legacyTask = mockk<Task<QuerySnapshot>>()
-        val legacySnapshot = mockk<QuerySnapshot>()
-        every { subsQuery.whereEqualTo("matchId", 49L) } returns subsQueryLegacy
-        every { subsQueryLegacy.get() } returns legacyTask
-        coEvery { legacyTask.await() } returns legacySnapshot
-        every { legacySnapshot.documents } returns emptyList()
         every { subsQuery.whereEqualTo("matchId", "1") } returns subQuery2
         every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
@@ -424,13 +403,6 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
 
         every { mockFirestore.collection("substitutions") } returns subsCollection
         every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
-        val subsQueryLegacy = mockk<Query>()
-        val legacyTask = mockk<Task<QuerySnapshot>>()
-        val legacySnapshot = mockk<QuerySnapshot>()
-        every { subsQuery.whereEqualTo("matchId", 49L) } returns subsQueryLegacy
-        every { subsQueryLegacy.get() } returns legacyTask
-        coEvery { legacyTask.await() } returns legacySnapshot
-        every { legacySnapshot.documents } returns emptyList()
         every { subsQuery.whereEqualTo("matchId", "1") } returns subQuery2
         every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
@@ -475,65 +447,18 @@ class PlayerSubstitutionFirestoreDataSourceImplTest {
     }
 
     @Test
-    fun `givenLegacyFetchThrowsException_whenGetMatchSubstitutions_thenContinuesWithRealTime`() = runTest {
-        setupUserWithTeam()
-
-        val listenerSlot = slot<EventListener<QuerySnapshot>>()
-        val subsCollection = mockk<CollectionReference>()
-        val subsQuery = mockk<Query>()
-        val subsQueryLegacy = mockk<Query>()
-        val subQuery2 = mockk<Query>()
-        val legacyTask = mockk<Task<QuerySnapshot>>()
-        val querySnapshot = mockk<QuerySnapshot>()
-        val docSnapshot = mockk<DocumentSnapshot>()
-
-        every { mockFirestore.collection("substitutions") } returns subsCollection
-        every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
-        every { subsQuery.whereEqualTo("matchId", 49L) } returns subsQueryLegacy
-        every { subsQueryLegacy.get() } returns legacyTask
-        coEvery { legacyTask.await() } throws RuntimeException("Legacy fetch error")
-        every { subsQuery.whereEqualTo("matchId", "1") } returns subQuery2
-        every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
-
-        val model = PlayerSubstitutionFirestoreModel(
-            id = "sub-doc-id", teamId = "team-doc-id", matchId = "1",
-            playerInId = "10", playerOutId = "20", substitutionTimeMillis = 0L,
-        )
-        every { docSnapshot.data } returns mapOf(
-            "matchId" to "1", "teamId" to "team-doc-id",
-            "playerOutId" to "20", "playerInId" to "10",
-        )
-        every { docSnapshot.id } returns "sub-doc-id"
-        every { querySnapshot.documents } returns listOf(docSnapshot)
-
-        dataSource.getMatchSubstitutions("1").test {
-            listenerSlot.captured.onEvent(querySnapshot, null)
-            val result = awaitItem()
-            assertEquals(1, result.size)
-            cancel()
-        }
-    }
-
-    @Test
     fun `givenDocumentWithMissingIds_whenGetMatchSubstitutions_thenParsesAsEmptyIds`() = runTest {
         setupUserWithTeam()
 
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         val subsCollection = mockk<CollectionReference>()
         val subsQuery = mockk<Query>()
-        val subsQueryLegacy = mockk<Query>()
         val subQuery2 = mockk<Query>()
-        val legacyTask = mockk<Task<QuerySnapshot>>()
-        val legacySnapshot = mockk<QuerySnapshot>()
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshot = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("substitutions") } returns subsCollection
         every { subsCollection.whereEqualTo("teamId", "team-doc-id") } returns subsQuery
-        every { subsQuery.whereEqualTo("matchId", 49L) } returns subsQueryLegacy
-        every { subsQueryLegacy.get() } returns legacyTask
-        coEvery { legacyTask.await() } returns legacySnapshot
-        every { legacySnapshot.documents } returns emptyList()
         every { subsQuery.whereEqualTo("matchId", "1") } returns subQuery2
         every { subQuery2.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 

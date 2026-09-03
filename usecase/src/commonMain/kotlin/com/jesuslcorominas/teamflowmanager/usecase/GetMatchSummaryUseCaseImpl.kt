@@ -33,7 +33,7 @@ internal class GetMatchSummaryUseCaseImpl(
                         playerTimes.mapNotNull { playerTime ->
                             val player =
                                 players.find { it.id == playerTime.playerId }
-                                    ?: return@mapNotNull null // pre-migration Long player ID — skip
+                                    ?: return@mapNotNull null // unknown player (e.g. deleted) — skip
                             val substitutionCount =
                                 substitutions.count {
                                     it.playerOutId == playerTime.playerId || it.playerInId == playerTime.playerId
@@ -49,10 +49,10 @@ internal class GetMatchSummaryUseCaseImpl(
                         substitutions.mapNotNull { substitution ->
                             val playerOut =
                                 players.find { it.id == substitution.playerOutId }
-                                    ?: return@mapNotNull null // pre-migration Long player ID — skip
+                                    ?: return@mapNotNull null // unknown player (e.g. deleted) — skip
                             val playerIn =
                                 players.find { it.id == substitution.playerInId }
-                                    ?: return@mapNotNull null // pre-migration Long player ID — skip
+                                    ?: return@mapNotNull null // unknown player (e.g. deleted) — skip
                             SubstitutionSummary(
                                 playerOut = playerOut,
                                 playerIn = playerIn,
