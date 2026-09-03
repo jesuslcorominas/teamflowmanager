@@ -7,6 +7,7 @@ val Primary = Color(0xFF003366)
 val PrimaryLight = Color(0xFF4F7BBF)
 
 val AccentEmphasis = Color(0xFF960615)
+val AccentEmphasis10 = Color(0xFFFBECEA)
 val AccentAffirmative = Color(0xFF3BC15B)
 val AccentDanger = Color(0xFF960615)
 
@@ -39,7 +40,7 @@ val LightColorScheme =
         onPrimaryContainer = ContentMain,
         secondary = AccentEmphasis,
         onSecondary = White,
-        secondaryContainer = Color(0xFFFBECEA),
+        secondaryContainer = AccentEmphasis10,
         onSecondaryContainer = ContentMain,
         tertiary = AccentAffirmative,
         onTertiary = White,
