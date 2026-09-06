@@ -24,6 +24,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -80,6 +81,12 @@ fun SettingsScreen(
             snackbarHostState.showSnackbar(notificationErrorMessage)
             viewModel.onNotificationUpdateErrorShown()
         }
+    }
+
+    // Committing on the way out is what defers the role change: the switch can be toggled freely
+    // while the screen is open, and only the final choice is applied.
+    DisposableEffect(Unit) {
+        onDispose { viewModel.commitRoleSelection() }
     }
 
     LaunchedEffect(signOutComplete) {
@@ -156,7 +163,7 @@ fun SettingsScreen(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
                     RoleSelectorSection(
-                        activeRole = roleSelectorState.activeRole,
+                        selectedRole = roleSelectorState.selectedRole,
                         enabled = roleSelectorState.isRoleSelectorEnabled,
                         onRoleSelected = { viewModel.onRoleSelected(it) },
                     )
@@ -264,7 +271,7 @@ private fun UserAccountItem(
 
 @Composable
 private fun RoleSelectorSection(
-    activeRole: ActiveViewRole,
+    selectedRole: ActiveViewRole,
     enabled: Boolean,
     onRoleSelected: (ActiveViewRole) -> Unit,
     modifier: Modifier = Modifier,
@@ -289,7 +296,7 @@ private fun RoleSelectorSection(
                 modifier = Modifier.weight(1f),
             )
             Switch(
-                checked = activeRole == ActiveViewRole.Coach,
+                checked = selectedRole == ActiveViewRole.Coach,
                 onCheckedChange = { isCoach ->
                     onRoleSelected(if (isCoach) ActiveViewRole.Coach else ActiveViewRole.President)
                 },
