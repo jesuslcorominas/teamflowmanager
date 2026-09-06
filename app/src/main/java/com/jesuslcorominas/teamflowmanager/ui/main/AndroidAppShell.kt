@@ -37,6 +37,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jesuslcorominas.teamflowmanager.R
+import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.ui.components.topbar.AppTopBar
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BackHandlerController
 import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomNavigationBar
@@ -62,6 +63,23 @@ fun AndroidAppShell(
 ) {
     val navController = rememberNavController()
     val isPresident by viewModel.isPresident.collectAsState()
+
+    // Switching role changes the whole bottom bar, so the destination the user is standing on
+    // belongs to the role they just left. Land on the first tab of the new one and drop the old
+    // back stack, so going back cannot return to the previous role's screens.
+    LaunchedEffect(Unit) {
+        viewModel.roleSwitches.collect { role ->
+            val landing =
+                when (role) {
+                    ActiveViewRole.President -> Route.TeamList
+                    ActiveViewRole.Coach -> Route.Matches
+                }
+            navController.navigate(landing.createRoute()) {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     LaunchedEffect(pendingNavigation) {
         when (val nav = pendingNavigation) {

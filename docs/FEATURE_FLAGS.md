@@ -53,8 +53,8 @@ laptop targets dev. `firebase.prod.json` is a minimal config that points at the 
 ## Changing a flag
 
 Edit the template for the environment you are targeting and open a PR. **Merging publishes it** —
-the `Remote Config` workflow (`.github/workflows/remoteconfig.yml`) deploys the template belonging
-to the branch that was pushed.
+the `Firebase Config` workflow (`.github/workflows/firebase-config.yml`) deploys the template
+belonging to the branch that was pushed. The same workflow deploys `firestore.rules`.
 
 **This is independent of releasing.** A PR to `main` that touches *only* the templates skips the
 build and the Play upload — the `scope` job in `release.yml` detects it and short-circuits the
@@ -98,18 +98,21 @@ No release is needed either way. The app picks the change up on the next fetch.
 
 ### CI credentials
 
-The workflow authenticates with a Google service account per project, following the same pattern as
-the Play Store deploy in `release.yml`:
+The `Firebase Config` workflow authenticates with a Google service account per project, following
+the same pattern as the Play Store deploy in `release.yml`:
 
 | Secret | Project |
 |---|---|
 | `FIREBASE_SERVICE_ACCOUNT_DEV` | `teamflow-manager-dev` |
 | `FIREBASE_SERVICE_ACCOUNT_PROD` | `teamflow-manager-897a3` |
 
-Each holds the full JSON key of a service account with the **Firebase Remote Config Admin**
-(`roles/firebaseremoteconfig.admin`) role on that project — no broader role is needed. Create them
-in Google Cloud console → IAM & Admin → Service Accounts → Keys, and paste each JSON into the
-matching GitHub repository secret. Without the secret the workflow fails with an explicit message
+Each holds the full JSON key of a service account with two roles on that project, and no more:
+
+- **Firebase Remote Config Admin** (`roles/firebaseremoteconfig.admin`) — publish flag templates.
+- **Firebase Rules Admin** (`roles/firebaserules.admin`) — publish `firestore.rules`.
+
+Create them in Google Cloud console → IAM & Admin → Service Accounts → Keys, and paste each JSON
+into the matching GitHub repository secret. Without the secret the workflow fails with an explicit message
 rather than silently skipping, so a template change is never merged believing it was published.
 
 ## Propagation timing
