@@ -33,6 +33,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write # mint the OIDC token Google exchanges for short-lived credentials
 
 concurrency:
   group: remoteconfig-${{ github.ref }}
@@ -120,21 +121,11 @@ jobs:
             echo "::notice::$TEMPLATE unchanged in this push — nothing to deploy for ${{ steps.target.outputs.env_name }}."
           fi
 
-      - name: Check credentials are configured
-        if: steps.changed.outputs.changed == 'true'
-        env:
-          SA_JSON: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
-        run: |
-          if [ -z "$SA_JSON" ]; then
-            echo "::error::Missing service account secret for ${{ steps.target.outputs.env_name }}."
-            echo "Add FIREBASE_SERVICE_ACCOUNT_DEV / FIREBASE_SERVICE_ACCOUNT_PROD — see docs/FEATURE_FLAGS.md."
-            exit 1
-          fi
-
       - uses: google-github-actions/auth@v2
         if: steps.changed.outputs.changed == 'true'
         with:
-          credentials_json: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+          workload_identity_provider: ${{ github.ref_name == 'main' && 'projects/622260891095/locations/global/workloadIdentityPools/github/providers/github' || 'projects/960836545640/locations/global/workloadIdentityPools/github/providers/github' }}
+          service_account: ${{ github.ref_name == 'main' && 'github-actions-firebase-config@teamflow-manager-897a3.iam.gserviceaccount.com' || 'github-actions-firebase-config@teamflow-manager-dev.iam.gserviceaccount.com' }}
 
       - name: Install Firebase CLI
         if: steps.changed.outputs.changed == 'true'

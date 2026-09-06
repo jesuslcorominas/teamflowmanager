@@ -17,6 +17,9 @@
 >
 > A rules fix can reach production without shipping an app version: open a PR to `main` touching
 > only `firestore.rules` and the release pipeline skips the build and the Play upload.
+>
+> CI authenticates with Workload Identity Federation — no service account key exists. See
+> [FEATURE_FLAGS.md](FEATURE_FLAGS.md#ci-credentials--keyless) for the accounts and roles.
 
 
 ## Issue Summary

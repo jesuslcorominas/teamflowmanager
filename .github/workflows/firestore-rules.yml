@@ -32,6 +32,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write # mint the OIDC token Google exchanges for short-lived credentials
 
 concurrency:
   group: firestore-rules-${{ github.ref }}
@@ -55,19 +56,10 @@ jobs:
             echo "project=teamflow-manager-dev" >> $GITHUB_OUTPUT
           fi
 
-      - name: Check credentials are configured
-        env:
-          SA_JSON: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
-        run: |
-          if [ -z "$SA_JSON" ]; then
-            echo "::error::Missing service account secret for ${{ steps.target.outputs.env_name }}."
-            echo "Add FIREBASE_SERVICE_ACCOUNT_DEV / FIREBASE_SERVICE_ACCOUNT_PROD — see docs/FIRESTORE_RULES_DEPLOYMENT.md."
-            exit 1
-          fi
-
       - uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+          workload_identity_provider: ${{ github.ref_name == 'main' && 'projects/622260891095/locations/global/workloadIdentityPools/github/providers/github' || 'projects/960836545640/locations/global/workloadIdentityPools/github/providers/github' }}
+          service_account: ${{ github.ref_name == 'main' && 'github-actions-firebase-config@teamflow-manager-897a3.iam.gserviceaccount.com' || 'github-actions-firebase-config@teamflow-manager-dev.iam.gserviceaccount.com' }}
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@15

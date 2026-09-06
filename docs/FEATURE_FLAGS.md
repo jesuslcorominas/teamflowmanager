@@ -98,24 +98,28 @@ the console for a quick test, the template for anything that should stick.
 
 No release is needed either way. The app picks the change up on the next fetch.
 
-### CI credentials
+### CI credentials — keyless
 
-Both Firebase workflows authenticate with the same Google service account per project, following
-the same pattern as the Play Store deploy in `release.yml`:
+Both Firebase workflows authenticate with **Workload Identity Federation**: GitHub proves its
+identity to Google with a short-lived OIDC token minted per run. There is no service account key
+anywhere — nothing to rotate, nothing that can leak from the repository secrets.
 
-| Secret | Project |
-|---|---|
-| `FIREBASE_SERVICE_ACCOUNT_DEV` | `teamflow-manager-dev` |
-| `FIREBASE_SERVICE_ACCOUNT_PROD` | `teamflow-manager-897a3` |
+| | dev | prod |
+|---|---|---|
+| Project | `teamflow-manager-dev` | `teamflow-manager-897a3` |
+| Service account | `github-actions-firebase-config@teamflow-manager-dev.iam.gserviceaccount.com` | `github-actions-firebase-config@teamflow-manager-897a3.iam.gserviceaccount.com` |
+| Roles | `roles/cloudconfig.admin`, `roles/firebaserules.admin` | same |
 
-Each holds the full JSON key of a service account with two roles on that project, and no more:
+`roles/cloudconfig.admin` is the Firebase Remote Config Admin role — note the id does not contain
+"remoteconfig"; `roles/firebaseremoteconfig.admin` does not exist.
 
-- **Firebase Remote Config Admin** (`roles/firebaseremoteconfig.admin`) — publish flag templates.
-- **Firebase Rules Admin** (`roles/firebaserules.admin`) — publish `firestore.rules`.
+The trust is scoped to this repository: the OIDC provider carries the attribute condition
+`assertion.repository=='jesuslcorominas/teamflowmanager'`, and the service account only grants
+`roles/iam.workloadIdentityUser` to that same repository's principal set. A workflow in any other
+repo presenting a GitHub token gets nothing.
 
-Create them in Google Cloud console → IAM & Admin → Service Accounts → Keys, and paste each JSON
-into the matching GitHub repository secret. Without the secret the workflow fails with an explicit message
-rather than silently skipping, so a template change is never merged believing it was published.
+The workflows need `permissions: id-token: write` to mint the token. The provider resource name and
+the service account email in the workflow files are identifiers, not secrets.
 
 ## Propagation timing
 
