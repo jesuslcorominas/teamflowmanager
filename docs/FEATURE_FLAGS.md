@@ -108,10 +108,15 @@ anywhere — nothing to rotate, nothing that can leak from the repository secret
 |---|---|---|
 | Project | `teamflow-manager-dev` | `teamflow-manager-897a3` |
 | Service account | `github-actions-firebase-config@teamflow-manager-dev.iam.gserviceaccount.com` | `github-actions-firebase-config@teamflow-manager-897a3.iam.gserviceaccount.com` |
-| Roles | `roles/cloudconfig.admin`, `roles/firebaserules.admin` | same |
+| Roles | `roles/cloudconfig.admin`, `roles/firebaserules.admin`, `roles/serviceusage.serviceUsageViewer` | same |
 
-`roles/cloudconfig.admin` is the Firebase Remote Config Admin role — note the id does not contain
-"remoteconfig"; `roles/firebaseremoteconfig.admin` does not exist.
+Two notes on the role ids, both learned the hard way:
+
+- `roles/cloudconfig.admin` is the Firebase Remote Config Admin role. The id does not contain
+  "remoteconfig" — `roles/firebaseremoteconfig.admin` does not exist and IAM rejects it.
+- `roles/serviceusage.serviceUsageViewer` is read-only and needed because the Firebase CLI checks
+  that `firestore.googleapis.com` is enabled before deploying rules. Without it the deploy fails
+  with `403 Permission denied to get service`, which says nothing about the missing role.
 
 The trust is scoped to this repository: the OIDC provider carries the attribute condition
 `assertion.repository=='jesuslcorominas/teamflowmanager'`, and the service account only grants
