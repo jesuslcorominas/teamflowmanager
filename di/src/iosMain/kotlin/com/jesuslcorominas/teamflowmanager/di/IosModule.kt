@@ -188,6 +188,7 @@ val iosModule =
                 setActiveViewRole = get(),
                 getNotificationPreferences = get(),
                 updateGlobalNotificationPreference = get(),
+                crashReporter = get(),
             )
         }
 

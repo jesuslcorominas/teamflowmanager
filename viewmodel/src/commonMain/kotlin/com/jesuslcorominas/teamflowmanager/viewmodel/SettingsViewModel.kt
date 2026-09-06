@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
@@ -36,6 +37,7 @@ class SettingsViewModel(
     private val setActiveViewRole: SetActiveViewRoleUseCase,
     private val getNotificationPreferences: GetNotificationPreferencesUseCase,
     private val updateGlobalNotificationPreference: UpdateGlobalNotificationPreferenceUseCase,
+    private val crashReporter: CrashReporter,
 ) : ViewModel() {
     val currentUser: StateFlow<User?> =
         getCurrentUserUseCase()
@@ -55,6 +57,14 @@ class SettingsViewModel(
 
     private val _notificationPreferences = MutableStateFlow(NotificationPreferencesState())
     val notificationPreferences: StateFlow<NotificationPreferencesState> = _notificationPreferences.asStateFlow()
+
+    /**
+     * Set when saving a notification preference failed, so the screen can tell the user the switch
+     * did not stick. The switch itself needs no reverting: it renders from
+     * [notificationPreferences], which only changes once Firestore confirms the write.
+     */
+    private val _notificationUpdateFailed = MutableStateFlow(false)
+    val notificationUpdateFailed: StateFlow<Boolean> = _notificationUpdateFailed.asStateFlow()
 
     data class RoleSelectorState(
         val showRoleSelector: Boolean = false,
@@ -96,15 +106,34 @@ class SettingsViewModel(
     }
 
     fun updateGlobalMatchEvents(enabled: Boolean) {
-        viewModelScope.launch {
-            updateGlobalNotificationPreference(_notificationPreferences.value.clubId, NotificationEventType.MATCH_EVENTS, enabled)
-        }
+        updateGlobalPreference(NotificationEventType.MATCH_EVENTS, enabled)
     }
 
     fun updateGlobalGoals(enabled: Boolean) {
+        updateGlobalPreference(NotificationEventType.GOALS, enabled)
+    }
+
+    /**
+     * The data source rethrows on failure and nothing above it used to catch, so any Firestore
+     * error — offline, permission denied, timeout — reached the default handler through
+     * [viewModelScope] and killed the process. Report it and surface it instead.
+     */
+    private fun updateGlobalPreference(
+        type: NotificationEventType,
+        enabled: Boolean,
+    ) {
         viewModelScope.launch {
-            updateGlobalNotificationPreference(_notificationPreferences.value.clubId, NotificationEventType.GOALS, enabled)
+            runCatching {
+                updateGlobalNotificationPreference(_notificationPreferences.value.clubId, type, enabled)
+            }.onFailure { error ->
+                crashReporter.recordException(error)
+                _notificationUpdateFailed.value = true
+            }
         }
+    }
+
+    fun onNotificationUpdateErrorShown() {
+        _notificationUpdateFailed.value = false
     }
 
     fun onRoleSelected(role: ActiveViewRole) {

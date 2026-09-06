@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -30,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
@@ -47,6 +51,7 @@ import teamflowmanager.shared_ui.generated.resources.settings_notifications_goal
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_match_events
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_mixed
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_section
+import teamflowmanager.shared_ui.generated.resources.settings_notifications_update_error
 import teamflowmanager.shared_ui.generated.resources.settings_role_coach
 import teamflowmanager.shared_ui.generated.resources.sign_out
 import teamflowmanager.shared_ui.generated.resources.sign_out_message
@@ -65,7 +70,17 @@ fun SettingsScreen(
     val signOutComplete by viewModel.signOutComplete.collectAsState()
     val roleSelectorState by viewModel.roleSelectorState.collectAsState()
     val notificationPreferences by viewModel.notificationPreferences.collectAsState()
+    val notificationUpdateFailed by viewModel.notificationUpdateFailed.collectAsState()
     var showSignOutDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val notificationErrorMessage = stringResource(Res.string.settings_notifications_update_error)
+
+    LaunchedEffect(notificationUpdateFailed) {
+        if (notificationUpdateFailed) {
+            snackbarHostState.showSnackbar(notificationErrorMessage)
+            viewModel.onNotificationUpdateErrorShown()
+        }
+    }
 
     LaunchedEffect(signOutComplete) {
         if (signOutComplete) {
@@ -111,76 +126,83 @@ fun SettingsScreen(
         )
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(TFMSpacing.spacing04),
+    Box(modifier = Modifier.fillMaxSize()) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).zIndex(1f),
+        )
+
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
         ) {
-            Text(
-                text = stringResource(Res.string.settings_account_section),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
-            )
-
-            Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-
-            currentUser?.let { user ->
-                UserAccountItem(
-                    user = user,
-                    onClick = { showSignOutDialog = true },
-                )
-            }
-
-            if (roleSelectorState.showRoleSelector) {
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
-                RoleSelectorSection(
-                    activeRole = roleSelectorState.activeRole,
-                    enabled = roleSelectorState.isRoleSelectorEnabled,
-                    onRoleSelected = { viewModel.onRoleSelected(it) },
-                )
-            }
-
-            if (roleSelectorState.activeRole == ActiveViewRole.President && notificationPreferences.clubId.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(TFMSpacing.spacing04),
+            ) {
                 Text(
-                    text = stringResource(Res.string.settings_notifications_section),
+                    text = stringResource(Res.string.settings_account_section),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
                 )
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-                NotificationSwitchItem(
-                    title = stringResource(Res.string.settings_notifications_match_events),
-                    subtitle =
-                        when (notificationPreferences.matchEventsState) {
-                            GlobalNotificationState.MIXED -> stringResource(Res.string.settings_notifications_mixed)
-                            else -> stringResource(Res.string.settings_notifications_applies_all_teams)
-                        },
-                    checked = notificationPreferences.matchEventsState == GlobalNotificationState.ALL_ON,
-                    onCheckedChange = { viewModel.updateGlobalMatchEvents(it) },
-                )
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-                NotificationSwitchItem(
-                    title = stringResource(Res.string.settings_notifications_goals),
-                    subtitle =
-                        when (notificationPreferences.goalsState) {
-                            GlobalNotificationState.MIXED -> stringResource(Res.string.settings_notifications_mixed)
-                            else -> stringResource(Res.string.settings_notifications_applies_all_teams)
-                        },
-                    checked = notificationPreferences.goalsState == GlobalNotificationState.ALL_ON,
-                    onCheckedChange = { viewModel.updateGlobalGoals(it) },
-                )
-            }
 
-            Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+
+                currentUser?.let { user ->
+                    UserAccountItem(
+                        user = user,
+                        onClick = { showSignOutDialog = true },
+                    )
+                }
+
+                if (roleSelectorState.showRoleSelector) {
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                    RoleSelectorSection(
+                        activeRole = roleSelectorState.activeRole,
+                        enabled = roleSelectorState.isRoleSelectorEnabled,
+                        onRoleSelected = { viewModel.onRoleSelected(it) },
+                    )
+                }
+
+                if (roleSelectorState.activeRole == ActiveViewRole.President && notificationPreferences.clubId.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+                    Text(
+                        text = stringResource(Res.string.settings_notifications_section),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
+                    )
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+                    NotificationSwitchItem(
+                        title = stringResource(Res.string.settings_notifications_match_events),
+                        subtitle =
+                            when (notificationPreferences.matchEventsState) {
+                                GlobalNotificationState.MIXED -> stringResource(Res.string.settings_notifications_mixed)
+                                else -> stringResource(Res.string.settings_notifications_applies_all_teams)
+                            },
+                        checked = notificationPreferences.matchEventsState == GlobalNotificationState.ALL_ON,
+                        onCheckedChange = { viewModel.updateGlobalMatchEvents(it) },
+                    )
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+                    NotificationSwitchItem(
+                        title = stringResource(Res.string.settings_notifications_goals),
+                        subtitle =
+                            when (notificationPreferences.goalsState) {
+                                GlobalNotificationState.MIXED -> stringResource(Res.string.settings_notifications_mixed)
+                                else -> stringResource(Res.string.settings_notifications_applies_all_teams)
+                            },
+                        checked = notificationPreferences.goalsState == GlobalNotificationState.ALL_ON,
+                        onCheckedChange = { viewModel.updateGlobalGoals(it) },
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+            }
         }
     }
 }
