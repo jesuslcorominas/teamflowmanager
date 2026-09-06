@@ -53,8 +53,10 @@ laptop targets dev. `firebase.prod.json` is a minimal config that points at the 
 ## Changing a flag
 
 Edit the template for the environment you are targeting and open a PR. **Merging publishes it** —
-the `Firebase Config` workflow (`.github/workflows/firebase-config.yml`) deploys the template
-belonging to the branch that was pushed. The same workflow deploys `firestore.rules`.
+the `Remote Config` workflow (`.github/workflows/remoteconfig.yml`) deploys the template belonging
+to the branch that was pushed. Firestore rules have their own workflow — see
+[FIRESTORE_RULES_DEPLOYMENT.md](FIRESTORE_RULES_DEPLOYMENT.md) — so the two never have to be
+deployed together.
 
 **This is independent of releasing.** A PR to `main` that touches *only* the templates skips the
 build and the Play upload — the `scope` job in `release.yml` detects it and short-circuits the
@@ -98,7 +100,7 @@ No release is needed either way. The app picks the change up on the next fetch.
 
 ### CI credentials
 
-The `Firebase Config` workflow authenticates with a Google service account per project, following
+Both Firebase workflows authenticate with the same Google service account per project, following
 the same pattern as the Play Store deploy in `release.yml`:
 
 | Secret | Project |

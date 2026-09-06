@@ -1,22 +1,19 @@
-name: Firebase Config
+name: Remote Config
 
-# Publishes the Firebase configuration that lives in this repo — Remote Config templates and
-# Firestore security rules — so what is merged is what is live:
+# Publishes the Firebase Remote Config templates, one per environment:
 #
-#   push to develop → remoteconfig/dev.template.json  + firestore.rules → teamflow-manager-dev
-#   push to main    → remoteconfig/prod.template.json + firestore.rules → teamflow-manager-897a3
-#
-# Firestore rules used to be deployed by hand, and they drifted: the notificationPreferences rules
-# added in #345 never reached production, so saving a notification preference was denied there for
-# months while dev worked fine.
+#   push to develop → remoteconfig/dev.template.json  → teamflow-manager-dev
+#   push to main    → remoteconfig/prod.template.json → teamflow-manager-897a3
 #
 # Both files live on both branches and sync through git like any other file — what differs is
-# which one each branch publishes. That is why a value can be true in dev and false in prod
-# without the two branches ever diverging.
+# which one each branch publishes. That is why a flag can be true in dev and false in prod without
+# the two branches ever diverging. Flags are configuration that is *meant* to differ per
+# environment; Firestore rules are not, which is why they have their own workflow and a single
+# shared file (see firestore-rules.yml).
 #
-# The deploy is independent of publishing a release: a PR to main touching only these templates
-# skips the build and the Play upload (see the `scope` job in release.yml), so a production flag
-# can be flipped at any time and still leave a reviewed history of who changed what and why.
+# Independent of publishing a release: a PR to main touching only these templates skips the build
+# and the Play upload (see the `scope` job in release.yml), so a production flag can be flipped at
+# any time and still leave a reviewed history of who changed what and why.
 #
 # A deploy replaces the WHOLE template for that project, so a value flipped by hand in the Firebase
 # console is undone by the next run. Use the console for a quick test, the template for anything
@@ -27,13 +24,11 @@ on:
     branches: [develop, main]
     paths:
       - 'remoteconfig/**'
-      - 'firestore.rules'
-      - '.github/workflows/firebase-config.yml'
+      - '.github/workflows/remoteconfig.yml'
   pull_request:
     branches: [develop, main]
     paths:
       - 'remoteconfig/**'
-      - 'firestore.rules'
   workflow_dispatch:
 
 permissions:
@@ -80,7 +75,7 @@ jobs:
           PY
 
   deploy:
-    name: Deploy config
+    name: Deploy template
     needs: validate
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -107,45 +102,22 @@ jobs:
       # The main → develop sync PR carries prod template changes into develop. Without this check
       # that push would republish dev's template for no reason, and any divergence would look like
       # it had been overwritten.
-      - name: Decide what changed in this push
+      - name: Skip when this environment's template did not change
         id: changed
         run: |
           TEMPLATE="${{ steps.target.outputs.template }}"
           BEFORE="${{ github.event.before }}"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] || \
              [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            echo "template=true" >> $GITHUB_OUTPUT
-            echo "rules=true" >> $GITHUB_OUTPUT
             echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Manual run or no diff base — deploying everything."
+            echo "Manual run or no diff base — deploying."
             exit 0
           fi
-
-          FILES=$(git diff --name-only "$BEFORE" "${{ github.sha }}")
-
-          # Only this environment's template: the main → develop sync carries the other one across
-          # and must not republish over dev's own values.
-          if echo "$FILES" | grep -qx "$TEMPLATE"; then
-            TEMPLATE_CHANGED=true
-          else
-            TEMPLATE_CHANGED=false
-          fi
-
-          # Rules are a single file shared by both environments, so any change deploys to whichever
-          # project this branch owns.
-          if echo "$FILES" | grep -qx "firestore.rules"; then
-            RULES_CHANGED=true
-          else
-            RULES_CHANGED=false
-          fi
-
-          echo "template=$TEMPLATE_CHANGED" >> $GITHUB_OUTPUT
-          echo "rules=$RULES_CHANGED" >> $GITHUB_OUTPUT
-          if [ "$TEMPLATE_CHANGED" = "true" ] || [ "$RULES_CHANGED" = "true" ]; then
+          if git diff --name-only "$BEFORE" "${{ github.sha }}" | grep -qx "$TEMPLATE"; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
-            echo "::notice::Nothing to deploy for ${{ steps.target.outputs.env_name }} in this push."
+            echo "::notice::$TEMPLATE unchanged in this push — nothing to deploy for ${{ steps.target.outputs.env_name }}."
           fi
 
       - name: Check credentials are configured
@@ -169,11 +141,11 @@ jobs:
         run: npm install -g firebase-tools@15
 
       - name: Show what is currently published
-        if: steps.changed.outputs.template == 'true'
+        if: steps.changed.outputs.changed == 'true'
         run: firebase remoteconfig:get --project ${{ steps.target.outputs.project }}
 
-      - name: Deploy Remote Config template
-        if: steps.changed.outputs.template == 'true'
+      - name: Deploy template
+        if: steps.changed.outputs.changed == 'true'
         # The commit message is passed through the environment, never interpolated into the shell.
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message || 'manual dispatch' }}
@@ -186,16 +158,5 @@ jobs:
             --message "${GITHUB_SHA:0:7} — ${SUBJECT}"
 
       - name: Verify what is published now
-        if: steps.changed.outputs.template == 'true'
+        if: steps.changed.outputs.changed == 'true'
         run: firebase remoteconfig:get --project ${{ steps.target.outputs.project }}
-
-      - name: Deploy Firestore rules
-        if: steps.changed.outputs.rules == 'true'
-        env:
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message || 'manual dispatch' }}
-        run: |
-          SUBJECT=$(printf '%s' "$COMMIT_MESSAGE" | head -1)
-          firebase deploy --only firestore:rules \
-            --project ${{ steps.target.outputs.project }} \
-            --non-interactive \
-            --message "${GITHUB_SHA:0:7} — ${SUBJECT}"

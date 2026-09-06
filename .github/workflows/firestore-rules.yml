@@ -1,0 +1,84 @@
+name: Firestore Rules
+
+# Publishes firestore.rules, so what is merged is what is enforced:
+#
+#   push to develop → teamflow-manager-dev
+#   push to main    → teamflow-manager-897a3
+#
+# They used to be deployed by hand and they drifted: the notificationPreferences rules added in
+# #345 never reached production, so saving a notification preference was denied there for months
+# while dev worked fine. The failure was invisible because the data source falls back to defaults
+# when a read is denied.
+#
+# ONE file for both environments, deliberately — unlike the Remote Config templates, which are one
+# per environment. A flag is configuration that is *meant* to differ per environment; a security
+# rule is not. Dev is only a useful rehearsal for production while both run the same rules, and
+# per-environment rule files would have made the drift above the normal state of affairs instead
+# of a bug. Staged rollout still works, through branches: develop gets it first, main gets it when
+# the change is promoted, and `git diff main develop -- firestore.rules` says what production is
+# still missing.
+#
+# Independent of publishing a release: a PR to main touching only firestore.rules skips the build
+# and the Play upload (see the `scope` job in release.yml), so production rules can be fixed
+# without shipping a version.
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - 'firestore.rules'
+      - '.github/workflows/firestore-rules.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firestore-rules-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve target
+        id: target
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "env_name=prod" >> $GITHUB_OUTPUT
+            echo "project=teamflow-manager-897a3" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=dev" >> $GITHUB_OUTPUT
+            echo "project=teamflow-manager-dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check credentials are configured
+        env:
+          SA_JSON: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+        run: |
+          if [ -z "$SA_JSON" ]; then
+            echo "::error::Missing service account secret for ${{ steps.target.outputs.env_name }}."
+            echo "Add FIREBASE_SERVICE_ACCOUNT_DEV / FIREBASE_SERVICE_ACCOUNT_PROD — see docs/FIRESTORE_RULES_DEPLOYMENT.md."
+            exit 1
+          fi
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ github.ref_name == 'main' && secrets.FIREBASE_SERVICE_ACCOUNT_PROD || secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@15
+
+      - name: Deploy rules
+        # The commit message is passed through the environment, never interpolated into the shell.
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || 'manual dispatch' }}
+        run: |
+          SUBJECT=$(printf '%s' "$COMMIT_MESSAGE" | head -1)
+          firebase deploy --only firestore:rules \
+            --project ${{ steps.target.outputs.project }} \
+            --non-interactive \
+            --message "${GITHUB_SHA:0:7} — ${SUBJECT}"
