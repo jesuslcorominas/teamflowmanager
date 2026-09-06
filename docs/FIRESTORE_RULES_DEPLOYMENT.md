@@ -1,4 +1,14 @@
-# Firestore Rules Fix - Deployment Guide
+# Firestore rules deployment
+
+> **Deployment is automatic.** Merging a change to `firestore.rules` deploys it:
+> `develop` → `teamflow-manager-dev`, `main` → `teamflow-manager-897a3`
+> (`.github/workflows/firebase-config.yml`).
+>
+> It used to be manual, and it drifted: the `notificationPreferences` rules added in #345 never
+> reached production, so saving a notification preference was denied there for months while dev
+> worked. The manual commands below still work as an escape hatch, but the repo is the source of
+> truth and CI keeps the two in sync.
+
 
 ## Issue Summary
 
