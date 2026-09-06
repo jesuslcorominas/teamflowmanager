@@ -2,10 +2,20 @@ package com.jesuslcorominas.teamflowmanager.data.core.repository
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PreferencesDataSource
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 internal class PreferencesRepositoryImpl(
     private val preferencesDataSource: PreferencesDataSource,
 ) : PreferencesRepository {
+    /**
+     * Key-value storage (SharedPreferences / NSUserDefaults) has no change notification, so the
+     * repository keeps the current role in a flow and updates it on write. Seeded from storage so
+     * the first emission is the persisted value, not a default.
+     */
+    private val activeViewRole = MutableStateFlow(preferencesDataSource.getActiveViewRole())
+
     override fun shouldShowInvalidSubstitutionAlert(): Boolean {
         return preferencesDataSource.shouldShowInvalidSubstitutionAlert()
     }
@@ -34,5 +44,8 @@ internal class PreferencesRepositoryImpl(
 
     override fun setActiveViewRole(role: String) {
         preferencesDataSource.setActiveViewRole(role)
+        activeViewRole.value = role
     }
+
+    override fun observeActiveViewRole(): Flow<String?> = activeViewRole.asStateFlow()
 }

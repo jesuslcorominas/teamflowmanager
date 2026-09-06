@@ -3,7 +3,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
@@ -12,6 +12,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -32,7 +33,7 @@ class MainViewModelTest {
     private lateinit var hasNotificationPermissionBeenRequestedUseCase: HasNotificationPermissionBeenRequestedUseCase
     private lateinit var setNotificationPermissionRequestedUseCase: SetNotificationPermissionRequestedUseCase
     private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
-    private lateinit var getActiveViewRoleUseCase: GetActiveViewRoleUseCase
+    private lateinit var observeActiveViewRoleUseCase: ObserveActiveViewRoleUseCase
 
     @Before
     fun setup() {
@@ -40,8 +41,8 @@ class MainViewModelTest {
         hasNotificationPermissionBeenRequestedUseCase = mockk()
         setNotificationPermissionRequestedUseCase = mockk(relaxed = true)
         getUserClubMembershipUseCase = mockk()
-        getActiveViewRoleUseCase = mockk()
-        every { getActiveViewRoleUseCase() } returns ActiveViewRole.President
+        observeActiveViewRoleUseCase = mockk()
+        every { observeActiveViewRoleUseCase() } returns flowOf(ActiveViewRole.President)
     }
 
     @After
@@ -53,7 +54,7 @@ class MainViewModelTest {
         hasNotificationPermissionBeenRequestedUseCase = hasNotificationPermissionBeenRequestedUseCase,
         setNotificationPermissionRequestedUseCase = setNotificationPermissionRequestedUseCase,
         getUserClubMembership = getUserClubMembershipUseCase,
-        getActiveViewRole = getActiveViewRoleUseCase,
+        observeActiveViewRole = observeActiveViewRoleUseCase,
     )
 
     @Test
@@ -107,7 +108,7 @@ class MainViewModelTest {
                 roles = listOf("Presidente"),
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(presidentMember)
-            every { getActiveViewRoleUseCase() } returns ActiveViewRole.Coach
+            every { observeActiveViewRoleUseCase() } returns flowOf(ActiveViewRole.Coach)
             val viewModel = createViewModel()
 
             // Value stays false (initial=false, computed=false) — no second emission from MutableStateFlow
@@ -144,4 +145,37 @@ class MainViewModelTest {
         // Then
         verify { setNotificationPermissionRequestedUseCase.invoke(true) }
     }
+
+    @Test
+    fun `isPresident follows a role switch without the membership flow re-emitting`() =
+        runTest(testDispatcher) {
+            // Given — a president whose membership never changes again
+            val presidentMember = ClubMember(
+                id = "1",
+                userId = "user123",
+                name = "John Doe",
+                email = "john@example.com",
+                clubId = "club_fs_1",
+                roles = listOf("Presidente"),
+            )
+            val storedRole = MutableStateFlow<ActiveViewRole>(ActiveViewRole.President)
+            every { getUserClubMembershipUseCase.invoke() } returns flowOf(presidentMember)
+            every { observeActiveViewRoleUseCase.invoke() } returns storedRole
+            val viewModel = createViewModel()
+
+            viewModel.isPresident.test {
+                assertFalse(awaitItem()) // initial value
+                assertTrue(awaitItem()) // president view
+
+                // When — only the stored role changes; the membership flow stays silent
+                storedRole.value = ActiveViewRole.Coach
+
+                // Then — this is what used to stay stale and keep the president navigation up
+                assertFalse(awaitItem())
+
+                storedRole.value = ActiveViewRole.President
+                assertTrue(awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }

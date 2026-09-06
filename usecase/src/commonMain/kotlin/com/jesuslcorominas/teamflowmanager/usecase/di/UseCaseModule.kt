@@ -58,6 +58,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.MarkPresidentNotificat
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnTeamAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentOnMemberWaitingUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCodeUseCase
@@ -149,6 +150,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.MarkPresidentNotificationAsUn
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyCoachAssignedOnTeamAssignmentUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyPresidentMatchEventUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyPresidentOnMemberWaitingUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ObserveActiveViewRoleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegenerateInvitationCodeUseCaseImpl
@@ -286,6 +288,7 @@ internal val useCaseInternalModule =
         // Role selector (president acting as coach)
         singleOf(::GetActiveViewRoleUseCaseImpl) bind GetActiveViewRoleUseCase::class
         singleOf(::SetActiveViewRoleUseCaseImpl) bind SetActiveViewRoleUseCase::class
+        singleOf(::ObserveActiveViewRoleUseCaseImpl) bind ObserveActiveViewRoleUseCase::class
 
         // Notification preferences
         singleOf(::GetNotificationPreferencesUseCaseImpl) bind GetNotificationPreferencesUseCase::class
