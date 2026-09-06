@@ -8,9 +8,11 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipU
 import com.jesuslcorominas.teamflowmanager.domain.usecase.HasNotificationPermissionBeenRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 
 class MainViewModel(
@@ -33,6 +35,15 @@ class MainViewModel(
         ) { clubMember, activeRole ->
             clubMember?.hasRole(ClubRole.PRESIDENT) == true && activeRole != ActiveViewRole.Coach
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    /**
+     * Emits only when the user actually switches role, never the value already stored on startup.
+     *
+     * The navigation of the two roles has nothing in common, so staying on the current screen after
+     * a switch leaves the user on a destination that belongs to the role they just left. The shell
+     * uses this to move to the landing tab of the new role.
+     */
+    val roleSwitches: Flow<ActiveViewRole> = observeActiveViewRole().drop(1)
 
     fun hasNotificationPermissionBeenRequested(): Boolean = hasNotificationPermissionBeenRequestedUseCase()
 

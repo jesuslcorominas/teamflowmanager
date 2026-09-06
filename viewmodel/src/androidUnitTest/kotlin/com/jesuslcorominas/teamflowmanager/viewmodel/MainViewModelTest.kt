@@ -178,4 +178,27 @@ class MainViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun `roleSwitches emits only actual switches, not the role already stored at startup`() =
+        runTest(testDispatcher) {
+            // Given — a stored role, as it is on any launch
+            val storedRole = MutableStateFlow<ActiveViewRole>(ActiveViewRole.President)
+            every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
+            every { observeActiveViewRoleUseCase.invoke() } returns storedRole
+            val viewModel = createViewModel()
+
+            viewModel.roleSwitches.test {
+                // Then — nothing yet: the stored value is not a switch and must not navigate
+                expectNoEvents()
+
+                // When
+                storedRole.value = ActiveViewRole.Coach
+                assertEquals(ActiveViewRole.Coach, awaitItem())
+
+                storedRole.value = ActiveViewRole.President
+                assertEquals(ActiveViewRole.President, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }
