@@ -434,4 +434,5 @@
     <string name="pending_team_message">Your account has been verified. Please wait until the club president assigns you to a team.</string>
     <string name="pending_team_sign_out">Sign out</string>
     <string name="settings_notifications_update_error">Could not save the change. Check your connection and try again.</string>
+    <string name="settings_role_requires_team">You need a team assigned to use the coach view.</string>
 </resources>

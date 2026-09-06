@@ -10,11 +10,11 @@ import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
 import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateGlobalNotificationPreferenceUseCase
@@ -33,7 +33,7 @@ class SettingsViewModel(
     private val analyticsTracker: AnalyticsTracker,
     private val getTeam: GetTeamUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
-    private val getActiveViewRole: GetActiveViewRoleUseCase,
+    private val observeActiveViewRole: ObserveActiveViewRoleUseCase,
     private val setActiveViewRole: SetActiveViewRoleUseCase,
     private val getNotificationPreferences: GetNotificationPreferencesUseCase,
     private val updateGlobalNotificationPreference: UpdateGlobalNotificationPreferenceUseCase,
@@ -68,9 +68,9 @@ class SettingsViewModel(
 
     data class RoleSelectorState(
         val showRoleSelector: Boolean = false,
+        /** False when the president has no team assigned: there is no coach view to switch to. */
         val isRoleSelectorEnabled: Boolean = false,
         val activeRole: ActiveViewRole = ActiveViewRole.President,
-        val roleChangedEvent: Boolean = false,
     )
 
     init {
@@ -84,12 +84,16 @@ class SettingsViewModel(
 
             if (isPresident) {
                 val team = getTeam().first()
-                _roleSelectorState.value =
-                    RoleSelectorState(
-                        showRoleSelector = true,
-                        isRoleSelectorEnabled = team != null,
-                        activeRole = getActiveViewRole(),
-                    )
+                launch {
+                    observeActiveViewRole().collect { role ->
+                        _roleSelectorState.value =
+                            RoleSelectorState(
+                                showRoleSelector = true,
+                                isRoleSelectorEnabled = team != null,
+                                activeRole = role,
+                            )
+                    }
+                }
 
                 val clubRemoteId = clubMember.clubId.takeIf { it.isNotBlank() } ?: return@launch
 
@@ -136,17 +140,12 @@ class SettingsViewModel(
         _notificationUpdateFailed.value = false
     }
 
+    /**
+     * Persists the new role. The switch and the app shell both observe the stored role, so no
+     * navigation side effect is needed to make the change visible.
+     */
     fun onRoleSelected(role: ActiveViewRole) {
         setActiveViewRole(role)
-        _roleSelectorState.value =
-            _roleSelectorState.value.copy(
-                activeRole = role,
-                roleChangedEvent = true,
-            )
-    }
-
-    fun onRoleChangedEventConsumed() {
-        _roleSelectorState.value = _roleSelectorState.value.copy(roleChangedEvent = false)
     }
 
     fun signOut() {

@@ -35,7 +35,7 @@ val viewModelModule =
                 hasNotificationPermissionBeenRequestedUseCase = get(),
                 setNotificationPermissionRequestedUseCase = get(),
                 getUserClubMembership = get(),
-                getActiveViewRole = get(),
+                observeActiveViewRole = get(),
             )
         }
 
@@ -242,7 +242,7 @@ val viewModelModule =
                 analyticsTracker = get(),
                 getTeam = get(),
                 getUserClubMembership = get(),
-                getActiveViewRole = get(),
+                observeActiveViewRole = get(),
                 setActiveViewRole = get(),
                 getNotificationPreferences = get(),
                 updateGlobalNotificationPreference = get(),

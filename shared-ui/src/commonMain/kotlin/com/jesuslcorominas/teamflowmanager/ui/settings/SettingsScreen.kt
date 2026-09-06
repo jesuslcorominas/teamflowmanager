@@ -53,6 +53,7 @@ import teamflowmanager.shared_ui.generated.resources.settings_notifications_mixe
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_section
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_update_error
 import teamflowmanager.shared_ui.generated.resources.settings_role_coach
+import teamflowmanager.shared_ui.generated.resources.settings_role_requires_team
 import teamflowmanager.shared_ui.generated.resources.sign_out
 import teamflowmanager.shared_ui.generated.resources.sign_out_message
 import teamflowmanager.shared_ui.generated.resources.sign_out_title
@@ -62,7 +63,6 @@ import teamflowmanager.shared_ui.generated.resources.user_name_unknown
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onSignOut: () -> Unit = {},
-    onRoleChanged: () -> Unit = {},
 ) {
     TrackScreenView(screenName = ScreenName.SETTINGS, screenClass = "SettingsScreen")
 
@@ -86,13 +86,6 @@ fun SettingsScreen(
         if (signOutComplete) {
             viewModel.clearSignOutComplete()
             onSignOut()
-        }
-    }
-
-    LaunchedEffect(roleSelectorState.roleChangedEvent) {
-        if (roleSelectorState.roleChangedEvent) {
-            viewModel.onRoleChangedEventConsumed()
-            onRoleChanged()
         }
     }
 
@@ -301,6 +294,16 @@ private fun RoleSelectorSection(
                     onRoleSelected(if (isCoach) ActiveViewRole.Coach else ActiveViewRole.President)
                 },
                 enabled = enabled,
+            )
+        }
+
+        // A greyed-out switch with no explanation reads as a bug; say why it cannot be used.
+        if (!enabled) {
+            Text(
+                text = stringResource(Res.string.settings_role_requires_team),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
             )
         }
     }

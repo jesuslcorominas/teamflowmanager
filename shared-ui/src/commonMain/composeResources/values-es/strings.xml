@@ -434,4 +434,5 @@
     <string name="pending_team_message">Tu cuenta ha sido verificada. Por favor, espera a que el presidente del club te asigne a un equipo.</string>
     <string name="pending_team_sign_out">Cerrar sesión</string>
     <string name="settings_notifications_update_error">No se pudo guardar el cambio. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="settings_role_requires_team">Necesitas tener un equipo asignado para usar la vista de entrenador.</string>
 </resources>
