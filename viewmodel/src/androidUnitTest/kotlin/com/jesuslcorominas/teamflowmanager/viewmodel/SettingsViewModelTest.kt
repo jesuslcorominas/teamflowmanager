@@ -1,13 +1,15 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
@@ -22,6 +24,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -44,10 +47,11 @@ class SettingsViewModelTest {
     private lateinit var analyticsTracker: AnalyticsTracker
     private lateinit var getTeamUseCase: GetTeamUseCase
     private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
-    private lateinit var getActiveViewRoleUseCase: GetActiveViewRoleUseCase
+    private lateinit var observeActiveViewRoleUseCase: ObserveActiveViewRoleUseCase
     private lateinit var setActiveViewRoleUseCase: SetActiveViewRoleUseCase
     private lateinit var getNotificationPreferencesUseCase: GetNotificationPreferencesUseCase
     private lateinit var updateGlobalNotificationPreferenceUseCase: UpdateGlobalNotificationPreferenceUseCase
+    private lateinit var crashReporter: CrashReporter
     private lateinit var viewModel: SettingsViewModel
 
     private val testUser = User(
@@ -66,15 +70,16 @@ class SettingsViewModelTest {
         analyticsTracker = mockk(relaxed = true)
         getTeamUseCase = mockk()
         getUserClubMembershipUseCase = mockk()
-        getActiveViewRoleUseCase = mockk()
+        observeActiveViewRoleUseCase = mockk()
         setActiveViewRoleUseCase = mockk(relaxed = true)
         getNotificationPreferencesUseCase = mockk(relaxed = true)
         updateGlobalNotificationPreferenceUseCase = mockk(relaxed = true)
+        crashReporter = mockk(relaxed = true)
 
         every { getCurrentUserUseCase() } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(null)
         every { getUserClubMembershipUseCase() } returns flowOf(null)
-        every { getActiveViewRoleUseCase() } returns ActiveViewRole.President
+        every { observeActiveViewRoleUseCase() } returns flowOf(ActiveViewRole.President)
 
         viewModel = SettingsViewModel(
             getCurrentUserUseCase = getCurrentUserUseCase,
@@ -83,10 +88,11 @@ class SettingsViewModelTest {
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
-            getActiveViewRole = getActiveViewRoleUseCase,
+            observeActiveViewRole = observeActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
     }
 
@@ -135,10 +141,11 @@ class SettingsViewModelTest {
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
-            getActiveViewRole = getActiveViewRoleUseCase,
+            observeActiveViewRole = observeActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
         advanceUntilIdle()
         coEvery { signOutUseCase() } returns Unit
@@ -180,10 +187,11 @@ class SettingsViewModelTest {
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
-            getActiveViewRole = getActiveViewRoleUseCase,
+            observeActiveViewRole = observeActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
         advanceUntilIdle()
 
@@ -210,10 +218,11 @@ class SettingsViewModelTest {
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
-            getActiveViewRole = getActiveViewRoleUseCase,
+            observeActiveViewRole = observeActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
         advanceUntilIdle()
 
@@ -250,10 +259,11 @@ class SettingsViewModelTest {
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
-            getActiveViewRole = getActiveViewRoleUseCase,
+            observeActiveViewRole = observeActiveViewRoleUseCase,
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
         advanceUntilIdle()
 
@@ -263,20 +273,86 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `onRoleSelected updates activeRole and fires roleChangedEvent`() = runTest(testDispatcher) {
-        viewModel.onRoleSelected(ActiveViewRole.Coach)
+    fun `onRoleSelected persists the role and the selector follows the stored value`() =
+        runTest(testDispatcher) {
+            // Given — a president with a team, so the selector is enabled
+            every { getUserClubMembershipUseCase() } returns flowOf(
+                ClubMember(
+                    id = "1",
+                    userId = "user123",
+                    name = "Test User",
+                    email = "test@example.com",
+                    clubId = "club123",
+                    roles = listOf("Presidente"),
+                ),
+            )
+            every { getTeamUseCase() } returns flowOf(
+                Team(
+                    id = "1",
+                    name = "Test Team",
+                    coachName = "Coach",
+                    delegateName = "Delegate",
+                    teamType = TeamType.FOOTBALL_5,
+                    clubId = "club123",
+                ),
+            )
+            // The stored role is the single source of truth; writing to it feeds the flow back.
+            val storedRole = MutableStateFlow<ActiveViewRole>(ActiveViewRole.President)
+            every { observeActiveViewRoleUseCase() } returns storedRole
+            every { setActiveViewRoleUseCase(any()) } answers { storedRole.value = firstArg() }
 
-        assertTrue(viewModel.roleSelectorState.value.roleChangedEvent)
-        assertEquals(ActiveViewRole.Coach, viewModel.roleSelectorState.value.activeRole)
-    }
+            viewModel = SettingsViewModel(
+                getCurrentUserUseCase = getCurrentUserUseCase,
+                signOutUseCase = signOutUseCase,
+                deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+                analyticsTracker = analyticsTracker,
+                getTeam = getTeamUseCase,
+                getUserClubMembership = getUserClubMembershipUseCase,
+                observeActiveViewRole = observeActiveViewRoleUseCase,
+                setActiveViewRole = setActiveViewRoleUseCase,
+                getNotificationPreferences = getNotificationPreferencesUseCase,
+                updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+                crashReporter = crashReporter,
+            )
+            advanceUntilIdle()
+
+            // When
+            viewModel.onRoleSelected(ActiveViewRole.Coach)
+            advanceUntilIdle()
+
+            // Then — persisted, and the selector reflects the stored value with no extra event
+            verify { setActiveViewRoleUseCase(ActiveViewRole.Coach) }
+            assertEquals(ActiveViewRole.Coach, viewModel.roleSelectorState.value.activeRole)
+        }
 
     @Test
-    fun `onRoleChangedEventConsumed resets roleChangedEvent`() = runTest(testDispatcher) {
-        viewModel.onRoleSelected(ActiveViewRole.Coach)
-        assertTrue(viewModel.roleSelectorState.value.roleChangedEvent)
+    fun `givenPreferenceUpdateFails_whenUpdateGlobalMatchEvents_thenReportsAndSurfacesInsteadOfCrashing`() =
+        runTest {
+            // Given — the data source rethrows, as it does on any Firestore failure
+            val failure = RuntimeException("permission denied")
+            coEvery {
+                updateGlobalNotificationPreferenceUseCase(any(), NotificationEventType.MATCH_EVENTS, any())
+            } throws failure
 
-        viewModel.onRoleChangedEventConsumed()
+            // When — this used to reach the default handler through viewModelScope and kill the app
+            viewModel.updateGlobalMatchEvents(false)
+            advanceUntilIdle()
 
-        assertFalse(viewModel.roleSelectorState.value.roleChangedEvent)
-    }
+            // Then
+            assertTrue(viewModel.notificationUpdateFailed.value)
+            verify { crashReporter.recordException(failure) }
+
+            viewModel.onNotificationUpdateErrorShown()
+            assertFalse(viewModel.notificationUpdateFailed.value)
+        }
+
+    @Test
+    fun `givenPreferenceUpdateSucceeds_whenUpdateGlobalGoals_thenNoErrorIsSurfaced`() =
+        runTest {
+            viewModel.updateGlobalGoals(true)
+            advanceUntilIdle()
+
+            assertFalse(viewModel.notificationUpdateFailed.value)
+            coVerify { updateGlobalNotificationPreferenceUseCase(any(), NotificationEventType.GOALS, true) }
+        }
 }

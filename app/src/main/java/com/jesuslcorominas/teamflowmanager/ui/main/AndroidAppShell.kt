@@ -93,7 +93,6 @@ fun AndroidAppShell(
         navController = navController,
         isPresident = isPresident,
         unreadNotificationsCount = if (isPresident) unreadCount else 0,
-        onRoleChanged = { viewModel.refreshIsPresident() },
     )
 }
 
@@ -102,7 +101,6 @@ private fun MainScaffold(
     navController: NavHostController,
     isPresident: Boolean,
     unreadNotificationsCount: Int = 0,
-    onRoleChanged: () -> Unit,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val backHandlerController = remember { BackHandlerController() }
@@ -224,7 +222,6 @@ private fun MainScaffold(
                         navController = navController,
                         currentBackHandler = backHandlerController,
                         onTitleChange = { dynamicTitle = it },
-                        onRoleChanged = onRoleChanged,
                     )
                 } // closes consumeWindowInsets Box
             }

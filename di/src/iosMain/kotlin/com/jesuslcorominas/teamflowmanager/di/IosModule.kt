@@ -92,7 +92,7 @@ val iosModule =
                 hasNotificationPermissionBeenRequestedUseCase = get(),
                 setNotificationPermissionRequestedUseCase = get(),
                 getUserClubMembership = get(),
-                getActiveViewRole = get(),
+                observeActiveViewRole = get(),
             )
         }
         factory {
@@ -184,10 +184,11 @@ val iosModule =
                 analyticsTracker = get(),
                 getTeam = get(),
                 getUserClubMembership = get(),
-                getActiveViewRole = get(),
+                observeActiveViewRole = get(),
                 setActiveViewRole = get(),
                 getNotificationPreferences = get(),
                 updateGlobalNotificationPreference = get(),
+                crashReporter = get(),
             )
         }
 

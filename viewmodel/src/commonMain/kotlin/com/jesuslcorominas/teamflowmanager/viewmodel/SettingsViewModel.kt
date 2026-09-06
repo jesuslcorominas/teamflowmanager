@@ -3,17 +3,18 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
 import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateGlobalNotificationPreferenceUseCase
@@ -32,10 +33,11 @@ class SettingsViewModel(
     private val analyticsTracker: AnalyticsTracker,
     private val getTeam: GetTeamUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
-    private val getActiveViewRole: GetActiveViewRoleUseCase,
+    private val observeActiveViewRole: ObserveActiveViewRoleUseCase,
     private val setActiveViewRole: SetActiveViewRoleUseCase,
     private val getNotificationPreferences: GetNotificationPreferencesUseCase,
     private val updateGlobalNotificationPreference: UpdateGlobalNotificationPreferenceUseCase,
+    private val crashReporter: CrashReporter,
 ) : ViewModel() {
     val currentUser: StateFlow<User?> =
         getCurrentUserUseCase()
@@ -56,11 +58,19 @@ class SettingsViewModel(
     private val _notificationPreferences = MutableStateFlow(NotificationPreferencesState())
     val notificationPreferences: StateFlow<NotificationPreferencesState> = _notificationPreferences.asStateFlow()
 
+    /**
+     * Set when saving a notification preference failed, so the screen can tell the user the switch
+     * did not stick. The switch itself needs no reverting: it renders from
+     * [notificationPreferences], which only changes once Firestore confirms the write.
+     */
+    private val _notificationUpdateFailed = MutableStateFlow(false)
+    val notificationUpdateFailed: StateFlow<Boolean> = _notificationUpdateFailed.asStateFlow()
+
     data class RoleSelectorState(
         val showRoleSelector: Boolean = false,
+        /** False when the president has no team assigned: there is no coach view to switch to. */
         val isRoleSelectorEnabled: Boolean = false,
         val activeRole: ActiveViewRole = ActiveViewRole.President,
-        val roleChangedEvent: Boolean = false,
     )
 
     init {
@@ -74,12 +84,16 @@ class SettingsViewModel(
 
             if (isPresident) {
                 val team = getTeam().first()
-                _roleSelectorState.value =
-                    RoleSelectorState(
-                        showRoleSelector = true,
-                        isRoleSelectorEnabled = team != null,
-                        activeRole = getActiveViewRole(),
-                    )
+                launch {
+                    observeActiveViewRole().collect { role ->
+                        _roleSelectorState.value =
+                            RoleSelectorState(
+                                showRoleSelector = true,
+                                isRoleSelectorEnabled = team != null,
+                                activeRole = role,
+                            )
+                    }
+                }
 
                 val clubRemoteId = clubMember.clubId.takeIf { it.isNotBlank() } ?: return@launch
 
@@ -96,28 +110,42 @@ class SettingsViewModel(
     }
 
     fun updateGlobalMatchEvents(enabled: Boolean) {
-        viewModelScope.launch {
-            updateGlobalNotificationPreference(_notificationPreferences.value.clubId, NotificationEventType.MATCH_EVENTS, enabled)
-        }
+        updateGlobalPreference(NotificationEventType.MATCH_EVENTS, enabled)
     }
 
     fun updateGlobalGoals(enabled: Boolean) {
+        updateGlobalPreference(NotificationEventType.GOALS, enabled)
+    }
+
+    /**
+     * The data source rethrows on failure and nothing above it used to catch, so any Firestore
+     * error — offline, permission denied, timeout — reached the default handler through
+     * [viewModelScope] and killed the process. Report it and surface it instead.
+     */
+    private fun updateGlobalPreference(
+        type: NotificationEventType,
+        enabled: Boolean,
+    ) {
         viewModelScope.launch {
-            updateGlobalNotificationPreference(_notificationPreferences.value.clubId, NotificationEventType.GOALS, enabled)
+            runCatching {
+                updateGlobalNotificationPreference(_notificationPreferences.value.clubId, type, enabled)
+            }.onFailure { error ->
+                crashReporter.recordException(error)
+                _notificationUpdateFailed.value = true
+            }
         }
     }
 
-    fun onRoleSelected(role: ActiveViewRole) {
-        setActiveViewRole(role)
-        _roleSelectorState.value =
-            _roleSelectorState.value.copy(
-                activeRole = role,
-                roleChangedEvent = true,
-            )
+    fun onNotificationUpdateErrorShown() {
+        _notificationUpdateFailed.value = false
     }
 
-    fun onRoleChangedEventConsumed() {
-        _roleSelectorState.value = _roleSelectorState.value.copy(roleChangedEvent = false)
+    /**
+     * Persists the new role. The switch and the app shell both observe the stored role, so no
+     * navigation side effect is needed to make the change visible.
+     */
+    fun onRoleSelected(role: ActiveViewRole) {
+        setActiveViewRole(role)
     }
 
     fun signOut() {

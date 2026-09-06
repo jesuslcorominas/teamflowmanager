@@ -1,4 +1,3 @@
-* Nuevo modo club. Gestiona todos los equipos pertenecientes a un mismo club.
-* Agregados roles de presidente y entrenador. Diferenciación de funciones y pantallas para cada estamento del club.
-* Notificaciones y alertas para los eventos más importantes del club o de tu equipo.
-* Corrección de errores y otras mejoras.
+* Corregido el cambio entre vista de presidente y entrenador: ahora el menú y las pantallas se actualizan al instante, sin salir de Ajustes.
+* Corregido un cierre inesperado de la app al desactivar las notificaciones del club.
+* El selector de rol explica por qué no está disponible cuando aún no tienes un equipo asignado.

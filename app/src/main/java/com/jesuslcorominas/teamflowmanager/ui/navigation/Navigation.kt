@@ -57,7 +57,6 @@ fun Navigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     onTitleChange: (String?) -> Unit,
-    onRoleChanged: () -> Unit,
     currentBackHandler: BackHandlerController,
 ) {
     NavHost(
@@ -383,11 +382,6 @@ fun Navigation(
             SettingsScreen(
                 onSignOut = {
                     navController.navigate(Route.Login.createRoute()) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onRoleChanged = {
-                    navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
