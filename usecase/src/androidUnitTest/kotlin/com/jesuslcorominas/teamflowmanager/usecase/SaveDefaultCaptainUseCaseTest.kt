@@ -23,7 +23,7 @@ class SaveDefaultCaptainUseCaseTest {
     @Test
     fun `invoke should save captain ID`() {
         // Given
-        val captainId = 42L
+        val captainId = "42"
         every { preferencesRepository.setDefaultCaptainId(captainId) } just runs
 
         // When

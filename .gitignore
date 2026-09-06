@@ -43,6 +43,7 @@ docs/GoogleService-Info*.plist
 *.hprof
 /app/google-services.json
 iosApp/Pods/
+iosApp/.build/
 iosApp/iosApp.xcworkspace/xcshareddata/swiftpm/
 iosApp/iosApp.xcworkspace/xcuserdata/
 iosApp/iosApp.xcodeproj/project.xcworkspace/xcuserdata/
@@ -51,6 +52,9 @@ iosApp/iosApp.xcodeproj/xcuserdata/
 # macOS metadata
 .DS_Store
 **/.DS_Store
+
+# Claude Code specs (internal planning docs, not for VCS)
+.claude/specs/
 
 # Kotlin build cache
 .kotlin/

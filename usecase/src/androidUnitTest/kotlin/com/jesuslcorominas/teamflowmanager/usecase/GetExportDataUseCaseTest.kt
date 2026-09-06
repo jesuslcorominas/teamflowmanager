@@ -55,14 +55,14 @@ class GetExportDataUseCaseTest {
 
     @Test
     fun `invoke should calculate correct player stats from time history and goals`() = runTest {
-        val player = createPlayer(1L)
-        val finishedMatch = createFinishedMatch(1L)
+        val player = createPlayer("1")
+        val finishedMatch = createFinishedMatch("1")
         val timeHistory = listOf(
-            PlayerTimeHistory(playerId = 1L, matchId = 1L, elapsedTimeMillis = 60000L, savedAtMillis = 0L),
-            PlayerTimeHistory(playerId = 1L, matchId = 2L, elapsedTimeMillis = 120000L, savedAtMillis = 0L),
+            PlayerTimeHistory(playerId = "1", matchId = "1", elapsedTimeMillis = 60000L, savedAtMillis = 0L),
+            PlayerTimeHistory(playerId = "1", matchId = "2", elapsedTimeMillis = 120000L, savedAtMillis = 0L),
         )
         val goals = listOf(
-            Goal(id = 1L, matchId = 1L, scorerId = 1L, goalTimeMillis = 100L, matchElapsedTimeMillis = 100L, isOpponentGoal = false),
+            Goal(id = "1", matchId = "1", scorerId = "1", goalTimeMillis = 100L, matchElapsedTimeMillis = 100L, isOpponentGoal = false),
         )
 
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player))
@@ -81,10 +81,10 @@ class GetExportDataUseCaseTest {
 
     @Test
     fun `invoke should only include finished matches in matchResults`() = runTest {
-        val finishedMatch = createFinishedMatch(1L)
+        val finishedMatch = createFinishedMatch("1")
         val scheduledMatch = Match(
-            id = 2L, teamName = "Team A", opponent = "Opp", location = "Stadium",
-            periodType = PeriodType.HALF_TIME, captainId = 1L, status = MatchStatus.SCHEDULED,
+            id = "2", teamName = "Team A", opponent = "Opp", location = "Stadium",
+            periodType = PeriodType.HALF_TIME, captainId = "1", status = MatchStatus.SCHEDULED,
             dateTime = 2000L,
         )
 
@@ -96,15 +96,15 @@ class GetExportDataUseCaseTest {
         val result = useCase.invoke().first()
 
         assertEquals(1, result.matchResults.size) // Only FINISHED match
-        assertEquals(1L, result.matchResults[0].match.id)
+        assertEquals("1", result.matchResults[0].match.id)
     }
 
     @Test
     fun `invoke should include only players with goals in topScorers`() = runTest {
-        val player1 = createPlayer(1L)
-        val player2 = createPlayer(2L)
+        val player1 = createPlayer("1")
+        val player2 = createPlayer("2")
         val goals = listOf(
-            Goal(id = 1L, matchId = 1L, scorerId = 1L, goalTimeMillis = 100L, matchElapsedTimeMillis = 100L, isOpponentGoal = false),
+            Goal(id = "1", matchId = "1", scorerId = "1", goalTimeMillis = 100L, matchElapsedTimeMillis = 100L, isOpponentGoal = false),
         )
 
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
@@ -116,18 +116,18 @@ class GetExportDataUseCaseTest {
 
         // Only player1 scored goals, player2 should not be in topScorers
         assertEquals(1, result.topScorers.size)
-        assertEquals(1L, result.topScorers[0].player.id)
+        assertEquals("1", result.topScorers[0].player.id)
         assertEquals(1, result.topScorers[0].totalGoals)
     }
 
     @Test
     fun `givenMultiplePlayersWithDifferentTotalTimes_whenInvoke_thenPlayerStatsSortedByTotalTimeDescending`() = runTest {
         // Given
-        val player1 = createPlayer(1L)
-        val player2 = createPlayer(2L)
+        val player1 = createPlayer("1")
+        val player2 = createPlayer("2")
         val timeHistory = listOf(
-            PlayerTimeHistory(playerId = 1L, matchId = 1L, elapsedTimeMillis = 60000L, savedAtMillis = 0L),  // 1 min
-            PlayerTimeHistory(playerId = 2L, matchId = 1L, elapsedTimeMillis = 120000L, savedAtMillis = 0L), // 2 min
+            PlayerTimeHistory(playerId = "1", matchId = "1", elapsedTimeMillis = 60000L, savedAtMillis = 0L),  // 1 min
+            PlayerTimeHistory(playerId = "2", matchId = "1", elapsedTimeMillis = 120000L, savedAtMillis = 0L), // 2 min
         )
 
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
@@ -140,16 +140,16 @@ class GetExportDataUseCaseTest {
 
         // Then - player2 has more total time, should appear first
         assertEquals(2, result.playerStats.size)
-        assertEquals(2L, result.playerStats[0].player.id)
-        assertEquals(1L, result.playerStats[1].player.id)
+        assertEquals("2", result.playerStats[0].player.id)
+        assertEquals("1", result.playerStats[1].player.id)
     }
 
     @Test
     fun `givenMultipleFinishedMatchesWithDifferentDates_whenInvoke_thenMatchResultsSortedByDateAscending`() = runTest {
         // Given
-        val match1 = createFinishedMatch(1L).copy(dateTime = 3000L)
-        val match2 = createFinishedMatch(2L).copy(dateTime = 1000L)
-        val match3 = createFinishedMatch(3L).copy(dateTime = 2000L)
+        val match1 = createFinishedMatch("1").copy(dateTime = 3000L)
+        val match2 = createFinishedMatch("2").copy(dateTime = 1000L)
+        val match3 = createFinishedMatch("3").copy(dateTime = 2000L)
 
         every { playerRepository.getAllPlayers() } returns flowOf(emptyList())
         every { matchRepository.getAllMatches() } returns flowOf(listOf(match1, match2, match3))
@@ -169,12 +169,12 @@ class GetExportDataUseCaseTest {
     @Test
     fun `givenMultipleScorersWithDifferentGoalCounts_whenInvoke_thenTopScorersSortedByGoalsDescending`() = runTest {
         // Given
-        val player1 = createPlayer(1L)
-        val player2 = createPlayer(2L)
+        val player1 = createPlayer("1")
+        val player2 = createPlayer("2")
         val goals = listOf(
-            Goal(id = 1L, matchId = 1L, scorerId = 1L, goalTimeMillis = 100L, matchElapsedTimeMillis = 100L, isOpponentGoal = false),
-            Goal(id = 2L, matchId = 1L, scorerId = 2L, goalTimeMillis = 200L, matchElapsedTimeMillis = 200L, isOpponentGoal = false),
-            Goal(id = 3L, matchId = 2L, scorerId = 2L, goalTimeMillis = 300L, matchElapsedTimeMillis = 300L, isOpponentGoal = false),
+            Goal(id = "1", matchId = "1", scorerId = "1", goalTimeMillis = 100L, matchElapsedTimeMillis = 100L, isOpponentGoal = false),
+            Goal(id = "2", matchId = "1", scorerId = "2", goalTimeMillis = 200L, matchElapsedTimeMillis = 200L, isOpponentGoal = false),
+            Goal(id = "3", matchId = "2", scorerId = "2", goalTimeMillis = 300L, matchElapsedTimeMillis = 300L, isOpponentGoal = false),
         )
 
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player1, player2))
@@ -187,19 +187,19 @@ class GetExportDataUseCaseTest {
 
         // Then - player2 has 2 goals, should appear first
         assertEquals(2, result.topScorers.size)
-        assertEquals(2L, result.topScorers[0].player.id)
+        assertEquals("2", result.topScorers[0].player.id)
         assertEquals(2, result.topScorers[0].totalGoals)
-        assertEquals(1L, result.topScorers[1].player.id)
+        assertEquals("1", result.topScorers[1].player.id)
         assertEquals(1, result.topScorers[1].totalGoals)
     }
 
     @Test
     fun `givenFinishedMatchWithNullDateTime_whenInvoke_thenMatchExcludedFromMatchResults`() = runTest {
         // Given
-        val matchWithDateTime = createFinishedMatch(1L)
+        val matchWithDateTime = createFinishedMatch("1")
         val matchWithoutDateTime = Match(
-            id = 2L, teamName = "Team A", opponent = "Opp", location = "Stadium",
-            periodType = PeriodType.HALF_TIME, captainId = 1L,
+            id = "2", teamName = "Team A", opponent = "Opp", location = "Stadium",
+            periodType = PeriodType.HALF_TIME, captainId = "1",
             status = MatchStatus.FINISHED, dateTime = null,
         )
 
@@ -213,13 +213,13 @@ class GetExportDataUseCaseTest {
 
         // Then - only the match with a dateTime is included
         assertEquals(1, result.matchResults.size)
-        assertEquals(1L, result.matchResults[0].match.id)
+        assertEquals("1", result.matchResults[0].match.id)
     }
 
     @Test
     fun `givenPlayerWithNoMatchHistory_whenInvoke_thenAverageTimeIsZeroAndMatchesPlayedIsZero`() = runTest {
         // Given
-        val player = createPlayer(1L)
+        val player = createPlayer("1")
 
         every { playerRepository.getAllPlayers() } returns flowOf(listOf(player))
         every { matchRepository.getAllMatches() } returns flowOf(emptyList())
@@ -236,23 +236,23 @@ class GetExportDataUseCaseTest {
         assertEquals(0.0, result.playerStats[0].totalTimeMinutes, 0.001)
     }
 
-    private fun createPlayer(id: Long) = Player(
+    private fun createPlayer(id: String) = Player(
         id = id,
         firstName = "Player",
-        lastName = "$id",
+        lastName = id,
         number = id.toInt(),
         positions = listOf(Position.Forward),
-        teamId = 1L,
+        teamId = "1",
         isCaptain = false,
     )
 
-    private fun createFinishedMatch(id: Long) = Match(
+    private fun createFinishedMatch(id: String) = Match(
         id = id,
         teamName = "Team A",
         opponent = "Opponent",
         location = "Stadium",
         periodType = PeriodType.HALF_TIME,
-        captainId = 1L,
+        captainId = "1",
         status = MatchStatus.FINISHED,
         dateTime = 1000L,
         goals = 2,

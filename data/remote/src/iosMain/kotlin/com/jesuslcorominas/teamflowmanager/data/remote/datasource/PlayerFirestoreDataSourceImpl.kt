@@ -4,7 +4,6 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -35,25 +34,6 @@ class PlayerFirestoreDataSourceImpl(
                     .limit(1)
                     .get()
             snapshot.documents.firstOrNull()?.id
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    private suspend fun findDocumentIdByPlayerId(
-        teamDocId: String,
-        playerId: Long,
-    ): String? {
-        return try {
-            val snapshot =
-                firestore.collection(PLAYERS_COLLECTION)
-                    .where { "teamId" equalTo teamDocId }
-                    .get()
-            snapshot.documents.firstOrNull { doc ->
-                doc.id.toStableId() == playerId
-            }?.id
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
@@ -117,22 +97,12 @@ class PlayerFirestoreDataSourceImpl(
             )
         }
 
-    override suspend fun getPlayerById(playerId: Long): Player? {
-        val teamDocId = getTeamDocumentId() ?: return null
+    override suspend fun getPlayerById(playerId: String): Player? {
         return try {
-            val snapshot =
-                firestore.collection(PLAYERS_COLLECTION)
-                    .where { "teamId" equalTo teamDocId }
-                    .where { "deleted" equalTo false }
-                    .get()
-            snapshot.documents.mapNotNull { doc ->
-                try {
-                    val model = doc.data<PlayerFirestoreModel>()
-                    model.copy(id = doc.id, teamId = teamDocId).toDomain()
-                } catch (_: Exception) {
-                    null
-                }
-            }.find { it.id == playerId }
+            val doc = firestore.collection(PLAYERS_COLLECTION).document(playerId).get()
+            if (!doc.exists) return null
+            val model = doc.data<PlayerFirestoreModel>()
+            if (model.deleted) null else model.copy(id = doc.id).toDomain()
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
@@ -164,7 +134,7 @@ class PlayerFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun setPlayerAsCaptain(playerId: Long) {
+    override suspend fun setPlayerAsCaptain(playerId: String) {
         val teamDocId = getTeamDocumentId() ?: return
         // Clear existing captains first
         try {
@@ -183,9 +153,8 @@ class PlayerFirestoreDataSourceImpl(
             // Best-effort clear
         }
         // Set new captain
-        val documentId = findDocumentIdByPlayerId(teamDocId, playerId) ?: return
         try {
-            firestore.collection(PLAYERS_COLLECTION).document(documentId)
+            firestore.collection(PLAYERS_COLLECTION).document(playerId)
                 .update("captain" to true)
         } catch (e: CancellationException) {
             throw e
@@ -194,11 +163,9 @@ class PlayerFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun removePlayerAsCaptain(playerId: Long) {
-        val teamDocId = getTeamDocumentId() ?: return
-        val documentId = findDocumentIdByPlayerId(teamDocId, playerId) ?: return
+    override suspend fun removePlayerAsCaptain(playerId: String) {
         try {
-            firestore.collection(PLAYERS_COLLECTION).document(documentId)
+            firestore.collection(PLAYERS_COLLECTION).document(playerId)
                 .update("captain" to false)
         } catch (e: CancellationException) {
             throw e
@@ -207,14 +174,14 @@ class PlayerFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun insertPlayer(player: Player): Long {
+    override suspend fun insertPlayer(player: Player): String {
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("No team found for current user")
         val model = player.toFirestoreModel().copy(teamId = teamDocId)
         return try {
             val docRef = firestore.collection(PLAYERS_COLLECTION).add(model)
-            docRef.id.toStableId()
+            docRef.id
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -226,12 +193,9 @@ class PlayerFirestoreDataSourceImpl(
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("No team found for current user")
-        val documentId =
-            findDocumentIdByPlayerId(teamDocId, player.id)
-                ?: throw IllegalStateException("Cannot find Firestore document for player ${player.id}")
-        val model = player.toFirestoreModel().copy(id = documentId, teamId = teamDocId)
+        val model = player.toFirestoreModel().copy(id = player.id, teamId = teamDocId)
         try {
-            firestore.collection(PLAYERS_COLLECTION).document(documentId).set(model)
+            firestore.collection(PLAYERS_COLLECTION).document(player.id).set(model)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -239,11 +203,9 @@ class PlayerFirestoreDataSourceImpl(
         }
     }
 
-    override suspend fun deletePlayer(playerId: Long) {
-        val teamDocId = getTeamDocumentId() ?: return
-        val documentId = findDocumentIdByPlayerId(teamDocId, playerId) ?: return
+    override suspend fun deletePlayer(playerId: String) {
         try {
-            firestore.collection(PLAYERS_COLLECTION).document(documentId)
+            firestore.collection(PLAYERS_COLLECTION).document(playerId)
                 .update("deleted" to true)
         } catch (e: CancellationException) {
             throw e

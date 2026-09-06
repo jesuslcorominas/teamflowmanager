@@ -33,6 +33,17 @@ gh pr diff <PR> --repo <owner/repo>
 - Obvious risks
 - Repository/DataSource cohesion (see below)
 - Class size (see below)
+- Credential leaks (see below)
+
+### Credential leak check
+
+Scan every `+` line in the diff for:
+- Google/Firebase API keys: `AIza[0-9A-Za-z_-]{35}`
+- Private keys: `-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY`
+- Service account JSON content: `"private_key"\s*:\s*"-----BEGIN`
+- Files that should never be committed: `google-services.json`, `GoogleService-Info.plist`, `*.keystore`, `*.jks` (unless clearly a test fixture)
+
+Flag any match as **Crítico**.
 
 ### Repository / DataSource cohesion check
 
@@ -70,6 +81,8 @@ For every file touched in the diff:
 ## Cohesión de repos/datasources
 
 ## Tamaño de clases
+
+## Seguridad
 
 ## Veredicto final
 

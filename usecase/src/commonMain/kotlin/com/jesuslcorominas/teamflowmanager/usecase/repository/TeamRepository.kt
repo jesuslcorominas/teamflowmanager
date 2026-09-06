@@ -34,12 +34,10 @@ interface TeamRepository {
     /**
      * Update the club assignment of a team.
      * @param teamId The identifier of the team
-     * @param clubNumericId The club's local numeric ID
      * @param clubId The club's string identifier
      */
     suspend fun updateTeamClubId(
         teamId: String,
-        clubNumericId: Long,
         clubId: String,
     )
 

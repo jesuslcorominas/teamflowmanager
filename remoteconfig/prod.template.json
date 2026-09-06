@@ -1,0 +1,14 @@
+{
+  "conditions": [],
+  "parameters": {
+    "player_image_upload_enabled": {
+      "defaultValue": {
+        "value": "false"
+      },
+      "description": "Player photo capture/pick in the player wizard. Off: the avatar is read-only (existing photos still display). See docs/FEATURE_FLAGS.md.",
+      "valueType": "BOOLEAN"
+    }
+  },
+  "parameterGroups": {},
+  "version": {}
+}

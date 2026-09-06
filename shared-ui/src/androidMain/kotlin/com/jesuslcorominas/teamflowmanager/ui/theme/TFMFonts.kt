@@ -15,8 +15,19 @@ private val provider =
 
 private val bebasNeue = GoogleFont("Bebas Neue")
 
+private val publicSans = GoogleFont("Public Sans")
+
 actual val BebasNeueFontFamily: FontFamily =
     FontFamily(
         Font(bebasNeue, provider, FontWeight.Normal),
         Font(bebasNeue, provider, FontWeight.Bold),
+    )
+
+actual val PublicSansFontFamily: FontFamily =
+    FontFamily(
+        Font(publicSans, provider, FontWeight.Light),
+        Font(publicSans, provider, FontWeight.Normal),
+        Font(publicSans, provider, FontWeight.Medium),
+        Font(publicSans, provider, FontWeight.SemiBold),
+        Font(publicSans, provider, FontWeight.Bold),
     )

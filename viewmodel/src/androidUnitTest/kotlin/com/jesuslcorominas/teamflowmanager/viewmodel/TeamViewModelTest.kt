@@ -127,7 +127,7 @@ class TeamViewModelTest {
     fun `uiState should be Success when team exists`() =
         runTest(testDispatcher) {
             // Given
-            val team = Team(1, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
+            val team = Team("1", "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(team)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
@@ -157,7 +157,7 @@ class TeamViewModelTest {
     fun `createTeam should call createTeamUseCase with correct parameters`() =
         runTest(testDispatcher) {
             // Given
-            val team = Team(0, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
+            val team = Team("0", "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(null)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
@@ -189,7 +189,7 @@ class TeamViewModelTest {
     fun `updateTeam should call updateTeamUseCase with correct team`() =
         runTest(testDispatcher) {
             // Given
-            val team = Team(1, "Updated Team", "Updated Coach", "Updated Delegate", teamType = TeamType.FOOTBALL_5)
+            val team = Team("1", "Updated Team", "Updated Coach", "Updated Delegate", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(team)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
@@ -224,14 +224,12 @@ class TeamViewModelTest {
         runTest(testDispatcher) {
             // Given
             val clubMember = ClubMember(
-                id = 1,
+                id = "1",
                 userId = "user123",
                 name = "John Doe",
                 email = "john@example.com",
-                clubId = 100,
+                clubId = "club_firestore_123",
                 roles = listOf("Presidente"),
-                remoteId = "clubmember_doc_123",
-                clubRemoteId = "club_firestore_123"
             )
             every { getTeamUseCase.invoke() } returns flowOf(null)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
@@ -257,7 +255,6 @@ class TeamViewModelTest {
             val state = viewModel.uiState.value
             assert(state is TeamUiState.NoTeam)
             val noTeamState = state as TeamUiState.NoTeam
-            assertEquals(100L, noTeamState.clubNumericId)
             assertEquals("club_firestore_123", noTeamState.clubId)
             assertEquals(true, noTeamState.isPresident)
             assertEquals(ClubRole.PRESIDENT, noTeamState.userRole)
@@ -268,14 +265,12 @@ class TeamViewModelTest {
         runTest(testDispatcher) {
             // Given
             val clubMember = ClubMember(
-                id = 1,
+                id = "1",
                 userId = "user123",
                 name = "John Doe",
                 email = "john@example.com",
-                clubId = 100,
+                clubId = "club_firestore_123",
                 roles = listOf("Coach"),
-                remoteId = "clubmember_doc_123",
-                clubRemoteId = "club_firestore_123"
             )
             every { getTeamUseCase.invoke() } returns flowOf(null)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
@@ -301,7 +296,6 @@ class TeamViewModelTest {
             val state = viewModel.uiState.value
             assert(state is TeamUiState.NoTeam)
             val noTeamState = state as TeamUiState.NoTeam
-            assertEquals(100L, noTeamState.clubNumericId)
             assertEquals("club_firestore_123", noTeamState.clubId)
             assertEquals(false, noTeamState.isPresident)
             assertEquals(ClubRole.COACH, noTeamState.userRole)
@@ -354,7 +348,7 @@ class TeamViewModelTest {
         viewModel = createViewModelWithTeam()
         advanceUntilIdle()
         coEvery { createTeamUseCase.invoke(any()) } throws Exception("Save failed")
-        val team = Team(0, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+        val team = Team("0", "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
         viewModel.createTeam(team) {}
         advanceUntilIdle()
 
@@ -368,7 +362,7 @@ class TeamViewModelTest {
         viewModel = createViewModelWithTeam()
         advanceUntilIdle()
         coEvery { createTeamUseCase.invoke(any()) } throws Exception("Error")
-        val team = Team(0, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+        val team = Team("0", "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
 
         viewModel.createTeam(team) {}
         advanceUntilIdle()
@@ -428,8 +422,8 @@ class TeamViewModelTest {
     @Test
     fun `updateTeam should show error when team type changed and scheduled matches exist`() =
         runTest(testDispatcher) {
-            val originalTeam = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
-            val updatedTeam = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_7)
+            val originalTeam = Team("1", "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+            val updatedTeam = Team("1", "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_7)
             every { getTeamUseCase.invoke() } returns flowOf(originalTeam)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
@@ -458,7 +452,7 @@ class TeamViewModelTest {
     @Test
     fun `updateTeam should set captain when captainId provided and no current captain`() =
         runTest(testDispatcher) {
-            val team = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+            val team = Team("1", "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
             every { getTeamUseCase.invoke() } returns flowOf(team)
             every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)
@@ -480,23 +474,23 @@ class TeamViewModelTest {
             )
             advanceUntilIdle()
 
-            viewModel.updateTeam(team, 5L) {}
+            viewModel.updateTeam(team, "5") {}
             advanceUntilIdle()
 
-            coVerify { setPlayerAsCaptainUseCase.invoke(5L) }
+            coVerify { setPlayerAsCaptainUseCase.invoke("5") }
         }
 
     @Test
     fun `updateTeam should remove captain when captainId is null and captain exists`() =
         runTest(testDispatcher) {
-            val team = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+            val team = Team("1", "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
             val existingCaptain = Player(
-                id = 3L,
+                id = "3",
                 firstName = "Cap",
                 lastName = "Tain",
                 number = 1,
                 positions = emptyList(),
-                teamId = 1L,
+                teamId = "1",
                 isCaptain = true,
             )
             every { getTeamUseCase.invoke() } returns flowOf(team)
@@ -523,12 +517,12 @@ class TeamViewModelTest {
             viewModel.updateTeam(team, null) {}
             advanceUntilIdle()
 
-            coVerify { removePlayerAsCaptainUseCase.invoke(3L) }
+            coVerify { removePlayerAsCaptainUseCase.invoke("3") }
         }
 
     @Test
     fun `updateTeam should set showSaveError on exception`() = runTest(testDispatcher) {
-        val team = Team(1, "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
+        val team = Team("1", "Team", "Coach", "Delegate", teamType = TeamType.FOOTBALL_5)
         every { getTeamUseCase.invoke() } returns flowOf(team)
         every { getPlayersUseCase.invoke() } returns flowOf(emptyList<Player>())
         every { getUserClubMembershipUseCase.invoke() } returns flowOf(null)

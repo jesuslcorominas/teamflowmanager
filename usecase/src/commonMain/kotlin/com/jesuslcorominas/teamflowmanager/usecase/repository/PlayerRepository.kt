@@ -8,17 +8,17 @@ interface PlayerRepository {
 
     fun getPlayersByTeam(teamId: String): Flow<List<Player>>
 
-    suspend fun getPlayerById(playerId: Long): Player?
+    suspend fun getPlayerById(playerId: String): Player?
 
     suspend fun getCaptainPlayer(): Player?
 
-    suspend fun addPlayer(player: Player): Long
+    suspend fun addPlayer(player: Player): String
 
-    suspend fun deletePlayer(playerId: Long)
+    suspend fun deletePlayer(playerId: String)
 
     suspend fun updatePlayer(player: Player)
 
-    suspend fun setPlayerAsCaptain(playerId: Long)
+    suspend fun setPlayerAsCaptain(playerId: String)
 
-    suspend fun removePlayerAsCaptain(playerId: Long)
+    suspend fun removePlayerAsCaptain(playerId: String)
 }

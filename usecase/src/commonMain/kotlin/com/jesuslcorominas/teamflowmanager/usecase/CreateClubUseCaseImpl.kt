@@ -39,8 +39,8 @@ internal class CreateClubUseCaseImpl(
 
         // If user has a team, associate it with the newly created club
         val team = getTeam().first()
-        if (team != null && club.remoteId != null) {
-            val updatedTeam = team.copy(clubRemoteId = club.remoteId)
+        if (team != null) {
+            val updatedTeam = team.copy(clubId = club.id)
             updateTeam(updatedTeam)
         }
 

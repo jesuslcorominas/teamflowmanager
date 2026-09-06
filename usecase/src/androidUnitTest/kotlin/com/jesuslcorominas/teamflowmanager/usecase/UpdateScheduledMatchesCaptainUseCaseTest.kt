@@ -25,24 +25,24 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
     @Test
     fun `invoke should update captain in all scheduled matches`() = runTest {
         // Given
-        val captainId = 42L
+        val captainId = "42"
         val scheduledMatches = listOf(
             Match(
-                id = 1L,
+                id = "1",
                 opponent = "Team A",
                 location = "Stadium",
-                squadCallUpIds = listOf(1L, 2L, 3L),
-                captainId = 1L,
+                squadCallUpIds = listOf("1", "2", "3"),
+                captainId = "1",
                 status = MatchStatus.SCHEDULED,
                 teamName = "Team B",
                 periodType = PeriodType.HALF_TIME,
             ),
             Match(
-                id = 2L,
+                id = "2",
                 opponent = "Team B",
                 location = "Stadium",
-                squadCallUpIds = listOf(1L, 2L, 3L),
-                captainId = 1L,
+                squadCallUpIds = listOf("1", "2", "3"),
+                captainId = "1",
                 status = MatchStatus.SCHEDULED,
                 teamName = "Team B",
                 periodType = PeriodType.HALF_TIME,
@@ -54,8 +54,8 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
         useCase.invoke(captainId)
 
         // Then
-        coVerify { matchRepository.updateMatchCaptain(1L, captainId) }
-        coVerify { matchRepository.updateMatchCaptain(2L, captainId) }
+        coVerify { matchRepository.updateMatchCaptain("1", captainId) }
+        coVerify { matchRepository.updateMatchCaptain("2", captainId) }
     }
 
     @Test
@@ -63,11 +63,11 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
         // Given
         val scheduledMatches = listOf(
             Match(
-                id = 1L,
+                id = "1",
                 opponent = "Team A",
                 location = "Stadium",
-                squadCallUpIds = listOf(1L, 2L, 3L),
-                captainId = 42L,
+                squadCallUpIds = listOf("1", "2", "3"),
+                captainId = "42",
                 status = MatchStatus.SCHEDULED,
                 teamName = "Team B",
                 periodType = PeriodType.HALF_TIME,
@@ -79,7 +79,7 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
         useCase.invoke(null)
 
         // Then
-        coVerify { matchRepository.updateMatchCaptain(1L, null) }
+        coVerify { matchRepository.updateMatchCaptain("1", null) }
     }
 
     @Test
@@ -88,7 +88,7 @@ class UpdateScheduledMatchesCaptainUseCaseTest {
         coEvery { matchRepository.getScheduledMatches() } returns emptyList()
 
         // When
-        useCase.invoke(42L)
+        useCase.invoke("42")
 
         // Then
         coVerify(exactly = 0) { matchRepository.updateMatchCaptain(any(), any()) }

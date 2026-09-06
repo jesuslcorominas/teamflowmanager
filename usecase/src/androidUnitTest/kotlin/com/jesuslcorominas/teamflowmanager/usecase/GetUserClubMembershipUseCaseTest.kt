@@ -40,13 +40,12 @@ class GetUserClubMembershipUseCaseTest {
             photoUrl = "https://example.com/photo.jpg"
         )
         val clubMember = ClubMember(
-            id = 1L,
+            id = "1",
             userId = "user123",
             name = "Test User",
             email = "test@example.com",
-            clubId = 100L,
+            clubId = "100",
             roles = listOf("member"),
-            remoteId = "member1"
         )
         every { getCurrentUser() } returns flowOf(user)
         every { clubMemberRepository.getClubMemberByUserId("user123") } returns flowOf(clubMember)

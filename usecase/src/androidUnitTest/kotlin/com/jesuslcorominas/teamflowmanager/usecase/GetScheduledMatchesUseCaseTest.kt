@@ -35,21 +35,21 @@ class GetScheduledMatchesUseCaseTest {
     @Test
     fun `invoke should return scheduled matches from repository`() = runTest {
         val match1 = Match(
-            id = 1L,
+            id = "1",
             teamName = "Team A",
             opponent = "Opponent 1",
             location = "Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
             periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L)),
         )
         val match2 = Match(
-            id = 2L,
+            id = "2",
             teamName = "Team A",
             opponent = "Opponent 2",
             location = "Arena",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
             periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L)),
         )
         coEvery { matchRepository.getScheduledMatches() } returns listOf(match1, match2)
@@ -57,7 +57,7 @@ class GetScheduledMatchesUseCaseTest {
         val result = useCase.invoke()
 
         assertEquals(2, result.size)
-        assertEquals(1L, result[0].id)
-        assertEquals(2L, result[1].id)
+        assertEquals("1", result[0].id)
+        assertEquals("2", result[1].id)
     }
 }

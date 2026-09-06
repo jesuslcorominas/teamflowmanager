@@ -25,7 +25,7 @@ class DeletePlayerUseCaseTest {
     @Test
     fun `invoke should delete player from repository`() = runTest {
         // Given
-        val playerId = 1L
+        val playerId = "1"
         coEvery { playerRepository.deletePlayer(playerId) } just runs
 
         // When

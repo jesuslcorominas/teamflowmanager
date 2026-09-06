@@ -28,16 +28,16 @@ class GetMatchByIdUseCaseTest {
     fun `invoke should return match from repository by id`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val match =
                 Match(
                     id = matchId,
-                    teamId = 1L,
+                    teamId = "1",
                     opponent = "Rival FC",
                     location = "Stadium",
                     teamName = "Team B",
                     periodType = PeriodType.HALF_TIME,
-                    captainId = 1L,
+                    captainId = "1",
                 )
             every { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
@@ -54,7 +54,7 @@ class GetMatchByIdUseCaseTest {
     fun `invoke should return null when match not found`() =
         runTest {
             // Given
-            val matchId = 999L
+            val matchId = "999"
             every { matchRepository.getMatchById(matchId) } returns flowOf(null)
 
             // When

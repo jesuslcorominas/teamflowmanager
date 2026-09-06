@@ -13,7 +13,7 @@ internal class StartTimeoutUseCaseImpl(
     private val playerTimeRepository: PlayerTimeRepository,
 ) : StartTimeoutUseCase {
     override suspend fun invoke(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     ) {
         // Get all player times for this match that are currently playing

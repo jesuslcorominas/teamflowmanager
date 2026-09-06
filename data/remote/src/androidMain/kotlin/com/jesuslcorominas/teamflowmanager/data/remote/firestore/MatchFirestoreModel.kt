@@ -1,7 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.google.firebase.firestore.DocumentId
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
@@ -11,8 +10,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
  * Firestore model for Match document.
  * This model is used for serialization/deserialization with Firestore.
  * The `id` field is automatically populated by Firestore with the document ID.
- * The `teamId` field stores the Firestore document ID of the team, which is used by
- * security rules to validate that the authenticated user is the owner of the team.
  */
 data class MatchFirestoreModel(
     @DocumentId
@@ -23,9 +20,9 @@ data class MatchFirestoreModel(
     val location: String = "",
     val dateTime: Long? = null,
     val numberOfPeriods: Int = 2,
-    val squadCallUpIds: List<Long> = emptyList(),
-    val captainId: Long = 0L,
-    val startingLineupIds: List<Long> = emptyList(),
+    val squadCallUpIds: List<String> = emptyList(),
+    val captainId: String = "",
+    val startingLineupIds: List<String> = emptyList(),
     val status: String = MatchStatus.SCHEDULED.name,
     val archived: Boolean = false,
     val pauseCount: Int = 0,
@@ -45,7 +42,7 @@ data class MatchFirestoreModel(
         dateTime = null,
         numberOfPeriods = 2,
         squadCallUpIds = emptyList(),
-        captainId = 0L,
+        captainId = "",
         startingLineupIds = emptyList(),
         status = MatchStatus.SCHEDULED.name,
         archived = false,
@@ -79,8 +76,8 @@ data class MatchPeriodFirestoreModel(
 fun MatchFirestoreModel.toDomain(): Match {
     val periodType = PeriodType.fromNumberOfPeriods(numberOfPeriods)
     return Match(
-        id = id.toStableId(),
-        teamId = teamId.toStableId(),
+        id = id,
+        teamId = teamId,
         teamName = teamName,
         opponent = opponent,
         location = location,
@@ -118,8 +115,8 @@ fun MatchFirestoreModel.toDomain(): Match {
 
 fun Match.toFirestoreModel(): MatchFirestoreModel =
     MatchFirestoreModel(
-        id = "", // Will be set when inserting/updating
-        teamId = "", // Will be set by the data source
+        id = id,
+        teamId = teamId,
         teamName = teamName,
         opponent = opponent,
         location = location,

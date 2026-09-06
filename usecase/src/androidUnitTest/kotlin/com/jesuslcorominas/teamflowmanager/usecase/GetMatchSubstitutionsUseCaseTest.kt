@@ -27,22 +27,22 @@ class GetMatchSubstitutionsUseCaseTest {
     fun `invoke should return substitutions for given match id`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val substitutions =
                 listOf(
                     PlayerSubstitution(
-                        id = 1L,
+                        id = "1",
                         matchId = matchId,
-                        playerOutId = 2L,
-                        playerInId = 3L,
+                        playerOutId = "2",
+                        playerInId = "3",
                         substitutionTimeMillis = System.currentTimeMillis(),
                         matchElapsedTimeMillis = 300000L,
                     ),
                     PlayerSubstitution(
-                        id = 2L,
+                        id = "2",
                         matchId = matchId,
-                        playerOutId = 4L,
-                        playerInId = 5L,
+                        playerOutId = "4",
+                        playerInId = "5",
                         substitutionTimeMillis = System.currentTimeMillis(),
                         matchElapsedTimeMillis = 600000L,
                     ),
@@ -61,7 +61,7 @@ class GetMatchSubstitutionsUseCaseTest {
     fun `invoke should return empty list when no substitutions exist`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             every { playerSubstitutionRepository.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
 
             // When

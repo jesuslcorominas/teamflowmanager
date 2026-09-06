@@ -127,11 +127,10 @@ class CreateClubViewModelTest {
     fun `createClub should succeed with valid club name`() = runTest {
         val clubName = "Test Club"
         val expectedClub = Club(
-            id = 1L,
+            id = "club123",
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            remoteId = "club123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase(clubName) } returns expectedClub
@@ -145,7 +144,7 @@ class CreateClubViewModelTest {
             analyticsTracker.logEvent(
                 AnalyticsEvent.CLUB_CREATED,
                 mapOf(
-                    AnalyticsParam.CLUB_ID to expectedClub.id.toString(),
+                    AnalyticsParam.CLUB_ID to expectedClub.id,
                     AnalyticsParam.CLUB_NAME to expectedClub.name,
                 ),
             )
@@ -156,11 +155,10 @@ class CreateClubViewModelTest {
     fun `createClub should emit Loading state while creating`() = runTest(testDispatcher) {
         val clubName = "Test Club"
         val expectedClub = Club(
-            id = 1L,
+            id = "club123",
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            remoteId = "club123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase(clubName) } coAnswers {
@@ -200,11 +198,10 @@ class CreateClubViewModelTest {
     fun `createClub should trim whitespace from club name`() = runTest {
         val clubName = "  Test Club  "
         val expectedClub = Club(
-            id = 1L,
+            id = "club123",
             ownerId = "user123",
             name = "Test Club",
             invitationCode = "ABC12345",
-            remoteId = "club123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase("Test Club") } returns expectedClub
@@ -234,11 +231,10 @@ class CreateClubViewModelTest {
         every { isNotificationPermissionGranted() } returns true
         val clubName = "Test Club"
         val expectedClub = Club(
-            id = 1L,
+            id = "club_firestore_123",
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            remoteId = "club_firestore_123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase(clubName) } returns expectedClub
@@ -254,11 +250,10 @@ class CreateClubViewModelTest {
         every { isNotificationPermissionGranted() } returns false
         val clubName = "Test Club"
         val expectedClub = Club(
-            id = 1L,
+            id = "club_firestore_123",
             ownerId = "user123",
             name = clubName,
             invitationCode = "ABC12345",
-            remoteId = "club_firestore_123",
         )
         viewModel.onClubNameChanged(clubName)
         coEvery { createClubUseCase(clubName) } returns expectedClub

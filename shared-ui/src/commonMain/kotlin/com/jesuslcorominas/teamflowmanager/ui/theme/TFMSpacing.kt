@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.theme
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -23,3 +24,5 @@ object TFMSpacing {
     val spacing17: Dp = 128.dp
     val spacing18: Dp = 144.dp
 }
+
+val LocalSpacing = staticCompositionLocalOf { TFMSpacing }

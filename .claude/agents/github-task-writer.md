@@ -6,7 +6,7 @@
 name: github-task-writer
 description: Issue generator using templates
 tools: all
-model: sonnet
+model: haiku
 ---
 
 # TEMPLATE MODE

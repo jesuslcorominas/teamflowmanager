@@ -24,7 +24,7 @@ class GetDefaultCaptainUseCaseTest {
     @Test
     fun `invoke should return captain ID when set`() = runTest {
         // Given
-        val captainId = 42L
+        val captainId = "42"
         every { preferencesRepository.getDefaultCaptainId() } returns captainId
 
         // When

@@ -14,11 +14,11 @@ internal class PreferencesRepositoryImpl(
         preferencesDataSource.setShouldShowInvalidSubstitutionAlert(shouldShow)
     }
 
-    override fun getDefaultCaptainId(): Long? {
+    override fun getDefaultCaptainId(): String? {
         return preferencesDataSource.getDefaultCaptainId()
     }
 
-    override fun setDefaultCaptainId(playerId: Long?) {
+    override fun setDefaultCaptainId(playerId: String?) {
         preferencesDataSource.setDefaultCaptainId(playerId)
     }
 

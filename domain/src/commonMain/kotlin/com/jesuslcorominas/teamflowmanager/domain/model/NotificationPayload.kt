@@ -26,5 +26,46 @@ sealed class NotificationPayload {
                     "userEmail" to userEmail,
                 )
         }
+
+        data class MatchStart(val teamName: String, val opponent: String) : Typed() {
+            override val type = NotificationType.MATCH_START
+            override val params = mapOf("teamName" to teamName, "opponent" to opponent)
+        }
+
+        data class MatchEnd(
+            val teamName: String,
+            val opponent: String,
+            val teamGoals: Int,
+            val opponentGoals: Int,
+        ) : Typed() {
+            override val type = NotificationType.MATCH_END
+            override val params =
+                mapOf(
+                    "teamName" to teamName,
+                    "opponent" to opponent,
+                    "teamGoals" to teamGoals.toString(),
+                    "opponentGoals" to opponentGoals.toString(),
+                )
+        }
+
+        data class GoalScored(
+            val teamName: String,
+            val opponentName: String,
+            val teamGoals: Int,
+            val opponentGoals: Int,
+            val minuteOfPlay: String?,
+            val isOpponentGoal: Boolean,
+        ) : Typed() {
+            override val type = NotificationType.GOAL
+            override val params =
+                buildMap {
+                    put("teamName", teamName)
+                    put("opponentName", opponentName)
+                    put("teamGoals", teamGoals.toString())
+                    put("opponentGoals", opponentGoals.toString())
+                    put("isOpponentGoal", isOpponentGoal.toString())
+                    minuteOfPlay?.let { put("minuteOfPlay", it) }
+                }
+        }
     }
 }

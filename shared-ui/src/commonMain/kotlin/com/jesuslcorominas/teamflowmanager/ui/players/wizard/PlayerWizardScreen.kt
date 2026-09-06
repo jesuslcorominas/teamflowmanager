@@ -1,9 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.ui.players.wizard
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppBackHandler
+import com.jesuslcorominas.teamflowmanager.ui.components.IosBackButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.CaptainConfirmationDialog
@@ -31,10 +32,10 @@ import teamflowmanager.shared_ui.generated.resources.unsaved_changes_title
 
 @Composable
 fun PlayerWizardScreen(
-    playerId: Long,
+    playerId: String,
     onNavigateBack: () -> Unit,
     wizardViewModel: PlayerWizardViewModel =
-        koinViewModel(key = playerId.toString(), parameters = { parametersOf(playerId) }),
+        koinViewModel(key = playerId, parameters = { parametersOf(playerId) }),
 ) {
     TrackScreenView(screenName = ScreenName.PLAYER_WIZARD, screenClass = "PlayerWizardScreen")
 
@@ -54,14 +55,14 @@ fun PlayerWizardScreen(
         wizardViewModel.requestBack(onNavigateBack)
     }
 
-    Scaffold { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
             is PlayerWizardUiState.Loading -> Loading()
             is PlayerWizardUiState.Error -> {
                 LaunchedEffect(Unit) { onNavigateBack() }
             }
             is PlayerWizardUiState.Ready -> {
-                Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                Column(modifier = Modifier.fillMaxSize()) {
                     when (currentStep) {
                         PlayerWizardStep.PLAYER_DATA -> {
                             PlayerDataStep(
@@ -70,6 +71,7 @@ fun PlayerWizardScreen(
                                 initialNumber = wizardViewModel.getNumber(),
                                 initialIsCaptain = wizardViewModel.getIsCaptain(),
                                 initialImageUri = wizardViewModel.getImageUri(),
+                                isImageUploadEnabled = wizardViewModel.isImageUploadEnabled,
                                 onDataChanged = { firstName, lastName, number, isCaptain, imageUri ->
                                     wizardViewModel.setPlayerData(firstName, lastName, number, isCaptain, imageUri)
                                 },
@@ -132,15 +134,17 @@ fun PlayerWizardScreen(
             }
         }
 
-        if (showExitDialog) {
-            AppAlertDialog(
-                title = stringResource(Res.string.unsaved_changes_title),
-                message = stringResource(Res.string.discard_message),
-                confirmText = stringResource(Res.string.discard),
-                dismissText = stringResource(Res.string.cancel),
-                onConfirm = { wizardViewModel.discardChanges(onNavigateBack) },
-                onDismiss = { wizardViewModel.dismissExitDialog() },
-            )
-        }
+        IosBackButton(onBack = { wizardViewModel.requestBack(onNavigateBack) })
+    }
+
+    if (showExitDialog) {
+        AppAlertDialog(
+            title = stringResource(Res.string.unsaved_changes_title),
+            message = stringResource(Res.string.discard_message),
+            confirmText = stringResource(Res.string.discard),
+            dismissText = stringResource(Res.string.cancel),
+            onConfirm = { wizardViewModel.discardChanges(onNavigateBack) },
+            onDismiss = { wizardViewModel.dismissExitDialog() },
+        )
     }
 }

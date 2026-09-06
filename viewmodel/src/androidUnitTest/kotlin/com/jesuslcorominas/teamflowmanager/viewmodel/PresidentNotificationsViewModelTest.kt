@@ -65,14 +65,12 @@ class PresidentNotificationsViewModelTest {
 
     private fun aClubMember() =
         ClubMember(
-            id = 1L,
+            id = "1",
             userId = "user1",
             name = "Test User",
             email = "test@test.com",
-            clubId = 1L,
+            clubId = "club1",
             roles = listOf("PRESIDENT"),
-            remoteId = "member1",
-            clubRemoteId = "club1",
         )
 
     private fun aNotification(
@@ -114,9 +112,9 @@ class PresidentNotificationsViewModelTest {
         }
 
     @Test
-    fun `when getUserClubMembership returns member with blank clubRemoteId state becomes NoClubMembership`() =
+    fun `when getUserClubMembership returns member with blank clubId state becomes NoClubMembership`() =
         runTest {
-            val memberWithBlankClubId = aClubMember().copy(clubRemoteId = "")
+            val memberWithBlankClubId = aClubMember().copy(clubId = "")
             every { getUserClubMembership() } returns flowOf(memberWithBlankClubId)
 
             val viewModel = createViewModel()

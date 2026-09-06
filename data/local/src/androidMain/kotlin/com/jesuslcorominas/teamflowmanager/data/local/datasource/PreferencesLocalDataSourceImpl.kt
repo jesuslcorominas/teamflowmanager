@@ -20,14 +20,13 @@ internal class PreferencesLocalDataSourceImpl(
             .apply()
     }
 
-    override fun getDefaultCaptainId(): Long? {
-        val captainId = sharedPreferences.getLong(KEY_DEFAULT_CAPTAIN_ID, -1L)
-        return if (captainId == -1L) null else captainId
+    override fun getDefaultCaptainId(): String? {
+        return sharedPreferences.getString(KEY_DEFAULT_CAPTAIN_ID, null)
     }
 
-    override fun setDefaultCaptainId(playerId: Long?) {
+    override fun setDefaultCaptainId(playerId: String?) {
         sharedPreferences.edit()
-            .putLong(KEY_DEFAULT_CAPTAIN_ID, playerId ?: -1L)
+            .putString(KEY_DEFAULT_CAPTAIN_ID, playerId)
             .apply()
     }
 

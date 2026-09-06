@@ -1,16 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
-/**
- * iOS Firestore model for Player — uses @Serializable (kotlinx.serialization).
- * Note: the field name is "captain" in Firestore (matches Android's @PropertyName("captain")).
- * The document ID is injected externally from DocumentSnapshot.id.
- */
 @Serializable
 data class PlayerFirestoreModel(
     @Transient val id: String = "",
@@ -26,7 +20,7 @@ data class PlayerFirestoreModel(
 
 fun PlayerFirestoreModel.toDomain(): Player =
     Player(
-        id = id.toStableId(),
+        id = id,
         firstName = firstName,
         lastName = lastName,
         number = number,
@@ -35,7 +29,7 @@ fun PlayerFirestoreModel.toDomain(): Player =
                 .split(",")
                 .filter { it.isNotBlank() }
                 .mapNotNull { Position.fromId(it.trim()) },
-        teamId = teamId.toStableId(),
+        teamId = teamId,
         isCaptain = captain,
         imageUri = imageUri,
         deleted = deleted,
@@ -43,12 +37,12 @@ fun PlayerFirestoreModel.toDomain(): Player =
 
 fun Player.toFirestoreModel(): PlayerFirestoreModel =
     PlayerFirestoreModel(
-        id = "",
+        id = id,
         firstName = firstName,
         lastName = lastName,
         number = number,
         positions = positions.joinToString(",") { it.id },
-        teamId = "",
+        teamId = teamId,
         captain = isCaptain,
         imageUri = imageUri,
         deleted = deleted,

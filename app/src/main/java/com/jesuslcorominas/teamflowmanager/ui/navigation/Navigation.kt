@@ -1,5 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.EnterTransition
@@ -7,8 +10,14 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,6 +25,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.jesuslcorominas.teamflowmanager.R
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
@@ -27,7 +40,7 @@ import com.jesuslcorominas.teamflowmanager.ui.club.PresidentNotificationsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.PresidentTeamDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
 import com.jesuslcorominas.teamflowmanager.ui.login.LoginScreen
-import com.jesuslcorominas.teamflowmanager.ui.main.search.LocalSearchState
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalSearchState
 import com.jesuslcorominas.teamflowmanager.ui.matches.ArchivedMatchesScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchListScreen
 import com.jesuslcorominas.teamflowmanager.ui.matches.MatchScreen
@@ -70,11 +83,6 @@ fun Navigation(
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
                     }
                 },
-                onNavigateToCreateTeam = {
-                    navController.navigate(Route.Team.createRoute(Route.Team.MODE_CREATE)) {
-                        popUpTo(Route.Splash.createRoute()) { inclusive = true }
-                    }
-                },
                 onNavigateToAwaitTeam = {
                     navController.navigate(Route.PendingTeamAssignment.createRoute()) {
                         popUpTo(Route.Splash.createRoute()) { inclusive = true }
@@ -94,7 +102,9 @@ fun Navigation(
         }
 
         composable(Route.Login.createRoute()) {
+            val context = LocalContext.current
             LoginScreen(
+                onSignInWithGoogle = { getGoogleIdToken(context) },
                 onLoginSuccess = {
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(Route.Login.createRoute()) { inclusive = true }
@@ -110,11 +120,6 @@ fun Navigation(
                 },
                 onJoinClub = {
                     navController.navigate(Route.JoinClub.createRoute())
-                },
-                onSignedOut = {
-                    navController.navigate(Route.Login.createRoute()) {
-                        popUpTo(0) { inclusive = true }
-                    }
                 },
             )
         }
@@ -163,7 +168,6 @@ fun Navigation(
                         popUpTo(Route.Team.createRoute(Route.Team.MODE_CREATE)) { inclusive = true }
                     }
                 },
-                currentBackHandler = if (mode == Route.Team.MODE_EDIT) currentBackHandler else null,
             )
         }
 
@@ -175,8 +179,8 @@ fun Navigation(
         ) {
             TeamListScreen(
                 onTeamClick = { team ->
-                    team.remoteId?.let { remoteId ->
-                        navController.navigate(Route.PresidentTeamDetail.createRoute(remoteId))
+                    if (team.id.isNotEmpty()) {
+                        navController.navigate(Route.PresidentTeamDetail.createRoute(team.id))
                     }
                 },
             )
@@ -203,7 +207,31 @@ fun Navigation(
             PresidentTeamDetailScreen(
                 teamId = teamId,
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToMatch = { matchId ->
+                    navController.navigate(Route.PresidentMatchDetail.createRoute(teamId, matchId))
+                },
             )
+        }
+
+        composable(
+            route = Route.PresidentMatchDetail.FULL_ROUTE,
+            arguments =
+                listOf(
+                    navArgument(Route.PresidentMatchDetail.ARG_TEAM_ID) {
+                        type = NavType.StringType
+                    },
+                    navArgument(Route.PresidentMatchDetail.ARG_MATCH_ID) {
+                        type = NavType.StringType
+                    },
+                ),
+        ) { backStackEntry ->
+            val teamId =
+                backStackEntry.arguments?.getString(Route.PresidentMatchDetail.ARG_TEAM_ID)
+                    ?: return@composable
+            val matchId =
+                backStackEntry.arguments?.getString(Route.PresidentMatchDetail.ARG_MATCH_ID)
+                    ?: return@composable
+            MatchScreen(matchId = matchId, readOnly = true)
         }
 
         composable(Route.ClubMembers.createRoute()) {
@@ -211,7 +239,17 @@ fun Navigation(
         }
 
         composable(Route.ClubSettings.createRoute()) {
-            ClubSettingsScreen()
+            val context = LocalContext.current
+            ClubSettingsScreen(
+                onShareCode = { code ->
+                    val intent =
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, code)
+                        }
+                    context.startActivity(Intent.createChooser(intent, null))
+                },
+            )
         }
 
         composable(Route.PresidentNotifications.createRoute()) {
@@ -221,7 +259,7 @@ fun Navigation(
         composable(Route.Players.createRoute()) {
             PlayersScreen(
                 onNavigateToCreatePlayer = {
-                    navController.navigate(Route.PlayerWizard.createRoute(0L))
+                    navController.navigate(Route.PlayerWizard.createRoute(""))
                 },
                 onNavigateToEditPlayer = { playerId ->
                     navController.navigate(Route.PlayerWizard.createRoute(playerId))
@@ -234,7 +272,8 @@ fun Navigation(
             arguments =
                 listOf(
                     navArgument(Route.PlayerWizard.ARG_PLAYER_ID) {
-                        type = NavType.LongType
+                        type = NavType.StringType
+                        defaultValue = ""
                     },
                 ),
             // Instant transitions: wizard changes topBar/bottomBar visibility, so we switch
@@ -244,7 +283,7 @@ fun Navigation(
             popEnterTransition = { EnterTransition.None },
             popExitTransition = { ExitTransition.None },
         ) { backStackEntry ->
-            val playerId = backStackEntry.arguments?.getLong(Route.PlayerWizard.ARG_PLAYER_ID) ?: 0L
+            val playerId = backStackEntry.arguments?.getString(Route.PlayerWizard.ARG_PLAYER_ID) ?: ""
             PlayerWizardScreen(
                 playerId = playerId,
                 onNavigateBack = { navController.popBackStack() },
@@ -252,7 +291,18 @@ fun Navigation(
         }
 
         composable(Route.Analysis.createRoute()) {
-            AnalysisScreen()
+            val context = LocalContext.current
+            AnalysisScreen(
+                onShareFile = { uri ->
+                    val intent =
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "application/pdf"
+                            putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                    context.startActivity(Intent.createChooser(intent, null))
+                },
+            )
         }
 
         composable(Route.Matches.createRoute()) {
@@ -282,8 +332,8 @@ fun Navigation(
             arguments =
                 listOf(
                     navArgument(Route.CreateMatch.ARG_MATCH_ID) {
-                        type = NavType.LongType
-                        defaultValue = 0L
+                        type = NavType.StringType
+                        defaultValue = ""
                     },
                 ),
             // Instant transitions: same reason as PlayerWizard.
@@ -292,11 +342,10 @@ fun Navigation(
             popEnterTransition = { EnterTransition.None },
             popExitTransition = { ExitTransition.None },
         ) { backStackEntry ->
-            val matchId = backStackEntry.arguments?.getLong(Route.CreateMatch.ARG_MATCH_ID) ?: 0L
+            val matchId = backStackEntry.arguments?.getString(Route.CreateMatch.ARG_MATCH_ID) ?: ""
             MatchCreationWizardScreen(
                 matchId = matchId,
                 onNavigateBack = { navController.popBackStack() },
-                currentBackHandler = currentBackHandler,
             )
         }
 
@@ -304,7 +353,7 @@ fun Navigation(
             route = Route.Match.FULL_ROUTE,
             arguments =
                 listOf(
-                    navArgument(Route.Match.ARG_MATCH_ID) { type = NavType.LongType },
+                    navArgument(Route.Match.ARG_MATCH_ID) { type = NavType.StringType },
                 ),
             deepLinks =
                 listOf(
@@ -314,9 +363,20 @@ fun Navigation(
                 ),
         ) { backStackEntry ->
             val matchId =
-                backStackEntry.arguments?.getLong(Route.Match.ARG_MATCH_ID)
+                backStackEntry.arguments?.getString(Route.Match.ARG_MATCH_ID)
                     ?: error("matchId required")
-            MatchScreen(matchId = matchId, onTitleChange = onTitleChange)
+            // Pre-migration deep links in notifications stored a Long hash as the matchId.
+            // The hash is not reversible, so we cannot locate the original Firestore document.
+            // Redirect to the matches list instead of showing an empty screen.
+            if (matchId.all { it.isDigit() }) {
+                LaunchedEffect(matchId) {
+                    navController.navigate(Route.Matches.createRoute()) {
+                        popUpTo(Route.Match.FULL_ROUTE) { inclusive = true }
+                    }
+                }
+            } else {
+                MatchScreen(matchId = matchId, onTitleChange = onTitleChange)
+            }
         }
 
         composable(route = Route.Settings.createRoute()) {
@@ -327,7 +387,6 @@ fun Navigation(
                     }
                 },
                 onRoleChanged = {
-                    onRoleChanged()
                     navController.navigate(Route.Splash.createRoute()) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -468,5 +527,31 @@ private fun NavHostController.navigateToMatches() {
         popUpTo(graph.startDestinationId) { inclusive = false }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+private suspend fun getGoogleIdToken(context: Context): String {
+    val credentialManager = CredentialManager.create(context)
+    val googleIdOption =
+        GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(context.getString(R.string.default_web_client_id))
+            .setAutoSelectEnabled(true)
+            .build()
+    val request = GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
+    return try {
+        val result = credentialManager.getCredential(request = request, context = context)
+        val credential = result.credential
+        if (credential is CustomCredential &&
+            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+        ) {
+            GoogleIdTokenCredential.createFrom(credential.data).idToken
+        } else {
+            throw IllegalStateException("Unexpected credential type")
+        }
+    } catch (e: GetCredentialException) {
+        throw IllegalStateException("Google sign-in failed: ${e.message}", e)
+    } catch (e: GoogleIdTokenParsingException) {
+        throw IllegalStateException("Failed to parse Google ID token: ${e.message}", e)
     }
 }

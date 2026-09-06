@@ -121,13 +121,13 @@ class JoinClubViewModelTest {
     @Test
     fun `joinClub should succeed with valid code`() = runTest {
         val code = "ABC123"
-        val club = Club(id = 1L, ownerId = "owner", name = "Test Club", invitationCode = code)
+        val club = Club(id = "club-1", ownerId = "owner", name = "Test Club", invitationCode = code)
         val clubMember = ClubMember(
-            id = 1L,
+            id = "1",
             userId = "user1",
             name = "User",
             email = "user@test.com",
-            clubId = 1L,
+            clubId = "club-1",
             roles = listOf("Coach"),
         )
         val result = JoinClubResult(club = club, orphanTeam = null, clubMember = clubMember)
@@ -144,20 +144,20 @@ class JoinClubViewModelTest {
     @Test
     fun `joinClub should track orphan team event when result has orphan team`() = runTest {
         val code = "ABC123"
-        val club = Club(id = 1L, ownerId = "owner", name = "Test Club", invitationCode = code)
+        val club = Club(id = "club-1", ownerId = "owner", name = "Test Club", invitationCode = code)
         val orphanTeam = Team(
-            id = 5L,
+            id = "5",
             name = "Orphan Team",
             coachName = "Coach",
             delegateName = "Delegate",
             teamType = TeamType.FOOTBALL_5,
         )
         val clubMember = ClubMember(
-            id = 1L,
+            id = "1",
             userId = "user1",
             name = "User",
             email = "user@test.com",
-            clubId = 1L,
+            clubId = "club-1",
             roles = listOf("Coach"),
         )
         val result = JoinClubResult(club = club, orphanTeam = orphanTeam, clubMember = clubMember)
@@ -200,18 +200,17 @@ class JoinClubViewModelTest {
         every { isNotificationPermissionGranted() } returns true
         val code = "ABC123"
         val club = Club(
-            id = 1L,
+            id = "club_firestore_123",
             ownerId = "owner",
             name = "Test Club",
             invitationCode = code,
-            remoteId = "club_firestore_123",
         )
         val clubMember = ClubMember(
-            id = 1L,
+            id = "1",
             userId = "user1",
             name = "User",
             email = "user@test.com",
-            clubId = 1L,
+            clubId = "club_firestore_123",
             roles = listOf("Coach"),
         )
         val result = JoinClubResult(club = club, orphanTeam = null, clubMember = clubMember)
@@ -229,18 +228,17 @@ class JoinClubViewModelTest {
         every { isNotificationPermissionGranted() } returns false
         val code = "ABC123"
         val club = Club(
-            id = 1L,
+            id = "club_firestore_123",
             ownerId = "owner",
             name = "Test Club",
             invitationCode = code,
-            remoteId = "club_firestore_123",
         )
         val clubMember = ClubMember(
-            id = 1L,
+            id = "1",
             userId = "user1",
             name = "User",
             email = "user@test.com",
-            clubId = 1L,
+            clubId = "club_firestore_123",
             roles = listOf("Coach"),
         )
         val result = JoinClubResult(club = club, orphanTeam = null, clubMember = clubMember)

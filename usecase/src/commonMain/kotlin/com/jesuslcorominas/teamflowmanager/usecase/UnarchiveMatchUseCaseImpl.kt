@@ -6,7 +6,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 internal class UnarchiveMatchUseCaseImpl(
     private val matchRepository: MatchRepository,
 ) : UnarchiveMatchUseCase {
-    override suspend fun invoke(matchId: Long) {
+    override suspend fun invoke(matchId: String) {
         matchRepository.unarchiveMatch(matchId)
     }
 }

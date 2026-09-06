@@ -6,6 +6,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
+import com.jesuslcorominas.teamflowmanager.domain.config.FeatureFlags
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPlayerUseCase
@@ -22,7 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class PlayerWizardViewModel(
-    private val playerId: Long,
+    private val playerId: String,
     private val getPlayerByIdUseCase: GetPlayerByIdUseCase,
     private val addPlayerUseCase: AddPlayerUseCase,
     private val updatePlayerUseCase: UpdatePlayerUseCase,
@@ -33,7 +34,12 @@ class PlayerWizardViewModel(
     private val getScheduledMatchesUseCase: GetScheduledMatchesUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
+    private val featureFlags: FeatureFlags,
 ) : ViewModel() {
+    /** Whether the photo picker is offered in the wizard. Remotely switchable. */
+    val isImageUploadEnabled: Boolean
+        get() = featureFlags.isPlayerImageUploadEnabled
+
     private val _uiState = MutableStateFlow<PlayerWizardUiState>(PlayerWizardUiState.Loading)
     val uiState: StateFlow<PlayerWizardUiState> = _uiState.asStateFlow()
 
@@ -63,14 +69,14 @@ class PlayerWizardViewModel(
     private var originalPositions: List<Position> = emptyList()
 
     init {
-        if (playerId > 0L) {
+        if (playerId.isNotEmpty()) {
             initializeForEdit(playerId)
         } else {
             initializeForCreate()
         }
     }
 
-    private fun initializeForEdit(playerId: Long) {
+    private fun initializeForEdit(playerId: String) {
         viewModelScope.launch {
             val player = getPlayerByIdUseCase.invoke(playerId)
             if (player != null) {
@@ -145,7 +151,7 @@ class PlayerWizardViewModel(
 
     fun getSelectedPositions() = selectedPositions
 
-    fun isEditMode() = playerId != 0L
+    fun isEditMode() = playerId.isNotEmpty()
 
     fun hasUnsavedChanges(): Boolean {
         return firstName != originalFirstName ||
@@ -202,7 +208,7 @@ class PlayerWizardViewModel(
                     lastName = lastName,
                     number = number.toInt(),
                     positions = selectedPositions,
-                    teamId = 1, // TODO: Get team ID properly
+                    teamId = "", // resolved server-side on insert
                     isCaptain = isCaptain,
                     imageUri = imageUri,
                 )
@@ -286,7 +292,7 @@ class PlayerWizardViewModel(
     ) {
         viewModelScope.launch {
             try {
-                val isNewPlayer = player.id == 0L
+                val isNewPlayer = player.id.isEmpty()
 
                 crashReporter.log(
                     "Saving player via wizard: ${player.firstName} ${player.lastName}, isNew: $isNewPlayer",

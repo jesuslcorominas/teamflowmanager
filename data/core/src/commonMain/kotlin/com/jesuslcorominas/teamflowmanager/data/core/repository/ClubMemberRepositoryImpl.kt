@@ -16,7 +16,6 @@ internal class ClubMemberRepositoryImpl(
         userId: String,
         name: String,
         email: String,
-        clubNumericId: Long,
         clubId: String,
         roles: List<String>,
     ): ClubMember {
@@ -24,7 +23,6 @@ internal class ClubMemberRepositoryImpl(
             userId,
             name,
             email,
-            clubNumericId,
             clubId,
             roles,
         )

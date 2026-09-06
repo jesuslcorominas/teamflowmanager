@@ -1,10 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.GoalFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseGoalDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
-import com.jesuslcorominas.teamflowmanager.data.remote.util.toStableId
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -24,6 +22,7 @@ class GoalFirestoreDataSourceImpl(
     companion object {
         private const val GOALS_COLLECTION = "goals"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     private suspend fun getTeamDocumentId(): String? {
@@ -42,36 +41,50 @@ class GoalFirestoreDataSourceImpl(
         }
     }
 
-    override fun getMatchGoals(matchId: Long): Flow<List<Goal>> =
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                val doc = firestore.collection(MATCHES_COLLECTION).document(matchId).get()
+                if (!doc.exists) {
+                    null
+                } else {
+                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+
+    override fun getMatchGoals(matchId: String): Flow<List<Goal>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val snapshots =
+            val newGoals =
                 firestore.collection(GOALS_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId }
                     .snapshots
-            emitAll(
-                snapshots.map { qs ->
-                    qs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<GoalFirestoreModel>().copy(id = doc.id).toDomain()
-                        } catch (_: Exception) {
-                            null
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            try {
+                                parseGoalDocument(doc.data<Map<String, Any?>>(), doc.id, matchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
+                    }.catch { e ->
+                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                     }
-                }.catch { e ->
-                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
-                },
-            )
+            emitAll(newGoals)
         }
 
     override fun getAllTeamGoals(): Flow<List<Goal>> =
@@ -94,7 +107,9 @@ class GoalFirestoreDataSourceImpl(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
                         try {
-                            doc.data<GoalFirestoreModel>().copy(id = doc.id).toDomain()
+                            val rawData = doc.data<Map<String, Any?>>()
+                            val rawMatchId = rawData["matchId"]?.toString() ?: ""
+                            parseGoalDocument(rawData, doc.id, rawMatchId)
                         } catch (_: Exception) {
                             null
                         }
@@ -105,14 +120,14 @@ class GoalFirestoreDataSourceImpl(
             )
         }
 
-    override suspend fun insertGoal(goal: Goal): Long {
+    override suspend fun insertGoal(goal: Goal): String {
         val teamDocId =
             getTeamDocumentId()
                 ?: throw IllegalStateException("Team must exist to insert goal")
         return try {
             val model = goal.toFirestoreModel().copy(teamId = teamDocId)
             val docRef = firestore.collection(GOALS_COLLECTION).add(model)
-            docRef.id.toStableId()
+            docRef.id
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

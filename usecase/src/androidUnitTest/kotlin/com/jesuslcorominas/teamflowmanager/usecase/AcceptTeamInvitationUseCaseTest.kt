@@ -25,14 +25,12 @@ class AcceptTeamInvitationUseCaseTest {
 
     private val coach = User(id = "coach1", email = "coach@test.com", displayName = "Coach Name", photoUrl = null)
     private val team = Team(
-        id = 1L,
+        id = "team_fs_1",
         name = "Team A",
         coachName = "",
         delegateName = "Del",
         teamType = TeamType.FOOTBALL_7,
-        remoteId = "team_fs_1",
-        clubRemoteId = "club_fs_1",
-        clubId = 10L,
+        clubId = "club_fs_1",
         coachId = null,
     )
 
@@ -100,7 +98,7 @@ class AcceptTeamInvitationUseCaseTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `givenTeamNotInClub_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
-        val teamWithoutClub = team.copy(clubRemoteId = null, clubId = null)
+        val teamWithoutClub = team.copy(clubId = null)
         coEvery { getCurrentUser() } returns flowOf(coach)
         coEvery { teamRepository.getTeamById("team_fs_1") } returns teamWithoutClub
         useCase.invoke("team_fs_1")
@@ -110,7 +108,7 @@ class AcceptTeamInvitationUseCaseTest {
     fun `givenValidCoachAndTeam_whenInvoke_thenUpdateTeamCoachIdAndCreateMember`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(coach)
         coEvery { teamRepository.getTeamById("team_fs_1") } returns team
-        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any(), any()) } returns mockk()
+        coEvery { clubMemberRepository.createOrUpdateClubMember(any(), any(), any(), any(), any()) } returns mockk()
 
         val result = useCase.invoke("team_fs_1")
 
@@ -118,7 +116,7 @@ class AcceptTeamInvitationUseCaseTest {
         coVerify { teamRepository.updateTeamCoachId("team_fs_1", "coach1") }
         coVerify {
             clubMemberRepository.createOrUpdateClubMember(
-                "coach1", "Coach Name", "coach@test.com", 10L, "club_fs_1", listOf(ClubRole.COACH.roleName)
+                "coach1", "Coach Name", "coach@test.com", "club_fs_1", listOf(ClubRole.COACH.roleName)
             )
         }
     }

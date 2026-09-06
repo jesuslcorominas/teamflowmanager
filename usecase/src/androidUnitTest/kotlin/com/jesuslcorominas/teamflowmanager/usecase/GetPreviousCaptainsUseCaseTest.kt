@@ -41,17 +41,17 @@ class GetPreviousCaptainsUseCaseTest {
         // Given - matches with played periods, ordered by dateTime desc
         val matches = listOf(
             Match(
-                id = 1L, dateTime = 1000L, captainId = 10L, teamName = "Team B",
+                id = "1", dateTime = 1000L, captainId = "10", teamName = "Team B",
                 opponent = "A", location = "S", periodType = PeriodType.HALF_TIME,
                 periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 100L, endTimeMillis = 200L)),
             ),
             Match(
-                id = 2L, dateTime = 2000L, captainId = 20L, teamName = "Team B",
+                id = "2", dateTime = 2000L, captainId = "20", teamName = "Team B",
                 opponent = "A", location = "S", periodType = PeriodType.HALF_TIME,
                 periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 100L, endTimeMillis = 200L)),
             ),
             Match(
-                id = 3L, dateTime = 3000L, captainId = 30L, teamName = "Team B",
+                id = "3", dateTime = 3000L, captainId = "30", teamName = "Team B",
                 opponent = "A", location = "S", periodType = PeriodType.HALF_TIME,
                 periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 100L, endTimeMillis = 200L)),
             ),
@@ -63,8 +63,8 @@ class GetPreviousCaptainsUseCaseTest {
 
         // Then - most recent first
         assertEquals(2, result.size)
-        assertEquals(30L, result[0]) // Most recent (dateTime=3000)
-        assertEquals(20L, result[1])
+        assertEquals("30", result[0]) // Most recent (dateTime=3000)
+        assertEquals("20", result[1])
     }
 
     @Test
@@ -73,19 +73,19 @@ class GetPreviousCaptainsUseCaseTest {
         val matches = listOf(
             // Not played: period startTimeMillis = 0 means not started
             Match(
-                id = 1L, dateTime = 1000L, captainId = 0L, teamName = "Team B",
+                id = "1", dateTime = 1000L, captainId = "", teamName = "Team B",
                 opponent = "A", location = "S", periodType = PeriodType.HALF_TIME,
                 periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 0L, endTimeMillis = 0L)),
             ),
             // Played: period has start and end times
             Match(
-                id = 2L, dateTime = 2000L, captainId = 20L, teamName = "Team B",
+                id = "2", dateTime = 2000L, captainId = "20", teamName = "Team B",
                 opponent = "A", location = "S", periodType = PeriodType.HALF_TIME,
                 periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 100L, endTimeMillis = 200L)),
             ),
             // Not played: period startTimeMillis = 0
             Match(
-                id = 3L, dateTime = 3000L, captainId = 0L, teamName = "Team B",
+                id = "3", dateTime = 3000L, captainId = "", teamName = "Team B",
                 opponent = "A", location = "S", periodType = PeriodType.HALF_TIME,
                 periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 0L, endTimeMillis = 0L)),
             ),
@@ -97,20 +97,20 @@ class GetPreviousCaptainsUseCaseTest {
 
         // Then - only the played match is included
         assertEquals(1, result.size)
-        assertEquals(20L, result[0])
+        assertEquals("20", result[0])
     }
 
     @Test
-    fun `invoke should include zero captainId for matches that have been played without captain`() = runTest {
+    fun `invoke should include empty captainId for matches that have been played without captain`() = runTest {
         // Given
         val matches = listOf(
             Match(
-                id = 1L, dateTime = 1000L, captainId = 0L, teamName = "Team B",
+                id = "1", dateTime = 1000L, captainId = "", teamName = "Team B",
                 opponent = "A", location = "S", periodType = PeriodType.HALF_TIME,
                 periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 100L, endTimeMillis = 200L)),
             ),
             Match(
-                id = 2L, dateTime = 2000L, captainId = 20L, teamName = "Team B",
+                id = "2", dateTime = 2000L, captainId = "20", teamName = "Team B",
                 opponent = "A", location = "S", periodType = PeriodType.HALF_TIME,
                 periods = listOf(MatchPeriod(periodNumber = 1, periodDuration = 1500000L, startTimeMillis = 100L, endTimeMillis = 200L)),
             ),
@@ -120,9 +120,9 @@ class GetPreviousCaptainsUseCaseTest {
         // When
         val result = useCase.invoke(2)
 
-        // Then - most recent first, 0L (no captain assigned) is included
+        // Then - most recent first, "" (no captain assigned) is included
         assertEquals(2, result.size)
-        assertEquals(20L, result[0])
-        assertEquals(0L, result[1])
+        assertEquals("20", result[0])
+        assertEquals("", result[1])
     }
 }

@@ -20,7 +20,7 @@ internal class StartMatchTimerUseCaseImpl(
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
 ) : StartMatchTimerUseCase {
     override suspend fun invoke(
-        matchId: Long,
+        matchId: String,
         currentTimeMillis: Long,
     ) {
         // Get the match first to validate it exists

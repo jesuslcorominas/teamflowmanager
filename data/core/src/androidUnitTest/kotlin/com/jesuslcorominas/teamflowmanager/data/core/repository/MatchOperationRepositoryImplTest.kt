@@ -26,8 +26,8 @@ class MatchOperationRepositoryImplTest {
 
     private fun createOperation(
         id: String = "",
-        matchId: Long = 1L,
-        teamId: Long = 1L,
+        matchId: String = "1",
+        teamId: String = "1",
         type: MatchOperationType = MatchOperationType.START,
         status: MatchOperationStatus = MatchOperationStatus.IN_PROGRESS,
     ) = MatchOperation(

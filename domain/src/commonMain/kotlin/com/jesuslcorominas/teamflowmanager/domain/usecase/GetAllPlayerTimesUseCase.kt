@@ -4,5 +4,5 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import kotlinx.coroutines.flow.Flow
 
 interface GetAllPlayerTimesUseCase {
-    operator fun invoke(matchId: Long): Flow<List<PlayerTime>>
+    operator fun invoke(matchId: String): Flow<List<PlayerTime>>
 }

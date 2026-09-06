@@ -109,6 +109,7 @@ val viewModelModule =
                 getScheduledMatchesUseCase = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
+                featureFlags = get(),
             )
         }
         viewModel { params ->
@@ -160,7 +161,7 @@ val viewModelModule =
                 matchId = params.get(),
                 getMatchById = get(),
                 getAllPlayerTimesUseCase = get(),
-                getPlayersUseCase = get(),
+                getPlayersByTeamUseCase = get(),
                 finishMatch = get(),
                 pauseMatch = get(),
                 resumeMatchUseCase = get(),
@@ -180,6 +181,8 @@ val viewModelModule =
                 timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
+                notifyPresidentMatchEvent = get(),
+                getTeamUseCase = get(),
             )
         }
         viewModel {
@@ -190,6 +193,7 @@ val viewModelModule =
                 archiveMatchUseCase = get(),
                 synchronizeTimeUseCase = get(),
                 timeProvider = get(),
+                timeTicker = get(),
                 analyticsTracker = get(),
                 crashReporter = get(),
             )
@@ -240,6 +244,8 @@ val viewModelModule =
                 getUserClubMembership = get(),
                 getActiveViewRole = get(),
                 setActiveViewRole = get(),
+                getNotificationPreferences = get(),
+                updateGlobalNotificationPreference = get(),
             )
         }
 
@@ -249,6 +255,10 @@ val viewModelModule =
                 getTeamById = get(),
                 getPlayersByTeam = get(),
                 getMatchesByTeam = get(),
+                getNotificationPreferences = get(),
+                updateTeamNotificationPreference = get(),
+                getUserClubMembership = get(),
+                timeTicker = get(),
             )
         }
 

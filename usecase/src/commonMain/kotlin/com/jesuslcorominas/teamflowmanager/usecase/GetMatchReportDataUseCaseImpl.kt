@@ -30,7 +30,7 @@ internal class GetMatchReportDataUseCaseImpl(
     private val goalRepository: GoalRepository,
     private val playerSubstitutionRepository: PlayerSubstitutionRepository,
 ) : GetMatchReportDataUseCase {
-    override fun invoke(matchId: Long): Flow<MatchReportData?> {
+    override fun invoke(matchId: String): Flow<MatchReportData?> {
         return combine(
             matchRepository.getMatchById(matchId),
             playerRepository.getAllPlayers(),
@@ -281,7 +281,7 @@ internal class GetMatchReportDataUseCaseImpl(
         val totalElapsedTime = calculateTotalElapsedTime(match)
 
         // Track which players are currently active and their start time
-        val activePlayerStartTimes = mutableMapOf<Long, Long>()
+        val activePlayerStartTimes = mutableMapOf<String, Long>()
 
         // Starting lineup players are active from time 0
         match.startingLineupIds.forEach { playerId ->

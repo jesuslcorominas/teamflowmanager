@@ -77,7 +77,6 @@ class ClubMemberFirestoreDataSourceImpl(
         userId: String,
         name: String,
         email: String,
-        clubNumericId: Long,
         clubId: String,
         roles: List<String>,
     ): ClubMember = throw NotImplementedError("createOrUpdateClubMember not implemented for iOS Phase 2")
@@ -93,4 +92,14 @@ class ClubMemberFirestoreDataSourceImpl(
         clubId: String,
         role: String,
     ) = throw NotImplementedError("addClubMemberRole not implemented for iOS Phase 2")
+
+    override suspend fun removeClubMember(
+        userId: String,
+        clubId: String,
+    ) {
+        require(userId.isNotBlank()) { "User ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
+        val clubMemberId = "${userId}_$clubId"
+        firestore.collection("clubMembers").document(clubMemberId).delete()
+    }
 }

@@ -20,7 +20,7 @@ class SetPlayerAsCaptainUseCaseTest {
 
     @Test
     fun `invoke should call setPlayerAsCaptain on repository`() = runTest {
-        val playerId = 5L
+        val playerId = "5"
 
         useCase.invoke(playerId)
 

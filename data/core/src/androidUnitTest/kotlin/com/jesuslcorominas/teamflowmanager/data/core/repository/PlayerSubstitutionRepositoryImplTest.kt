@@ -25,10 +25,10 @@ class PlayerSubstitutionRepositoryImplTest {
     }
 
     private fun createSubstitution(
-        id: Long = 0L,
-        matchId: Long = 1L,
-        playerOutId: Long = 10L,
-        playerInId: Long = 11L,
+        id: String = "",
+        matchId: String = "1",
+        playerOutId: String = "10",
+        playerInId: String = "11",
         operationId: String? = null,
     ) = PlayerSubstitution(
         id = id,
@@ -44,10 +44,10 @@ class PlayerSubstitutionRepositoryImplTest {
 
     @Test
     fun `givenMatchWithSubstitutions_whenGetMatchSubstitutions_thenDelegatesToDataSource`() = runTest {
-        val matchId = 1L
+        val matchId = "1"
         val substitutions = listOf(
-            createSubstitution(id = 1L, matchId = matchId),
-            createSubstitution(id = 2L, matchId = matchId, playerOutId = 20L, playerInId = 21L),
+            createSubstitution(id = "1", matchId = matchId),
+            createSubstitution(id = "2", matchId = matchId, playerOutId = "20", playerInId = "21"),
         )
         every { playerSubstitutionDataSource.getMatchSubstitutions(matchId) } returns flowOf(substitutions)
 
@@ -58,7 +58,7 @@ class PlayerSubstitutionRepositoryImplTest {
 
     @Test
     fun `givenMatchWithNoSubstitutions_whenGetMatchSubstitutions_thenReturnsEmptyList`() = runTest {
-        val matchId = 99L
+        val matchId = "99"
         every { playerSubstitutionDataSource.getMatchSubstitutions(matchId) } returns flowOf(emptyList())
 
         val result = repository.getMatchSubstitutions(matchId).first()
@@ -71,22 +71,22 @@ class PlayerSubstitutionRepositoryImplTest {
     @Test
     fun `givenSubstitution_whenInsertSubstitution_thenReturnsInsertedId`() = runTest {
         val substitution = createSubstitution()
-        coEvery { playerSubstitutionDataSource.insertSubstitution(substitution) } returns 3L
+        coEvery { playerSubstitutionDataSource.insertSubstitution(substitution) } returns "sub-3"
 
         val result = repository.insertSubstitution(substitution)
 
-        assertEquals(3L, result)
+        assertEquals("sub-3", result)
         coVerify { playerSubstitutionDataSource.insertSubstitution(substitution) }
     }
 
     @Test
     fun `givenSubstitutionWithOperationId_whenInsertSubstitution_thenDelegatesToDataSource`() = runTest {
         val substitution = createSubstitution(operationId = "op-sub-123")
-        coEvery { playerSubstitutionDataSource.insertSubstitution(substitution) } returns 4L
+        coEvery { playerSubstitutionDataSource.insertSubstitution(substitution) } returns "sub-4"
 
         val result = repository.insertSubstitution(substitution)
 
-        assertEquals(4L, result)
+        assertEquals("sub-4", result)
         coVerify { playerSubstitutionDataSource.insertSubstitution(substitution) }
     }
 }

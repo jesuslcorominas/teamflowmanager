@@ -152,7 +152,7 @@ class MatchNotificationManager(private val context: Context) {
         }
     }
 
-    private fun createContentIntent(matchId: Long): PendingIntent {
+    private fun createContentIntent(matchId: String): PendingIntent {
         val deepLinkUri = Uri.parse("teamflowmanager://match/$matchId")
         val intent =
             Intent(Intent.ACTION_VIEW, deepLinkUri).apply {

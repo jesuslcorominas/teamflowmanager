@@ -27,7 +27,7 @@ class PreferencesLocalDataSourceImplTest {
         every { mockContext.getSharedPreferences(any(), any()) } returns mockSharedPreferences
         every { mockSharedPreferences.edit() } returns mockEditor
         every { mockEditor.putBoolean(any(), any()) } returns mockEditor
-        every { mockEditor.putLong(any(), any()) } returns mockEditor
+        every { mockEditor.putString(any(), any()) } returns mockEditor
 
         dataSource = PreferencesLocalDataSourceImpl(mockContext)
     }
@@ -74,16 +74,16 @@ class PreferencesLocalDataSourceImplTest {
 
     @Test
     fun `givenCaptainIdStored_whenGetDefaultCaptainId_thenReturnsCaptainId`() {
-        every { mockSharedPreferences.getLong("default_captain_id", -1L) } returns 7L
+        every { mockSharedPreferences.getString("default_captain_id", null) } returns "7"
 
         val result = dataSource.getDefaultCaptainId()
 
-        assertEquals(7L, result)
+        assertEquals("7", result)
     }
 
     @Test
-    fun `givenSentinelValueStored_whenGetDefaultCaptainId_thenReturnsNull`() {
-        every { mockSharedPreferences.getLong("default_captain_id", -1L) } returns -1L
+    fun `givenNoCaptainIdStored_whenGetDefaultCaptainId_thenReturnsNull`() {
+        every { mockSharedPreferences.getString("default_captain_id", null) } returns null
 
         val result = dataSource.getDefaultCaptainId()
 
@@ -94,17 +94,17 @@ class PreferencesLocalDataSourceImplTest {
 
     @Test
     fun `givenCaptainId_whenSetDefaultCaptainId_thenStoresCaptainIdInPreferences`() {
-        dataSource.setDefaultCaptainId(5L)
+        dataSource.setDefaultCaptainId("5")
 
-        verify { mockEditor.putLong("default_captain_id", 5L) }
+        verify { mockEditor.putString("default_captain_id", "5") }
         verify { mockEditor.apply() }
     }
 
     @Test
-    fun `givenNullCaptainId_whenSetDefaultCaptainId_thenStoresSentinelValueInPreferences`() {
+    fun `givenNullCaptainId_whenSetDefaultCaptainId_thenStoresNullInPreferences`() {
         dataSource.setDefaultCaptainId(null)
 
-        verify { mockEditor.putLong("default_captain_id", -1L) }
+        verify { mockEditor.putString("default_captain_id", null) }
         verify { mockEditor.apply() }
     }
 

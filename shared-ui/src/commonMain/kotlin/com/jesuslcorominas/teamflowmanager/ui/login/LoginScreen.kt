@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.ui.login
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -27,14 +29,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
+import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel.UiState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.app_name
+import teamflowmanager.shared_ui.generated.resources.ic_google
 import teamflowmanager.shared_ui.generated.resources.login_subtitle
 import teamflowmanager.shared_ui.generated.resources.sign_in_with_google
 
@@ -59,6 +66,8 @@ fun LoginScreen(
      */
     onRequestNotificationPermission: (() -> Unit)? = null,
 ) {
+    TrackScreenView(screenName = ScreenName.LOGIN, screenClass = "LoginScreen")
+
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -103,6 +112,10 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
+                TeamFlowManagerIcon()
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
                     text = stringResource(Res.string.app_name),
                     style = MaterialTheme.typography.headlineLarge,
@@ -145,6 +158,12 @@ fun LoginScreen(
                             strokeWidth = 2.dp,
                         )
                     } else {
+                        Image(
+                            painter = painterResource(Res.drawable.ic_google),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = stringResource(Res.string.sign_in_with_google),
                             style = MaterialTheme.typography.labelLarge,

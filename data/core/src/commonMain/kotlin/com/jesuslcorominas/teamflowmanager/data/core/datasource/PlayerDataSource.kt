@@ -8,19 +8,19 @@ interface PlayerDataSource {
 
     fun getPlayersByTeam(teamId: String): Flow<List<Player>>
 
-    suspend fun getPlayerById(playerId: Long): Player?
+    suspend fun getPlayerById(playerId: String): Player?
 
     suspend fun getCaptainPlayer(): Player?
 
-    suspend fun setPlayerAsCaptain(playerId: Long)
+    suspend fun setPlayerAsCaptain(playerId: String)
 
-    suspend fun removePlayerAsCaptain(playerId: Long)
+    suspend fun removePlayerAsCaptain(playerId: String)
 
     suspend fun updatePlayer(player: Player)
 
-    suspend fun insertPlayer(player: Player): Long
+    suspend fun insertPlayer(player: Player): String
 
-    suspend fun deletePlayer(playerId: Long)
+    suspend fun deletePlayer(playerId: String)
 
     /**
      * Get all players directly (not as a Flow) for migration purposes.

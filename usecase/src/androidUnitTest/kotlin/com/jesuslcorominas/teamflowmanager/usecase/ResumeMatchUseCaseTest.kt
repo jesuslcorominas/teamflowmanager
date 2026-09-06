@@ -49,7 +49,7 @@ class ResumeMatchUseCaseTest {
     fun `givenMatchNotFound_whenInvoke_thenDoNothing`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(null)
 
@@ -65,13 +65,13 @@ class ResumeMatchUseCaseTest {
     fun `givenMatchPausedWithPausedPlayers_whenInvoke_thenResumeAllPausedPlayersAndMatch`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val match = createPausedMatch(matchId)
             val playerTimes = listOf(
-                PlayerTime(playerId = 1L, isRunning = false, elapsedTimeMillis = 500L, status = PlayerTimeStatus.PAUSED),
-                PlayerTime(playerId = 2L, isRunning = false, elapsedTimeMillis = 300L, status = PlayerTimeStatus.PAUSED),
-                PlayerTime(playerId = 3L, isRunning = false, elapsedTimeMillis = 0L, status = PlayerTimeStatus.ON_BENCH),
+                PlayerTime(playerId = "1", isRunning = false, elapsedTimeMillis = 500L, status = PlayerTimeStatus.PAUSED),
+                PlayerTime(playerId = "2", isRunning = false, elapsedTimeMillis = 300L, status = PlayerTimeStatus.PAUSED),
+                PlayerTime(playerId = "3", isRunning = false, elapsedTimeMillis = 0L, status = PlayerTimeStatus.ON_BENCH),
             )
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
@@ -80,7 +80,7 @@ class ResumeMatchUseCaseTest {
             resumeMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { playerTimeRepository.startTimersBatchWithOperationId(matchId, listOf(1L, 2L), currentTime, "op1") }
+            coVerify { playerTimeRepository.startTimersBatchWithOperationId(matchId, listOf("1", "2"), currentTime, "op1") }
             coVerify {
                 matchRepository.updateMatch(
                     match { it.status == MatchStatus.IN_PROGRESS }
@@ -92,12 +92,12 @@ class ResumeMatchUseCaseTest {
     fun `givenMatchPausedWithNoPausedPlayers_whenInvoke_thenOnlyResumeMatch`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val match = createPausedMatch(matchId)
             val playerTimes = listOf(
-                PlayerTime(playerId = 1L, isRunning = false, elapsedTimeMillis = 0L, status = PlayerTimeStatus.ON_BENCH),
-                PlayerTime(playerId = 2L, isRunning = false, elapsedTimeMillis = 0L, status = PlayerTimeStatus.ON_BENCH),
+                PlayerTime(playerId = "1", isRunning = false, elapsedTimeMillis = 0L, status = PlayerTimeStatus.ON_BENCH),
+                PlayerTime(playerId = "2", isRunning = false, elapsedTimeMillis = 0L, status = PlayerTimeStatus.ON_BENCH),
             )
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
@@ -118,7 +118,7 @@ class ResumeMatchUseCaseTest {
     fun `givenMatchPausedWithNoPlayerTimes_whenInvoke_thenOnlyResumeMatch`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val match = createPausedMatch(matchId)
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
@@ -136,15 +136,15 @@ class ResumeMatchUseCaseTest {
             }
         }
 
-    private fun createPausedMatch(id: Long): Match {
+    private fun createPausedMatch(id: String): Match {
         return Match(
             id = id,
-            teamId = 1L,
+            teamId = "1",
             teamName = "Team A",
             opponent = "Opponent",
             location = "Stadium",
             periodType = PeriodType.HALF_TIME,
-            captainId = 1L,
+            captainId = "1",
             status = MatchStatus.PAUSED,
             periods = listOf(
                 // First period finished

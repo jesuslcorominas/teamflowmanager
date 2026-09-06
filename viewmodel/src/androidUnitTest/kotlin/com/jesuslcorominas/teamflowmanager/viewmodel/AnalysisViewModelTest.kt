@@ -70,13 +70,13 @@ class AnalysisViewModelTest {
         crashReporter = crashReporter,
     )
 
-    private fun makePlayer(id: Long) = Player(
+    private fun makePlayer(id: String) = Player(
         id = id,
         firstName = "Player$id",
         lastName = "Last",
         number = id.toInt(),
         positions = listOf(Position.Forward),
-        teamId = 1L,
+        teamId = "1",
         isCaptain = false,
     )
 
@@ -116,7 +116,7 @@ class AnalysisViewModelTest {
     fun `uiState should be Success with time stats when stats are available`() =
         runTest(testDispatcher) {
             // Given
-            val player = makePlayer(1L)
+            val player = makePlayer("1")
             val timeStats = listOf(PlayerTimeStats(player = player, totalTimeMinutes = 45.0, matchesPlayed = 1))
             every { getPlayerTimeStatsUseCase.invoke() } returns flowOf(timeStats)
             every { getPlayerGoalStatsUseCase.invoke() } returns flowOf(emptyList())
@@ -134,7 +134,7 @@ class AnalysisViewModelTest {
     @Test
     fun `uiState should include goal stats when both are available`() = runTest(testDispatcher) {
         // Given
-        val player = makePlayer(1L)
+        val player = makePlayer("1")
         val timeStats = listOf(PlayerTimeStats(player = player, totalTimeMinutes = 45.0, matchesPlayed = 1))
         val goalStats = listOf(PlayerGoalStats(player = player, totalGoals = 2, matchesWithGoals = 1))
         every { getPlayerTimeStatsUseCase.invoke() } returns flowOf(timeStats)
@@ -171,7 +171,7 @@ class AnalysisViewModelTest {
         every { getPlayerTimeStatsUseCase.invoke() } returns flowOf(emptyList())
         every { getPlayerGoalStatsUseCase.invoke() } returns flowOf(emptyList())
         val team = Team(
-            id = 1L,
+            id = "1",
             name = "My Team",
             coachName = "Coach",
             delegateName = "Delegate",

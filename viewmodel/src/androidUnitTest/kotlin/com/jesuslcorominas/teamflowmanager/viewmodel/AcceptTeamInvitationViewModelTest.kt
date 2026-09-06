@@ -93,7 +93,7 @@ class AcceptTeamInvitationViewModelTest {
             // Given
             val mockUser = mockk<User>()
             val team = Team(
-                id = 1L,
+                id = "1",
                 name = "Test Team",
                 coachName = "Coach",
                 delegateName = "Delegate",
@@ -134,7 +134,7 @@ class AcceptTeamInvitationViewModelTest {
         // Given
         val mockUser = mockk<User>()
         val team = Team(
-            id = 1L,
+            id = "1",
             name = "Test Team",
             coachName = "Coach",
             delegateName = "Delegate",

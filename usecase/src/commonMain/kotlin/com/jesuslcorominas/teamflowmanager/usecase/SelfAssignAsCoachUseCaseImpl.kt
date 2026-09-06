@@ -30,7 +30,7 @@ internal class SelfAssignAsCoachUseCaseImpl(
                 ?: throw IllegalArgumentException("Team not found: $teamId")
 
         // Verify team belongs to a club
-        require(team.clubRemoteId != null) {
+        require(team.clubId != null) {
             "Team must belong to a club to assign a coach"
         }
 
@@ -50,7 +50,7 @@ internal class SelfAssignAsCoachUseCaseImpl(
         }
 
         // Verify they are in the same club
-        require(currentUserMembership.clubRemoteId == team.clubRemoteId) {
+        require(currentUserMembership.clubId == team.clubId) {
             "User and team must be in the same club"
         }
 
@@ -63,7 +63,7 @@ internal class SelfAssignAsCoachUseCaseImpl(
 
             // Add Coach role to the President's roles (if not already present)
             if (!currentUserMembership.hasRole(ClubRole.COACH)) {
-                team.clubRemoteId?.let { clubId ->
+                team.clubId?.let { clubId ->
                     clubMemberRepository.addClubMemberRole(
                         userId = currentUser.id,
                         clubId = clubId,

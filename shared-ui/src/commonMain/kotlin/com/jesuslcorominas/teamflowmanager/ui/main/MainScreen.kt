@@ -4,11 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
@@ -141,7 +145,25 @@ fun MainScreen(
                 },
                 contentWindowInsets = WindowInsets(0),
             ) { paddingValues ->
-                content(PaddingValues(top = paddingValues.calculateTopPadding()))
+                val showTopBar = uiConfig?.showTopBar == true
+                val topPadding =
+                    if (showTopBar) {
+                        paddingValues.calculateTopPadding()
+                    } else {
+                        WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding()
+                    }
+                // When we apply the status-bar inset manually (showTopBar=false), consume it
+                // so child Scaffolds with their own TopAppBar don't double-apply it.
+                Box(
+                    modifier =
+                        if (!showTopBar) {
+                            Modifier.consumeWindowInsets(WindowInsets.statusBars)
+                        } else {
+                            Modifier
+                        },
+                ) {
+                    content(PaddingValues(top = topPadding))
+                }
             }
 
             // Gradient overlay: transparent → surface color, covering the bar zone + FadeHeight above.

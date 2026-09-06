@@ -12,15 +12,15 @@ internal class PlayerRepositoryImpl(
 
     override fun getPlayersByTeam(teamId: String): Flow<List<Player>> = playerDataSource.getPlayersByTeam(teamId)
 
-    override suspend fun getPlayerById(playerId: Long): Player? = playerDataSource.getPlayerById(playerId)
+    override suspend fun getPlayerById(playerId: String): Player? = playerDataSource.getPlayerById(playerId)
 
     override suspend fun getCaptainPlayer(): Player? = playerDataSource.getCaptainPlayer()
 
-    override suspend fun addPlayer(player: Player): Long {
+    override suspend fun addPlayer(player: Player): String {
         return playerDataSource.insertPlayer(player)
     }
 
-    override suspend fun deletePlayer(playerId: Long) {
+    override suspend fun deletePlayer(playerId: String) {
         playerDataSource.deletePlayer(playerId)
     }
 
@@ -28,11 +28,11 @@ internal class PlayerRepositoryImpl(
         playerDataSource.updatePlayer(player)
     }
 
-    override suspend fun setPlayerAsCaptain(playerId: Long) {
+    override suspend fun setPlayerAsCaptain(playerId: String) {
         playerDataSource.setPlayerAsCaptain(playerId)
     }
 
-    override suspend fun removePlayerAsCaptain(playerId: Long) {
+    override suspend fun removePlayerAsCaptain(playerId: String) {
         playerDataSource.removePlayerAsCaptain(playerId)
     }
 }

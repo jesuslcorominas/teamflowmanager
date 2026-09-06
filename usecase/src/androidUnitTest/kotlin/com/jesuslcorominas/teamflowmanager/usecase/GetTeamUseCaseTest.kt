@@ -29,7 +29,7 @@ class GetTeamUseCaseTest {
     fun `invoke should return team from repository`() =
         runTest {
             // Given
-            val team = Team(1, "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
+            val team = Team("1", "Test Team", "Coach Name", "Delegate Name", teamType = TeamType.FOOTBALL_5)
             every { teamRepository.getTeam() } returns flowOf(team)
 
             // When

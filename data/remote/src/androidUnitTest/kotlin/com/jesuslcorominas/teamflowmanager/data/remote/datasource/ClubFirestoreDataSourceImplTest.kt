@@ -248,6 +248,6 @@ class ClubFirestoreDataSourceImplTest {
         val result = dataSource.getClubByInvitationCode("ABCD1234")
 
         assertNotNull(result)
-        assertEquals("auto-doc-id", result!!.remoteId)
+        assertEquals("auto-doc-id", result!!.id)
     }
 }

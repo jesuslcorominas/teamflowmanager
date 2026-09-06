@@ -27,7 +27,7 @@ import teamflowmanager.shared_ui.generated.resources.no_players_message
 fun PlayersScreen(
     viewModel: PlayerViewModel = koinViewModel(),
     onNavigateToCreatePlayer: () -> Unit = {},
-    onNavigateToEditPlayer: (Long) -> Unit = {},
+    onNavigateToEditPlayer: (String) -> Unit = {},
 ) {
     TrackScreenView(screenName = ScreenName.PLAYERS, screenClass = "PlayersScreen")
 

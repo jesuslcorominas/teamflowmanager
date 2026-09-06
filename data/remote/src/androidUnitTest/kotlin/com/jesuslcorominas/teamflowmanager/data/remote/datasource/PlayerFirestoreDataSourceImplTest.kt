@@ -131,7 +131,7 @@ class PlayerFirestoreDataSourceImplTest {
     fun `givenNoTeam_whenGetPlayerById_thenReturnsNull`() = runTest {
         setupUserWithNoTeam()
 
-        val result = dataSource.getPlayerById(1L)
+        val result = dataSource.getPlayerById("1")
 
         assertNull(result)
     }
@@ -150,7 +150,7 @@ class PlayerFirestoreDataSourceImplTest {
         setupUserWithNoTeam()
 
         try {
-            dataSource.setPlayerAsCaptain(1L)
+            dataSource.setPlayerAsCaptain("1")
             fail("Expected IllegalStateException")
         } catch (e: IllegalStateException) {
             // expected
@@ -158,15 +158,19 @@ class PlayerFirestoreDataSourceImplTest {
     }
 
     @Test
-    fun `givenNoTeam_whenRemovePlayerAsCaptain_thenThrowsIllegalStateException`() = runTest {
-        setupUserWithNoTeam()
+    fun `givenNoTeam_whenRemovePlayerAsCaptain_thenDoesNotThrow`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        // Production now directly calls document(playerId).update("isCaptain", false) - no team lookup.
+        val playersCollection = mockk<CollectionReference>()
+        val playerDocRef = mockk<DocumentReference>()
 
-        try {
-            dataSource.removePlayerAsCaptain(1L)
-            fail("Expected IllegalStateException")
-        } catch (e: IllegalStateException) {
-            // expected
-        }
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.document("1") } returns playerDocRef
+        val updateTask = mockk<Task<Void>>()
+        every { playerDocRef.update("isCaptain", false) } returns updateTask
+        coEvery { updateTask.await() } returns mockk()
+
+        dataSource.removePlayerAsCaptain("1")
     }
 
     @Test
@@ -184,15 +188,19 @@ class PlayerFirestoreDataSourceImplTest {
     }
 
     @Test
-    fun `givenNoTeam_whenDeletePlayer_thenThrowsIllegalStateException`() = runTest {
-        setupUserWithNoTeam()
+    fun `givenNoTeam_whenDeletePlayer_thenDoesNotThrow`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        // Production now directly calls document(playerId).update("deleted", true) - no team lookup.
+        val playersCollection = mockk<CollectionReference>()
+        val playerDocRef = mockk<DocumentReference>()
 
-        try {
-            dataSource.deletePlayer(1L)
-            fail("Expected IllegalStateException")
-        } catch (e: IllegalStateException) {
-            // expected
-        }
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.document("1") } returns playerDocRef
+        val updateTask = mockk<Task<Void>>()
+        every { playerDocRef.update("deleted", true) } returns updateTask
+        coEvery { updateTask.await() } returns mockk()
+
+        dataSource.deletePlayer("1")
     }
 
     @Test
@@ -228,25 +236,24 @@ class PlayerFirestoreDataSourceImplTest {
 
         val result = dataSource.insertPlayer(player)
 
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
     fun `givenPlayerNotFound_whenDeletePlayer_thenDoesNotThrow`() = runTest {
-        setupUserWithTeam()
-
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        // Production now directly calls document(playerId).update("deleted", true) - no query needed.
         val playersCollection = mockk<CollectionReference>()
-        val playerQuery = mockk<Query>()
-        val playerSnapshot = mockk<QuerySnapshot>()
-        every { mockFirestore.collection("players") } returns playersCollection
-        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playerQuery
-        val playerTask = mockk<Task<QuerySnapshot>>()
-        every { playerQuery.get() } returns playerTask
-        coEvery { playerTask.await() } returns playerSnapshot
-        every { playerSnapshot.documents } returns emptyList()
+        val playerDocRef = mockk<DocumentReference>()
 
-        // Should not throw when player not found
-        dataSource.deletePlayer(99999L)
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.document("99999") } returns playerDocRef
+        val updateTask = mockk<Task<Void>>()
+        every { playerDocRef.update("deleted", true) } returns updateTask
+        coEvery { updateTask.await() } returns mockk()
+
+        // Should not throw when player not found (Firestore just updates or fails silently)
+        dataSource.deletePlayer("99999")
     }
 
     @Test
@@ -270,7 +277,7 @@ class PlayerFirestoreDataSourceImplTest {
         val result = dataSource.insertPlayer(player)
 
         // Should succeed without calling imageStorageDataSource.uploadImage
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
@@ -292,7 +299,7 @@ class PlayerFirestoreDataSourceImplTest {
 
         val result = dataSource.insertPlayer(player)
 
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
@@ -316,29 +323,22 @@ class PlayerFirestoreDataSourceImplTest {
 
         val result = dataSource.insertPlayer(player)
 
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
     fun `givenExistingPlayer_whenGetPlayerById_thenReturnsPlayer`() = runTest {
-        setupUserWithTeam()
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
 
         val playersCollection = mockk<CollectionReference>()
-        val playerQuery = mockk<Query>()
-        val playerSnapshot = mockk<QuerySnapshot>()
+        val playerDocRef = mockk<DocumentReference>()
         val playerDoc = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("players") } returns playersCollection
-        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playerQuery
-        val playerTask = mockk<Task<QuerySnapshot>>()
-        every { playerQuery.get() } returns playerTask
-        coEvery { playerTask.await() } returns playerSnapshot
-
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
+        every { playersCollection.document("player-doc-id") } returns playerDocRef
+        val playerTask = mockk<Task<DocumentSnapshot>>()
+        every { playerDocRef.get() } returns playerTask
+        coEvery { playerTask.await() } returns playerDoc
 
         val playerModel = PlayerFirestoreModel(
             id = "player-doc-id",
@@ -348,10 +348,10 @@ class PlayerFirestoreDataSourceImplTest {
             deleted = false
         )
         every { playerDoc.id } returns "player-doc-id"
+        every { playerDoc.exists() } returns true
         every { playerDoc.toObject(PlayerFirestoreModel::class.java) } returns playerModel
-        every { playerSnapshot.documents } returns listOf(playerDoc)
 
-        val result = dataSource.getPlayerById(stablePlayerId)
+        val result = dataSource.getPlayerById("player-doc-id")
 
         assertNotNull(result)
     }
@@ -416,22 +416,28 @@ class PlayerFirestoreDataSourceImplTest {
     fun `givenPlayerNotFound_whenSetPlayerAsCaptain_thenDoesNotThrow`() = runTest {
         setupUserWithTeam()
 
-        val playersCollection = mockk<CollectionReference>(relaxed = true)
+        val playersCollection = mockk<CollectionReference>()
         every { mockFirestore.collection("players") } returns playersCollection
 
-        val emptySnapshot = mockk<QuerySnapshot>()
-        every { emptySnapshot.documents } returns emptyList()
+        // Setup for clearAllCaptains: whereEqualTo("teamId") -> whereEqualTo("isCaptain", true) -> get()
+        val allTeamQuery = mockk<Query>()
+        val captainsQuery = mockk<Query>()
+        val captainsSnapshot = mockk<QuerySnapshot>()
+        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns allTeamQuery
+        every { allTeamQuery.whereEqualTo("isCaptain", true) } returns captainsQuery
+        val captainsTask = mockk<Task<QuerySnapshot>>()
+        every { captainsQuery.get() } returns captainsTask
+        coEvery { captainsTask.await() } returns captainsSnapshot
+        every { captainsSnapshot.documents } returns emptyList()
 
-        val relaxedQuery = mockk<Query>(relaxed = true)
-        every { playersCollection.whereEqualTo(any<String>(), any()) } returns relaxedQuery
-        every { relaxedQuery.whereEqualTo(any<String>(), any()) } returns relaxedQuery
-        every { relaxedQuery.limit(any()) } returns relaxedQuery
+        // Setup for document(playerId).update("isCaptain", true)
+        val playerDocRef = mockk<DocumentReference>()
+        every { playersCollection.document("99999") } returns playerDocRef
+        val updateTask = mockk<Task<Void>>()
+        every { playerDocRef.update("isCaptain", true) } returns updateTask
+        coEvery { updateTask.await() } returns mockk()
 
-        val queryTask = mockk<Task<QuerySnapshot>>()
-        every { relaxedQuery.get() } returns queryTask
-        coEvery { queryTask.await() } returns emptySnapshot
-
-        dataSource.setPlayerAsCaptain(99999L)
+        dataSource.setPlayerAsCaptain("99999")
     }
 
     @Test
@@ -443,12 +449,6 @@ class PlayerFirestoreDataSourceImplTest {
         val playerSnapshot = mockk<QuerySnapshot>()
         val playerDoc = mockk<DocumentSnapshot>()
         val playerDocRef = mockk<DocumentReference>()
-
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val playerModel = PlayerFirestoreModel(
             id = "player-doc-id",
@@ -472,25 +472,23 @@ class PlayerFirestoreDataSourceImplTest {
         every { playerDocRef.update("deleted", true) } returns updateTask
         coEvery { updateTask.await() } returns mockk()
 
-        dataSource.deletePlayer(stablePlayerId)
+        dataSource.deletePlayer("player-doc-id")
     }
 
     @Test
     fun `givenPlayerNotFound_whenRemovePlayerAsCaptain_thenDoesNotThrow`() = runTest {
-        setupUserWithTeam()
-
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        // Production now directly calls document(playerId).update("isCaptain", false) - no query needed.
         val playersCollection = mockk<CollectionReference>()
-        val playerQuery = mockk<Query>()
-        val playerSnapshot = mockk<QuerySnapshot>()
+        val playerDocRef = mockk<DocumentReference>()
 
         every { mockFirestore.collection("players") } returns playersCollection
-        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playerQuery
-        val playerTask = mockk<Task<QuerySnapshot>>()
-        every { playerQuery.get() } returns playerTask
-        coEvery { playerTask.await() } returns playerSnapshot
-        every { playerSnapshot.documents } returns emptyList()
+        every { playersCollection.document("99999") } returns playerDocRef
+        val updateTask = mockk<Task<Void>>()
+        every { playerDocRef.update("isCaptain", false) } returns updateTask
+        coEvery { updateTask.await() } returns mockk()
 
-        dataSource.removePlayerAsCaptain(99999L)
+        dataSource.removePlayerAsCaptain("99999")
     }
 
     @Test
@@ -498,12 +496,6 @@ class PlayerFirestoreDataSourceImplTest {
         setupUserWithTeam()
 
         val existingImageUrl = "https://firebasestorage.googleapis.com/v0/b/bucket/o/image.jpg"
-
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val playersCollection = mockk<CollectionReference>()
         val playerQuery = mockk<Query>()
@@ -535,7 +527,7 @@ class PlayerFirestoreDataSourceImplTest {
         coEvery { setTask.await() } returns mockk()
 
         val player = mockk<Player>(relaxed = true)
-        every { player.id } returns stablePlayerId
+        every { player.id } returns "player-doc-id"
         every { player.imageUri } returns existingImageUrl
 
         dataSource.updatePlayer(player)
@@ -546,12 +538,6 @@ class PlayerFirestoreDataSourceImplTest {
         setupUserWithTeam()
 
         val existingImageUrl = "https://firebasestorage.googleapis.com/v0/b/bucket/o/image.jpg"
-
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val playersCollection = mockk<CollectionReference>()
         val playerQuery = mockk<Query>()
@@ -585,7 +571,7 @@ class PlayerFirestoreDataSourceImplTest {
         coEvery { setTask.await() } returns mockk()
 
         val player = mockk<Player>(relaxed = true)
-        every { player.id } returns stablePlayerId
+        every { player.id } returns "player-doc-id"
         every { player.imageUri } returns null
 
         dataSource.updatePlayer(player)
@@ -598,12 +584,6 @@ class PlayerFirestoreDataSourceImplTest {
         val existingImageUrl = "https://firebasestorage.googleapis.com/v0/b/bucket/o/old_image.jpg"
         val newLocalUri = "content://media/new_image.jpg"
         val uploadedUrl = "https://firebasestorage.googleapis.com/v0/b/bucket/o/new_image.jpg"
-
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val playersCollection = mockk<CollectionReference>()
         val playerQuery = mockk<Query>()
@@ -638,36 +618,38 @@ class PlayerFirestoreDataSourceImplTest {
         coEvery { setTask.await() } returns mockk()
 
         val player = mockk<Player>(relaxed = true)
-        every { player.id } returns stablePlayerId
+        every { player.id } returns "player-doc-id"
         every { player.imageUri } returns newLocalUri
 
         dataSource.updatePlayer(player)
     }
 
     @Test
-    fun `givenPlayerNotFound_whenUpdatePlayer_thenThrowsIllegalStateException`() = runTest {
+    fun `givenPlayerNotFound_whenUpdatePlayer_thenUpserts`() = runTest {
+        // Production now calls getPlayerById (document().get()) and if not found, proceeds to upsert.
         setupUserWithTeam()
 
         val playersCollection = mockk<CollectionReference>()
-        val playerQuery = mockk<Query>()
-        val playerSnapshot = mockk<QuerySnapshot>()
+        val playerDocRef = mockk<DocumentReference>()
+        val playerDoc = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("players") } returns playersCollection
-        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playerQuery
-        val playerTask = mockk<Task<QuerySnapshot>>()
-        every { playerQuery.get() } returns playerTask
-        coEvery { playerTask.await() } returns playerSnapshot
-        every { playerSnapshot.documents } returns emptyList()
+        every { playersCollection.document("99999") } returns playerDocRef
+        val getTask = mockk<Task<DocumentSnapshot>>()
+        every { playerDocRef.get() } returns getTask
+        coEvery { getTask.await() } returns playerDoc
+        every { playerDoc.exists() } returns false
+
+        val setTask = mockk<Task<Void>>()
+        every { playerDocRef.set(any()) } returns setTask
+        coEvery { setTask.await() } returns mockk()
 
         val player = mockk<Player>(relaxed = true)
-        every { player.id } returns 99999L
+        every { player.id } returns "99999"
+        every { player.imageUri } returns null
 
-        try {
-            dataSource.updatePlayer(player)
-            fail("Expected IllegalStateException")
-        } catch (e: IllegalStateException) {
-            // expected
-        }
+        // Should not throw - player is upserted
+        dataSource.updatePlayer(player)
     }
 
     @Test
@@ -675,12 +657,6 @@ class PlayerFirestoreDataSourceImplTest {
         setupUserWithTeam()
 
         val otherFirebaseUrl = "https://storage.googleapis.com/bucket/other.jpg"
-
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val playersCollection = mockk<CollectionReference>()
         val playerQuery = mockk<Query>()
@@ -713,7 +689,7 @@ class PlayerFirestoreDataSourceImplTest {
         coEvery { setTask.await() } returns mockk()
 
         val player = mockk<Player>(relaxed = true)
-        every { player.id } returns stablePlayerId
+        every { player.id } returns "player-doc-id"
         // Player has a firebase storage URL that is different from current (else branch)
         every { player.imageUri } returns otherFirebaseUrl
 
@@ -814,12 +790,6 @@ class PlayerFirestoreDataSourceImplTest {
     fun `givenValidPlayer_whenSetPlayerAsCaptain_thenUpdatesFirestore`() = runTest {
         setupUserWithTeam()
 
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
-
         val playersCollection = mockk<CollectionReference>()
         val playerDocRef = mockk<DocumentReference>()
 
@@ -863,18 +833,12 @@ class PlayerFirestoreDataSourceImplTest {
         every { playerDocRef.update("isCaptain", true) } returns updateTask
         coEvery { updateTask.await() } returns mockk()
 
-        dataSource.setPlayerAsCaptain(stablePlayerId)
+        dataSource.setPlayerAsCaptain("player-doc-id")
     }
 
     @Test
     fun `givenValidPlayer_whenRemovePlayerAsCaptain_thenUpdatesFirestore`() = runTest {
         setupUserWithTeam()
-
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val playersCollection = mockk<CollectionReference>()
         val playerQuery = mockk<Query>()
@@ -904,7 +868,7 @@ class PlayerFirestoreDataSourceImplTest {
         every { playerDocRef.update("isCaptain", false) } returns updateTask
         coEvery { updateTask.await() } returns mockk()
 
-        dataSource.removePlayerAsCaptain(stablePlayerId)
+        dataSource.removePlayerAsCaptain("player-doc-id")
     }
 
     @Test
@@ -920,7 +884,7 @@ class PlayerFirestoreDataSourceImplTest {
         every { playerQuery.get() } returns playerTask
         coEvery { playerTask.await() } throws RuntimeException("Firestore error")
 
-        val result = dataSource.getPlayerById(1L)
+        val result = dataSource.getPlayerById("exception-player-id")
 
         assertNull(result)
     }
@@ -980,18 +944,12 @@ class PlayerFirestoreDataSourceImplTest {
         every { player.imageUri } returns "file:///storage/image.jpg"
 
         val result = dataSource.insertPlayer(player)
-        assertTrue(result != 0L)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
     fun `givenExistingCaptain_whenSetPlayerAsCaptain_thenClearsOldCaptainAndSetsNew`() = runTest {
         setupUserWithTeam()
-
-        val stableNewPlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "new-player-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val playersCollection = mockk<CollectionReference>()
         val allTeamQuery = mockk<Query>()
@@ -1048,18 +1006,12 @@ class PlayerFirestoreDataSourceImplTest {
         every { newPlayerDocRef.update("isCaptain", true) } returns setTask
         coEvery { setTask.await() } returns mockk()
 
-        dataSource.setPlayerAsCaptain(stableNewPlayerId)
+        dataSource.setPlayerAsCaptain("new-player-id")
     }
 
     @Test
     fun `givenDeletedCaptain_whenSetPlayerAsCaptain_thenSkipsDeletedCaptainUpdate`() = runTest {
         setupUserWithTeam()
-
-        val stableNewPlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val playersCollection = mockk<CollectionReference>()
         val allTeamQuery = mockk<Query>()
@@ -1110,29 +1062,23 @@ class PlayerFirestoreDataSourceImplTest {
         every { playerDocRef.update("isCaptain", true) } returns setTask
         coEvery { setTask.await() } returns mockk()
 
-        dataSource.setPlayerAsCaptain(stableNewPlayerId)
+        dataSource.setPlayerAsCaptain("player-doc-id")
     }
 
     @Test
     fun `givenPlayerWithEmptyIdModel_whenGetPlayerById_thenSetsIdFromDocumentId`() = runTest {
-        setupUserWithTeam()
+        // Production uses document(playerId).get() directly; the model.copy(id = document.id) sets the id.
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
 
         val playersCollection = mockk<CollectionReference>()
-        val playerQuery = mockk<Query>()
-        val playerSnapshot = mockk<QuerySnapshot>()
+        val playerDocRef = mockk<DocumentReference>()
         val playerDoc = mockk<DocumentSnapshot>()
 
         every { mockFirestore.collection("players") } returns playersCollection
-        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playerQuery
-        val playerTask = mockk<Task<QuerySnapshot>>()
-        every { playerQuery.get() } returns playerTask
-        coEvery { playerTask.await() } returns playerSnapshot
-
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
+        every { playersCollection.document("player-doc-id") } returns playerDocRef
+        val playerTask = mockk<Task<DocumentSnapshot>>()
+        every { playerDocRef.get() } returns playerTask
+        coEvery { playerTask.await() } returns playerDoc
 
         val playerModel = PlayerFirestoreModel(
             id = "",
@@ -1142,10 +1088,10 @@ class PlayerFirestoreDataSourceImplTest {
             deleted = false
         )
         every { playerDoc.id } returns "player-doc-id"
+        every { playerDoc.exists() } returns true
         every { playerDoc.toObject(PlayerFirestoreModel::class.java) } returns playerModel
-        every { playerSnapshot.documents } returns listOf(playerDoc)
 
-        val result = dataSource.getPlayerById(stablePlayerId)
+        val result = dataSource.getPlayerById("player-doc-id")
 
         assertNotNull(result)
     }
@@ -1194,12 +1140,6 @@ class PlayerFirestoreDataSourceImplTest {
         val playerDoc = mockk<DocumentSnapshot>()
         val playerDocRef = mockk<DocumentReference>()
 
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
-
         val playerModel = PlayerFirestoreModel(
             id = "",
             teamId = "team-doc-id",
@@ -1222,18 +1162,12 @@ class PlayerFirestoreDataSourceImplTest {
         every { playerDocRef.update("deleted", true) } returns updateTask
         coEvery { updateTask.await() } returns mockk()
 
-        dataSource.deletePlayer(stablePlayerId)
+        dataSource.deletePlayer("player-doc-id")
     }
 
     @Test
     fun `givenPlayerWithNullImageAndNoExistingImage_whenUpdatePlayer_thenSucceeds`() = runTest {
         setupUserWithTeam()
-
-        val stablePlayerId = run {
-            var result = 0L; var multiplier = 1L
-            for (char in "player-doc-id") { result += char.code * multiplier; multiplier *= 31 }
-            kotlin.math.abs(result)
-        }
 
         val playersCollection = mockk<CollectionReference>()
         val playerQuery = mockk<Query>()
@@ -1265,7 +1199,344 @@ class PlayerFirestoreDataSourceImplTest {
         coEvery { setTask.await() } returns mockk()
 
         val player = mockk<Player>(relaxed = true)
-        every { player.id } returns stablePlayerId
+        every { player.id } returns "player-doc-id"
+        every { player.imageUri } returns null
+
+        dataSource.updatePlayer(player)
+    }
+
+
+
+    @Test
+    fun `givenNullDocumentModel_whenGetPlayerById_thenReturnsNull`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+
+        val playersCollection = mockk<CollectionReference>()
+        val playerDocRef = mockk<DocumentReference>()
+        val playerDoc = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.document("player-doc-id") } returns playerDocRef
+        val playerTask = mockk<Task<DocumentSnapshot>>()
+        every { playerDocRef.get() } returns playerTask
+        coEvery { playerTask.await() } returns playerDoc
+
+        every { playerDoc.exists() } returns true
+        every { playerDoc.toObject(PlayerFirestoreModel::class.java) } returns null
+
+        val result = dataSource.getPlayerById("player-doc-id")
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `givenPlayerNotExist_whenGetPlayerById_thenReturnsNull`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+
+        val playersCollection = mockk<CollectionReference>()
+        val playerDocRef = mockk<DocumentReference>()
+        val playerDoc = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.document("player-doc-id") } returns playerDocRef
+        val playerTask = mockk<Task<DocumentSnapshot>>()
+        every { playerDocRef.get() } returns playerTask
+        coEvery { playerTask.await() } returns playerDoc
+
+        every { playerDoc.exists() } returns false
+
+        val result = dataSource.getPlayerById("player-doc-id")
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `givenDeletedPlayer_whenGetPlayerById_thenReturnsNull`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+
+        val playersCollection = mockk<CollectionReference>()
+        val playerDocRef = mockk<DocumentReference>()
+        val playerDoc = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.document("player-doc-id") } returns playerDocRef
+        val playerTask = mockk<Task<DocumentSnapshot>>()
+        every { playerDocRef.get() } returns playerTask
+        coEvery { playerTask.await() } returns playerDoc
+
+        val playerModel = PlayerFirestoreModel(
+            id = "player-doc-id",
+            teamId = "team-doc-id",
+            firstName = "John",
+            lastName = "Doe",
+            deleted = true
+        )
+        every { playerDoc.exists() } returns true
+        every { playerDoc.toObject(PlayerFirestoreModel::class.java) } returns playerModel
+
+        val result = dataSource.getPlayerById("player-doc-id")
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `givenAuthenticatedUserWithNoTeam_whenGetAllPlayers_thenReturnsEmptyThenClosesFlow`() =
+        runTest {
+            val listenerSlot = slot<EventListener<QuerySnapshot>>()
+            every { mockAuth.currentUser } returns mockUser
+            every { mockUser.uid } returns "user-123"
+            val teamsCollection = mockk<CollectionReference>()
+            val teamQuery = mockk<Query>()
+            val teamSnapshot = mockk<QuerySnapshot>()
+
+            every { mockFirestore.collection("teams") } returns teamsCollection
+            every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
+            every { teamQuery.limit(1) } returns teamQuery
+            val teamTask = mockk<Task<QuerySnapshot>>()
+            every { teamQuery.get() } returns teamTask
+            mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+            coEvery { teamTask.await() } returns teamSnapshot
+            every { teamSnapshot.documents } returns emptyList()
+
+            dataSource.getAllPlayers().test {
+                val result = awaitItem()
+                assertEquals(emptyList<Player>(), result)
+                cancel()
+            }
+        }
+
+    @Test
+    fun `givenValidPlayer_whenGetPlayersByTeam_thenEmitsPlayers`() = runTest {
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val playersCollection = mockk<CollectionReference>()
+        val playersQuery = mockk<Query>()
+        val querySnapshot = mockk<QuerySnapshot>()
+        val docSnapshot = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playersQuery
+        every { playersQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val playerModel = PlayerFirestoreModel(
+            id = "player-doc-id",
+            teamId = "team-doc-id",
+            firstName = "John",
+            lastName = "Doe",
+            deleted = false
+        )
+        every { docSnapshot.id } returns "player-doc-id"
+        every { docSnapshot.toObject(PlayerFirestoreModel::class.java) } returns playerModel
+        every { querySnapshot.documents } returns listOf(docSnapshot)
+
+        dataSource.getPlayersByTeam("team-doc-id").test {
+            listenerSlot.captured.onEvent(querySnapshot, null)
+            val result = awaitItem()
+            assertEquals(1, result.size)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenFirestoreErrorInGetPlayersByTeam_thenEmitsEmptyList`() = runTest {
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val playersCollection = mockk<CollectionReference>()
+        val playersQuery = mockk<Query>()
+
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playersQuery
+        every { playersQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val mockError = mockk<FirebaseFirestoreException>(relaxed = true)
+
+        dataSource.getPlayersByTeam("team-doc-id").test {
+            listenerSlot.captured.onEvent(null, mockError)
+            val result = awaitItem()
+            assertEquals(emptyList<Player>(), result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenDeletedPlayerInList_whenGetPlayersByTeam_thenFiltersDeleted`() = runTest {
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val playersCollection = mockk<CollectionReference>()
+        val playersQuery = mockk<Query>()
+        val querySnapshot = mockk<QuerySnapshot>()
+        val deletedDoc = mockk<DocumentSnapshot>()
+        val validDoc = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playersQuery
+        every { playersQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val deletedModel = PlayerFirestoreModel(
+            id = "deleted-id",
+            teamId = "team-doc-id",
+            firstName = "Deleted",
+            lastName = "Player",
+            deleted = true
+        )
+        val validModel = PlayerFirestoreModel(
+            id = "valid-id",
+            teamId = "team-doc-id",
+            firstName = "Valid",
+            lastName = "Player",
+            deleted = false
+        )
+        every { deletedDoc.id } returns "deleted-id"
+        every { deletedDoc.toObject(PlayerFirestoreModel::class.java) } returns deletedModel
+        every { validDoc.id } returns "valid-id"
+        every { validDoc.toObject(PlayerFirestoreModel::class.java) } returns validModel
+        every { querySnapshot.documents } returns listOf(deletedDoc, validDoc)
+
+        dataSource.getPlayersByTeam("team-doc-id").test {
+            listenerSlot.captured.onEvent(querySnapshot, null)
+            val result = awaitItem()
+            assertEquals(1, result.size)
+            assertEquals("valid-id", result[0].id)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenNullSnapshotInGetPlayersByTeam_thenEmitsEmptyList`() = runTest {
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        val playersCollection = mockk<CollectionReference>()
+        val playersQuery = mockk<Query>()
+
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playersQuery
+        every { playersQuery.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        dataSource.getPlayersByTeam("team-doc-id").test {
+            listenerSlot.captured.onEvent(null, null)
+            val result = awaitItem()
+            assertEquals(emptyList<Player>(), result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenStorageGooglesDotComUrl_whenIsFirebaseStorageUrl_thenReturnsTrue`() = runTest {
+        setupUserWithTeam()
+
+        val playersCollection = mockk<CollectionReference>()
+        val playerDocRef = mockk<DocumentReference>()
+        every { playerDocRef.id } returns "player-doc-id"
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.document() } returns playerDocRef
+
+        val voidTask = mockk<Task<Void>>()
+        every { playerDocRef.set(any()) } returns voidTask
+        coEvery { voidTask.await() } returns mockk()
+
+        val googleStorageUrl = "https://storage.googleapis.com/bucket/image.jpg"
+        val player = mockk<Player>(relaxed = true)
+        every { player.imageUri } returns googleStorageUrl
+
+        val result = dataSource.insertPlayer(player)
+
+        assertTrue(result.isNotEmpty())
+    }
+
+    @Test
+    fun `givenCaptainPlayerInMultipleDocuments_whenGetCaptainPlayer_thenReturnsCaptainFromFirst`() =
+        runTest {
+            setupUserWithTeam()
+
+            val playersCollection = mockk<CollectionReference>()
+            val playerQuery = mockk<Query>(relaxed = true)
+            val playerSnapshot = mockk<QuerySnapshot>()
+            val playerDoc = mockk<DocumentSnapshot>()
+
+            every { mockFirestore.collection("players") } returns playersCollection
+            every { playersCollection.whereEqualTo("teamId", "team-doc-id") } returns playerQuery
+            every { playerQuery.whereEqualTo(any<String>(), any()) } returns playerQuery
+            every { playerQuery.limit(any()) } returns playerQuery
+            val playerTask = mockk<Task<QuerySnapshot>>()
+            every { playerQuery.get() } returns playerTask
+            coEvery { playerTask.await() } returns playerSnapshot
+
+            val playerModel = PlayerFirestoreModel(
+                id = "captain-id",
+                teamId = "team-doc-id",
+                firstName = "Captain",
+                lastName = "One",
+                isCaptain = true,
+                deleted = false
+            )
+            every { playerDoc.id } returns "captain-id"
+            every { playerDoc.toObject(PlayerFirestoreModel::class.java) } returns playerModel
+            every { playerSnapshot.documents } returns listOf(playerDoc)
+
+            val result = dataSource.getCaptainPlayer()
+
+            assertNotNull(result)
+            assertEquals("captain-id", result!!.id)
+        }
+
+    @Test
+    fun `givenNoAuthUser_whenGetTeamDocumentId_thenReturnsNull`() = runTest {
+        every { mockAuth.currentUser } returns null
+
+        val result = dataSource.getPlayerById("player-123")
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `givenExceptionInGetTeamDocumentId_whenGetAllPlayers_thenEmitsEmptyList`() = runTest {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.uid } returns "user-123"
+        val teamsCollection = mockk<CollectionReference>()
+        val teamQuery = mockk<Query>()
+
+        every { mockFirestore.collection("teams") } returns teamsCollection
+        every { teamsCollection.whereEqualTo("assignedCoachId", "user-123") } returns teamQuery
+        every { teamQuery.limit(1) } returns teamQuery
+        val teamTask = mockk<Task<QuerySnapshot>>()
+        every { teamQuery.get() } returns teamTask
+        coEvery { teamTask.await() } throws RuntimeException("Firestore error")
+
+        dataSource.getAllPlayers().test {
+            val result = awaitItem()
+            assertEquals(emptyList<Player>(), result)
+            cancel()
+        }
+    }
+
+    @Test
+    fun `givenValidPlayerWithNullImageUrl_whenUpdatePlayer_thenSucceeds`() = runTest {
+        setupUserWithTeam()
+
+        val playersCollection = mockk<CollectionReference>()
+        val playerDocRef = mockk<DocumentReference>()
+        val playerDoc = mockk<DocumentSnapshot>()
+
+        every { mockFirestore.collection("players") } returns playersCollection
+        every { playersCollection.document("player-doc-id") } returns playerDocRef
+        val getTask = mockk<Task<DocumentSnapshot>>()
+        every { playerDocRef.get() } returns getTask
+        coEvery { getTask.await() } returns playerDoc
+
+        val playerModel = PlayerFirestoreModel(
+            id = "player-doc-id",
+            teamId = "team-doc-id",
+            firstName = "Player",
+            lastName = "One",
+            deleted = false,
+            imageUri = null
+        )
+        every { playerDoc.exists() } returns true
+        every { playerDoc.toObject(PlayerFirestoreModel::class.java) } returns playerModel
+
+        val setTask = mockk<Task<Void>>()
+        every { playerDocRef.set(any()) } returns setTask
+        coEvery { setTask.await() } returns mockk()
+
+        val player = mockk<Player>(relaxed = true)
+        every { player.id } returns "player-doc-id"
         every { player.imageUri } returns null
 
         dataSource.updatePlayer(player)

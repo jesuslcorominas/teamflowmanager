@@ -18,10 +18,40 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────────────────────
+  # 0. Change scope
+  # A PR to main that only touches remoteconfig/*.template.json is a feature-flag
+  # change, not a release: it must reach Firebase (see remoteconfig.yml) without
+  # building or uploading anything to Play. Anything else runs the full pipeline.
+  # ─────────────────────────────────────────────────────────────
+  scope:
+    name: Detect change scope
+    runs-on: ubuntu-latest
+    outputs:
+      config_only: ${{ steps.detect.outputs.config_only }}
+    steps:
+      - name: List changed files
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FILES=$(gh api \
+            "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+            --paginate --jq '.[].filename')
+          echo "Changed files:"
+          echo "$FILES"
+          if [ -n "$FILES" ] && [ -z "$(echo "$FILES" | grep -v '^remoteconfig/.*\.template\.json$')" ]; then
+            echo "config_only=true" >> $GITHUB_OUTPUT
+            echo "::notice::Remote Config template only — skipping build and Play upload."
+          else
+            echo "config_only=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ─────────────────────────────────────────────────────────────
   # 1. Tests & Lint
   # ─────────────────────────────────────────────────────────────
   test:
     name: Tests & Lint
+    needs: scope
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +64,10 @@ jobs:
           SHA="${{ github.event.pull_request.head.sha || github.sha }}"
           git fetch origin "$SHA" --depth=1 2>/dev/null || true
           COMMIT_MSG=$(git log -1 --format='%s' "$SHA")
-          if echo "$COMMIT_MSG" | grep -q '\[skip-tests\]'; then
+          if [ "${{ needs.scope.outputs.config_only }}" = "true" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⏩ Remote Config template only — nothing to test"
+          elif echo "$COMMIT_MSG" | grep -q '\[skip-tests\]'; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "⏩ [skip-tests] detected — skipping tests and lint"
           else
@@ -101,7 +134,8 @@ jobs:
   # ─────────────────────────────────────────────────────────────
   validate-version:
     name: Validate versionCode
-    needs: test
+    needs: [scope, test]
+    if: needs.scope.outputs.config_only != 'true'
     runs-on: ubuntu-latest
     outputs:
       version_name: ${{ steps.version.outputs.version_name }}

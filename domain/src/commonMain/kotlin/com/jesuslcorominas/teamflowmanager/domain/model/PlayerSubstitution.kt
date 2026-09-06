@@ -1,10 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.domain.model
 
 data class PlayerSubstitution(
-    val id: Long = 0L,
-    val matchId: Long,
-    val playerOutId: Long,
-    val playerInId: Long,
+    val id: String = "",
+    val matchId: String,
+    val playerOutId: String,
+    val playerInId: String,
     val substitutionTimeMillis: Long,
     val matchElapsedTimeMillis: Long,
     val operationId: String? = null,

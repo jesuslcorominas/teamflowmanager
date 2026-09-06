@@ -2,20 +2,28 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchesByTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateTeamNotificationPreferenceUseCase
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-enum class PresidentTeamTab { SUMMARY, PLAYERS, MATCHES, STATS }
+enum class PresidentTeamTab { SUMMARY, PLAYERS, MATCHES, STATS, NOTIFICATIONS }
 
 data class PresidentTeamStats(
     val totalMatches: Int,
@@ -45,6 +53,10 @@ class PresidentTeamDetailViewModel(
     private val getTeamById: GetTeamByIdUseCase,
     private val getPlayersByTeam: GetPlayersByTeamUseCase,
     private val getMatchesByTeam: GetMatchesByTeamUseCase,
+    private val getNotificationPreferences: GetNotificationPreferencesUseCase,
+    private val updateTeamNotificationPreference: UpdateTeamNotificationPreferenceUseCase,
+    private val getUserClubMembership: GetUserClubMembershipUseCase,
+    private val timeTicker: TimeTicker,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PresidentTeamDetailUiState>(PresidentTeamDetailUiState.Loading)
     val uiState: StateFlow<PresidentTeamDetailUiState> = _uiState.asStateFlow()
@@ -52,8 +64,27 @@ class PresidentTeamDetailViewModel(
     private val _selectedTab = MutableStateFlow(PresidentTeamTab.SUMMARY)
     val selectedTab: StateFlow<PresidentTeamTab> = _selectedTab.asStateFlow()
 
+    private val _currentTime = MutableStateFlow(0L)
+    val currentTime: StateFlow<Long> = _currentTime.asStateFlow()
+
+    data class TeamNotificationPreferencesState(
+        val matchEvents: Boolean = true,
+        val goals: Boolean = true,
+        val globalMatchEventsState: GlobalNotificationState = GlobalNotificationState.ALL_ON,
+        val globalGoalsState: GlobalNotificationState = GlobalNotificationState.ALL_ON,
+        val clubId: String = "",
+    )
+
+    private val _teamNotificationState = MutableStateFlow(TeamNotificationPreferencesState())
+    val teamNotificationState: StateFlow<TeamNotificationPreferencesState> = _teamNotificationState.asStateFlow()
+
     init {
         load()
+        viewModelScope.launch {
+            timeTicker.timeFlow.collect { now ->
+                _currentTime.value = now
+            }
+        }
     }
 
     fun selectTab(tab: PresidentTeamTab) {
@@ -62,16 +93,16 @@ class PresidentTeamDetailViewModel(
 
     private fun load() {
         viewModelScope.launch {
-            val team = getTeamById(teamId)
-            if (team == null) {
-                _uiState.value = PresidentTeamDetailUiState.Error
-                return@launch
-            }
+            // Kick off team fetch concurrently with the snapshot listener subscriptions so
+            // all three Firestore round-trips happen in parallel instead of sequentially.
+            val teamDeferred = async { getTeamById(teamId) }
 
             combine(
                 getPlayersByTeam(teamId),
                 getMatchesByTeam(teamId),
             ) { players, matches ->
+                val team = teamDeferred.await()
+                if (team == null) return@combine null
                 val finishedMatches = matches.filter { it.status == MatchStatus.FINISHED }
                 val stats =
                     PresidentTeamStats(
@@ -90,7 +121,42 @@ class PresidentTeamDetailViewModel(
                     stats = stats,
                 )
             }.collect { state ->
-                _uiState.value = state
+                _uiState.value = state ?: PresidentTeamDetailUiState.Error
+            }
+        }
+
+        viewModelScope.launch {
+            val clubMember = getUserClubMembership().first() ?: return@launch
+            val clubId = clubMember.clubId
+
+            getNotificationPreferences(clubId).collect { prefs ->
+                val teamPref = prefs.teamPreferences[teamId]
+                _teamNotificationState.value =
+                    TeamNotificationPreferencesState(
+                        matchEvents = teamPref?.matchEvents ?: prefs.globalMatchEvents,
+                        goals = teamPref?.goals ?: prefs.globalGoals,
+                        globalMatchEventsState = prefs.globalStateFor(NotificationEventType.MATCH_EVENTS),
+                        globalGoalsState = prefs.globalStateFor(NotificationEventType.GOALS),
+                        clubId = clubId,
+                    )
+            }
+        }
+    }
+
+    fun updateTeamMatchEvents(enabled: Boolean) {
+        viewModelScope.launch {
+            runCatching {
+                val state = _teamNotificationState.value
+                updateTeamNotificationPreference(state.clubId, teamId, NotificationEventType.MATCH_EVENTS, enabled)
+            }
+        }
+    }
+
+    fun updateTeamGoals(enabled: Boolean) {
+        viewModelScope.launch {
+            runCatching {
+                val state = _teamNotificationState.value
+                updateTeamNotificationPreference(state.clubId, teamId, NotificationEventType.GOALS, enabled)
             }
         }
     }

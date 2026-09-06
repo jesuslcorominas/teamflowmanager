@@ -87,22 +87,22 @@ class ArchivedMatchesViewModelTest {
             val archivedMatches =
                 listOf(
                     Match(
-                        id = 1L,
+                        id = "1",
                         teamName = "Home Team",
                         opponent = "Team A",
                         location = "Stadium A",
                         periodType = PeriodType.HALF_TIME,
-                        captainId = 1L,
+                        captainId = "1",
                         status = MatchStatus.FINISHED,
                         archived = true,
                     ),
                     Match(
-                        id = 2L,
+                        id = "2",
                         teamName = "Home Team",
                         opponent = "Team B",
                         location = "Stadium B",
                         periodType = PeriodType.HALF_TIME,
-                        captainId = 1L,
+                        captainId = "1",
                         status = MatchStatus.FINISHED,
                         archived = true,
                     ),
@@ -125,7 +125,7 @@ class ArchivedMatchesViewModelTest {
             // Given
             every { getArchivedMatchesUseCase.invoke() } returns flowOf(emptyList())
             viewModel = createViewModel()
-            val matchId = 1L
+            val matchId = "1"
 
             // When
             viewModel.unarchiveMatch(matchId)

@@ -20,10 +20,10 @@ class StartPlayerTimersBatchUseCaseTest {
 
     @Test
     fun `invoke should call startTimersBatch on repository`() = runTest {
-        val playerIds = listOf(1L, 2L, 3L)
+        val playerIds = listOf("1", "2", "3")
         val currentTimeMillis = 7000L
 
-        val matchId = 42L
+        val matchId = "42"
         useCase.invoke(matchId, playerIds, currentTimeMillis)
 
         coVerify { playerTimeRepository.startTimersBatch(matchId, playerIds, currentTimeMillis) }

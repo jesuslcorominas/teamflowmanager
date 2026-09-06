@@ -89,22 +89,22 @@ class SplashViewModel(
                 // President who is also assigned as coach to a team — respect the role preference
                 when (getActiveViewRole()) {
                     ActiveViewRole.Coach -> {
-                        val clubRemoteId = team.clubRemoteId
-                        if (clubRemoteId != null) {
-                            syncFcmTokenIfPermitted(user.id, clubRemoteId)
+                        val clubId = team.clubId
+                        if (clubId != null) {
+                            syncFcmTokenIfPermitted(user.id, clubId)
                             _uiState.value = UiState.TeamExists
                         } else {
                             _uiState.value = UiState.ClubPresident
                         }
                     }
                     ActiveViewRole.President -> {
-                        syncFcmTokenIfPermitted(user.id, clubMember.clubRemoteId)
+                        syncFcmTokenIfPermitted(user.id, clubMember.clubId)
                         _uiState.value = UiState.ClubPresident
                     }
                 }
             } else {
                 // President with no team assigned as coach — always show president view
-                syncFcmTokenIfPermitted(user.id, clubMember.clubRemoteId)
+                syncFcmTokenIfPermitted(user.id, clubMember.clubId)
                 _uiState.value = UiState.ClubPresident
             }
             return
@@ -123,9 +123,9 @@ class SplashViewModel(
                 _uiState.value = UiState.NoTeam
             }
         } else {
-            val clubRemoteId = team.clubRemoteId
-            if (clubRemoteId != null) {
-                syncFcmTokenIfPermitted(user.id, clubRemoteId)
+            val clubId = team.clubId
+            if (clubId != null) {
+                syncFcmTokenIfPermitted(user.id, clubId)
                 _uiState.value = UiState.TeamExists
             } else {
                 _uiState.value = UiState.NoClub

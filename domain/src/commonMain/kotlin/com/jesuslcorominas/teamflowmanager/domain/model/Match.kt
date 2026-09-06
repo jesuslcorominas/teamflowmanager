@@ -3,16 +3,16 @@ package com.jesuslcorominas.teamflowmanager.domain.model
 import kotlin.collections.filter
 
 data class Match(
-    val id: Long = 0L,
-    val teamId: Long = 1L,
+    val id: String = "",
+    val teamId: String = "",
     val teamName: String,
     val opponent: String,
     val location: String,
     val dateTime: Long? = null,
     val periodType: PeriodType,
-    val squadCallUpIds: List<Long> = emptyList(),
-    val captainId: Long,
-    val startingLineupIds: List<Long> = emptyList(),
+    val squadCallUpIds: List<String> = emptyList(),
+    val captainId: String = "",
+    val startingLineupIds: List<String> = emptyList(),
     val status: MatchStatus = MatchStatus.SCHEDULED,
     val archived: Boolean = false,
     val pauseCount: Int = 0,

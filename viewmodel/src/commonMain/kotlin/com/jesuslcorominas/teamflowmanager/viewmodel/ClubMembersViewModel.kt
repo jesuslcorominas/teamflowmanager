@@ -58,7 +58,7 @@ class ClubMembersViewModel(
             try {
                 // Get user's club membership
                 val clubMember = getUserClubMembership().first()
-                val clubId = clubMember?.clubRemoteId
+                val clubId = clubMember?.clubId
 
                 if (clubMember == null || clubId == null) {
                     _uiState.value = UiState.NoClubMembership

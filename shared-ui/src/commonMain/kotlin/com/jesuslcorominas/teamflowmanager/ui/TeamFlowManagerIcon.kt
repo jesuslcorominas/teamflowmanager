@@ -1,13 +1,25 @@
 package com.jesuslcorominas.teamflowmanager.ui
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.painterResource
+import teamflowmanager.shared_ui.generated.resources.Res
+import teamflowmanager.shared_ui.generated.resources.ic_launcher
 
-/**
- * Displays the TeamFlow Manager app icon.
- *
- * - Android: renders the branded vector drawable (ic_launcher).
- * - iOS: renders a styled "TFM" text placeholder.
- *   TODO (KMP-19+): export icon as CMP SVG/PNG resource to unify both platforms.
- */
 @Composable
-expect fun TeamFlowManagerIcon()
+fun TeamFlowManagerIcon(
+    modifier: Modifier = Modifier,
+    size: Dp = 144.dp,
+) {
+    Icon(
+        modifier = modifier.size(size),
+        painter = painterResource(Res.drawable.ic_launcher),
+        contentDescription = null,
+        tint = Color.Unspecified,
+    )
+}

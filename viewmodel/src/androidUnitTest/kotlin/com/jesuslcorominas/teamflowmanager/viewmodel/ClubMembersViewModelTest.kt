@@ -30,25 +30,21 @@ class ClubMembersViewModelTest {
     private lateinit var removeClubMemberUseCase: RemoveClubMemberUseCase
 
     private val presidentMember = ClubMember(
-        id = 1L,
+        id = "1",
         userId = "user123",
         name = "President User",
         email = "president@example.com",
-        clubId = 100L,
+        clubId = "club_fs_1",
         roles = listOf("Presidente"),
-        remoteId = "member1",
-        clubRemoteId = "club_fs_1",
     )
 
     private val coachMember = ClubMember(
-        id = 2L,
+        id = "2",
         userId = "coach456",
         name = "Coach User",
         email = "coach@example.com",
-        clubId = 100L,
+        clubId = "club_fs_1",
         roles = listOf("Coach"),
-        remoteId = "member2",
-        clubRemoteId = "club_fs_1",
     )
 
     @Before

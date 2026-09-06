@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeDocument
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
@@ -23,6 +24,7 @@ class PlayerTimeFirestoreDataSourceImpl(
     companion object {
         private const val PLAYER_TIMES_COLLECTION = "playerTimes"
         private const val TEAMS_COLLECTION = "teams"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     private suspend fun getTeamDocumentId(): String? {
@@ -41,7 +43,7 @@ class PlayerTimeFirestoreDataSourceImpl(
         }
     }
 
-    override fun getPlayerTime(playerId: Long): Flow<PlayerTime?> =
+    override fun getPlayerTime(playerId: String): Flow<PlayerTime?> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
@@ -80,36 +82,50 @@ class PlayerTimeFirestoreDataSourceImpl(
      *
      * Note: requires a composite Firestore index on playerTimes(teamId ASC, matchId ASC).
      */
-    override fun getPlayerTimesByMatch(matchId: Long): Flow<List<PlayerTime>> =
+    private suspend fun getTeamDocumentIdOrFromMatch(matchId: String): String? =
+        getTeamDocumentId()
+            ?: try {
+                val doc = firestore.collection(MATCHES_COLLECTION).document(matchId).get()
+                if (!doc.exists) {
+                    null
+                } else {
+                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+
+    override fun getPlayerTimesByMatch(matchId: String): Flow<List<PlayerTime>> =
         flow {
             val currentUserId = firebaseAuth.currentUser?.uid
             if (currentUserId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val teamDocId = getTeamDocumentId()
+            val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
                 emit(emptyList())
                 return@flow
             }
-            val snapshots =
+            val newTimes =
                 firestore.collection(PLAYER_TIMES_COLLECTION)
                     .where { "teamId" equalTo teamDocId }
                     .where { "matchId" equalTo matchId }
                     .snapshots
-            emitAll(
-                snapshots.map { qs ->
-                    qs.documents.mapNotNull { doc ->
-                        try {
-                            doc.data<PlayerTimeFirestoreModel>().toDomain()
-                        } catch (_: Exception) {
-                            null
+                    .map { qs ->
+                        qs.documents.mapNotNull { doc ->
+                            try {
+                                parsePlayerTimeDocument(doc.data<Map<String, Any?>>(), matchId)
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
+                    }.catch { e ->
+                        if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                     }
-                }.catch { e ->
-                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
-                },
-            )
+            emitAll(newTimes)
         }
 
     override suspend fun upsertPlayerTime(playerTime: PlayerTime) {

@@ -17,8 +17,8 @@ android {
         applicationId = "com.jesuslcorominas.teamflowmanager"
         minSdk = 29
         targetSdk = 36
-        versionCode = 50
-        versionName = "0.5.0"
+        versionCode = 51
+        versionName = "0.6.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -70,6 +70,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared-ui"))
     implementation(project(":viewmodel"))
     implementation(project(":di"))
     implementation(project(":domain"))
@@ -110,6 +111,7 @@ dependencies {
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.storage.ktx)
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.firebase.config.ktx)
 
     // Credential Manager for Google Sign-In
     implementation(libs.credentials)

@@ -21,9 +21,9 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
     private val matchOperationRepository: MatchOperationRepository,
 ) : RegisterPlayerSubstitutionUseCase {
     override suspend fun invoke(
-        matchId: Long,
-        playerOutId: Long,
-        playerInId: Long,
+        matchId: String,
+        playerOutId: String,
+        playerInId: String,
         currentTimeMillis: Long,
     ) {
         // Get match to calculate elapsed time

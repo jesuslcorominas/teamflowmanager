@@ -1,10 +1,9 @@
 package com.jesuslcorominas.teamflowmanager.domain.model
 
 data class Club(
-    val id: Long,
+    val id: String,
     val ownerId: String,
     val name: String,
     val invitationCode: String,
-    val remoteId: String? = null,
     val homeGround: String? = null,
 )

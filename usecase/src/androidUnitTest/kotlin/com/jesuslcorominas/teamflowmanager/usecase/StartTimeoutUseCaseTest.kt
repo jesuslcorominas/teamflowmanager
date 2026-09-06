@@ -37,13 +37,13 @@ class StartTimeoutUseCaseTest {
     fun `invoke should pause all running player timers in batch and then start timeout timer`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val runningPlayerTimes =
                 listOf(
-                    PlayerTime(playerId = 1L, isRunning = true, elapsedTimeMillis = 500L, status = PlayerTimeStatus.PLAYING),
-                    PlayerTime(playerId = 2L, isRunning = true, elapsedTimeMillis = 300L, status = PlayerTimeStatus.PLAYING),
-                    PlayerTime(playerId = 3L, isRunning = false, elapsedTimeMillis = 200L),
+                    PlayerTime(playerId = "1", isRunning = true, elapsedTimeMillis = 500L, status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "2", isRunning = true, elapsedTimeMillis = 300L, status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "3", isRunning = false, elapsedTimeMillis = 200L),
                 )
 
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(runningPlayerTimes)
@@ -52,7 +52,7 @@ class StartTimeoutUseCaseTest {
             startTimeoutUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify { playerTimeRepository.pauseTimersBatch(matchId, listOf(1L, 2L), currentTime) }
+            coVerify { playerTimeRepository.pauseTimersBatch(matchId, listOf("1", "2"), currentTime) }
             coVerify { matchRepository.startTimeout(matchId, currentTime) }
         }
 
@@ -60,12 +60,12 @@ class StartTimeoutUseCaseTest {
     fun `invoke should start timeout timer even when no player timers are running`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             val playerTimes =
                 listOf(
-                    PlayerTime(playerId = 1L, isRunning = false, elapsedTimeMillis = 500L),
-                    PlayerTime(playerId = 2L, isRunning = false, elapsedTimeMillis = 300L),
+                    PlayerTime(playerId = "1", isRunning = false, elapsedTimeMillis = 500L),
+                    PlayerTime(playerId = "2", isRunning = false, elapsedTimeMillis = 300L),
                 )
 
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
@@ -82,7 +82,7 @@ class StartTimeoutUseCaseTest {
     fun `invoke should start timeout timer when no player times exist`() =
         runTest {
             // Given
-            val matchId = 1L
+            val matchId = "1"
             val currentTime = 1000L
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(emptyList())
 

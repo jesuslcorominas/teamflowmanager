@@ -75,14 +75,12 @@ class MainViewModelTest {
     fun `isPresident should be true when user has President role`() = runTest(testDispatcher) {
         // Given
         val presidentMember = ClubMember(
-            id = 1L,
+            id = "1",
             userId = "user123",
             name = "John Doe",
             email = "john@example.com",
-            clubId = 100L,
+            clubId = "club_fs_1",
             roles = listOf("Presidente"),
-            remoteId = "member1",
-            clubRemoteId = "club_fs_1",
         )
         every { getUserClubMembershipUseCase.invoke() } returns flowOf(presidentMember)
         val viewModel = createViewModel()
@@ -101,14 +99,12 @@ class MainViewModelTest {
     fun `isPresident should be false when user is president but active role is Coach`() =
         runTest(testDispatcher) {
             val presidentMember = ClubMember(
-                id = 1L,
+                id = "1",
                 userId = "user123",
                 name = "John Doe",
                 email = "john@example.com",
-                clubId = 100L,
+                clubId = "club_fs_1",
                 roles = listOf("Presidente"),
-                remoteId = "member1",
-                clubRemoteId = "club_fs_1",
             )
             every { getUserClubMembershipUseCase.invoke() } returns flowOf(presidentMember)
             every { getActiveViewRoleUseCase() } returns ActiveViewRole.Coach

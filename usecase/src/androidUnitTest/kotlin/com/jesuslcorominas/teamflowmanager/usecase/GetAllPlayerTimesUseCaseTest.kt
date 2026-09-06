@@ -28,13 +28,13 @@ class GetAllPlayerTimesUseCaseTest {
             // Given
             val playerTimes =
                 listOf(
-                    PlayerTime(playerId = 1L, elapsedTimeMillis = 5000L, isRunning = true),
-                    PlayerTime(playerId = 2L, elapsedTimeMillis = 3000L, isRunning = false),
+                    PlayerTime(playerId = "1", elapsedTimeMillis = 5000L, isRunning = true),
+                    PlayerTime(playerId = "2", elapsedTimeMillis = 3000L, isRunning = false),
                 )
             every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(playerTimes)
 
             // When
-            val result = getAllPlayerTimesUseCase.invoke(matchId = 1L).first()
+            val result = getAllPlayerTimesUseCase.invoke(matchId = "1").first()
 
             // Then
             assertEquals(playerTimes, result)
@@ -47,7 +47,7 @@ class GetAllPlayerTimesUseCaseTest {
             every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
 
             // When
-            val result = getAllPlayerTimesUseCase.invoke(matchId = 1L).first()
+            val result = getAllPlayerTimesUseCase.invoke(matchId = "1").first()
 
             // Then
             assertEquals(emptyList<PlayerTime>(), result)

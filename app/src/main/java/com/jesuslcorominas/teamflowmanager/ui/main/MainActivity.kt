@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TFMAppTheme {
-                MainScreen(
+                AndroidAppShell(
                     pendingNavigation = pendingNavigation,
                 )
             }

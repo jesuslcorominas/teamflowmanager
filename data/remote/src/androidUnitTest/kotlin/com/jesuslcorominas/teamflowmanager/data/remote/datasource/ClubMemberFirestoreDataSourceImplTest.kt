@@ -73,7 +73,7 @@ class ClubMemberFirestoreDataSourceImplTest {
     @Test
     fun `givenBlankUserId_whenCreateOrUpdateClubMember_thenThrowsIllegalArgumentException`() = runTest {
         try {
-            dataSource.createOrUpdateClubMember("", "John", "j@j.com", 1L, "club-id", listOf("player"))
+            dataSource.createOrUpdateClubMember("", "John", "j@j.com", "club-id", listOf("player"))
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {
             // expected
@@ -83,7 +83,7 @@ class ClubMemberFirestoreDataSourceImplTest {
     @Test
     fun `givenBlankName_whenCreateOrUpdateClubMember_thenThrowsIllegalArgumentException`() = runTest {
         try {
-            dataSource.createOrUpdateClubMember("user-123", "", "j@j.com", 1L, "club-id", listOf("player"))
+            dataSource.createOrUpdateClubMember("user-123", "", "j@j.com", "club-id", listOf("player"))
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {
             // expected
@@ -93,7 +93,7 @@ class ClubMemberFirestoreDataSourceImplTest {
     @Test
     fun `givenBlankEmail_whenCreateOrUpdateClubMember_thenThrowsIllegalArgumentException`() = runTest {
         try {
-            dataSource.createOrUpdateClubMember("user-123", "John", "", 1L, "club-id", listOf("player"))
+            dataSource.createOrUpdateClubMember("user-123", "John", "", "club-id", listOf("player"))
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {
             // expected
@@ -103,7 +103,7 @@ class ClubMemberFirestoreDataSourceImplTest {
     @Test
     fun `givenBlankClubFirestoreIdInCreate_whenCreateOrUpdateClubMember_thenThrowsIllegalArgumentException`() = runTest {
         try {
-            dataSource.createOrUpdateClubMember("user-123", "John", "j@j.com", 1L, "", listOf("player"))
+            dataSource.createOrUpdateClubMember("user-123", "John", "j@j.com", "", listOf("player"))
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {
             // expected
@@ -113,7 +113,7 @@ class ClubMemberFirestoreDataSourceImplTest {
     @Test
     fun `givenEmptyRoles_whenCreateOrUpdateClubMember_thenThrowsIllegalArgumentException`() = runTest {
         try {
-            dataSource.createOrUpdateClubMember("user-123", "John", "j@j.com", 1L, "club-id", emptyList())
+            dataSource.createOrUpdateClubMember("user-123", "John", "j@j.com", "club-id", emptyList())
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {
             // expected
@@ -300,7 +300,7 @@ class ClubMemberFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } returns mockk()
 
         val result = dataSource.createOrUpdateClubMember(
-            "user-123", "John", "j@j.com", 1L, "club-id", listOf("player")
+            "user-123", "John", "j@j.com", "club-id", listOf("player")
         )
 
         assertNotNull(result)
@@ -473,7 +473,7 @@ class ClubMemberFirestoreDataSourceImplTest {
         coEvery { voidTask.await() } throws RuntimeException("Network error")
 
         try {
-            dataSource.createOrUpdateClubMember("user-123", "John", "j@j.com", 1L, "club-id", listOf("player"))
+            dataSource.createOrUpdateClubMember("user-123", "John", "j@j.com", "club-id", listOf("player"))
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
             // expected

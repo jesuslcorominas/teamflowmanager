@@ -88,7 +88,7 @@ class CreateClubViewModel(
                 )
 
                 // Sync FCM token with new club subscription (fire-and-forget)
-                syncFcmTokenAfterClubChange(club.remoteId)
+                syncFcmTokenAfterClubChange(club.id)
 
                 _uiState.value = UiState.Success(club)
             } catch (e: Exception) {

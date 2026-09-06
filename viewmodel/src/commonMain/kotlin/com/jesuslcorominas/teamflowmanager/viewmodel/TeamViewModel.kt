@@ -83,12 +83,11 @@ class TeamViewModel(
 
                 val isPresident = clubMember?.hasRole(ClubRole.PRESIDENT) ?: false
                 val userRole = clubMember?.roles?.firstNotNullOfOrNull { ClubRole.fromString(it) }
-                val clubNumericId = clubMember?.clubId
-                val clubId = clubMember?.clubRemoteId
+                val clubId = clubMember?.clubId
 
                 if (team == null || isCreateMode) {
                     // No team exists, or explicitly creating a new one
-                    _uiState.update { TeamUiState.NoTeam(clubNumericId, clubId, isPresident, userRole) }
+                    _uiState.update { TeamUiState.NoTeam(clubId, isPresident, userRole) }
                 } else {
                     _uiState.update { TeamUiState.Success(team, players) }
                 }
@@ -133,7 +132,7 @@ class TeamViewModel(
 
     fun updateTeam(
         team: Team,
-        captainId: Long?,
+        captainId: String?,
         onSuccess: () -> Unit,
     ) {
         viewModelScope.launch {
@@ -206,7 +205,6 @@ sealed interface TeamUiState {
     data object Loading : TeamUiState
 
     data class NoTeam(
-        val clubNumericId: Long? = null,
         val clubId: String? = null,
         val isPresident: Boolean = false,
         val userRole: ClubRole? = null,
