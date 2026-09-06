@@ -70,7 +70,10 @@ class SettingsViewModel(
         val showRoleSelector: Boolean = false,
         /** False when the president has no team assigned: there is no coach view to switch to. */
         val isRoleSelectorEnabled: Boolean = false,
+        /** The role currently in effect for the rest of the app. */
         val activeRole: ActiveViewRole = ActiveViewRole.President,
+        /** What the switch shows. Applied on leaving the screen, not on every tap. */
+        val selectedRole: ActiveViewRole = ActiveViewRole.President,
     )
 
     init {
@@ -86,11 +89,14 @@ class SettingsViewModel(
                 val team = getTeam().first()
                 launch {
                     observeActiveViewRole().collect { role ->
+                        // Only emits once a selection has been committed, so resetting the pending
+                        // selection here cannot discard an in-progress one.
                         _roleSelectorState.value =
                             RoleSelectorState(
                                 showRoleSelector = true,
                                 isRoleSelectorEnabled = team != null,
                                 activeRole = role,
+                                selectedRole = role,
                             )
                     }
                 }
@@ -141,11 +147,26 @@ class SettingsViewModel(
     }
 
     /**
-     * Persists the new role. The switch and the app shell both observe the stored role, so no
-     * navigation side effect is needed to make the change visible.
+     * Records what the switch shows, without applying it.
+     *
+     * Applying on every tap made the bottom bar change under the user while they were still in
+     * Settings, and moved them to another screen mid-interaction. The selection is committed by
+     * [commitRoleSelection] when the screen goes away, so the role can be toggled any number of
+     * times and only the final choice counts.
      */
     fun onRoleSelected(role: ActiveViewRole) {
-        setActiveViewRole(role)
+        _roleSelectorState.value = _roleSelectorState.value.copy(selectedRole = role)
+    }
+
+    /**
+     * Applies the pending selection, if it differs from the role in effect. Called when the screen
+     * is left; persisting is what makes the shell react, so the navigation happens on the way out.
+     */
+    fun commitRoleSelection() {
+        val state = _roleSelectorState.value
+        if (state.showRoleSelector && state.selectedRole != state.activeRole) {
+            setActiveViewRole(state.selectedRole)
+        }
     }
 
     fun signOut() {
