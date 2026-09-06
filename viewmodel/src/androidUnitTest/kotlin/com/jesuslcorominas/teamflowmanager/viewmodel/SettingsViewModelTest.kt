@@ -1,8 +1,10 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
+import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
@@ -48,6 +50,7 @@ class SettingsViewModelTest {
     private lateinit var setActiveViewRoleUseCase: SetActiveViewRoleUseCase
     private lateinit var getNotificationPreferencesUseCase: GetNotificationPreferencesUseCase
     private lateinit var updateGlobalNotificationPreferenceUseCase: UpdateGlobalNotificationPreferenceUseCase
+    private lateinit var crashReporter: CrashReporter
     private lateinit var viewModel: SettingsViewModel
 
     private val testUser = User(
@@ -70,6 +73,7 @@ class SettingsViewModelTest {
         setActiveViewRoleUseCase = mockk(relaxed = true)
         getNotificationPreferencesUseCase = mockk(relaxed = true)
         updateGlobalNotificationPreferenceUseCase = mockk(relaxed = true)
+        crashReporter = mockk(relaxed = true)
 
         every { getCurrentUserUseCase() } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(null)
@@ -87,6 +91,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
     }
 
@@ -139,6 +144,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
         advanceUntilIdle()
         coEvery { signOutUseCase() } returns Unit
@@ -184,6 +190,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
         advanceUntilIdle()
 
@@ -214,6 +221,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
         advanceUntilIdle()
 
@@ -254,6 +262,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
         )
         advanceUntilIdle()
 
@@ -279,4 +288,35 @@ class SettingsViewModelTest {
 
         assertFalse(viewModel.roleSelectorState.value.roleChangedEvent)
     }
+
+    @Test
+    fun `givenPreferenceUpdateFails_whenUpdateGlobalMatchEvents_thenReportsAndSurfacesInsteadOfCrashing`() =
+        runTest {
+            // Given — the data source rethrows, as it does on any Firestore failure
+            val failure = RuntimeException("permission denied")
+            coEvery {
+                updateGlobalNotificationPreferenceUseCase(any(), NotificationEventType.MATCH_EVENTS, any())
+            } throws failure
+
+            // When — this used to reach the default handler through viewModelScope and kill the app
+            viewModel.updateGlobalMatchEvents(false)
+            advanceUntilIdle()
+
+            // Then
+            assertTrue(viewModel.notificationUpdateFailed.value)
+            verify { crashReporter.recordException(failure) }
+
+            viewModel.onNotificationUpdateErrorShown()
+            assertFalse(viewModel.notificationUpdateFailed.value)
+        }
+
+    @Test
+    fun `givenPreferenceUpdateSucceeds_whenUpdateGlobalGoals_thenNoErrorIsSurfaced`() =
+        runTest {
+            viewModel.updateGlobalGoals(true)
+            advanceUntilIdle()
+
+            assertFalse(viewModel.notificationUpdateFailed.value)
+            coVerify { updateGlobalNotificationPreferenceUseCase(any(), NotificationEventType.GOALS, true) }
+        }
 }
