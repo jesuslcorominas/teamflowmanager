@@ -188,6 +188,9 @@ val iosModule =
                 setActiveViewRole = get(),
                 getNotificationPreferences = get(),
                 updateGlobalNotificationPreference = get(),
+                getSubstitutionMode = get(),
+                setSubstitutionMode = get(),
+                getAllMatches = get(),
                 crashReporter = get(),
             )
         }

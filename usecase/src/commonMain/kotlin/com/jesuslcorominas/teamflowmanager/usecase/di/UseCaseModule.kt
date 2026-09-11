@@ -44,6 +44,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPresidentNotificationsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
@@ -74,6 +75,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
@@ -136,6 +138,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPresidentNotificationsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.GetSubstitutionModeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamsByClubUseCaseImpl
@@ -166,6 +169,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.SetActiveViewRoleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetShouldShowInvalidSubstitutionAlertUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SetSubstitutionModeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ShouldShowInvalidSubstitutionAlertUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCaseImpl
@@ -295,6 +299,10 @@ internal val useCaseInternalModule =
         singleOf(::UpdateGlobalNotificationPreferenceUseCaseImpl) bind UpdateGlobalNotificationPreferenceUseCase::class
         singleOf(::UpdateTeamNotificationPreferenceUseCaseImpl) bind UpdateTeamNotificationPreferenceUseCase::class
         singleOf(::NotifyPresidentMatchEventUseCaseImpl) bind NotifyPresidentMatchEventUseCase::class
+
+        // Substitution mode (live vs scheduled substitutions)
+        singleOf(::GetSubstitutionModeUseCaseImpl) bind GetSubstitutionModeUseCase::class
+        singleOf(::SetSubstitutionModeUseCaseImpl) bind SetSubstitutionModeUseCase::class
 
         // President notification center
         singleOf(::GetPresidentNotificationsUseCaseImpl) bind GetPresidentNotificationsUseCase::class

@@ -21,4 +21,9 @@ interface PreferencesRepository {
 
     /** Emits the stored active view role and every later change made through [setActiveViewRole]. */
     fun observeActiveViewRole(): Flow<String?>
+
+    fun setSubstitutionMode(mode: String)
+
+    /** Emits the stored substitution mode and every later change made through [setSubstitutionMode]. */
+    fun observeSubstitutionMode(): Flow<String?>
 }

@@ -7,22 +7,30 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateGlobalNotificationPreferenceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -37,6 +45,9 @@ class SettingsViewModel(
     private val setActiveViewRole: SetActiveViewRoleUseCase,
     private val getNotificationPreferences: GetNotificationPreferencesUseCase,
     private val updateGlobalNotificationPreference: UpdateGlobalNotificationPreferenceUseCase,
+    private val getSubstitutionMode: GetSubstitutionModeUseCase,
+    private val setSubstitutionMode: SetSubstitutionModeUseCase,
+    private val getAllMatches: GetAllMatchesUseCase,
     private val crashReporter: CrashReporter,
 ) : ViewModel() {
     val currentUser: StateFlow<User?> =
@@ -76,8 +87,49 @@ class SettingsViewModel(
         val selectedRole: ActiveViewRole = ActiveViewRole.President,
     )
 
+    data class SubstitutionModeState(
+        val mode: SubstitutionMode = SubstitutionMode.SCHEDULED,
+        /** False while a match is running: changing the mode mid-match would strand queued changes. */
+        val isEnabled: Boolean = true,
+    )
+
+    private val _substitutionModeState = MutableStateFlow(SubstitutionModeState())
+    val substitutionModeState: StateFlow<SubstitutionModeState> = _substitutionModeState.asStateFlow()
+
     init {
         loadRoleSelectorState()
+        observeSubstitutionMode()
+    }
+
+    /**
+     * The switch renders from the persisted value, and locks while any visible match is running.
+     *
+     * [getAllMatches] reaches the data layer and can fail; an uncaught throw in [viewModelScope]
+     * kills the process, so a failed query degrades to "enabled" rather than locking the switch.
+     */
+    private fun observeSubstitutionMode() {
+        viewModelScope.launch {
+            val matchRunning =
+                getAllMatches()
+                    .map { matches ->
+                        matches.any {
+                            it.status == MatchStatus.IN_PROGRESS || it.status == MatchStatus.PAUSED
+                        }
+                    }
+                    .catch { emit(false) }
+
+            combine(getSubstitutionMode(), matchRunning) { mode, running ->
+                SubstitutionModeState(mode = mode, isEnabled = !running)
+            }.collect { _substitutionModeState.value = it }
+        }
+    }
+
+    /**
+     * Applied on the spot, unlike the role selector: nothing else in the app shell reacts to this
+     * setting mid-session, so there is no reason to defer it to screen exit.
+     */
+    fun onSubstitutionModeChanged(scheduled: Boolean) {
+        setSubstitutionMode(if (scheduled) SubstitutionMode.SCHEDULED else SubstitutionMode.LIVE)
     }
 
     private fun loadRoleSelectorState() {

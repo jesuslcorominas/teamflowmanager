@@ -435,4 +435,9 @@
     <string name="pending_team_sign_out">Cerrar sesión</string>
     <string name="settings_notifications_update_error">No se pudo guardar el cambio. Revisa tu conexión e inténtalo de nuevo.</string>
     <string name="settings_role_requires_team">Necesitas tener un equipo asignado para usar la vista de entrenador.</string>
+    <string name="settings_substitution_mode_live_hint">Los cambios se aplican en el momento en que los haces.</string>
+    <string name="settings_substitution_mode_locked">No puedes cambiar esto mientras haya un partido en curso.</string>
+    <string name="settings_substitution_mode_scheduled">Cambios programados</string>
+    <string name="settings_substitution_mode_scheduled_hint">Los cambios se acumulan y se aplican juntos cuando los confirmas.</string>
+    <string name="settings_substitutions_section">Cambios</string>
 </resources>
