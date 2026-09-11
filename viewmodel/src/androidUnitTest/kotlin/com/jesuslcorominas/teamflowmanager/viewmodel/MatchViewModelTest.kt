@@ -829,6 +829,74 @@ class MatchViewModelTest {
         verify(exactly = 1) { clearPendingSubstitutionsUseCase(MATCH_ID) }
     }
 
+
+    @Test
+    fun `givenQueuedPairs_thenPendingSubstitutionsResolvesThemToPlayersInOrder`() =
+        runTest(testDispatcher) {
+            // Given
+            givenScheduledMode()
+            givenFourPlayerSquad()
+            pendingStore.value = listOf(PAIR_3_4, PAIR_1_2)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            // Then — this is what B5 paints: names and numbers, in the order they were queued
+            val items = viewModel.pendingSubstitutions.value
+            assertEquals(listOf(PAIR_3_4, PAIR_1_2), items.map { it.pair })
+            assertEquals(listOf("3", "1"), items.map { it.playerOut.id })
+            assertEquals(listOf(4, 2), items.map { it.playerIn.number })
+        }
+
+    @Test
+    fun `givenAPairWhosePlayersAreNotCalledUp_thenNoBlankCardIsEmitted`() =
+        runTest(testDispatcher) {
+            // Given — the squad is only players 1 and 2
+            givenScheduledMode()
+            pendingStore.value = listOf(PAIR_1_2, PAIR_3_4)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            // Then — an unpaintable pair is dropped rather than shown empty
+            assertEquals(listOf(PAIR_1_2), viewModel.pendingSubstitutions.value.map { it.pair })
+        }
+
+    @Test
+    fun `givenAReportedResult_whenConsumed_thenItIsCleared`() =
+        runTest(testDispatcher) {
+            // Given
+            givenScheduledMode()
+            coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
+                SubstitutionBatchResult(applied = listOf(PAIR_1_2), discarded = emptyList())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+            viewModel.executePendingSubstitution(PAIR_1_2)
+            advanceUntilIdle()
+            assertTrue(viewModel.lastSubstitutionResult.value != null)
+
+            // When
+            viewModel.consumeLastSubstitutionResult()
+
+            // Then — the screen acknowledges it so a rotation does not show it twice
+            assertNull(viewModel.lastSubstitutionResult.value)
+        }
+
+    @Test
+    fun `givenAnEmptyQueue_whenExecuteAll_thenNothingIsAttempted`() =
+        runTest(testDispatcher) {
+            // Given
+            givenScheduledMode()
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            // When
+            viewModel.executeAllPendingSubstitutions()
+            advanceUntilIdle()
+
+            // Then — no empty operation, and no result banner out of nowhere
+            coVerify(exactly = 0) { registerPlayerSubstitutionUseCase(any(), any(), any()) }
+            assertNull(viewModel.lastSubstitutionResult.value)
+        }
+
     companion object {
         private const val MATCH_ID = "1"
         private val PAIR_1_2 = SubstitutionPair(playerOutId = "1", playerInId = "2")
