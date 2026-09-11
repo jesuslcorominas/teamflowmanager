@@ -9,6 +9,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionBatchResult
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPendingSubstitutionUseCase
@@ -375,6 +376,21 @@ class MatchViewModel(
     }
 
     /**
+     * A pair whose players are not in the call-up cannot be named, so it is left out of the
+     * published result rather than surfaced half-empty. Unreachable in practice; logged because a
+     * report that quietly holds fewer entries than the batch would be hard to make sense of.
+     */
+    private fun reportUnresolvedInResult(result: SubstitutionBatchResult) {
+        val published = _lastSubstitutionResult.value ?: return
+        val missing =
+            (result.applied.size - published.applied.size) +
+                (result.discarded.size - published.discarded.size)
+        if (missing > 0) {
+            crashReporter.log("$missing substitution(s) left out of the result: players not in the call-up")
+        }
+    }
+
+    /**
      * Runs whatever was scheduled during the break. Must be called after [ResumeMatchUseCase] has
      * returned — see [resumeMatch].
      */
@@ -552,7 +568,13 @@ class MatchViewModel(
     /** Runs every card under a single operation id. */
     fun executeAllPendingSubstitutions() {
         viewModelScope.launch {
-            runSubstitutions(pendingSubstitutions.value.map { it.pair }, SubstitutionExecutionTrigger.MANUAL)
+            // Read the store, not the resolved list. squadPlayers fills in asynchronously, so
+            // there is a window where cards exist but pendingSubstitutions is still empty — and
+            // taking the resolved list there would turn the button into a silent no-op.
+            runSubstitutions(
+                observePendingSubstitutionsUseCase(matchId).first(),
+                SubstitutionExecutionTrigger.MANUAL,
+            )
         }
     }
 
@@ -597,12 +619,21 @@ class MatchViewModel(
                 result.discarded.forEach { removePendingSubstitutionUseCase(matchId, it.pair) }
             }
 
+            // Resolved before publishing: on a resume run the cards are gone by the time the
+            // screen reads this, so ids alone would leave it with nobody to name.
+            val squad = squadPlayers.value
             _lastSubstitutionResult.value =
                 SubstitutionExecutionResult(
                     trigger = trigger,
-                    applied = result.applied,
-                    discarded = result.discarded,
+                    applied = result.applied.mapNotNull { it.toPendingItem(squad) },
+                    discarded =
+                        result.discarded.mapNotNull { discarded ->
+                            discarded.pair.toPendingItem(squad)?.let {
+                                DiscardedSubstitutionItem(substitution = it, reason = discarded.reason)
+                            }
+                        },
                 )
+            reportUnresolvedInResult(result)
 
             val method = if (trigger == SubstitutionExecutionTrigger.RESUME) "scheduled_resume" else "scheduled_manual"
             result.applied.forEach { pair ->
@@ -617,6 +648,13 @@ class MatchViewModel(
                     ),
                 )
             }
+        } catch (e: Exception) {
+            // Reported, then swallowed. Not rethrown like performSubstitution does: that would
+            // take down the app over a failed batch, and here nothing has been lost — no card was
+            // unscheduled, so the coach can simply press again. Going unreported was the actual
+            // problem; this path was the only substitution route invisible to diagnostics.
+            crashReporter.recordException(e)
+            crashReporter.log("Error running scheduled substitutions (trigger=$trigger): ${e.message}")
         } finally {
             _isSubstitutionInProgress.value = false
         }

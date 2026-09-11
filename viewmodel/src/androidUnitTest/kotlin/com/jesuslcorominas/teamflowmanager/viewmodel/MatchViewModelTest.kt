@@ -53,6 +53,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -594,7 +595,7 @@ class MatchViewModelTest {
         // Then — a single card takes the same path as a batch, with a list of one
         coVerify(exactly = 1) { registerPlayerSubstitutionUseCase(MATCH_ID, listOf(PAIR_1_2), any()) }
         verify(exactly = 1) { removePendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
-        assertEquals(listOf(PAIR_1_2), viewModel.lastSubstitutionResult.value?.applied)
+        assertEquals(listOf(PAIR_1_2), viewModel.lastSubstitutionResult.value?.applied?.map { it.pair })
     }
 
     @Test
@@ -895,6 +896,81 @@ class MatchViewModelTest {
             // Then — no empty operation, and no result banner out of nowhere
             coVerify(exactly = 0) { registerPlayerSubstitutionUseCase(any(), any(), any()) }
             assertNull(viewModel.lastSubstitutionResult.value)
+        }
+
+
+    @Test
+    fun `givenAResumeRunThatUnschedulesTheCards_thenTheResultStillNamesThePlayers`() =
+        runTest(testDispatcher) {
+            // Given
+            givenScheduledMode()
+            givenFourPlayerSquad()
+            pendingStore.value = listOf(PAIR_1_2, PAIR_3_4)
+            coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
+                SubstitutionBatchResult(
+                    applied = listOf(PAIR_1_2),
+                    discarded = listOf(DiscardedSubstitution(PAIR_3_4, SubstitutionDiscardReason.PLAYER_IN_NOT_IN_MATCH)),
+                )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            // When
+            viewModel.resumeMatch(MATCH_ID)
+            advanceUntilIdle()
+
+            // Then — the cards are gone from the store by now, so the result is the only place
+            // left that can tell the coach who came on and who went off
+            verify { removePendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
+            verify { removePendingSubstitutionUseCase(MATCH_ID, PAIR_3_4) }
+            val result = viewModel.lastSubstitutionResult.value
+            assertEquals("1", result?.applied?.single()?.playerOut?.id)
+            assertEquals(2, result?.applied?.single()?.playerIn?.number)
+            val discarded = result?.discarded?.single()
+            assertEquals("3", discarded?.substitution?.playerOut?.id)
+            assertEquals(4, discarded?.substitution?.playerIn?.number)
+            assertEquals(SubstitutionDiscardReason.PLAYER_IN_NOT_IN_MATCH, discarded?.reason)
+        }
+
+    @Test
+    fun `givenTheSquadHasNotLoadedYet_whenExecuteAll_thenTheQueuedCardsStillRun`() =
+        runTest(testDispatcher) {
+            // Given — the store holds a card but the squad never arrives, so the resolved list
+            // stays empty. This is the window that exists while the player flows are loading.
+            givenScheduledMode()
+            every { getPlayersByTeamUseCase(any()) } returns emptyFlow()
+            pendingStore.value = listOf(PAIR_1_2)
+            coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
+                SubstitutionBatchResult(applied = listOf(PAIR_1_2), discarded = emptyList())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+            assertTrue(viewModel.pendingSubstitutions.value.isEmpty())
+
+            // When
+            viewModel.executeAllPendingSubstitutions()
+            advanceUntilIdle()
+
+            // Then — reading the store rather than the resolved list keeps the button from
+            // being a silent no-op here
+            coVerify(exactly = 1) { registerPlayerSubstitutionUseCase(MATCH_ID, listOf(PAIR_1_2), any()) }
+        }
+
+    @Test
+    fun `givenTheBatchThrowsOnAManualRun_thenItIsReportedAndTheSpinnerIsCleared`() =
+        runTest(testDispatcher) {
+            // Given
+            givenScheduledMode()
+            val boom = IllegalStateException("no active match found")
+            coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } throws boom
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            // When
+            viewModel.executePendingSubstitution(PAIR_1_2)
+            runCatching { advanceUntilIdle() }
+
+            // Then — the manual path used to be the only substitution route blind to diagnostics
+            verify { crashReporter.recordException(boom) }
+            assertFalse(viewModel.isSubstitutionInProgress.value)
         }
 
     companion object {
