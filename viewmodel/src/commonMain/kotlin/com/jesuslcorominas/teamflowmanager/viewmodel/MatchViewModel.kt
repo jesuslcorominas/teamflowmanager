@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
@@ -459,8 +460,7 @@ class MatchViewModel(
 
                     registerPlayerSubstitutionUseCase(
                         matchId = currentState.match.id,
-                        playerOutId = playerOut,
-                        playerInId = playerIn,
+                        substitutions = listOf(SubstitutionPair(playerOutId = playerOut, playerInId = playerIn)),
                         currentTimeMillis = _currentTime.value,
                     )
 
