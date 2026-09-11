@@ -8,6 +8,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
@@ -264,8 +265,7 @@ class MatchViewModelTest {
         coVerify {
             registerPlayerSubstitutionUseCase(
                 matchId = MATCH_ID,
-                playerOutId = "1",
-                playerInId = "2",
+                substitutions = listOf(SubstitutionPair(playerOutId = "1", playerInId = "2")),
                 currentTimeMillis = any(),
             )
         }
@@ -283,8 +283,7 @@ class MatchViewModelTest {
         coVerify {
             registerPlayerSubstitutionUseCase(
                 matchId = MATCH_ID,
-                playerOutId = "1",
-                playerInId = "2",
+                substitutions = listOf(SubstitutionPair(playerOutId = "1", playerInId = "2")),
                 currentTimeMillis = any(),
             )
         }
