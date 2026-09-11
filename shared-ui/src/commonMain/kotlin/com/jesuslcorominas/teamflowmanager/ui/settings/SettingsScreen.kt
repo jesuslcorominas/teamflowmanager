@@ -42,6 +42,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.util.DateFormatter
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -58,6 +59,7 @@ import teamflowmanager.shared_ui.generated.resources.settings_role_coach
 import teamflowmanager.shared_ui.generated.resources.settings_role_requires_team
 import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_live_hint
 import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_locked
+import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_locked_by
 import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_scheduled
 import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_scheduled_hint
 import teamflowmanager.shared_ui.generated.resources.settings_substitutions_section
@@ -188,7 +190,7 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
                 SubstitutionModeSection(
                     mode = substitutionModeState.mode,
-                    enabled = substitutionModeState.isEnabled,
+                    blockingMatch = substitutionModeState.blockingMatch,
                     onModeChanged = { viewModel.onSubstitutionModeChanged(it) },
                 )
 
@@ -295,10 +297,11 @@ private fun UserAccountItem(
 @Composable
 private fun SubstitutionModeSection(
     mode: SubstitutionMode,
-    enabled: Boolean,
+    blockingMatch: SettingsViewModel.BlockingMatch?,
     onModeChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val enabled = blockingMatch == null
     Column(modifier = modifier) {
         Row(
             modifier =
@@ -336,10 +339,22 @@ private fun SubstitutionModeSection(
             modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
         )
 
-        // A greyed-out switch with no explanation reads as a bug; say why it cannot be used.
-        if (!enabled) {
+        // A greyed-out switch with no explanation reads as a bug; say why it cannot be used, and
+        // name the match responsible so the user can go and finish it. A match abandoned by a
+        // killed app stays IN_PROGRESS forever, and an unnamed lock would have no way out.
+        if (blockingMatch != null) {
+            val matchLabel =
+                blockingMatch.dateTime
+                    ?.let { "${blockingMatch.opponent}, ${DateFormatter.formatDateTime(it)}" }
+                    ?: blockingMatch.opponent
+
             Text(
-                text = stringResource(Res.string.settings_substitution_mode_locked),
+                text =
+                    if (matchLabel.isBlank()) {
+                        stringResource(Res.string.settings_substitution_mode_locked)
+                    } else {
+                        stringResource(Res.string.settings_substitution_mode_locked_by, matchLabel)
+                    },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),

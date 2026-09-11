@@ -44,7 +44,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPresidentNotificationsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPreviousCaptainsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetScheduledMatchesUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamsByClubUseCase
@@ -60,6 +59,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnT
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentOnMemberWaitingUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCodeUseCase
@@ -138,7 +138,6 @@ import com.jesuslcorominas.teamflowmanager.usecase.GetPlayersUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPresidentNotificationsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetPreviousCaptainsUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetScheduledMatchesUseCaseImpl
-import com.jesuslcorominas.teamflowmanager.usecase.GetSubstitutionModeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamByIdUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.GetTeamsByClubUseCaseImpl
@@ -154,6 +153,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.NotifyCoachAssignedOnTeamAssi
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyPresidentMatchEventUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyPresidentOnMemberWaitingUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ObserveActiveViewRoleUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ObserveSubstitutionModeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegenerateInvitationCodeUseCaseImpl
@@ -301,7 +301,7 @@ internal val useCaseInternalModule =
         singleOf(::NotifyPresidentMatchEventUseCaseImpl) bind NotifyPresidentMatchEventUseCase::class
 
         // Substitution mode (live vs scheduled substitutions)
-        singleOf(::GetSubstitutionModeUseCaseImpl) bind GetSubstitutionModeUseCase::class
+        singleOf(::ObserveSubstitutionModeUseCaseImpl) bind ObserveSubstitutionModeUseCase::class
         singleOf(::SetSubstitutionModeUseCaseImpl) bind SetSubstitutionModeUseCase::class
 
         // President notification center

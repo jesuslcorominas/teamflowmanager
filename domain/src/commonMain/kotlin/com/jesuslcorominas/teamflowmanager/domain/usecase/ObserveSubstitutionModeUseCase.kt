@@ -10,6 +10,6 @@ import kotlinx.coroutines.flow.Flow
  * stay in sync with the setting — the Settings switch, and later the match screen — needs the flow.
  * Emits [SubstitutionMode.SCHEDULED] when nothing has been stored.
  */
-interface GetSubstitutionModeUseCase {
+interface ObserveSubstitutionModeUseCase {
     operator fun invoke(): Flow<SubstitutionMode>
 }

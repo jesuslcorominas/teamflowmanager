@@ -1,7 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetSubstitutionModeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PreferencesRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -16,14 +16,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-class GetSubstitutionModeUseCaseTest {
+class ObserveSubstitutionModeUseCaseTest {
     private lateinit var preferencesRepository: PreferencesRepository
-    private lateinit var getSubstitutionModeUseCase: GetSubstitutionModeUseCase
+    private lateinit var observeSubstitutionModeUseCase: ObserveSubstitutionModeUseCase
 
     @Before
     fun setup() {
         preferencesRepository = mockk(relaxed = true)
-        getSubstitutionModeUseCase = GetSubstitutionModeUseCaseImpl(preferencesRepository)
+        observeSubstitutionModeUseCase = ObserveSubstitutionModeUseCaseImpl(preferencesRepository)
     }
 
     @Test
@@ -33,7 +33,7 @@ class GetSubstitutionModeUseCaseTest {
             every { preferencesRepository.observeSubstitutionMode() } returns flowOf("LIVE")
 
             // When
-            val result = getSubstitutionModeUseCase().toList()
+            val result = observeSubstitutionModeUseCase().toList()
 
             // Then
             assertEquals(1, result.size)
@@ -48,7 +48,7 @@ class GetSubstitutionModeUseCaseTest {
             every { preferencesRepository.observeSubstitutionMode() } returns flowOf("SCHEDULED")
 
             // When
-            val result = getSubstitutionModeUseCase().toList()
+            val result = observeSubstitutionModeUseCase().toList()
 
             // Then
             assertEquals(listOf(SubstitutionMode.SCHEDULED), result)
@@ -62,7 +62,7 @@ class GetSubstitutionModeUseCaseTest {
             every { preferencesRepository.observeSubstitutionMode() } returns flowOf(null)
 
             // When
-            val result = getSubstitutionModeUseCase().toList()
+            val result = observeSubstitutionModeUseCase().toList()
 
             // Then
             assertEquals(listOf(SubstitutionMode.SCHEDULED), result)
@@ -76,7 +76,7 @@ class GetSubstitutionModeUseCaseTest {
             every { preferencesRepository.observeSubstitutionMode() } returns flowOf("live")
 
             // When
-            val result = getSubstitutionModeUseCase().toList()
+            val result = observeSubstitutionModeUseCase().toList()
 
             // Then
             assertEquals(listOf(SubstitutionMode.SCHEDULED), result)
@@ -89,7 +89,7 @@ class GetSubstitutionModeUseCaseTest {
             every { preferencesRepository.observeSubstitutionMode() } returns flowOf("BOGUS")
 
             // When
-            val result = getSubstitutionModeUseCase().toList()
+            val result = observeSubstitutionModeUseCase().toList()
 
             // Then
             assertEquals(listOf(SubstitutionMode.SCHEDULED), result)
@@ -105,7 +105,7 @@ class GetSubstitutionModeUseCaseTest {
             // When
             val emissions = mutableListOf<SubstitutionMode>()
             backgroundScope.launch {
-                getSubstitutionModeUseCase().collect { emissions.add(it) }
+                observeSubstitutionModeUseCase().collect { emissions.add(it) }
             }
             runCurrent()
             stored.value = "LIVE"

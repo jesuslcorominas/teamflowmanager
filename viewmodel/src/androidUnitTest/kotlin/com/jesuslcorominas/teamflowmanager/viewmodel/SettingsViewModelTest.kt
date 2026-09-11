@@ -17,7 +17,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetSubstitutionModeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
@@ -31,6 +31,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -38,10 +39,13 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -59,7 +63,7 @@ class SettingsViewModelTest {
     private lateinit var setActiveViewRoleUseCase: SetActiveViewRoleUseCase
     private lateinit var getNotificationPreferencesUseCase: GetNotificationPreferencesUseCase
     private lateinit var updateGlobalNotificationPreferenceUseCase: UpdateGlobalNotificationPreferenceUseCase
-    private lateinit var getSubstitutionModeUseCase: GetSubstitutionModeUseCase
+    private lateinit var observeSubstitutionModeUseCase: ObserveSubstitutionModeUseCase
     private lateinit var setSubstitutionModeUseCase: SetSubstitutionModeUseCase
     private lateinit var getAllMatchesUseCase: GetAllMatchesUseCase
     private lateinit var crashReporter: CrashReporter
@@ -85,12 +89,12 @@ class SettingsViewModelTest {
         setActiveViewRoleUseCase = mockk(relaxed = true)
         getNotificationPreferencesUseCase = mockk(relaxed = true)
         updateGlobalNotificationPreferenceUseCase = mockk(relaxed = true)
-        getSubstitutionModeUseCase = mockk(relaxed = true)
+        observeSubstitutionModeUseCase = mockk(relaxed = true)
         setSubstitutionModeUseCase = mockk(relaxed = true)
         getAllMatchesUseCase = mockk(relaxed = true)
         crashReporter = mockk(relaxed = true)
 
-        every { getSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.SCHEDULED)
+        every { observeSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.SCHEDULED)
         every { getAllMatchesUseCase() } returns flowOf(emptyList())
         every { getCurrentUserUseCase() } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(null)
@@ -108,7 +112,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getSubstitutionMode = getSubstitutionModeUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
             setSubstitutionMode = setSubstitutionModeUseCase,
             getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
@@ -164,7 +168,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getSubstitutionMode = getSubstitutionModeUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
             setSubstitutionMode = setSubstitutionModeUseCase,
             getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
@@ -213,7 +217,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getSubstitutionMode = getSubstitutionModeUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
             setSubstitutionMode = setSubstitutionModeUseCase,
             getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
@@ -247,7 +251,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getSubstitutionMode = getSubstitutionModeUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
             setSubstitutionMode = setSubstitutionModeUseCase,
             getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
@@ -291,7 +295,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getSubstitutionMode = getSubstitutionModeUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
             setSubstitutionMode = setSubstitutionModeUseCase,
             getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
@@ -422,11 +426,23 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getSubstitutionMode = getSubstitutionModeUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
             setSubstitutionMode = setSubstitutionModeUseCase,
             getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
         )
+    }
+
+    /**
+     * [SettingsViewModel.substitutionModeState] is shared with `WhileSubscribed`, so it stays at its
+     * initial value until something collects it. Subscribe, let the flows settle, read, unsubscribe.
+     */
+    private fun TestScope.stateWhileSubscribed(): SettingsViewModel.SubstitutionModeState {
+        val job = backgroundScope.launch { viewModel.substitutionModeState.collect { } }
+        runCurrent()
+        val state = viewModel.substitutionModeState.value
+        job.cancel()
+        return state
     }
 
     private fun matchWith(status: MatchStatus): Match =
@@ -439,6 +455,7 @@ class SettingsViewModelTest {
             periodType = PeriodType.HALF_TIME,
             captainId = "player1",
             status = status,
+            dateTime = 1_700_000_000_000L,
         )
 
     private fun buildViewModel(): SettingsViewModel =
@@ -453,7 +470,7 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-            getSubstitutionMode = getSubstitutionModeUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
             setSubstitutionMode = setSubstitutionModeUseCase,
             getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
@@ -467,10 +484,9 @@ class SettingsViewModelTest {
 
             // When
             viewModel = buildViewModel()
-            advanceUntilIdle()
 
             // Then
-            assertTrue(viewModel.substitutionModeState.value.isEnabled)
+            assertTrue(stateWhileSubscribed().isEnabled)
         }
 
     @Test
@@ -488,14 +504,13 @@ class SettingsViewModelTest {
 
             // When
             viewModel = buildViewModel()
-            advanceUntilIdle()
 
             // Then
-            assertTrue(viewModel.substitutionModeState.value.isEnabled)
+            assertTrue(stateWhileSubscribed().isEnabled)
         }
 
     @Test
-    fun `substitution mode switch is disabled when a match is in progress`() =
+    fun `substitution mode switch is disabled and names the match in progress`() =
         runTest {
             // Given
             every { getAllMatchesUseCase() } returns
@@ -503,10 +518,12 @@ class SettingsViewModelTest {
 
             // When
             viewModel = buildViewModel()
-            advanceUntilIdle()
+            val state = stateWhileSubscribed()
 
-            // Then
-            assertFalse(viewModel.substitutionModeState.value.isEnabled)
+            // Then — naming the blocker is the only way out of a match left open by a killed app
+            assertFalse(state.isEnabled)
+            assertEquals("Rival FC", state.blockingMatch?.opponent)
+            assertEquals(1_700_000_000_000L, state.blockingMatch?.dateTime)
         }
 
     @Test
@@ -517,10 +534,32 @@ class SettingsViewModelTest {
 
             // When
             viewModel = buildViewModel()
-            advanceUntilIdle()
+            val state = stateWhileSubscribed()
 
             // Then
+            assertFalse(state.isEnabled)
+            assertEquals("Rival FC", state.blockingMatch?.opponent)
+        }
+
+    @Test
+    fun `substitution mode switch re-enables when the blocking match finishes`() =
+        runTest {
+            // Given — the same match, first running and then finished
+            val matches = MutableStateFlow(listOf(matchWith(MatchStatus.IN_PROGRESS)))
+            every { getAllMatchesUseCase() } returns matches
+
+            // When
+            viewModel = buildViewModel()
+            val collector = backgroundScope.launch { viewModel.substitutionModeState.collect { } }
+            runCurrent()
             assertFalse(viewModel.substitutionModeState.value.isEnabled)
+            matches.value = listOf(matchWith(MatchStatus.FINISHED))
+            runCurrent()
+
+            // Then
+            assertTrue(viewModel.substitutionModeState.value.isEnabled)
+            assertNull(viewModel.substitutionModeState.value.blockingMatch)
+            collector.cancel()
         }
 
     /**
@@ -535,24 +574,22 @@ class SettingsViewModelTest {
 
             // When
             viewModel = buildViewModel()
-            advanceUntilIdle()
 
             // Then
-            assertTrue(viewModel.substitutionModeState.value.isEnabled)
+            assertTrue(stateWhileSubscribed().isEnabled)
         }
 
     @Test
     fun `substitution mode state reflects the stored mode`() =
         runTest {
             // Given
-            every { getSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.LIVE)
+            every { observeSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.LIVE)
 
             // When
             viewModel = buildViewModel()
-            advanceUntilIdle()
 
             // Then
-            assertEquals(SubstitutionMode.LIVE, viewModel.substitutionModeState.value.mode)
+            assertEquals(SubstitutionMode.LIVE, stateWhileSubscribed().mode)
         }
 
     @Test
