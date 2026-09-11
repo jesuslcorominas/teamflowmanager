@@ -1,11 +1,13 @@
 package com.jesuslcorominas.teamflowmanager.viewmodel
 
+import com.jesuslcorominas.teamflowmanager.domain.model.DiscardedSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 
 data class PlayerTimeItem(
@@ -44,6 +46,50 @@ data class SubstitutionItem(
     val playerOut: Player,
     val playerIn: Player,
     val matchElapsedTimeMillis: Long,
+)
+
+/**
+ * A scheduled substitution already resolved to players, so the screen can paint a card without
+ * looking anything up: [SubstitutionPair] carries ids, and a card needs names and numbers.
+ */
+data class PendingSubstitutionItem(
+    val pair: SubstitutionPair,
+    val playerOut: Player,
+    val playerIn: Player,
+)
+
+/**
+ * Scheduling [requested] would drop [displaced], because they share a player. Raised before the
+ * destructive write so the coach can confirm or back out; confirming applies it and discards
+ * [displaced], dismissing schedules nothing.
+ */
+data class PendingSubstitutionConflict(
+    val requested: PendingSubstitutionItem,
+    val displaced: List<PendingSubstitutionItem>,
+)
+
+/**
+ * Who ran a batch of substitutions. It changes how the outcome is worded and, more importantly,
+ * what happens to the cards that were discarded — see [SubstitutionExecutionResult].
+ */
+enum class SubstitutionExecutionTrigger {
+    /** The coach tapped a card's play button, or "substitute all". */
+    MANUAL,
+
+    /** The match was resumed after a break and the queue ran on its own, with nobody watching. */
+    RESUME,
+}
+
+/**
+ * Outcome of running a batch, individual or not. [applied] pairs are always unscheduled;
+ * [discarded] ones survive a [SubstitutionExecutionTrigger.MANUAL] run — the coach is watching and
+ * can fix or delete them — but not a [SubstitutionExecutionTrigger.RESUME] one, where a surviving
+ * card would fire again by itself at the next break, silently.
+ */
+data class SubstitutionExecutionResult(
+    val trigger: SubstitutionExecutionTrigger,
+    val applied: List<SubstitutionPair>,
+    val discarded: List<DiscardedSubstitution>,
 )
 
 data class EndPeriodState(

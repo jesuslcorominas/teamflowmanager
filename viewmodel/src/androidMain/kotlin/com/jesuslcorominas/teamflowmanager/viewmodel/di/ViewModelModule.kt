@@ -183,6 +183,12 @@ val viewModelModule =
                 crashReporter = get(),
                 notifyPresidentMatchEvent = get(),
                 getTeamUseCase = get(),
+                observeSubstitutionModeUseCase = get(),
+                observePendingSubstitutionsUseCase = get(),
+                getPendingSubstitutionConflictsUseCase = get(),
+                addPendingSubstitutionUseCase = get(),
+                removePendingSubstitutionUseCase = get(),
+                clearPendingSubstitutionsUseCase = get(),
             )
         }
         viewModel {

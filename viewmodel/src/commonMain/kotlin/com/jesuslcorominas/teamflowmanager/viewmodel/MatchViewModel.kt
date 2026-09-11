@@ -7,8 +7,12 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPendingSubstitutionUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearPendingSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
@@ -17,13 +21,17 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPendingSubstitutionConflictsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPlayersByTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MatchEventNotification
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObservePendingSubstitutionsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePendingSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
@@ -41,6 +49,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -70,6 +79,12 @@ class MatchViewModel(
     private val crashReporter: CrashReporter,
     private val notifyPresidentMatchEvent: NotifyPresidentMatchEventUseCase,
     private val getTeamUseCase: GetTeamUseCase,
+    private val observeSubstitutionModeUseCase: ObserveSubstitutionModeUseCase,
+    private val observePendingSubstitutionsUseCase: ObservePendingSubstitutionsUseCase,
+    private val getPendingSubstitutionConflictsUseCase: GetPendingSubstitutionConflictsUseCase,
+    private val addPendingSubstitutionUseCase: AddPendingSubstitutionUseCase,
+    private val removePendingSubstitutionUseCase: RemovePendingSubstitutionUseCase,
+    private val clearPendingSubstitutionsUseCase: ClearPendingSubstitutionsUseCase,
 ) : ViewModel() {
     private val teamFlow = getTeamUseCase().stateIn(viewModelScope, SharingStarted.Eagerly, null)
     private val notificationCoordinator = MatchNotificationCoordinator(notifyPresidentMatchEvent)
@@ -103,6 +118,52 @@ class MatchViewModel(
 
     private val _isSubstitutionInProgress = MutableStateFlow(false)
     val isSubstitutionInProgress: StateFlow<Boolean> = _isSubstitutionInProgress.asStateFlow()
+
+    /**
+     * Seeded with [SubstitutionMode.SCHEDULED], the product default, so the screen never paints a
+     * frame of the live layout before preferences have emitted.
+     */
+    val substitutionMode: StateFlow<SubstitutionMode> =
+        observeSubstitutionModeUseCase()
+            .stateIn(viewModelScope, SharingStarted.Eagerly, SubstitutionMode.SCHEDULED)
+
+    /** The squad call-up, which is who may be painted on a pending card. */
+    private val squadPlayers: StateFlow<List<Player>> =
+        getMatchById(matchId)
+            .flatMapLatest { match ->
+                if (match == null) {
+                    flowOf(emptyList())
+                } else {
+                    getPlayersByTeamUseCase(match.teamId)
+                        .map { players -> players.filter { it.id in match.squadCallUpIds } }
+                }
+            }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /**
+     * The scheduled substitutions, resolved to players so the screen can paint them directly.
+     * Exposed in both modes: switching to live is a device-wide setting, not an instruction to
+     * throw away what was already scheduled for this match.
+     */
+    val pendingSubstitutions: StateFlow<List<PendingSubstitutionItem>> =
+        combine(
+            observePendingSubstitutionsUseCase(matchId),
+            squadPlayers,
+        ) { pairs, players ->
+            // A pair neither of whose players is in the call-up cannot be painted; dropping it
+            // beats showing a blank card. Corrupt data, not a normal state.
+            pairs.mapNotNull { it.toPendingItem(players) }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private val _pendingSubstitutionConflict = MutableStateFlow<PendingSubstitutionConflict?>(null)
+    val pendingSubstitutionConflict: StateFlow<PendingSubstitutionConflict?> = _pendingSubstitutionConflict.asStateFlow()
+
+    /**
+     * Outcome of the last batch. Held rather than emitted once: the batch that runs on resume has
+     * nobody watching, and losing its result to a recomposition would lose the only notice that
+     * anything happened.
+     */
+    private val _lastSubstitutionResult = MutableStateFlow<SubstitutionExecutionResult?>(null)
+    val lastSubstitutionResult: StateFlow<SubstitutionExecutionResult?> = _lastSubstitutionResult.asStateFlow()
 
     init {
         loadMatchData(matchId)
@@ -174,6 +235,10 @@ class MatchViewModel(
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                     crashReporter.log("Finishing match: ${currentState.match.id}")
                     finishMatch(currentState.match.id, _currentTime.value)
+
+                    // A finished match takes no more substitutions: anything still scheduled is
+                    // dead weight that would reappear if the screen were reopened.
+                    clearPendingSubstitutionsUseCase(currentState.match.id)
 
                     analyticsTracker.logEvent(
                         AnalyticsEvent.MATCH_FINISHED,
@@ -285,6 +350,8 @@ class MatchViewModel(
                 }
 
                 getMatchById(matchId).first()?.let {
+                    // Suspends until the match is running again AND the paused players are back
+                    // to PLAYING, both under ResumeMatchUseCase's own operation id.
                     resumeMatchUseCase(it.id, _currentTime.value)
 
                     analyticsTracker.logEvent(
@@ -293,12 +360,33 @@ class MatchViewModel(
                             AnalyticsParam.MATCH_ID to matchId,
                         ),
                     )
+
+                    // Only now. RegisterPlayerSubstitutionUseCase selects on PLAYING, so running
+                    // the queue before the restore above would drop every pair on
+                    // PLAYER_OUT_NOT_PLAYING and lose the coach's changes without a word.
+                    runPendingSubstitutionsAfterResume()
                 }
             } catch (e: Exception) {
                 crashReporter.recordException(e)
                 crashReporter.log("Error resuming match: ${e.message}")
                 throw e
             }
+        }
+    }
+
+    /**
+     * Runs whatever was scheduled during the break. Must be called after [ResumeMatchUseCase] has
+     * returned — see [resumeMatch].
+     */
+    private suspend fun runPendingSubstitutionsAfterResume() {
+        try {
+            val pending = observePendingSubstitutionsUseCase(matchId).first()
+            runSubstitutions(pending, SubstitutionExecutionTrigger.RESUME)
+        } catch (e: Exception) {
+            crashReporter.recordException(e)
+            crashReporter.log("Error running scheduled substitutions on resume: ${e.message}")
+            // Deliberately not rethrown: the match is already resumed, and failing the resume
+            // coroutine here would leave the screen worse off than losing a few scheduled changes.
         }
     }
 
@@ -356,7 +444,7 @@ class MatchViewModel(
         val currentState = _uiState.value
         if (currentState is MatchUiState.Success) {
             val player = currentState.playerTimes.find { it.player.id == playerId }
-            if (player?.isRunning == true) {
+            if (player?.isOnPitch(substitutionMode.value) == true) {
                 _selectedPlayerOut.value = playerId
             } else {
                 // Player is not currently playing, show alert if preferences allow
@@ -388,12 +476,150 @@ class MatchViewModel(
             return
         }
 
+        val pair = SubstitutionPair(playerOutId = playerOut, playerInId = playerInId)
+        if (substitutionMode.value == SubstitutionMode.SCHEDULED) {
+            schedule(pair)
+            return
+        }
+
         performSubstitution(
             playerIn = playerInId,
             playerOut = playerOut,
             analyticsMessage = "Two-step substitution: $playerOut -> $playerInId",
             method = "two_step",
         )
+    }
+
+    /**
+     * Queues [pair] instead of applying it. When it would displace pairs already scheduled, the
+     * conflict is raised first and nothing is written until the coach confirms.
+     */
+    private fun schedule(pair: SubstitutionPair) {
+        val conflicts = getPendingSubstitutionConflictsUseCase(matchId, pair)
+        if (conflicts.isEmpty()) {
+            addPendingSubstitutionUseCase(matchId, pair)
+            _selectedPlayerOut.value = null
+            return
+        }
+
+        val players = squadPlayers.value
+        val requested = pair.toPendingItem(players)
+        if (requested == null) {
+            // Unreachable in practice: both players were picked from the call-up list. If it ever
+            // happens, honour the coach's action rather than dropping it over a missing warning.
+            crashReporter.log("Scheduling a substitution whose players are not in the call-up: $pair")
+            addPendingSubstitutionUseCase(matchId, pair)
+            _selectedPlayerOut.value = null
+            return
+        }
+
+        _pendingSubstitutionConflict.value =
+            PendingSubstitutionConflict(
+                requested = requested,
+                displaced = conflicts.mapNotNull { it.toPendingItem(players) },
+            )
+    }
+
+    /** Schedules the pair that was warned about; the store discards the ones it displaces. */
+    fun confirmPendingSubstitutionConflict() {
+        val conflict = _pendingSubstitutionConflict.value ?: return
+        addPendingSubstitutionUseCase(matchId, conflict.requested.pair)
+        _pendingSubstitutionConflict.value = null
+        _selectedPlayerOut.value = null
+    }
+
+    /** Backs out of the warning: nothing is scheduled and nothing already scheduled is lost. */
+    fun dismissPendingSubstitutionConflict() {
+        _pendingSubstitutionConflict.value = null
+        _selectedPlayerOut.value = null
+    }
+
+    fun removePendingSubstitution(pair: SubstitutionPair) {
+        removePendingSubstitutionUseCase(matchId, pair)
+    }
+
+    fun clearPendingSubstitutions() {
+        clearPendingSubstitutionsUseCase(matchId)
+    }
+
+    /** Runs a single card. Same path as "substitute all", with a batch of one. */
+    fun executePendingSubstitution(pair: SubstitutionPair) {
+        viewModelScope.launch {
+            runSubstitutions(listOf(pair), SubstitutionExecutionTrigger.MANUAL)
+        }
+    }
+
+    /** Runs every card under a single operation id. */
+    fun executeAllPendingSubstitutions() {
+        viewModelScope.launch {
+            runSubstitutions(pendingSubstitutions.value.map { it.pair }, SubstitutionExecutionTrigger.MANUAL)
+        }
+    }
+
+    fun consumeLastSubstitutionResult() {
+        _lastSubstitutionResult.value = null
+    }
+
+    /**
+     * The one and only execution path: a card's play button, "substitute all" and the automatic
+     * run after a break all land here, so a batch of one behaves exactly like a batch of many.
+     *
+     * Applied pairs are always unscheduled. Discarded ones survive a
+     * [SubstitutionExecutionTrigger.MANUAL] run — the coach is watching, [lastSubstitutionResult]
+     * tells them why, and deleting their card for them would lose work with no way back. On
+     * [SubstitutionExecutionTrigger.RESUME] they are dropped: a card that outlived a resume would
+     * fire again by itself at the next break, with nobody watching again.
+     *
+     * Running this while the match is paused is allowed and expected — the coach can schedule
+     * during the break, so they can press the button there too. Every pair is then discarded with
+     * PLAYER_OUT_NOT_PLAYING, because paused players are not PLAYING, the cards stay, and the
+     * result says so. Nothing is lost: they apply on their own when the match resumes.
+     */
+    private suspend fun runSubstitutions(
+        pairs: List<SubstitutionPair>,
+        trigger: SubstitutionExecutionTrigger,
+    ) {
+        if (pairs.isEmpty()) return
+
+        try {
+            _isSubstitutionInProgress.value = true
+            crashReporter.log("Running ${pairs.size} scheduled substitution(s), trigger=$trigger")
+
+            val result =
+                registerPlayerSubstitutionUseCase(
+                    matchId = matchId,
+                    substitutions = pairs,
+                    currentTimeMillis = _currentTime.value,
+                )
+
+            result.applied.forEach { removePendingSubstitutionUseCase(matchId, it) }
+            if (trigger == SubstitutionExecutionTrigger.RESUME) {
+                result.discarded.forEach { removePendingSubstitutionUseCase(matchId, it.pair) }
+            }
+
+            _lastSubstitutionResult.value =
+                SubstitutionExecutionResult(
+                    trigger = trigger,
+                    applied = result.applied,
+                    discarded = result.discarded,
+                )
+
+            val method = if (trigger == SubstitutionExecutionTrigger.RESUME) "scheduled_resume" else "scheduled_manual"
+            result.applied.forEach { pair ->
+                analyticsTracker.logEvent(
+                    AnalyticsEvent.SUBSTITUTION_MADE,
+                    mapOf(
+                        AnalyticsParam.MATCH_ID to matchId,
+                        AnalyticsParam.PLAYER_OUT to pair.playerOutId,
+                        AnalyticsParam.PLAYER_IN to pair.playerInId,
+                        AnalyticsParam.SUBSTITUTION_MINUTE to (_currentTime.value / 60000).toString(),
+                        AnalyticsParam.SUBSTITUTION_METHOD to method,
+                    ),
+                )
+            }
+        } finally {
+            _isSubstitutionInProgress.value = false
+        }
     }
 
     /**
@@ -432,7 +658,7 @@ class MatchViewModel(
         val currentState = _uiState.value
         if (currentState is MatchUiState.Success) {
             val playerIn = currentState.playerTimes.find { it.player.id == playerInId }
-            if (playerIn?.isRunning == true) {
+            if (playerIn?.isOnPitch(substitutionMode.value) == true) {
                 // Player is already playing, show alert and don't proceed with substitution
                 if (shouldShowInvalidSubstitutionAlertUseCase()) {
                     _showInvalidSubstitutionAlert.value = true
@@ -762,6 +988,23 @@ class MatchViewModel(
 
     fun exportCompleted() {
         _exportState.value = ExportState.Idle
+    }
+
+    /**
+     * Whether the player counts as being on the pitch for substitution purposes.
+     *
+     * In scheduled mode a paused player counts: during the break the coach must see who is on and
+     * be able to queue changes. In live mode the predicate stays exactly as it was — widening it
+     * there would let a substitution be attempted mid-break, only for the use case to discard it
+     * on PLAYER_OUT_NOT_PLAYING with nothing queued to recover it.
+     */
+    private fun PlayerTimeItem.isOnPitch(mode: SubstitutionMode): Boolean =
+        if (mode == SubstitutionMode.SCHEDULED) isRunning || isPaused else isRunning
+
+    private fun SubstitutionPair.toPendingItem(players: List<Player>): PendingSubstitutionItem? {
+        val out = players.find { it.id == playerOutId } ?: return null
+        val incoming = players.find { it.id == playerInId } ?: return null
+        return PendingSubstitutionItem(pair = this, playerOut = out, playerIn = incoming)
     }
 
     companion object

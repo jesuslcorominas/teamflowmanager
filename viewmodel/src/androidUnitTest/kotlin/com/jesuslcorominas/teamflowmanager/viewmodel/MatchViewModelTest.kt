@@ -8,8 +8,19 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.DiscardedSubstitution
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionBatchResult
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionDiscardReason
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
+import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPendingSubstitutionUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearPendingSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPendingSubstitutionConflictsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObservePendingSubstitutionsUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePendingSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
@@ -33,6 +44,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -40,6 +52,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -82,6 +95,15 @@ class MatchViewModelTest {
     private lateinit var notifyPresidentMatchEventUseCase: NotifyPresidentMatchEventUseCase
     private lateinit var getTeamUseCase: GetTeamUseCase
     private lateinit var getPlayersByTeamUseCase: GetPlayersByTeamUseCase
+    private lateinit var observeSubstitutionModeUseCase: ObserveSubstitutionModeUseCase
+    private lateinit var observePendingSubstitutionsUseCase: ObservePendingSubstitutionsUseCase
+    private lateinit var getPendingSubstitutionConflictsUseCase: GetPendingSubstitutionConflictsUseCase
+    private lateinit var addPendingSubstitutionUseCase: AddPendingSubstitutionUseCase
+    private lateinit var removePendingSubstitutionUseCase: RemovePendingSubstitutionUseCase
+    private lateinit var clearPendingSubstitutionsUseCase: ClearPendingSubstitutionsUseCase
+
+    /** Stands in for the pending store so a test can watch what the ViewModel schedules. */
+    private lateinit var pendingStore: MutableStateFlow<List<SubstitutionPair>>
 
     private val testMatch = Match(
         id = MATCH_ID,
@@ -131,6 +153,19 @@ class MatchViewModelTest {
         notifyPresidentMatchEventUseCase = mockk(relaxed = true)
         getTeamUseCase = mockk(relaxed = true)
         getPlayersByTeamUseCase = mockk(relaxed = true)
+        observeSubstitutionModeUseCase = mockk()
+        observePendingSubstitutionsUseCase = mockk()
+        getPendingSubstitutionConflictsUseCase = mockk()
+        addPendingSubstitutionUseCase = mockk(relaxed = true)
+        removePendingSubstitutionUseCase = mockk(relaxed = true)
+        clearPendingSubstitutionsUseCase = mockk(relaxed = true)
+        pendingStore = MutableStateFlow(emptyList())
+
+        // Live mode and an empty queue by default: every pre-existing test keeps exercising the
+        // immediate path it was written for. The scheduled tests override these explicitly.
+        every { observeSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.LIVE)
+        every { observePendingSubstitutionsUseCase(any()) } returns pendingStore
+        every { getPendingSubstitutionConflictsUseCase(any(), any()) } returns emptyList()
 
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(testMatch)
         every { getAllPlayerTimesUseCase(any()) } returns flowOf(playerTimes)
@@ -170,6 +205,12 @@ class MatchViewModelTest {
         notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
         getTeamUseCase = getTeamUseCase,
         getPlayersByTeamUseCase = getPlayersByTeamUseCase,
+        observeSubstitutionModeUseCase = observeSubstitutionModeUseCase,
+        observePendingSubstitutionsUseCase = observePendingSubstitutionsUseCase,
+        getPendingSubstitutionConflictsUseCase = getPendingSubstitutionConflictsUseCase,
+        addPendingSubstitutionUseCase = addPendingSubstitutionUseCase,
+        removePendingSubstitutionUseCase = removePendingSubstitutionUseCase,
+        clearPendingSubstitutionsUseCase = clearPendingSubstitutionsUseCase,
     )
 
     @Test
