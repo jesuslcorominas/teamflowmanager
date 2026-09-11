@@ -435,4 +435,10 @@
     <string name="pending_team_sign_out">Sign out</string>
     <string name="settings_notifications_update_error">Could not save the change. Check your connection and try again.</string>
     <string name="settings_role_requires_team">You need a team assigned to use the coach view.</string>
+    <string name="settings_substitution_mode_live_hint">Substitutions are applied the moment you make them.</string>
+    <string name="settings_substitution_mode_locked">You cannot change this while a match is in progress.</string>
+    <string name="settings_substitution_mode_locked_by">You cannot change this while a match is in progress: %1$s. Finish it to change the mode.</string>
+    <string name="settings_substitution_mode_scheduled">Scheduled substitutions</string>
+    <string name="settings_substitution_mode_scheduled_hint">Substitutions are queued and applied together when you confirm them.</string>
+    <string name="settings_substitutions_section">Substitutions</string>
 </resources>

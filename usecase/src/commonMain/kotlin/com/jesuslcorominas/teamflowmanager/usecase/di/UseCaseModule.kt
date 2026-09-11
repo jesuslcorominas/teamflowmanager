@@ -59,6 +59,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyCoachAssignedOnT
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentOnMemberWaitingUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCodeUseCase
@@ -74,6 +75,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetNotificationPermissionRequestedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
@@ -151,6 +153,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.NotifyCoachAssignedOnTeamAssi
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyPresidentMatchEventUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.NotifyPresidentOnMemberWaitingUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ObserveActiveViewRoleUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.ObserveSubstitutionModeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegenerateInvitationCodeUseCaseImpl
@@ -166,6 +169,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.SetActiveViewRoleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetNotificationPermissionRequestedUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetShouldShowInvalidSubstitutionAlertUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SetSubstitutionModeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ShouldShowInvalidSubstitutionAlertUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCaseImpl
@@ -295,6 +299,10 @@ internal val useCaseInternalModule =
         singleOf(::UpdateGlobalNotificationPreferenceUseCaseImpl) bind UpdateGlobalNotificationPreferenceUseCase::class
         singleOf(::UpdateTeamNotificationPreferenceUseCaseImpl) bind UpdateTeamNotificationPreferenceUseCase::class
         singleOf(::NotifyPresidentMatchEventUseCaseImpl) bind NotifyPresidentMatchEventUseCase::class
+
+        // Substitution mode (live vs scheduled substitutions)
+        singleOf(::ObserveSubstitutionModeUseCaseImpl) bind ObserveSubstitutionModeUseCase::class
+        singleOf(::SetSubstitutionModeUseCaseImpl) bind SetSubstitutionModeUseCase::class
 
         // President notification center
         singleOf(::GetPresidentNotificationsUseCaseImpl) bind GetPresidentNotificationsUseCase::class

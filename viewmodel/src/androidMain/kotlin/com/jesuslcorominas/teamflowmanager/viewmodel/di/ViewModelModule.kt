@@ -246,6 +246,9 @@ val viewModelModule =
                 setActiveViewRole = get(),
                 getNotificationPreferences = get(),
                 updateGlobalNotificationPreference = get(),
+                observeSubstitutionMode = get(),
+                setSubstitutionMode = get(),
+                getAllMatches = get(),
                 crashReporter = get(),
             )
         }
