@@ -1,14 +1,14 @@
 package com.jesuslcorominas.teamflowmanager.data.core.datasource
 
 /**
- * Storage clave-valor opaco para los pendientes de un partido. No conoce el formato del [String]:
- * la serialización vive en data/core.
+ * Opaque key-value storage for a match's pendings. It does not know the format of the [String]:
+ * serialization lives in data/core.
  */
 interface PendingSubstitutionsDataSource {
-    /** Devuelve el payload guardado para [matchId], o `null` si no hay nada. */
+    /** Returns the payload stored for [matchId], or `null` when there is none. */
     fun getRaw(matchId: String): String?
 
-    /** Guarda [raw] para [matchId]. Un [raw] `null` borra la entrada. */
+    /** Stores [raw] for [matchId]. A `null` [raw] deletes the entry. */
     fun setRaw(
         matchId: String,
         raw: String?,

@@ -3,6 +3,9 @@ package com.jesuslcorominas.teamflowmanager.data.core.repository
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PendingSubstitutionsDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -303,15 +306,127 @@ class PendingSubstitutionsRepositoryImplTest {
     @Test
     fun `givenObserverCollecting_whenAddPair_thenEmitsUpdatedList`() =
         runTest {
-            // Given an already obtained flow
-            val flow = repository.observe(MATCH_ID)
-            assertTrue(flow.first().isEmpty())
+            // Given a real collector running while the writes happen
+            val emissions = mutableListOf<List<SubstitutionPair>>()
+            val collector =
+                backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                    repository.observe(MATCH_ID).toList(emissions)
+                }
 
             // When
             repository.add(MATCH_ID, PAIR_1_2)
+            repository.add(MATCH_ID, PAIR_3_4)
 
-            // Then the same flow instance emits the updated value
-            assertEquals(listOf(PAIR_1_2), flow.first())
+            // Then the collector saw the seed and both updates, not just the latest value
+            assertEquals(
+                listOf(emptyList(), listOf(PAIR_1_2), listOf(PAIR_1_2, PAIR_3_4)),
+                emissions,
+            )
+            collector.cancel()
+        }
+
+    // --- degenerate pair ---
+
+    @Test
+    fun `givenSamePlayerOutAndIn_whenAdd_thenPairIsIgnored`() =
+        runTest {
+            // Given a pair where a player would substitute themselves
+            val degenerate = SubstitutionPair(playerOutId = "p1", playerInId = "p1")
+
+            // When
+            repository.add(MATCH_ID, degenerate)
+
+            // Then nothing is scheduled and nothing is written
+            assertTrue(repository.observe(MATCH_ID).first().isEmpty())
+            assertFalse(dataSource.storage.containsKey(MATCH_ID))
+        }
+
+    @Test
+    fun `givenExistingPairs_whenAddDegeneratePair_thenExistingPairsAreKept`() =
+        runTest {
+            // Given
+            repository.add(MATCH_ID, PAIR_1_2)
+
+            // When a degenerate pair reusing p1 is added, it must not discard the real one
+            repository.add(MATCH_ID, SubstitutionPair(playerOutId = "p1", playerInId = "p1"))
+
+            // Then
+            assertEquals(listOf(PAIR_1_2), repository.observe(MATCH_ID).first())
+        }
+
+    // --- conflictsFor ---
+
+    @Test
+    fun `givenNoPendings_whenConflictsFor_thenReturnsEmpty`() =
+        runTest {
+            assertTrue(repository.conflictsFor(MATCH_ID, PAIR_1_2).isEmpty())
+        }
+
+    @Test
+    fun `givenDisjointPairScheduled_whenConflictsFor_thenReturnsEmpty`() =
+        runTest {
+            // Given
+            repository.add(MATCH_ID, PAIR_3_4)
+
+            // When / Then
+            assertTrue(repository.conflictsFor(MATCH_ID, PAIR_1_2).isEmpty())
+        }
+
+    @Test
+    fun `givenPairsSharingPlayers_whenConflictsFor_thenReturnsExactlyWhatAddWouldDiscard`() =
+        runTest {
+            // Given one pair that shares p1 with the candidate and one that does not
+            repository.add(MATCH_ID, PAIR_1_2)
+            repository.add(MATCH_ID, PAIR_3_4)
+
+            // When
+            val conflicts = repository.conflictsFor(MATCH_ID, PAIR_5_1)
+
+            // Then the reported conflicts are the pairs add() actually drops
+            assertEquals(listOf(PAIR_1_2), conflicts)
+            repository.add(MATCH_ID, PAIR_5_1)
+            assertEquals(listOf(PAIR_3_4, PAIR_5_1), repository.observe(MATCH_ID).first())
+        }
+
+    @Test
+    fun `givenPairAlreadyScheduled_whenConflictsFor_thenReturnsEmptyBecauseAddIsANoOp`() =
+        runTest {
+            // Given
+            repository.add(MATCH_ID, PAIR_1_2)
+
+            // When / Then an exact re-add discards nothing
+            assertTrue(repository.conflictsFor(MATCH_ID, PAIR_1_2).isEmpty())
+        }
+
+    @Test
+    fun `givenDegeneratePair_whenConflictsFor_thenReturnsEmptyBecauseAddIgnoresIt`() =
+        runTest {
+            // Given
+            repository.add(MATCH_ID, PAIR_1_2)
+
+            // When / Then
+            assertTrue(
+                repository
+                    .conflictsFor(MATCH_ID, SubstitutionPair(playerOutId = "p1", playerInId = "p1"))
+                    .isEmpty(),
+            )
+        }
+
+    // --- clear over an unreadable payload ---
+
+    @Test
+    fun `givenCorruptedJsonInStorage_whenClear_thenCorruptEntryIsRemoved`() =
+        runTest {
+            // Given a payload that cannot be parsed, so the match already reads as empty
+            dataSource.storage[MATCH_ID] = "{not json"
+            val repositoryOverCorruptStorage = PendingSubstitutionsRepositoryImpl(dataSource)
+            assertTrue(repositoryOverCorruptStorage.observe(MATCH_ID).first().isEmpty())
+
+            // When
+            repositoryOverCorruptStorage.clear(MATCH_ID)
+
+            // Then clear does not skip the write: the corrupt entry is gone for good
+            assertFalse(dataSource.storage.containsKey(MATCH_ID))
         }
 }
 

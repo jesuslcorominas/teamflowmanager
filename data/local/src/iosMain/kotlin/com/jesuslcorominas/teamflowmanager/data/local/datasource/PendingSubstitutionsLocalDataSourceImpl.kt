@@ -20,8 +20,9 @@ internal class PendingSubstitutionsLocalDataSourceImpl : PendingSubstitutionsDat
         }
     }
 
-    // NSUserDefaults es un espacio de nombres único por app: el prefijo incluye el dominio de la
-    // feature para no colisionar con las claves de PreferencesLocalDataSourceImpl.
+    // NSUserDefaults is a single app-wide namespace, so the prefix carries the feature domain to
+    // avoid colliding with PreferencesLocalDataSourceImpl's keys. The Android side gets the same
+    // isolation from its own preferences file, which is why the two key prefixes differ.
     private fun keyFor(matchId: String): String = KEY_PREFIX + matchId
 
     companion object {

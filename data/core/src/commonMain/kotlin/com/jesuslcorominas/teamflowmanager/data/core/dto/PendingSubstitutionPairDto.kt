@@ -5,8 +5,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Representación serializable de una sustitución pendiente. Vive en data/core porque el modelo de
- * domain no puede llevar @Serializable (domain no tiene el plugin de serialización).
+ * Serializable representation of a pending substitution. It lives in data/core because the domain
+ * model cannot carry @Serializable: domain has no serialization plugin.
  */
 @Serializable
 internal data class PendingSubstitutionPairDto(

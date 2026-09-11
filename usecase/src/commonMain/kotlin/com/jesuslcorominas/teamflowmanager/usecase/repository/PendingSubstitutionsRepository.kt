@@ -4,38 +4,57 @@ import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Almacén local de las sustituciones que el entrenador deja programadas antes de ejecutarlas.
- * Los pendientes son locales al dispositivo, se atan a un [matchId] y sobreviven al cierre de la app.
- * No se sincronizan con Firestore.
+ * Local store of the substitutions a coach leaves scheduled before executing them. Pendings are
+ * local to the device, keyed by match, and survive an app restart. They are never synced to
+ * Firestore.
  *
- * Invariantes garantizados por la implementación:
- * - Cada pareja empareja exactamente un saliente con un entrante.
- * - Un mismo jugador no aparece en dos parejas a la vez, ni como saliente ni como entrante.
- * - No hay parejas exactamente duplicadas.
- * - Se conserva el orden de inserción.
+ * Guaranteed invariants:
+ * - Each pair matches exactly one outgoing player with one incoming player, and the two differ.
+ * - A player never appears in two pairs at once, neither as outgoing nor as incoming.
+ * - There are no exactly duplicated pairs.
+ * - Insertion order is preserved.
+ *
+ * Threading: implementations are NOT thread-safe. Every mutating call for a given match must come
+ * from a single thread — in practice the main thread, where the ViewModel owning the match screen
+ * lives. Only the flow returned by [observe] may be collected from anywhere.
  */
 interface PendingSubstitutionsRepository {
     /**
-     * Emite la lista actual de pendientes de [matchId] y cada cambio posterior.
-     * Para un partido sin nada guardado emite lista vacía.
+     * Emits the current pendings of [matchId] and every later change.
+     * A match with nothing stored emits an empty list.
      */
     fun observe(matchId: String): Flow<List<SubstitutionPair>>
 
     /**
-     * Añade [pair] al final de la lista de [matchId]. Descarta cualquier pareja previa que comparta
-     * el saliente o el entrante de [pair]. Si [pair] ya está exactamente igual, no hace nada.
+     * Pairs already scheduled for [matchId] that share a player with [pair], and that [add] would
+     * therefore discard. Empty when [pair] displaces nothing — including when [pair] is already
+     * scheduled exactly, or when it is degenerate and [add] would ignore it.
+     *
+     * Lets the UI warn before the destructive write without restating the conflict rule.
+     */
+    fun conflictsFor(
+        matchId: String,
+        pair: SubstitutionPair,
+    ): List<SubstitutionPair>
+
+    /**
+     * Appends [pair] to [matchId], discarding any previously scheduled pair that shares its
+     * outgoing or incoming player — see [conflictsFor] to know which ones beforehand.
+     *
+     * Does nothing when [pair] is already scheduled exactly (it keeps its position), or when both
+     * of its players are the same, which is not a substitution.
      */
     fun add(
         matchId: String,
         pair: SubstitutionPair,
     )
 
-    /** Elimina exactamente [pair] de [matchId]. Si no está, no hace nada. */
+    /** Removes exactly [pair] from [matchId]. Does nothing when it is not scheduled. */
     fun remove(
         matchId: String,
         pair: SubstitutionPair,
     )
 
-    /** Elimina todos los pendientes de [matchId]. No afecta a otros partidos. */
+    /** Removes every pending of [matchId]. Leaves other matches untouched. */
     fun clear(matchId: String)
 }
