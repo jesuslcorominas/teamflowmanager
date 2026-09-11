@@ -50,9 +50,11 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
                 .filter { it.status == PlayerTimeStatus.PLAYING }
                 .map { it.playerId }
                 .toSet()
-        val knownPlayerIds = playerTimes.map { it.playerId }.toSet()
 
-        val selection = selectPairs(substitutions, playingPlayerIds, knownPlayerIds)
+        // The squad call-up is the source of truth for who may come on, NOT the player times:
+        // those rows are created lazily the first time a player's timer starts, so a called-up
+        // substitute who has not played yet has no row at all.
+        val selection = selectPairs(substitutions, playingPlayerIds, match.squadCallUpIds.toSet())
         val validPairs = selection.applied
 
         // No valid pair: no operation is created, but the caller still learns why
@@ -71,7 +73,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
             )
         val operationId = matchOperationRepository.createOperation(operation)
 
-        // Both are already duplicate-free: selectValidPairs consumes each player at most once
+        // Both are already duplicate-free: selectPairs consumes each player at most once
         val playerOutIds = validPairs.map { it.playerOutId }
         val playerInIds = validPairs.map { it.playerInId }
 
@@ -93,7 +95,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
 
         // Step 4: Refresh the operationId of the remaining players still on the pitch, so the UI
         // filter (lastOperationId == match.lastCompletedOperationId) keeps showing them. Only the
-        // leaving players need excluding: selectValidPairs already guarantees that no incoming
+        // leaving players need excluding: selectPairs already guarantees that no incoming
         // player was on the pitch, so none of them can be written twice in the same operation.
         val substitutedOutPlayerIds = playerOutIds.toSet()
         val otherPlayingPlayers = playingPlayerIds.filterNot { it in substitutedOutPlayerIds }
@@ -149,7 +151,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
     private fun selectPairs(
         substitutions: List<SubstitutionPair>,
         playingPlayerIds: Set<String>,
-        knownPlayerIds: Set<String>,
+        calledUpPlayerIds: Set<String>,
     ): SubstitutionBatchResult {
         val applied = mutableListOf<SubstitutionPair>()
         val discarded = mutableListOf<DiscardedSubstitution>()
@@ -163,7 +165,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
                 discardReasonFor(
                     pair = pair,
                     playingPlayerIds = playingPlayerIds,
-                    knownPlayerIds = knownPlayerIds,
+                    calledUpPlayerIds = calledUpPlayerIds,
                     consumedPlayerOutIds = consumedPlayerOutIds,
                     consumedPlayerInIds = consumedPlayerInIds,
                 )
@@ -188,7 +190,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
     private fun discardReasonFor(
         pair: SubstitutionPair,
         playingPlayerIds: Set<String>,
-        knownPlayerIds: Set<String>,
+        calledUpPlayerIds: Set<String>,
         consumedPlayerOutIds: Set<String>,
         consumedPlayerInIds: Set<String>,
     ): SubstitutionDiscardReason? =
@@ -199,7 +201,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
             pair.playerInId in playingPlayerIds ->
                 SubstitutionDiscardReason.PLAYER_IN_ALREADY_PLAYING
 
-            pair.playerInId !in knownPlayerIds ->
+            pair.playerInId !in calledUpPlayerIds ->
                 SubstitutionDiscardReason.PLAYER_IN_NOT_IN_MATCH
 
             pair.playerOutId in consumedPlayerOutIds || pair.playerInId in consumedPlayerInIds ->

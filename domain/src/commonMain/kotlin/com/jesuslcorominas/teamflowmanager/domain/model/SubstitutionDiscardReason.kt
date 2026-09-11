@@ -20,8 +20,12 @@ enum class SubstitutionDiscardReason {
     PLAYER_IN_ALREADY_PLAYING,
 
     /**
-     * The incoming player has no player time for this match: nobody called them up. Starting their
-     * timer would create a brand new record for a player that is not part of the squad.
+     * The incoming player is not in the match squad call-up. Starting their timer would create a
+     * brand new player time record for someone who is not part of the squad.
+     *
+     * The check is against the call-up and not against the existing player times on purpose: those
+     * rows are created lazily the first time a player's timer starts, so a called-up substitute who
+     * has not played yet has no row and must still be allowed to come on.
      */
     PLAYER_IN_NOT_IN_MATCH,
 

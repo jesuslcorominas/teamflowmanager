@@ -60,6 +60,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
         status: MatchStatus = MatchStatus.IN_PROGRESS,
         startTimeMillis: Long,
         endTimeMillis: Long = 0L,
+        squadCallUpIds: List<String> = emptyList(),
     ) = Match(
         id = matchId,
         teamId = "1",
@@ -69,6 +70,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
         periodType = PeriodType.HALF_TIME,
         captainId = "1",
         status = status,
+        squadCallUpIds = squadCallUpIds,
         periods =
             listOf(
                 MatchPeriod(
@@ -90,7 +92,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val currentTimeMillis = System.currentTimeMillis()
             val periodStartTime = currentTimeMillis - 60000L
             val operationId = "op123"
-            val match = buildMatch(matchId, startTimeMillis = periodStartTime)
+            val match = buildMatch(matchId, startTimeMillis = periodStartTime, squadCallUpIds = listOf("2", "3"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             // Mock player times - playerOut is running
@@ -180,10 +182,11 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val currentTimeMillis = System.currentTimeMillis()
             val periodStartTime = currentTimeMillis - 120000L
             val operationId = "op456"
-            val match = buildMatch(matchId, startTimeMillis = periodStartTime)
+            val match = buildMatch(matchId, startTimeMillis = periodStartTime, squadCallUpIds = listOf("2", "3"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
-            // Mock player times - playerOut is running, playerIn waits on the bench
+            // Mock player times - playerOut is running. playerIn is called up but has never played,
+            // so it has NO player time row: that is how production looks before a first entry
             val playerTimes =
                 listOf(
                     PlayerTime(
@@ -193,7 +196,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
                         lastStartTimeMillis = periodStartTime,
                         status = PlayerTimeStatus.PLAYING,
                     ),
-                    PlayerTime(playerId = playerInId, status = PlayerTimeStatus.ON_BENCH),
                 )
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
 
@@ -231,10 +233,12 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     status = MatchStatus.PAUSED,
                     startTimeMillis = periodStartTime,
                     endTimeMillis = periodEndTime,
+                    squadCallUpIds = listOf("2", "3"),
                 )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
-            // Mock player times - playerOut is running, playerIn waits on the bench
+            // Mock player times - playerOut is running. playerIn is called up but has never played,
+            // so it has NO player time row: that is how production looks before a first entry
             val playerTimes =
                 listOf(
                     PlayerTime(
@@ -244,7 +248,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
                         lastStartTimeMillis = null,
                         status = PlayerTimeStatus.PLAYING,
                     ),
-                    PlayerTime(playerId = playerInId, status = PlayerTimeStatus.ON_BENCH),
                 )
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
 
@@ -273,7 +276,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val playerOutId = "99" // not present in player times
             val playerInId = "3"
             val currentTimeMillis = System.currentTimeMillis()
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("2", "3"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
             coEvery { getAllPlayerTimesUseCase(matchId) } returns
                 flowOf(
@@ -302,15 +305,12 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val playerInId = "3"
             val currentTimeMillis = System.currentTimeMillis()
             val operationId = "op789"
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("2", "3"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
             coEvery { getAllPlayerTimesUseCase(matchId) } returns
                 flowOf(
-                    listOf(
-                        // only playerOut is playing, playerIn waits on the bench
-                        PlayerTime(playerId = playerOutId, status = PlayerTimeStatus.PLAYING),
-                        PlayerTime(playerId = playerInId, status = PlayerTimeStatus.ON_BENCH),
-                    ),
+                    // only playerOut is playing; playerIn is called up but has no row yet
+                    listOf(PlayerTime(playerId = playerOutId, status = PlayerTimeStatus.PLAYING)),
                 )
             coEvery { matchOperationRepository.createOperation(any()) } returns operationId
             coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
@@ -346,7 +346,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val playerInId = "3"
             val currentTimeMillis = System.currentTimeMillis()
             val periodStartTime = currentTimeMillis - 60000L
-            val match = buildMatch(matchId, startTimeMillis = periodStartTime)
+            val match = buildMatch(matchId, startTimeMillis = periodStartTime, squadCallUpIds = listOf("2", "3"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             // Mock player times - playerOut is NOT running (on bench)
@@ -397,7 +397,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val otherPlayerId2 = "5"
             val currentTimeMillis = System.currentTimeMillis()
             val operationId = "op-multi"
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("2", "3", "4", "5"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val playerTimes =
@@ -469,7 +469,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val currentTimeMillis = System.currentTimeMillis()
             val periodStartTime = currentTimeMillis - 120000L
             val operationId = "op-batch-3"
-            val match = buildMatch(matchId, startTimeMillis = periodStartTime)
+            val match = buildMatch(matchId, startTimeMillis = periodStartTime, squadCallUpIds = listOf("out1", "out2", "out3", "in1", "in2", "in3"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val playerTimes =
@@ -544,7 +544,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val matchId = "1"
             val currentTimeMillis = System.currentTimeMillis()
             val operationId = "op-mixed"
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("out1", "out2", "out3", "in1", "in2", "in3"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val playerTimes =
@@ -611,7 +611,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             // Given: no leaving player is PLAYING
             val matchId = "1"
             val currentTimeMillis = System.currentTimeMillis()
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("out1", "out2", "in1", "in2"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
             coEvery { getAllPlayerTimesUseCase(matchId) } returns
                 flowOf(
@@ -654,7 +654,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val matchId = "1"
             val currentTimeMillis = System.currentTimeMillis()
             val operationId = "op-others"
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("out1", "out2", "in1", "in2", "stay1", "stay2"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val playerTimes =
@@ -706,7 +706,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val matchId = "1"
             val currentTimeMillis = System.currentTimeMillis()
             val operationId = "op-dup"
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("out1", "in1", "in2"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val playerTimes =
@@ -764,7 +764,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val matchId = "1"
             val currentTimeMillis = System.currentTimeMillis()
             val operationId = "op-dup-in"
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("out1", "out2", "in1"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val playerTimes =
@@ -823,7 +823,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             // Given: a self-substitution A -> A for a player currently on the pitch
             val matchId = "1"
             val currentTimeMillis = System.currentTimeMillis()
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("out1"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
             coEvery { getAllPlayerTimesUseCase(matchId) } returns
                 flowOf(listOf(PlayerTime(playerId = "out1", status = PlayerTimeStatus.PLAYING)))
@@ -856,7 +856,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val matchId = "1"
             val currentTimeMillis = System.currentTimeMillis()
             val operationId = "op-chained"
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("A", "B", "C"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val playerTimes =
@@ -919,7 +919,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val matchId = "1"
             val currentTimeMillis = System.currentTimeMillis()
             val operationId = "op-ghost"
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("out1", "out2", "in1"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val playerTimes =
@@ -975,6 +975,61 @@ class RegisterPlayerSubstitutionUseCaseTest {
         }
 
     @Test
+    fun `givenCalledUpSubstituteWithoutPlayerTimeRow_whenInvoke_thenPairIsApplied`() =
+        runTest {
+            // Given: the production shape of a first substitution. PlayerTime rows are created
+            // lazily by startTimersBatchWithOperationId, so a called-up substitute who has not
+            // played yet has NO row - only the starters do. Validating the incoming player against
+            // the player times instead of the squad call-up would silently drop this substitution,
+            // which is the first one of every substitute in every match.
+            val matchId = "1"
+            val currentTimeMillis = System.currentTimeMillis()
+            val operationId = "op-first-entry"
+            val match =
+                buildMatch(
+                    matchId,
+                    startTimeMillis = currentTimeMillis - 60000L,
+                    squadCallUpIds = listOf("starter1", "starter2", "bench1"),
+                )
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+
+            // Only the starters have a row; bench1 has never played
+            val playerTimes =
+                listOf(
+                    PlayerTime(playerId = "starter1", status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "starter2", status = PlayerTimeStatus.PLAYING),
+                )
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
+            coEvery { matchOperationRepository.createOperation(any()) } returns operationId
+
+            val substitutions = mutableListOf<PlayerSubstitution>()
+            coEvery { playerSubstitutionRepository.insertSubstitution(capture(substitutions)) } returns "sub-id"
+
+            val pairs = listOf(SubstitutionPair(playerOutId = "starter1", playerInId = "bench1"))
+
+            // When
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - the substitution goes through
+            assertEquals(pairs, result.applied)
+            assertEquals(emptyList<DiscardedSubstitution>(), result.discarded)
+            assertEquals(1, substitutions.size)
+            assertEquals("bench1", substitutions.first().playerInId)
+            coVerify(exactly = 1) { matchOperationRepository.createOperation(any()) }
+            coVerify {
+                playerTimeRepository.substituteOutPlayersBatchWithOperationId(
+                    matchId,
+                    listOf("starter1"),
+                    currentTimeMillis,
+                    operationId,
+                )
+            }
+            coVerify {
+                playerTimeRepository.startTimersBatchWithOperationId(matchId, listOf("bench1"), currentTimeMillis, operationId)
+            }
+        }
+
+    @Test
     fun `givenPairBreakingSeveralRules_whenInvoke_thenReasonFollowsEnumDeclarationOrder`() =
         runTest {
             // Given: a pair that breaks three rules at once - its leaving player is on the bench,
@@ -982,7 +1037,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val matchId = "1"
             val currentTimeMillis = System.currentTimeMillis()
             val operationId = "op-precedence"
-            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L, squadCallUpIds = listOf("out1", "in1"))
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
             val playerTimes =
