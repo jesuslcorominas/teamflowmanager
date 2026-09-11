@@ -510,8 +510,330 @@ class MatchViewModelTest {
         assertFalse(copy.isBreak)
     }
 
+
+    // ── Scheduled substitutions (#412) ───────────────────────────────────────
+
+    /** Four called-up players, two of them on the pitch, so a batch of two pairs is possible. */
+    private fun givenFourPlayerSquad(playerTimeStatus: PlayerTimeStatus = PlayerTimeStatus.PLAYING) {
+        val squad = listOf(
+            Player(id = "1", firstName = "A", lastName = "A", number = 1, positions = listOf(Position.Forward), teamId = "1", isCaptain = false),
+            Player(id = "2", firstName = "B", lastName = "B", number = 2, positions = listOf(Position.Defender), teamId = "1", isCaptain = false),
+            Player(id = "3", firstName = "C", lastName = "C", number = 3, positions = listOf(Position.Forward), teamId = "1", isCaptain = false),
+            Player(id = "4", firstName = "D", lastName = "D", number = 4, positions = listOf(Position.Defender), teamId = "1", isCaptain = false),
+        )
+        val onPitch = playerTimeStatus == PlayerTimeStatus.PLAYING
+        every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(
+            testMatch.copy(
+                squadCallUpIds = listOf("1", "2", "3", "4"),
+                status = if (onPitch) MatchStatus.IN_PROGRESS else MatchStatus.PAUSED,
+            ),
+        )
+        every { getPlayersByTeamUseCase(any()) } returns flowOf(squad)
+        every { getAllPlayerTimesUseCase(any()) } returns flowOf(
+            listOf(
+                PlayerTime(playerId = "1", elapsedTimeMillis = 5000L, isRunning = onPitch, status = playerTimeStatus),
+                PlayerTime(playerId = "3", elapsedTimeMillis = 5000L, isRunning = onPitch, status = playerTimeStatus),
+                PlayerTime(playerId = "2", elapsedTimeMillis = 0L, isRunning = false, status = PlayerTimeStatus.ON_BENCH),
+                PlayerTime(playerId = "4", elapsedTimeMillis = 0L, isRunning = false, status = PlayerTimeStatus.ON_BENCH),
+            ),
+        )
+    }
+
+    private fun givenScheduledMode() {
+        every { observeSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.SCHEDULED)
+    }
+
+    @Test
+    fun `givenScheduledMode_whenSubstitutePlayer_thenQueuesTheCardInsteadOfApplyingIt`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.selectPlayerOut("1")
+        viewModel.substitutePlayer("2")
+        advanceUntilIdle()
+
+        // Then — this is the whole point of the feature: nothing is applied yet
+        verify(exactly = 1) { addPendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
+        coVerify(exactly = 0) { registerPlayerSubstitutionUseCase(any(), any(), any()) }
+        assertNull(viewModel.selectedPlayerOut.value)
+    }
+
+    @Test
+    fun `givenLiveMode_whenSubstitutePlayer_thenAppliesImmediatelyAndQueuesNothing`() = runTest(testDispatcher) {
+        // Given — live mode is the default of this suite; stated here because it is the subject
+        every { observeSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.LIVE)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.selectPlayerOut("1")
+        viewModel.substitutePlayer("2")
+        advanceUntilIdle()
+
+        // Then — guards the non-regression the issue asks for
+        coVerify(exactly = 1) { registerPlayerSubstitutionUseCase(MATCH_ID, listOf(PAIR_1_2), any()) }
+        verify(exactly = 0) { addPendingSubstitutionUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `givenAQueuedCard_whenExecuteIt_thenRunsABatchOfOneAndUnschedulesIt`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        coEvery { registerPlayerSubstitutionUseCase(MATCH_ID, listOf(PAIR_1_2), any()) } returns
+            SubstitutionBatchResult(applied = listOf(PAIR_1_2), discarded = emptyList())
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.executePendingSubstitution(PAIR_1_2)
+        advanceUntilIdle()
+
+        // Then — a single card takes the same path as a batch, with a list of one
+        coVerify(exactly = 1) { registerPlayerSubstitutionUseCase(MATCH_ID, listOf(PAIR_1_2), any()) }
+        verify(exactly = 1) { removePendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
+        assertEquals(listOf(PAIR_1_2), viewModel.lastSubstitutionResult.value?.applied)
+    }
+
+    @Test
+    fun `givenTwoQueuedCards_whenExecuteAll_thenRunsThemInASingleBatch`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        givenFourPlayerSquad()
+        pendingStore.value = listOf(PAIR_1_2, PAIR_3_4)
+        coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
+            SubstitutionBatchResult(applied = listOf(PAIR_1_2, PAIR_3_4), discarded = emptyList())
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.executeAllPendingSubstitutions()
+        advanceUntilIdle()
+
+        // Then — ONE invocation carrying both pairs: that is what gives them one operation id.
+        // Two invocations of one pair each would also "work" and would be wrong.
+        coVerify(exactly = 1) { registerPlayerSubstitutionUseCase(MATCH_ID, listOf(PAIR_1_2, PAIR_3_4), any()) }
+        coVerify(exactly = 1) { registerPlayerSubstitutionUseCase(any(), any(), any()) }
+    }
+
+    @Test
+    fun `givenQueuedCards_whenRemoveOneOrClearAll_thenTheStoreIsToldExactlyThat`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.removePendingSubstitution(PAIR_1_2)
+        viewModel.clearPendingSubstitutions()
+
+        // Then
+        verify(exactly = 1) { removePendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
+        verify(exactly = 1) { clearPendingSubstitutionsUseCase(MATCH_ID) }
+    }
+
+    @Test
+    fun `givenAPlayerAlreadyQueued_whenSchedulingHimAgain_thenWarnsBeforeWritingAnything`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        givenFourPlayerSquad()
+        pendingStore.value = listOf(PAIR_1_4)
+        every { getPendingSubstitutionConflictsUseCase(MATCH_ID, PAIR_1_2) } returns listOf(PAIR_1_4)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.selectPlayerOut("1")
+        viewModel.substitutePlayer("2")
+        advanceUntilIdle()
+
+        // Then — the coach is asked first; the destructive write has NOT happened
+        val conflict = viewModel.pendingSubstitutionConflict.value
+        assertEquals(PAIR_1_2, conflict?.requested?.pair)
+        assertEquals(listOf(PAIR_1_4), conflict?.displaced?.map { it.pair })
+        verify(exactly = 0) { addPendingSubstitutionUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `givenAConflictWarning_whenConfirmed_thenSchedulesIt_andWhenDismissed_thenDoesNot`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        givenFourPlayerSquad()
+        pendingStore.value = listOf(PAIR_1_4)
+        every { getPendingSubstitutionConflictsUseCase(MATCH_ID, PAIR_1_2) } returns listOf(PAIR_1_4)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.selectPlayerOut("1")
+        viewModel.substitutePlayer("2")
+        advanceUntilIdle()
+
+        // When — confirmed
+        viewModel.confirmPendingSubstitutionConflict()
+
+        // Then — the store itself drops the displaced pair; the ViewModel only writes the new one
+        verify(exactly = 1) { addPendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
+        assertNull(viewModel.pendingSubstitutionConflict.value)
+
+        // When — warned again and dismissed
+        viewModel.selectPlayerOut("1")
+        viewModel.substitutePlayer("2")
+        advanceUntilIdle()
+        viewModel.dismissPendingSubstitutionConflict()
+
+        // Then — no second write, and nothing already queued was lost
+        verify(exactly = 1) { addPendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
+        assertNull(viewModel.pendingSubstitutionConflict.value)
+        assertNull(viewModel.selectedPlayerOut.value)
+    }
+
+    @Test
+    fun `givenAPausedMatch_whenSelectingAPausedPlayer_thenScheduledModeAcceptsHimAndLiveModeDoesNot`() = runTest(testDispatcher) {
+        // Given — during the break the pitch players sit at PAUSED, not PLAYING
+        givenScheduledMode()
+        givenFourPlayerSquad(playerTimeStatus = PlayerTimeStatus.PAUSED)
+        val scheduled = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        scheduled.selectPlayerOut("1")
+
+        // Then — the coach can queue changes during the break
+        assertEquals("1", scheduled.selectedPlayerOut.value)
+        assertFalse(scheduled.showInvalidSubstitutionAlert.value)
+
+        // Given — same state, live mode
+        every { observeSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.LIVE)
+        val live = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        live.selectPlayerOut("1")
+
+        // Then — live keeps rejecting: applying it now would be discarded by the use case anyway,
+        // and unlike a queued card there would be nothing left to recover
+        assertNull(live.selectedPlayerOut.value)
+        assertTrue(live.showInvalidSubstitutionAlert.value)
+    }
+
+    @Test
+    fun `givenQueuedCards_whenResuming_thenRestoresThePlayersBeforeRunningTheBatch`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        pendingStore.value = listOf(PAIR_1_2)
+        coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
+            SubstitutionBatchResult(applied = listOf(PAIR_1_2), discarded = emptyList())
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.resumeMatch(MATCH_ID)
+        advanceUntilIdle()
+
+        // Then — ResumeMatchUseCase puts the paused players back to PLAYING, and the register use
+        // case selects on PLAYING. The reverse order discards the whole batch silently.
+        coVerifyOrder {
+            resumeMatchUseCase(MATCH_ID, any())
+            registerPlayerSubstitutionUseCase(MATCH_ID, listOf(PAIR_1_2), any())
+        }
+    }
+
+    @Test
+    fun `givenResumeDiscardsEverything_thenTheCardsAreDroppedAndTheResultSaysWhy`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        pendingStore.value = listOf(PAIR_1_2)
+        coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
+            SubstitutionBatchResult(
+                applied = emptyList(),
+                discarded = listOf(DiscardedSubstitution(PAIR_1_2, SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING)),
+            )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.resumeMatch(MATCH_ID)
+        advanceUntilIdle()
+
+        // Then — a card that outlived a resume would fire again by itself at the next break
+        verify(exactly = 1) { removePendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
+        val result = viewModel.lastSubstitutionResult.value
+        assertEquals(SubstitutionExecutionTrigger.RESUME, result?.trigger)
+        assertTrue(result?.applied?.isEmpty() == true)
+        assertEquals(SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING, result?.discarded?.single()?.reason)
+    }
+
+    @Test
+    fun `givenAManualRunThatDiscards_thenTheCardIsKeptForTheCoach`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
+            SubstitutionBatchResult(
+                applied = emptyList(),
+                discarded = listOf(DiscardedSubstitution(PAIR_1_2, SubstitutionDiscardReason.PLAYER_IN_ALREADY_PLAYING)),
+            )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.executePendingSubstitution(PAIR_1_2)
+        advanceUntilIdle()
+
+        // Then — with the coach watching, deleting their card would lose work with no way back
+        verify(exactly = 0) { removePendingSubstitutionUseCase(any(), any()) }
+        assertEquals(SubstitutionExecutionTrigger.MANUAL, viewModel.lastSubstitutionResult.value?.trigger)
+    }
+
+    @Test
+    fun `givenAPausedMatch_whenExecutingACard_thenItRunsTheCardIsKeptAndTheResultExplainsIt`() = runTest(testDispatcher) {
+        // Given — the coach queued during the break and pressed the button there too
+        givenScheduledMode()
+        givenFourPlayerSquad(playerTimeStatus = PlayerTimeStatus.PAUSED)
+        pendingStore.value = listOf(PAIR_1_2)
+        coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
+            SubstitutionBatchResult(
+                applied = emptyList(),
+                discarded = listOf(DiscardedSubstitution(PAIR_1_2, SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING)),
+            )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.executeAllPendingSubstitutions()
+        advanceUntilIdle()
+
+        // Then — the button is not blocked, nothing applies while paused, and nothing is lost:
+        // the card stays and will run on its own when the match resumes
+        coVerify(exactly = 1) { registerPlayerSubstitutionUseCase(MATCH_ID, listOf(PAIR_1_2), any()) }
+        verify(exactly = 0) { removePendingSubstitutionUseCase(any(), any()) }
+        assertEquals(
+            SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING,
+            viewModel.lastSubstitutionResult.value?.discarded?.single()?.reason,
+        )
+    }
+
+    @Test
+    fun `givenQueuedCards_whenTheMatchIsFinished_thenTheQueueIsEmptied`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.confirmStopMatch()
+        advanceUntilIdle()
+
+        // Then — a finished match takes no more substitutions
+        coVerify(exactly = 1) { finishMatchUseCase(MATCH_ID, any()) }
+        verify(exactly = 1) { clearPendingSubstitutionsUseCase(MATCH_ID) }
+    }
+
     companion object {
         private const val MATCH_ID = "1"
+        private val PAIR_1_2 = SubstitutionPair(playerOutId = "1", playerInId = "2")
+        private val PAIR_3_4 = SubstitutionPair(playerOutId = "3", playerInId = "4")
+        private val PAIR_1_4 = SubstitutionPair(playerOutId = "1", playerInId = "4")
     }
 }
 

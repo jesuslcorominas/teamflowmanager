@@ -998,8 +998,7 @@ class MatchViewModel(
      * there would let a substitution be attempted mid-break, only for the use case to discard it
      * on PLAYER_OUT_NOT_PLAYING with nothing queued to recover it.
      */
-    private fun PlayerTimeItem.isOnPitch(mode: SubstitutionMode): Boolean =
-        if (mode == SubstitutionMode.SCHEDULED) isRunning || isPaused else isRunning
+    private fun PlayerTimeItem.isOnPitch(mode: SubstitutionMode): Boolean = if (mode == SubstitutionMode.SCHEDULED) isRunning || isPaused else isRunning
 
     private fun SubstitutionPair.toPendingItem(players: List<Player>): PendingSubstitutionItem? {
         val out = players.find { it.id == playerOutId } ?: return null
