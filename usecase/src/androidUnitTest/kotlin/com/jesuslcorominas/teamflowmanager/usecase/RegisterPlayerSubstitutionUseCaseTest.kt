@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.DiscardedSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
@@ -10,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionDiscardReason
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
@@ -446,7 +448,11 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val currentTimeMillis = System.currentTimeMillis()
 
             // When
-            registerPlayerSubstitutionUseCase(matchId, emptyList(), currentTimeMillis)
+            val result = registerPlayerSubstitutionUseCase(matchId, emptyList(), currentTimeMillis)
+
+            // Then - an empty batch applies nothing and discards nothing
+            assertEquals(emptyList<SubstitutionPair>(), result.applied)
+            assertEquals(emptyList<DiscardedSubstitution>(), result.discarded)
 
             // Then - exits before touching any repository: neither the match nor the times are read
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
@@ -489,7 +495,11 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
 
             // When
-            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - the three pairs are reported as applied, in the requested order
+            assertEquals(pairs, result.applied)
+            assertEquals(emptyList<DiscardedSubstitution>(), result.discarded)
 
             // Then - a single atomic operation covers the whole batch
             coVerify(exactly = 1) { matchOperationRepository.createOperation(any()) }
@@ -560,7 +570,16 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
 
             // When
-            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - the result tells which pair fell and why, keeping the requested order
+            assertEquals(listOf(pairs[0], pairs[2]), result.applied)
+            assertEquals(
+                listOf(
+                    DiscardedSubstitution(pairs[1], SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING),
+                ),
+                result.discarded,
+            )
 
             // Then - only the two valid pairs are applied, under a single operation
             coVerify(exactly = 1) { matchOperationRepository.createOperation(any()) }
@@ -609,9 +628,18 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
 
             // When
-            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
 
-            // Then
+            // Then - REASON 1: nothing applied, every pair reported as PLAYER_OUT_NOT_PLAYING
+            assertEquals(emptyList<SubstitutionPair>(), result.applied)
+            assertEquals(
+                listOf(
+                    DiscardedSubstitution(pairs[0], SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING),
+                    DiscardedSubstitution(pairs[1], SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING),
+                ),
+                result.discarded,
+            )
+
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
             coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
             coVerify(exactly = 0) { playerTimeRepository.substituteOutPlayersBatchWithOperationId(any(), any(), any(), any()) }
@@ -700,7 +728,16 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
 
             // When
-            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - REASON 4 on the leaving side this time
+            assertEquals(listOf(pairs[0]), result.applied)
+            assertEquals(
+                listOf(
+                    DiscardedSubstitution(pairs[1], SubstitutionDiscardReason.PLAYER_ALREADY_SUBSTITUTED_IN_BATCH),
+                ),
+                result.discarded,
+            )
 
             // Then - the leaving player is consumed by the first pair, so the second one is dropped
             assertEquals(1, substitutions.size)
@@ -749,7 +786,17 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
 
             // When
-            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - REASON 4: in1 was consumed by the first pair, so the second one is reported as
+            // an incompatible pair rather than silently half-applied
+            assertEquals(listOf(pairs[0]), result.applied)
+            assertEquals(
+                listOf(
+                    DiscardedSubstitution(pairs[1], SubstitutionDiscardReason.PLAYER_ALREADY_SUBSTITUTED_IN_BATCH),
+                ),
+                result.discarded,
+            )
 
             // Then - the second pair is dropped whole: out2 must NOT be benched, or the team would
             // be left a player short with a single incoming player covering two exits
@@ -784,7 +831,16 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val pairs = listOf(SubstitutionPair(playerOutId = "out1", playerInId = "out1"))
 
             // When
-            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - REASON 2: A is on the pitch, so A is a valid leaver but an invalid arrival
+            assertEquals(emptyList<SubstitutionPair>(), result.applied)
+            assertEquals(
+                listOf(
+                    DiscardedSubstitution(pairs[0], SubstitutionDiscardReason.PLAYER_IN_ALREADY_PLAYING),
+                ),
+                result.discarded,
+            )
 
             // Then - no operation at all: benching and restarting the same player in one operation
             // would alter the time accounting and leave an A <-> A row in the history
@@ -822,7 +878,16 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
 
             // When
-            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - REASON 2 again, this time through a chain: only B -> C survives
+            assertEquals(listOf(pairs[1]), result.applied)
+            assertEquals(
+                listOf(
+                    DiscardedSubstitution(pairs[0], SubstitutionDiscardReason.PLAYER_IN_ALREADY_PLAYING),
+                ),
+                result.discarded,
+            )
 
             // Then - A -> B is dropped because B is already playing. Applying it would bench B and
             // restart B's timer in the same operation, leaving B on the pitch while the history
@@ -876,7 +941,16 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
 
             // When
-            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - REASON 3: the caller can tell the pending change points at someone not called up
+            assertEquals(listOf(pairs[0]), result.applied)
+            assertEquals(
+                listOf(
+                    DiscardedSubstitution(pairs[1], SubstitutionDiscardReason.PLAYER_IN_NOT_IN_MATCH),
+                ),
+                result.discarded,
+            )
 
             // Then - the unknown id never reaches startTimersBatchWithOperationId, which would
             // upsert a brand new PlayerTime row in PLAYING for a player nobody called up
@@ -898,5 +972,46 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     operationId,
                 )
             }
+        }
+
+    @Test
+    fun `givenPairBreakingSeveralRules_whenInvoke_thenReasonFollowsEnumDeclarationOrder`() =
+        runTest {
+            // Given: a pair that breaks three rules at once - its leaving player is on the bench,
+            // its incoming player is on the pitch, and both repeat the first pair of the batch
+            val matchId = "1"
+            val currentTimeMillis = System.currentTimeMillis()
+            val operationId = "op-precedence"
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+
+            val playerTimes =
+                listOf(
+                    PlayerTime(playerId = "out1", status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "in1", status = PlayerTimeStatus.ON_BENCH),
+                )
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
+            coEvery { matchOperationRepository.createOperation(any()) } returns operationId
+            coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
+
+            val pairs =
+                listOf(
+                    SubstitutionPair(playerOutId = "out1", playerInId = "in1"),
+                    // in1 is now consumed AND out1 is consumed, but the very first rule that the
+                    // second pair breaks is that its leaving player (in1) is not on the pitch
+                    SubstitutionPair(playerOutId = "in1", playerInId = "out1"),
+                )
+
+            // When
+            val result = registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - the earliest reason in the enum wins, not the last rule evaluated
+            assertEquals(listOf(pairs[0]), result.applied)
+            assertEquals(
+                listOf(
+                    DiscardedSubstitution(pairs[1], SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING),
+                ),
+                result.discarded,
+            )
         }
 }

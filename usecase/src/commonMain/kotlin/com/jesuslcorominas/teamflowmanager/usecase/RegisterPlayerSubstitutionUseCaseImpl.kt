@@ -1,10 +1,13 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.DiscardedSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationType
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeStatus
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionBatchResult
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionDiscardReason
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
@@ -29,9 +32,11 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         matchId: String,
         substitutions: List<SubstitutionPair>,
         currentTimeMillis: Long,
-    ) {
+    ): SubstitutionBatchResult {
         // Nothing to do: exit before touching the repositories
-        if (substitutions.isEmpty()) return
+        if (substitutions.isEmpty()) {
+            return SubstitutionBatchResult(applied = emptyList(), discarded = emptyList())
+        }
 
         // Get match to calculate elapsed time
         val match = matchRepository.getMatchById(matchId).first()
@@ -47,10 +52,11 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
                 .toSet()
         val knownPlayerIds = playerTimes.map { it.playerId }.toSet()
 
-        val validPairs = selectValidPairs(substitutions, playingPlayerIds, knownPlayerIds)
+        val selection = selectPairs(substitutions, playingPlayerIds, knownPlayerIds)
+        val validPairs = selection.applied
 
-        // No valid pair: no operation is created
-        if (validPairs.isEmpty()) return
+        // No valid pair: no operation is created, but the caller still learns why
+        if (validPairs.isEmpty()) return selection
 
         // Elapsed time computed once and shared by every PlayerSubstitution of the batch
         val matchElapsedTime = match.getTotalElapsed(currentTimeMillis)
@@ -127,50 +133,78 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
             match = match.copy(lastCompletedOperationId = operationId),
             operationId = operationId,
         )
+
+        return selection
     }
 
     /**
-     * Picks the pairs that can be applied together. An invalid pair is silently discarded and never
+     * Splits the requested batch into the pairs that can be applied together and the ones that
+     * cannot, each with its [SubstitutionDiscardReason]. An invalid pair is discarded and never
      * aborts the rest of the batch, which is the historical single-pair behaviour.
      *
      * Every rule is evaluated against the state read at the start of the batch, so the outcome
-     * depends on the data and not on the order in which the repository calls happen. A pair is
-     * dropped when:
-     * - the leaving player is not on the pitch (nothing to substitute out);
-     * - the incoming player is unknown to the match, which would make
-     *   [PlayerTimeRepository.startTimersBatchWithOperationId] create a brand new PlayerTime row for
-     *   a player that was never called up;
-     * - the incoming player is already on the pitch. This also covers a self-substitution (A -> A)
-     *   and a chained batch (A -> B, B -> C), where benching B and starting B's timer in the same
-     *   operation would leave B playing while the history claims B left;
-     * - the leaving or the incoming player was already consumed by an earlier pair of the same
-     *   batch. Applying only half of such a pair would silently leave the team a player short or a
-     *   player long.
+     * depends on the data and not on the order in which the repository calls happen. Both lists
+     * preserve the order of [substitutions].
      */
-    private fun selectValidPairs(
+    private fun selectPairs(
         substitutions: List<SubstitutionPair>,
         playingPlayerIds: Set<String>,
         knownPlayerIds: Set<String>,
-    ): List<SubstitutionPair> {
-        val validPairs = mutableListOf<SubstitutionPair>()
+    ): SubstitutionBatchResult {
+        val applied = mutableListOf<SubstitutionPair>()
+        val discarded = mutableListOf<DiscardedSubstitution>()
         val consumedPlayerOutIds = mutableSetOf<String>()
         val consumedPlayerInIds = mutableSetOf<String>()
 
         substitutions.forEach { pair ->
-            val isApplicable =
-                pair.playerOutId in playingPlayerIds &&
-                    pair.playerInId in knownPlayerIds &&
-                    pair.playerInId !in playingPlayerIds &&
-                    pair.playerOutId !in consumedPlayerOutIds &&
-                    pair.playerInId !in consumedPlayerInIds
+            // Both ids are checked before either is consumed, so rejecting a pair because of its
+            // incoming player does not burn a leaving player that a later pair could still use
+            val reason =
+                discardReasonFor(
+                    pair = pair,
+                    playingPlayerIds = playingPlayerIds,
+                    knownPlayerIds = knownPlayerIds,
+                    consumedPlayerOutIds = consumedPlayerOutIds,
+                    consumedPlayerInIds = consumedPlayerInIds,
+                )
 
-            if (isApplicable) {
-                validPairs += pair
+            if (reason == null) {
+                applied += pair
                 consumedPlayerOutIds += pair.playerOutId
                 consumedPlayerInIds += pair.playerInId
+            } else {
+                discarded += DiscardedSubstitution(pair = pair, reason = reason)
             }
         }
 
-        return validPairs
+        return SubstitutionBatchResult(applied = applied, discarded = discarded)
     }
+
+    /**
+     * The reason why [pair] cannot be applied, or `null` when it can. When a pair breaks more than
+     * one rule the first match wins, so the branches below follow the declaration order of
+     * [SubstitutionDiscardReason].
+     */
+    private fun discardReasonFor(
+        pair: SubstitutionPair,
+        playingPlayerIds: Set<String>,
+        knownPlayerIds: Set<String>,
+        consumedPlayerOutIds: Set<String>,
+        consumedPlayerInIds: Set<String>,
+    ): SubstitutionDiscardReason? =
+        when {
+            pair.playerOutId !in playingPlayerIds ->
+                SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING
+
+            pair.playerInId in playingPlayerIds ->
+                SubstitutionDiscardReason.PLAYER_IN_ALREADY_PLAYING
+
+            pair.playerInId !in knownPlayerIds ->
+                SubstitutionDiscardReason.PLAYER_IN_NOT_IN_MATCH
+
+            pair.playerOutId in consumedPlayerOutIds || pair.playerInId in consumedPlayerInIds ->
+                SubstitutionDiscardReason.PLAYER_ALREADY_SUBSTITUTED_IN_BATCH
+
+            else -> null
+        }
 }
