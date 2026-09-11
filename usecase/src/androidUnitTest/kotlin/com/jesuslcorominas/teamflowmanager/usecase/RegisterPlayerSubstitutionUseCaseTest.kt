@@ -181,7 +181,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             val match = buildMatch(matchId, startTimeMillis = periodStartTime)
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
-            // Mock player times - playerOut is running
+            // Mock player times - playerOut is running, playerIn waits on the bench
             val playerTimes =
                 listOf(
                     PlayerTime(
@@ -191,6 +191,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                         lastStartTimeMillis = periodStartTime,
                         status = PlayerTimeStatus.PLAYING,
                     ),
+                    PlayerTime(playerId = playerInId, status = PlayerTimeStatus.ON_BENCH),
                 )
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
 
@@ -231,7 +232,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
 
-            // Mock player times - playerOut is running
+            // Mock player times - playerOut is running, playerIn waits on the bench
             val playerTimes =
                 listOf(
                     PlayerTime(
@@ -241,6 +242,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
                         lastStartTimeMillis = null,
                         status = PlayerTimeStatus.PLAYING,
                     ),
+                    PlayerTime(playerId = playerInId, status = PlayerTimeStatus.ON_BENCH),
                 )
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
 
@@ -302,7 +304,11 @@ class RegisterPlayerSubstitutionUseCaseTest {
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
             coEvery { getAllPlayerTimesUseCase(matchId) } returns
                 flowOf(
-                    listOf(PlayerTime(playerId = playerOutId, status = PlayerTimeStatus.PLAYING)), // only playerOut is playing
+                    listOf(
+                        // only playerOut is playing, playerIn waits on the bench
+                        PlayerTime(playerId = playerOutId, status = PlayerTimeStatus.PLAYING),
+                        PlayerTime(playerId = playerInId, status = PlayerTimeStatus.ON_BENCH),
+                    ),
                 )
             coEvery { matchOperationRepository.createOperation(any()) } returns operationId
             coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
@@ -442,9 +448,10 @@ class RegisterPlayerSubstitutionUseCaseTest {
             // When
             registerPlayerSubstitutionUseCase(matchId, emptyList(), currentTimeMillis)
 
-            // Then - exits before touching any repository, the match is never read
+            // Then - exits before touching any repository: neither the match nor the times are read
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
             coVerify(exactly = 0) { matchRepository.getMatchById(any()) }
+            coVerify(exactly = 0) { getAllPlayerTimesUseCase(any()) }
             coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
         }
 
@@ -695,7 +702,7 @@ class RegisterPlayerSubstitutionUseCaseTest {
             // When
             registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
 
-            // Then - distinctBy keeps the first pair only
+            // Then - the leaving player is consumed by the first pair, so the second one is dropped
             assertEquals(1, substitutions.size)
             assertEquals("out1", substitutions.first().playerOutId)
             assertEquals("in1", substitutions.first().playerInId)
@@ -710,6 +717,186 @@ class RegisterPlayerSubstitutionUseCaseTest {
             coVerify(exactly = 1) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
             coVerify {
                 playerTimeRepository.startTimersBatchWithOperationId(matchId, listOf("in1"), currentTimeMillis, operationId)
+            }
+        }
+
+    @Test
+    fun `givenDuplicatedPlayerIn_whenInvoke_thenSecondPairIsDiscardedEntirely`() =
+        runTest {
+            // Given: two pairs sharing the same incoming player
+            val matchId = "1"
+            val currentTimeMillis = System.currentTimeMillis()
+            val operationId = "op-dup-in"
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+
+            val playerTimes =
+                listOf(
+                    PlayerTime(playerId = "out1", status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "out2", status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "in1", status = PlayerTimeStatus.ON_BENCH),
+                )
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
+            coEvery { matchOperationRepository.createOperation(any()) } returns operationId
+
+            val substitutions = mutableListOf<PlayerSubstitution>()
+            coEvery { playerSubstitutionRepository.insertSubstitution(capture(substitutions)) } returns "sub-id"
+
+            val pairs =
+                listOf(
+                    SubstitutionPair(playerOutId = "out1", playerInId = "in1"),
+                    SubstitutionPair(playerOutId = "out2", playerInId = "in1"),
+                )
+
+            // When
+            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - the second pair is dropped whole: out2 must NOT be benched, or the team would
+            // be left a player short with a single incoming player covering two exits
+            assertEquals(1, substitutions.size)
+            assertEquals("out1", substitutions.first().playerOutId)
+            assertEquals("in1", substitutions.first().playerInId)
+            coVerify {
+                playerTimeRepository.substituteOutPlayersBatchWithOperationId(
+                    matchId,
+                    listOf("out1"),
+                    currentTimeMillis,
+                    operationId,
+                )
+            }
+            // out2 stays on the pitch and only gets the operationId refresh
+            coVerify {
+                playerTimeRepository.startTimersBatchWithOperationId(matchId, listOf("out2"), currentTimeMillis, operationId)
+            }
+        }
+
+    @Test
+    fun `givenPlayerOutEqualsPlayerIn_whenInvoke_thenPairIsDiscarded`() =
+        runTest {
+            // Given: a self-substitution A -> A for a player currently on the pitch
+            val matchId = "1"
+            val currentTimeMillis = System.currentTimeMillis()
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns
+                flowOf(listOf(PlayerTime(playerId = "out1", status = PlayerTimeStatus.PLAYING)))
+
+            val pairs = listOf(SubstitutionPair(playerOutId = "out1", playerInId = "out1"))
+
+            // When
+            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - no operation at all: benching and restarting the same player in one operation
+            // would alter the time accounting and leave an A <-> A row in the history
+            coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
+            coVerify(exactly = 0) { playerTimeRepository.substituteOutPlayersBatchWithOperationId(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
+        }
+
+    @Test
+    fun `givenChainedPairs_whenInvoke_thenPairWhoseIncomingPlayerIsOnThePitchIsDiscarded`() =
+        runTest {
+            // Given: a chained batch A -> B, B -> C where B is currently on the pitch
+            val matchId = "1"
+            val currentTimeMillis = System.currentTimeMillis()
+            val operationId = "op-chained"
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+
+            val playerTimes =
+                listOf(
+                    PlayerTime(playerId = "A", status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "B", status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "C", status = PlayerTimeStatus.ON_BENCH),
+                )
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
+            coEvery { matchOperationRepository.createOperation(any()) } returns operationId
+
+            val substitutions = mutableListOf<PlayerSubstitution>()
+            coEvery { playerSubstitutionRepository.insertSubstitution(capture(substitutions)) } returns "sub-id"
+
+            val pairs =
+                listOf(
+                    SubstitutionPair(playerOutId = "A", playerInId = "B"),
+                    SubstitutionPair(playerOutId = "B", playerInId = "C"),
+                )
+
+            // When
+            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - A -> B is dropped because B is already playing. Applying it would bench B and
+            // restart B's timer in the same operation, leaving B on the pitch while the history
+            // claims B left, and putting two players on for a single exit
+            assertEquals(1, substitutions.size)
+            assertEquals("B", substitutions.first().playerOutId)
+            assertEquals("C", substitutions.first().playerInId)
+            coVerify {
+                playerTimeRepository.substituteOutPlayersBatchWithOperationId(
+                    matchId,
+                    listOf("B"),
+                    currentTimeMillis,
+                    operationId,
+                )
+            }
+            coVerify {
+                playerTimeRepository.startTimersBatchWithOperationId(matchId, listOf("C"), currentTimeMillis, operationId)
+            }
+            // A never leaves the pitch, it only gets the operationId refresh
+            coVerify {
+                playerTimeRepository.startTimersBatchWithOperationId(matchId, listOf("A"), currentTimeMillis, operationId)
+            }
+        }
+
+    @Test
+    fun `givenUnknownPlayerIn_whenInvoke_thenPairIsDiscardedAndNoGhostPlayerIsCreated`() =
+        runTest {
+            // Given: an incoming player that has no PlayerTime for this match (not called up)
+            val matchId = "1"
+            val currentTimeMillis = System.currentTimeMillis()
+            val operationId = "op-ghost"
+            val match = buildMatch(matchId, startTimeMillis = currentTimeMillis - 60000L)
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+
+            val playerTimes =
+                listOf(
+                    PlayerTime(playerId = "out1", status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "out2", status = PlayerTimeStatus.PLAYING),
+                    PlayerTime(playerId = "in1", status = PlayerTimeStatus.ON_BENCH),
+                )
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
+            coEvery { matchOperationRepository.createOperation(any()) } returns operationId
+
+            val substitutions = mutableListOf<PlayerSubstitution>()
+            coEvery { playerSubstitutionRepository.insertSubstitution(capture(substitutions)) } returns "sub-id"
+
+            val pairs =
+                listOf(
+                    SubstitutionPair(playerOutId = "out1", playerInId = "in1"),
+                    SubstitutionPair(playerOutId = "out2", playerInId = "unknown"),
+                )
+
+            // When
+            registerPlayerSubstitutionUseCase(matchId, pairs, currentTimeMillis)
+
+            // Then - the unknown id never reaches startTimersBatchWithOperationId, which would
+            // upsert a brand new PlayerTime row in PLAYING for a player nobody called up
+            assertEquals(1, substitutions.size)
+            assertEquals("in1", substitutions.first().playerInId)
+            coVerify(exactly = 0) {
+                playerTimeRepository.startTimersBatchWithOperationId(
+                    any(),
+                    match { it.contains("unknown") },
+                    any(),
+                    any(),
+                )
+            }
+            coVerify {
+                playerTimeRepository.substituteOutPlayersBatchWithOperationId(
+                    matchId,
+                    listOf("out1"),
+                    currentTimeMillis,
+                    operationId,
+                )
             }
         }
 }

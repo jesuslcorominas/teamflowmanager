@@ -37,20 +37,17 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         val match = matchRepository.getMatchById(matchId).first()
         requireNotNull(match) { "No active match found" }
 
-        // Single read of player times for the whole batch
+        // Single read of player times for the whole batch. Sets keep the lookups below O(1) while
+        // preserving insertion order, which the "other playing players" batch relies on.
         val playerTimes = getAllPlayerTimesUseCase(matchId).first()
         val playingPlayerIds =
             playerTimes
                 .filter { it.status == PlayerTimeStatus.PLAYING }
                 .map { it.playerId }
+                .toSet()
+        val knownPlayerIds = playerTimes.map { it.playerId }.toSet()
 
-        // Keep only pairs whose leaving player is actually on the pitch. An invalid pair is
-        // silently discarded and never aborts the batch. distinctBy protects against two pairs
-        // sharing the same leaving player: the first one wins.
-        val validPairs =
-            substitutions
-                .filter { it.playerOutId in playingPlayerIds }
-                .distinctBy { it.playerOutId }
+        val validPairs = selectValidPairs(substitutions, playingPlayerIds, knownPlayerIds)
 
         // No valid pair: no operation is created
         if (validPairs.isEmpty()) return
@@ -68,8 +65,9 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
             )
         val operationId = matchOperationRepository.createOperation(operation)
 
+        // Both are already duplicate-free: selectValidPairs consumes each player at most once
         val playerOutIds = validPairs.map { it.playerOutId }
-        val playerInIds = validPairs.map { it.playerInId }.distinct()
+        val playerInIds = validPairs.map { it.playerInId }
 
         // Step 2: Substitute out every leaving player in one call - sets ON_BENCH status
         playerTimeRepository.substituteOutPlayersBatchWithOperationId(
@@ -88,11 +86,11 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         )
 
         // Step 4: Refresh the operationId of the remaining players still on the pitch, so the UI
-        // filter (lastOperationId == match.lastCompletedOperationId) keeps showing them. Incoming
-        // players are excluded too, to avoid writing twice on the same PlayerTime within the same
-        // operation if an incoming player was already PLAYING.
-        val otherPlayingPlayers =
-            playingPlayerIds.filterNot { it in playerOutIds || it in playerInIds }
+        // filter (lastOperationId == match.lastCompletedOperationId) keeps showing them. Only the
+        // leaving players need excluding: selectValidPairs already guarantees that no incoming
+        // player was on the pitch, so none of them can be written twice in the same operation.
+        val substitutedOutPlayerIds = playerOutIds.toSet()
+        val otherPlayingPlayers = playingPlayerIds.filterNot { it in substitutedOutPlayerIds }
         if (otherPlayingPlayers.isNotEmpty()) {
             playerTimeRepository.startTimersBatchWithOperationId(
                 matchId = matchId,
@@ -129,5 +127,50 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
             match = match.copy(lastCompletedOperationId = operationId),
             operationId = operationId,
         )
+    }
+
+    /**
+     * Picks the pairs that can be applied together. An invalid pair is silently discarded and never
+     * aborts the rest of the batch, which is the historical single-pair behaviour.
+     *
+     * Every rule is evaluated against the state read at the start of the batch, so the outcome
+     * depends on the data and not on the order in which the repository calls happen. A pair is
+     * dropped when:
+     * - the leaving player is not on the pitch (nothing to substitute out);
+     * - the incoming player is unknown to the match, which would make
+     *   [PlayerTimeRepository.startTimersBatchWithOperationId] create a brand new PlayerTime row for
+     *   a player that was never called up;
+     * - the incoming player is already on the pitch. This also covers a self-substitution (A -> A)
+     *   and a chained batch (A -> B, B -> C), where benching B and starting B's timer in the same
+     *   operation would leave B playing while the history claims B left;
+     * - the leaving or the incoming player was already consumed by an earlier pair of the same
+     *   batch. Applying only half of such a pair would silently leave the team a player short or a
+     *   player long.
+     */
+    private fun selectValidPairs(
+        substitutions: List<SubstitutionPair>,
+        playingPlayerIds: Set<String>,
+        knownPlayerIds: Set<String>,
+    ): List<SubstitutionPair> {
+        val validPairs = mutableListOf<SubstitutionPair>()
+        val consumedPlayerOutIds = mutableSetOf<String>()
+        val consumedPlayerInIds = mutableSetOf<String>()
+
+        substitutions.forEach { pair ->
+            val isApplicable =
+                pair.playerOutId in playingPlayerIds &&
+                    pair.playerInId in knownPlayerIds &&
+                    pair.playerInId !in playingPlayerIds &&
+                    pair.playerOutId !in consumedPlayerOutIds &&
+                    pair.playerInId !in consumedPlayerInIds
+
+            if (isApplicable) {
+                validPairs += pair
+                consumedPlayerOutIds += pair.playerOutId
+                consumedPlayerInIds += pair.playerInId
+            }
+        }
+
+        return validPairs
     }
 }
