@@ -455,7 +455,6 @@
     <string name="pending_substitutions_clear_all_message">Se borrar\u00e1 la lista completa de cambios programados (%1$d). Esta acci\u00f3n no se puede deshacer.</string>
     <string name="pending_substitutions_conflict_title">Este jugador ya tiene un cambio</string>
     <string name="pending_substitutions_player_already_scheduled">El jugador seleccionado ya tiene un cambio programado. Si continúas, se sustituirá por el nuevo.</string>
-    <string name="pending_substitutions_conflict_message">Si programas %1$s, se descartar\u00e1n estos cambios:</string>
     <string name="pending_substitutions_conflict_confirm">Programar igualmente</string>
     <string name="substitution_result_manual_title">Cambios aplicados</string>
     <string name="substitution_result_resume_title">Cambios aplicados al reanudar</string>

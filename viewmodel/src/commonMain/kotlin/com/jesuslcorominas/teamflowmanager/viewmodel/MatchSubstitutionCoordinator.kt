@@ -135,7 +135,6 @@ internal class MatchSubstitutionCoordinator(
         scope: CoroutineScope,
         mode: SubstitutionMode,
         playerTimes: List<PlayerTimeItem>,
-        squadPlayers: List<Player>,
         currentTimeMillis: Long,
         pendingPairs: List<SubstitutionPair>,
     ) {

@@ -1352,6 +1352,15 @@ private fun PendingSubstitutionsSection(
     val canExpand = canExpandPendingSubstitutions(items)
     val isExpanded = expanded && canExpand
 
+    // Masking an open switch is not the same as closing it. Emptying the queue from an open
+    // section — "substitute all", or "delete all" — made it LOOK shut while `expanded` stayed true
+    // underneath, so the next change queued swung it open on its own, handing the squad list's
+    // space straight back to the cards. That is the very thing this section was reshaped to stop,
+    // arriving through a side door. Emptying the queue closes it for real.
+    LaunchedEffect(canExpand) {
+        if (!canExpand) expanded = false
+    }
+
     if (showClearAllConfirmation) {
         AppAlertDialog(
             title = stringResource(Res.string.pending_substitutions_clear_all_title),

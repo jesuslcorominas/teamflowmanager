@@ -299,7 +299,6 @@ class MatchViewModel internal constructor(
             scope = viewModelScope,
             mode = substitutionMode.value,
             playerTimes = currentState.playerTimes,
-            squadPlayers = squadPlayers.value,
             currentTimeMillis = _currentTime.value,
             pendingPairs = pendingSubstitutions.value.map { it.pair },
         )

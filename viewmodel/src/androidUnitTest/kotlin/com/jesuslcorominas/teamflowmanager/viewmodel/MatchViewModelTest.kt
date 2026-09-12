@@ -766,6 +766,31 @@ class MatchViewModelTest {
     }
 
     @Test
+    fun `givenTheWarningAboutThePlayerComingOn_whenDismissed_thenTheFirstPickSurvives`() = runTest(testDispatcher) {
+        // Given — player 3 is already chosen to come off, and player 4 turns out to be taken
+        givenScheduledMode()
+        givenFourPlayerSquad()
+        pendingStore.value = listOf(PAIR_1_4)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.selectPlayerOut("3")
+        viewModel.substitutePlayer("4")
+        advanceUntilIdle()
+
+        // When — the coach backs out of the warning
+        viewModel.dismissPlayerAlreadyScheduled()
+        advanceUntilIdle()
+
+        // Then — player 3 is STILL chosen. This is the branch the other dismissal test cannot
+        // reach: there the warning is about the player coming off, so selectedPlayerOut is null
+        // before and after and the assertion passes for either reason. Here it is null only if the
+        // dismissal wrongly threw the first pick away, which is the thing being claimed.
+        assertNull(viewModel.playerAlreadyScheduledAlert.value)
+        assertEquals("3", viewModel.selectedPlayerOut.value)
+        verify(exactly = 0) { addPendingSubstitutionUseCase(any(), any()) }
+    }
+
+    @Test
     fun `givenTheWarningAboutThePlayerComingOn_whenConfirmed_thenThePairIsWritten`() = runTest(testDispatcher) {
         // Given
         givenScheduledMode()
