@@ -441,4 +441,29 @@
     <string name="settings_substitution_mode_scheduled">Cambios programados</string>
     <string name="settings_substitution_mode_scheduled_hint">Los cambios se acumulan y se aplican juntos cuando los confirmas.</string>
     <string name="settings_substitutions_section">Sustituciones</string>
+
+    <!-- Scheduled substitutions -->
+    <string name="pending_substitutions_title">Cambios programados (%1$d)</string>
+    <string name="pending_substitutions_execute_all">Cambiar todos</string>
+    <string name="pending_substitutions_clear_all">Borrar todos</string>
+    <string name="pending_substitutions_execute_one">Aplicar este cambio</string>
+    <string name="pending_substitutions_remove_one">Borrar este cambio</string>
+    <string name="pending_substitutions_paused_hint">Con el partido en pausa los cambios no pueden aplicarse todav\u00eda: se aplicar\u00e1n autom\u00e1ticamente al reanudar.</string>
+    <string name="pending_substitutions_clear_all_title">\u00bfBorrar todos los cambios?</string>
+    <string name="pending_substitutions_clear_all_message">Se perder\u00e1n los %1$d cambios programados. Esta acci\u00f3n no se puede deshacer.</string>
+    <string name="pending_substitutions_conflict_title">Este jugador ya tiene un cambio</string>
+    <string name="pending_substitutions_conflict_message">Si programas %1$s, se descartar\u00e1n estos cambios:</string>
+    <string name="pending_substitutions_conflict_confirm">Programar igualmente</string>
+    <string name="substitution_result_manual_title">Cambios aplicados</string>
+    <string name="substitution_result_resume_title">Cambios aplicados al reanudar</string>
+    <string name="substitution_result_resume_intro">Estos cambios se ejecutaron solos al reanudar el partido:</string>
+    <string name="substitution_result_applied_header">Aplicados (%1$d)</string>
+    <string name="substitution_result_discarded_header">No aplicados (%1$d)</string>
+    <string name="substitution_result_snackbar_applied">%1$d cambios aplicados</string>
+    <string name="substitution_result_pair">%1$d %2$s \u2192 %3$d %4$s</string>
+    <string name="substitution_result_pair_discarded">%1$d %2$s \u2192 %3$d %4$s: %5$s</string>
+    <string name="substitution_discard_reason_out_not_playing">no estaba en el campo</string>
+    <string name="substitution_discard_reason_in_already_playing">ya estaba jugando</string>
+    <string name="substitution_discard_reason_in_not_in_match">no est\u00e1 convocado</string>
+    <string name="substitution_discard_reason_already_in_batch">ya estaba en otro cambio de esta tanda</string>
 </resources>
