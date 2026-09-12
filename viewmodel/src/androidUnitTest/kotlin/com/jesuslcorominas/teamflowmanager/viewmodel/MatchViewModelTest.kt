@@ -183,14 +183,19 @@ class MatchViewModelTest {
     private fun createViewModel() = MatchViewModel(
         matchId = MATCH_ID,
         getMatchById = getMatchByIdUseCase,
-        getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
         finishMatch = finishMatchUseCase,
         pauseMatch = pauseMatchUseCase,
         resumeMatchUseCase = resumeMatchUseCase,
         startMatchTimerUseCase = startMatchTimerUseCase,
         registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
-        getMatchSummaryUseCase = getMatchSummaryUseCase,
-        getMatchTimelineUseCase = getMatchTimelineUseCase,
+        stateLoader =
+            MatchStateLoader(
+                getMatchById = getMatchByIdUseCase,
+                getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
+                getPlayersByTeamUseCase = getPlayersByTeamUseCase,
+                getMatchTimelineUseCase = getMatchTimelineUseCase,
+                getMatchSummaryUseCase = getMatchSummaryUseCase,
+            ),
         goalRecorder =
             MatchGoalRecorder(
                 registerGoal = registerGoalUseCase,
@@ -216,7 +221,6 @@ class MatchViewModelTest {
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
         getTeamUseCase = getTeamUseCase,
-        getPlayersByTeamUseCase = getPlayersByTeamUseCase,
         observeSubstitutionModeUseCase = observeSubstitutionModeUseCase,
         observePendingSubstitutionsUseCase = observePendingSubstitutionsUseCase,
         getPendingSubstitutionConflictsUseCase = getPendingSubstitutionConflictsUseCase,

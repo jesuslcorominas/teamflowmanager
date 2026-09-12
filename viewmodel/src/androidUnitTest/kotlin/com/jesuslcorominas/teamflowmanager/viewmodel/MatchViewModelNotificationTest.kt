@@ -144,14 +144,19 @@ class MatchViewModelNotificationTest {
     private fun createViewModel(): MatchViewModel = MatchViewModel(
         matchId = MATCH_ID,
         getMatchById = getMatchByIdUseCase,
-        getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
         finishMatch = mockk(relaxed = true),
         pauseMatch = mockk(relaxed = true),
         resumeMatchUseCase = mockk(relaxed = true),
         startMatchTimerUseCase = mockk(relaxed = true),
         registerPlayerSubstitutionUseCase = mockk(relaxed = true),
-        getMatchSummaryUseCase = mockk(relaxed = true),
-        getMatchTimelineUseCase = getMatchTimelineUseCase,
+        stateLoader =
+            MatchStateLoader(
+                getMatchById = getMatchByIdUseCase,
+                getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
+                getPlayersByTeamUseCase = mockk { every { this@mockk(any()) } returns flowOf(players) },
+                getMatchTimelineUseCase = getMatchTimelineUseCase,
+                getMatchSummaryUseCase = mockk(relaxed = true),
+            ),
         goalRecorder =
             MatchGoalRecorder(
                 registerGoal = registerGoalUseCase,
@@ -177,7 +182,6 @@ class MatchViewModelNotificationTest {
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
         getTeamUseCase = getTeamUseCase,
-        getPlayersByTeamUseCase = mockk { every { this@mockk(any()) } returns flowOf(players) },
         observeSubstitutionModeUseCase = mockk { every { this@mockk() } returns flowOf(SubstitutionMode.LIVE) },
         observePendingSubstitutionsUseCase = mockk { every { this@mockk(any()) } returns flowOf(emptyList()) },
         getPendingSubstitutionConflictsUseCase = mockk(relaxed = true),

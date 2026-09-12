@@ -14,15 +14,11 @@ fun Scope.createMatchViewModel(matchId: String): MatchViewModel =
     MatchViewModel(
         matchId = matchId,
         getMatchById = get(),
-        getAllPlayerTimesUseCase = get(),
-        getPlayersByTeamUseCase = get(),
         finishMatch = get(),
         pauseMatch = get(),
         resumeMatchUseCase = get(),
         startMatchTimerUseCase = get(),
         registerPlayerSubstitutionUseCase = get(),
-        getMatchSummaryUseCase = get(),
-        getMatchTimelineUseCase = get(),
         startTimeoutUseCase = get(),
         endTimeoutUseCase = get(),
         synchronizeTimeUseCase = get(),
@@ -40,6 +36,14 @@ fun Scope.createMatchViewModel(matchId: String): MatchViewModel =
         addPendingSubstitutionUseCase = get(),
         removePendingSubstitutionUseCase = get(),
         clearPendingSubstitutionsUseCase = get(),
+        stateLoader =
+            MatchStateLoader(
+                getMatchById = get(),
+                getAllPlayerTimesUseCase = get(),
+                getPlayersByTeamUseCase = get(),
+                getMatchTimelineUseCase = get(),
+                getMatchSummaryUseCase = get(),
+            ),
         goalRecorder =
             MatchGoalRecorder(
                 registerGoal = get(),
