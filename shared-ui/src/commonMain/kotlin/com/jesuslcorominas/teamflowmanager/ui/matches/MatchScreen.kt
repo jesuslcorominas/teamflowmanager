@@ -1321,17 +1321,19 @@ private fun PendingSubstitutionsSection(
     }
 
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = TFMSpacing.spacing02)) {
+        // Title and actions on separate rows: side by side, the Spanish title wraps onto a second
+        // line and reads as a mistake. Two rows survive any locale and any screen width.
+        Text(
+            text = stringResource(Res.string.pending_substitutions_title, items.size),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+        )
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
         ) {
-            Text(
-                text = stringResource(Res.string.pending_substitutions_title, items.size),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-            )
-
             TextButton(onClick = onExecuteAll, enabled = canExecute) {
                 Text(text = stringResource(Res.string.pending_substitutions_execute_all))
             }
