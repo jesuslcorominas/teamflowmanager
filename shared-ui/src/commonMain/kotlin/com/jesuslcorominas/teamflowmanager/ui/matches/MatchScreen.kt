@@ -497,7 +497,7 @@ private fun MatchDetailContent(
                 items = state.playerTimes.sortedBy(currentSortOrder, state.match),
                 key = { it.player.id },
             ) { playerTimeItem ->
-                val isPlaying = if (state.match.isInProgress) playerTimeItem.isRunning else false
+                val isPlaying = isOnPitchForDisplay(substitutionMode, state.match, playerTimeItem)
                 PlayerItem(
                     modifier =
                         Modifier.animateItem(
@@ -513,7 +513,7 @@ private fun MatchDetailContent(
                     showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
                     isSelected = selectedPlayerOut == playerTimeItem.player.id,
                     onClick =
-                        if (state.match.isInProgress && !readOnly) {
+                        if (canSelectPlayerForSubstitution(substitutionMode, state.match, readOnly)) {
                             { onPlayerClick(playerTimeItem.player.id) }
                         } else {
                             null
