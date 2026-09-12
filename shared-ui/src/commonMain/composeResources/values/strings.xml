@@ -441,4 +441,30 @@
     <string name="settings_substitution_mode_scheduled">Scheduled substitutions</string>
     <string name="settings_substitution_mode_scheduled_hint">Substitutions are queued and applied together when you confirm them.</string>
     <string name="settings_substitutions_section">Substitutions</string>
+
+    <!-- Scheduled substitutions -->
+    <string name="pending_substitutions_title">Scheduled changes (%1$d)</string>
+    <string name="pending_substitutions_execute_all">Substitute all</string>
+    <string name="pending_substitutions_clear_all">Delete all</string>
+    <string name="pending_substitutions_execute_one">Apply this change</string>
+    <string name="pending_substitutions_remove_one">Delete this change</string>
+    <string name="pending_substitutions_paused_hint">While the match is paused these changes cannot be applied yet: they will be applied automatically when you resume.</string>
+    <string name="pending_substitutions_clear_all_title">Delete all changes?</string>
+    <string name="pending_substitutions_clear_all_message">This deletes the whole list of scheduled changes (%1$d). It cannot be undone.</string>
+    <string name="pending_substitutions_conflict_title">This player already has a change</string>
+    <string name="pending_substitutions_conflict_message">If you schedule %1$s, these changes will be discarded:</string>
+    <string name="pending_substitutions_conflict_confirm">Schedule anyway</string>
+    <string name="substitution_result_manual_title">Changes applied</string>
+    <string name="substitution_result_resume_title">Changes applied on resume</string>
+    <string name="substitution_result_resume_intro">These changes ran on their own when the match was resumed:</string>
+    <string name="substitution_result_applied_header">Applied (%1$d)</string>
+    <string name="substitution_result_discarded_header">Not applied (%1$d)</string>
+    <string name="substitution_result_snackbar_applied">Changes applied: %1$d</string>
+    <string name="substitution_result_pair">%1$d %2$s \u2192 %3$d %4$s</string>
+    <string name="substitution_result_pair_discarded">%1$d %2$s \u2192 %3$d %4$s: %5$s</string>
+    <string name="substitution_discard_subject_either">One of the two players</string>
+    <string name="substitution_discard_reason_out_not_playing">%1$s was not on the pitch</string>
+    <string name="substitution_discard_reason_in_already_playing">%1$s was already on the pitch</string>
+    <string name="substitution_discard_reason_in_not_in_match">%1$s is not in the squad call-up</string>
+    <string name="substitution_discard_reason_already_in_batch">%1$s was already part of another change in this batch</string>
 </resources>
