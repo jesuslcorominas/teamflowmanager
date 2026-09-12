@@ -148,7 +148,21 @@ class MatchViewModelNotificationTest {
         pauseMatch = mockk(relaxed = true),
         resumeMatchUseCase = mockk(relaxed = true),
         startMatchTimerUseCase = mockk(relaxed = true),
-        registerPlayerSubstitutionUseCase = mockk(relaxed = true),
+        substitutions =
+            MatchSubstitutionCoordinator(
+                matchId = MATCH_ID,
+                registerPlayerSubstitutionUseCase = mockk(relaxed = true),
+                observeSubstitutionModeUseCase = mockk { every { this@mockk() } returns flowOf(SubstitutionMode.LIVE) },
+                observePendingSubstitutionsUseCase = mockk { every { this@mockk(any()) } returns flowOf(emptyList()) },
+                getPendingSubstitutionConflictsUseCase = mockk(relaxed = true),
+                addPendingSubstitutionUseCase = mockk(relaxed = true),
+                removePendingSubstitutionUseCase = mockk(relaxed = true),
+                clearPendingSubstitutionsUseCase = mockk(relaxed = true),
+                shouldShowInvalidSubstitutionAlertUseCase = mockk(relaxed = true),
+                setShouldShowInvalidSubstitutionAlertUseCase = mockk(relaxed = true),
+                analyticsTracker = analyticsTracker,
+                crashReporter = crashReporter,
+            ),
         stateLoader =
             MatchStateLoader(
                 getMatchById = getMatchByIdUseCase,
@@ -175,19 +189,11 @@ class MatchViewModelNotificationTest {
             ),
         synchronizeTimeUseCase = mockk(relaxed = true),
         startPlayerTimersBatchUseCase = mockk(relaxed = true),
-        shouldShowInvalidSubstitutionAlertUseCase = mockk { every { this@mockk() } returns false },
-        setShouldShowInvalidSubstitutionAlertUseCase = mockk(relaxed = true),
         timeTicker = fakeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
         getTeamUseCase = getTeamUseCase,
-        observeSubstitutionModeUseCase = mockk { every { this@mockk() } returns flowOf(SubstitutionMode.LIVE) },
-        observePendingSubstitutionsUseCase = mockk { every { this@mockk(any()) } returns flowOf(emptyList()) },
-        getPendingSubstitutionConflictsUseCase = mockk(relaxed = true),
-        addPendingSubstitutionUseCase = mockk(relaxed = true),
-        removePendingSubstitutionUseCase = mockk(relaxed = true),
-        clearPendingSubstitutionsUseCase = mockk(relaxed = true),
     )
 
     // ── fireNotification – integration with notifyPresidentMatchEventUseCase ──

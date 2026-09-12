@@ -80,9 +80,9 @@ class MatchViewModelGoalTest {
         getMatchByIdUseCase = mockk()
         getAllPlayerTimesUseCase = mockk()
         registerGoalUseCase = mockk(relaxed = true)
-        shouldShowInvalidSubstitutionAlertUseCase = mockk()
         analyticsTracker = mockk(relaxed = true)
         crashReporter = mockk(relaxed = true)
+        shouldShowInvalidSubstitutionAlertUseCase = mockk()
         fakeTicker = FakeTimeTicker()
 
         every { shouldShowInvalidSubstitutionAlertUseCase.invoke() } returns false
@@ -107,7 +107,21 @@ class MatchViewModelGoalTest {
         pauseMatch = mockk(relaxed = true),
         resumeMatchUseCase = mockk(relaxed = true),
         startMatchTimerUseCase = mockk(relaxed = true),
-        registerPlayerSubstitutionUseCase = mockk(relaxed = true),
+        substitutions =
+            MatchSubstitutionCoordinator(
+                matchId = MATCH_ID,
+                registerPlayerSubstitutionUseCase = mockk(relaxed = true),
+                observeSubstitutionModeUseCase = mockk { every { this@mockk() } returns flowOf(SubstitutionMode.LIVE) },
+                observePendingSubstitutionsUseCase = mockk { every { this@mockk(any()) } returns flowOf(emptyList()) },
+                getPendingSubstitutionConflictsUseCase = mockk(relaxed = true),
+                addPendingSubstitutionUseCase = mockk(relaxed = true),
+                removePendingSubstitutionUseCase = mockk(relaxed = true),
+                clearPendingSubstitutionsUseCase = mockk(relaxed = true),
+                shouldShowInvalidSubstitutionAlertUseCase = shouldShowInvalidSubstitutionAlertUseCase,
+                setShouldShowInvalidSubstitutionAlertUseCase = mockk(relaxed = true),
+                analyticsTracker = analyticsTracker,
+                crashReporter = crashReporter,
+            ),
         stateLoader =
             MatchStateLoader(
                 getMatchById = getMatchByIdUseCase,
@@ -134,19 +148,11 @@ class MatchViewModelGoalTest {
             ),
         synchronizeTimeUseCase = mockk(relaxed = true),
         startPlayerTimersBatchUseCase = mockk(relaxed = true),
-        shouldShowInvalidSubstitutionAlertUseCase = shouldShowInvalidSubstitutionAlertUseCase,
-        setShouldShowInvalidSubstitutionAlertUseCase = mockk(relaxed = true),
         timeTicker = fakeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = mockk(relaxed = true),
         getTeamUseCase = mockk(relaxed = true),
-        observeSubstitutionModeUseCase = mockk { every { this@mockk() } returns flowOf(SubstitutionMode.LIVE) },
-        observePendingSubstitutionsUseCase = mockk { every { this@mockk(any()) } returns flowOf(emptyList()) },
-        getPendingSubstitutionConflictsUseCase = mockk(relaxed = true),
-        addPendingSubstitutionUseCase = mockk(relaxed = true),
-        removePendingSubstitutionUseCase = mockk(relaxed = true),
-        clearPendingSubstitutionsUseCase = mockk(relaxed = true),
     )
 
     @Test

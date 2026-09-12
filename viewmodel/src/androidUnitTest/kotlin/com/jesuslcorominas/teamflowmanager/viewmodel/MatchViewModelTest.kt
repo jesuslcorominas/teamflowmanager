@@ -187,7 +187,21 @@ class MatchViewModelTest {
         pauseMatch = pauseMatchUseCase,
         resumeMatchUseCase = resumeMatchUseCase,
         startMatchTimerUseCase = startMatchTimerUseCase,
-        registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
+        substitutions =
+            MatchSubstitutionCoordinator(
+                matchId = MATCH_ID,
+                registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
+                observeSubstitutionModeUseCase = observeSubstitutionModeUseCase,
+                observePendingSubstitutionsUseCase = observePendingSubstitutionsUseCase,
+                getPendingSubstitutionConflictsUseCase = getPendingSubstitutionConflictsUseCase,
+                addPendingSubstitutionUseCase = addPendingSubstitutionUseCase,
+                removePendingSubstitutionUseCase = removePendingSubstitutionUseCase,
+                clearPendingSubstitutionsUseCase = clearPendingSubstitutionsUseCase,
+                shouldShowInvalidSubstitutionAlertUseCase = shouldShowInvalidSubstitutionAlertUseCase,
+                setShouldShowInvalidSubstitutionAlertUseCase = setShouldShowInvalidSubstitutionAlertUseCase,
+                analyticsTracker = analyticsTracker,
+                crashReporter = crashReporter,
+            ),
         stateLoader =
             MatchStateLoader(
                 getMatchById = getMatchByIdUseCase,
@@ -214,19 +228,11 @@ class MatchViewModelTest {
             ),
         synchronizeTimeUseCase = synchronizeTimeUseCase,
         startPlayerTimersBatchUseCase = startPlayerTimersBatchUseCase,
-        shouldShowInvalidSubstitutionAlertUseCase = shouldShowInvalidSubstitutionAlertUseCase,
-        setShouldShowInvalidSubstitutionAlertUseCase = setShouldShowInvalidSubstitutionAlertUseCase,
         timeTicker = fakeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,
         notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
         getTeamUseCase = getTeamUseCase,
-        observeSubstitutionModeUseCase = observeSubstitutionModeUseCase,
-        observePendingSubstitutionsUseCase = observePendingSubstitutionsUseCase,
-        getPendingSubstitutionConflictsUseCase = getPendingSubstitutionConflictsUseCase,
-        addPendingSubstitutionUseCase = addPendingSubstitutionUseCase,
-        removePendingSubstitutionUseCase = removePendingSubstitutionUseCase,
-        clearPendingSubstitutionsUseCase = clearPendingSubstitutionsUseCase,
     )
 
     @Test
