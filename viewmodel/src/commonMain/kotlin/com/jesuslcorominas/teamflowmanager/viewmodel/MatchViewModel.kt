@@ -87,7 +87,7 @@ class MatchViewModel internal constructor(
             .pendingItems(squadPlayers)
             .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val pendingSubstitutionConflict: StateFlow<PendingSubstitutionConflict?> get() = substitutions.pendingSubstitutionConflict
+    val playerAlreadyScheduledAlert: StateFlow<PlayerAlreadyScheduledAlert?> get() = substitutions.playerAlreadyScheduledAlert
 
     /**
      * Outcome of the last batch. Held rather than emitted once: the batch that runs on resume has
@@ -275,7 +275,12 @@ class MatchViewModel internal constructor(
     fun selectPlayerOut(playerId: String) {
         val currentState = _uiState.value
         if (currentState is MatchUiState.Success) {
-            substitutions.selectPlayerOut(playerId, currentState.playerTimes, substitutionMode.value)
+            substitutions.selectPlayerOut(
+                playerId = playerId,
+                playerTimes = currentState.playerTimes,
+                mode = substitutionMode.value,
+                pendingPairs = pendingSubstitutions.value.map { it.pair },
+            )
         }
     }
 
@@ -296,6 +301,7 @@ class MatchViewModel internal constructor(
             playerTimes = currentState.playerTimes,
             squadPlayers = squadPlayers.value,
             currentTimeMillis = _currentTime.value,
+            pendingPairs = pendingSubstitutions.value.map { it.pair },
         )
     }
 
@@ -318,12 +324,12 @@ class MatchViewModel internal constructor(
         )
     }
 
-    fun confirmPendingSubstitutionConflict() {
-        substitutions.confirmPendingSubstitutionConflict()
+    fun confirmPlayerAlreadyScheduled() {
+        substitutions.confirmPlayerAlreadyScheduled()
     }
 
-    fun dismissPendingSubstitutionConflict() {
-        substitutions.dismissPendingSubstitutionConflict()
+    fun dismissPlayerAlreadyScheduled() {
+        substitutions.dismissPlayerAlreadyScheduled()
     }
 
     fun removePendingSubstitution(pair: SubstitutionPair) {

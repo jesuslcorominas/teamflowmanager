@@ -17,7 +17,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPendingSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearPendingSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPendingSubstitutionConflictsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObservePendingSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePendingSubstitutionUseCase
@@ -98,7 +97,6 @@ class MatchViewModelTest {
     private lateinit var getPlayersByTeamUseCase: GetPlayersByTeamUseCase
     private lateinit var observeSubstitutionModeUseCase: ObserveSubstitutionModeUseCase
     private lateinit var observePendingSubstitutionsUseCase: ObservePendingSubstitutionsUseCase
-    private lateinit var getPendingSubstitutionConflictsUseCase: GetPendingSubstitutionConflictsUseCase
     private lateinit var addPendingSubstitutionUseCase: AddPendingSubstitutionUseCase
     private lateinit var removePendingSubstitutionUseCase: RemovePendingSubstitutionUseCase
     private lateinit var clearPendingSubstitutionsUseCase: ClearPendingSubstitutionsUseCase
@@ -156,7 +154,6 @@ class MatchViewModelTest {
         getPlayersByTeamUseCase = mockk(relaxed = true)
         observeSubstitutionModeUseCase = mockk()
         observePendingSubstitutionsUseCase = mockk()
-        getPendingSubstitutionConflictsUseCase = mockk()
         addPendingSubstitutionUseCase = mockk(relaxed = true)
         removePendingSubstitutionUseCase = mockk(relaxed = true)
         clearPendingSubstitutionsUseCase = mockk(relaxed = true)
@@ -166,7 +163,6 @@ class MatchViewModelTest {
         // immediate path it was written for. The scheduled tests override these explicitly.
         every { observeSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.LIVE)
         every { observePendingSubstitutionsUseCase(any()) } returns pendingStore
-        every { getPendingSubstitutionConflictsUseCase(any(), any()) } returns emptyList()
 
         every { getMatchByIdUseCase(MATCH_ID) } returns flowOf(testMatch)
         every { getAllPlayerTimesUseCase(any()) } returns flowOf(playerTimes)
@@ -202,7 +198,6 @@ class MatchViewModelTest {
                 registerPlayerSubstitutionUseCase = registerPlayerSubstitutionUseCase,
                 observeSubstitutionModeUseCase = observeSubstitutionModeUseCase,
                 observePendingSubstitutionsUseCase = observePendingSubstitutionsUseCase,
-                getPendingSubstitutionConflictsUseCase = getPendingSubstitutionConflictsUseCase,
                 addPendingSubstitutionUseCase = addPendingSubstitutionUseCase,
                 removePendingSubstitutionUseCase = removePendingSubstitutionUseCase,
                 clearPendingSubstitutionsUseCase = clearPendingSubstitutionsUseCase,
@@ -662,57 +657,171 @@ class MatchViewModelTest {
     }
 
     @Test
-    fun `givenAPlayerAlreadyQueued_whenSchedulingHimAgain_thenWarnsBeforeWritingAnything`() = runTest(testDispatcher) {
+    fun `givenAQueuedPlayer_whenPickedToComeOff_thenWarnsAtThatMomentAndSelectsNobodyYet`() = runTest(testDispatcher) {
+        // Given — player 1 already has a change waiting
+        givenScheduledMode()
+        givenFourPlayerSquad()
+        pendingStore.value = listOf(PAIR_1_4)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When — they are picked as the player coming off, and nothing more
+        viewModel.selectPlayerOut("1")
+        advanceUntilIdle()
+
+        // Then — asked straight away, about the only player picked so far, and not yet selected:
+        // this is the whole point of moving the question off the save.
+        assertEquals("1", viewModel.playerAlreadyScheduledAlert.value?.playerId)
+        assertNull(viewModel.selectedPlayerOut.value)
+        verify(exactly = 0) { addPendingSubstitutionUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `givenTheWarningAboutThePlayerComingOff_whenConfirmed_thenHeIsSelectedAndNothingIsWrittenYet`() =
+        runTest(testDispatcher) {
+            // Given
+            givenScheduledMode()
+            givenFourPlayerSquad()
+            pendingStore.value = listOf(PAIR_1_4)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+            viewModel.selectPlayerOut("1")
+            advanceUntilIdle()
+
+            // When
+            viewModel.confirmPlayerAlreadyScheduled()
+            advanceUntilIdle()
+
+            // Then — confirming picks the player; who comes on is still an open question
+            assertNull(viewModel.playerAlreadyScheduledAlert.value)
+            assertEquals("1", viewModel.selectedPlayerOut.value)
+            verify(exactly = 0) { addPendingSubstitutionUseCase(any(), any()) }
+        }
+
+    @Test
+    fun `givenTheWarningWasAcceptedForThePlayerComingOff_whenTheOtherIsPicked_thenItIsNotAskedAgain`() =
+        runTest(testDispatcher) {
+            // Given — the coach has already said yes about player 1
+            givenScheduledMode()
+            givenFourPlayerSquad()
+            pendingStore.value = listOf(PAIR_1_4)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+            viewModel.selectPlayerOut("1")
+            viewModel.confirmPlayerAlreadyScheduled()
+            advanceUntilIdle()
+
+            // When — player 2, who has no change of their own, comes on
+            viewModel.substitutePlayer("2")
+            advanceUntilIdle()
+
+            // Then — written without a second dialog. A permission already granted is not asked
+            // for again; that is how people learn to dismiss dialogs unread.
+            assertNull(viewModel.playerAlreadyScheduledAlert.value)
+            verify(exactly = 1) { addPendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
+        }
+
+    @Test
+    fun `givenTheWarningAboutThePlayerComingOff_whenDismissed_thenNobodyIsSelected`() = runTest(testDispatcher) {
         // Given
         givenScheduledMode()
         givenFourPlayerSquad()
         pendingStore.value = listOf(PAIR_1_4)
-        every { getPendingSubstitutionConflictsUseCase(MATCH_ID, PAIR_1_2) } returns listOf(PAIR_1_4)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.selectPlayerOut("1")
+        advanceUntilIdle()
+
+        // When
+        viewModel.dismissPlayerAlreadyScheduled()
+        advanceUntilIdle()
+
+        // Then
+        assertNull(viewModel.playerAlreadyScheduledAlert.value)
+        assertNull(viewModel.selectedPlayerOut.value)
+        verify(exactly = 0) { addPendingSubstitutionUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `givenAQueuedPlayer_whenPickedToComeOn_thenWarnsAndKeepsTheFirstPick`() = runTest(testDispatcher) {
+        // Given — player 4 is the incoming half of a queued change; player 3 has none
+        givenScheduledMode()
+        givenFourPlayerSquad()
+        pendingStore.value = listOf(PAIR_1_4)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.selectPlayerOut("3")
+        advanceUntilIdle()
+
+        // When
+        viewModel.substitutePlayer("4")
+        advanceUntilIdle()
+
+        // Then — the warning names the player just tapped, not the one picked earlier, and nothing
+        // is written. The first pick survives: the coach was told this player is taken, not that
+        // they should start over.
+        assertEquals("4", viewModel.playerAlreadyScheduledAlert.value?.playerId)
+        assertEquals("3", viewModel.selectedPlayerOut.value)
+        verify(exactly = 0) { addPendingSubstitutionUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `givenTheWarningAboutThePlayerComingOn_whenConfirmed_thenThePairIsWritten`() = runTest(testDispatcher) {
+        // Given
+        givenScheduledMode()
+        givenFourPlayerSquad()
+        pendingStore.value = listOf(PAIR_1_4)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.selectPlayerOut("3")
+        viewModel.substitutePlayer("4")
+        advanceUntilIdle()
+
+        // When
+        viewModel.confirmPlayerAlreadyScheduled()
+        advanceUntilIdle()
+
+        // Then — the store drops the pair this displaces; the ViewModel only writes the new one
+        assertNull(viewModel.playerAlreadyScheduledAlert.value)
+        verify(exactly = 1) { addPendingSubstitutionUseCase(MATCH_ID, PAIR_3_4) }
+        assertNull(viewModel.selectedPlayerOut.value)
+    }
+
+    @Test
+    fun `givenTwoPlayersWithNoChangeOfTheirOwn_whenScheduled_thenNothingIsAskedAtAll`() = runTest(testDispatcher) {
+        // Given — a queue that involves neither of the two about to be picked
+        givenScheduledMode()
+        givenFourPlayerSquad()
+        pendingStore.value = listOf(PAIR_1_4)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.selectPlayerOut("3")
+        viewModel.substitutePlayer("2")
+        advanceUntilIdle()
+
+        // Then — straight through, no dialog on the way in and none on the way out
+        assertNull(viewModel.playerAlreadyScheduledAlert.value)
+        verify(exactly = 1) { addPendingSubstitutionUseCase(MATCH_ID, SubstitutionPair(playerOutId = "3", playerInId = "2")) }
+    }
+
+    @Test
+    fun `givenLiveMode_whenPickingAPlayerWithAQueuedChange_thenNothingIsAsked`() = runTest(testDispatcher) {
+        // Given — a queue that outlived a switch to live. Nothing here displaces anything: a live
+        // substitution applies at once and leaves the queue alone, so a warning would be noise.
+        givenFourPlayerSquad()
+        pendingStore.value = listOf(PAIR_1_4)
         val viewModel = createViewModel()
         advanceUntilIdle()
 
         // When
         viewModel.selectPlayerOut("1")
-        viewModel.substitutePlayer("2")
         advanceUntilIdle()
 
-        // Then — the coach is asked first; the destructive write has NOT happened
-        val conflict = viewModel.pendingSubstitutionConflict.value
-        assertEquals(PAIR_1_2, conflict?.requested?.pair)
-        assertEquals(listOf(PAIR_1_4), conflict?.displaced?.map { it.pair })
-        verify(exactly = 0) { addPendingSubstitutionUseCase(any(), any()) }
-    }
-
-    @Test
-    fun `givenAConflictWarning_whenConfirmed_thenSchedulesIt_andWhenDismissed_thenDoesNot`() = runTest(testDispatcher) {
-        // Given
-        givenScheduledMode()
-        givenFourPlayerSquad()
-        pendingStore.value = listOf(PAIR_1_4)
-        every { getPendingSubstitutionConflictsUseCase(MATCH_ID, PAIR_1_2) } returns listOf(PAIR_1_4)
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-        viewModel.selectPlayerOut("1")
-        viewModel.substitutePlayer("2")
-        advanceUntilIdle()
-
-        // When — confirmed
-        viewModel.confirmPendingSubstitutionConflict()
-
-        // Then — the store itself drops the displaced pair; the ViewModel only writes the new one
-        verify(exactly = 1) { addPendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
-        assertNull(viewModel.pendingSubstitutionConflict.value)
-
-        // When — warned again and dismissed
-        viewModel.selectPlayerOut("1")
-        viewModel.substitutePlayer("2")
-        advanceUntilIdle()
-        viewModel.dismissPendingSubstitutionConflict()
-
-        // Then — no second write, and nothing already queued was lost
-        verify(exactly = 1) { addPendingSubstitutionUseCase(MATCH_ID, PAIR_1_2) }
-        assertNull(viewModel.pendingSubstitutionConflict.value)
-        assertNull(viewModel.selectedPlayerOut.value)
+        // Then
+        assertNull(viewModel.playerAlreadyScheduledAlert.value)
+        assertEquals("1", viewModel.selectedPlayerOut.value)
     }
 
     @Test

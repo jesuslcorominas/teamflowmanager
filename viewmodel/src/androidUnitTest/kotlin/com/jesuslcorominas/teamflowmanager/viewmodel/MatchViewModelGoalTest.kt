@@ -122,7 +122,6 @@ class MatchViewModelGoalTest {
                 registerPlayerSubstitutionUseCase = mockk(relaxed = true),
                 observeSubstitutionModeUseCase = mockk { every { this@mockk() } returns flowOf(SubstitutionMode.LIVE) },
                 observePendingSubstitutionsUseCase = mockk { every { this@mockk(any()) } returns flowOf(emptyList()) },
-                getPendingSubstitutionConflictsUseCase = mockk(relaxed = true),
                 addPendingSubstitutionUseCase = mockk(relaxed = true),
                 removePendingSubstitutionUseCase = mockk(relaxed = true),
                 clearPendingSubstitutionsUseCase = mockk(relaxed = true),

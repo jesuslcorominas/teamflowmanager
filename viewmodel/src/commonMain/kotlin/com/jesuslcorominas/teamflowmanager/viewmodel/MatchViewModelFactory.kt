@@ -38,7 +38,6 @@ fun Scope.createMatchViewModel(matchId: String): MatchViewModel =
                 registerPlayerSubstitutionUseCase = get(),
                 observeSubstitutionModeUseCase = get(),
                 observePendingSubstitutionsUseCase = get(),
-                getPendingSubstitutionConflictsUseCase = get(),
                 addPendingSubstitutionUseCase = get(),
                 removePendingSubstitutionUseCase = get(),
                 clearPendingSubstitutionsUseCase = get(),
