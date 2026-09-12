@@ -194,8 +194,13 @@ class MatchViewModelTest {
         registerGoal = registerGoalUseCase,
         startTimeoutUseCase = startTimeoutUseCase,
         endTimeoutUseCase = endTimeoutUseCase,
-        getMatchReportData = getMatchReportDataUseCase,
-        exportMatchReportToPdf = exportMatchReportToPdfUseCase,
+        reportExporter =
+            MatchReportExporter(
+                getMatchReportData = getMatchReportDataUseCase,
+                exportMatchReportToPdf = exportMatchReportToPdfUseCase,
+                analyticsTracker = analyticsTracker,
+                crashReporter = crashReporter,
+            ),
         synchronizeTimeUseCase = synchronizeTimeUseCase,
         startPlayerTimersBatchUseCase = startPlayerTimersBatchUseCase,
         shouldShowInvalidSubstitutionAlertUseCase = shouldShowInvalidSubstitutionAlertUseCase,

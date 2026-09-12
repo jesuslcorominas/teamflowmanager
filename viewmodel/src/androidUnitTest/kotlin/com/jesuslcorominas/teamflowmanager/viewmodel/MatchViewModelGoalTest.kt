@@ -114,8 +114,13 @@ class MatchViewModelGoalTest {
         registerGoal = registerGoalUseCase,
         startTimeoutUseCase = mockk(relaxed = true),
         endTimeoutUseCase = mockk(relaxed = true),
-        getMatchReportData = mockk(relaxed = true),
-        exportMatchReportToPdf = mockk(relaxed = true),
+        reportExporter =
+            MatchReportExporter(
+                getMatchReportData = mockk(relaxed = true),
+                exportMatchReportToPdf = mockk(relaxed = true),
+                analyticsTracker = analyticsTracker,
+                crashReporter = crashReporter,
+            ),
         synchronizeTimeUseCase = mockk(relaxed = true),
         startPlayerTimersBatchUseCase = mockk(relaxed = true),
         shouldShowInvalidSubstitutionAlertUseCase = shouldShowInvalidSubstitutionAlertUseCase,

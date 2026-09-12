@@ -15,11 +15,9 @@ import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPendingSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearPendingSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.ExportMatchReportToPdfUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchReportDataUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchSummaryUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchTimelineUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPendingSubstitutionConflictsUseCase
@@ -54,7 +52,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class MatchViewModel(
+/**
+ * Constructor is `internal`: its collaborators are internal to this module, and a public
+ * constructor cannot expose them. Build it from outside with [createMatchViewModel].
+ */
+class MatchViewModel internal constructor(
     private val matchId: String,
     private val getMatchById: GetMatchByIdUseCase,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
@@ -69,8 +71,6 @@ class MatchViewModel(
     private val registerGoal: RegisterGoalUseCase,
     private val startTimeoutUseCase: StartTimeoutUseCase,
     private val endTimeoutUseCase: EndTimeoutUseCase,
-    private val getMatchReportData: GetMatchReportDataUseCase,
-    private val exportMatchReportToPdf: ExportMatchReportToPdfUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
     private val startPlayerTimersBatchUseCase: StartPlayerTimersBatchUseCase,
     private val shouldShowInvalidSubstitutionAlertUseCase: ShouldShowInvalidSubstitutionAlertUseCase,
@@ -86,6 +86,7 @@ class MatchViewModel(
     private val addPendingSubstitutionUseCase: AddPendingSubstitutionUseCase,
     private val removePendingSubstitutionUseCase: RemovePendingSubstitutionUseCase,
     private val clearPendingSubstitutionsUseCase: ClearPendingSubstitutionsUseCase,
+    private val reportExporter: MatchReportExporter,
 ) : ViewModel() {
     private val teamFlow = getTeamUseCase().stateIn(viewModelScope, SharingStarted.Eagerly, null)
     private val notificationCoordinator = MatchNotificationCoordinator(notifyPresidentMatchEvent)
@@ -114,8 +115,7 @@ class MatchViewModel(
     private val _showOpponentGoalDialog = MutableStateFlow(false)
     val showOpponentGoalDialog: StateFlow<Boolean> = _showOpponentGoalDialog.asStateFlow()
 
-    private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
-    val exportState: StateFlow<ExportState> = _exportState.asStateFlow()
+    val exportState: StateFlow<ExportState> get() = reportExporter.state
 
     private val _isSubstitutionInProgress = MutableStateFlow(false)
     val isSubstitutionInProgress: StateFlow<Boolean> = _isSubstitutionInProgress.asStateFlow()
@@ -992,40 +992,11 @@ class MatchViewModel(
     }
 
     fun requestExport() {
-        viewModelScope.launch {
-            try {
-                crashReporter.log("Requesting match report export for match: $matchId")
-                _exportState.value = ExportState.Loading
-                val matchReportData = getMatchReportData(matchId).firstOrNull()
-
-                if (matchReportData != null) {
-                    val uri = exportMatchReportToPdf(matchReportData)
-                    _exportState.value =
-                        if (uri != null) {
-                            analyticsTracker.logEvent(
-                                AnalyticsEvent.MATCH_REPORT_EXPORTED,
-                                mapOf(
-                                    AnalyticsParam.MATCH_ID to matchId,
-                                    AnalyticsParam.EXPORT_TYPE to "pdf",
-                                ),
-                            )
-                            ExportState.Ready(uri)
-                        } else {
-                            ExportState.Error
-                        }
-                } else {
-                    _exportState.value = ExportState.Error
-                }
-            } catch (e: Exception) {
-                crashReporter.recordException(e)
-                crashReporter.log("Error exporting match report: ${e.message}")
-                _exportState.value = ExportState.Error
-            }
-        }
+        reportExporter.request(viewModelScope, matchId)
     }
 
     fun exportCompleted() {
-        _exportState.value = ExportState.Idle
+        reportExporter.completed()
     }
 
     /**
