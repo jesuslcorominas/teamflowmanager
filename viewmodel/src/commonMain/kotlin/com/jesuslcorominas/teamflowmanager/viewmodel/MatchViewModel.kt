@@ -28,7 +28,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEv
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObservePendingSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePendingSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
@@ -68,7 +67,6 @@ class MatchViewModel internal constructor(
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
     private val getMatchSummaryUseCase: GetMatchSummaryUseCase,
     private val getMatchTimelineUseCase: GetMatchTimelineUseCase,
-    private val registerGoal: RegisterGoalUseCase,
     private val startTimeoutUseCase: StartTimeoutUseCase,
     private val endTimeoutUseCase: EndTimeoutUseCase,
     private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
@@ -87,6 +85,7 @@ class MatchViewModel internal constructor(
     private val removePendingSubstitutionUseCase: RemovePendingSubstitutionUseCase,
     private val clearPendingSubstitutionsUseCase: ClearPendingSubstitutionsUseCase,
     private val reportExporter: MatchReportExporter,
+    private val goalRecorder: MatchGoalRecorder,
 ) : ViewModel() {
     private val teamFlow = getTeamUseCase().stateIn(viewModelScope, SharingStarted.Eagerly, null)
     private val notificationCoordinator = MatchNotificationCoordinator(notifyPresidentMatchEvent)
@@ -765,54 +764,16 @@ class MatchViewModel internal constructor(
 
     fun registerGoal(scorerId: String?) {
         viewModelScope.launch {
-            try {
-                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                    crashReporter.log(
-                        "Registering ${scorerId?.let { "goal for player: $it" } ?: "own goal (autogol by rival)"}",
-                    )
-                    registerGoal(
-                        matchId = currentState.match.id,
-                        scorerId = scorerId,
-                        currentTimeMillis = _currentTime.value,
-                        isOpponentGoal = false,
-                        isOwnGoal = scorerId == null,
-                    )
-
-                    analyticsTracker.logEvent(
-                        AnalyticsEvent.GOAL_SCORED,
-                        mapOf(
-                            AnalyticsParam.MATCH_ID to currentState.match.id,
-                            AnalyticsParam.PLAYER_ID to (scorerId ?: ""),
-                            AnalyticsParam.GOAL_MINUTE to (_currentTime.value / 60000).toString(),
-                            AnalyticsParam.TEAM_TYPE to (scorerId?.let { "own" } ?: "own_goal"),
-                        ).filter { it.value.isNotBlank() },
-                    )
-
-                    val goalMatchId = currentState.match.id
-                    val snapshotTime = _currentTime.value
-                    notificationCoordinator.fireNotification(
-                        scope = viewModelScope,
-                        team = teamFlow.value,
-                        matchId = goalMatchId,
-                    ) {
-                        val updatedMatch = getMatchById(goalMatchId).first() ?: return@fireNotification null
-                        val minuteOfPlay = notificationCoordinator.minuteOfPlay(updatedMatch, snapshotTime)
-                        MatchEventNotification.Goal(
-                            teamName = updatedMatch.teamName,
-                            opponentName = updatedMatch.opponent,
-                            teamGoals = updatedMatch.goals,
-                            opponentGoals = updatedMatch.opponentGoals,
-                            minuteOfPlay = minuteOfPlay,
-                            isOpponentGoal = false,
-                        )
-                    }
-
-                    _showGoalScorerDialog.value = false
-                }
-            } catch (e: Exception) {
-                crashReporter.recordException(e)
-                crashReporter.log("Error registering goal: ${e.message}")
-                throw e
+            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                goalRecorder.record(
+                    scope = viewModelScope,
+                    notifications = notificationCoordinator,
+                    matchId = currentState.match.id,
+                    scorerId = scorerId,
+                    currentTimeMillis = _currentTime.value,
+                    team = teamFlow.value,
+                )
+                _showGoalScorerDialog.value = false
             }
         }
     }
@@ -827,51 +788,15 @@ class MatchViewModel internal constructor(
 
     fun registerOpponentGoal() {
         viewModelScope.launch {
-            try {
-                (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                    crashReporter.log("Registering opponent goal")
-                    // For opponent goals, scorerId is null since opponent players are not tracked
-                    registerGoal(
-                        matchId = currentState.match.id,
-                        scorerId = null,
-                        currentTimeMillis = _currentTime.value,
-                        isOpponentGoal = true,
-                    )
-
-                    analyticsTracker.logEvent(
-                        AnalyticsEvent.OPPONENT_GOAL_SCORED,
-                        mapOf(
-                            AnalyticsParam.MATCH_ID to currentState.match.id,
-                            AnalyticsParam.GOAL_MINUTE to (_currentTime.value / 60000).toString(),
-                            AnalyticsParam.TEAM_TYPE to "opponent",
-                        ),
-                    )
-
-                    val goalMatchId = currentState.match.id
-                    val snapshotTime = _currentTime.value
-                    notificationCoordinator.fireNotification(
-                        scope = viewModelScope,
-                        team = teamFlow.value,
-                        matchId = goalMatchId,
-                    ) {
-                        val updatedMatch = getMatchById(goalMatchId).first() ?: return@fireNotification null
-                        val minuteOfPlay = notificationCoordinator.minuteOfPlay(updatedMatch, snapshotTime)
-                        MatchEventNotification.Goal(
-                            teamName = updatedMatch.teamName,
-                            opponentName = updatedMatch.opponent,
-                            teamGoals = updatedMatch.goals,
-                            opponentGoals = updatedMatch.opponentGoals,
-                            minuteOfPlay = minuteOfPlay,
-                            isOpponentGoal = true,
-                        )
-                    }
-
-                    _showOpponentGoalDialog.value = false
-                }
-            } catch (e: Exception) {
-                crashReporter.recordException(e)
-                crashReporter.log("Error registering opponent goal: ${e.message}")
-                throw e
+            (_uiState.value as? MatchUiState.Success)?.let { currentState ->
+                goalRecorder.recordOpponent(
+                    scope = viewModelScope,
+                    notifications = notificationCoordinator,
+                    matchId = currentState.match.id,
+                    currentTimeMillis = _currentTime.value,
+                    team = teamFlow.value,
+                )
+                _showOpponentGoalDialog.value = false
             }
         }
     }
