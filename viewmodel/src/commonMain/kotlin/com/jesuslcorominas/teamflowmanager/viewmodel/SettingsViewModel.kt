@@ -7,22 +7,30 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubRole
 import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateGlobalNotificationPreferenceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -37,6 +45,9 @@ class SettingsViewModel(
     private val setActiveViewRole: SetActiveViewRoleUseCase,
     private val getNotificationPreferences: GetNotificationPreferencesUseCase,
     private val updateGlobalNotificationPreference: UpdateGlobalNotificationPreferenceUseCase,
+    private val observeSubstitutionMode: ObserveSubstitutionModeUseCase,
+    private val setSubstitutionMode: SetSubstitutionModeUseCase,
+    private val getAllMatches: GetAllMatchesUseCase,
     private val crashReporter: CrashReporter,
 ) : ViewModel() {
     val currentUser: StateFlow<User?> =
@@ -76,8 +87,68 @@ class SettingsViewModel(
         val selectedRole: ActiveViewRole = ActiveViewRole.President,
     )
 
+    /** The running match that locks the setting, named so the user knows what to go and finish. */
+    data class BlockingMatch(
+        val opponent: String,
+        val dateTime: Long?,
+    )
+
+    data class SubstitutionModeState(
+        val mode: SubstitutionMode = SubstitutionMode.SCHEDULED,
+        /**
+         * Non-null while a match is running: switching mode mid-match would strand queued changes.
+         *
+         * A match only leaves IN_PROGRESS/PAUSED through an explicit finish, and nothing recovers
+         * abandoned ones, so a single match left open by a killed app would otherwise grey the
+         * switch out forever with no clue as to why. Naming the match gives the user somewhere
+         * to go.
+         */
+        val blockingMatch: BlockingMatch? = null,
+    ) {
+        val isEnabled: Boolean get() = blockingMatch == null
+    }
+
+    /**
+     * The switch renders from the persisted value, and locks while a match of the current team is
+     * running.
+     *
+     * Shared with [SharingStarted.WhileSubscribed] like the other flows here, rather than collected
+     * for the ViewModel's whole life: [getAllMatches] opens a Firestore listener, and it has no
+     * business staying open while Settings is off screen just to decide whether a switch is grey.
+     *
+     * [getAllMatches] can also fail, and an uncaught throw in [viewModelScope] kills the process.
+     * Catching degrades to "enabled", the deliberate safe side — locking the user out of a
+     * device-local setting because a query failed is worse than letting them change it. The catch
+     * ends the match flow, so it does not recover within one subscription; reopening Settings
+     * resubscribes and retries.
+     */
+    val substitutionModeState: StateFlow<SubstitutionModeState> =
+        combine(
+            observeSubstitutionMode(),
+            getAllMatches()
+                .map { matches ->
+                    matches.firstOrNull {
+                        it.status == MatchStatus.IN_PROGRESS || it.status == MatchStatus.PAUSED
+                    }
+                }
+                .catch { emit(null) },
+        ) { mode, runningMatch ->
+            SubstitutionModeState(
+                mode = mode,
+                blockingMatch = runningMatch?.let { BlockingMatch(it.opponent, it.dateTime) },
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SubstitutionModeState())
+
     init {
         loadRoleSelectorState()
+    }
+
+    /**
+     * Applied on the spot, unlike the role selector: nothing else in the app shell reacts to this
+     * setting mid-session, so there is no reason to defer it to screen exit.
+     */
+    fun onSubstitutionModeChanged(scheduled: Boolean) {
+        setSubstitutionMode(if (scheduled) SubstitutionMode.SCHEDULED else SubstitutionMode.LIVE)
     }
 
     private fun loadRoleSelectorState() {
