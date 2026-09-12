@@ -78,6 +78,7 @@ import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityC
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import com.jesuslcorominas.teamflowmanager.viewmodel.DiscardedSubstitutionItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.ExportState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
@@ -131,6 +132,7 @@ import teamflowmanager.shared_ui.generated.resources.statistics_tab
 import teamflowmanager.shared_ui.generated.resources.stop_match_early_message
 import teamflowmanager.shared_ui.generated.resources.stop_match_early_period_message
 import teamflowmanager.shared_ui.generated.resources.stop_match_early_title
+import teamflowmanager.shared_ui.generated.resources.substitution_discard_subject_either
 import teamflowmanager.shared_ui.generated.resources.substitution_result_applied_header
 import teamflowmanager.shared_ui.generated.resources.substitution_result_discarded_header
 import teamflowmanager.shared_ui.generated.resources.substitution_result_manual_title
@@ -480,7 +482,7 @@ private fun MatchDetailContent(
         )
 
         PendingSubstitutionsSection(
-            items = pendingCardsToShow(substitutionMode, readOnly, pendingSubstitutions),
+            items = pendingCardsToShow(readOnly, pendingSubstitutions),
             canExecute = canExecutePendingSubstitutions(state.match),
             onExecute = onExecutePendingSubstitution,
             onExecuteAll = onExecuteAllPendingSubstitutions,
@@ -1499,7 +1501,7 @@ private fun SubstitutionResultDialog(
                                     "${discarded.substitution.playerOut.firstName} ${discarded.substitution.playerOut.lastName}",
                                     discarded.substitution.playerIn.number,
                                     "${discarded.substitution.playerIn.firstName} ${discarded.substitution.playerIn.lastName}",
-                                    stringResource(discardReasonRes(discarded.reason)),
+                                    discardReasonText(discarded),
                                 ),
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -1512,6 +1514,27 @@ private fun SubstitutionResultDialog(
         },
         shape = MaterialTheme.shapes.medium,
     )
+}
+
+/**
+ * The reason a pair was dropped, with the player it is actually about named in it.
+ *
+ * Without the name the fragment attaches itself to whoever is nearest in the line, and
+ * "7 Juan -> 11 Pedro: ya estaba jugando" reads as an accusation against Juan when it is about
+ * Pedro. Naming the wrong player is worse than jargon: jargon confuses, this misleads.
+ */
+@Composable
+private fun discardReasonText(discarded: DiscardedSubstitutionItem): String {
+    val substitution = discarded.substitution
+    val subject =
+        when (discardReasonSubject(discarded.reason)) {
+            DiscardReasonSubject.PLAYER_OUT ->
+                "${substitution.playerOut.firstName} ${substitution.playerOut.lastName}"
+            DiscardReasonSubject.PLAYER_IN ->
+                "${substitution.playerIn.firstName} ${substitution.playerIn.lastName}"
+            DiscardReasonSubject.EITHER -> stringResource(Res.string.substitution_discard_subject_either)
+        }
+    return stringResource(discardReasonRes(discarded.reason), subject)
 }
 
 @Composable

@@ -80,33 +80,32 @@ class PendingSubstitutionsPresentationTest {
     // ---------- pendingCardsToShow ----------
 
     @Test
-    fun `live mode paints no pending cards even when the queue is full`() {
+    fun `every queued card is painted`() {
         val items = listOf(pending(1), pending(2), pending(3))
 
-        assertEquals(
-            emptyList(),
-            pendingCardsToShow(SubstitutionMode.LIVE, readOnly = false, items = items),
-        )
+        assertEquals(items, pendingCardsToShow(readOnly = false, items = items))
     }
 
     @Test
-    fun `scheduled mode paints every queued card`() {
-        val items = listOf(pending(1), pending(2), pending(3))
-
-        assertEquals(
-            items,
-            pendingCardsToShow(SubstitutionMode.SCHEDULED, readOnly = false, items = items),
-        )
+    fun `an empty queue paints nothing, which is what live mode always looks like`() {
+        assertEquals(emptyList(), pendingCardsToShow(readOnly = false, items = emptyList()))
     }
 
     @Test
-    fun `read only never paints pending cards even in scheduled mode`() {
+    fun `a queue that outlived a switch to live is still painted, so it can be deleted`() {
+        // Nothing can be queued in live mode, so this only happens to a queue built in scheduled
+        // mode that survived the switch. Hiding it would leave cards applying themselves at the
+        // next break with the coach never having seen them.
         val items = listOf(pending(1), pending(2))
 
-        assertEquals(
-            emptyList(),
-            pendingCardsToShow(SubstitutionMode.SCHEDULED, readOnly = true, items = items),
-        )
+        assertEquals(items, pendingCardsToShow(readOnly = false, items = items))
+    }
+
+    @Test
+    fun `read only never paints pending cards`() {
+        val items = listOf(pending(1), pending(2))
+
+        assertEquals(emptyList(), pendingCardsToShow(readOnly = true, items = items))
     }
 
     // ---------- isOnPitchForDisplay ----------
@@ -300,6 +299,38 @@ class PendingSubstitutionsPresentationTest {
             discardReasonRes(SubstitutionDiscardReason.PLAYER_ALREADY_SUBSTITUTED_IN_BATCH),
         )
     }
+
+    // ---------- discardReasonSubject ----------
+
+    @Test
+    fun `a reason about the player going off names the player going off`() {
+        assertEquals(
+            DiscardReasonSubject.PLAYER_OUT,
+            discardReasonSubject(SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING),
+        )
+    }
+
+    @Test
+    fun `a reason about the player coming on names the player coming on, not the one going off`() {
+        assertEquals(
+            DiscardReasonSubject.PLAYER_IN,
+            discardReasonSubject(SubstitutionDiscardReason.PLAYER_IN_ALREADY_PLAYING),
+        )
+        assertEquals(
+            DiscardReasonSubject.PLAYER_IN,
+            discardReasonSubject(SubstitutionDiscardReason.PLAYER_IN_NOT_IN_MATCH),
+        )
+    }
+
+    @Test
+    fun `a reason that can be about either player names neither, instead of inventing one`() {
+        assertEquals(
+            DiscardReasonSubject.EITHER,
+            discardReasonSubject(SubstitutionDiscardReason.PLAYER_ALREADY_SUBSTITUTED_IN_BATCH),
+        )
+    }
+
+    // ---------- distinctness ----------
 
     @Test
     fun `every discard reason has a distinct message, so none reads as another`() {

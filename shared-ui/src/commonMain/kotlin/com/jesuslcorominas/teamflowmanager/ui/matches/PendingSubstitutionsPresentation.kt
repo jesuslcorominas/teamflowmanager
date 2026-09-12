@@ -19,15 +19,21 @@ import teamflowmanager.shared_ui.generated.resources.substitution_discard_reason
 // logic this way — see aggregateScorers and calculateFinishedPeriodElapsedTime.
 
 /**
- * The cards to paint. Empty in [SubstitutionMode.LIVE] and in read-only, which is what keeps the
- * live layout byte-for-byte what it was: the section, its header and its dialogs all hang off this
- * being non-empty.
+ * The cards to paint: whatever is queued, unless the screen is read-only.
+ *
+ * Deliberately not gated on [SubstitutionMode.LIVE]. The ViewModel exposes the queue in both modes
+ * on purpose — switching to live is a device-wide setting, not an instruction to throw away what
+ * was already scheduled for this match — and hiding it here would contradict that contract.
+ *
+ * In ordinary live use this changes nothing: nothing can be queued in live mode, so the list is
+ * empty and the section never appears. It only matters when a queue outlives a switch to live,
+ * and there the coach seeing their cards and being able to delete them beats the cards staying
+ * invisible and applying themselves at the next break.
  */
 internal fun pendingCardsToShow(
-    mode: SubstitutionMode,
     readOnly: Boolean,
     items: List<PendingSubstitutionItem>,
-): List<PendingSubstitutionItem> = if (mode == SubstitutionMode.SCHEDULED && !readOnly) items else emptyList()
+): List<PendingSubstitutionItem> = if (readOnly) emptyList() else items
 
 /**
  * Whether the player is shown as being on the pitch.
@@ -106,7 +112,33 @@ internal fun presentationFor(result: SubstitutionExecutionResult): SubstitutionR
         SubstitutionResultPresentation.SNACKBAR
     }
 
-/** Why a pair was not applied, in a coach's words: no ids, no "batch", no "player time". */
+/**
+ * Which of the two players a discard reason is actually about.
+ *
+ * The reasons are not all about the same side, and a message that names the wrong player is worse
+ * than one full of jargon: jargon confuses, this misleads. PLAYER_ALREADY_SUBSTITUTED_IN_BATCH is
+ * the honest exception — the domain raises it when *either* side was already used by an earlier
+ * pair, so naming one of them would be inventing detail the app does not have.
+ */
+internal enum class DiscardReasonSubject {
+    PLAYER_OUT,
+    PLAYER_IN,
+    EITHER,
+}
+
+internal fun discardReasonSubject(reason: SubstitutionDiscardReason): DiscardReasonSubject =
+    when (reason) {
+        SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING -> DiscardReasonSubject.PLAYER_OUT
+        SubstitutionDiscardReason.PLAYER_IN_ALREADY_PLAYING -> DiscardReasonSubject.PLAYER_IN
+        SubstitutionDiscardReason.PLAYER_IN_NOT_IN_MATCH -> DiscardReasonSubject.PLAYER_IN
+        SubstitutionDiscardReason.PLAYER_ALREADY_SUBSTITUTED_IN_BATCH -> DiscardReasonSubject.EITHER
+    }
+
+/**
+ * Why a pair was not applied, in a coach's words: no ids, no "batch", no "player time".
+ *
+ * Every message names its subject — see [discardReasonSubject] for which player that is.
+ */
 internal fun discardReasonRes(reason: SubstitutionDiscardReason): StringResource =
     when (reason) {
         SubstitutionDiscardReason.PLAYER_OUT_NOT_PLAYING -> Res.string.substitution_discard_reason_out_not_playing
