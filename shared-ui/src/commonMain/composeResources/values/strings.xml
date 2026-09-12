@@ -444,6 +444,8 @@
 
     <!-- Scheduled substitutions -->
     <string name="pending_substitutions_title">Scheduled changes (%1$d)</string>
+    <string name="pending_substitutions_expand">Show scheduled changes</string>
+    <string name="pending_substitutions_collapse">Hide scheduled changes</string>
     <string name="pending_substitutions_execute_all">Substitute all</string>
     <string name="pending_substitutions_clear_all">Delete all</string>
     <string name="pending_substitutions_execute_one">Apply this change</string>
@@ -452,7 +454,7 @@
     <string name="pending_substitutions_clear_all_title">Delete all changes?</string>
     <string name="pending_substitutions_clear_all_message">This deletes the whole list of scheduled changes (%1$d). It cannot be undone.</string>
     <string name="pending_substitutions_conflict_title">This player already has a change</string>
-    <string name="pending_substitutions_conflict_message">If you schedule %1$s, these changes will be discarded:</string>
+    <string name="pending_substitutions_player_already_scheduled">The selected player already has a scheduled change. Choosing them will replace it.</string>
     <string name="pending_substitutions_conflict_confirm">Schedule anyway</string>
     <string name="substitution_result_manual_title">Changes applied</string>
     <string name="substitution_result_resume_title">Changes applied on resume</string>

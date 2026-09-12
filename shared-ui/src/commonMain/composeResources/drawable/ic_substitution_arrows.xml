@@ -1,0 +1,37 @@
+<!--
+  The swap motif of the app icon, on its own: the two arcs that mean "one in, one out".
+
+  Lifted verbatim from app/src/main/res/drawable/ic_launcher.xml — the green arc (#3FCC1D, on top)
+  and the red one (#960615, below) — because shared-ui is commonMain and cannot reach a drawable
+  that lives in the Android module. Duplicating it as a composeResources drawable is the house
+  pattern: ic_launcher.xml itself is already here, byte for byte, next to ic_goal and ic_whistle.
+
+  The launcher's group (scale 0.65, translate 104) is NOT copied. It only places the motif inside
+  the 595.28x597.84 canvas of the icon, and being a uniform transform it says nothing about how the
+  two arcs sit relative to each other. What matters is that both are symmetric about (297.64,
+  298.92) — the centre of the icon's circle — so the frame below is a square of side 458.12 (twice
+  the 229.06 that is the furthest either arc reaches from that centre), translated so the motif is
+  centred in it. Centred, not merely cropped: anything that spins this mark turns it on its own
+  axis instead of swinging it around an off-centre point.
+
+  Both colours are baked in. This is a two-colour mark, not a tintable icon — draw it with Image,
+  not Icon. Note the green is the icon's own (#3FCC1D), which is not the theme's SubstitutionGreen.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="458.12"
+    android:viewportHeight="458.12">
+    <group
+        android:translateX="-68.58"
+        android:translateY="-69.86">
+        <path
+            android:fillColor="#3FCC1D"
+            android:fillType="evenOdd"
+            android:pathData="M523.71,180.44c-4.8,23.73 -9.42,46.57 -14.15,69.95c-19.54,-13.19 -38.46,-25.98 -57.38,-38.76c0.1,-0.37 0.19,-0.75 0.29,-1.12c1.73,-0.81 3.44,-1.66 5.19,-2.42c4.34,-1.9 8.65,-3.86 13.06,-5.59c2.47,-0.97 2.68,-2.08 1.46,-4.37c-6.68,-12.51 -14.72,-24.06 -24,-34.73c-31.65,-36.4 -71.34,-58.9 -118.71,-67.44c-38.9,-7.01 -76.75,-2.71 -113.07,13.07c-20.96,9.1 -39.55,21.95 -56.33,37.43c-0.45,0.41 -0.93,0.79 -1.85,0.86c1.17,-1.5 2.37,-2.99 3.52,-4.52c1.18,-1.56 2.26,-3.19 3.49,-4.71c18.11,-22.39 40.72,-38.89 66.92,-50.5c26.59,-11.79 54.55,-17.06 83.61,-16.16c48.52,1.51 91.6,17.77 129.09,48.54c22.48,18.45 40.62,40.52 53.69,66.61c1.32,2.63 2.65,3.35 5.52,2.05C510.2,185.82 516.54,183.4 523.71,180.44z" />
+        <path
+            android:fillColor="#960615"
+            android:fillType="evenOdd"
+            android:pathData="M68.58,417.74c4.8,-23.73 9.42,-46.57 14.15,-69.95c19.54,13.19 38.46,25.98 57.38,38.76c-0.1,0.37 -0.19,0.75 -0.29,1.12c-1.73,0.81 -3.44,1.66 -5.19,2.42c-4.34,1.9 -8.65,3.86 -13.06,5.59c-2.48,0.97 -2.68,2.08 -1.46,4.37c6.68,12.5 14.72,24.06 24,34.73c31.65,36.4 71.34,58.9 118.71,67.44c38.9,7.01 76.75,2.71 113.07,-13.07c20.96,-9.1 39.55,-21.95 56.33,-37.43c0.45,-0.41 0.93,-0.79 1.85,-0.86c-1.18,1.51 -2.37,3 -3.52,4.52c-1.18,1.55 -2.26,3.19 -3.49,4.71c-18.11,22.39 -40.72,38.89 -66.91,50.5c-26.59,11.78 -54.55,17.06 -83.61,16.16c-48.52,-1.51 -91.6,-17.77 -129.09,-48.54c-22.48,-18.45 -40.62,-40.52 -53.69,-66.6c-1.32,-2.63 -2.65,-3.35 -5.52,-2.05C82.08,412.36 75.75,414.78 68.58,417.74z" />
+    </group>
+</vector>

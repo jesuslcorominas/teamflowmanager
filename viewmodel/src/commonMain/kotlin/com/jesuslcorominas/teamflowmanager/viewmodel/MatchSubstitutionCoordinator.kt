@@ -10,7 +10,6 @@ import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.usecase.AddPendingSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearPendingSubstitutionsUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetPendingSubstitutionConflictsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObservePendingSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
@@ -44,7 +43,6 @@ internal class MatchSubstitutionCoordinator(
     private val registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase,
     private val observeSubstitutionModeUseCase: ObserveSubstitutionModeUseCase,
     private val observePendingSubstitutionsUseCase: ObservePendingSubstitutionsUseCase,
-    private val getPendingSubstitutionConflictsUseCase: GetPendingSubstitutionConflictsUseCase,
     private val addPendingSubstitutionUseCase: AddPendingSubstitutionUseCase,
     private val removePendingSubstitutionUseCase: RemovePendingSubstitutionUseCase,
     private val clearPendingSubstitutionsUseCase: ClearPendingSubstitutionsUseCase,
@@ -62,8 +60,21 @@ internal class MatchSubstitutionCoordinator(
     private val _isSubstitutionInProgress = MutableStateFlow(false)
     val isSubstitutionInProgress: StateFlow<Boolean> = _isSubstitutionInProgress.asStateFlow()
 
-    private val _pendingSubstitutionConflict = MutableStateFlow<PendingSubstitutionConflict?>(null)
-    val pendingSubstitutionConflict: StateFlow<PendingSubstitutionConflict?> = _pendingSubstitutionConflict.asStateFlow()
+    private val _playerAlreadyScheduledAlert = MutableStateFlow<PlayerAlreadyScheduledAlert?>(null)
+    val playerAlreadyScheduledAlert: StateFlow<PlayerAlreadyScheduledAlert?> = _playerAlreadyScheduledAlert.asStateFlow()
+
+    /**
+     * What the coach was in the middle of doing when the warning interrupted them, so confirming
+     * can finish it. Held as data rather than a callback so a test can see what is pending.
+     *
+     * [playerInId] null means they were picking the player coming off and had got no further.
+     */
+    private var interruptedSelection: InterruptedSelection? = null
+
+    private data class InterruptedSelection(
+        val playerOutId: String,
+        val playerInId: String?,
+    )
 
     private val _lastSubstitutionResult = MutableStateFlow<SubstitutionExecutionResult?>(null)
     val lastSubstitutionResult: StateFlow<SubstitutionExecutionResult?> = _lastSubstitutionResult.asStateFlow()
@@ -78,13 +89,27 @@ internal class MatchSubstitutionCoordinator(
             pairs.mapNotNull { it.toPendingItem(players) }
         }
 
+    /**
+     * Picks the player coming off, warning first if they already have a change waiting.
+     *
+     * The warning used to come at the end, once both players were picked, and by then it could not
+     * say which of the two it was about — the coach saw a name they had just tapped and reasonably
+     * read the problem as being with that one. Asked the moment a player is chosen, there is only
+     * one player it can be about.
+     */
     fun selectPlayerOut(
         playerId: String,
         playerTimes: List<PlayerTimeItem>,
         mode: SubstitutionMode,
+        pendingPairs: List<SubstitutionPair>,
     ) {
         val player = playerTimes.find { it.player.id == playerId }
         if (player?.isOnPitch(mode) == true) {
+            if (mode == SubstitutionMode.SCHEDULED && pendingPairs.involve(playerId)) {
+                interruptedSelection = InterruptedSelection(playerOutId = playerId, playerInId = null)
+                _playerAlreadyScheduledAlert.value = PlayerAlreadyScheduledAlert(playerId = playerId)
+                return
+            }
             _selectedPlayerOut.value = playerId
         } else {
             // Player is not currently playing, show alert if preferences allow
@@ -110,8 +135,8 @@ internal class MatchSubstitutionCoordinator(
         scope: CoroutineScope,
         mode: SubstitutionMode,
         playerTimes: List<PlayerTimeItem>,
-        squadPlayers: List<Player>,
         currentTimeMillis: Long,
+        pendingPairs: List<SubstitutionPair>,
     ) {
         val playerOut = _selectedPlayerOut.value ?: return
 
@@ -124,7 +149,15 @@ internal class MatchSubstitutionCoordinator(
 
         val pair = SubstitutionPair(playerOutId = playerOut, playerInId = playerInId)
         if (mode == SubstitutionMode.SCHEDULED) {
-            schedule(pair, squadPlayers)
+            // The same question asked of the player going off, asked again of the one coming on —
+            // the only moment at which this one has been chosen. Whoever was warned about at
+            // selection is not warned about again when the pair is stored.
+            if (pendingPairs.involve(playerInId)) {
+                interruptedSelection = InterruptedSelection(playerOutId = playerOut, playerInId = playerInId)
+                _playerAlreadyScheduledAlert.value = PlayerAlreadyScheduledAlert(playerId = playerInId)
+                return
+            }
+            schedule(pair)
             return
         }
 
@@ -163,49 +196,48 @@ internal class MatchSubstitutionCoordinator(
     }
 
     /**
-     * Queues [pair] instead of applying it. When it would displace pairs already scheduled, the
-     * conflict is raised first and nothing is written until the coach confirms.
+     * Queues [pair] instead of applying it, and lets the store drop whatever it displaces.
+     *
+     * Nothing is asked here any more. Both players were checked the moment they were picked — see
+     * [selectPlayerOut] and [substitutePlayer] — so a warning at this point could only repeat one
+     * the coach has already answered, and a second dialog for an already-granted permission is how
+     * people learn to dismiss dialogs without reading them.
      */
-    private fun schedule(
-        pair: SubstitutionPair,
-        squadPlayers: List<Player>,
-    ) {
-        val conflicts = getPendingSubstitutionConflictsUseCase(matchId, pair)
-        if (conflicts.isEmpty()) {
-            addPendingSubstitutionUseCase(matchId, pair)
-            _selectedPlayerOut.value = null
-            return
-        }
-
-        val requested = pair.toPendingItem(squadPlayers)
-        if (requested == null) {
-            // Unreachable in practice: both players were picked from the call-up list. If it ever
-            // happens, honour the coach's action rather than dropping it over a missing warning.
-            crashReporter.log("Scheduling a substitution whose players are not in the call-up: $pair")
-            addPendingSubstitutionUseCase(matchId, pair)
-            _selectedPlayerOut.value = null
-            return
-        }
-
-        _pendingSubstitutionConflict.value =
-            PendingSubstitutionConflict(
-                requested = requested,
-                displaced = conflicts.mapNotNull { it.toPendingItem(squadPlayers) },
-            )
-    }
-
-    /** Schedules the pair that was warned about; the store discards the ones it displaces. */
-    fun confirmPendingSubstitutionConflict() {
-        val conflict = _pendingSubstitutionConflict.value ?: return
-        addPendingSubstitutionUseCase(matchId, conflict.requested.pair)
-        _pendingSubstitutionConflict.value = null
+    private fun schedule(pair: SubstitutionPair) {
+        addPendingSubstitutionUseCase(matchId, pair)
         _selectedPlayerOut.value = null
     }
 
-    /** Backs out of the warning: nothing is scheduled and nothing already scheduled is lost. */
-    fun dismissPendingSubstitutionConflict() {
-        _pendingSubstitutionConflict.value = null
-        _selectedPlayerOut.value = null
+    /**
+     * Goes ahead with the selection the warning interrupted.
+     *
+     * Confirming the player coming off only selects them — the coach still has to pick who comes
+     * on, and may yet change their mind. Confirming the one coming on stores the pair, and the
+     * store discards whatever it displaces.
+     */
+    fun confirmPlayerAlreadyScheduled() {
+        val interrupted = interruptedSelection ?: return
+        interruptedSelection = null
+        _playerAlreadyScheduledAlert.value = null
+
+        val playerIn = interrupted.playerInId
+        if (playerIn == null) {
+            _selectedPlayerOut.value = interrupted.playerOutId
+        } else {
+            schedule(SubstitutionPair(playerOutId = interrupted.playerOutId, playerInId = playerIn))
+        }
+    }
+
+    /**
+     * Backs out of the warning. Nothing is scheduled and nothing already scheduled is lost.
+     *
+     * A player already chosen to come off stays chosen: the coach was told the player they just
+     * tapped is unavailable, not that they should start over, and throwing the first pick away
+     * would make them repeat it.
+     */
+    fun dismissPlayerAlreadyScheduled() {
+        interruptedSelection = null
+        _playerAlreadyScheduledAlert.value = null
     }
 
     fun removePending(pair: SubstitutionPair) {
@@ -219,6 +251,9 @@ internal class MatchSubstitutionCoordinator(
     fun consumeLastResult() {
         _lastSubstitutionResult.value = null
     }
+
+    /** Whether any queued pair has this player on either side of it. */
+    private fun List<SubstitutionPair>.involve(playerId: String): Boolean = any { it.playerOutId == playerId || it.playerInId == playerId }
 
     /** Every queued card, read from the store — see [runAll] for why not the resolved list. */
     suspend fun queuedPairs(): List<SubstitutionPair> = observePendingSubstitutionsUseCase(matchId).first()

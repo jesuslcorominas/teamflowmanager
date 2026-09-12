@@ -71,13 +71,17 @@ data class DiscardedSubstitutionItem(
 )
 
 /**
- * Scheduling [requested] would drop [displaced], because they share a player. Raised before the
- * destructive write so the coach can confirm or back out; confirming applies it and discards
- * [displaced], dismissing schedules nothing.
+ * The player just picked, [playerId], already has a change waiting, so choosing them will replace
+ * it. Raised the moment they are picked — whether they are the one coming off or the one coming on
+ * — rather than once the pair is complete, which is the only point at which the warning can be
+ * unambiguous about who it is about.
+ *
+ * Carries the player and not the changes it would displace. The question put to the coach is about
+ * the player in front of them, and listing the pairs that would go invited them to audit a decision
+ * they had already made.
  */
-data class PendingSubstitutionConflict(
-    val requested: PendingSubstitutionItem,
-    val displaced: List<PendingSubstitutionItem>,
+data class PlayerAlreadyScheduledAlert(
+    val playerId: String,
 )
 
 /**
