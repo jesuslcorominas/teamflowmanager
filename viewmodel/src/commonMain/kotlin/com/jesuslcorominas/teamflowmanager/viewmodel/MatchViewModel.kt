@@ -2,33 +2,20 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
-import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
-import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.MatchEventNotification
 import com.jesuslcorominas.teamflowmanager.domain.usecase.NotifyPresidentMatchEventUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.ResumeMatchUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.StartPlayerTimersBatchUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.StartTimeoutUseCase
-import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -38,15 +25,6 @@ import kotlinx.coroutines.launch
  */
 class MatchViewModel internal constructor(
     private val matchId: String,
-    private val getMatchById: GetMatchByIdUseCase,
-    private val finishMatch: FinishMatchUseCase,
-    private val pauseMatch: PauseMatchUseCase,
-    private val resumeMatchUseCase: ResumeMatchUseCase,
-    private val startMatchTimerUseCase: StartMatchTimerUseCase,
-    private val startTimeoutUseCase: StartTimeoutUseCase,
-    private val endTimeoutUseCase: EndTimeoutUseCase,
-    private val synchronizeTimeUseCase: SynchronizeTimeUseCase,
-    private val startPlayerTimersBatchUseCase: StartPlayerTimersBatchUseCase,
     private val timeTicker: TimeTicker,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
@@ -56,6 +34,7 @@ class MatchViewModel internal constructor(
     private val goalRecorder: MatchGoalRecorder,
     private val stateLoader: MatchStateLoader,
     private val substitutions: MatchSubstitutionCoordinator,
+    private val clock: MatchClockController,
 ) : ViewModel() {
     private val teamFlow = getTeamUseCase().stateIn(viewModelScope, SharingStarted.Eagerly, null)
     private val notificationCoordinator = MatchNotificationCoordinator(notifyPresidentMatchEvent)
@@ -126,28 +105,12 @@ class MatchViewModel internal constructor(
         viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState is MatchUiState.Success && !currentState.match.isStarted) {
-                // Synchronize time with server before starting the match
-                try {
-                    synchronizeTimeUseCase()
-                } catch (e: Exception) {
-                    crashReporter.recordException(e)
-                    crashReporter.log("Error synchronizing time before match start: ${e.message}")
-                    // Continue with match start even if sync fails
-                }
-
-                val currentTime = _currentTime.value
-                getMatchById(matchId).first()?.let {
-                    startMatchTimerUseCase(matchId = it.id, currentTime)
-                    // Start all player timers at once using batch operation
-                    if (it.startingLineupIds.isNotEmpty()) {
-                        startPlayerTimersBatchUseCase(it.id, it.startingLineupIds, currentTime)
-                    }
-
+                clock.begin(matchId, _currentTime.value)?.let { started ->
                     notificationCoordinator.fireNotification(
                         scope = viewModelScope,
                         team = teamFlow.value,
-                        matchId = it.id,
-                    ) { MatchEventNotification.Start(it.teamName, it.opponent) }
+                        matchId = started.id,
+                    ) { MatchEventNotification.Start(started.teamName, started.opponent) }
                 }
             }
         }
@@ -158,23 +121,9 @@ class MatchViewModel internal constructor(
             (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                 if (!currentState.match.isLastPeriod()) {
                     _showStopConfirmation.value = true
+                } else if (clock.needsEndPeriodConfirmation(currentState.match, _currentTime.value)) {
+                    _showPauseConfirmation.value = EndPeriodState(false)
                 } else {
-                    val currentPeriod =
-                        currentState.match.periods
-                            .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
-
-                    if (currentPeriod != null) {
-                        val elapsedTime = (_currentTime.value - currentPeriod.startTimeMillis).coerceAtLeast(0L)
-                        val remainingTime = currentPeriod.periodDuration - elapsedTime
-
-                        // If more than 1 minute remains in normal time, show confirmation dialog
-                        // If in additional time (remainingTime <= 0), proceed without confirmation
-                        if (remainingTime > 60000L) {
-                            _showPauseConfirmation.value = EndPeriodState(false)
-                            return@launch
-                        }
-                    }
-
                     confirmStopMatch()
                 }
             }
@@ -185,20 +134,11 @@ class MatchViewModel internal constructor(
         viewModelScope.launch {
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                    crashReporter.log("Finishing match: ${currentState.match.id}")
-                    finishMatch(currentState.match.id, _currentTime.value)
+                    clock.finish(currentState.match.id, _currentTime.value)
 
                     // A finished match takes no more substitutions: anything still scheduled is
                     // dead weight that would reappear if the screen were reopened.
                     substitutions.clearPending()
-
-                    analyticsTracker.logEvent(
-                        AnalyticsEvent.MATCH_FINISHED,
-                        mapOf(
-                            AnalyticsParam.MATCH_ID to currentState.match.id,
-                            AnalyticsParam.DURATION_MINUTES to (_currentTime.value / 60000).toString(),
-                        ),
-                    )
 
                     val finishedMatch = currentState.match
                     notificationCoordinator.fireNotification(
@@ -229,24 +169,12 @@ class MatchViewModel internal constructor(
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                     if (currentState.match.canPause()) {
-                        // Calculate remaining time in current period
-                        val currentPeriod =
-                            currentState.match.periods
-                                .firstOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
-
-                        if (currentPeriod != null) {
-                            val elapsedTime = (_currentTime.value - currentPeriod.startTimeMillis).coerceAtLeast(0L)
-                            val remainingTime = currentPeriod.periodDuration - elapsedTime
-
-                            // If more than 1 minute remains in normal time, show confirmation dialog
-                            // If in additional time (remainingTime <= 0), proceed without confirmation
-                            if (remainingTime > 60000L) {
-                                _showPauseConfirmation.value = EndPeriodState(true)
-                                return@launch
-                            }
+                        if (clock.needsEndPeriodConfirmation(currentState.match, _currentTime.value)) {
+                            _showPauseConfirmation.value = EndPeriodState(true)
+                            return@launch
                         }
 
-                        // If no active period or less than 1 minute remains, proceed with pausing immediately
+                        // If no active period or less than 1 minute remains, pause immediately
                         confirmPauseMatch()
                     }
                 }
@@ -262,16 +190,7 @@ class MatchViewModel internal constructor(
         viewModelScope.launch {
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
-                    crashReporter.log("Pausing match: ${currentState.match.id}")
-                    pauseMatch(currentState.match.id, _currentTime.value)
-
-                    analyticsTracker.logEvent(
-                        AnalyticsEvent.MATCH_PAUSED,
-                        mapOf(
-                            AnalyticsParam.MATCH_ID to currentState.match.id,
-                            AnalyticsParam.DURATION_MINUTES to (_currentTime.value / 60000).toString(),
-                        ),
-                    )
+                    clock.pause(currentState.match.id, _currentTime.value)
                 }
 
                 _showPauseConfirmation.value = null
@@ -290,32 +209,12 @@ class MatchViewModel internal constructor(
     fun resumeMatch(matchId: String) {
         viewModelScope.launch {
             try {
-                crashReporter.log("Resuming match: $matchId")
-
-                // Synchronize time with server before resuming
-                try {
-                    synchronizeTimeUseCase()
-                } catch (e: Exception) {
-                    crashReporter.recordException(e)
-                    crashReporter.log("Error synchronizing time before match resume: ${e.message}")
-                    // Continue with match resume even if sync fails
-                }
-
-                getMatchById(matchId).first()?.let {
-                    // Suspends until the match is running again AND the paused players are back
-                    // to PLAYING, both under ResumeMatchUseCase's own operation id.
-                    resumeMatchUseCase(it.id, _currentTime.value)
-
-                    analyticsTracker.logEvent(
-                        AnalyticsEvent.MATCH_RESUMED,
-                        mapOf(
-                            AnalyticsParam.MATCH_ID to matchId,
-                        ),
-                    )
-
-                    // Only now. RegisterPlayerSubstitutionUseCase selects on PLAYING, so running
-                    // the queue before the restore above would drop every pair on
-                    // PLAYER_OUT_NOT_PLAYING and lose the coach's changes without a word.
+                // The order here is the point of the whole scheduled-substitutions feature.
+                // clock.resume() suspends until the match is running again AND the paused players
+                // are back to PLAYING; RegisterPlayerSubstitutionUseCase selects on PLAYING, so
+                // running the queue any earlier would drop every pair on PLAYER_OUT_NOT_PLAYING
+                // and lose the coach's changes without a word.
+                if (clock.resume(matchId, _currentTime.value)) {
                     runPendingSubstitutionsAfterResume()
                 }
             } catch (e: Exception) {
@@ -327,13 +226,12 @@ class MatchViewModel internal constructor(
     }
 
     /**
-     * Runs whatever was scheduled during the break. Must be called after [ResumeMatchUseCase] has
-     * returned — see [resumeMatch].
+     * Runs whatever was scheduled during the break. Must be called after the match has been
+     * resumed — see [resumeMatch].
      */
     private suspend fun runPendingSubstitutionsAfterResume() {
         try {
-            val pending = substitutions.queuedPairs()
-            runSubstitutions(pending, SubstitutionExecutionTrigger.RESUME)
+            runSubstitutions(substitutions.queuedPairs(), SubstitutionExecutionTrigger.RESUME)
         } catch (e: Exception) {
             crashReporter.recordException(e)
             crashReporter.log("Error running scheduled substitutions on resume: ${e.message}")
@@ -347,16 +245,7 @@ class MatchViewModel internal constructor(
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                     if (currentState.match.isInProgress) {
-                        crashReporter.log("Starting timeout for match: ${currentState.match.id}")
-                        startTimeoutUseCase(currentState.match.id, _currentTime.value)
-
-                        analyticsTracker.logEvent(
-                            AnalyticsEvent.BUTTON_CLICKED,
-                            mapOf(
-                                AnalyticsParam.BUTTON_NAME to "start_timeout",
-                                AnalyticsParam.MATCH_ID to currentState.match.id,
-                            ),
-                        )
+                        clock.startTimeout(currentState.match.id, _currentTime.value)
                     }
                 }
             } catch (e: Exception) {
@@ -372,16 +261,7 @@ class MatchViewModel internal constructor(
             try {
                 (_uiState.value as? MatchUiState.Success)?.let { currentState ->
                     if (currentState.match.status == MatchStatus.TIMEOUT) {
-                        crashReporter.log("Ending timeout for match: ${currentState.match.id}")
-                        endTimeoutUseCase(currentState.match.id, _currentTime.value)
-
-                        analyticsTracker.logEvent(
-                            AnalyticsEvent.BUTTON_CLICKED,
-                            mapOf(
-                                AnalyticsParam.BUTTON_NAME to "end_timeout",
-                                AnalyticsParam.MATCH_ID to currentState.match.id,
-                            ),
-                        )
+                        clock.endTimeout(currentState.match.id, _currentTime.value)
                     }
                 }
             } catch (e: Exception) {

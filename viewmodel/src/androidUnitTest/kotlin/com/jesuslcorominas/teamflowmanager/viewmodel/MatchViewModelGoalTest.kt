@@ -102,11 +102,20 @@ class MatchViewModelGoalTest {
 
     private fun createViewModel() = MatchViewModel(
         matchId = MATCH_ID,
-        getMatchById = getMatchByIdUseCase,
-        finishMatch = mockk(relaxed = true),
-        pauseMatch = mockk(relaxed = true),
-        resumeMatchUseCase = mockk(relaxed = true),
-        startMatchTimerUseCase = mockk(relaxed = true),
+        clock =
+            MatchClockController(
+                startMatchTimerUseCase = mockk(relaxed = true),
+                startPlayerTimersBatchUseCase = mockk(relaxed = true),
+                synchronizeTimeUseCase = mockk(relaxed = true),
+                pauseMatchUseCase = mockk(relaxed = true),
+                resumeMatchUseCase = mockk(relaxed = true),
+                finishMatchUseCase = mockk(relaxed = true),
+                startTimeoutUseCase = mockk(relaxed = true),
+                endTimeoutUseCase = mockk(relaxed = true),
+                getMatchById = getMatchByIdUseCase,
+                analyticsTracker = analyticsTracker,
+                crashReporter = crashReporter,
+            ),
         substitutions =
             MatchSubstitutionCoordinator(
                 matchId = MATCH_ID,
@@ -137,8 +146,6 @@ class MatchViewModelGoalTest {
                 analyticsTracker = analyticsTracker,
                 crashReporter = crashReporter,
             ),
-        startTimeoutUseCase = mockk(relaxed = true),
-        endTimeoutUseCase = mockk(relaxed = true),
         reportExporter =
             MatchReportExporter(
                 getMatchReportData = mockk(relaxed = true),
@@ -146,8 +153,6 @@ class MatchViewModelGoalTest {
                 analyticsTracker = analyticsTracker,
                 crashReporter = crashReporter,
             ),
-        synchronizeTimeUseCase = mockk(relaxed = true),
-        startPlayerTimersBatchUseCase = mockk(relaxed = true),
         timeTicker = fakeTicker,
         analyticsTracker = analyticsTracker,
         crashReporter = crashReporter,

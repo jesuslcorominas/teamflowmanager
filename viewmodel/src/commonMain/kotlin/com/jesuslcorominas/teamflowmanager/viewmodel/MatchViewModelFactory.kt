@@ -13,20 +13,25 @@ import org.koin.core.scope.Scope
 fun Scope.createMatchViewModel(matchId: String): MatchViewModel =
     MatchViewModel(
         matchId = matchId,
-        getMatchById = get(),
-        finishMatch = get(),
-        pauseMatch = get(),
-        resumeMatchUseCase = get(),
-        startMatchTimerUseCase = get(),
-        startTimeoutUseCase = get(),
-        endTimeoutUseCase = get(),
-        synchronizeTimeUseCase = get(),
-        startPlayerTimersBatchUseCase = get(),
         timeTicker = get(),
         analyticsTracker = get(),
         crashReporter = get(),
         notifyPresidentMatchEvent = get(),
         getTeamUseCase = get(),
+        clock =
+            MatchClockController(
+                startMatchTimerUseCase = get(),
+                startPlayerTimersBatchUseCase = get(),
+                synchronizeTimeUseCase = get(),
+                pauseMatchUseCase = get(),
+                resumeMatchUseCase = get(),
+                finishMatchUseCase = get(),
+                startTimeoutUseCase = get(),
+                endTimeoutUseCase = get(),
+                getMatchById = get(),
+                analyticsTracker = get(),
+                crashReporter = get(),
+            ),
         substitutions =
             MatchSubstitutionCoordinator(
                 matchId = matchId,
