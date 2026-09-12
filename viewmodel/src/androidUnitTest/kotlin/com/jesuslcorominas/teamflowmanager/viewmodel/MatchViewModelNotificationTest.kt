@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
@@ -166,6 +167,12 @@ class MatchViewModelNotificationTest {
         notifyPresidentMatchEvent = notifyPresidentMatchEventUseCase,
         getTeamUseCase = getTeamUseCase,
         getPlayersByTeamUseCase = mockk { every { this@mockk(any()) } returns flowOf(players) },
+        observeSubstitutionModeUseCase = mockk { every { this@mockk() } returns flowOf(SubstitutionMode.LIVE) },
+        observePendingSubstitutionsUseCase = mockk { every { this@mockk(any()) } returns flowOf(emptyList()) },
+        getPendingSubstitutionConflictsUseCase = mockk(relaxed = true),
+        addPendingSubstitutionUseCase = mockk(relaxed = true),
+        removePendingSubstitutionUseCase = mockk(relaxed = true),
+        clearPendingSubstitutionsUseCase = mockk(relaxed = true),
     )
 
     // ── fireNotification – integration with notifyPresidentMatchEventUseCase ──
