@@ -13,11 +13,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -31,6 +34,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -57,6 +62,8 @@ import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerActivityInterval
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.ScorePoint
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppIconButton
@@ -66,6 +73,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
+import com.jesuslcorominas.teamflowmanager.ui.matches.components.PendingSubstitutionCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
@@ -73,7 +81,11 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.ExportState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PendingSubstitutionConflict
+import com.jesuslcorominas.teamflowmanager.viewmodel.PendingSubstitutionItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
+import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionExecutionResult
+import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionExecutionTrigger
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -102,6 +114,15 @@ import teamflowmanager.shared_ui.generated.resources.own_goal_scorer_label
 import teamflowmanager.shared_ui.generated.resources.pause_match_button
 import teamflowmanager.shared_ui.generated.resources.pause_match_early_message
 import teamflowmanager.shared_ui.generated.resources.pause_match_early_title
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_clear_all
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_clear_all_message
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_clear_all_title
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_conflict_confirm
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_conflict_message
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_conflict_title
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_execute_all
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_paused_hint
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_title
 import teamflowmanager.shared_ui.generated.resources.resume_match_button
 import teamflowmanager.shared_ui.generated.resources.scorers_dialog_title
 import teamflowmanager.shared_ui.generated.resources.scorers_tab
@@ -110,6 +131,14 @@ import teamflowmanager.shared_ui.generated.resources.statistics_tab
 import teamflowmanager.shared_ui.generated.resources.stop_match_early_message
 import teamflowmanager.shared_ui.generated.resources.stop_match_early_period_message
 import teamflowmanager.shared_ui.generated.resources.stop_match_early_title
+import teamflowmanager.shared_ui.generated.resources.substitution_result_applied_header
+import teamflowmanager.shared_ui.generated.resources.substitution_result_discarded_header
+import teamflowmanager.shared_ui.generated.resources.substitution_result_manual_title
+import teamflowmanager.shared_ui.generated.resources.substitution_result_pair
+import teamflowmanager.shared_ui.generated.resources.substitution_result_pair_discarded
+import teamflowmanager.shared_ui.generated.resources.substitution_result_resume_intro
+import teamflowmanager.shared_ui.generated.resources.substitution_result_resume_title
+import teamflowmanager.shared_ui.generated.resources.substitution_result_snackbar_applied
 import teamflowmanager.shared_ui.generated.resources.summary_tab
 import teamflowmanager.shared_ui.generated.resources.timeline_tab
 import teamflowmanager.shared_ui.generated.resources.timeout_button
@@ -140,8 +169,50 @@ fun MatchScreen(
     val showPauseConfirmation by viewModel.showPauseConfirmation.collectAsState()
     val showGoalScorerDialog by viewModel.showGoalScorerDialog.collectAsState()
     val showOpponentGoalDialog by viewModel.showOpponentGoalDialog.collectAsState()
+    val substitutionMode by viewModel.substitutionMode.collectAsState()
+    val pendingSubstitutions by viewModel.pendingSubstitutions.collectAsState()
+    val pendingSubstitutionConflict by viewModel.pendingSubstitutionConflict.collectAsState()
 
     var currentSortOrder: PlayerSortOrderBy by remember { mutableStateOf(PlayerSortOrderBy.BY_ACTIVE_FIRST) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    var substitutionResultDialog: SubstitutionExecutionResult? by remember { mutableStateOf(null) }
+    var appliedSnackbarCount by remember { mutableIntStateOf(0) }
+    var appliedSnackbarSeq by remember { mutableIntStateOf(0) }
+
+    // One effect that cleans up first and observes afterwards, on purpose: two separate effects
+    // would race, and the cleanup losing that race would swallow a fresh result.
+    //
+    // The cleanup exists because on iOS the ViewModel is cached in the root ViewModelStore and is
+    // never cleared on back navigation, so a conflict or a result left behind would pop up again
+    // on re-entry. Same LaunchedEffect(Unit) pattern the project already uses for this.
+    LaunchedEffect(Unit) {
+        viewModel.dismissPendingSubstitutionConflict()
+        viewModel.consumeLastSubstitutionResult()
+        viewModel.lastSubstitutionResult.collect { result ->
+            if (result == null) return@collect
+            // Consumed before it is painted: the dialog is driven by screen-local state, so
+            // holding it in the ViewModel would only leave it there to reappear later.
+            viewModel.consumeLastSubstitutionResult()
+            when (presentationFor(result)) {
+                SubstitutionResultPresentation.DIALOG -> substitutionResultDialog = result
+                SubstitutionResultPresentation.SNACKBAR -> {
+                    appliedSnackbarCount = result.applied.size
+                    appliedSnackbarSeq++
+                }
+            }
+        }
+    }
+
+    val appliedSnackbarMessage =
+        stringResource(Res.string.substitution_result_snackbar_applied, appliedSnackbarCount)
+    // Keyed on a counter, not on the message: two identical batches in a row would otherwise be
+    // one string and the second would never be shown.
+    LaunchedEffect(appliedSnackbarSeq) {
+        if (appliedSnackbarSeq > 0) {
+            snackbarHostState.showSnackbar(appliedSnackbarMessage)
+        }
+    }
 
     LaunchedEffect(exportState) {
         if (exportState is ExportState.Ready) {
@@ -164,6 +235,12 @@ fun MatchScreen(
                         readOnly = readOnly,
                         selectedPlayerOut = selectedPlayerOut,
                         currentSortOrder = currentSortOrder,
+                        substitutionMode = substitutionMode,
+                        pendingSubstitutions = pendingSubstitutions,
+                        onExecutePendingSubstitution = { viewModel.executePendingSubstitution(it) },
+                        onExecuteAllPendingSubstitutions = { viewModel.executeAllPendingSubstitutions() },
+                        onRemovePendingSubstitution = { viewModel.removePendingSubstitution(it) },
+                        onClearPendingSubstitutions = { viewModel.clearPendingSubstitutions() },
                         onSaveMatch = { viewModel.saveMatch() },
                         onPauseMatch = { viewModel.pauseMatch() },
                         onResumeMatch = { viewModel.resumeMatch(state.match.id) },
@@ -237,6 +314,29 @@ fun MatchScreen(
             )
         }
 
+        pendingSubstitutionConflict?.let { conflict ->
+            PendingSubstitutionConflictDialog(
+                conflict = conflict,
+                onConfirm = { viewModel.confirmPendingSubstitutionConflict() },
+                onDismiss = { viewModel.dismissPendingSubstitutionConflict() },
+            )
+        }
+
+        substitutionResultDialog?.let { result ->
+            SubstitutionResultDialog(
+                result = result,
+                onDismiss = { substitutionResultDialog = null },
+            )
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = LocalContentBottomPadding.current),
+        )
+
         if (isSubstitutionInProgress) {
             Box(
                 modifier =
@@ -271,6 +371,12 @@ private fun SuccessState(
     readOnly: Boolean,
     selectedPlayerOut: String?,
     currentSortOrder: PlayerSortOrderBy,
+    substitutionMode: SubstitutionMode,
+    pendingSubstitutions: List<PendingSubstitutionItem>,
+    onExecutePendingSubstitution: (SubstitutionPair) -> Unit,
+    onExecuteAllPendingSubstitutions: () -> Unit,
+    onRemovePendingSubstitution: (SubstitutionPair) -> Unit,
+    onClearPendingSubstitutions: () -> Unit,
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
@@ -303,6 +409,12 @@ private fun SuccessState(
             readOnly = readOnly,
             selectedPlayerOut = selectedPlayerOut,
             currentSortOrder = currentSortOrder,
+            substitutionMode = substitutionMode,
+            pendingSubstitutions = pendingSubstitutions,
+            onExecutePendingSubstitution = onExecutePendingSubstitution,
+            onExecuteAllPendingSubstitutions = onExecuteAllPendingSubstitutions,
+            onRemovePendingSubstitution = onRemovePendingSubstitution,
+            onClearPendingSubstitutions = onClearPendingSubstitutions,
             onSaveMatch = onSaveMatch,
             onPauseMatch = onPauseMatch,
             onResumeMatch = onResumeMatch,
@@ -323,6 +435,12 @@ private fun MatchDetailContent(
     readOnly: Boolean,
     selectedPlayerOut: String?,
     currentSortOrder: PlayerSortOrderBy,
+    substitutionMode: SubstitutionMode,
+    pendingSubstitutions: List<PendingSubstitutionItem>,
+    onExecutePendingSubstitution: (SubstitutionPair) -> Unit,
+    onExecuteAllPendingSubstitutions: () -> Unit,
+    onRemovePendingSubstitution: (SubstitutionPair) -> Unit,
+    onClearPendingSubstitutions: () -> Unit,
     onSaveMatch: () -> Unit,
     onPauseMatch: () -> Unit,
     onResumeMatch: () -> Unit,
@@ -359,6 +477,15 @@ private fun MatchDetailContent(
         PlayerSortOrderRow(
             currentSortOrder = currentSortOrder,
             onSortOrderChange = onSortOrderChange,
+        )
+
+        PendingSubstitutionsSection(
+            items = pendingCardsToShow(substitutionMode, readOnly, pendingSubstitutions),
+            canExecute = canExecutePendingSubstitutions(state.match),
+            onExecute = onExecutePendingSubstitution,
+            onExecuteAll = onExecuteAllPendingSubstitutions,
+            onRemove = onRemovePendingSubstitution,
+            onClearAll = onClearPendingSubstitutions,
         )
 
         // Player list — click-based substitution (no drag-drop in KMP-23)
@@ -1157,3 +1284,240 @@ private fun OpponentGoalConfirmationDialog(
 }
 
 // endregion
+
+/**
+ * The queue of scheduled changes, above the squad list so that tapping two players and seeing a
+ * card appear is one glance, not a trip to another surface.
+ *
+ * Height is capped: N cards at once is the point of the feature, and without a cap they would
+ * squeeze the squad list — the thing the coach is actually looking at — down to nothing.
+ */
+@Composable
+private fun PendingSubstitutionsSection(
+    items: List<PendingSubstitutionItem>,
+    canExecute: Boolean,
+    onExecute: (SubstitutionPair) -> Unit,
+    onExecuteAll: () -> Unit,
+    onRemove: (SubstitutionPair) -> Unit,
+    onClearAll: () -> Unit,
+) {
+    if (items.isEmpty()) return
+
+    var showClearAllConfirmation by remember { mutableStateOf(false) }
+
+    if (showClearAllConfirmation) {
+        AppAlertDialog(
+            title = stringResource(Res.string.pending_substitutions_clear_all_title),
+            message = stringResource(Res.string.pending_substitutions_clear_all_message, items.size),
+            confirmText = stringResource(Res.string.yes),
+            dismissText = stringResource(Res.string.no),
+            isDestructive = true,
+            onConfirm = {
+                showClearAllConfirmation = false
+                onClearAll()
+            },
+            onDismiss = { showClearAllConfirmation = false },
+        )
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = TFMSpacing.spacing02)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(Res.string.pending_substitutions_title, items.size),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+
+            TextButton(onClick = onExecuteAll, enabled = canExecute) {
+                Text(text = stringResource(Res.string.pending_substitutions_execute_all))
+            }
+
+            TextButton(onClick = { showClearAllConfirmation = true }) {
+                Text(
+                    text = stringResource(Res.string.pending_substitutions_clear_all),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+
+        // A greyed-out button with no explanation reads as a bug; say why, and say what will
+        // happen instead — the queue runs on its own when the match is resumed.
+        if (!canExecute) {
+            Text(
+                text = stringResource(Res.string.pending_substitutions_paused_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = TFMSpacing.spacing01),
+            )
+        }
+
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 200.dp)
+                    .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+        ) {
+            items.forEach { item ->
+                PendingSubstitutionCard(
+                    item = item,
+                    executeEnabled = canExecute,
+                    onExecute = { onExecute(item.pair) },
+                    onRemove = { onRemove(item.pair) },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Warns before a destructive write: scheduling this pair drops the ones it shares a player with.
+ *
+ * Names them instead of counting them — "2 changes will be discarded" gives the coach nothing to
+ * decide with. AppAlertDialog cannot do it: it takes a single message String, and this needs a list.
+ */
+@Composable
+private fun PendingSubstitutionConflictDialog(
+    conflict: PendingSubstitutionConflict,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(Res.string.pending_substitutions_conflict_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text =
+                        stringResource(
+                            Res.string.pending_substitutions_conflict_message,
+                            substitutionPairText(conflict.requested),
+                        ),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
+                conflict.displaced.forEach { displaced ->
+                    Text(
+                        text = substitutionPairText(displaced),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(Res.string.pending_substitutions_conflict_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(text = stringResource(Res.string.cancel)) }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
+
+/**
+ * What a batch actually did.
+ *
+ * A run triggered on resume gets its own wording, not a variant of the manual one: it happened
+ * while the coach was not looking, and its discarded cards are deleted from the store before this
+ * is ever painted, so this dialog is the only record that will remain of the team having changed.
+ */
+@Composable
+private fun SubstitutionResultDialog(
+    result: SubstitutionExecutionResult,
+    onDismiss: () -> Unit,
+) {
+    val isResume = result.trigger == SubstitutionExecutionTrigger.RESUME
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text =
+                    stringResource(
+                        if (isResume) {
+                            Res.string.substitution_result_resume_title
+                        } else {
+                            Res.string.substitution_result_manual_title
+                        },
+                    ),
+                style = MaterialTheme.typography.titleLarge,
+            )
+        },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                if (isResume) {
+                    Text(
+                        text = stringResource(Res.string.substitution_result_resume_intro),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
+                }
+
+                if (result.applied.isNotEmpty()) {
+                    Text(
+                        text = stringResource(Res.string.substitution_result_applied_header, result.applied.size),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    result.applied.forEach { applied ->
+                        Text(
+                            text = substitutionPairText(applied),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+
+                if (result.discarded.isNotEmpty()) {
+                    Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
+                    Text(
+                        text = stringResource(Res.string.substitution_result_discarded_header, result.discarded.size),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    result.discarded.forEach { discarded ->
+                        Text(
+                            text =
+                                stringResource(
+                                    Res.string.substitution_result_pair_discarded,
+                                    discarded.substitution.playerOut.number,
+                                    "${discarded.substitution.playerOut.firstName} ${discarded.substitution.playerOut.lastName}",
+                                    discarded.substitution.playerIn.number,
+                                    "${discarded.substitution.playerIn.firstName} ${discarded.substitution.playerIn.lastName}",
+                                    stringResource(discardReasonRes(discarded.reason)),
+                                ),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(text = stringResource(Res.string.close)) }
+        },
+        shape = MaterialTheme.shapes.medium,
+    )
+}
+
+@Composable
+private fun substitutionPairText(item: PendingSubstitutionItem): String =
+    stringResource(
+        Res.string.substitution_result_pair,
+        item.playerOut.number,
+        "${item.playerOut.firstName} ${item.playerOut.lastName}",
+        item.playerIn.number,
+        "${item.playerIn.firstName} ${item.playerIn.lastName}",
+    )
