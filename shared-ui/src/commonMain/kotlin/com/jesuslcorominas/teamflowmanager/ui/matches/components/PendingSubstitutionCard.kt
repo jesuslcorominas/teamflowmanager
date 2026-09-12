@@ -1,22 +1,21 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,8 +27,10 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.SubstitutionGreen
 import com.jesuslcorominas.teamflowmanager.ui.theme.SubstitutionRed
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.PendingSubstitutionItem
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import teamflowmanager.shared_ui.generated.resources.Res
+import teamflowmanager.shared_ui.generated.resources.ic_substitution_arrows
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_execute_one
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_remove_one
 
@@ -41,10 +42,15 @@ import teamflowmanager.shared_ui.generated.resources.pending_substitutions_remov
  * squeezed on top of each other and a two-digit number was barely readable, which is the one thing
  * on this card the coach reads at a glance.
  *
+ * Sized to match [com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem]: the same
+ * [TFMSpacing.spacing04] padding around a default-size [JerseyBadge], so the height comes out equal
+ * by construction rather than from a number copied across by eye. Sitting directly above the squad
+ * list, a card that was visibly shorter and carried visibly smaller numbers read as a lesser kind
+ * of row; it is the same kind of row, about two players instead of one.
+ *
  * Deliberately not [com.jesuslcorominas.teamflowmanager.ui.components.card.SubstitutionCard]: that
  * one belongs to a finished match's timeline and is built around the minute it happened, which a
- * change that has not happened yet does not have. Several of these have to fit above the squad
- * list at once, so this one is a compact row rather than a tall card.
+ * change that has not happened yet does not have.
  */
 @Composable
 fun PendingSubstitutionCard(
@@ -60,18 +66,19 @@ fun PendingSubstitutionCard(
                 Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = TFMSpacing.spacing02,
-                        end = TFMSpacing.spacing01,
-                        top = TFMSpacing.spacing02,
-                        bottom = TFMSpacing.spacing02,
+                        start = TFMSpacing.spacing03,
+                        end = TFMSpacing.spacing02,
+                        top = TFMSpacing.spacing04,
+                        bottom = TFMSpacing.spacing04,
                     ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
         ) {
-            JerseyBadge(number = item.playerIn.number, size = 30)
+            JerseyBadge(number = item.playerIn.number)
+
+            Spacer(modifier = Modifier.width(TFMSpacing.spacing03))
 
             PlayerName(
-                name = "${item.playerIn.firstName} ${item.playerIn.lastName}",
+                name = item.playerIn.firstName,
                 color = SubstitutionGreen,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.weight(1f),
@@ -80,31 +87,37 @@ fun PendingSubstitutionCard(
             SubstitutionArrows()
 
             PlayerName(
-                name = "${item.playerOut.firstName} ${item.playerOut.lastName}",
+                name = item.playerOut.firstName,
                 color = SubstitutionRed,
                 textAlign = TextAlign.End,
                 modifier = Modifier.weight(1f),
             )
 
-            JerseyBadge(number = item.playerOut.number, size = 30)
+            Spacer(modifier = Modifier.width(TFMSpacing.spacing03))
 
+            JerseyBadge(number = item.playerOut.number)
+
+            // The badge is the only thing telling two players with the same first name apart, so
+            // the buttons keep their distance from it rather than crowding the number.
+            Spacer(modifier = Modifier.width(TFMSpacing.spacing03))
+
+            // Side by side, with room between them. Stacked and touching, the play and the bin read
+            // as one smudged control, and a mis-tap here deletes a change the coach meant to run.
+            // Dropping the surname freed the width to lay them out flat; at 40dp each they stay
+            // under the 56dp badge that sets this card's height, so it still matches a player's row.
             AppIconButton(
-                modifier = Modifier.size(40.dp),
-                internalModifier = Modifier.size(26.dp),
+                modifier = Modifier.size(36.dp),
+                internalModifier = Modifier.size(24.dp),
                 imageVector = Icons.Filled.PlayArrow,
                 contentDescription = stringResource(Res.string.pending_substitutions_execute_one),
                 enabled = executeEnabled,
-                tint =
-                    if (executeEnabled) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                    },
                 onClick = onExecute,
             )
 
+            Spacer(modifier = Modifier.width(TFMSpacing.spacing01))
+
             AppIconButton(
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(36.dp),
                 internalModifier = Modifier.size(22.dp),
                 imageVector = Icons.Filled.Delete,
                 contentDescription = stringResource(Res.string.pending_substitutions_remove_one),
@@ -115,29 +128,26 @@ fun PendingSubstitutionCard(
     }
 }
 
-/** Green in, red out — the direction each player is travelling, in the colours of the house. */
+/**
+ * The swap motif from the app icon: green arc over red arc, one coming on and one going off.
+ *
+ * The app's own mark rather than two Material arrows, so the card says "substitution" in the same
+ * visual language as the launcher. Drawn with [Image], not `Icon`: it carries its own two colours
+ * and a tint would flatten it to one.
+ */
 @Composable
 private fun SubstitutionArrows() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(
-            modifier = Modifier.size(16.dp),
-            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-            contentDescription = null,
-            tint = SubstitutionGreen,
-        )
-        Icon(
-            modifier = Modifier.size(16.dp),
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = null,
-            tint = SubstitutionRed,
-        )
-    }
+    Image(
+        modifier = Modifier.size(28.dp),
+        painter = painterResource(Res.drawable.ic_substitution_arrows),
+        contentDescription = null,
+    )
 }
 
 @Composable
 private fun PlayerName(
     name: String,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     textAlign: TextAlign,
     modifier: Modifier = Modifier,
 ) {
@@ -148,6 +158,15 @@ private fun PlayerName(
         fontWeight = FontWeight.Medium,
         color = color,
         textAlign = textAlign,
+        // One line, and never two. Measured on a device, two 56dp badges, the arrows and the two
+        // buttons leave this column narrower than some first names are wide, and a second line does
+        // not rescue a single word — Compose breaks it mid-word instead, so "Alvaro" came out as
+        // "Alvar/o" and "Martín" as "Martí/n", which is worse than any truncation. Capped at one
+        // line a long name ends in an ellipsis, which at least reads as a name.
+        //
+        // bodySmall rather than bodyMedium for the same reason: the jersey number is what tells two
+        // players apart now that surnames are gone, and it is the thing drawn large. The name only
+        // has to confirm it.
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )

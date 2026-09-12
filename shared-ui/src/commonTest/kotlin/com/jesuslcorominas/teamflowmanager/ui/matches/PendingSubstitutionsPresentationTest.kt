@@ -232,6 +232,179 @@ class PendingSubstitutionsPresentationTest {
         assertFalse(canExecutePendingSubstitutions(match(MatchStatus.FINISHED)))
     }
 
+    // ---------- shouldShowPendingSubstitutionsSection ----------
+
+    @Test
+    fun `scheduled mode paints the section with an empty queue, so its buttons exist to be disabled`() {
+        assertTrue(
+            shouldShowPendingSubstitutionsSection(
+                readOnly = false,
+                mode = SubstitutionMode.SCHEDULED,
+                items = emptyList(),
+            ),
+        )
+    }
+
+    @Test
+    fun `live mode with an empty queue paints nothing, rather than spend a row on a count of zero`() {
+        assertFalse(
+            shouldShowPendingSubstitutionsSection(
+                readOnly = false,
+                mode = SubstitutionMode.LIVE,
+                items = emptyList(),
+            ),
+        )
+    }
+
+    @Test
+    fun `a queue that outlived a switch to live still gets its section, so it can be deleted`() {
+        assertTrue(
+            shouldShowPendingSubstitutionsSection(
+                readOnly = false,
+                mode = SubstitutionMode.LIVE,
+                items = listOf(pending(1)),
+            ),
+        )
+    }
+
+    @Test
+    fun `read only never paints the section, queued or not`() {
+        assertFalse(
+            shouldShowPendingSubstitutionsSection(
+                readOnly = true,
+                mode = SubstitutionMode.SCHEDULED,
+                items = listOf(pending(1)),
+            ),
+        )
+        assertFalse(
+            shouldShowPendingSubstitutionsSection(
+                readOnly = true,
+                mode = SubstitutionMode.SCHEDULED,
+                items = emptyList(),
+            ),
+        )
+    }
+
+    // ---------- canExecuteAllPendingSubstitutions / canClearAllPendingSubstitutions ----------
+
+    @Test
+    fun `substitute all needs both a queue and a running match`() {
+        assertTrue(
+            canExecuteAllPendingSubstitutions(match(MatchStatus.IN_PROGRESS), listOf(pending(1))),
+        )
+    }
+
+    @Test
+    fun `substitute all is off with an empty queue even while the match is running`() {
+        assertFalse(canExecuteAllPendingSubstitutions(match(MatchStatus.IN_PROGRESS), emptyList()))
+    }
+
+    @Test
+    fun `substitute all is off while paused even with a queue, as it was before`() {
+        assertFalse(canExecuteAllPendingSubstitutions(match(MatchStatus.PAUSED), listOf(pending(1))))
+    }
+
+    @Test
+    fun `delete all is off with an empty queue`() {
+        assertFalse(canClearAllPendingSubstitutions(emptyList()))
+    }
+
+    @Test
+    fun `delete all stays on while the match is paused, because changing one's mind is not blocked`() {
+        // The two reasons are distinct on purpose: the pause blocks applying changes, never
+        // discarding them. Half time is exactly when a coach rethinks the queue.
+        assertTrue(canClearAllPendingSubstitutions(listOf(pending(1))))
+    }
+
+    // ---------- shouldShowPausedHint ----------
+
+    @Test
+    fun `the pause is explained when it is holding a real queue back`() {
+        assertTrue(shouldShowPausedHint(match(MatchStatus.PAUSED), listOf(pending(1))))
+    }
+
+    @Test
+    fun `nothing is explained while the match is running`() {
+        assertFalse(shouldShowPausedHint(match(MatchStatus.IN_PROGRESS), listOf(pending(1))))
+    }
+
+    @Test
+    fun `an empty queue during a pause explains nothing, because the pause is not what is off`() {
+        // The button is disabled here for lack of anything to run. Printing the pause message would
+        // name the wrong cause and send the coach looking for a pause to undo.
+        assertFalse(shouldShowPausedHint(match(MatchStatus.PAUSED), emptyList()))
+        assertFalse(shouldShowPausedHint(match(MatchStatus.TIMEOUT), emptyList()))
+    }
+
+    // ---------- canExpandPendingSubstitutions ----------
+
+    @Test
+    fun `an empty queue cannot be opened, so the row is not a switch`() {
+        assertFalse(canExpandPendingSubstitutions(emptyList()))
+    }
+
+    @Test
+    fun `a queue with something in it can be opened`() {
+        assertTrue(canExpandPendingSubstitutions(listOf(pending(1))))
+    }
+
+    // ---------- shouldPulseCounter ----------
+
+    @Test
+    fun `the counter reacts when a change is added`() {
+        assertTrue(
+            shouldPulseCounter(
+                previousPairs = listOf(pending(1).pair),
+                currentPairs = listOf(pending(1).pair, pending(2).pair),
+            ),
+        )
+    }
+
+    @Test
+    fun `the first change queued reacts, which is when it matters most`() {
+        assertTrue(shouldPulseCounter(previousPairs = emptyList(), currentPairs = listOf(pending(1).pair)))
+    }
+
+    @Test
+    fun `replacing a change reacts even though the count does not move`() {
+        // The case the count-based version got wrong: scheduling over a player who already had a
+        // change displaces the old pair, so the total stays put and the coach was told nothing.
+        assertTrue(
+            shouldPulseCounter(
+                previousPairs = listOf(pending(1).pair, pending(2).pair),
+                currentPairs = listOf(pending(1).pair, pending(3).pair),
+            ),
+        )
+    }
+
+    @Test
+    fun `deleting a change does not react, since the animation means stored`() {
+        assertFalse(
+            shouldPulseCounter(
+                previousPairs = listOf(pending(1).pair, pending(2).pair),
+                currentPairs = listOf(pending(1).pair),
+            ),
+        )
+        assertFalse(shouldPulseCounter(previousPairs = listOf(pending(1).pair), currentPairs = emptyList()))
+    }
+
+    @Test
+    fun `an unchanged queue does not react, so a repaint is not mistaken for a change`() {
+        val pairs = listOf(pending(1).pair, pending(2).pair)
+        assertFalse(shouldPulseCounter(previousPairs = pairs, currentPairs = pairs))
+    }
+
+    @Test
+    fun `the same pairs in a different order do not react`() {
+        // Sorting is not news. Nothing was stored, so nothing should say it was.
+        assertFalse(
+            shouldPulseCounter(
+                previousPairs = listOf(pending(1).pair, pending(2).pair),
+                currentPairs = listOf(pending(2).pair, pending(1).pair),
+            ),
+        )
+    }
+
     // ---------- presentationFor ----------
 
     @Test

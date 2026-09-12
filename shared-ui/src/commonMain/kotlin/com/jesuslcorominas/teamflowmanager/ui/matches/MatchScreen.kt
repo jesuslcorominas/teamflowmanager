@@ -1,9 +1,17 @@
 package com.jesuslcorominas.teamflowmanager.ui.matches
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,14 +30,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,11 +60,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
@@ -82,7 +97,6 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.DiscardedSubstitutionItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.ExportState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.PendingSubstitutionConflict
 import com.jesuslcorominas.teamflowmanager.viewmodel.PendingSubstitutionItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionExecutionResult
@@ -103,6 +117,7 @@ import teamflowmanager.shared_ui.generated.resources.dont_show_again
 import teamflowmanager.shared_ui.generated.resources.end_timeout_button
 import teamflowmanager.shared_ui.generated.resources.finish_match_button
 import teamflowmanager.shared_ui.generated.resources.ic_goal
+import teamflowmanager.shared_ui.generated.resources.ic_substitution_arrows
 import teamflowmanager.shared_ui.generated.resources.ic_timeout
 import teamflowmanager.shared_ui.generated.resources.ic_whistle
 import teamflowmanager.shared_ui.generated.resources.invalid_substitution_message
@@ -118,11 +133,13 @@ import teamflowmanager.shared_ui.generated.resources.pause_match_early_title
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_clear_all
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_clear_all_message
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_clear_all_title
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_collapse
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_conflict_confirm
-import teamflowmanager.shared_ui.generated.resources.pending_substitutions_conflict_message
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_conflict_title
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_execute_all
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_expand
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_paused_hint
+import teamflowmanager.shared_ui.generated.resources.pending_substitutions_player_already_scheduled
 import teamflowmanager.shared_ui.generated.resources.pending_substitutions_title
 import teamflowmanager.shared_ui.generated.resources.resume_match_button
 import teamflowmanager.shared_ui.generated.resources.scorers_dialog_title
@@ -173,7 +190,7 @@ fun MatchScreen(
     val showOpponentGoalDialog by viewModel.showOpponentGoalDialog.collectAsState()
     val substitutionMode by viewModel.substitutionMode.collectAsState()
     val pendingSubstitutions by viewModel.pendingSubstitutions.collectAsState()
-    val pendingSubstitutionConflict by viewModel.pendingSubstitutionConflict.collectAsState()
+    val playerAlreadyScheduledAlert by viewModel.playerAlreadyScheduledAlert.collectAsState()
 
     var currentSortOrder: PlayerSortOrderBy by remember { mutableStateOf(PlayerSortOrderBy.BY_ACTIVE_FIRST) }
 
@@ -189,7 +206,7 @@ fun MatchScreen(
     // never cleared on back navigation, so a conflict or a result left behind would pop up again
     // on re-entry. Same LaunchedEffect(Unit) pattern the project already uses for this.
     LaunchedEffect(Unit) {
-        viewModel.dismissPendingSubstitutionConflict()
+        viewModel.dismissPlayerAlreadyScheduled()
         viewModel.consumeLastSubstitutionResult()
         viewModel.lastSubstitutionResult.collect { result ->
             if (result == null) return@collect
@@ -316,11 +333,14 @@ fun MatchScreen(
             )
         }
 
-        pendingSubstitutionConflict?.let { conflict ->
-            PendingSubstitutionConflictDialog(
-                conflict = conflict,
-                onConfirm = { viewModel.confirmPendingSubstitutionConflict() },
-                onDismiss = { viewModel.dismissPendingSubstitutionConflict() },
+        playerAlreadyScheduledAlert?.let {
+            AppAlertDialog(
+                title = stringResource(Res.string.pending_substitutions_conflict_title),
+                message = stringResource(Res.string.pending_substitutions_player_already_scheduled),
+                confirmText = stringResource(Res.string.pending_substitutions_conflict_confirm),
+                dismissText = stringResource(Res.string.cancel),
+                onConfirm = { viewModel.confirmPlayerAlreadyScheduled() },
+                onDismiss = { viewModel.dismissPlayerAlreadyScheduled() },
             )
         }
 
@@ -348,10 +368,7 @@ fun MatchScreen(
                         .pointerInput(Unit) { detectTapGestures { } },
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(64.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                SubstitutionProgressIndicator()
             }
         }
     }
@@ -476,18 +493,25 @@ private fun MatchDetailContent(
             onScoreBoardClick = scoreBoardClick,
         )
 
+        val pendingCards = pendingCardsToShow(readOnly, pendingSubstitutions)
+
+        if (shouldShowPendingSubstitutionsSection(readOnly, substitutionMode, pendingCards)) {
+            PendingSubstitutionsSection(
+                items = pendingCards,
+                match = state.match,
+                onExecute = onExecutePendingSubstitution,
+                onExecuteAll = onExecuteAllPendingSubstitutions,
+                onRemove = onRemovePendingSubstitution,
+                onClearAll = onClearPendingSubstitutions,
+            )
+        }
+
+        // Below the queue and directly above the list it sorts. It is a control *of* the squad
+        // list, so it belongs against it; with the queue in between, it read as if it sorted the
+        // scheduled changes.
         PlayerSortOrderRow(
             currentSortOrder = currentSortOrder,
             onSortOrderChange = onSortOrderChange,
-        )
-
-        PendingSubstitutionsSection(
-            items = pendingCardsToShow(readOnly, pendingSubstitutions),
-            canExecute = canExecutePendingSubstitutions(state.match),
-            onExecute = onExecutePendingSubstitution,
-            onExecuteAll = onExecuteAllPendingSubstitutions,
-            onRemove = onRemovePendingSubstitution,
-            onClearAll = onClearPendingSubstitutions,
         )
 
         // Player list — click-based substitution (no drag-drop in KMP-23)
@@ -1288,24 +1312,45 @@ private fun OpponentGoalConfirmationDialog(
 // endregion
 
 /**
- * The queue of scheduled changes, above the squad list so that tapping two players and seeing a
- * card appear is one glance, not a trip to another surface.
+ * The queue of scheduled changes, above the squad list so that tapping two players and seeing the
+ * count move is one glance, not a trip to another surface.
  *
- * Height is capped: N cards at once is the point of the feature, and without a cap they would
- * squeeze the squad list — the thing the coach is actually looking at — down to nothing.
+ * One card, collapsed by default, and that is the whole point of it. Cards the height of a player's
+ * row are readable but expensive, and with four or five queued they pushed the squad list off the
+ * screen — the list being the thing a coach actually watches during a match. Closed, the section
+ * costs a single row, and the queue is still countable, runnable and clearable from that row alone.
+ *
+ * The tap target is the header row rather than the whole card. Collapsed those are the same thing,
+ * which is what "tap anywhere to open it" means in practice; expanded, the extra area is the queued
+ * cards, and each of those carries its own play and delete buttons. Folding the section away under
+ * someone reaching for one of those buttons would be a small betrayal, so the cards are not part of
+ * the switch. The two header buttons sit inside the clickable row and swallow their own taps.
+ *
+ * Whether this is painted at all is [shouldShowPendingSubstitutionsSection]'s decision, taken by
+ * the caller; with an empty queue there is a header here and no cards.
  */
 @Composable
 private fun PendingSubstitutionsSection(
     items: List<PendingSubstitutionItem>,
-    canExecute: Boolean,
+    match: Match,
     onExecute: (SubstitutionPair) -> Unit,
     onExecuteAll: () -> Unit,
     onRemove: (SubstitutionPair) -> Unit,
     onClearAll: () -> Unit,
 ) {
-    if (items.isEmpty()) return
-
     var showClearAllConfirmation by remember { mutableStateOf(false) }
+
+    // Closed to begin with. The section opening itself the moment anything is queued would hand the
+    // squad list's space straight back to the cards and leave the chevron as a chore to be repeated
+    // after every substitution — which is the complaint this whole screen is being reworked for.
+    // Nothing is hidden by starting closed: the counter grows and settles to say the tap landed.
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    // What the section actually is, as opposed to what the switch was last left at. An empty queue
+    // has nothing to show, so it stays shut however the coach left it — see
+    // [canExpandPendingSubstitutions].
+    val canExpand = canExpandPendingSubstitutions(items)
+    val isExpanded = expanded && canExpand
 
     if (showClearAllConfirmation) {
         AppAlertDialog(
@@ -1322,112 +1367,223 @@ private fun PendingSubstitutionsSection(
         )
     }
 
-    Column(modifier = Modifier.fillMaxWidth().padding(bottom = TFMSpacing.spacing02)) {
-        // Title and actions on separate rows: side by side, the Spanish title wraps onto a second
-        // line and reads as a mistake. Two rows survive any locale and any screen width.
-        Text(
-            text = stringResource(Res.string.pending_substitutions_title, items.size),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-        )
+    // The card wraps the header row, and only while the section is closed.
+    //
+    // Closed, the section IS that row, so a card around it is a card around the whole thing: the
+    // surface and its shadow say "this opens", and set it apart from the match card above and the
+    // squad list below. Open, the same surface became a card wrapped around cards — the queued
+    // changes are cards in their own right — and two frames around one piece of content read as a
+    // mistake. Painting it transparent was not enough: a Surface casts its shadow whatever colour
+    // it is filled with, and on the device the outline of a box nobody could see was still there.
+    //
+    // What must NOT move is the [AnimatedVisibility] below. Putting the whole section inside the
+    // branch instead of just the header placed that call at two different points in the tree,
+    // Compose stopped recognising it across the switch, and the open/close animation disappeared —
+    // the list snapped in and out. Same call site in every state: the container around the header
+    // may change, the list may not.
+    //
+    // Deliberately not AppCard when it is closed either: AppCard rings every card in the app with a
+    // 1dp outline, and here that line ran the full width of the screen, reading as a rule drawn
+    // across it rather than as the edge of a thing.
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = TFMSpacing.spacing03)) {
+        val header: @Composable () -> Unit = {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (canExpand) Modifier.clickable { expanded = !expanded } else Modifier,
+                        )
+                        .padding(
+                            start = TFMSpacing.spacing04,
+                            end = TFMSpacing.spacing02,
+                            top = TFMSpacing.spacing02,
+                            bottom = TFMSpacing.spacing02,
+                        ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PendingSubstitutionsCounter(pairs = items.map { it.pair })
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End,
-        ) {
-            TextButton(onClick = onExecuteAll, enabled = canExecute) {
-                Text(text = stringResource(Res.string.pending_substitutions_execute_all))
-            }
+                Spacer(modifier = Modifier.weight(1f))
 
-            TextButton(onClick = { showClearAllConfirmation = true }) {
-                Text(
-                    text = stringResource(Res.string.pending_substitutions_clear_all),
-                    color = MaterialTheme.colorScheme.error,
+                val executeAllEnabled = canExecuteAllPendingSubstitutions(match, items)
+                val clearAllEnabled = canClearAllPendingSubstitutions(items)
+
+                // FastForward and DeleteSweep rather than PlayArrow and Delete: the cards below use
+                // those two for the single change they belong to, and the same glyph meaning "this
+                // one" in one place and "all of them" in another is how a coach empties a queue by
+                // accident. The doubled and the swept variants say "all" on sight.
+                AppIconButton(
+                    modifier = Modifier.size(44.dp),
+                    internalModifier = Modifier.size(26.dp),
+                    imageVector = Icons.Filled.FastForward,
+                    contentDescription = stringResource(Res.string.pending_substitutions_execute_all),
+                    enabled = executeAllEnabled,
+                    onClick = onExecuteAll,
                 )
+
+                AppIconButton(
+                    modifier = Modifier.size(44.dp),
+                    internalModifier = Modifier.size(26.dp),
+                    imageVector = Icons.Filled.DeleteSweep,
+                    contentDescription = stringResource(Res.string.pending_substitutions_clear_all),
+                    enabled = clearAllEnabled,
+                    tint = if (clearAllEnabled) MaterialTheme.colorScheme.error else null,
+                    onClick = { showClearAllConfirmation = true },
+                )
+
+                // An indicator, not a control — the whole header row is the control. It stays
+                // because a row that opens on touch and says so nowhere is a row nobody touches,
+                // and it goes when there is nothing to open, because pointing at an empty drawer is
+                // worse than not pointing at all.
+                if (canExpand) {
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        imageVector = if (isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                        contentDescription =
+                            stringResource(
+                                if (isExpanded) {
+                                    Res.string.pending_substitutions_collapse
+                                } else {
+                                    Res.string.pending_substitutions_expand
+                                },
+                            ),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
 
-        // A greyed-out button with no explanation reads as a bug; say why, and say what will
-        // happen instead — the queue runs on its own when the match is resumed.
-        if (!canExecute) {
+        if (isExpanded) {
+            header()
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            ) {
+                header()
+            }
+        }
+
+        // A greyed-out button with no explanation reads as a bug; say why, and say what will happen
+        // instead — the queue runs on its own when the match is resumed. Only while the pause is
+        // what is actually blocking it: see shouldShowPausedHint.
+        if (shouldShowPausedHint(match, items)) {
             Text(
                 text = stringResource(Res.string.pending_substitutions_paused_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = TFMSpacing.spacing01),
+                modifier =
+                    Modifier.padding(
+                        start = TFMSpacing.spacing04,
+                        end = TFMSpacing.spacing04,
+                        top = TFMSpacing.spacing02,
+                    ),
             )
         }
 
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 200.dp)
-                    .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
-        ) {
-            items.forEach { item ->
-                PendingSubstitutionCard(
-                    item = item,
-                    executeEnabled = canExecute,
-                    onExecute = { onExecute(item.pair) },
-                    onRemove = { onRemove(item.pair) },
-                )
+        AnimatedVisibility(visible = isExpanded) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 260.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = TFMSpacing.spacing02),
+                verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+            ) {
+                items.forEach { item ->
+                    PendingSubstitutionCard(
+                        item = item,
+                        executeEnabled = canExecutePendingSubstitutions(match),
+                        onExecute = { onExecute(item.pair) },
+                        onRemove = { onRemove(item.pair) },
+                    )
+                }
             }
         }
     }
 }
 
 /**
- * Warns before a destructive write: scheduling this pair drops the ones it shares a player with.
+ * The queue's size, ringed by the app icon's swap arrows, which turn a full circle whenever a
+ * change is added.
  *
- * Names them instead of counting them — "2 changes will be discarded" gives the coach nothing to
- * decide with. AppAlertDialog cannot do it: it takes a single message String, and this needs a list.
+ * The arrows stand in for the words "Cambios programados" rather than sitting beside them. Beside
+ * them the count appeared twice — once inside the ring and once in the label's "(2)" — and the row
+ * had to carry a title, two buttons and a chevron on a 411dp phone. The mark says what the section
+ * is without spelling it, which is the whole reason an app has an icon.
+ *
+ * The spin is the receipt: the card that was just queued may be behind a collapsed section or below
+ * the fold, so this is the one thing a coach can always see move. Only on the way up — deleting a
+ * change is not something to celebrate. See [shouldPulseCounter].
+ *
+ * The mark is centred in its own square viewport, so it turns on its axis rather than swinging
+ * around an off-centre point; see ic_substitution_arrows.xml.
+ *
+ * With the words gone the row has no text left to read aloud, so the count carries the full label
+ * as its content description.
  */
 @Composable
-private fun PendingSubstitutionConflictDialog(
-    conflict: PendingSubstitutionConflict,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
+private fun PendingSubstitutionsCounter(
+    pairs: List<SubstitutionPair>,
+    modifier: Modifier = Modifier,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(Res.string.pending_substitutions_conflict_title),
-                style = MaterialTheme.typography.titleLarge,
-            )
-        },
-        text = {
-            Column {
-                Text(
-                    text =
-                        stringResource(
-                            Res.string.pending_substitutions_conflict_message,
-                            substitutionPairText(conflict.requested),
-                        ),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Spacer(modifier = Modifier.padding(TFMSpacing.spacing01))
-                conflict.displaced.forEach { displaced ->
-                    Text(
-                        text = substitutionPairText(displaced),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = stringResource(Res.string.pending_substitutions_conflict_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(text = stringResource(Res.string.cancel)) }
-        },
-        shape = MaterialTheme.shapes.medium,
+    val turns = remember { Animatable(0f) }
+    var previousPairs by remember { mutableStateOf(pairs) }
+
+    LaunchedEffect(pairs) {
+        val pulse = shouldPulseCounter(previousPairs, pairs)
+        previousPairs = pairs
+        if (pulse) {
+            turns.snapTo(0f)
+            turns.animateTo(1f, animationSpec = tween(durationMillis = 500))
+        }
+    }
+
+    val label = stringResource(Res.string.pending_substitutions_title, pairs.size)
+
+    Box(
+        modifier = modifier.semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            modifier =
+                Modifier
+                    .size(48.dp)
+                    .graphicsLayer { rotationZ = turns.value * 360f },
+            painter = painterResource(Res.drawable.ic_substitution_arrows),
+            contentDescription = null,
+        )
+        Text(
+            text = pairs.size.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+/**
+ * The app's swap arrows, turning, while a batch is being written.
+ *
+ * The same mark the queue's counter carries, spinning the same way, instead of a generic circular
+ * indicator: what is happening is substitutions being made, and this says so. A plain spinner could
+ * equally have meant loading the match, saving a goal, or anything else.
+ */
+@Composable
+private fun SubstitutionProgressIndicator() {
+    val transition = rememberInfiniteTransition()
+    val angle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(animation = tween(durationMillis = 900, easing = LinearEasing)),
+    )
+
+    Image(
+        modifier = Modifier.size(72.dp).graphicsLayer { rotationZ = angle },
+        painter = painterResource(Res.drawable.ic_substitution_arrows),
+        contentDescription = null,
     )
 }
 

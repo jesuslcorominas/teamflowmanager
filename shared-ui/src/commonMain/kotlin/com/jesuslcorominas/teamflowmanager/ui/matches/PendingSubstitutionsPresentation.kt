@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.matches
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionDiscardReason
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionPair
 import com.jesuslcorominas.teamflowmanager.viewmodel.PendingSubstitutionItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerTimeItem
 import com.jesuslcorominas.teamflowmanager.viewmodel.SubstitutionExecutionResult
@@ -86,6 +87,88 @@ internal fun canSelectPlayerForSubstitution(
  * exactly as its tests fix it.
  */
 internal fun canExecutePendingSubstitutions(match: Match): Boolean = match.isInProgress
+
+/**
+ * Whether the section is painted at all — header included, even with nothing queued.
+ *
+ * The header has to survive an empty queue, because "Substitute all" and "Delete all" are required
+ * to show up disabled when there is nothing to act on, and a button that is not drawn cannot be
+ * disabled. The count in the title carries the rest of the message: `(0)` says the queue is empty
+ * without a line of prose saying so.
+ *
+ * Not in live mode with an empty queue, though. There is nothing to schedule there, so a permanent
+ * "Scheduled changes (0)" would cost the squad list a row and buy nothing — the exact opposite of
+ * what this section is being reshaped for. A queue that outlived a switch to live still shows, for
+ * the reason [pendingCardsToShow] gives: it has to be reachable to be deleted.
+ */
+internal fun shouldShowPendingSubstitutionsSection(
+    readOnly: Boolean,
+    mode: SubstitutionMode,
+    items: List<PendingSubstitutionItem>,
+): Boolean = !readOnly && (mode == SubstitutionMode.SCHEDULED || items.isNotEmpty())
+
+/**
+ * Whether "Substitute all" does anything: there has to be something queued, and the match has to be
+ * able to take it.
+ *
+ * Two independent reasons to be off, deliberately kept as two. [canExecutePendingSubstitutions] is
+ * unchanged and still owns the pause; this only adds the emptiness on top of it.
+ */
+internal fun canExecuteAllPendingSubstitutions(
+    match: Match,
+    items: List<PendingSubstitutionItem>,
+): Boolean = items.isNotEmpty() && canExecutePendingSubstitutions(match)
+
+/**
+ * Whether "Delete all" does anything: only that there is something to delete.
+ *
+ * Pointedly not gated on the pause. Throwing the queue away at half time is a perfectly ordinary
+ * thing for a coach to do — the pause blocks *applying* changes, not changing one's mind about
+ * them.
+ */
+internal fun canClearAllPendingSubstitutions(items: List<PendingSubstitutionItem>): Boolean = items.isNotEmpty()
+
+/**
+ * Whether to print the line explaining the pause.
+ *
+ * Only when the pause is actually blocking something. With an empty queue the button is off because
+ * there is nothing to run, not because the match is stopped, and saying "while the match is paused
+ * these changes cannot be applied yet" under an empty list would name the wrong cause — the coach
+ * would go looking for a pause to undo and find no changes waiting on the other side of it.
+ */
+internal fun shouldShowPausedHint(
+    match: Match,
+    items: List<PendingSubstitutionItem>,
+): Boolean = items.isNotEmpty() && !canExecutePendingSubstitutions(match)
+
+/**
+ * Whether the section can be opened at all.
+ *
+ * With nothing queued there is nothing behind the header, and a row that answers a tap by doing
+ * visibly nothing reads as broken — the coach presses it, no list appears, and they press again.
+ * So with an empty queue the row is not a switch: no chevron, no ripple, no tap.
+ *
+ * It also decides what the section looks like, not just what it does. A queue emptied while the
+ * section was open must fall back to its closed form rather than sit there open around nothing.
+ */
+internal fun canExpandPendingSubstitutions(items: List<PendingSubstitutionItem>): Boolean = items.isNotEmpty()
+
+/**
+ * Whether the counter should play its animation: did the queue just gain a pair it did not have?
+ *
+ * Deliberately about the pairs and not about how many there are. Scheduling a change for a player
+ * who already had one does not grow the queue — the new pair displaces the old — and keying this on
+ * the count left that case with no acknowledgement at all: the coach tapped two players, the number
+ * stayed at 3, and nothing on screen said the app had heard them. The animation is the receipt, so
+ * it has to fire whenever something was stored, not whenever the total moved.
+ *
+ * Still nothing on the way down. Deleting a change removes pairs and adds none, so this is false,
+ * and a queue that is merely repainted contains no pair it did not contain a moment ago.
+ */
+internal fun shouldPulseCounter(
+    previousPairs: List<SubstitutionPair>,
+    currentPairs: List<SubstitutionPair>,
+): Boolean = currentPairs.any { it !in previousPairs }
 
 /** How the outcome of a batch reaches the coach. */
 internal enum class SubstitutionResultPresentation {
