@@ -2,12 +2,24 @@
 
 > **Deployment is automatic.** Merging a change to `firestore.rules` deploys it:
 > `develop` → `teamflow-manager-dev`, `main` → `teamflow-manager-897a3`
-> (`.github/workflows/firebase-config.yml`).
+> (`.github/workflows/firestore-rules.yml`).
 >
 > It used to be manual, and it drifted: the `notificationPreferences` rules added in #345 never
 > reached production, so saving a notification preference was denied there for months while dev
 > worked. The manual commands below still work as an escape hatch, but the repo is the source of
 > truth and CI keeps the two in sync.
+>
+> **One file for both environments, on purpose.** Dev is only a useful rehearsal for production
+> while both enforce the same rules — per-environment rule files would make that drift the normal
+> state of affairs rather than a bug. Staged rollout comes from branches: `develop` deploys to
+> `teamflow-manager-dev`, `main` to `teamflow-manager-897a3`, and
+> `git diff main develop -- firestore.rules` shows what production is still missing.
+>
+> A rules fix can reach production without shipping an app version: open a PR to `main` touching
+> only `firestore.rules` and the release pipeline skips the build and the Play upload.
+>
+> CI authenticates with Workload Identity Federation — no service account key exists. See
+> [FEATURE_FLAGS.md](FEATURE_FLAGS.md#ci-credentials--keyless) for the accounts and roles.
 
 
 ## Issue Summary

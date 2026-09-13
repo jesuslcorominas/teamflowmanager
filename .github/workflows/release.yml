@@ -19,9 +19,11 @@ env:
 jobs:
   # ─────────────────────────────────────────────────────────────
   # 0. Change scope
-  # A PR to main that only touches remoteconfig/*.template.json is a feature-flag
-  # change, not a release: it must reach Firebase (see remoteconfig.yml) without
-  # building or uploading anything to Play. Anything else runs the full pipeline.
+  # A PR to main that only touches Firebase configuration — Remote Config
+  # templates or firestore.rules — is not a release: it must reach Firebase (see
+  # remoteconfig.yml / firestore-rules.yml) without building or uploading
+  # anything to Play, so a flag can be flipped or a rule fixed in production
+  # without shipping a version. Anything else runs the full pipeline.
   # ─────────────────────────────────────────────────────────────
   scope:
     name: Detect change scope
@@ -39,9 +41,9 @@ jobs:
             --paginate --jq '.[].filename')
           echo "Changed files:"
           echo "$FILES"
-          if [ -n "$FILES" ] && [ -z "$(echo "$FILES" | grep -v '^remoteconfig/.*\.template\.json$')" ]; then
+          if [ -n "$FILES" ] && [ -z "$(echo "$FILES" | grep -vE '^(remoteconfig/.*\.template\.json|firestore\.rules)$')" ]; then
             echo "config_only=true" >> $GITHUB_OUTPUT
-            echo "::notice::Remote Config template only — skipping build and Play upload."
+            echo "::notice::Firebase configuration only — skipping build and Play upload."
           else
             echo "config_only=false" >> $GITHUB_OUTPUT
           fi
@@ -66,7 +68,7 @@ jobs:
           COMMIT_MSG=$(git log -1 --format='%s' "$SHA")
           if [ "${{ needs.scope.outputs.config_only }}" = "true" ]; then
             echo "skip=true" >> $GITHUB_OUTPUT
-            echo "⏩ Remote Config template only — nothing to test"
+            echo "⏩ Firebase configuration only — nothing to test"
           elif echo "$COMMIT_MSG" | grep -q '\[skip-tests\]'; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "⏩ [skip-tests] detected — skipping tests and lint"

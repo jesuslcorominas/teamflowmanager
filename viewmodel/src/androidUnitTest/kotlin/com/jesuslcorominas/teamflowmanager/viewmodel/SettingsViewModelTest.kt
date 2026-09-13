@@ -273,56 +273,55 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `onRoleSelected persists the role and the selector follows the stored value`() =
+    fun `onRoleSelected does not apply the role until the selection is committed`() =
         runTest(testDispatcher) {
-            // Given — a president with a team, so the selector is enabled
-            every { getUserClubMembershipUseCase() } returns flowOf(
-                ClubMember(
-                    id = "1",
-                    userId = "user123",
-                    name = "Test User",
-                    email = "test@example.com",
-                    clubId = "club123",
-                    roles = listOf("Presidente"),
-                ),
-            )
-            every { getTeamUseCase() } returns flowOf(
-                Team(
-                    id = "1",
-                    name = "Test Team",
-                    coachName = "Coach",
-                    delegateName = "Delegate",
-                    teamType = TeamType.FOOTBALL_5,
-                    clubId = "club123",
-                ),
-            )
-            // The stored role is the single source of truth; writing to it feeds the flow back.
             val storedRole = MutableStateFlow<ActiveViewRole>(ActiveViewRole.President)
-            every { observeActiveViewRoleUseCase() } returns storedRole
-            every { setActiveViewRoleUseCase(any()) } answers { storedRole.value = firstArg() }
-
-            viewModel = SettingsViewModel(
-                getCurrentUserUseCase = getCurrentUserUseCase,
-                signOutUseCase = signOutUseCase,
-                deleteFcmTokenUseCase = deleteFcmTokenUseCase,
-                analyticsTracker = analyticsTracker,
-                getTeam = getTeamUseCase,
-                getUserClubMembership = getUserClubMembershipUseCase,
-                observeActiveViewRole = observeActiveViewRoleUseCase,
-                setActiveViewRole = setActiveViewRoleUseCase,
-                getNotificationPreferences = getNotificationPreferencesUseCase,
-                updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
-                crashReporter = crashReporter,
-            )
+            buildPresidentViewModel(storedRole)
             advanceUntilIdle()
 
-            // When
+            // When — the switch is toggled several times, as a user comparing options might
+            viewModel.onRoleSelected(ActiveViewRole.Coach)
+            viewModel.onRoleSelected(ActiveViewRole.President)
             viewModel.onRoleSelected(ActiveViewRole.Coach)
             advanceUntilIdle()
 
-            // Then — persisted, and the selector reflects the stored value with no extra event
-            verify { setActiveViewRoleUseCase(ActiveViewRole.Coach) }
+            // Then — the switch follows, but nothing is applied: the shell must not move yet
+            assertEquals(ActiveViewRole.Coach, viewModel.roleSelectorState.value.selectedRole)
+            assertEquals(ActiveViewRole.President, viewModel.roleSelectorState.value.activeRole)
+            verify(exactly = 0) { setActiveViewRoleUseCase(any()) }
+        }
+
+    @Test
+    fun `commitRoleSelection applies only the final choice`() =
+        runTest(testDispatcher) {
+            val storedRole = MutableStateFlow<ActiveViewRole>(ActiveViewRole.President)
+            buildPresidentViewModel(storedRole)
+            advanceUntilIdle()
+
+            viewModel.onRoleSelected(ActiveViewRole.Coach)
+            viewModel.onRoleSelected(ActiveViewRole.President)
+            viewModel.onRoleSelected(ActiveViewRole.Coach)
+            viewModel.commitRoleSelection()
+            advanceUntilIdle()
+
+            verify(exactly = 1) { setActiveViewRoleUseCase(ActiveViewRole.Coach) }
             assertEquals(ActiveViewRole.Coach, viewModel.roleSelectorState.value.activeRole)
+        }
+
+    @Test
+    fun `commitRoleSelection does nothing when the switch ended where it started`() =
+        runTest(testDispatcher) {
+            val storedRole = MutableStateFlow<ActiveViewRole>(ActiveViewRole.President)
+            buildPresidentViewModel(storedRole)
+            advanceUntilIdle()
+
+            // Toggled and toggled back: leaving the screen must not count as a change
+            viewModel.onRoleSelected(ActiveViewRole.Coach)
+            viewModel.onRoleSelected(ActiveViewRole.President)
+            viewModel.commitRoleSelection()
+            advanceUntilIdle()
+
+            verify(exactly = 0) { setActiveViewRoleUseCase(any()) }
         }
 
     @Test
@@ -355,4 +354,44 @@ class SettingsViewModelTest {
             assertFalse(viewModel.notificationUpdateFailed.value)
             coVerify { updateGlobalNotificationPreferenceUseCase(any(), NotificationEventType.GOALS, true) }
         }
+
+    /** A president with a team, so the role selector is shown and enabled. */
+    private fun buildPresidentViewModel(storedRole: MutableStateFlow<ActiveViewRole>) {
+        every { getUserClubMembershipUseCase() } returns flowOf(
+            ClubMember(
+                id = "1",
+                userId = "user123",
+                name = "Test User",
+                email = "test@example.com",
+                clubId = "club123",
+                roles = listOf("Presidente"),
+            ),
+        )
+        every { getTeamUseCase() } returns flowOf(
+            Team(
+                id = "1",
+                name = "Test Team",
+                coachName = "Coach",
+                delegateName = "Delegate",
+                teamType = TeamType.FOOTBALL_5,
+                clubId = "club123",
+            ),
+        )
+        every { observeActiveViewRoleUseCase() } returns storedRole
+        every { setActiveViewRoleUseCase(any()) } answers { storedRole.value = firstArg() }
+
+        viewModel = SettingsViewModel(
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            signOutUseCase = signOutUseCase,
+            deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            analyticsTracker = analyticsTracker,
+            getTeam = getTeamUseCase,
+            getUserClubMembership = getUserClubMembershipUseCase,
+            observeActiveViewRole = observeActiveViewRoleUseCase,
+            setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            crashReporter = crashReporter,
+        )
+    }
 }
