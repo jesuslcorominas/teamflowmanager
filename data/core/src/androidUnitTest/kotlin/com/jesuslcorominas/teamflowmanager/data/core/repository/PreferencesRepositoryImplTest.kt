@@ -6,6 +6,10 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -148,4 +152,78 @@ class PreferencesRepositoryImplTest {
 
         verify { preferencesDataSource.setNotificationPermissionRequested(false) }
     }
+
+    // --- observeSubstitutionMode / setSubstitutionMode ---
+
+    @Test
+    fun `givenStoredSubstitutionMode_whenObserveSubstitutionMode_thenFirstEmissionIsTheSeededValue`() =
+        runTest {
+            // Given — the flow is seeded in the constructor, so the stub must precede it
+            every { preferencesDataSource.getSubstitutionMode() } returns "LIVE"
+            val seededRepository = PreferencesRepositoryImpl(preferencesDataSource)
+
+            // When
+            val first = seededRepository.observeSubstitutionMode().first()
+
+            // Then — the persisted value, never a default
+            assertEquals("LIVE", first)
+        }
+
+    @Test
+    fun `givenNoStoredSubstitutionMode_whenObserveSubstitutionMode_thenFirstEmissionIsNull`() =
+        runTest {
+            // Given
+            every { preferencesDataSource.getSubstitutionMode() } returns null
+            val seededRepository = PreferencesRepositoryImpl(preferencesDataSource)
+
+            // When
+            val first = seededRepository.observeSubstitutionMode().first()
+
+            // Then
+            assertNull(first)
+        }
+
+    @Test
+    fun `givenACollector_whenSetSubstitutionMode_thenDelegatesAndEmitsTheNewValue`() =
+        runTest {
+            // Given — key-value storage reports no changes, so the repository flow is the only
+            // way an already-subscribed screen learns about the write
+            every { preferencesDataSource.getSubstitutionMode() } returns null
+            val seededRepository = PreferencesRepositoryImpl(preferencesDataSource)
+            val emissions = mutableListOf<String?>()
+            backgroundScope.launch {
+                seededRepository.observeSubstitutionMode().collect { emissions.add(it) }
+            }
+            runCurrent()
+
+            // When
+            seededRepository.setSubstitutionMode("LIVE")
+            runCurrent()
+
+            // Then
+            verify { preferencesDataSource.setSubstitutionMode("LIVE") }
+            assertEquals(listOf(null, "LIVE"), emissions)
+        }
+
+    @Test
+    fun `givenACollector_whenSetSubstitutionModeTwice_thenBothValuesAreEmittedInOrder`() =
+        runTest {
+            // Given
+            every { preferencesDataSource.getSubstitutionMode() } returns null
+            val seededRepository = PreferencesRepositoryImpl(preferencesDataSource)
+            val emissions = mutableListOf<String?>()
+            backgroundScope.launch {
+                seededRepository.observeSubstitutionMode().collect { emissions.add(it) }
+            }
+            runCurrent()
+
+            // When
+            seededRepository.setSubstitutionMode("LIVE")
+            runCurrent()
+            seededRepository.setSubstitutionMode("SCHEDULED")
+            runCurrent()
+
+            // Then
+            assertEquals(listOf(null, "LIVE", "SCHEDULED"), emissions)
+        }
 }

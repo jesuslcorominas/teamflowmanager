@@ -143,7 +143,17 @@ sealed class Route(
     data object PlayerWizard : Route(path = "player_wizard", showTopBar = false) {
         const val ARG_PLAYER_ID = "playerId"
         private const val PATH = "player_wizard"
-        const val FULL_ROUTE = "$PATH/{$ARG_PLAYER_ID}"
+
+        /**
+         * The player id is optional: absent means "create". It is a query argument because a path
+         * argument is mandatory, and routing "create" through a path forces a placeholder id —
+         * which is how the FAB ended up navigating to `player_wizard/0`, a leftover from when ids
+         * were Longs. The wizard then looked for a player with that id, found none and bounced
+         * straight back to the list.
+         */
+        const val FULL_ROUTE = "$PATH?$ARG_PLAYER_ID={$ARG_PLAYER_ID}"
+
+        fun createRoute(playerId: String = ""): String = if (playerId.isEmpty()) PATH else "$PATH?$ARG_PLAYER_ID=$playerId"
     }
 
     data object ArchivedMatches : Route(

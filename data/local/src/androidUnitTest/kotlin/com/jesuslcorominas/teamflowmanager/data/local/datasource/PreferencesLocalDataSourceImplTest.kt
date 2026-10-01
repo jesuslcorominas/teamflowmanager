@@ -145,4 +145,34 @@ class PreferencesLocalDataSourceImplTest {
         verify { mockEditor.putBoolean("notification_permission_requested", false) }
         verify { mockEditor.apply() }
     }
+
+    // --- getSubstitutionMode / setSubstitutionMode ---
+
+    @Test
+    fun `givenNoSubstitutionModeStored_whenGetSubstitutionMode_thenReturnsNull`() {
+        every { mockSharedPreferences.getString("substitution_mode", null) } returns null
+
+        val result = dataSource.getSubstitutionMode()
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `givenSubstitutionModeStored_whenGetSubstitutionMode_thenReturnsStoredValue`() {
+        every { mockSharedPreferences.getString("substitution_mode", null) } returns "LIVE"
+
+        val result = dataSource.getSubstitutionMode()
+
+        assertEquals("LIVE", result)
+    }
+
+    @Test
+    fun `givenScheduledMode_whenSetSubstitutionMode_thenWritesToTheLiteralSubstitutionModeKey`() {
+        // The key name is the storage contract: renaming it would silently reset every user's
+        // setting on update, so it is asserted literally rather than through the constant.
+        dataSource.setSubstitutionMode("SCHEDULED")
+
+        verify { mockEditor.putString("substitution_mode", "SCHEDULED") }
+        verify { mockEditor.apply() }
+    }
 }

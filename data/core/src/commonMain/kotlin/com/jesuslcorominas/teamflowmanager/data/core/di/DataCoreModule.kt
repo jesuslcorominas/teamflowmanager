@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationPerm
 import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationPreferencesRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.NotificationTopicRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PendingCoachAssignmentRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.data.core.repository.PendingSubstitutionsRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerSubstitutionRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeHistoryRepositoryImpl
@@ -33,6 +34,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationPermis
 import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationPreferencesRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.NotificationTopicRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PendingCoachAssignmentRepository
+import com.jesuslcorominas.teamflowmanager.usecase.repository.PendingSubstitutionsRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeHistoryRepository
@@ -75,6 +77,7 @@ internal val repositoryModule =
         singleOf(::NotificationTopicRepositoryImpl) bind NotificationTopicRepository::class
         singleOf(::NotificationPermissionRepositoryImpl) bind NotificationPermissionRepository::class
         singleOf(::PendingCoachAssignmentRepositoryImpl) bind PendingCoachAssignmentRepository::class
+        singleOf(::PendingSubstitutionsRepositoryImpl) bind PendingSubstitutionsRepository::class
         singleOf(::FcmNotificationRepositoryImpl) bind FcmNotificationRepository::class
         singleOf(::PresidentNotificationRepositoryImpl) bind PresidentNotificationRepository::class
         singleOf(::NotificationPreferencesRepositoryImpl) bind NotificationPreferencesRepository::class

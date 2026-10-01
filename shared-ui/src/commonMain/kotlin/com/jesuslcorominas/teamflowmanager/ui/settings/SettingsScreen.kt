@@ -38,9 +38,11 @@ import androidx.compose.ui.zIndex
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.GlobalNotificationState
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
+import com.jesuslcorominas.teamflowmanager.ui.util.DateFormatter
 import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -55,6 +57,12 @@ import teamflowmanager.shared_ui.generated.resources.settings_notifications_sect
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_update_error
 import teamflowmanager.shared_ui.generated.resources.settings_role_coach
 import teamflowmanager.shared_ui.generated.resources.settings_role_requires_team
+import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_live_hint
+import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_locked
+import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_locked_by
+import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_scheduled
+import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_scheduled_hint
+import teamflowmanager.shared_ui.generated.resources.settings_substitutions_section
 import teamflowmanager.shared_ui.generated.resources.sign_out
 import teamflowmanager.shared_ui.generated.resources.sign_out_message
 import teamflowmanager.shared_ui.generated.resources.sign_out_title
@@ -72,6 +80,7 @@ fun SettingsScreen(
     val roleSelectorState by viewModel.roleSelectorState.collectAsState()
     val notificationPreferences by viewModel.notificationPreferences.collectAsState()
     val notificationUpdateFailed by viewModel.notificationUpdateFailed.collectAsState()
+    val substitutionModeState by viewModel.substitutionModeState.collectAsState()
     var showSignOutDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val notificationErrorMessage = stringResource(Res.string.settings_notifications_update_error)
@@ -168,6 +177,22 @@ fun SettingsScreen(
                         onRoleSelected = { viewModel.onRoleSelected(it) },
                     )
                 }
+
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                Text(
+                    text = stringResource(Res.string.settings_substitutions_section),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
+                )
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+                SubstitutionModeSection(
+                    mode = substitutionModeState.mode,
+                    blockingMatch = substitutionModeState.blockingMatch,
+                    onModeChanged = { viewModel.onSubstitutionModeChanged(it) },
+                )
 
                 if (roleSelectorState.activeRole == ActiveViewRole.President && notificationPreferences.clubId.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
@@ -266,6 +291,75 @@ private fun UserAccountItem(
             contentDescription = stringResource(Res.string.sign_out),
             tint = MaterialTheme.colorScheme.error,
         )
+    }
+}
+
+@Composable
+private fun SubstitutionModeSection(
+    mode: SubstitutionMode,
+    blockingMatch: SettingsViewModel.BlockingMatch?,
+    onModeChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val enabled = blockingMatch == null
+    Column(modifier = modifier) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TFMSpacing.spacing02),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(Res.string.settings_substitution_mode_scheduled),
+                style = MaterialTheme.typography.bodyLarge,
+                color =
+                    if (enabled) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    },
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = mode == SubstitutionMode.SCHEDULED,
+                onCheckedChange = onModeChanged,
+                enabled = enabled,
+            )
+        }
+
+        Text(
+            text =
+                when (mode) {
+                    SubstitutionMode.SCHEDULED -> stringResource(Res.string.settings_substitution_mode_scheduled_hint)
+                    SubstitutionMode.LIVE -> stringResource(Res.string.settings_substitution_mode_live_hint)
+                },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
+        )
+
+        // A greyed-out switch with no explanation reads as a bug; say why it cannot be used, and
+        // name the match responsible so the user can go and finish it. A match abandoned by a
+        // killed app stays IN_PROGRESS forever, and an unnamed lock would have no way out.
+        if (blockingMatch != null) {
+            val matchLabel =
+                blockingMatch.dateTime
+                    ?.let { "${blockingMatch.opponent}, ${DateFormatter.formatDateTime(it)}" }
+                    ?: blockingMatch.opponent
+
+            Text(
+                text =
+                    if (matchLabel.isBlank()) {
+                        stringResource(Res.string.settings_substitution_mode_locked)
+                    } else {
+                        stringResource(Res.string.settings_substitution_mode_locked_by, matchLabel)
+                    },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
+            )
+        }
     }
 }
 

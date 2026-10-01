@@ -16,4 +16,8 @@ interface PreferencesDataSource {
     fun getActiveViewRole(): String?
 
     fun setActiveViewRole(role: String)
+
+    fun getSubstitutionMode(): String?
+
+    fun setSubstitutionMode(mode: String)
 }

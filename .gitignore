@@ -56,6 +56,9 @@ iosApp/iosApp.xcodeproj/xcuserdata/
 # Claude Code specs (internal planning docs, not for VCS)
 .claude/specs/
 
+# Agent planning scratch: briefings, specs and plans shared by concurrent sessions, not for VCS
+.planning/
+
 # Kotlin build cache
 .kotlin/
 

@@ -16,6 +16,9 @@ internal class PreferencesRepositoryImpl(
      */
     private val activeViewRole = MutableStateFlow(preferencesDataSource.getActiveViewRole())
 
+    /** Same reasoning as [activeViewRole]: seeded from storage, updated on every write. */
+    private val substitutionMode = MutableStateFlow(preferencesDataSource.getSubstitutionMode())
+
     override fun shouldShowInvalidSubstitutionAlert(): Boolean {
         return preferencesDataSource.shouldShowInvalidSubstitutionAlert()
     }
@@ -48,4 +51,11 @@ internal class PreferencesRepositoryImpl(
     }
 
     override fun observeActiveViewRole(): Flow<String?> = activeViewRole.asStateFlow()
+
+    override fun setSubstitutionMode(mode: String) {
+        preferencesDataSource.setSubstitutionMode(mode)
+        substitutionMode.value = mode
+    }
+
+    override fun observeSubstitutionMode(): Flow<String?> = substitutionMode.asStateFlow()
 }

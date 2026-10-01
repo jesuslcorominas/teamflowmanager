@@ -12,7 +12,6 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchListViewModel
-import com.jesuslcorominas.teamflowmanager.viewmodel.MatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PendingTeamAssignmentViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.PlayerWizardViewModel
@@ -22,6 +21,7 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.SettingsViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.createMatchViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.RealTimeTicker
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
 import org.koin.core.module.dsl.viewModel
@@ -157,33 +157,7 @@ val viewModelModule =
             )
         }
         viewModel { params ->
-            MatchViewModel(
-                matchId = params.get(),
-                getMatchById = get(),
-                getAllPlayerTimesUseCase = get(),
-                getPlayersByTeamUseCase = get(),
-                finishMatch = get(),
-                pauseMatch = get(),
-                resumeMatchUseCase = get(),
-                startMatchTimerUseCase = get(),
-                registerPlayerSubstitutionUseCase = get(),
-                getMatchSummaryUseCase = get(),
-                getMatchTimelineUseCase = get(),
-                registerGoal = get(),
-                startTimeoutUseCase = get(),
-                endTimeoutUseCase = get(),
-                getMatchReportData = get(),
-                exportMatchReportToPdf = get(),
-                synchronizeTimeUseCase = get(),
-                startPlayerTimersBatchUseCase = get(),
-                shouldShowInvalidSubstitutionAlertUseCase = get(),
-                setShouldShowInvalidSubstitutionAlertUseCase = get(),
-                timeTicker = get(),
-                analyticsTracker = get(),
-                crashReporter = get(),
-                notifyPresidentMatchEvent = get(),
-                getTeamUseCase = get(),
-            )
+            createMatchViewModel(matchId = params.get())
         }
         viewModel {
             MatchListViewModel(
@@ -246,6 +220,9 @@ val viewModelModule =
                 setActiveViewRole = get(),
                 getNotificationPreferences = get(),
                 updateGlobalNotificationPreference = get(),
+                observeSubstitutionMode = get(),
+                setSubstitutionMode = get(),
+                getAllMatches = get(),
                 crashReporter = get(),
             )
         }

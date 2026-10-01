@@ -4,17 +4,24 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
+import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
+import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
+import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetNotificationPreferencesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetActiveViewRoleUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SetSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.UpdateGlobalNotificationPreferenceUseCase
 import io.mockk.coEvery
@@ -24,16 +31,21 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -51,6 +63,9 @@ class SettingsViewModelTest {
     private lateinit var setActiveViewRoleUseCase: SetActiveViewRoleUseCase
     private lateinit var getNotificationPreferencesUseCase: GetNotificationPreferencesUseCase
     private lateinit var updateGlobalNotificationPreferenceUseCase: UpdateGlobalNotificationPreferenceUseCase
+    private lateinit var observeSubstitutionModeUseCase: ObserveSubstitutionModeUseCase
+    private lateinit var setSubstitutionModeUseCase: SetSubstitutionModeUseCase
+    private lateinit var getAllMatchesUseCase: GetAllMatchesUseCase
     private lateinit var crashReporter: CrashReporter
     private lateinit var viewModel: SettingsViewModel
 
@@ -74,8 +89,13 @@ class SettingsViewModelTest {
         setActiveViewRoleUseCase = mockk(relaxed = true)
         getNotificationPreferencesUseCase = mockk(relaxed = true)
         updateGlobalNotificationPreferenceUseCase = mockk(relaxed = true)
+        observeSubstitutionModeUseCase = mockk(relaxed = true)
+        setSubstitutionModeUseCase = mockk(relaxed = true)
+        getAllMatchesUseCase = mockk(relaxed = true)
         crashReporter = mockk(relaxed = true)
 
+        every { observeSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.SCHEDULED)
+        every { getAllMatchesUseCase() } returns flowOf(emptyList())
         every { getCurrentUserUseCase() } returns flowOf(null)
         every { getTeamUseCase() } returns flowOf(null)
         every { getUserClubMembershipUseCase() } returns flowOf(null)
@@ -92,6 +112,9 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
+            setSubstitutionMode = setSubstitutionModeUseCase,
+            getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
         )
     }
@@ -145,6 +168,9 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
+            setSubstitutionMode = setSubstitutionModeUseCase,
+            getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
         )
         advanceUntilIdle()
@@ -191,6 +217,9 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
+            setSubstitutionMode = setSubstitutionModeUseCase,
+            getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
         )
         advanceUntilIdle()
@@ -222,6 +251,9 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
+            setSubstitutionMode = setSubstitutionModeUseCase,
+            getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
         )
         advanceUntilIdle()
@@ -263,6 +295,9 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
+            setSubstitutionMode = setSubstitutionModeUseCase,
+            getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
         )
         advanceUntilIdle()
@@ -391,7 +426,185 @@ class SettingsViewModelTest {
             setActiveViewRole = setActiveViewRoleUseCase,
             getNotificationPreferences = getNotificationPreferencesUseCase,
             updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
+            setSubstitutionMode = setSubstitutionModeUseCase,
+            getAllMatches = getAllMatchesUseCase,
             crashReporter = crashReporter,
         )
     }
+
+    /**
+     * [SettingsViewModel.substitutionModeState] is shared with `WhileSubscribed`, so it stays at its
+     * initial value until something collects it. Subscribe, let the flows settle, read, unsubscribe.
+     */
+    private fun TestScope.stateWhileSubscribed(): SettingsViewModel.SubstitutionModeState {
+        val job = backgroundScope.launch { viewModel.substitutionModeState.collect { } }
+        runCurrent()
+        val state = viewModel.substitutionModeState.value
+        job.cancel()
+        return state
+    }
+
+    private fun matchWith(status: MatchStatus): Match =
+        Match(
+            id = "match-${status.name}",
+            teamId = "team1",
+            opponent = "Rival FC",
+            location = "Stadium",
+            teamName = "Team A",
+            periodType = PeriodType.HALF_TIME,
+            captainId = "player1",
+            status = status,
+            dateTime = 1_700_000_000_000L,
+        )
+
+    private fun buildViewModel(): SettingsViewModel =
+        SettingsViewModel(
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            signOutUseCase = signOutUseCase,
+            deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            analyticsTracker = analyticsTracker,
+            getTeam = getTeamUseCase,
+            getUserClubMembership = getUserClubMembershipUseCase,
+            observeActiveViewRole = observeActiveViewRoleUseCase,
+            setActiveViewRole = setActiveViewRoleUseCase,
+            getNotificationPreferences = getNotificationPreferencesUseCase,
+            updateGlobalNotificationPreference = updateGlobalNotificationPreferenceUseCase,
+            observeSubstitutionMode = observeSubstitutionModeUseCase,
+            setSubstitutionMode = setSubstitutionModeUseCase,
+            getAllMatches = getAllMatchesUseCase,
+            crashReporter = crashReporter,
+        )
+
+    @Test
+    fun `substitution mode switch is enabled when there are no matches`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase() } returns flowOf(emptyList())
+
+            // When
+            viewModel = buildViewModel()
+
+            // Then
+            assertTrue(stateWhileSubscribed().isEnabled)
+        }
+
+    @Test
+    fun `substitution mode switch is enabled when no match is running`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase() } returns
+                flowOf(
+                    listOf(
+                        matchWith(MatchStatus.SCHEDULED),
+                        matchWith(MatchStatus.TIMEOUT),
+                        matchWith(MatchStatus.FINISHED),
+                    ),
+                )
+
+            // When
+            viewModel = buildViewModel()
+
+            // Then
+            assertTrue(stateWhileSubscribed().isEnabled)
+        }
+
+    @Test
+    fun `substitution mode switch is disabled and names the match in progress`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase() } returns
+                flowOf(listOf(matchWith(MatchStatus.SCHEDULED), matchWith(MatchStatus.IN_PROGRESS)))
+
+            // When
+            viewModel = buildViewModel()
+            val state = stateWhileSubscribed()
+
+            // Then — naming the blocker is the only way out of a match left open by a killed app
+            assertFalse(state.isEnabled)
+            assertEquals("Rival FC", state.blockingMatch?.opponent)
+            assertEquals(1_700_000_000_000L, state.blockingMatch?.dateTime)
+        }
+
+    @Test
+    fun `substitution mode switch is disabled when a match is paused`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase() } returns flowOf(listOf(matchWith(MatchStatus.PAUSED)))
+
+            // When
+            viewModel = buildViewModel()
+            val state = stateWhileSubscribed()
+
+            // Then
+            assertFalse(state.isEnabled)
+            assertEquals("Rival FC", state.blockingMatch?.opponent)
+        }
+
+    @Test
+    fun `substitution mode switch re-enables when the blocking match finishes`() =
+        runTest {
+            // Given — the same match, first running and then finished
+            val matches = MutableStateFlow(listOf(matchWith(MatchStatus.IN_PROGRESS)))
+            every { getAllMatchesUseCase() } returns matches
+
+            // When
+            viewModel = buildViewModel()
+            val collector = backgroundScope.launch { viewModel.substitutionModeState.collect { } }
+            runCurrent()
+            assertFalse(viewModel.substitutionModeState.value.isEnabled)
+            matches.value = listOf(matchWith(MatchStatus.FINISHED))
+            runCurrent()
+
+            // Then
+            assertTrue(viewModel.substitutionModeState.value.isEnabled)
+            assertNull(viewModel.substitutionModeState.value.blockingMatch)
+            collector.cancel()
+        }
+
+    /**
+     * A failing match query must not lock the switch, and above all must not reach the default
+     * handler through viewModelScope and kill the process.
+     */
+    @Test
+    fun `substitution mode switch stays enabled when the match query fails`() =
+        runTest {
+            // Given
+            every { getAllMatchesUseCase() } returns flow { throw IllegalStateException("offline") }
+
+            // When
+            viewModel = buildViewModel()
+
+            // Then
+            assertTrue(stateWhileSubscribed().isEnabled)
+        }
+
+    @Test
+    fun `substitution mode state reflects the stored mode`() =
+        runTest {
+            // Given
+            every { observeSubstitutionModeUseCase() } returns flowOf(SubstitutionMode.LIVE)
+
+            // When
+            viewModel = buildViewModel()
+
+            // Then
+            assertEquals(SubstitutionMode.LIVE, stateWhileSubscribed().mode)
+        }
+
+    @Test
+    fun `onSubstitutionModeChanged applies the mode immediately`() =
+        runTest {
+            // Given
+            viewModel = buildViewModel()
+            advanceUntilIdle()
+
+            // When
+            viewModel.onSubstitutionModeChanged(scheduled = false)
+            viewModel.onSubstitutionModeChanged(scheduled = true)
+
+            // Then
+            verify { setSubstitutionModeUseCase(SubstitutionMode.LIVE) }
+            verify { setSubstitutionModeUseCase(SubstitutionMode.SCHEDULED) }
+        }
 }
