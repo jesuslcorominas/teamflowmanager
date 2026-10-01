@@ -279,12 +279,12 @@ private fun Route.toFABContentDescriptionRes(): Int? =
         else -> null
     }
 
-private fun Route.toDestination() =
+internal fun Route.toDestination() =
     when (this) {
         Route.Team -> Route.Team.createRoute(Route.Team.MODE_EDIT)
         Route.TeamList -> Route.Team.createRoute(Route.Team.MODE_CREATE)
         Route.Matches -> Route.CreateMatch.createRoute(Route.CreateMatch.DEFAULT_MATCH_ID)
-        Route.Players -> Route.PlayerWizard.createRoute(0L)
+        Route.Players -> Route.PlayerWizard.createRoute()
         else -> null
     }
 
