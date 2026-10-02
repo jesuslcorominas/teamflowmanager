@@ -1,2 +1,1 @@
-* Posibilidad de programar cambios
-* Corregido el botón de añadir jugador, que no llegaba a abrir el formulario
+* Corregido un cierre inesperado al crear un partido en instalaciones que venían de versiones anteriores
