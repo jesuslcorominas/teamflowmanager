@@ -90,6 +90,31 @@ class PreferencesLocalDataSourceImplTest {
         assertNull(result)
     }
 
+    @Test
+    fun `givenLegacyLongCaptainIdStored_whenGetDefaultCaptainId_thenReturnsNull`() {
+        // Builds before the String-ID migration wrote this key with putLong, so SharedPreferences
+        // throws on getString. The datasource must not propagate the crash.
+        every { mockSharedPreferences.getString("default_captain_id", null) } throws
+            ClassCastException("java.lang.Long cannot be cast to java.lang.String")
+        every { mockEditor.remove("default_captain_id") } returns mockEditor
+
+        val result = dataSource.getDefaultCaptainId()
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `givenLegacyLongCaptainIdStored_whenGetDefaultCaptainId_thenClearsTheStaleKey`() {
+        every { mockSharedPreferences.getString("default_captain_id", null) } throws
+            ClassCastException("java.lang.Long cannot be cast to java.lang.String")
+        every { mockEditor.remove("default_captain_id") } returns mockEditor
+
+        dataSource.getDefaultCaptainId()
+
+        verify { mockEditor.remove("default_captain_id") }
+        verify { mockEditor.apply() }
+    }
+
     // --- setDefaultCaptainId ---
 
     @Test
