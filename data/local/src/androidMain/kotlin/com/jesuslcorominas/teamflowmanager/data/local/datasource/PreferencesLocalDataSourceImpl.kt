@@ -21,7 +21,17 @@ internal class PreferencesLocalDataSourceImpl(
     }
 
     override fun getDefaultCaptainId(): String? {
-        return sharedPreferences.getString(KEY_DEFAULT_CAPTAIN_ID, null)
+        return try {
+            sharedPreferences.getString(KEY_DEFAULT_CAPTAIN_ID, null)
+        } catch (_: ClassCastException) {
+            // Builds before the String-ID migration stored this key as a Long hash of the
+            // Firestore document ID. That hash cannot be mapped back to a document ID, so the
+            // value is dropped instead of converted and the user picks a default captain again.
+            sharedPreferences.edit()
+                .remove(KEY_DEFAULT_CAPTAIN_ID)
+                .apply()
+            null
+        }
     }
 
     override fun setDefaultCaptainId(playerId: String?) {
