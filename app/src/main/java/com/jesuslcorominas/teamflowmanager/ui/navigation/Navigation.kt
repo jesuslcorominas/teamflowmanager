@@ -230,7 +230,12 @@ fun Navigation(
             val matchId =
                 backStackEntry.arguments?.getString(Route.PresidentMatchDetail.ARG_MATCH_ID)
                     ?: return@composable
-            MatchScreen(matchId = matchId, readOnly = true)
+            val context = LocalContext.current
+            MatchScreen(
+                matchId = matchId,
+                readOnly = true,
+                onExportReady = { uri -> sharePdf(context, uri) },
+            )
         }
 
         composable(Route.ClubMembers.createRoute()) {
@@ -292,15 +297,7 @@ fun Navigation(
         composable(Route.Analysis.createRoute()) {
             val context = LocalContext.current
             AnalysisScreen(
-                onShareFile = { uri ->
-                    val intent =
-                        Intent(Intent.ACTION_SEND).apply {
-                            type = "application/pdf"
-                            putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                    context.startActivity(Intent.createChooser(intent, null))
-                },
+                onShareFile = { uri -> sharePdf(context, uri) },
             )
         }
 
@@ -374,7 +371,12 @@ fun Navigation(
                     }
                 }
             } else {
-                MatchScreen(matchId = matchId, onTitleChange = onTitleChange)
+                val context = LocalContext.current
+                MatchScreen(
+                    matchId = matchId,
+                    onTitleChange = onTitleChange,
+                    onExportReady = { uri -> sharePdf(context, uri) },
+                )
             }
         }
 
@@ -548,4 +550,17 @@ private suspend fun getGoogleIdToken(context: Context): String {
     } catch (e: GoogleIdTokenParsingException) {
         throw IllegalStateException("Failed to parse Google ID token: ${e.message}", e)
     }
+}
+
+private fun sharePdf(
+    context: Context,
+    uri: String,
+) {
+    val intent =
+        Intent(Intent.ACTION_SEND).apply {
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+    context.startActivity(Intent.createChooser(intent, null))
 }
