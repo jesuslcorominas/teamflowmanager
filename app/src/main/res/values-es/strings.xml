@@ -435,4 +435,17 @@
     <string name="assign_coach_not_member">Este email no está registrado como miembro del club.</string>
     <string name="assign_coach_error">Error al asignar el entrenador. Inténtalo de nuevo.</string>
 
+
+    <!-- Notification settings -->
+    <string name="settings_notifications_section">Notificaciones</string>
+    <string name="settings_notifications_match_events">Eventos de partido</string>
+    <string name="settings_notifications_goals">Goles</string>
+    <string name="settings_notifications_applies_all_teams">Se aplica a todos los equipos del club</string>
+    <string name="settings_notifications_mixed">Configuración mixta por equipo</string>
+    <string name="president_team_detail_notifications_tab">Notificaciones</string>
+    <string name="president_notifications_match_events">Eventos de partido</string>
+    <string name="president_notifications_goals">Goles</string>
+    <string name="president_notifications_global_on">Configuración global: Activado</string>
+    <string name="president_notifications_global_off">Configuración global: Desactivado</string>
+    <string name="president_notifications_global_mixed">Configuración mixta por equipo</string>
 </resources>

@@ -87,12 +87,12 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `an empty queue paints nothing, which is what live mode always looks like`() {
+    fun `an empty queue paints nothing - which is what live mode always looks like`() {
         assertEquals(emptyList(), pendingCardsToShow(readOnly = false, items = emptyList()))
     }
 
     @Test
-    fun `a queue that outlived a switch to live is still painted, so it can be deleted`() {
+    fun `a queue that outlived a switch to live is still painted - so it can be deleted`() {
         // Nothing can be queued in live mode, so this only happens to a queue built in scheduled
         // mode that survived the switch. Hiding it would leave cards applying themselves at the
         // next break with the coach never having seen them.
@@ -122,7 +122,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `live mode paused shows nobody on the pitch, exactly as before scheduled substitutions`() {
+    fun `live mode paused shows nobody on the pitch - exactly as before scheduled substitutions`() {
         assertFalse(
             isOnPitchForDisplay(
                 SubstitutionMode.LIVE,
@@ -225,7 +225,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `the queue cannot be run while the match is stopped, because every pair would be discarded`() {
+    fun `the queue cannot be run while the match is stopped - because every pair would be discarded`() {
         assertFalse(canExecutePendingSubstitutions(match(MatchStatus.PAUSED)))
         assertFalse(canExecutePendingSubstitutions(match(MatchStatus.TIMEOUT)))
         assertFalse(canExecutePendingSubstitutions(match(MatchStatus.SCHEDULED)))
@@ -235,7 +235,7 @@ class PendingSubstitutionsPresentationTest {
     // ---------- shouldShowPendingSubstitutionsSection ----------
 
     @Test
-    fun `scheduled mode paints the section with an empty queue, so its buttons exist to be disabled`() {
+    fun `scheduled mode paints the section with an empty queue - so its buttons exist to be disabled`() {
         assertTrue(
             shouldShowPendingSubstitutionsSection(
                 readOnly = false,
@@ -246,7 +246,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `live mode with an empty queue paints nothing, rather than spend a row on a count of zero`() {
+    fun `live mode with an empty queue paints nothing - rather than spend a row on a count of zero`() {
         assertFalse(
             shouldShowPendingSubstitutionsSection(
                 readOnly = false,
@@ -257,7 +257,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `a queue that outlived a switch to live still gets its section, so it can be deleted`() {
+    fun `a queue that outlived a switch to live still gets its section - so it can be deleted`() {
         assertTrue(
             shouldShowPendingSubstitutionsSection(
                 readOnly = false,
@@ -268,7 +268,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `read only never paints the section, queued or not`() {
+    fun `read only never paints the section - queued or not`() {
         assertFalse(
             shouldShowPendingSubstitutionsSection(
                 readOnly = true,
@@ -300,7 +300,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `substitute all is off while paused even with a queue, as it was before`() {
+    fun `substitute all is off while paused even with a queue - as it was before`() {
         assertFalse(canExecuteAllPendingSubstitutions(match(MatchStatus.PAUSED), listOf(pending(1))))
     }
 
@@ -310,7 +310,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `delete all stays on while the match is paused, because changing one's mind is not blocked`() {
+    fun `delete all stays on while the match is paused - because changing one's mind is not blocked`() {
         // The two reasons are distinct on purpose: the pause blocks applying changes, never
         // discarding them. Half time is exactly when a coach rethinks the queue.
         assertTrue(canClearAllPendingSubstitutions(listOf(pending(1))))
@@ -329,7 +329,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `an empty queue during a pause explains nothing, because the pause is not what is off`() {
+    fun `an empty queue during a pause explains nothing - because the pause is not what is off`() {
         // The button is disabled here for lack of anything to run. Printing the pause message would
         // name the wrong cause and send the coach looking for a pause to undo.
         assertFalse(shouldShowPausedHint(match(MatchStatus.PAUSED), emptyList()))
@@ -339,7 +339,7 @@ class PendingSubstitutionsPresentationTest {
     // ---------- canExpandPendingSubstitutions ----------
 
     @Test
-    fun `an empty queue cannot be opened, so the row is not a switch`() {
+    fun `an empty queue cannot be opened - so the row is not a switch`() {
         assertFalse(canExpandPendingSubstitutions(emptyList()))
     }
 
@@ -361,7 +361,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `the first change queued reacts, which is when it matters most`() {
+    fun `the first change queued reacts - which is when it matters most`() {
         assertTrue(shouldPulseCounter(previousPairs = emptyList(), currentPairs = listOf(pending(1).pair)))
     }
 
@@ -378,7 +378,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `deleting a change does not react, since the animation means stored`() {
+    fun `deleting a change does not react - since the animation means stored`() {
         assertFalse(
             shouldPulseCounter(
                 previousPairs = listOf(pending(1).pair, pending(2).pair),
@@ -389,7 +389,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `an unchanged queue does not react, so a repaint is not mistaken for a change`() {
+    fun `an unchanged queue does not react - so a repaint is not mistaken for a change`() {
         val pairs = listOf(pending(1).pair, pending(2).pair)
         assertFalse(shouldPulseCounter(previousPairs = pairs, currentPairs = pairs))
     }
@@ -408,7 +408,7 @@ class PendingSubstitutionsPresentationTest {
     // ---------- presentationFor ----------
 
     @Test
-    fun `a clean manual run is reported with a snackbar, since the coach is watching`() {
+    fun `a clean manual run is reported with a snackbar - since the coach is watching`() {
         assertEquals(
             SubstitutionResultPresentation.SNACKBAR,
             presentationFor(result(SubstitutionExecutionTrigger.MANUAL)),
@@ -416,7 +416,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `a manual run with discards needs a dialog, to show a reason per pair`() {
+    fun `a manual run with discards needs a dialog - to show a reason per pair`() {
         assertEquals(
             SubstitutionResultPresentation.DIALOG,
             presentationFor(result(SubstitutionExecutionTrigger.MANUAL, discardedCount = 1)),
@@ -424,7 +424,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `a clean resume run still needs a dialog, because nobody was watching`() {
+    fun `a clean resume run still needs a dialog - because nobody was watching`() {
         assertEquals(
             SubstitutionResultPresentation.DIALOG,
             presentationFor(result(SubstitutionExecutionTrigger.RESUME)),
@@ -484,7 +484,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `a reason about the player coming on names the player coming on, not the one going off`() {
+    fun `a reason about the player coming on names the player coming on - not the one going off`() {
         assertEquals(
             DiscardReasonSubject.PLAYER_IN,
             discardReasonSubject(SubstitutionDiscardReason.PLAYER_IN_ALREADY_PLAYING),
@@ -496,7 +496,7 @@ class PendingSubstitutionsPresentationTest {
     }
 
     @Test
-    fun `a reason that can be about either player names neither, instead of inventing one`() {
+    fun `a reason that can be about either player names neither - instead of inventing one`() {
         assertEquals(
             DiscardReasonSubject.EITHER,
             discardReasonSubject(SubstitutionDiscardReason.PLAYER_ALREADY_SUBSTITUTED_IN_BATCH),
@@ -506,7 +506,7 @@ class PendingSubstitutionsPresentationTest {
     // ---------- distinctness ----------
 
     @Test
-    fun `every discard reason has a distinct message, so none reads as another`() {
+    fun `every discard reason has a distinct message - so none reads as another`() {
         val messages = SubstitutionDiscardReason.entries.map { discardReasonRes(it) }
 
         assertEquals(SubstitutionDiscardReason.entries.size, messages.toSet().size)
