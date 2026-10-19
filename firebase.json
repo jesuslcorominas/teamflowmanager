@@ -25,6 +25,10 @@
       {
         "source": "/api/sendNotification",
         "function": "sendNotification"
+      },
+      {
+        "source": "/api/deleteAccount",
+        "function": "deleteAccount"
       }
     ]
   },

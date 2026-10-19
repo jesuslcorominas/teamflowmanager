@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.di
 
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.AccountDeletionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
@@ -20,6 +21,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSo
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PresidentNotificationDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.TeamDataSource
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.AccountDeletionDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.FirebaseAuthDataSourceImpl
@@ -43,8 +45,12 @@ import com.jesuslcorominas.teamflowmanager.data.remote.datasource.TeamFirestoreD
 import com.jesuslcorominas.teamflowmanager.data.remote.transaction.FirestoreTransactionRunner
 import com.jesuslcorominas.teamflowmanager.domain.utils.TransactionRunner
 import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.app
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.darwin.Darwin
+import io.ktor.client.plugins.HttpTimeout
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -61,6 +67,24 @@ actual val dataRemoteModule: Module =
 
         // Auth
         singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
+
+        // Cloud Functions over HTTP. Ktorfit is generated for Android only, so
+        // iOS talks to the same endpoints through a plain Ktor client.
+        single {
+            HttpClient(Darwin) {
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 30_000
+                    connectTimeoutMillis = 10_000
+                }
+            }
+        }
+        single<AccountDeletionDataSource> {
+            AccountDeletionDataSourceImpl(
+                httpClient = get(),
+                functionsBaseUrl = functionsBaseUrl(),
+                authDataSource = get(),
+            )
+        }
 
         // Real Firestore implementations
         singleOf(::TeamFirestoreDataSourceImpl) bind TeamDataSource::class
@@ -91,3 +115,9 @@ actual val dataRemoteModule: Module =
         singleOf(::NotificationPreferencesFirestoreDataSourceImpl) bind NotificationPreferencesDataSource::class
         singleOf(::PendingCoachAssignmentFirestoreDataSourceImpl) bind PendingCoachAssignmentDataSource::class
     }
+
+/**
+ * Base URL of this project's Cloud Functions, derived from the Firebase app so
+ * dev and prod builds each hit their own project.
+ */
+private fun functionsBaseUrl(): String = "https://us-central1-${Firebase.app.options.projectId}.cloudfunctions.net/"

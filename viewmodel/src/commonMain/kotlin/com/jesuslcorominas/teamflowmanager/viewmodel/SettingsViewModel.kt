@@ -11,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.NotificationEventType
 import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.User
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteAccountUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
@@ -38,6 +39,7 @@ class SettingsViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val signOutUseCase: SignOutUseCase,
     private val deleteFcmTokenUseCase: DeleteFcmTokenUseCase,
+    private val deleteAccountUseCase: DeleteAccountUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val getTeam: GetTeamUseCase,
     private val getUserClubMembership: GetUserClubMembershipUseCase,
@@ -56,6 +58,18 @@ class SettingsViewModel(
 
     private val _signOutComplete = MutableStateFlow(false)
     val signOutComplete: StateFlow<Boolean> = _signOutComplete.asStateFlow()
+
+    /**
+     * Where the account deletion stands.
+     *
+     * The cascade runs server-side and can take a while on a club with several
+     * seasons of matches, so the screen needs to show progress and keep the
+     * confirm button from being tapped twice.
+     */
+    enum class DeleteAccountStatus { IDLE, IN_PROGRESS, FAILED }
+
+    private val _deleteAccountStatus = MutableStateFlow(DeleteAccountStatus.IDLE)
+    val deleteAccountStatus: StateFlow<DeleteAccountStatus> = _deleteAccountStatus.asStateFlow()
 
     private val _roleSelectorState = MutableStateFlow(RoleSelectorState())
     val roleSelectorState: StateFlow<RoleSelectorState> = _roleSelectorState.asStateFlow()
@@ -255,5 +269,38 @@ class SettingsViewModel(
 
     fun clearSignOutComplete() {
         _signOutComplete.value = false
+    }
+
+    /**
+     * Deletes the account for good. Guarded against a second tap: the cascade is
+     * not idempotent, and a concurrent second call would race the first one's
+     * sign-out.
+     */
+    fun deleteAccount() {
+        if (_deleteAccountStatus.value == DeleteAccountStatus.IN_PROGRESS) return
+
+        viewModelScope.launch {
+            _deleteAccountStatus.value = DeleteAccountStatus.IN_PROGRESS
+
+            deleteAccountUseCase()
+                .onSuccess {
+                    analyticsTracker.logEvent("delete_account", emptyMap())
+                    analyticsTracker.setUserId(null)
+                    _deleteAccountStatus.value = DeleteAccountStatus.IDLE
+                    // The use case already signed out; reuse the same signal the
+                    // logout flow uses so the shell returns to the login screen.
+                    _signOutComplete.value = true
+                }
+                .onFailure { error ->
+                    crashReporter.recordException(error)
+                    _deleteAccountStatus.value = DeleteAccountStatus.FAILED
+                }
+        }
+    }
+
+    fun onDeleteAccountErrorShown() {
+        if (_deleteAccountStatus.value == DeleteAccountStatus.FAILED) {
+            _deleteAccountStatus.value = DeleteAccountStatus.IDLE
+        }
     }
 }

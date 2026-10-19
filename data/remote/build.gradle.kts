@@ -22,6 +22,9 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.koin.core)
                 implementation(libs.kotlinx.serialization.json)
+                // Ktor core is shared: the account-deletion datasource lives in
+                // commonMain because Ktorfit only generates for the Android target.
+                implementation(libs.ktor.client.core)
             }
         }
         val androidMain by getting {

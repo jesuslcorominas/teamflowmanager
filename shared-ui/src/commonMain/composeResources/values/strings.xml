@@ -55,6 +55,17 @@
     <string name="sign_out_title">Logout</string>
     <string name="sign_out_message">Are you sure you want to close session?</string>
     <string name="user_name_unknown">User</string>
+    <string name="delete_account">Delete account</string>
+    <string name="delete_account_subtitle">Deletes your account and your data for good</string>
+    <string name="delete_account_title">Delete your account?</string>
+    <string name="delete_account_message">This cannot be undone. Your account, your club memberships and the teams, players, matches, photos and history that are left with no one to own them will be deleted permanently. Clubs with other members carry on: ownership passes to another member.</string>
+    <string name="delete_account_confirm">Delete permanently</string>
+    <string name="delete_account_in_progress">Deleting your account\u2026</string>
+    <string name="delete_account_error">Your account could not be deleted. Try again, and write to privacidad@teamflowmanager.app if it keeps failing.</string>
+    <string name="settings_legal_section">Legal</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_terms_of_use">Terms of use</string>
+    <string name="settings_open_in_browser">Opens in your browser</string>
 
     <!-- Common -->
     <string name="save">Save</string>
