@@ -10,8 +10,32 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
 }
 
+// Kotlin version used by the compiler, read once here because the `libs` version-catalog
+// accessor is only available on the root project script, not inside `subprojects { }`.
+val kotlinCompilerVersion = libs.versions.kotlin.get()
+
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
+    // Keep the Kotlin standard library aligned with the compiler version declared in
+    // gradle/libs.versions.toml. Some dependencies (notably ktorfit 2.6.0) are published
+    // against kotlin-stdlib 2.2.0; that higher version wins Gradle's conflict resolution on
+    // the Android classpath, and Kotlin Multiplatform's consistent resolution then propagates
+    // a "strictly 2.2.0" constraint onto the common metadata configurations. The resulting
+    // 2.2.0 commonMain .klib has an ABI the 2.1.0 compiler cannot read, which breaks
+    // :data:remote:compileCommonMainKotlinMetadata. Forcing the stdlib back to the compiler
+    // version keeps the runtime library and the compiler in sync.
+    configurations.configureEach {
+        resolutionStrategy {
+            force(
+                "org.jetbrains.kotlin:kotlin-stdlib:$kotlinCompilerVersion",
+                "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinCompilerVersion",
+                "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinCompilerVersion",
+                "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinCompilerVersion",
+                "org.jetbrains.kotlin:kotlin-reflect:$kotlinCompilerVersion",
+            )
+        }
+    }
 
     extensions.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension>("ktlint") {
         android.set(true)
