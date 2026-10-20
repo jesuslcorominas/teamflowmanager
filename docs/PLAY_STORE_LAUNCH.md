@@ -202,20 +202,30 @@ traducidas antes de ofrecerla.
 
 ## 7. Pipeline de release
 
-El job `promote` de `.github/workflows/post-release.yml` sigue desactivado con
-`if: false` desde la fase alpha. Para que el merge de una rama `release/*` a
-`main` publique en producción hay que:
+El job `promote` de `.github/workflows/post-release.yml` ya está activo: al
+mergear una rama `release/*` a `main`, la versión que está en alpha se promueve
+a producción.
 
-1. Cambiar el `if` por la condición ya comentada en el fichero:
-   `github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')`
-2. Cambiar el `status: "completed"` del payload por un despliegue escalonado
-   (`status: "inProgress"` más `userFraction`), para no publicar al 100 % de los
-   usuarios de golpe en la primera versión de producción.
-3. Actualizar el cuerpo del GitHub Release, que todavía dice «disponible en Play
-   Store alpha».
+**Despliegue escalonado.** La variable de repositorio `PLAY_ROLLOUT_FRACTION`
+controla a qué fracción de usuarios llega:
 
-Hasta entonces, la promoción de alpha a producción se hace a mano desde Play
-Console.
+| Valor | Efecto |
+|---|---|
+| sin definir | 0.1 — el 10 % de los usuarios (`status: inProgress`) |
+| `0.2`, `0.5`… | esa fracción (`status: inProgress`) |
+| `1` | publicación directa al 100 % (`status: completed`) |
+
+Cualquier otro valor aborta el job antes de llamar a la Play API. Se define en
+GitHub → Settings → Secrets and variables → Actions → Variables.
+
+Con un despliegue escalonado, el resto del rollout se escala a mano desde Play
+Console → Producción → la versión → «Aumentar el porcentaje de implementación».
+**Para la primera versión de producción conviene dejar el 0.1 por defecto** y
+subir según se vean los datos de Crashlytics.
+
+Si la Play API rechaza la actualización del track o el commit de la edición, el
+job falla y no se crea el GitHub Release, para que no anuncie una publicación
+que no ha llegado a Play.
 
 ---
 
@@ -225,5 +235,6 @@ Console.
 2. Desplegar hosting y functions para que las URLs legales respondan.
 3. Rellenar Data Safety, acceso a la app, público objetivo y clasificación.
 4. Preparar gráficos y capturas, y subir la ficha.
-5. Activar el job `promote` (sección 7).
-6. Lanzar una `release/*` con `/publish` y promover con despliegue escalonado.
+5. Lanzar una `release/*` con `/publish`. Al mergear su PR a `main`, el job
+   `promote` publica en producción al 10 % de los usuarios (sección 7).
+6. Vigilar Crashlytics un par de días y escalar el rollout desde Play Console.
