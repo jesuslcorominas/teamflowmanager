@@ -115,7 +115,12 @@ jobs:
     name: Full build (macOS)
     runs-on: macos-latest
     continue-on-error: true
-    timeout-minutes: 60
+    # A measured cold run (nothing in either cache) took just under 60 minutes on a
+    # macos-latest runner: ~21 min of Gradle distribution download, configuration, Android
+    # lint and unit tests before Kotlin/Native was even touched, then the native toolchain
+    # download, the iOS compilation and R8. Warm runs are far shorter, but the budget has
+    # to cover the cold case or the cache never gets written.
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v4
@@ -124,16 +129,27 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
-      # Kotlin/Native downloads a ~1 GB toolchain plus the platform klibs into ~/.konan on
-      # every cold run; without this cache a third of the job is spent re-downloading it.
-      - name: Cache Kotlin/Native toolchain
-        uses: actions/cache@v4
+      # Restore and save are split on purpose. actions/cache's bundled post step does not
+      # run when the job is cancelled — which is exactly what a timeout looks like — so the
+      # combined action would never seed the cache after a slow cold run, leaving every
+      # future run equally cold. The explicit save with `if: always()` writes whatever was
+      # downloaded even if the build itself failed or timed out.
+      #
+      # ~/.konan holds the Kotlin/Native toolchain (~1 GB of LLVM, sysroots and platform
+      # klibs); ~/.gradle holds the wrapper distribution and the dependency cache.
+      - name: Restore Gradle and Kotlin/Native caches
+        id: build-cache
+        uses: actions/cache/restore@v4
         with:
-          path: ~/.konan
-          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: konan-${{ runner.os }}-
+          path: |
+            ~/.konan
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: macos-build-${{ hashFiles('gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}-${{ github.run_id }}
+          restore-keys: |
+            macos-build-${{ hashFiles('gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}-
+            macos-build-
 
       - name: Select Xcode version
         uses: maxim-lobanov/setup-xcode@v1
@@ -164,6 +180,16 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew build --no-daemon --stacktrace
+
+      - name: Save Gradle and Kotlin/Native caches
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.konan
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ steps.build-cache.outputs.cache-primary-key }}
 
       - name: Upload build reports on failure
         if: failure()
@@ -198,5 +224,7 @@ jobs:
           fi
           if [[ "$macos" == "failure" ]]; then
             echo "⚠️ Full build (macOS) failed — not blocking yet, but ./gradlew build is broken."
+          elif [[ "$macos" == "cancelled" ]]; then
+            echo "⚠️ Full build (macOS) was cancelled — most likely it hit its timeout."
           fi
           echo "✅ All required checks passed (or were skipped)"
