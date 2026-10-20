@@ -106,3 +106,20 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 }
+
+// The dev.gitlive:firebase-* artifacts are cinterop wrappers over the FirebaseCore,
+// FirebaseAuth and FirebaseFirestore Objective-C frameworks. This project supplies those
+// frameworks through CocoaPods in iosApp.xcworkspace (iosApp/Pods/ is gitignored), not
+// through the Gradle build, so Gradle has no framework search path for them. Linking the
+// iOS *executable* for this module therefore fails with `ld: framework 'FirebaseCore' not
+// found`, which broke `./gradlew build`.
+//
+// Only the test executable is affected: the production framework produced by :iosApp is
+// static, so it defers those symbols to the Xcode link, where the pods are present. The
+// commonTest sources of this module are pure Firestore mapper tests and already run on the
+// JVM as part of the Android unit tests, so disabling the native test binary costs no
+// coverage. Re-enable this if the module ever adopts the Kotlin CocoaPods plugin.
+tasks.matching { it.name.matches(Regex("link.*Test(Ios|IosSimulator)Arm64")) }
+    .configureEach { enabled = false }
+tasks.matching { it.name.matches(Regex("ios(Arm64|SimulatorArm64)Test(Binaries)?")) }
+    .configureEach { enabled = false }
