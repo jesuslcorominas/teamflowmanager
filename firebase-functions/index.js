@@ -11,6 +11,11 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
+// Account deletion (Google Play policy requirement). Kept in its own module:
+// the cascade is long enough that inlining it here would bury the short-link
+// and notification handlers.
+exports.deleteAccount = require('./accountDeletion').deleteAccount;
+
 /**
  * Generate a short link for team invitation.
  *

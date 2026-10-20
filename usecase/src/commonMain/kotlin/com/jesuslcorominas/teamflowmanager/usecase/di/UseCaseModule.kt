@@ -11,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateClubUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreatePendingCoachAssignmentUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateTeamUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteAccountUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeletePendingCoachAssignmentUseCase
@@ -110,6 +111,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.CreateClubUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreatePendingCoachAssignmentUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.CreateTeamUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.DeleteAccountUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteFcmTokenUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeleteMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.DeletePendingCoachAssignmentUseCaseImpl
@@ -288,6 +290,7 @@ internal val useCaseInternalModule =
         singleOf(::GetCurrentUserUseCaseImpl) bind GetCurrentUserUseCase::class
         singleOf(::SignInWithGoogleUseCaseImpl) bind SignInWithGoogleUseCase::class
         singleOf(::SignOutUseCaseImpl) bind SignOutUseCase::class
+        singleOf(::DeleteAccountUseCaseImpl) bind DeleteAccountUseCase::class
 
         // Time synchronization
         singleOf(::SynchronizeTimeUseCaseImpl) bind SynchronizeTimeUseCase::class

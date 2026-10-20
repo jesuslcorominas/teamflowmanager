@@ -1,0 +1,177 @@
+/* Shared styling for the legal pages (privacy policy, terms, account deletion).
+   The landing page keeps its own gradient hero; these are documents, so they
+   are set for reading: one column, generous line height, dark-mode aware. */
+
+:root {
+  --tfm-bg: #f6f7fb;
+  --tfm-surface: #ffffff;
+  --tfm-text: #1b1c22;
+  --tfm-muted: #5a5c69;
+  --tfm-accent: #667eea;
+  --tfm-border: #e3e5ef;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tfm-bg: #15161c;
+    --tfm-surface: #1e2028;
+    --tfm-text: #ecedf2;
+    --tfm-muted: #a2a4b4;
+    --tfm-accent: #8fa0ff;
+    --tfm-border: #2d3039;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  background: var(--tfm-bg);
+  color: var(--tfm-text);
+  line-height: 1.65;
+}
+
+header.hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  padding: 48px 20px 32px;
+}
+
+header.hero .inner,
+main,
+footer .inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+header.hero h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+header.hero p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+header.hero a {
+  color: #fff;
+}
+
+main {
+  background: var(--tfm-surface);
+  border: 1px solid var(--tfm-border);
+  border-radius: 12px;
+  margin: -24px auto 40px;
+  padding: 32px 24px;
+  max-width: 760px;
+}
+
+h2 {
+  font-size: 20px;
+  margin-top: 36px;
+  padding-top: 8px;
+  border-top: 1px solid var(--tfm-border);
+}
+
+h2:first-of-type {
+  margin-top: 8px;
+  border-top: none;
+}
+
+h3 {
+  font-size: 16px;
+  margin-top: 24px;
+}
+
+a {
+  color: var(--tfm-accent);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 15px;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--tfm-border);
+}
+
+th {
+  color: var(--tfm-muted);
+  font-weight: 600;
+}
+
+.updated {
+  color: var(--tfm-muted);
+  font-size: 14px;
+}
+
+.callout {
+  background: rgba(102, 126, 234, 0.08);
+  border-left: 3px solid var(--tfm-accent);
+  border-radius: 6px;
+  padding: 16px 18px;
+  margin: 20px 0;
+}
+
+.callout h3 {
+  margin-top: 0;
+}
+
+footer {
+  padding: 0 0 48px;
+  color: var(--tfm-muted);
+  font-size: 14px;
+}
+
+footer nav a {
+  margin-right: 16px;
+}
+
+/* The table is the clearest way to tie each purpose to its legal basis, but it
+   does not survive a phone screen; stack it into labelled rows instead. */
+@media (max-width: 640px) {
+  main {
+    margin: -16px 12px 32px;
+    padding: 24px 18px;
+  }
+
+  table,
+  tbody,
+  tr,
+  td,
+  th {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    border-bottom: 1px solid var(--tfm-border);
+    padding: 12px 0;
+  }
+
+  td {
+    border: none;
+    padding: 2px 0;
+  }
+
+  td::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: var(--tfm-muted);
+  }
+}

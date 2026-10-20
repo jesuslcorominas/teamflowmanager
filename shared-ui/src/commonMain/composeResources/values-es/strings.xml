@@ -55,6 +55,17 @@
     <string name="sign_out_title">Cerrar sesión</string>
     <string name="sign_out_message">¿Estás seguro de que quieres cerrar sesión?</string>
     <string name="user_name_unknown">Usuario</string>
+    <string name="delete_account">Eliminar cuenta</string>
+    <string name="delete_account_subtitle">Borra tu cuenta y tus datos de forma definitiva</string>
+    <string name="delete_account_title">\u00bfEliminar tu cuenta?</string>
+    <string name="delete_account_message">Esta acci\u00f3n no se puede deshacer. Se eliminar\u00e1n para siempre tu cuenta, tu pertenencia a los clubes y los equipos, jugadores, partidos, fotos e historial que se queden sin nadie a quien pertenecer. Los clubes con m\u00e1s miembros siguen existiendo: la propiedad pasa a otro miembro.</string>
+    <string name="delete_account_confirm">Eliminar definitivamente</string>
+    <string name="delete_account_in_progress">Eliminando tu cuenta\u2026</string>
+    <string name="delete_account_error">No se ha podido eliminar tu cuenta. Int\u00e9ntalo de nuevo y escribe a privacidad@teamflowmanager.app si vuelve a fallar.</string>
+    <string name="settings_legal_section">Legal</string>
+    <string name="settings_privacy_policy">Pol\u00edtica de privacidad</string>
+    <string name="settings_terms_of_use">T\u00e9rminos de uso</string>
+    <string name="settings_open_in_browser">Se abre en el navegador</string>
 
     <!-- Common -->
     <string name="save">Guardar</string>

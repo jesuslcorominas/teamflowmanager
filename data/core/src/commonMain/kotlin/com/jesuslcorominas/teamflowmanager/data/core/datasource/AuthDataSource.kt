@@ -11,4 +11,13 @@ interface AuthDataSource {
     suspend fun signOut()
 
     suspend fun saveUserToFirestore(user: User)
+
+    /**
+     * A freshly minted Firebase ID token for the signed-in user, or null when
+     * nobody is signed in.
+     *
+     * Needed to authenticate calls to our own Cloud Functions, which verify the
+     * token rather than trusting a uid sent in the body.
+     */
+    suspend fun getIdToken(): String?
 }

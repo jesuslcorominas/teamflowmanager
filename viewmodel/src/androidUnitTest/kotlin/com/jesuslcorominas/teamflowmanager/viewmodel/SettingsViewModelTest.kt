@@ -12,6 +12,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.SubstitutionMode
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
+import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteAccountUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.DeleteFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveActiveViewRoleUseCase
@@ -29,6 +30,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -56,6 +58,7 @@ class SettingsViewModelTest {
     private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
     private lateinit var signOutUseCase: SignOutUseCase
     private lateinit var deleteFcmTokenUseCase: DeleteFcmTokenUseCase
+    private lateinit var deleteAccountUseCase: DeleteAccountUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
     private lateinit var getTeamUseCase: GetTeamUseCase
     private lateinit var getUserClubMembershipUseCase: GetUserClubMembershipUseCase
@@ -82,6 +85,7 @@ class SettingsViewModelTest {
         getCurrentUserUseCase = mockk()
         signOutUseCase = mockk()
         deleteFcmTokenUseCase = mockk(relaxed = true)
+        deleteAccountUseCase = mockk(relaxed = true)
         analyticsTracker = mockk(relaxed = true)
         getTeamUseCase = mockk()
         getUserClubMembershipUseCase = mockk()
@@ -105,6 +109,7 @@ class SettingsViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             signOutUseCase = signOutUseCase,
             deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            deleteAccountUseCase = deleteAccountUseCase,
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
@@ -161,6 +166,7 @@ class SettingsViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             signOutUseCase = signOutUseCase,
             deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            deleteAccountUseCase = deleteAccountUseCase,
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
@@ -210,6 +216,7 @@ class SettingsViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             signOutUseCase = signOutUseCase,
             deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            deleteAccountUseCase = deleteAccountUseCase,
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
@@ -244,6 +251,7 @@ class SettingsViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             signOutUseCase = signOutUseCase,
             deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            deleteAccountUseCase = deleteAccountUseCase,
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
@@ -288,6 +296,7 @@ class SettingsViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             signOutUseCase = signOutUseCase,
             deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            deleteAccountUseCase = deleteAccountUseCase,
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
@@ -419,6 +428,7 @@ class SettingsViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             signOutUseCase = signOutUseCase,
             deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            deleteAccountUseCase = deleteAccountUseCase,
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
@@ -463,6 +473,7 @@ class SettingsViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             signOutUseCase = signOutUseCase,
             deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            deleteAccountUseCase = deleteAccountUseCase,
             analyticsTracker = analyticsTracker,
             getTeam = getTeamUseCase,
             getUserClubMembership = getUserClubMembershipUseCase,
@@ -606,5 +617,79 @@ class SettingsViewModelTest {
             // Then
             verify { setSubstitutionModeUseCase(SubstitutionMode.LIVE) }
             verify { setSubstitutionModeUseCase(SubstitutionMode.SCHEDULED) }
+        }
+
+    // ── Account deletion ──────────────────────────────────────────────────────
+
+    @Test
+    fun `delete account status starts idle`() {
+        assertEquals(SettingsViewModel.DeleteAccountStatus.IDLE, viewModel.deleteAccountStatus.value)
+    }
+
+    @Test
+    fun `deleteAccount on success reports completion and returns to idle`() =
+        runTest(testDispatcher) {
+            coEvery { deleteAccountUseCase() } returns Result.success(Unit)
+
+            viewModel.deleteAccount()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { deleteAccountUseCase() }
+            verify { analyticsTracker.logEvent("delete_account", any()) }
+            verify { analyticsTracker.setUserId(null) }
+            assertTrue(viewModel.signOutComplete.value)
+            assertEquals(SettingsViewModel.DeleteAccountStatus.IDLE, viewModel.deleteAccountStatus.value)
+        }
+
+    @Test
+    fun `deleteAccount on failure reports the error and does not navigate away`() =
+        runTest(testDispatcher) {
+            val error = IllegalStateException("deleteAccount returned 500")
+            coEvery { deleteAccountUseCase() } returns Result.failure(error)
+
+            viewModel.deleteAccount()
+            advanceUntilIdle()
+
+            assertEquals(SettingsViewModel.DeleteAccountStatus.FAILED, viewModel.deleteAccountStatus.value)
+            verify { crashReporter.recordException(error) }
+            assertFalse(viewModel.signOutComplete.value)
+            verify(exactly = 0) { analyticsTracker.logEvent("delete_account", any()) }
+        }
+
+    @Test
+    fun `onDeleteAccountErrorShown clears the failure`() =
+        runTest(testDispatcher) {
+            coEvery { deleteAccountUseCase() } returns Result.failure(IllegalStateException("boom"))
+            viewModel.deleteAccount()
+            advanceUntilIdle()
+
+            viewModel.onDeleteAccountErrorShown()
+
+            assertEquals(SettingsViewModel.DeleteAccountStatus.IDLE, viewModel.deleteAccountStatus.value)
+        }
+
+    @Test
+    fun `deleteAccount ignores a second tap while the cascade is running`() =
+        runTest(testDispatcher) {
+            val gate = CompletableDeferred<Unit>()
+            coEvery { deleteAccountUseCase() } coAnswers {
+                gate.await()
+                Result.success(Unit)
+            }
+
+            viewModel.deleteAccount()
+            runCurrent()
+            assertEquals(
+                SettingsViewModel.DeleteAccountStatus.IN_PROGRESS,
+                viewModel.deleteAccountStatus.value,
+            )
+
+            viewModel.deleteAccount()
+            runCurrent()
+
+            gate.complete(Unit)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { deleteAccountUseCase() }
         }
 }

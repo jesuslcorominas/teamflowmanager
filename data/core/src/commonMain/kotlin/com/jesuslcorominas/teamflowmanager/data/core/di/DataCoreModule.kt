@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.data.core.di
 
+import com.jesuslcorominas.teamflowmanager.data.core.repository.AccountRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.AuthRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubMemberRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.ClubRepositoryImpl
@@ -21,6 +22,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeReposi
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PreferencesRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PresidentNotificationRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.TeamRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.usecase.repository.AccountRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubRepository
@@ -71,6 +73,8 @@ internal val repositoryModule =
         singleOf(::GoalRepositoryImpl) bind GoalRepository::class
 
         singleOf(::AuthRepositoryImpl) bind AuthRepository::class
+
+        singleOf(::AccountRepositoryImpl) bind AccountRepository::class
 
         singleOf(::FcmTokenRepositoryImpl) bind FcmTokenRepository::class
         singleOf(::FcmTokenProviderRepositoryImpl) bind FcmTokenProviderRepository::class
