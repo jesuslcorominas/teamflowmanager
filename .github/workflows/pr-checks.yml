@@ -4,6 +4,12 @@ on:
   pull_request:
     branches: [develop]
 
+# macOS runners are billed at 10x the Linux rate, so a new push must not leave the
+# previous full build running.
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
@@ -91,9 +97,85 @@ jobs:
           path: build/reports/jacoco/testDebugUnitTestCoverage/
           retention-days: 7
 
+  # ─────────────────────────────────────────────────────────────
+  # Full `./gradlew build` on macOS.
+  #
+  # Everything else in CI runs on ubuntu-latest and only invokes `ktlintCheck` and
+  # `testDebugUnitTestCoverage`, so nothing ever compiled the Kotlin/Native targets or
+  # assembled the Android release variants. `./gradlew build` was broken on develop for
+  # months behind five stacked failures that CI could not see (see PR #446). This job is
+  # the guard against that happening again: it is the only place the whole build graph —
+  # iOS metadata and native compilation included — is actually exercised.
+  #
+  # It is deliberately NOT part of ci-gate while it stabilises: a 30-minute macOS job
+  # should not block a PR on its first weeks of life. Promote it by adding it to
+  # ci-gate's `needs` and checking its result there once it has proven reliable.
+  # ─────────────────────────────────────────────────────────────
+  build-macos:
+    name: Full build (macOS)
+    runs-on: macos-latest
+    continue-on-error: true
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      # Kotlin/Native downloads a ~1 GB toolchain plus the platform klibs into ~/.konan on
+      # every cold run; without this cache a third of the job is spent re-downloading it.
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+
+      - name: Select Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Restore google-services.json
+        run: |
+          mkdir -p app/src/dev app/src/prod
+          echo "${{ secrets.GOOGLE_SERVICES_DEV }}"  | base64 --decode > app/src/dev/google-services.json
+          echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 --decode > app/src/prod/google-services.json
+
+      # :app:packageDevRelease and :app:packageProdRelease are part of `build` and sign the
+      # APK, so the job needs the real keystore. These are the same secrets release.yml
+      # already uses for :app:bundleProdRelease; reusing them keeps R8 minification and
+      # resource shrinking — a classic source of release-only breakage — inside this check
+      # instead of excluding the tasks with -x.
+      - name: Restore release keystore
+        run: echo "${{ secrets.KEYSTORE_JKS }}" | base64 --decode > ${{ github.workspace }}/teamflow.jks
+
+      - name: Grant gradlew permission
+        run: chmod +x gradlew
+
+      - name: Run full build
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/teamflow.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew build --no-daemon --stacktrace
+
+      - name: Upload build reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build-reports
+          path: '**/build/reports/**'
+          retention-days: 7
+
   ci-gate:
     name: CI Gate
-    needs: [lint, test-and-coverage]
+    needs: [lint, test-and-coverage, build-macos]
     if: always()
     runs-on: ubuntu-latest
 
@@ -102,8 +184,10 @@ jobs:
         run: |
           lint="${{ needs.lint.result }}"
           tests="${{ needs.test-and-coverage.result }}"
+          macos="${{ needs.build-macos.result }}"
           echo "lint: $lint"
           echo "test-and-coverage: $tests"
+          echo "build-macos (non-blocking): $macos"
           if [[ "$lint" == "failure" || "$lint" == "cancelled" ]]; then
             echo "❌ Lint job failed"
             exit 1
@@ -111,5 +195,8 @@ jobs:
           if [[ "$tests" == "failure" || "$tests" == "cancelled" ]]; then
             echo "❌ Tests & Coverage job failed"
             exit 1
+          fi
+          if [[ "$macos" == "failure" ]]; then
+            echo "⚠️ Full build (macOS) failed — not blocking yet, but ./gradlew build is broken."
           fi
           echo "✅ All required checks passed (or were skipped)"
