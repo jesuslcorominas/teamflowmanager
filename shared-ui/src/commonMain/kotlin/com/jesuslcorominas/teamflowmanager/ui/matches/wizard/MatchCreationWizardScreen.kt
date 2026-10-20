@@ -84,6 +84,8 @@ fun MatchCreationWizardScreen(
                                     wizardViewModel.setGeneralData(opponent, location, date, time, numberOfPeriods)
                                 },
                                 homeGround = homeGround,
+                                periodTypeSelectable = wizardViewModel.isPeriodTypeSelectable(),
+                                periodDurationMinutes = wizardViewModel.getPeriodDurationMinutes(),
                                 onNext = { wizardViewModel.goToNextStep() },
                                 onCancel = { wizardViewModel.requestBack(onNavigateBack) },
                                 modifier =
