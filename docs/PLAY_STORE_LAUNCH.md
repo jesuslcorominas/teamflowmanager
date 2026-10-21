@@ -4,6 +4,10 @@ Guía para pasar la app del track `alpha` a producción abierta. Reúne lo que h
 que rellenar en Play Console (que no se puede automatizar desde el repositorio)
 y los textos ya redactados para copiar y pegar.
 
+> Si es la primera vez que publicas, empieza por
+> [PLAY_STORE_STEP_BY_STEP.md](PLAY_STORE_STEP_BY_STEP.md), que lleva el orden de
+> los pasos. Este documento es el contenido que aquella guía manda copiar.
+
 Estado de referencia: versión `0.7.3`, versionCode `59`, publicada solo en alpha.
 
 ---
