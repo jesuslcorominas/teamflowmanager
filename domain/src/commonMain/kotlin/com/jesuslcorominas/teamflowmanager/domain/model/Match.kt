@@ -61,6 +61,8 @@ data class MatchPeriod(
     companion object {
         const val PERIOD_DURATION_TWO_HALF = 25 * 60 * 1000L // 25 minutes in milliseconds
         const val PERIOD_DURATION_FOUR_QUARTERS = ((12 * 60) + 30) * 1000L // 12 minutes 30 seconds in milliseconds
+        const val PERIOD_DURATION_TWO_HALF_30 = 30 * 60 * 1000L // 30 minutes in milliseconds
+        const val PERIOD_DURATION_TWO_HALF_45 = 45 * 60 * 1000L // 45 minutes in milliseconds
     }
 }
 

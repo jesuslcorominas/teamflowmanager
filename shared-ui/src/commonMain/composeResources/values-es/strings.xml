@@ -191,6 +191,7 @@
     <string name="number_of_periods">Nº de Tiempos</string>
     <string name="two_halves">2 Partes</string>
     <string name="four_quarters">4 Cuartos</string>
+    <string name="fixed_period_format">2 partes de %d min</string>
     <string name="search_match_placeholder">Busca por oponente o ubicación</string>
 
     <!-- Match Status -->

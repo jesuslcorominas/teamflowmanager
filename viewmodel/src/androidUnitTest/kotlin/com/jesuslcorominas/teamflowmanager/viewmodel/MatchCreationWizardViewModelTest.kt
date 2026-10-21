@@ -4,9 +4,12 @@ import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
+import com.jesuslcorominas.teamflowmanager.domain.model.Team
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetDefaultCaptainUseCase
@@ -23,6 +26,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -1114,5 +1118,184 @@ class MatchCreationWizardViewModelTest {
 
         // Then
         assertTrue(viewModel.hasUnsavedChanges())
+    }
+
+    // ── Period rules by team type ──────────────────────────────────────────────────
+
+    private fun givenTeamOfType(teamType: TeamType) {
+        every { getTeamUseCase.invoke() } returns
+            flowOf(Team(id = "1", name = "Team", coachName = "Coach", delegateName = "Delegate", teamType = teamType))
+    }
+
+    @Test
+    fun `isPeriodTypeSelectable is true only for FOOTBALL_5`() = runTest(testDispatcher) {
+        TeamType.entries.forEach { teamType ->
+            // Given
+            givenTeamOfType(teamType)
+
+            // When
+            viewModel = createViewModel()
+            advanceUntilIdle()
+
+            // Then
+            assertEquals(teamType == TeamType.FOOTBALL_5, viewModel.isPeriodTypeSelectable())
+        }
+    }
+
+    @Test
+    fun `getPeriodDurationMinutes returns 25 for FOOTBALL_5 with 2 periods`() = runTest(testDispatcher) {
+        // Given
+        givenTeamOfType(TeamType.FOOTBALL_5)
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(25, viewModel.getPeriodDurationMinutes())
+    }
+
+    @Test
+    fun `getPeriodDurationMinutes returns 12 for FOOTBALL_5 with 4 periods`() = runTest(testDispatcher) {
+        // Given
+        givenTeamOfType(TeamType.FOOTBALL_5)
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When
+        viewModel.setGeneralData("Opponent", "Stadium", 1000L, 3600000L, 4)
+
+        // Then
+        assertEquals(12, viewModel.getPeriodDurationMinutes())
+    }
+
+    @Test
+    fun `getPeriodDurationMinutes returns 30 for FOOTBALL_7 and 45 for FOOTBALL_11`() = runTest(testDispatcher) {
+        // Given
+        givenTeamOfType(TeamType.FOOTBALL_7)
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        assertEquals(30, viewModel.getPeriodDurationMinutes())
+
+        givenTeamOfType(TeamType.FOOTBALL_11)
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(45, viewModel.getPeriodDurationMinutes())
+    }
+
+    @Test
+    fun `updateMatch with FOOTBALL_7 team forces HALF_TIME and 2 periods of 30 minutes`() = runTest(testDispatcher) {
+        // Given
+        val matchId = "42"
+        val existingMatch = Match(
+            id = matchId,
+            teamName = "Team",
+            opponent = "Opponent",
+            location = "Stadium",
+            periodType = PeriodType.HALF_TIME,
+            captainId = "1",
+        )
+        givenTeamOfType(TeamType.FOOTBALL_7)
+        coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(existingMatch)
+        val matchSlot = slot<Match>()
+        coEvery { updateMatchUseCase.invoke(capture(matchSlot)) } just runs
+        viewModel = createViewModel(matchId)
+        advanceUntilIdle()
+        viewModel.setGeneralData("Opponent", "Stadium", 1000L, 3600000L, 4)
+
+        // When
+        viewModel.updateMatch()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(PeriodType.HALF_TIME, matchSlot.captured.periodType)
+        assertEquals(2, matchSlot.captured.periods.size)
+        assertTrue(matchSlot.captured.periods.all { it.periodDuration == 1_800_000L })
+    }
+
+    @Test
+    fun `updateMatch on a match not yet started rebuilds periods with the right duration`() = runTest(testDispatcher) {
+        // Given
+        val matchId = "42"
+        val existingMatch = Match(
+            id = matchId,
+            teamName = "Team",
+            opponent = "Opponent",
+            location = "Stadium",
+            periodType = PeriodType.HALF_TIME,
+            captainId = "1",
+        )
+        givenTeamOfType(TeamType.FOOTBALL_5)
+        coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(existingMatch)
+        val matchSlot = slot<Match>()
+        coEvery { updateMatchUseCase.invoke(capture(matchSlot)) } just runs
+        viewModel = createViewModel(matchId)
+        advanceUntilIdle()
+        viewModel.setGeneralData("Opponent", "Stadium", 1000L, 3600000L, 4)
+
+        // When
+        viewModel.updateMatch()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(PeriodType.QUARTER_TIME, matchSlot.captured.periodType)
+        assertEquals(4, matchSlot.captured.periods.size)
+        assertTrue(matchSlot.captured.periods.all { it.periodDuration == 750_000L })
+    }
+
+    @Test
+    fun `updateMatch on a match already started keeps its periods untouched`() = runTest(testDispatcher) {
+        // Given
+        val matchId = "42"
+        val startedPeriods = listOf(
+            MatchPeriod(periodNumber = 1, periodDuration = 1_500_000L, startTimeMillis = 5_000L),
+            MatchPeriod(periodNumber = 2, periodDuration = 1_500_000L),
+        )
+        val existingMatch = Match(
+            id = matchId,
+            teamName = "Team",
+            opponent = "Opponent",
+            location = "Stadium",
+            periodType = PeriodType.HALF_TIME,
+            captainId = "1",
+            periods = startedPeriods,
+        )
+        givenTeamOfType(TeamType.FOOTBALL_11)
+        coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(existingMatch)
+        val matchSlot = slot<Match>()
+        coEvery { updateMatchUseCase.invoke(capture(matchSlot)) } just runs
+        viewModel = createViewModel(matchId)
+        advanceUntilIdle()
+
+        // When
+        viewModel.updateMatch()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(startedPeriods, matchSlot.captured.periods)
+    }
+
+    @Test
+    fun `editing a legacy FOOTBALL_7 match with 4 periods normalizes to 2 without unsaved changes`() = runTest(testDispatcher) {
+        // Given
+        val matchId = "42"
+        val legacyMatch = Match(
+            id = matchId,
+            teamName = "Team",
+            opponent = "Opponent",
+            location = "Stadium",
+            periodType = PeriodType.QUARTER_TIME,
+            captainId = "1",
+        )
+        givenTeamOfType(TeamType.FOOTBALL_7)
+        coEvery { getMatchByIdUseCase.invoke(matchId) } returns flowOf(legacyMatch)
+
+        // When
+        viewModel = createViewModel(matchId)
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(2, viewModel.getNumberOfPeriods())
+        assertFalse(viewModel.hasUnsavedChanges())
     }
 }
