@@ -39,12 +39,55 @@ jobs:
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
-      - uses: google-github-actions/auth@v2
+      # El token se firma con la clave de la service account (flujo JWT-bearer),
+      # igual que hace el upload a alpha. No se usa google-github-actions/auth
+      # con token_format porque eso impersona la cuenta vía IAM y exige el rol
+      # iam.serviceAccountTokenCreator sobre sí misma, que la cuenta no tiene.
+      - name: Get Play API access token
         id: auth
-        with:
-          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          token_format: 'access_token'
-          access_token_scopes: 'https://www.googleapis.com/auth/androidpublisher'
+        env:
+          SA_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          KEY_FILE="$RUNNER_TEMP/play-sa-key.pem"
+          trap 'rm -f "$KEY_FILE"' EXIT
+
+          CLIENT_EMAIL=$(jq -r '.client_email' <<< "$SA_JSON")
+          jq -r '.private_key' <<< "$SA_JSON" > "$KEY_FILE"
+          if [ -z "$CLIENT_EMAIL" ] || [ "$CLIENT_EMAIL" = "null" ]; then
+            echo "❌ GOOGLE_PLAY_SERVICE_ACCOUNT_JSON no contiene client_email"
+            exit 1
+          fi
+
+          b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+
+          NOW=$(date +%s)
+          HEADER=$(printf '{"alg":"RS256","typ":"JWT"}' | b64url)
+          CLAIMS=$(jq -nc \
+            --arg iss "$CLIENT_EMAIL" \
+            --argjson iat "$NOW" \
+            --argjson exp "$((NOW + 3600))" \
+            '{iss: $iss,
+              scope: "https://www.googleapis.com/auth/androidpublisher",
+              aud: "https://oauth2.googleapis.com/token",
+              iat: $iat, exp: $exp}' | b64url)
+          SIGNATURE=$(printf '%s.%s' "$HEADER" "$CLAIMS" \
+            | openssl dgst -sha256 -sign "$KEY_FILE" -binary | b64url)
+
+          RESPONSE=$(curl -s -X POST https://oauth2.googleapis.com/token \
+            --data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer' \
+            --data-urlencode "assertion=$HEADER.$CLAIMS.$SIGNATURE")
+          TOKEN=$(jq -r '.access_token // empty' <<< "$RESPONSE")
+
+          if [ -z "$TOKEN" ]; then
+            echo "❌ La Play API no devolvió token de acceso"
+            jq -r '.error_description // .error // "respuesta sin detalle"' <<< "$RESPONSE"
+            exit 1
+          fi
+
+          echo "::add-mask::$TOKEN"
+          echo "access_token=$TOKEN" >> $GITHUB_OUTPUT
+          echo "✅ Token obtenido para $CLIENT_EMAIL"
 
       - name: Promote beta → production
         run: |
