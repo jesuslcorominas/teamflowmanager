@@ -26,7 +26,15 @@ koin = "4.0.0"
 koin-compose = "4.0.0"
 navigationCompose = "2.9.5"
 room = "2.8.3"
-ktor = "3.0.1"
+# Must stay aligned with the ktor version ktorfit 2.6.0 brings in transitively.
+# ktorfit drags ktor onto the Android classpath, and Kotlin Multiplatform's consistent
+# resolution then propagates a "strictly <that version>" constraint onto the common
+# metadata configurations. When the version declared here is lower, ktor-client-darwin
+# is requested at one version and resolved at another; its metadata is entirely
+# host-specific (the root -metadata.jar holds only META-INF), and that mismatch makes
+# the Kotlin Gradle plugin silently drop the module from the iosMain metadata classpath,
+# breaking :data:remote:compileIosMainKotlinMetadata with "Unresolved reference 'darwin'".
+ktor = "3.2.1"
 ktorfit = "2.6.0"
 kotlinxSerialization = "1.7.3"
 kotlinxDatetime = "0.6.1"
