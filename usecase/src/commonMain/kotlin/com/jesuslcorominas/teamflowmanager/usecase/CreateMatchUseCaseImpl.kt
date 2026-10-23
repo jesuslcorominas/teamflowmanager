@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriodRules
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
@@ -21,15 +22,22 @@ internal class CreateMatchUseCaseImpl(
 }
 
 private fun SkeletonMatch.toMatch(team: Team): Match {
+    val periodType =
+        MatchPeriodRules.resolvePeriodType(
+            team.teamType,
+            PeriodType.fromNumberOfPeriods(numberOfPeriods),
+        )
+
     return Match(
         teamId = team.id,
         teamName = team.name,
         opponent = opponent,
         location = location,
         dateTime = dateTime,
-        periodType = PeriodType.fromNumberOfPeriods(numberOfPeriods),
+        periodType = periodType,
         squadCallUpIds = this.squadCallUpIds,
         captainId = this.captainId,
         startingLineupIds = this.startingLineupIds,
+        periods = MatchPeriodRules.buildPeriods(team.teamType, periodType),
     )
 }

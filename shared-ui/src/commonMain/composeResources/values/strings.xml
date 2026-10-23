@@ -191,6 +191,7 @@
     <string name="number_of_periods">Number of Periods</string>
     <string name="two_halves">2 Halves</string>
     <string name="four_quarters">4 Quarters</string>
+    <string name="fixed_period_format">2 halves of %d min</string>
     <string name="search_match_placeholder">Search matches by opponent or place</string>
 
     <!-- Match Status -->
