@@ -181,6 +181,7 @@ val iosModule =
                 getCurrentUserUseCase = get(),
                 signOutUseCase = get(),
                 deleteFcmTokenUseCase = get(),
+                deleteAccountUseCase = get(),
                 analyticsTracker = get(),
                 getTeam = get(),
                 getUserClubMembership = get(),

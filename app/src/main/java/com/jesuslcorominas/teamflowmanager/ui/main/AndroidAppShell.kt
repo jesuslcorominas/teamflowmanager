@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.ui.main
 
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.LocalActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -28,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -134,10 +134,10 @@ private fun MainScaffold(
 
     val uiConfig = route?.uiConfig(arguments)
 
-    val activity = LocalContext.current as ComponentActivity
+    val activity = LocalActivity.current as? ComponentActivity
     val showBottomBar = uiConfig?.showBottomBar == true
     LaunchedEffect(showBottomBar) {
-        activity.enableEdgeToEdge(
+        activity?.enableEdgeToEdge(
             statusBarStyle =
                 SystemBarStyle.auto(
                     lightScrim = LightColorScheme.primary.toArgb(),

@@ -7,10 +7,12 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriodRules
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.Player
 import com.jesuslcorominas.teamflowmanager.domain.model.Position
 import com.jesuslcorominas.teamflowmanager.domain.model.SkeletonMatch
+import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.usecase.CreateMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCaptainPlayerUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetClubByIdUseCase
@@ -75,13 +77,14 @@ class MatchCreationWizardViewModel(
     private var allPlayers: List<Player> = emptyList()
     private var activeMatchId: String = matchId
     private var isEditMode = matchId.isNotEmpty()
-    private var teamTypeValue: Int = 5 // Default to Football 5
+    private var teamType: TeamType = TeamType.FOOTBALL_5
     private val _homeGround = MutableStateFlow<String?>(null)
     val homeGround: StateFlow<String?> = _homeGround.asStateFlow()
 
     // Flag to track if match data is loaded for edit mode
     private var matchDataLoaded = false
     private var playersLoaded = false
+    private var teamLoaded = false
     private var pendingMatchIdForEdit: String? = if (matchId.isNotEmpty()) matchId else null
 
     init {
@@ -132,6 +135,7 @@ class MatchCreationWizardViewModel(
 
         matchDataLoaded = false
         playersLoaded = false
+        teamLoaded = false
         _homeGround.value = null
         pendingMatchIdForEdit = if (newMatchId.isNotEmpty()) newMatchId else null
 
@@ -146,11 +150,28 @@ class MatchCreationWizardViewModel(
     private fun loadTeam() {
         viewModelScope.launch {
             val team = getTeamUseCase.invoke().first()
-            teamTypeValue = team?.teamType?.players ?: 5
+            teamType = team?.teamType ?: TeamType.FOOTBALL_5
             team?.clubId?.let { clubId ->
                 _homeGround.value = getClubByIdUseCase.invoke(clubId)?.homeGround
             }
+            teamLoaded = true
+            applyPeriodRules()
+            checkAndSetReady()
         }
+    }
+
+    /**
+     * Forces the regulation number of periods for team types that do not allow choosing.
+     * Also realigns the original value so normalizing a legacy match does not look like an
+     * unsaved change to the user.
+     */
+    private fun applyPeriodRules() {
+        if (!teamLoaded) return
+        if (MatchPeriodRules.isPeriodTypeSelectable(teamType)) return
+
+        val forced = MatchPeriodRules.defaultPeriodType(teamType).numberOfPeriods
+        numberOfPeriods = forced
+        originalNumberOfPeriods = forced
     }
 
     private fun loadMatchForEdit(matchId: String) {
@@ -160,6 +181,7 @@ class MatchCreationWizardViewModel(
                 initializeFromMatch(match)
             }
             matchDataLoaded = true
+            applyPeriodRules()
             checkAndSetReady()
         }
     }
@@ -199,6 +221,7 @@ class MatchCreationWizardViewModel(
      * In create mode, we only need players.
      */
     private fun checkAndSetReady() {
+        if (!teamLoaded) return
         if (!playersLoaded) return
 
         // In edit mode, wait for match data too
@@ -257,7 +280,14 @@ class MatchCreationWizardViewModel(
 
     fun getStartingLineupIds() = startingLineupIds
 
-    fun getTeamTypePlayerCount() = teamTypeValue
+    fun getTeamTypePlayerCount() = teamType.players
+
+    fun isPeriodTypeSelectable() = MatchPeriodRules.isPeriodTypeSelectable(teamType)
+
+    fun getPeriodDurationMinutes(): Int {
+        val periodType = MatchPeriodRules.resolvePeriodType(teamType, PeriodType.fromNumberOfPeriods(numberOfPeriods))
+        return (MatchPeriodRules.periodDuration(teamType, periodType) / 60_000L).toInt()
+    }
 
     fun goToNextStep() {
         viewModelScope.launch {
@@ -397,12 +427,24 @@ class MatchCreationWizardViewModel(
                     crashReporter.log("Updating match via wizard: $id")
                     val existingMatch = getMatchByIdUseCase.invoke(id).firstOrNull()
                     existingMatch?.let { match ->
+                        val resolvedPeriodType =
+                            MatchPeriodRules.resolvePeriodType(teamType, PeriodType.fromNumberOfPeriods(numberOfPeriods))
+                        // Never rebuild the periods of a match that has already started: that would wipe the clock.
+                        val matchHasStarted = match.periods.any { it.startTimeMillis > 0L }
+                        val updatedPeriods =
+                            if (matchHasStarted) {
+                                match.periods
+                            } else {
+                                MatchPeriodRules.buildPeriods(teamType, resolvedPeriodType)
+                            }
+
                         val updatedMatch =
                             match.copy(
                                 opponent = opponent,
                                 location = location,
                                 dateTime = date?.plus(time ?: 0L),
-                                periodType = PeriodType.fromNumberOfPeriods(numberOfPeriods),
+                                periodType = resolvedPeriodType,
+                                periods = updatedPeriods,
                                 squadCallUpIds = squadCallUpIds.toList(),
                                 captainId = captainId,
                                 startingLineupIds = startingLineupIds.toList(),

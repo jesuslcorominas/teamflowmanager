@@ -3,6 +3,17 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // =======================================================================
+    // ACCOUNT DELETION
+    // =======================================================================
+    // Deliberately absent from these rules. The account-deletion cascade runs in
+    // the `deleteAccount` Cloud Function with the Admin SDK, which bypasses
+    // these rules entirely, so no `allow delete` was widened for it. In
+    // particular, goals, substitutions, playerTimeHistory and matchOperations
+    // still have no client delete rule on purpose: granting one for a one-off
+    // operation would leave the permission open for every other request.
+    // See docs/ACCOUNT_DELETION.md.
+
+    // =======================================================================
     // HELPER FUNCTIONS
     // =======================================================================
 

@@ -11,9 +11,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +40,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
@@ -48,13 +58,23 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.cancel
+import teamflowmanager.shared_ui.generated.resources.delete_account
+import teamflowmanager.shared_ui.generated.resources.delete_account_confirm
+import teamflowmanager.shared_ui.generated.resources.delete_account_error
+import teamflowmanager.shared_ui.generated.resources.delete_account_in_progress
+import teamflowmanager.shared_ui.generated.resources.delete_account_message
+import teamflowmanager.shared_ui.generated.resources.delete_account_subtitle
+import teamflowmanager.shared_ui.generated.resources.delete_account_title
 import teamflowmanager.shared_ui.generated.resources.settings_account_section
+import teamflowmanager.shared_ui.generated.resources.settings_legal_section
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_applies_all_teams
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_goals
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_match_events
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_mixed
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_section
 import teamflowmanager.shared_ui.generated.resources.settings_notifications_update_error
+import teamflowmanager.shared_ui.generated.resources.settings_open_in_browser
+import teamflowmanager.shared_ui.generated.resources.settings_privacy_policy
 import teamflowmanager.shared_ui.generated.resources.settings_role_coach
 import teamflowmanager.shared_ui.generated.resources.settings_role_requires_team
 import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_live_hint
@@ -63,10 +83,19 @@ import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_
 import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_scheduled
 import teamflowmanager.shared_ui.generated.resources.settings_substitution_mode_scheduled_hint
 import teamflowmanager.shared_ui.generated.resources.settings_substitutions_section
+import teamflowmanager.shared_ui.generated.resources.settings_terms_of_use
 import teamflowmanager.shared_ui.generated.resources.sign_out
 import teamflowmanager.shared_ui.generated.resources.sign_out_message
 import teamflowmanager.shared_ui.generated.resources.sign_out_title
 import teamflowmanager.shared_ui.generated.resources.user_name_unknown
+
+/**
+ * The published legal pages, served from Firebase Hosting (firebase-functions/public).
+ * Google Play requires the privacy policy to be reachable from inside the app as
+ * well as from the store listing.
+ */
+private const val PRIVACY_POLICY_URL = "https://teamflowmanager.app/privacy.html"
+private const val TERMS_OF_USE_URL = "https://teamflowmanager.app/terms.html"
 
 @Composable
 fun SettingsScreen(
@@ -81,14 +110,26 @@ fun SettingsScreen(
     val notificationPreferences by viewModel.notificationPreferences.collectAsState()
     val notificationUpdateFailed by viewModel.notificationUpdateFailed.collectAsState()
     val substitutionModeState by viewModel.substitutionModeState.collectAsState()
+    val deleteAccountStatus by viewModel.deleteAccountStatus.collectAsState()
     var showSignOutDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val uriHandler = LocalUriHandler.current
     val notificationErrorMessage = stringResource(Res.string.settings_notifications_update_error)
+    val deleteAccountErrorMessage = stringResource(Res.string.delete_account_error)
 
     LaunchedEffect(notificationUpdateFailed) {
         if (notificationUpdateFailed) {
             snackbarHostState.showSnackbar(notificationErrorMessage)
             viewModel.onNotificationUpdateErrorShown()
+        }
+    }
+
+    LaunchedEffect(deleteAccountStatus) {
+        if (deleteAccountStatus == SettingsViewModel.DeleteAccountStatus.FAILED) {
+            showDeleteAccountDialog = false
+            snackbarHostState.showSnackbar(deleteAccountErrorMessage)
+            viewModel.onDeleteAccountErrorShown()
         }
     }
 
@@ -135,6 +176,58 @@ fun SettingsScreen(
         )
     }
 
+    if (showDeleteAccountDialog) {
+        val deleting = deleteAccountStatus == SettingsViewModel.DeleteAccountStatus.IN_PROGRESS
+        AlertDialog(
+            // Not dismissable while the cascade runs: leaving the dialog would
+            // hide a destructive operation that is still in flight.
+            onDismissRequest = { if (!deleting) showDeleteAccountDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.DeleteForever,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            },
+            title = { Text(text = stringResource(Res.string.delete_account_title)) },
+            text = {
+                Column {
+                    Text(text = stringResource(Res.string.delete_account_message))
+                    if (deleting) {
+                        Spacer(modifier = Modifier.height(TFMSpacing.spacing04))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(TFMSpacing.spacing02))
+                            Text(
+                                text = stringResource(Res.string.delete_account_in_progress),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !deleting,
+                    onClick = { viewModel.deleteAccount() },
+                ) {
+                    Text(
+                        text = stringResource(Res.string.delete_account_confirm),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    enabled = !deleting,
+                    onClick = { showDeleteAccountDialog = false },
+                ) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            },
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         SnackbarHost(
             hostState = snackbarHostState,
@@ -149,6 +242,7 @@ fun SettingsScreen(
                 modifier =
                     Modifier
                         .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
                         .padding(TFMSpacing.spacing04),
             ) {
                 Text(
@@ -164,6 +258,16 @@ fun SettingsScreen(
                     UserAccountItem(
                         user = user,
                         onClick = { showSignOutDialog = true },
+                    )
+
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+
+                    SettingsLinkItem(
+                        icon = Icons.Outlined.DeleteForever,
+                        title = stringResource(Res.string.delete_account),
+                        subtitle = stringResource(Res.string.delete_account_subtitle),
+                        tint = MaterialTheme.colorScheme.error,
+                        onClick = { showDeleteAccountDialog = true },
                     )
                 }
 
@@ -227,7 +331,87 @@ fun SettingsScreen(
                 }
 
                 Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
+                Text(
+                    text = stringResource(Res.string.settings_legal_section),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = TFMSpacing.spacing02),
+                )
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+                SettingsLinkItem(
+                    icon = Icons.Outlined.PrivacyTip,
+                    title = stringResource(Res.string.settings_privacy_policy),
+                    subtitle = stringResource(Res.string.settings_open_in_browser),
+                    trailingIcon = Icons.AutoMirrored.Outlined.OpenInNew,
+                    onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) },
+                )
+                SettingsLinkItem(
+                    icon = Icons.Outlined.Description,
+                    title = stringResource(Res.string.settings_terms_of_use),
+                    subtitle = stringResource(Res.string.settings_open_in_browser),
+                    trailingIcon = Icons.AutoMirrored.Outlined.OpenInNew,
+                    onClick = { uriHandler.openUri(TERMS_OF_USE_URL) },
+                )
+
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing06))
             }
+        }
+    }
+}
+
+/**
+ * A tappable settings row: leading icon, title, hint, optional trailing icon.
+ * [tint] colours the leading icon and the title, for destructive entries.
+ */
+@Composable
+private fun SettingsLinkItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color = MaterialTheme.colorScheme.onSurface,
+    trailingIcon: ImageVector? = null,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(TFMSpacing.spacing02),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(24.dp),
+        )
+
+        Spacer(modifier = Modifier.width(TFMSpacing.spacing04))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = tint,
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        if (trailingIcon != null) {
+            Icon(
+                imageVector = trailingIcon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 }

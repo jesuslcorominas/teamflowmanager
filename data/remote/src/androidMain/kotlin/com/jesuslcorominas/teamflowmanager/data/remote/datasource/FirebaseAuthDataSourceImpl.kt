@@ -62,6 +62,18 @@ class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthD
         firebaseAuth.signOut()
     }
 
+    override suspend fun getIdToken(): String? {
+        return try {
+            // Forced refresh: a cached token can be minutes old, and the Cloud
+            // Function rejects anything it cannot verify.
+            firebaseAuth.currentUser?.getIdToken(true)?.await()?.token
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     override suspend fun saveUserToFirestore(user: User) {
         // Note: This is a placeholder for Firestore integration
         // When Firestore is added, this will save user data to the 'users' collection

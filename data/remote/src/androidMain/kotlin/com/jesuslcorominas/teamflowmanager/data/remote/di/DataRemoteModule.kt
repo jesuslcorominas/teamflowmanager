@@ -5,6 +5,7 @@ import com.google.firebase.app
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.jesuslcorominas.teamflowmanager.data.core.datasource.AccountDeletionDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubDataSource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.ClubMemberDataSource
@@ -29,6 +30,7 @@ import com.jesuslcorominas.teamflowmanager.data.remote.api.FcmNotificationApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.ShortLinkApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.createFcmNotificationApi
 import com.jesuslcorominas.teamflowmanager.data.remote.api.createShortLinkApi
+import com.jesuslcorominas.teamflowmanager.data.remote.datasource.AccountDeletionDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.AndroidFcmDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubFirestoreDataSourceImpl
 import com.jesuslcorominas.teamflowmanager.data.remote.datasource.ClubMemberFirestoreDataSourceImpl
@@ -82,6 +84,13 @@ internal val firebaseModule =
         singleOf(::FirebaseStorageDataSourceImpl) bind ImageStorageDataSource::class
         single<DynamicLinkDataSource> {
             FirebaseDynamicLinkDataSourceImpl(shortLinkApi = get())
+        }
+        single<AccountDeletionDataSource> {
+            AccountDeletionDataSourceImpl(
+                httpClient = get(),
+                functionsBaseUrl = functionsBaseUrl(),
+                authDataSource = get(),
+            )
         }
         singleOf(::FirestoreTimeProvider) bind TimeProvider::class
         singleOf(::FirestoreTransactionRunner) bind TransactionRunner::class
@@ -138,7 +147,7 @@ internal val ktorfitModule =
             Ktorfit
                 .Builder()
                 .httpClient(get<HttpClient>())
-                .baseUrl("https://us-central1-${Firebase.app.options.projectId}.cloudfunctions.net/")
+                .baseUrl(functionsBaseUrl())
                 .build()
         }
         single<ShortLinkApi> {
@@ -148,6 +157,12 @@ internal val ktorfitModule =
             get<Ktorfit>().createFcmNotificationApi()
         }
     }
+
+/**
+ * Base URL of this project's Cloud Functions, derived from the Firebase app so
+ * dev and prod flavors each hit their own project without a build-config knob.
+ */
+private fun functionsBaseUrl(): String = "https://us-central1-${Firebase.app.options.projectId}.cloudfunctions.net/"
 
 actual val dataRemoteModule: Module =
     module {

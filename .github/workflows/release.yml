@@ -289,21 +289,37 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Check Apple signing secrets
+        id: signing
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+        run: |
+          if [ -n "$CERTIFICATE_BASE64" ]; then
+            echo "available=true" >> $GITHUB_OUTPUT
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+            echo "::warning::Apple signing secrets not configured — skipping IPA build."
+          fi
+
       - name: Restore GoogleService-Info plists
+        if: steps.signing.outputs.available == 'true'
         run: |
           echo "${{ secrets.GOOGLE_SERVICE_INFO_DEV }}"  | base64 --decode > iosApp/iosApp/GoogleService-Info.plist
           echo "${{ secrets.GOOGLE_SERVICE_INFO_PROD }}" | base64 --decode > iosApp/iosApp/GoogleService-Info-Prod.plist
 
       - name: Select Xcode version
+        if: steps.signing.outputs.available == 'true'
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
 
       - name: Install CocoaPods dependencies
+        if: steps.signing.outputs.available == 'true'
         working-directory: iosApp
         run: pod install
 
       - name: Import Distribution Certificate
+        if: steps.signing.outputs.available == 'true'
         env:
           CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
           CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -319,6 +335,7 @@ jobs:
           security list-keychain -d user -s "$KEYCHAIN_PATH"
 
       - name: Install Provisioning Profile
+        if: steps.signing.outputs.available == 'true'
         env:
           PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
         run: |
@@ -328,6 +345,7 @@ jobs:
           cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Archive
+        if: steps.signing.outputs.available == 'true'
         run: |
           xcodebuild archive \
             -workspace iosApp/iosApp.xcworkspace \
@@ -338,6 +356,7 @@ jobs:
             -allowProvisioningUpdates
 
       - name: Export IPA (ad-hoc)
+        if: steps.signing.outputs.available == 'true'
         run: |
           printf '%s\n' \
             '<?xml version="1.0" encoding="UTF-8"?>' \
@@ -358,6 +377,7 @@ jobs:
             -exportPath $RUNNER_TEMP/ipa
 
       - name: Upload IPA artifact
+        if: steps.signing.outputs.available == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: TeamFlowManager-iOS-${{ needs.validate-version.outputs.version_name }}.ipa

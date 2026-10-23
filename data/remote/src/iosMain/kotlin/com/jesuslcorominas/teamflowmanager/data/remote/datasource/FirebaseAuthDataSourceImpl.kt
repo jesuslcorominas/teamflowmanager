@@ -6,6 +6,7 @@ import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.coroutines.cancellation.CancellationException
 
 class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthDataSource {
     override fun getCurrentUser(): Flow<User?> =
@@ -47,6 +48,18 @@ class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthD
 
     override suspend fun signOut() {
         firebaseAuth.signOut()
+    }
+
+    override suspend fun getIdToken(): String? {
+        return try {
+            // Forced refresh: a cached token can be minutes old, and the Cloud
+            // Function rejects anything it cannot verify.
+            firebaseAuth.currentUser?.getIdToken(forceRefresh = true)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
     }
 
     override suspend fun saveUserToFirestore(user: User) {

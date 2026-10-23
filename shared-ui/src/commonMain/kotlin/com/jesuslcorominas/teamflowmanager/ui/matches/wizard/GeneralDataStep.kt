@@ -61,6 +61,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.cancel
+import teamflowmanager.shared_ui.generated.resources.fixed_period_format
 import teamflowmanager.shared_ui.generated.resources.four_quarters
 import teamflowmanager.shared_ui.generated.resources.location
 import teamflowmanager.shared_ui.generated.resources.location_required
@@ -89,6 +90,8 @@ fun GeneralDataStep(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
     homeGround: String? = null,
+    periodTypeSelectable: Boolean = true,
+    periodDurationMinutes: Int = 25,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -282,45 +285,53 @@ fun GeneralDataStep(
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                // 2 Halves
+            if (periodTypeSelectable) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .clickable { numberOfPeriods = 2 },
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    RadioButton(
-                        selected = numberOfPeriods == 2,
-                        onClick = { numberOfPeriods = 2 },
-                    )
-                    Text(
-                        text = stringResource(Res.string.two_halves),
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
+                    // 2 Halves
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .clickable { numberOfPeriods = 2 },
+                    ) {
+                        RadioButton(
+                            selected = numberOfPeriods == 2,
+                            onClick = { numberOfPeriods = 2 },
+                        )
+                        Text(
+                            text = stringResource(Res.string.two_halves),
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
 
-                // 4 Quarters
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .clickable { numberOfPeriods = 4 },
-                ) {
-                    RadioButton(
-                        selected = numberOfPeriods == 4,
-                        onClick = { numberOfPeriods = 4 },
-                    )
-                    Text(
-                        text = stringResource(Res.string.four_quarters),
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
+                    // 4 Quarters
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .clickable { numberOfPeriods = 4 },
+                    ) {
+                        RadioButton(
+                            selected = numberOfPeriods == 4,
+                            onClick = { numberOfPeriods = 4 },
+                        )
+                        Text(
+                            text = stringResource(Res.string.four_quarters),
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
                 }
+            } else {
+                Text(
+                    text = stringResource(Res.string.fixed_period_format, periodDurationMinutes),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                )
             }
         }
 
