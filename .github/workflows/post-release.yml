@@ -16,13 +16,14 @@ env:
 jobs:
   # ─────────────────────────────────────────────────────────────
   # 1. Promote Play Alpha → Production  (solo en merges de release/*)
-  # DISABLED: en fase alpha, la promoción a producción es manual.
-  # Reactivar cuando se salga de alpha cambiando el if a:
-  #   if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+  # El despliegue es escalonado: la variable de repositorio PLAY_ROLLOUT_FRACTION
+  # fija la fracción de usuarios que recibe la versión (0.1 por defecto). Ponla
+  # a 1 para publicar al 100% de golpe. El resto del despliegue se escala a mano
+  # desde Play Console.
   # ─────────────────────────────────────────────────────────────
   promote:
     name: Promote Play Alpha → Production
-    if: false
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
     runs-on: ubuntu-latest
     outputs:
       version_name: ${{ steps.version.outputs.version_name }}
@@ -68,13 +69,39 @@ jobs:
             exit 1
           fi
 
-          NOTES_JSON=$(echo "$NOTES" | jq -Rs .)
+          # Despliegue escalonado salvo que la fracción sea 1: con userFraction
+          # la versión sale como inProgress y se escala desde Play Console.
+          FRACTION="${{ vars.PLAY_ROLLOUT_FRACTION || '0.1' }}"
+          if ! awk "BEGIN{exit !($FRACTION > 0 && $FRACTION <= 1)}"; then
+            echo "❌ PLAY_ROLLOUT_FRACTION debe estar entre 0 (excluido) y 1 — valor recibido: $FRACTION"
+            exit 1
+          fi
 
-          curl -s -X PUT \
+          if awk "BEGIN{exit !($FRACTION == 1)}"; then
+            RELEASE=$(jq -n --arg vc "$VERSION_CODE" --arg notes "$NOTES" \
+              '{versionCodes: [$vc], status: "completed",
+                releaseNotes: [{language: "es-ES", text: $notes}]}')
+            echo "Publicando al 100% de los usuarios"
+          else
+            RELEASE=$(jq -n --arg vc "$VERSION_CODE" --arg notes "$NOTES" --argjson f "$FRACTION" \
+              '{versionCodes: [$vc], status: "inProgress", userFraction: $f,
+                releaseNotes: [{language: "es-ES", text: $notes}]}')
+            echo "Despliegue escalonado a una fracción de $FRACTION de los usuarios"
+          fi
+
+          BODY=$(jq -n --argjson r "$RELEASE" '{track: "production", releases: [$r]}')
+
+          TRACK_RESULT=$(curl -s -X PUT \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID/tracks/production" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"track\":\"production\",\"releases\":[{\"versionCodes\":[\"$VERSION_CODE\"],\"status\":\"completed\",\"releaseNotes\":[{\"language\":\"es-ES\",\"text\":$NOTES_JSON}]}]}"
+            -d "$BODY")
+
+          echo "$TRACK_RESULT"
+          if echo "$TRACK_RESULT" | jq -e '.error' > /dev/null; then
+            echo "❌ La Play API rechazó la actualización del track de producción"
+            exit 1
+          fi
 
           RESULT=$(curl -s -X POST \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PKG/edits/$EDIT_ID:commit" \
@@ -83,12 +110,16 @@ jobs:
             -d '{}')
 
           echo "$RESULT"
-          echo "✅ versionCode $VERSION_CODE promoted to production"
+          if echo "$RESULT" | jq -e '.error' > /dev/null; then
+            echo "❌ La Play API rechazó el commit de la edición — nada se ha publicado"
+            exit 1
+          fi
+          echo "✅ versionCode $VERSION_CODE promovido a producción (fracción $FRACTION)"
 
   # ─────────────────────────────────────────────────────────────
   # 2. GitHub Release  (solo en merges de release/*)
-  # Secuencial tras promote: corre si promote tuvo éxito o fue skipped (fase alpha).
-  # Cuando se reactive promote, este job solo correrá si promote también pasa.
+  # Secuencial tras promote: si la promoción falla no se crea el Release, para
+  # que no anuncie una publicación que no ha llegado a Play.
   # ─────────────────────────────────────────────────────────────
   github-release:
     name: Create GitHub Release
@@ -131,7 +162,7 @@ jobs:
             ${{ steps.notes.outputs.notes }}
 
             ---
-            - Android: disponible en Play Store alpha
+            - Android: publicado en Google Play
             - iOS: IPA disponible en los artefactos del workflow de CI (30 días)
           draft: false
           prerelease: false
