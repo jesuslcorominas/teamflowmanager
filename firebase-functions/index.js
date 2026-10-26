@@ -62,7 +62,7 @@ exports.createShortLink = onRequest({ timeoutSeconds: 30 }, async (req, res) => 
         clicks: 0,
       });
 
-      const shortLink = `https://teamflowmanager.web.app/l/${shortId}`;
+      const shortLink = `https://teamflow-manager-897a3.web.app/l/${shortId}`;
 
       console.log('[createShortLink] Sending response', {
         shortId,
