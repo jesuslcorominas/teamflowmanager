@@ -16,6 +16,50 @@ permissions:
   checks: write
 
 jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Decide si hace falta el build completo de macOS.
+  #
+  # El job de macOS tarda unos 90 minutos y el ci-gate lo espera, así que una PR
+  # que solo toca documentación o HTML pasaba de 6 minutos a hora y media. Solo
+  # se ejecuta cuando la PR puede romper el build nativo: fuentes de iOS o de
+  # shared-ui, ficheros de Gradle, el catálogo de versiones o este workflow.
+  #
+  # Los cinco fallos que destapó la PR #446 venían precisamente de ahí: versiones
+  # en libs.versions.toml y dependencias en los build.gradle.kts.
+  # ─────────────────────────────────────────────────────────────
+  scope:
+    name: Detect change scope
+    runs-on: ubuntu-latest
+    outputs:
+      needs_full_build: ${{ steps.detect.outputs.needs_full_build }}
+    steps:
+      - name: List changed files
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FILES=$(gh api \
+            "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+            --paginate --jq '.[].filename')
+          echo "Changed files:"
+          echo "$FILES"
+
+          # Sin lista de ficheros no se puede decidir: se asume que sí hace falta.
+          if [ -z "$FILES" ]; then
+            echo "::warning::No se pudo listar los ficheros de la PR — se ejecuta el build completo por precaución."
+            echo "needs_full_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          PATTERN='^iosApp/|^shared-ui/|^gradle/|^gradle\.properties$|(^|/)build\.gradle\.kts$|/iosMain/|^\.github/workflows/pr-checks\.yml$'
+          if echo "$FILES" | grep -qE "$PATTERN"; then
+            echo "needs_full_build=true" >> $GITHUB_OUTPUT
+            echo "::notice::La PR toca el build nativo — se ejecuta el build completo en macOS."
+          else
+            echo "needs_full_build=false" >> $GITHUB_OUTPUT
+            echo "::notice::La PR no toca el build nativo — se omite el build completo en macOS."
+          fi
+
   lint:
     name: Lint (ktlint)
     runs-on: ubuntu-latest
@@ -107,12 +151,17 @@ jobs:
   # the guard against that happening again: it is the only place the whole build graph —
   # iOS metadata and native compilation included — is actually exercised.
   #
-  # It is deliberately NOT part of ci-gate while it stabilises: a 30-minute macOS job
-  # should not block a PR on its first weeks of life. Promote it by adding it to
-  # ci-gate's `needs` and checking its result there once it has proven reliable.
+  # Su resultado NO tumba el ci-gate mientras se estabiliza: un job de 90 minutos no
+  # debería bloquear una PR en sus primeras semanas de vida. Para promoverlo, basta con
+  # comprobar su resultado en ci-gate cuando haya demostrado ser fiable.
+  #
+  # Solo se ejecuta cuando el job `scope` detecta que la PR toca el build nativo. Si se
+  # omite, ci-gate lo ve como `skipped` y no pasa nada.
   # ─────────────────────────────────────────────────────────────
   build-macos:
     name: Full build (macOS)
+    needs: scope
+    if: needs.scope.outputs.needs_full_build == 'true'
     runs-on: macos-latest
     continue-on-error: true
     # A measured cold run (nothing in either cache) took just under 60 minutes on a
@@ -226,5 +275,7 @@ jobs:
             echo "⚠️ Full build (macOS) failed — not blocking yet, but ./gradlew build is broken."
           elif [[ "$macos" == "cancelled" ]]; then
             echo "⚠️ Full build (macOS) was cancelled — most likely it hit its timeout."
+          elif [[ "$macos" == "skipped" ]]; then
+            echo "⏩ Full build (macOS) skipped — this PR does not touch the native build."
           fi
           echo "✅ All required checks passed (or were skipped)"
