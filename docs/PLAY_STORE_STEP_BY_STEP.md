@@ -1,7 +1,13 @@
 # Publicar en producción — guía paso a paso
 
-Para hacerlo la primera vez, de principio a fin. Cada paso dice **dónde** hay
-que hacerlo y **cómo saber que está hecho**.
+> **Estado: la app ya está publicada.** Versión 61 (0.8.0), disponible en Google
+> Play desde el 24 de octubre de 2026, en 178 países. Las fases 1 a 5 de esta
+> guía ya están hechas; quedan los pendientes de la última sección.
+>
+> La guía se mantiene porque el camino sigue siendo el mismo para cada versión
+> nueva, y porque explica qué hay detrás de cada declaración de la ficha.
+
+Cada paso dice **dónde** hay que hacerlo y **cómo saber que está hecho**.
 
 Los datos de referencia (textos de la ficha, respuestas de los formularios,
 tablas de datos recogidos) están en [PLAY_STORE_LAUNCH.md](PLAY_STORE_LAUNCH.md).
@@ -41,7 +47,7 @@ firebase deploy --only hosting,functions
 Comprobar que las tres responden:
 
 ```bash
-for u in privacy terms delete-account; do curl -s -o /dev/null -w "$u: %{http_code}\n" "https://teamflowmanager.app/$u.html"; done
+for u in privacy terms delete-account; do curl -s -o /dev/null -w "$u: %{http_code}\n" "https://teamflow-manager-897a3.web.app/$u.html"; done
 ```
 
 - [ ] Las tres devuelven `200`
@@ -133,7 +139,7 @@ Todo en **Política y programas → Contenido de la aplicación**. La pestaña
 
 ### 2.1 Política de privacidad
 
-- Pegar: `https://teamflowmanager.app/privacy.html`
+- Pegar: `https://teamflow-manager-897a3.web.app/privacy.html`
 - [ ] Guardado
 
 ### 2.2 Anuncios
@@ -177,7 +183,7 @@ la sección 2 de [PLAY_STORE_LAUNCH.md](PLAY_STORE_LAUNCH.md). En resumen:
 
 - Sí se recogen datos; **no** se comparten con terceros.
 - Todos se cifran en tránsito.
-- Sí se puede solicitar el borrado → URL: `https://teamflowmanager.app/delete-account.html`
+- Sí se puede solicitar el borrado → URL: `https://teamflow-manager-897a3.web.app/delete-account.html`
 - Tipos a marcar: nombre, correo, ID de usuario, fotos, contenido generado por el
   usuario, interacciones con la app, registros de fallos, diagnósticos e ID de
   dispositivo.
@@ -206,7 +212,7 @@ Los textos están redactados en la sección 5 de
 En **Configuración de la tienda**, aparte:
 
 - [ ] Categoría: **Deportes**
-- [ ] Correo de contacto: `privacidad@teamflowmanager.app` — tiene que ser un
+- [ ] Correo de contacto: `jesuslcorominas@gmail.com` — tiene que ser un
       buzón que leas de verdad, porque se publica en la ficha
 - [ ] Países: elegir dónde se distribuye (empezar por España es razonable)
 
@@ -271,9 +277,33 @@ y se reenvía — es normal, no es un drama.
 
 ## Lo que no está resuelto
 
-- **`./gradlew build` está roto en `develop`**: `:data:remote:compileIosMainKotlinMetadata`
-  falla con `Unresolved reference 'darwin'`. No afecta a la publicación en Play
-  — el AAB de Android se genera sin tocar los metadatos de iOS — pero sí bloquea
-  el build de iOS. Hay una sesión trabajando en ello.
-- **iOS no se publica todavía**: la CI genera un IPA ad-hoc como artefacto, sin
-  subida a App Store Connect. Es trabajo aparte.
+**Seguridad de los datos declara cosas falsas.** A 23 de octubre, la ficha
+pública decía «Los datos no se cifran» y «Los datos no se pueden eliminar». Las
+dos son incorrectas: Firebase va por HTTPS y el borrado de cuenta existe y está
+desplegado. Hay que rehacer el cuestionario con las respuestas de la sección 2
+de [PLAY_STORE_LAUNCH.md](PLAY_STORE_LAUNCH.md).
+
+**El deep link HTTPS no verifica.** `AndroidManifest.xml` y `Navigation.kt`
+declaran `teamflowmanager.app` con `autoVerify="true"`, y ese dominio no existe.
+Cambiarlo a `teamflow-manager-897a3.web.app` exige además publicar un
+`assetlinks.json` en ese host con la huella SHA-256 del certificado de firma
+(Play Console → Integridad de la aplicación → Firma de aplicaciones). Mientras
+tanto el esquema propio `teamflowmanager://` sí funciona, que es el que usan de
+verdad los enlaces de invitación.
+
+**Las invitaciones por enlace están rotas.** Dos motivos encadenados:
+
+1. `createShortLink` generaba URLs en `teamflowmanager.web.app`, un sitio que no
+   existe. Corregido en este documento y en el código, pero **la corrección no
+   está desplegada**.
+2. En el host correcto, `/l/**` responde **403**: las funciones desplegadas son
+   de 1ª generación y no admiten invocación sin autenticar.
+
+Redesplegarlas no es directo: el código del repositorio ya está migrado a
+`firebase-functions/v2`, y Firebase rechaza el despliegue con
+«Upgrading from 1st Gen to 2nd Gen is not yet supported». Hay que borrar las
+tres funciones antiguas y recrearlas, asumiendo un corte. `deleteAccount` sí
+está desplegada, porque es nueva y nació en 2ª generación.
+
+**iOS no se publica**: la CI genera un IPA ad-hoc como artefacto, sin subida a
+App Store Connect, y no está previsto a corto plazo.

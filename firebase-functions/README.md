@@ -49,7 +49,7 @@ firebase deploy --only firestore:rules
 
 Create a short link:
 ```bash
-curl -X POST https://teamflowmanager.web.app/api/createShortLink \
+curl -X POST https://teamflow-manager-897a3.web.app/api/createShortLink \
   -H "Content-Type: application/json" \
   -d '{"teamId":"test123","teamName":"Test Team"}'
 ```
@@ -59,7 +59,7 @@ curl -X POST https://teamflowmanager.web.app/api/createShortLink \
 1. **Android app** calls `/api/createShortLink` with team info
 2. **Cloud Function** generates unique 6-char ID
 3. **Stores** in Firestore: `shortLinks/{id}`
-4. **Returns** short link: `https://teamflowmanager.web.app/l/{id}`
+4. **Returns** short link: `https://teamflow-manager-897a3.web.app/l/{id}`
 5. **User clicks** link → Hosting rewrites to `redirectShortLink` function
 6. **Function** serves HTML page that:
    - Attempts to open app with deep link
