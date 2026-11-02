@@ -77,6 +77,15 @@ class PendingSubstitutionsPresentationTest {
             },
     )
 
+    /** A batch that blew up: nothing applied, nothing discarded, nothing unscheduled. */
+    private fun failedResult(trigger: SubstitutionExecutionTrigger) =
+        SubstitutionExecutionResult(
+            trigger = trigger,
+            applied = emptyList(),
+            discarded = emptyList(),
+            failed = true,
+        )
+
     // ---------- pendingCardsToShow ----------
 
     @Test
@@ -436,6 +445,22 @@ class PendingSubstitutionsPresentationTest {
         assertEquals(
             SubstitutionResultPresentation.DIALOG,
             presentationFor(result(SubstitutionExecutionTrigger.RESUME, discardedCount = 2)),
+        )
+    }
+
+    @Test
+    fun `a manual run that failed needs a dialog - a snackbar would claim changes were applied`() {
+        assertEquals(
+            SubstitutionResultPresentation.DIALOG,
+            presentationFor(failedResult(SubstitutionExecutionTrigger.MANUAL)),
+        )
+    }
+
+    @Test
+    fun `a resume run that failed needs a dialog`() {
+        assertEquals(
+            SubstitutionResultPresentation.DIALOG,
+            presentationFor(failedResult(SubstitutionExecutionTrigger.RESUME)),
         )
     }
 

@@ -187,9 +187,13 @@ internal enum class SubstitutionResultPresentation {
  * are still there to be fixed. A [SubstitutionExecutionTrigger.RESUME] run always gets one — it
  * happened with nobody watching, and its discarded cards are deleted from the store before the
  * screen ever sees this, so the dialog is the only record that will remain of the team changing.
+ *
+ * A failed batch is checked first and never gets a snackbar. The snackbar's only wording is
+ * "changes applied", which is the opposite of what happened, and a message that disappears on its
+ * own is the wrong shape for something the coach has to act on.
  */
 internal fun presentationFor(result: SubstitutionExecutionResult): SubstitutionResultPresentation =
-    if (result.trigger == SubstitutionExecutionTrigger.RESUME || result.discarded.isNotEmpty()) {
+    if (result.failed || result.trigger == SubstitutionExecutionTrigger.RESUME || result.discarded.isNotEmpty()) {
         SubstitutionResultPresentation.DIALOG
     } else {
         SubstitutionResultPresentation.SNACKBAR

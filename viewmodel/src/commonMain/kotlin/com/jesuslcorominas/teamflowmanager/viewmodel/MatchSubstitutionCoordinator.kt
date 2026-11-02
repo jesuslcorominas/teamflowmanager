@@ -328,10 +328,22 @@ internal class MatchSubstitutionCoordinator(
         } catch (e: Exception) {
             // Reported, then swallowed. Not rethrown like performSubstitution does: that would
             // take down the app over a failed batch, and here nothing has been lost — no card was
-            // unscheduled, so the coach can simply press again. Going unreported was the actual
-            // problem; this path was the only substitution route invisible to diagnostics.
+            // unscheduled, so the coach can simply press again. That last claim holds only because
+            // the removes above sit after the use case call; `givenTheBatchThrows_thenNoCardIsUnscheduled`
+            // is what keeps it true.
             crashReporter.recordException(e)
             crashReporter.log("Error running scheduled substitutions (trigger=$trigger): ${e.message}")
+
+            // Not rethrowing is not the same as saying nothing. Without this the coach saw the
+            // spinner come and go, the cards sit exactly where they were, and no explanation —
+            // from the outside, indistinguishable from the button being broken.
+            _lastSubstitutionResult.value =
+                SubstitutionExecutionResult(
+                    trigger = trigger,
+                    applied = emptyList(),
+                    discarded = emptyList(),
+                    failed = true,
+                )
         } finally {
             _isSubstitutionInProgress.value = false
         }
