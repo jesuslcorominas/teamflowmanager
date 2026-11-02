@@ -329,8 +329,9 @@ internal class MatchSubstitutionCoordinator(
             // Reported, then swallowed. Not rethrown like performSubstitution does: that would
             // take down the app over a failed batch, and here nothing has been lost — no card was
             // unscheduled, so the coach can simply press again. That last claim holds only because
-            // the removes above sit after the use case call; `givenTheBatchThrows_thenNoCardIsUnscheduled`
-            // is what keeps it true.
+            // the removes above sit after the use case call, and MatchSubstitutionCoordinatorTest
+            // has a case named for exactly that, so reordering them turns a comment that would
+            // quietly become a lie into a red test.
             crashReporter.recordException(e)
             crashReporter.log("Error running scheduled substitutions (trigger=$trigger): ${e.message}")
 

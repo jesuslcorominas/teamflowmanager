@@ -73,7 +73,7 @@ class MatchSubstitutionCoordinatorTest {
     }
 
     @Test
-    fun `givenTheBatchThrows_thenAFailedResultIsPublished`() =
+    fun `a batch that throws publishes a failed result instead of staying silent`() =
         runTest {
             // Given
             coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } throws
@@ -97,7 +97,7 @@ class MatchSubstitutionCoordinatorTest {
         }
 
     @Test
-    fun `givenTheBatchThrowsOnAResumeRun_thenTheFailureKeepsItsTrigger`() =
+    fun `a failure on a resume run keeps its trigger - nobody was watching that one`() =
         runTest {
             // Given
             coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } throws
@@ -125,7 +125,7 @@ class MatchSubstitutionCoordinatorTest {
      * it existing, since until now nothing watched that ordering.
      */
     @Test
-    fun `givenTheBatchThrows_thenNoCardIsUnscheduled`() =
+    fun `a batch that throws unschedules nothing - which is what lets it be swallowed`() =
         runTest {
             // Given
             coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } throws
@@ -144,7 +144,7 @@ class MatchSubstitutionCoordinatorTest {
         }
 
     @Test
-    fun `givenTheBatchThrows_thenTheSpinnerIsClearedAndTheExceptionIsReportedButNotRethrown`() =
+    fun `a batch that throws is reported and clears the spinner without bringing the app down`() =
         runTest {
             // Given
             val boom = IllegalStateException("no active match found")
@@ -165,7 +165,7 @@ class MatchSubstitutionCoordinatorTest {
         }
 
     @Test
-    fun `givenTheBatchSucceeds_thenTheResultIsNotMarkedAsFailed`() =
+    fun `a batch that succeeds is not marked as failed`() =
         runTest {
             // Given
             coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
@@ -191,7 +191,7 @@ class MatchSubstitutionCoordinatorTest {
      * have nothing left to paint.
      */
     @Test
-    fun `givenAPublishedResult_thenItStaysUntilConsumeLastResultIsCalled`() =
+    fun `a published result stays put until it is explicitly consumed`() =
         runTest {
             // Given
             coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } returns
