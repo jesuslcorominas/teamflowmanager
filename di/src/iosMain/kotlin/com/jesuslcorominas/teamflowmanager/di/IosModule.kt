@@ -63,6 +63,7 @@ val iosModule =
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
                 getActiveViewRole = get(),
+                recoverAbandonedMatches = get(),
             )
         }
         factory {

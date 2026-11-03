@@ -48,6 +48,7 @@ val viewModelModule =
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
                 getActiveViewRole = get(),
+                recoverAbandonedMatches = get(),
             )
         }
 

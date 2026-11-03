@@ -10,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetTeamUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetUserClubMembershipUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RecoverAbandonedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
 import kotlinx.coroutines.Job
@@ -27,11 +28,13 @@ class SplashViewModel(
     private val syncFcmTokenUseCase: SyncFcmTokenUseCase,
     private val isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase,
     private val getActiveViewRole: GetActiveViewRoleUseCase,
+    private val recoverAbandonedMatches: RecoverAbandonedMatchesUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private var startupJob: Job? = null
+    private var abandonedMatchSweepLaunched = false
 
     sealed interface UiState {
         data object Loading : UiState
@@ -68,7 +71,28 @@ class SplashViewModel(
                     // Continue anyway - time sync will be attempted again when starting matches
                 }
                 checkAuthAndLoadTeam()
+                sweepAbandonedMatches()
             }
+    }
+
+    /**
+     * Finishes the matches a dead process left running. A cold start is the only moment one can be
+     * observed — the app was not there to notice — so this is where the sweep belongs, after the
+     * clock is synchronised and only once the user turns out to be authenticated.
+     *
+     * Deliberately launched outside [startupJob]: [refresh] cancels that job, and a sweep cut in
+     * half could leave a match finished with its queue of scheduled changes still on the device.
+     * It is also fire and forget — nothing in the splash waits on it, and a failure must never cost
+     * the user their navigation. The guard keeps a [refresh] from sweeping twice.
+     */
+    private fun sweepAbandonedMatches() {
+        if (abandonedMatchSweepLaunched) return
+        val state = _uiState.value
+        if (state == UiState.NotAuthenticated || state == UiState.LocalDataNeedsAuth) return
+        abandonedMatchSweepLaunched = true
+        viewModelScope.launch {
+            runCatching { recoverAbandonedMatches() }
+        }
     }
 
     private suspend fun checkAuthAndLoadTeam() {
