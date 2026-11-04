@@ -49,8 +49,10 @@ internal class MatchOperationRepositoryImpl(
                 matchOperationDataSource.updateOperation(operation.copy(status = MatchOperationStatus.FAILED))
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 // Continue sweeping remaining operations rather than aborting the whole batch.
+                // Logged so a systematic failure does not leave operations stuck IN_PROGRESS silently.
+                println("MatchOperationRepository: could not mark operation ${operation.id} as FAILED: ${e.message}")
             }
         }
     }

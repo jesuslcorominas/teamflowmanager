@@ -22,8 +22,9 @@ internal class GetMatchByIdUseCaseImpl(
      *
      * Before emitting the first value, sweeps any IN_PROGRESS operations that are older than
      * [STALE_OPERATION_THRESHOLD_MILLIS] and marks them FAILED. The sweep runs once per
-     * collection start (via [onStart]), not on every downstream emission, so reconnecting the
-     * collector does not cause repeated writes mid-match.
+     * collection start (via [onStart]), not on every downstream emission. Re-subscribing does
+     * run it again, so the query is repeated on every reconnect; the age threshold is what
+     * keeps a live operation from another device from ever being swept.
      */
     override fun invoke(matchId: String): Flow<Match?> =
         matchRepository.getMatchById(matchId)

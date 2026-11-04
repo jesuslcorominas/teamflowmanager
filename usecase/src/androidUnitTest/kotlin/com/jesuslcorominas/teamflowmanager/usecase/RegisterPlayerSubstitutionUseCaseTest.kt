@@ -17,7 +17,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
-import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -33,7 +32,6 @@ import org.junit.Test
 class RegisterPlayerSubstitutionUseCaseTest {
     private lateinit var matchRepository: MatchRepository
     private lateinit var playerTimeRepository: PlayerTimeRepository
-    private lateinit var playerSubstitutionRepository: PlayerSubstitutionRepository
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var matchOperationRepository: MatchOperationRepository
     private lateinit var registerPlayerSubstitutionUseCase: RegisterPlayerSubstitutionUseCase
@@ -42,14 +40,12 @@ class RegisterPlayerSubstitutionUseCaseTest {
     fun setup() {
         matchRepository = mockk(relaxed = true)
         playerTimeRepository = mockk(relaxed = true)
-        playerSubstitutionRepository = mockk(relaxed = true)
         getAllPlayerTimesUseCase = mockk(relaxed = true)
         matchOperationRepository = mockk(relaxed = true)
         registerPlayerSubstitutionUseCase =
             RegisterPlayerSubstitutionUseCaseImpl(
                 matchRepository,
                 playerTimeRepository,
-                playerSubstitutionRepository,
                 getAllPlayerTimesUseCase,
                 matchOperationRepository,
             )
@@ -285,7 +281,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
             // Then - playerOut is not playing, so no operation is started
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
             coVerify(exactly = 0) { playerTimeRepository.substituteOutPlayersBatchWithOperationId(any(), any(), any(), any()) }
-            coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
         }
 
     @Test
@@ -305,7 +300,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
                     listOf(PlayerTime(playerId = playerOutId, status = PlayerTimeStatus.PLAYING)),
                 )
             coEvery { matchOperationRepository.createOperation(any()) } returns operationId
-            coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
 
             // When
             registerPlayerSubstitutionUseCase(
@@ -360,7 +354,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
             coVerify(exactly = 0) { playerTimeRepository.substituteOutPlayersBatchWithOperationId(any(), any(), any(), any()) }
             coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
-            coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
         }
 
     @Test(expected = IllegalArgumentException::class)
@@ -401,7 +394,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
             coEvery { matchOperationRepository.createOperation(any()) } returns operationId
-            coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
 
             // When
             registerPlayerSubstitutionUseCase(
@@ -450,7 +442,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
             coVerify(exactly = 0) { matchRepository.getMatchById(any()) }
             coVerify(exactly = 0) { getAllPlayerTimesUseCase(any()) }
-            coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
         }
 
     @Test
@@ -636,7 +627,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
             )
 
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
-            coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
             coVerify(exactly = 0) { playerTimeRepository.substituteOutPlayersBatchWithOperationId(any(), any(), any(), any()) }
             coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
             coVerify(exactly = 0) { matchRepository.updateMatchWithOperationId(any(), any()) }
@@ -663,7 +653,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
             coEvery { matchOperationRepository.createOperation(any()) } returns operationId
-            coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
 
             val pairs =
                 listOf(
@@ -843,7 +832,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
             // would alter the time accounting and leave an A <-> A row in the history
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
             coVerify(exactly = 0) { playerTimeRepository.substituteOutPlayersBatchWithOperationId(any(), any(), any(), any()) }
-            coVerify(exactly = 0) { playerSubstitutionRepository.insertSubstitution(any()) }
         }
 
     @Test
@@ -1047,7 +1035,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
             coEvery { getAllPlayerTimesUseCase(matchId) } returns flowOf(playerTimes)
             coEvery { matchOperationRepository.createOperation(any()) } returns operationId
-            coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
 
             val pairs =
                 listOf(
@@ -1098,7 +1085,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
             coEvery { matchOperationRepository.createOperation(any()) } returns operationId
-            coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
 
             val playerOutTime =
                 PlayerTime(playerId = "player-out", status = PlayerTimeStatus.ON_BENCH, isRunning = false, lastOperationId = operationId)
@@ -1162,7 +1148,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
             coEvery { matchOperationRepository.createOperation(any()) } returns operationId
-            coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
 
             // "player-stays" is on the pitch and is NOT part of the substitution pair
             coEvery { getAllPlayerTimesUseCase(matchId) } returns
@@ -1245,7 +1230,6 @@ class RegisterPlayerSubstitutionUseCaseTest {
                 )
             coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
             coEvery { matchOperationRepository.createOperation(any()) } returns operationId
-            coEvery { playerSubstitutionRepository.insertSubstitution(any()) } returns "sub-id"
             coEvery { getAllPlayerTimesUseCase(matchId) } returns
                 flowOf(listOf(PlayerTime(playerId = "player-out", status = PlayerTimeStatus.PLAYING, isRunning = true)))
             coEvery {

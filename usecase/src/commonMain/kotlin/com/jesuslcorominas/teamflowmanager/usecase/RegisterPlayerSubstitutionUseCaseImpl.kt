@@ -14,15 +14,12 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
-import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import kotlinx.coroutines.flow.first
 
 internal class RegisterPlayerSubstitutionUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val playerTimeRepository: PlayerTimeRepository,
-    @Suppress("UnusedPrivateProperty")
-    private val playerSubstitutionRepository: PlayerSubstitutionRepository,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
     private val matchOperationRepository: MatchOperationRepository,
 ) : RegisterPlayerSubstitutionUseCase {
