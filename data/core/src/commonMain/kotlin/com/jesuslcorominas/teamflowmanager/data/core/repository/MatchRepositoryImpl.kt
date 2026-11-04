@@ -153,11 +153,19 @@ internal class MatchRepositoryImpl(
         }
     }
 
+    @Suppress("DEPRECATION")
     override suspend fun updateMatchWithOperationId(
         match: Match,
         operationId: String,
     ) {
         val updatedMatch = match.copy(lastCompletedOperationId = operationId)
         matchDataSource.updateMatch(updatedMatch)
+    }
+
+    override suspend fun updateLastCompletedOperationId(
+        matchId: String,
+        operationId: String,
+    ) {
+        matchDataSource.updateLastCompletedOperationId(matchId, operationId)
     }
 }

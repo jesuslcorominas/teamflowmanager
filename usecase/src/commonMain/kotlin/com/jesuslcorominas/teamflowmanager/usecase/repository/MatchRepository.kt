@@ -50,10 +50,33 @@ interface MatchRepository {
     suspend fun unarchiveMatch(matchId: String)
 
     /**
-     * Updates the match with a specific operation ID to track atomic operations
+     * Updates the match with a specific operation ID to track atomic operations.
+     *
+     * @deprecated Use [updateLastCompletedOperationId] instead. That method does a partial field
+     * update and avoids overwriting concurrent writes on other fields (#417).
      */
+    @Deprecated(
+        message = "Use updateLastCompletedOperationId for partial field update to avoid lost updates (#417).",
+        replaceWith = ReplaceWith("updateLastCompletedOperationId(match.id, operationId)"),
+    )
     suspend fun updateMatchWithOperationId(
         match: Match,
+        operationId: String,
+    )
+
+    /**
+     * Writes only the [Match.lastCompletedOperationId] field, leaving all other fields untouched.
+     *
+     * This is a targeted partial-field update — not a full document replace — so it cannot
+     * overwrite concurrent writes on other fields (e.g. a goal registered from another device at
+     * the same time). Callers must prefer this over [updateMatch] whenever the only intent is to
+     * advance the completed operation pointer (#417).
+     *
+     * @param matchId     The ID of the match to update.
+     * @param operationId The operation ID to write into [Match.lastCompletedOperationId].
+     */
+    suspend fun updateLastCompletedOperationId(
+        matchId: String,
         operationId: String,
     )
 }

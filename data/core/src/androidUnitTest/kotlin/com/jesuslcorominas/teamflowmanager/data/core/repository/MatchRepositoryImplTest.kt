@@ -511,4 +511,29 @@ class MatchRepositoryImplTest {
             )
         }
     }
+
+    // -----------------------------------------------------------------------------------------
+    // Regression test — #417: partial field update
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * #417 — Verifies that [MatchRepositoryImpl.updateLastCompletedOperationId] performs a
+     * targeted partial-field update (delegating to the datasource's
+     * [updateLastCompletedOperationId]) and does NOT replace the full document via [updateMatch].
+     *
+     * This test passes already after T003 implemented the method correctly. It is included here
+     * as a permanent regression guard so that any future change that accidentally reverts to a
+     * full-document write is caught immediately.
+     */
+    @Test
+    fun `#417 updateLastCompletedOperationId writes only the lastCompletedOperationId field, not the full document`() = runTest {
+        val matchId = "match-417"
+        val operationId = "op-417"
+
+        repository.updateLastCompletedOperationId(matchId, operationId)
+
+        // Partial field update — not a full document replace
+        coVerify(exactly = 1) { matchDataSource.updateLastCompletedOperationId(matchId, operationId) }
+        coVerify(exactly = 0) { matchDataSource.updateMatch(any()) }
+    }
 }

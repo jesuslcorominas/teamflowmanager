@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationType
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
@@ -42,23 +43,26 @@ internal class PauseMatchUseCaseImpl(
         val operationId = matchOperationRepository.createOperation(operation)
 
         // Step 2: Get all player times for this match that are currently playing
-        val playerTimes = getAllPlayerTimesUseCase(matchId).first()
+        val allPlayerTimes = getAllPlayerTimesUseCase(matchId).first()
         val playingPlayerIds =
-            playerTimes
+            allPlayerTimes
                 .filter { it.status == PlayerTimeStatus.PLAYING }
                 .map { it.playerId }
 
-        // Step 3: Pause all playing player timers with operation ID
-        if (playingPlayerIds.isNotEmpty()) {
-            playerTimeRepository.pauseTimersBatchWithOperationId(
-                matchId = matchId,
-                playerIds = playingPlayerIds,
-                currentTimeMillis = currentTimeMillis,
-                operationId = operationId,
-            )
-        }
+        // Step 3: Compute player times without writing
+        val playerTimes =
+            if (playingPlayerIds.isNotEmpty()) {
+                playerTimeRepository.preparePauseTimersBatch(
+                    matchId = matchId,
+                    playerIds = playingPlayerIds,
+                    currentTimeMillis = currentTimeMillis,
+                    operationId = operationId,
+                )
+            } else {
+                emptyList()
+            }
 
-        // Step 4: Pause the match timer
+        // Step 4: Update match state — writes status, periods and pauseCount (not the operation id)
         val firstNotFinishedPeriod = match.periods.firstOrNull { it.endTimeMillis == 0L }
         if (firstNotFinishedPeriod == null) {
             return // All periods already finished, cannot pause
@@ -79,15 +83,22 @@ internal class PauseMatchUseCaseImpl(
             )
         matchRepository.updateMatch(updatedMatch)
 
-        // Step 5: Mark operation as COMPLETED
-        val completedOperation =
-            operation.copy(
-                id = operationId,
-                status = MatchOperationStatus.COMPLETED,
+        // Step 5: Commit all changes atomically in a single WriteBatch
+        val commit =
+            MatchOperationCommit(
+                matchId = matchId,
+                operation = operation.copy(id = operationId, status = MatchOperationStatus.COMPLETED),
+                playerTimes = playerTimes,
+                lastCompletedOperationId = operationId,
             )
-        matchOperationRepository.updateOperation(completedOperation)
 
-        // Step 6: Update match with lastCompletedOperationId
-        matchRepository.updateMatchWithOperationId(updatedMatch, operationId)
+        try {
+            matchOperationRepository.commitOperation(commit)
+        } catch (e: Exception) {
+            matchOperationRepository.updateOperation(
+                operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
+            )
+            throw e
+        }
     }
 }

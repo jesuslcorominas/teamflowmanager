@@ -265,4 +265,20 @@ class MatchFirestoreDataSourceImpl(
     override suspend fun clearLocalData() {
         // No-op for remote data source
     }
+
+    override suspend fun updateLastCompletedOperationId(
+        matchId: String,
+        operationId: String,
+    ) {
+        try {
+            firestore.collection(MATCHES_COLLECTION)
+                .document(matchId)
+                .update("lastCompletedOperationId", operationId)
+                .await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw e
+        }
+    }
 }

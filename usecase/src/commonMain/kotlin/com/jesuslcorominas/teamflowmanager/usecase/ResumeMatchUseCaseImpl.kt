@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationType
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
@@ -41,25 +42,28 @@ internal class ResumeMatchUseCaseImpl(
             )
         val operationId = matchOperationRepository.createOperation(operation)
 
-        // Step 2: Get all player times for this match and resume only the ones that were in PAUSED state
-        val playerTimes = getAllPlayerTimesUseCase(matchId).first()
+        // Step 2: Get all player times for this match and resume only the ones in PAUSED state
+        val allPlayerTimes = getAllPlayerTimesUseCase(matchId).first()
         val pausedPlayerIds =
-            playerTimes
+            allPlayerTimes
                 .filter { it.status == PlayerTimeStatus.PAUSED }
                 .map { it.playerId }
 
-        // Step 3: Start all paused player timers with operation ID
-        if (pausedPlayerIds.isNotEmpty()) {
-            playerTimeRepository.startTimersBatchWithOperationId(
-                matchId = matchId,
-                playerIds = pausedPlayerIds,
-                currentTimeMillis = currentTimeMillis,
-                operationId = operationId,
-            )
-        }
+        // Step 3: Compute player times without writing
+        val playerTimes =
+            if (pausedPlayerIds.isNotEmpty()) {
+                playerTimeRepository.prepareStartTimersBatch(
+                    matchId = matchId,
+                    playerIds = pausedPlayerIds,
+                    currentTimeMillis = currentTimeMillis,
+                    operationId = operationId,
+                )
+            } else {
+                emptyList()
+            }
 
-        // Step 4: Resume the match timer
-        // For resume, find the next period that hasn't started yet
+        // Step 4: Update match state — writes status and periods (not the operation id).
+        // For resume, find the next period that hasn't started yet.
         val firstNotStartedPeriod = match.periods.firstOrNull { it.startTimeMillis == 0L }
         if (firstNotStartedPeriod == null) {
             return // All periods already started, cannot resume to start a new period
@@ -79,15 +83,22 @@ internal class ResumeMatchUseCaseImpl(
             )
         matchRepository.updateMatch(updatedMatch)
 
-        // Step 5: Mark operation as COMPLETED
-        val completedOperation =
-            operation.copy(
-                id = operationId,
-                status = MatchOperationStatus.COMPLETED,
+        // Step 5: Commit all changes atomically in a single WriteBatch
+        val commit =
+            MatchOperationCommit(
+                matchId = matchId,
+                operation = operation.copy(id = operationId, status = MatchOperationStatus.COMPLETED),
+                playerTimes = playerTimes,
+                lastCompletedOperationId = operationId,
             )
-        matchOperationRepository.updateOperation(completedOperation)
 
-        // Step 6: Update match with lastCompletedOperationId
-        matchRepository.updateMatchWithOperationId(updatedMatch, operationId)
+        try {
+            matchOperationRepository.commitOperation(commit)
+        } catch (e: Exception) {
+            matchOperationRepository.updateOperation(
+                operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
+            )
+            throw e
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
@@ -15,6 +16,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -79,7 +81,8 @@ class StartMatchTimerUseCaseTest {
                     match { it.status == MatchStatus.IN_PROGRESS }
                 )
             }
-            coVerify { playerTimeRepository.startTimersBatchWithOperationId(matchId, startingLineup, currentTime, "op1") }
+            coVerify { playerTimeRepository.prepareStartTimersBatch(matchId, startingLineup, currentTime, "op1") }
+            coVerify { matchOperationRepository.commitOperation(any()) }
         }
 
     @Test
@@ -150,4 +153,49 @@ class StartMatchTimerUseCaseTest {
             ),
         )
     }
+
+    // -----------------------------------------------------------------------------------------
+    // Regression test — #416: error handling
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * #416 — Verifies that when the atomic write fails during match start, the operation is marked
+     * FAILED and lastCompletedOperationId is NOT advanced.
+     *
+     * Regression: currently there is no try/catch around the write path, so an exception
+     * propagates without marking the operation FAILED. This test fails until T004 wraps
+     * commitOperation in a try/catch that calls updateOperation(FAILED) on error.
+     */
+    @Test
+    fun `#416 when commitOperation throws during start, operation is marked FAILED and lastCompletedOperationId is not advanced`() =
+        runTest {
+            // Given
+            val matchId = "1"
+            val currentTime = 1000L
+            val operationId = "op1"
+            val match = createScheduledMatch(matchId, startingLineupIds = listOf("player1"))
+            coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
+
+            // The atomic write fails
+            coEvery { matchOperationRepository.commitOperation(any()) } throws RuntimeException("Firestore write failed")
+
+            // When — exception is expected to propagate
+            var caughtException: Throwable? = null
+            try {
+                startMatchTimerUseCase.invoke(matchId, currentTime)
+            } catch (e: RuntimeException) {
+                caughtException = e
+            }
+
+            // Then — operation is marked FAILED; lastCompletedOperationId is NOT advanced
+            coVerify(exactly = 1) {
+                matchOperationRepository.updateOperation(
+                    match { it.id == operationId && it.status == MatchOperationStatus.FAILED },
+                )
+            }
+            coVerify(exactly = 0) { matchRepository.updateLastCompletedOperationId(any(), any()) }
+            @Suppress("DEPRECATION")
+            coVerify(exactly = 0) { matchRepository.updateMatchWithOperationId(any(), any()) }
+            assertTrue("exception must propagate to caller", caughtException != null)
+        }
 }

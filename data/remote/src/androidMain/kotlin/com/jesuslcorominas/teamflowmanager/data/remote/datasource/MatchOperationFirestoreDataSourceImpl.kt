@@ -8,6 +8,8 @@ import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchOperationF
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -23,6 +25,9 @@ class MatchOperationFirestoreDataSourceImpl(
         private const val TAG = "MatchOperationFirestoreDS"
         private const val OPERATIONS_COLLECTION = "matchOperations"
         private const val TEAMS_COLLECTION = "teams"
+        private const val PLAYER_TIMES_COLLECTION = "playerTimes"
+        private const val SUBSTITUTIONS_COLLECTION = "substitutions"
+        private const val MATCHES_COLLECTION = "matches"
     }
 
     /**
@@ -131,6 +136,81 @@ class MatchOperationFirestoreDataSourceImpl(
         } catch (e: Exception) {
             Log.e(TAG, "getOperationById: Error getting operation", e)
             null
+        }
+    }
+
+    override suspend fun commitOperation(commit: MatchOperationCommit) {
+        Log.d(TAG, "commitOperation: matchId=${commit.matchId}, operationId=${commit.operation.id}")
+
+        val teamDocId = getTeamDocumentId()
+        if (teamDocId == null) {
+            Log.e(TAG, "commitOperation: No team found, cannot commit operation")
+            throw IllegalStateException("Team must exist to commit operation")
+        }
+
+        try {
+            val batch = firestore.batch()
+
+            // 1. Write all PlayerTime records
+            commit.playerTimes.forEach { playerTime ->
+                val docId = "player_${playerTime.playerId}"
+                val model = playerTime.toFirestoreModel().copy(id = docId, teamId = teamDocId)
+                val docRef = firestore.collection(PLAYER_TIMES_COLLECTION).document(docId)
+                batch.set(docRef, model)
+            }
+
+            // 2. Write all substitutions
+            commit.substitutions.forEach { substitution ->
+                val subRef = firestore.collection(SUBSTITUTIONS_COLLECTION).document()
+                val model = substitution.toFirestoreModel().copy(id = subRef.id, teamId = teamDocId)
+                batch.set(subRef, model)
+            }
+
+            // 3. Write the operation (already marked COMPLETED by the caller)
+            val operationDocRef = firestore.collection(OPERATIONS_COLLECTION).document(commit.operation.id)
+            val operationModel = commit.operation.toFirestoreModel().copy(teamId = teamDocId)
+            batch.set(operationDocRef, operationModel)
+
+            // 4. Partial field update on Match — only lastCompletedOperationId, never the full document
+            val matchDocRef = firestore.collection(MATCHES_COLLECTION).document(commit.matchId)
+            batch.update(matchDocRef, "lastCompletedOperationId", commit.lastCompletedOperationId)
+
+            batch.commit().await()
+            Log.d(TAG, "commitOperation: Batch committed successfully for operationId=${commit.operation.id}")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "commitOperation: Error committing operation batch", e)
+            throw e
+        }
+    }
+
+    override suspend fun getOperationsByMatchAndStatus(
+        matchId: String,
+        status: MatchOperationStatus,
+    ): List<MatchOperation> {
+        Log.d(TAG, "getOperationsByMatchAndStatus: matchId=$matchId, status=$status")
+
+        return try {
+            val snapshot =
+                firestore.collection(OPERATIONS_COLLECTION)
+                    .whereEqualTo("matchId", matchId)
+                    .whereEqualTo("status", status.name)
+                    .get()
+                    .await()
+
+            snapshot.documents.mapNotNull { doc ->
+                try {
+                    doc.toObject(MatchOperationFirestoreModel::class.java)?.toDomain()
+                } catch (_: Exception) {
+                    null
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "getOperationsByMatchAndStatus: Error querying operations", e)
+            emptyList()
         }
     }
 }

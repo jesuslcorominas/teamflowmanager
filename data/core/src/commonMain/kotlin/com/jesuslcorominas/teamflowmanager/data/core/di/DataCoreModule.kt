@@ -60,7 +60,9 @@ internal val repositoryModule =
 
         singleOf(::MatchRepositoryImpl) bind MatchRepository::class
 
-        singleOf(::MatchOperationRepositoryImpl) bind MatchOperationRepository::class
+        // currentTimeProvider uses the default (System.currentTimeMillis) in production;
+        // tests inject their own lambda via the constructor directly.
+        single<MatchOperationRepository> { MatchOperationRepositoryImpl(get()) }
 
         singleOf(::PlayerTimeRepositoryImpl) bind PlayerTimeRepository::class
 

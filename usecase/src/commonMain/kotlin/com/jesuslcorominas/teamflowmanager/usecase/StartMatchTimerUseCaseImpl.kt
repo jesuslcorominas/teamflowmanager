@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationType
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
@@ -40,12 +41,12 @@ internal class StartMatchTimerUseCaseImpl(
             )
         val operationId = matchOperationRepository.createOperation(operation)
 
-        // Step 2: Update match with operation ID (but not yet as lastCompleted)
         val firstNotStartedPeriod = match.periods.firstOrNull { it.startTimeMillis == 0L }
         if (firstNotStartedPeriod == null) {
             return // All periods already started, cannot start match
         }
 
+        // Step 2: Update match state — writes status and periods (not the operation id)
         val updatedMatch =
             match.copy(
                 status = MatchStatus.IN_PROGRESS,
@@ -60,25 +61,35 @@ internal class StartMatchTimerUseCaseImpl(
             )
         matchRepository.updateMatch(updatedMatch)
 
-        // Step 3: Update player times with operation ID
-        if (match.startingLineupIds.isNotEmpty()) {
-            playerTimeRepository.startTimersBatchWithOperationId(
+        // Step 3: Compute player times without writing
+        val playerTimes =
+            if (match.startingLineupIds.isNotEmpty()) {
+                playerTimeRepository.prepareStartTimersBatch(
+                    matchId = matchId,
+                    playerIds = match.startingLineupIds,
+                    currentTimeMillis = currentTimeMillis,
+                    operationId = operationId,
+                )
+            } else {
+                emptyList()
+            }
+
+        // Step 4: Commit all changes atomically in a single WriteBatch
+        val commit =
+            MatchOperationCommit(
                 matchId = matchId,
-                playerIds = match.startingLineupIds,
-                currentTimeMillis = currentTimeMillis,
-                operationId = operationId,
+                operation = operation.copy(id = operationId, status = MatchOperationStatus.COMPLETED),
+                playerTimes = playerTimes,
+                lastCompletedOperationId = operationId,
             )
+
+        try {
+            matchOperationRepository.commitOperation(commit)
+        } catch (e: Exception) {
+            matchOperationRepository.updateOperation(
+                operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
+            )
+            throw e
         }
-
-        // Step 4: Mark operation as COMPLETED
-        val completedOperation =
-            operation.copy(
-                id = operationId,
-                status = MatchOperationStatus.COMPLETED,
-            )
-        matchOperationRepository.updateOperation(completedOperation)
-
-        // Step 5: Update match with lastCompletedOperationId
-        matchRepository.updateMatchWithOperationId(updatedMatch, operationId)
     }
 }

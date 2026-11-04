@@ -36,4 +36,15 @@ interface MatchDataSource {
      * Only applicable for local data sources.
      */
     suspend fun clearLocalData()
+
+    /**
+     * Writes only the [Match.lastCompletedOperationId] field, leaving all other fields untouched.
+     *
+     * This is a targeted partial-field update — not a full document replace — so it cannot
+     * overwrite concurrent writes on other fields (#417).
+     */
+    suspend fun updateLastCompletedOperationId(
+        matchId: String,
+        operationId: String,
+    )
 }
