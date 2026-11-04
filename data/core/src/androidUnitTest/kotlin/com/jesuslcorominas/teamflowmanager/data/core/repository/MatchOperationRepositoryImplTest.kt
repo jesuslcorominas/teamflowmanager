@@ -188,6 +188,34 @@ class MatchOperationRepositoryImplTest {
     }
 
     /**
+     * #416 — A flaky connection while sweeping one operation must not abort the whole sweep:
+     * the remaining stale operations still have to be marked FAILED. Without this, a single
+     * failing write would leave later operations hanging in IN_PROGRESS indefinitely.
+     */
+    @Test
+    fun `#416 markStaleOperationsAsFailed keeps sweeping when one operation fails to update`() = runTest {
+        val matchId = "match-1"
+        val twoMinutesMillis = 2 * 60 * 1000L
+        val threeMinutesAgo = fakeNow - 3 * 60 * 1000L
+        val failing = createOperation(id = "op-failing", createdAt = threeMinutesAgo)
+        val survivor = createOperation(id = "op-survivor", createdAt = threeMinutesAgo)
+
+        coEvery {
+            matchOperationDataSource.getOperationsByMatchAndStatus(matchId, MatchOperationStatus.IN_PROGRESS)
+        } returns listOf(failing, survivor)
+        coEvery {
+            matchOperationDataSource.updateOperation(failing.copy(status = MatchOperationStatus.FAILED))
+        } throws RuntimeException("Firestore write failed")
+
+        // Must not propagate: the sweep is best-effort per operation
+        repository.markStaleOperationsAsFailed(matchId, twoMinutesMillis)
+
+        coVerify(exactly = 1) {
+            matchOperationDataSource.updateOperation(survivor.copy(status = MatchOperationStatus.FAILED))
+        }
+    }
+
+    /**
      * #416 — The sweep only transitions [MatchOperationStatus] to FAILED on the stale operation
      * itself. It never touches [Match.lastCompletedOperationId] or any other match field,
      * which would require a separate [MatchDataSource] that [MatchOperationRepositoryImpl]
