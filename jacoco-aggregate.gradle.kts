@@ -91,8 +91,9 @@ afterEvaluate {
         }
         classDirectories.setFrom(files(androidClassDirs + jvmClassDirs))
 
-        // Both layouts coexist: the classic Gradle one (:app, :viewmodel) and the KMP one,
-        // where shared code lives in commonMain and platform code in androidMain.
+        // Both layouts coexist: the classic Gradle one (:app) and the KMP one, where shared
+        // code lives in commonMain and platform code in androidMain. A module may offer
+        // several of these; takeIf { exists } keeps only the ones it actually has.
         val sourceSetDirs = listOf(
             "src/main/java",
             "src/main/kotlin",
