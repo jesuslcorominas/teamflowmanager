@@ -247,6 +247,6 @@ que no ha llegado a Play.
 2. Desplegar hosting y functions para que las URLs legales respondan.
 3. Rellenar Data Safety, acceso a la app, público objetivo y clasificación.
 4. Preparar gráficos y capturas, y subir la ficha.
-5. Lanzar una `release/*` con `/publish`. Al mergear su PR a `main`, el job
+5. Lanzar una `release/*` con `/release-app`. Al mergear su PR a `main`, el job
    `promote` publica en producción al 10 % de los usuarios (sección 7).
 6. Vigilar Crashlytics un par de días y escalar el rollout desde Play Console.
