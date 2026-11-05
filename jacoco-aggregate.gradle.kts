@@ -17,6 +17,9 @@ val androidModules = listOf(
     ":viewmodel",
     ":data:local",
     ":data:remote",
+    // :domain reports 100% over just 29 instructions: `**/model/**` below excludes about
+    // 99% of the module, and the handful that survives is covered by other modules' tests,
+    // not by its own. Read #469 before trusting that figure.
     ":domain",
     ":usecase",
     ":data:core",
@@ -94,11 +97,15 @@ afterEvaluate {
         // Both layouts coexist: the classic Gradle one (:app) and the KMP one, where shared
         // code lives in commonMain and platform code in androidMain. A module may offer
         // several of these; takeIf { exists } keeps only the ones it actually has.
+        // Order matters: JaCoCo resolves a class to the FIRST matching package/File.kt it
+        // finds here. For an expect/actual pair both files share that path, and what the
+        // Android target compiles -- and what the .exec measures -- is the actual, so
+        // androidMain has to win over commonMain.
         val sourceSetDirs = listOf(
             "src/main/java",
             "src/main/kotlin",
-            "src/commonMain/kotlin",
             "src/androidMain/kotlin",
+            "src/commonMain/kotlin",
         )
         val sourceDirs = (androidAppModules.map { (path, _) -> path } + androidModules + jvmModules).flatMap { path ->
             val mod = rootProj.project(path)
