@@ -105,11 +105,23 @@ enum class SubstitutionExecutionTrigger {
  * [discarded] ones survive a [SubstitutionExecutionTrigger.MANUAL] run — the coach is watching and
  * can fix or delete them — but not a [SubstitutionExecutionTrigger.RESUME] one, where a surviving
  * card would fire again by itself at the next break, silently.
+ *
+ * [failed] means the batch threw rather than reporting an outcome, so there is no outcome to
+ * report: both lists are empty, not because nothing happened but because the app cannot say what
+ * did. Every card stays queued and the coach can press again — the one thing that is known, and
+ * the reason this is worth telling them rather than bringing the app down.
+ *
+ * Keeping those lists empty when [failed] is the caller's job, and there is exactly one caller
+ * that sets it. Not enforced in an `init` block on purpose: this type is built on the path whose
+ * whole point is to degrade instead of crashing, and a constructor that throws there would undo
+ * that. The screen reads [failed] first and never looks at the lists, so a violation would be
+ * invisible rather than harmful.
  */
 data class SubstitutionExecutionResult(
     val trigger: SubstitutionExecutionTrigger,
     val applied: List<PendingSubstitutionItem>,
     val discarded: List<DiscardedSubstitutionItem>,
+    val failed: Boolean = false,
 )
 
 data class EndPeriodState(

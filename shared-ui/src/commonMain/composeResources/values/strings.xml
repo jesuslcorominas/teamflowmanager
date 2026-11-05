@@ -476,6 +476,9 @@
     <string name="substitution_result_snackbar_applied">Changes applied: %1$d</string>
     <string name="substitution_result_pair">%1$d %2$s \u2192 %3$d %4$s</string>
     <string name="substitution_result_pair_discarded">%1$d %2$s \u2192 %3$d %4$s: %5$s</string>
+    <string name="substitution_result_failed_title">Changes could not be applied</string>
+    <string name="substitution_result_failed_manual_body">Something went wrong and none of the changes could be applied. They are all still scheduled: check your connection and press again.</string>
+    <string name="substitution_result_failed_resume_body">The scheduled changes were due to run on their own when the match was resumed, but something went wrong and none of them could be applied. Your team is still as it was, and every change is still scheduled.</string>
     <string name="substitution_discard_subject_either">One of the two players</string>
     <string name="substitution_discard_reason_out_not_playing">%1$s was not on the pitch</string>
     <string name="substitution_discard_reason_in_already_playing">%1$s was already on the pitch</string>

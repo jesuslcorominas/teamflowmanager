@@ -476,6 +476,9 @@
     <string name="substitution_result_snackbar_applied">Cambios aplicados: %1$d</string>
     <string name="substitution_result_pair">%1$d %2$s \u2192 %3$d %4$s</string>
     <string name="substitution_result_pair_discarded">%1$d %2$s \u2192 %3$d %4$s: %5$s</string>
+    <string name="substitution_result_failed_title">No se pudieron aplicar los cambios</string>
+    <string name="substitution_result_failed_manual_body">Algo ha fallado y no se pudo aplicar ninguno de los cambios. Siguen todos programados: revisa la conexi\u00f3n y vuelve a pulsar.</string>
+    <string name="substitution_result_failed_resume_body">Los cambios programados iban a ejecutarse solos al reanudar el partido, pero algo ha fallado y no se pudo aplicar ninguno. Tu equipo sigue como estaba y todos los cambios siguen programados.</string>
     <string name="substitution_discard_subject_either">Alguno de los dos</string>
     <string name="substitution_discard_reason_out_not_playing">%1$s no estaba en el campo</string>
     <string name="substitution_discard_reason_in_already_playing">%1$s ya estaba jugando</string>
