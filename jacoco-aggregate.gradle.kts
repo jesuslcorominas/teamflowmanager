@@ -8,19 +8,28 @@ val androidAppModules = listOf(
     ":app" to "testDevDebugUnitTest",
 )
 
-// Android library modules (no flavors) — task pattern: testDebugUnitTest
-// Add new Android library modules here (1 line each)
+// Android library and KMP modules (no flavors) — task pattern: testDebugUnitTest
+// A KMP module with androidTarget() belongs here: its tests live in src/androidUnitTest,
+// its classes in build/tmp/kotlin-classes/debug and its coverage data in
+// build/jacoco/testDebugUnitTest.exec — exactly what this branch aggregates.
+// Add new Android library or KMP modules here (1 line each)
 val androidModules = listOf(
     ":viewmodel",
     ":data:local",
     ":data:remote",
-)
-
-// Pure JVM/Kotlin modules — add new JVM modules here (1 line each)
-val jvmModules = listOf(
+    // :domain reports 100% over just 29 instructions: `**/model/**` below excludes about
+    // 99% of the module, and the handful that survives is covered by other modules' tests,
+    // not by its own. Read #469 before trusting that figure.
+    ":domain",
     ":usecase",
     ":data:core",
 )
+
+// Pure JVM/Kotlin modules — classes under build/classes/kotlin/main, tests on the :test task.
+// Empty on purpose: every module in this project targets Android, so none qualifies today.
+// Kept as the extension point for a future JVM-only module.
+// Add new JVM modules here (1 line each)
+val jvmModules = emptyList<String>()
 
 val classExcludes = listOf(
     "**/di/**",
@@ -85,12 +94,22 @@ afterEvaluate {
         }
         classDirectories.setFrom(files(androidClassDirs + jvmClassDirs))
 
+        // Both layouts coexist: the classic Gradle one (:app) and the KMP one, where shared
+        // code lives in commonMain and platform code in androidMain. A module may offer
+        // several of these; takeIf { exists } keeps only the ones it actually has.
+        // Order matters: JaCoCo resolves a class to the FIRST matching package/File.kt it
+        // finds here. For an expect/actual pair both files share that path, and what the
+        // Android target compiles -- and what the .exec measures -- is the actual, so
+        // androidMain has to win over commonMain.
+        val sourceSetDirs = listOf(
+            "src/main/java",
+            "src/main/kotlin",
+            "src/androidMain/kotlin",
+            "src/commonMain/kotlin",
+        )
         val sourceDirs = (androidAppModules.map { (path, _) -> path } + androidModules + jvmModules).flatMap { path ->
             val mod = rootProj.project(path)
-            listOfNotNull(
-                mod.file("src/main/java").takeIf { it.exists() },
-                mod.file("src/main/kotlin").takeIf { it.exists() },
-            )
+            sourceSetDirs.mapNotNull { dir -> mod.file(dir).takeIf { it.exists() } }
         }
         sourceDirectories.setFrom(files(sourceDirs))
         additionalSourceDirs.setFrom(files(sourceDirs))
