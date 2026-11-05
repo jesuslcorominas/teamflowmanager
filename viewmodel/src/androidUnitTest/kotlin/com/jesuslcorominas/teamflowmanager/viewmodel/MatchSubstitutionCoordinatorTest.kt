@@ -17,6 +17,10 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubst
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -183,6 +187,34 @@ class MatchSubstitutionCoordinatorTest {
             val result = requireNotNull(coordinator.lastSubstitutionResult.value)
             assertFalse(result.failed)
             assertEquals(listOf(PAIR_1_2), result.applied.map { it.pair })
+        }
+
+    /**
+     * CancellationException is an Exception, so it lands in the same catch as a real failure. Now
+     * that the published result outlives the call, a batch abandoned because the screen went away
+     * must not leave a failure behind to greet whoever opens the match next.
+     */
+    @Test
+    fun `a batch cancelled because the screen went away publishes nothing`() =
+        runTest {
+            // Given a batch that is still in flight when its scope dies
+            coEvery { registerPlayerSubstitutionUseCase(any(), any(), any()) } coAnswers { awaitCancellation() }
+            val job =
+                launch {
+                    coordinator.run(
+                        pairs = listOf(PAIR_1_2),
+                        trigger = SubstitutionExecutionTrigger.MANUAL,
+                        squadPlayers = SQUAD,
+                        currentTimeMillis = 0L,
+                    )
+                }
+            advanceUntilIdle()
+
+            // When
+            job.cancelAndJoin()
+
+            // Then
+            assertNull(coordinator.lastSubstitutionResult.value)
         }
 
     /**

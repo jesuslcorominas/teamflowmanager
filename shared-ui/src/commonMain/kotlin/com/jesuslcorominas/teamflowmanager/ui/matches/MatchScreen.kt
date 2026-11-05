@@ -209,25 +209,36 @@ fun MatchScreen(
     // never cleared on back navigation, so a conflict left behind would pop up again on re-entry.
     // Same LaunchedEffect(Unit) pattern the project already uses for this.
     //
-    // It no longer consumes the batch result, and this effect running again is exactly why. On
-    // Android a rotation recreates the Activity, so this runs a second time against a ViewModel
-    // that outlived it — and a result the coach has not answered yet has to survive that. The
-    // cleanup cannot tell a rotation from a fresh entry; leaving the result alone makes the
-    // question moot, because the only thing that clears it is the coach having seen it.
+    // It no longer consumes the batch result, and this effect running again is exactly why. An
+    // Activity recreation with the process alive — a rotation, or a change to the system font
+    // size — runs this a second time against a ViewModel that outlived it, and a dialog the coach
+    // has not answered yet has to survive that. The cleanup cannot tell a recreation from a fresh
+    // entry; leaving the dialog's result alone makes the question moot, because the only thing
+    // that clears it is the coach having closed it.
+    //
+    // Process death is a different matter and is not covered: the ViewModel goes with it. Doing
+    // so would need a Saver or persistence, which is the surface option 2 was chosen to avoid.
     LaunchedEffect(Unit) {
         viewModel.dismissPlayerAlreadyScheduled()
         viewModel.lastSubstitutionResult.collect { result ->
             if (result == null) return@collect
-            // Not consumed here. The ViewModel keeps it until the screen says it has been shown —
-            // the dialog's dismiss, or the snackbar coming back — so a recreated screen collects
-            // it again and paints it again. This matters most for the batch that runs on resume:
-            // nobody was watching, its discarded cards are already gone from the store, and this
-            // dialog is the only record of it that will ever exist.
             when (presentationFor(result)) {
+                // Left in the ViewModel until the coach closes the dialog. That is what makes it
+                // survive a recreation, and it matters most for the batch that runs on resume:
+                // nobody was watching, its discarded cards are already gone from the store, and
+                // this dialog is the only record of it that will ever exist.
                 SubstitutionResultPresentation.DIALOG -> substitutionResultDialog = result
+                // Consumed as soon as it is routed, not once the snackbar has been seen. Holding
+                // it for the few seconds the snackbar lasts buys almost nothing — a transient
+                // message is no great loss to a recreation — and costs two real problems: leaving
+                // the screen mid-snackbar would strand the result, which on iOS survives in the
+                // root ViewModelStore and announces an old batch again on re-entry; and consuming
+                // afterwards would discard whatever is published by then, which could be a dialog
+                // the screen has not shown yet.
                 SubstitutionResultPresentation.SNACKBAR -> {
                     appliedSnackbarCount = result.applied.size
                     appliedSnackbarSeq++
+                    viewModel.consumeLastSubstitutionResult()
                 }
             }
         }
@@ -240,9 +251,6 @@ fun MatchScreen(
     LaunchedEffect(appliedSnackbarSeq) {
         if (appliedSnackbarSeq > 0) {
             snackbarHostState.showSnackbar(appliedSnackbarMessage)
-            // Shown and gone, so it has served its purpose — and until this point a rotation
-            // would correctly bring it back.
-            viewModel.consumeLastSubstitutionResult()
         }
     }
 
