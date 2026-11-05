@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchOperationDa
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchOperationFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toPeriodUpdateMap
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
@@ -129,9 +130,20 @@ class MatchOperationFirestoreDataSourceImpl(
             val operationModel = commit.operation.toFirestoreModel().copy(teamId = teamDocId)
             batch.set(operationDocRef, operationModel)
 
-            // 4. Partial field update on Match — only lastCompletedOperationId, never the full document
+            // 4. Partial field update on Match — lastCompletedOperationId plus, when present,
+            //    the match state fields (status, periods, pauseCount). All written in the same
+            //    batch so that either everything lands or nothing does (P1 fix).
             val matchDocRef = firestore.collection(MATCHES_COLLECTION).document(commit.matchId)
-            batch.update(matchDocRef, "lastCompletedOperationId" to commit.lastCompletedOperationId)
+            val matchPairs =
+                mutableListOf<Pair<String, Any>>(
+                    "lastCompletedOperationId" to commit.lastCompletedOperationId,
+                )
+            commit.matchState?.let { state ->
+                matchPairs.add("status" to state.status.name)
+                matchPairs.add("periods" to state.periods.map { it.toPeriodUpdateMap() })
+                state.pauseCount?.let { matchPairs.add("pauseCount" to it) }
+            }
+            batch.update(matchDocRef, *matchPairs.toTypedArray())
 
             batch.commit()
         } catch (e: CancellationException) {

@@ -5,13 +5,12 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
-import kotlinx.datetime.Clock
 import kotlin.coroutines.cancellation.CancellationException
 
 internal class MatchOperationRepositoryImpl(
     private val matchOperationDataSource: MatchOperationDataSource,
     // Injected so tests can supply a fixed timestamp instead of relying on the real wall clock.
-    private val currentTimeProvider: () -> Long = { Clock.System.now().toEpochMilliseconds() },
+    private val currentTimeProvider: () -> Long,
 ) : MatchOperationRepository {
     override suspend fun createOperation(operation: MatchOperation): String = matchOperationDataSource.createOperation(operation)
 

@@ -4,7 +4,10 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toPeriodUpdateMap
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.FirebaseFirestoreException
@@ -249,6 +252,30 @@ class MatchFirestoreDataSourceImpl(
         try {
             firestore.collection(MATCHES_COLLECTION).document(matchId)
                 .update("lastCompletedOperationId" to operationId)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    override suspend fun updateMatchState(
+        matchId: String,
+        status: MatchStatus,
+        periods: List<MatchPeriod>,
+        pauseCount: Int?,
+    ) {
+        try {
+            val pairs =
+                mutableListOf(
+                    "status" to status.name,
+                    "periods" to periods.map { it.toPeriodUpdateMap() },
+                )
+            if (pauseCount != null) {
+                pairs.add("pauseCount" to pauseCount)
+            }
+            firestore.collection(MATCHES_COLLECTION).document(matchId)
+                .update(*pairs.toTypedArray())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

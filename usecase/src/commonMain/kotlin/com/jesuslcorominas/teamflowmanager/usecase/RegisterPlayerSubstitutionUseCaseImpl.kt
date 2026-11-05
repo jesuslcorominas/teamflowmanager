@@ -73,6 +73,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
                 teamId = match.teamId,
                 type = MatchOperationType.SUBSTITUTION,
                 status = MatchOperationStatus.IN_PROGRESS,
+                createdAt = currentTimeMillis,
             )
         val operationId = matchOperationRepository.createOperation(operation)
 
@@ -142,9 +143,16 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         try {
             matchOperationRepository.commitOperation(commit)
         } catch (e: Exception) {
-            matchOperationRepository.updateOperation(
-                operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
-            )
+            // Mark the operation as FAILED so the sweep can clean it up. If this secondary write
+            // also fails, suppress it and re-throw the original exception so the caller always
+            // receives the root cause (P2a).
+            try {
+                matchOperationRepository.updateOperation(
+                    operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
+                )
+            } catch (updateEx: Exception) {
+                println("MatchOperation: could not mark operation $operationId as FAILED: ${updateEx.message}")
+            }
             throw e
         }
 

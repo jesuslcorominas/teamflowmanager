@@ -1,6 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.usecase.repository
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import kotlinx.coroutines.flow.Flow
 
 interface MatchRepository {
@@ -78,5 +80,23 @@ interface MatchRepository {
     suspend fun updateLastCompletedOperationId(
         matchId: String,
         operationId: String,
+    )
+
+    /**
+     * Writes only [Match.status], [Match.periods] and optionally [Match.pauseCount], leaving all
+     * other fields (including [Match.lastCompletedOperationId]) untouched.
+     *
+     * Callers must prefer this over [updateMatch] whenever the intent is to advance match state
+     * (start, pause, resume, finish) without overwriting concurrent writes on other fields such
+     * as a goal registered from another device at the same time (#417).
+     *
+     * [pauseCount] is optional — only the pause operation changes it. Pass `null` to leave the
+     * field untouched in the backing store.
+     */
+    suspend fun updateMatchState(
+        matchId: String,
+        status: MatchStatus,
+        periods: List<MatchPeriod>,
+        pauseCount: Int?,
     )
 }

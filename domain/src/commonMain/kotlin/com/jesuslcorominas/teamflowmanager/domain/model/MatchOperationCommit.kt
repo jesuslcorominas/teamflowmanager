@@ -21,4 +21,13 @@ data class MatchOperationCommit(
      * field update (never a full document replace, to avoid overwriting concurrent writes — #417).
      */
     val lastCompletedOperationId: String,
+    /**
+     * When non-null, the batch will also write [MatchStateUpdate.status], [MatchStateUpdate.periods]
+     * and optionally [MatchStateUpdate.pauseCount] into the Match document in the same atomic write
+     * as [lastCompletedOperationId]. This closes the P1 partial-state window: if the batch fails,
+     * none of the match state fields are persisted.
+     *
+     * Callers that do not need to advance match state (e.g. substitution, goal) leave this null.
+     */
+    val matchState: MatchStateUpdate? = null,
 )

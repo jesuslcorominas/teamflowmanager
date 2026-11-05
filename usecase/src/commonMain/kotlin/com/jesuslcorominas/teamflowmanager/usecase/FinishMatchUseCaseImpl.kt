@@ -59,13 +59,13 @@ internal class FinishMatchUseCaseImpl(
                 }
             }
 
-            // Step 2: Update match state — writes status and periods (not the operation id)
-            val finishedMatch =
-                match.copy(
-                    periods = periods,
-                    status = MatchStatus.FINISHED,
-                )
-            matchRepository.updateMatch(finishedMatch)
+            // Step 2: Update match state — partial write of status and periods only (#417).
+            matchRepository.updateMatchState(
+                matchId = matchId,
+                status = MatchStatus.FINISHED,
+                periods = periods,
+                pauseCount = null,
+            )
 
             // Step 3: Get player times for this match and save history
             val playerTimes =
@@ -128,9 +128,16 @@ internal class FinishMatchUseCaseImpl(
             try {
                 matchOperationRepository.commitOperation(commit)
             } catch (e: Exception) {
-                matchOperationRepository.updateOperation(
-                    operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
-                )
+                // Mark the operation as FAILED so the sweep can clean it up. If this secondary write
+                // also fails, suppress it and re-throw the original exception so the caller always
+                // receives the root cause (P2a).
+                try {
+                    matchOperationRepository.updateOperation(
+                        operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
+                    )
+                } catch (updateEx: Exception) {
+                    println("MatchOperation: could not mark operation $operationId as FAILED: ${updateEx.message}")
+                }
                 throw e
             }
         } catch (e: Exception) {

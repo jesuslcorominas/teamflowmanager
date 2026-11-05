@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationType
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStateUpdate
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
@@ -30,6 +31,13 @@ internal class StartMatchTimerUseCaseImpl(
             return // Early return if match doesn't exist
         }
 
+        // Guard: check periods BEFORE creating an operation so no orphaned IN_PROGRESS record
+        // is left when this normal path exits early (P2b).
+        val firstNotStartedPeriod = match.periods.firstOrNull { it.startTimeMillis == 0L }
+        if (firstNotStartedPeriod == null) {
+            return // All periods already started, cannot start match
+        }
+
         // Step 1: Create operation with IN_PROGRESS status
         val operation =
             MatchOperation(
@@ -41,25 +49,15 @@ internal class StartMatchTimerUseCaseImpl(
             )
         val operationId = matchOperationRepository.createOperation(operation)
 
-        val firstNotStartedPeriod = match.periods.firstOrNull { it.startTimeMillis == 0L }
-        if (firstNotStartedPeriod == null) {
-            return // All periods already started, cannot start match
-        }
-
-        // Step 2: Update match state — writes status and periods (not the operation id)
-        val updatedMatch =
-            match.copy(
-                status = MatchStatus.IN_PROGRESS,
-                periods =
-                    match.periods.map { period ->
-                        if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
-                            period.copy(startTimeMillis = currentTimeMillis)
-                        } else {
-                            period
-                        }
-                    },
-            )
-        matchRepository.updateMatch(updatedMatch)
+        // Step 2: Compute updated periods (not written yet — the write happens in the batch below).
+        val updatedPeriods =
+            match.periods.map { period ->
+                if (period.periodNumber == firstNotStartedPeriod.periodNumber) {
+                    period.copy(startTimeMillis = currentTimeMillis)
+                } else {
+                    period
+                }
+            }
 
         // Step 3: Compute player times without writing
         val playerTimes =
@@ -74,21 +72,35 @@ internal class StartMatchTimerUseCaseImpl(
                 emptyList()
             }
 
-        // Step 4: Commit all changes atomically in a single WriteBatch
+        // Step 4: Commit all changes atomically in a single WriteBatch.
+        // matchState carries status and periods so they land in the same batch as
+        // lastCompletedOperationId — if the commit fails, no match state is persisted (P1 fix).
         val commit =
             MatchOperationCommit(
                 matchId = matchId,
                 operation = operation.copy(id = operationId, status = MatchOperationStatus.COMPLETED),
                 playerTimes = playerTimes,
                 lastCompletedOperationId = operationId,
+                matchState =
+                    MatchStateUpdate(
+                        status = MatchStatus.IN_PROGRESS,
+                        periods = updatedPeriods,
+                    ),
             )
 
         try {
             matchOperationRepository.commitOperation(commit)
         } catch (e: Exception) {
-            matchOperationRepository.updateOperation(
-                operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
-            )
+            // Mark the operation as FAILED so the sweep can clean it up. If this secondary write
+            // also fails, suppress it and re-throw the original exception so the caller always
+            // receives the root cause (P2a).
+            try {
+                matchOperationRepository.updateOperation(
+                    operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
+                )
+            } catch (updateEx: Exception) {
+                println("MatchOperation: could not mark operation $operationId as FAILED: ${updateEx.message}")
+            }
             throw e
         }
     }

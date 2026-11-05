@@ -1265,4 +1265,86 @@ class RegisterPlayerSubstitutionUseCaseTest {
             coVerify(exactly = 0) { matchRepository.updateMatchWithOperationId(any(), any()) }
             assertTrue("exception must propagate to caller", caughtException != null)
         }
+
+    // -----------------------------------------------------------------------------------------
+    // P1 — createdAt: operation is stamped with the caller's currentTimeMillis
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    fun `P1 operation createdAt equals currentTimeMillis passed to invoke`() =
+        runTest {
+            // Given
+            val matchId = "1"
+            val currentTimeMillis = 42000L
+            val operationId = "op-p1"
+            val match =
+                buildMatch(
+                    matchId,
+                    startTimeMillis = currentTimeMillis - 60_000L,
+                    squadCallUpIds = listOf("player-out", "player-in"),
+                )
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            coEvery { matchOperationRepository.createOperation(any()) } returns operationId
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns
+                flowOf(listOf(PlayerTime(playerId = "player-out", status = PlayerTimeStatus.PLAYING, isRunning = true)))
+            coEvery { playerTimeRepository.prepareSubstituteOutPlayersBatch(any(), any(), any(), any()) } returns emptyList()
+            coEvery { playerTimeRepository.prepareStartTimersBatch(any(), any(), any(), any()) } returns emptyList()
+
+            // When
+            registerPlayerSubstitutionUseCase(
+                matchId,
+                listOf(SubstitutionPair(playerOutId = "player-out", playerInId = "player-in")),
+                currentTimeMillis,
+            )
+
+            // Then — the MatchOperation created has createdAt == currentTimeMillis
+            coVerify {
+                matchOperationRepository.createOperation(
+                    match { it.createdAt == currentTimeMillis },
+                )
+            }
+        }
+
+    // -----------------------------------------------------------------------------------------
+    // P2a — double-failure: updateOperation itself throws after commitOperation throws
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    fun `P2a when both commitOperation and updateOperation throw during substitution, original exception propagates`() =
+        runTest {
+            // Given
+            val matchId = "1"
+            val currentTimeMillis = System.currentTimeMillis()
+            val operationId = "op-double-fail"
+            val match =
+                buildMatch(
+                    matchId,
+                    startTimeMillis = currentTimeMillis - 60_000L,
+                    squadCallUpIds = listOf("player-out", "player-in"),
+                )
+            coEvery { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            coEvery { matchOperationRepository.createOperation(any()) } returns operationId
+            coEvery { getAllPlayerTimesUseCase(matchId) } returns
+                flowOf(listOf(PlayerTime(playerId = "player-out", status = PlayerTimeStatus.PLAYING, isRunning = true)))
+            coEvery { playerTimeRepository.prepareSubstituteOutPlayersBatch(any(), any(), any(), any()) } returns emptyList()
+            coEvery { playerTimeRepository.prepareStartTimersBatch(any(), any(), any(), any()) } returns emptyList()
+            coEvery { matchOperationRepository.commitOperation(any()) } throws RuntimeException("commit failed")
+            coEvery { matchOperationRepository.updateOperation(any()) } throws RuntimeException("update failed")
+
+            // When — only the original exception propagates, secondary is suppressed
+            var caughtException: Throwable? = null
+            try {
+                registerPlayerSubstitutionUseCase(
+                    matchId,
+                    listOf(SubstitutionPair(playerOutId = "player-out", playerInId = "player-in")),
+                    currentTimeMillis,
+                )
+            } catch (e: RuntimeException) {
+                caughtException = e
+            }
+
+            // Then
+            assertTrue("original exception must propagate", caughtException != null)
+            assertTrue("original exception message", caughtException!!.message == "commit failed")
+        }
 }
