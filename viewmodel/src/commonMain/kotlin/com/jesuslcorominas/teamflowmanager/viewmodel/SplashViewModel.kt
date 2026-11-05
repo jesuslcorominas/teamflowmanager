@@ -13,6 +13,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissi
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RecoverAbandonedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SynchronizeTimeUseCase
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.AppCoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,7 @@ class SplashViewModel(
     private val isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase,
     private val getActiveViewRole: GetActiveViewRoleUseCase,
     private val recoverAbandonedMatches: RecoverAbandonedMatchesUseCase,
+    private val appScope: AppCoroutineScope,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -77,20 +79,27 @@ class SplashViewModel(
 
     /**
      * Finishes the matches a dead process left running. A cold start is the only moment one can be
-     * observed — the app was not there to notice — so this is where the sweep belongs, after the
-     * clock is synchronised and only once the user turns out to be authenticated.
+     * observed — the app was not there to notice — so the splash is where the trigger belongs,
+     * after the clock is synchronised and only once the user turns out to be authenticated.
      *
-     * Deliberately launched outside [startupJob]: [refresh] cancels that job, and a sweep cut in
-     * half could leave a match finished with its queue of scheduled changes still on the device.
-     * It is also fire and forget — nothing in the splash waits on it, and a failure must never cost
-     * the user their navigation. The guard keeps a [refresh] from sweeping twice.
+     * The splash decides *when*, not *for how long*. The sweep runs on [appScope], not on
+     * `viewModelScope`, because this ViewModel is about to be destroyed: the state emission that
+     * gets us here is the same one that wakes the splash up to navigate, and every route out pops
+     * the splash off the back stack. On `viewModelScope` the sweep died at its first suspension —
+     * the read of the matches — so it would barely ever get as far as finding one to recover, and
+     * silently, since cancellation is not reported. Worse, if it did get further, the window it
+     * could be cut in was the one between the finish and the emptying of the queue, which is
+     * precisely the state the order of those two calls exists to prevent.
+     *
+     * Fire and forget: nothing in the splash waits on it, and a failure must never cost the user
+     * their navigation. The guard keeps a [refresh] from sweeping twice.
      */
     private fun sweepAbandonedMatches() {
         if (abandonedMatchSweepLaunched) return
         val state = _uiState.value
         if (state == UiState.NotAuthenticated || state == UiState.LocalDataNeedsAuth) return
         abandonedMatchSweepLaunched = true
-        viewModelScope.launch {
+        appScope.launch {
             runCatching { recoverAbandonedMatches() }
         }
     }

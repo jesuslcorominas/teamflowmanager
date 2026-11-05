@@ -11,6 +11,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearPendingSubstituti
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObservePendingSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RecoverAbandonedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
@@ -31,6 +32,7 @@ import org.junit.Test
 
 class RecoverAbandonedMatchesUseCaseTest {
     private lateinit var getAllMatches: GetAllMatchesUseCase
+    private lateinit var getMatchById: GetMatchByIdUseCase
     private lateinit var finishMatch: FinishMatchUseCase
     private lateinit var endTimeout: EndTimeoutUseCase
     private lateinit var observePendingSubstitutions: ObservePendingSubstitutionsUseCase
@@ -42,6 +44,7 @@ class RecoverAbandonedMatchesUseCaseTest {
     @Before
     fun setup() {
         getAllMatches = mockk(relaxed = true)
+        getMatchById = mockk(relaxed = true)
         finishMatch = mockk(relaxed = true)
         endTimeout = mockk(relaxed = true)
         observePendingSubstitutions = mockk(relaxed = true)
@@ -51,6 +54,7 @@ class RecoverAbandonedMatchesUseCaseTest {
         useCase =
             RecoverAbandonedMatchesUseCaseImpl(
                 getAllMatches = getAllMatches,
+                getMatchById = getMatchById,
                 finishMatch = finishMatch,
                 endTimeout = endTimeout,
                 observePendingSubstitutions = observePendingSubstitutions,
@@ -59,6 +63,8 @@ class RecoverAbandonedMatchesUseCaseTest {
                 crashReporter = crashReporter,
             )
         every { getAllMatches() } returns flowOf(emptyList())
+        // Por defecto el finish cumple: el partido se relee ya en FINISHED.
+        every { getMatchById(any()) } returns flowOf(baseMatch(MatchStatus.FINISHED, emptyList()))
         every { observePendingSubstitutions(any()) } returns flowOf(emptyList())
         every { timeProvider.getCurrentTime() } returns T0 + SEVEN_HOURS
     }
@@ -185,8 +191,13 @@ class RecoverAbandonedMatchesUseCaseTest {
             coVerify(exactly = 0) { finishMatch(any(), any()) }
         }
 
+    /**
+     * El partido califica por su fecha, pero sin períodos la cota no puede salir de ellos. El
+     * instante de finish es la hora de convocatoria más la duración nominal completa del partido
+     * — nunca `now`, que aquí serían siete horas de juego por titular.
+     */
     @Test
-    fun `givenRunningMatchWithOnlyADate_whenInvoke_thenTheDateIsUsedAsLastActivity`() =
+    fun `givenRunningMatchWithOnlyADate_whenInvoke_thenFinishesAtTheLatestPlausibleEnd`() =
         runTest {
             val match = inProgressMatch(periodStart = T0).copy(periods = emptyList(), dateTime = T0)
             every { getAllMatches() } returns flowOf(listOf(match))
@@ -194,7 +205,8 @@ class RecoverAbandonedMatchesUseCaseTest {
             val recovered = useCase()
 
             assertEquals(1, recovered)
-            coVerify(exactly = 1) { finishMatch(MATCH_ID, T0 + SEVEN_HOURS) }
+            coVerify(exactly = 1) { finishMatch(MATCH_ID, T0 + 2 * PERIOD_DURATION) }
+            coVerify(exactly = 0) { finishMatch(MATCH_ID, T0 + SEVEN_HOURS) }
         }
 
     @Test
@@ -298,7 +310,7 @@ class RecoverAbandonedMatchesUseCaseTest {
 
 
     @Test
-    fun `givenPausedMatchWithNoClosedPeriod_whenInvoke_thenFallsBackToTheMatchDate`() =
+    fun `givenPausedMatchWithNoClosedPeriod_whenInvoke_thenFinishesAtTheLatestPlausibleEnd`() =
         runTest {
             val match = pausedMatch(pausedAt = T0).copy(periods = emptyList(), dateTime = T0)
             every { getAllMatches() } returns flowOf(listOf(match))
@@ -306,11 +318,12 @@ class RecoverAbandonedMatchesUseCaseTest {
             val recovered = useCase()
 
             assertEquals(1, recovered)
-            coVerify(exactly = 1) { finishMatch(MATCH_ID, T0 + SEVEN_HOURS) }
+            coVerify(exactly = 1) { finishMatch(MATCH_ID, T0 + 2 * PERIOD_DURATION) }
+            coVerify(exactly = 0) { finishMatch(MATCH_ID, T0 + SEVEN_HOURS) }
         }
 
     @Test
-    fun `givenInProgressMatchWhosePeriodsAreAllClosed_whenInvoke_thenFallsBackToTheMatchDate`() =
+    fun `givenInProgressMatchWhosePeriodsAreAllClosed_whenInvoke_thenFinishesAtTheLastClosedPeriod`() =
         runTest {
             val closed =
                 MatchPeriod(
@@ -325,7 +338,8 @@ class RecoverAbandonedMatchesUseCaseTest {
             val recovered = useCase()
 
             assertEquals(1, recovered)
-            coVerify(exactly = 1) { finishMatch(MATCH_ID, T0 + SEVEN_HOURS) }
+            coVerify(exactly = 1) { finishMatch(MATCH_ID, T0) }
+            coVerify(exactly = 0) { finishMatch(MATCH_ID, T0 + SEVEN_HOURS) }
         }
 
     @Test
@@ -382,6 +396,90 @@ class RecoverAbandonedMatchesUseCaseTest {
             assertTrue(thrown is CancellationException)
             verify(exactly = 0) { crashReporter.recordException(any()) }
             verify(exactly = 0) { clearPendingSubstitutions(any()) }
+        }
+
+
+    /** P1 de la revisión: ausencia de excepción no es finish ejecutado. */
+    @Test
+    fun `givenTheFinishReturnsSilently_whenInvoke_thenTheQueueIsKeptAndNoRecoveryIsReported`() =
+        runTest {
+            val match = inProgressMatch(periodStart = T0)
+            every { getAllMatches() } returns flowOf(listOf(match))
+            // El finish no lanza, pero el partido sigue vivo: fue borrado, o ya no estaba en un
+            // estado finalizable. Es lo que devuelve FinishMatchUseCase por sus dos return mudos.
+            every { getMatchById(MATCH_ID) } returns flowOf(match)
+
+            val recovered = useCase()
+
+            assertEquals(0, recovered)
+            verify(exactly = 0) { clearPendingSubstitutions(any()) }
+            verify(exactly = 0) { crashReporter.recordException(ofType(AbandonedMatchRecoveredException::class)) }
+        }
+
+    @Test
+    fun `givenTheMatchDisappearsDuringTheFinish_whenInvoke_thenTheQueueIsKept`() =
+        runTest {
+            val match = inProgressMatch(periodStart = T0)
+            every { getAllMatches() } returns flowOf(listOf(match))
+            every { getMatchById(MATCH_ID) } returns flowOf(null)
+
+            val recovered = useCase()
+
+            assertEquals(0, recovered)
+            verify(exactly = 0) { clearPendingSubstitutions(any()) }
+        }
+
+    /** P1 de la revisión: sin ningún timestamp fiable no se inventa una fecha de finish. */
+    @Test
+    fun `givenAnUndatableAbandonedMatch_whenInvoke_thenItIsReportedInsteadOfFinished`() =
+        runTest {
+            val match = inProgressMatch(periodStart = T0).copy(periods = emptyList(), dateTime = 0L, teamId = "t")
+            val undatable = match.copy(status = MatchStatus.TIMEOUT, timeoutStartTimeMillis = T0, periods = emptyList())
+            every { getAllMatches() } returns flowOf(listOf(undatable))
+
+            val recovered = useCase()
+
+            assertEquals(0, recovered)
+            coVerify(exactly = 0) { finishMatch(any(), any()) }
+            verify(exactly = 0) { clearPendingSubstitutions(any()) }
+            verify { crashReporter.recordException(ofType(AbandonedMatchRecoveredException::class)) }
+        }
+
+    /**
+     * P2 de la revisión: un tiempo muerto pedido en el descuento arranca los cronómetros DESPUÉS
+     * del final nominal del período, así que sin suelo el finish caería por detrás y restaría
+     * tiempo de juego a todos los que estaban en el campo.
+     */
+    @Test
+    fun `givenATimeoutAskedForInStoppageTime_whenInvoke_thenTheFinishIsNotBeforeTheTimers`() =
+        runTest {
+            val periodStart = T0
+            val timeoutStart = T0 + PERIOD_DURATION + TWO_MINUTES // minuto 27 de un período de 25
+            val match =
+                inProgressMatch(periodStart = periodStart).copy(
+                    status = MatchStatus.TIMEOUT,
+                    timeoutStartTimeMillis = timeoutStart,
+                )
+            every { getAllMatches() } returns flowOf(listOf(match))
+            every { timeProvider.getCurrentTime() } returns timeoutStart + SEVEN_HOURS
+
+            useCase()
+
+            coVerify(exactly = 1) { finishMatch(MATCH_ID, timeoutStart) }
+        }
+
+    /** P2 de la revisión: el `=` de `>=` no lo verificaba ningún test. */
+    @Test
+    fun `givenInactivityExactlyAtTheThreshold_whenInvoke_thenTheMatchIsRecovered`() =
+        runTest {
+            val match = pausedMatch(pausedAt = T0)
+            every { getAllMatches() } returns flowOf(listOf(match))
+            every { timeProvider.getCurrentTime() } returns T0 + SIX_HOURS
+
+            val recovered = useCase()
+
+            assertEquals(1, recovered)
+            coVerify(exactly = 1) { finishMatch(MATCH_ID, T0) }
         }
 
     private fun mentionsTheWholeContext(message: String): Boolean =

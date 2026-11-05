@@ -22,14 +22,18 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.createMatchViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.AppCoroutineScope
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.RealTimeTicker
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.createAppCoroutineScope
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val viewModelModule =
     module {
+        single { createAppCoroutineScope() } bind AppCoroutineScope::class
+
         viewModel {
             MainViewModel(
                 hasNotificationPermissionBeenRequestedUseCase = get(),
@@ -49,6 +53,7 @@ val viewModelModule =
                 isNotificationPermissionGranted = get(),
                 getActiveViewRole = get(),
                 recoverAbandonedMatches = get(),
+                appScope = get(),
             )
         }
 

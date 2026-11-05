@@ -9,6 +9,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ClearPendingSubstituti
 import com.jesuslcorominas.teamflowmanager.domain.usecase.EndTimeoutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.FinishMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllMatchesUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObservePendingSubstitutionsUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RecoverAbandonedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
@@ -17,6 +18,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 internal class RecoverAbandonedMatchesUseCaseImpl(
     private val getAllMatches: GetAllMatchesUseCase,
+    private val getMatchById: GetMatchByIdUseCase,
     private val finishMatch: FinishMatchUseCase,
     private val endTimeout: EndTimeoutUseCase,
     private val observePendingSubstitutions: ObservePendingSubstitutionsUseCase,
@@ -46,8 +48,7 @@ internal class RecoverAbandonedMatchesUseCaseImpl(
             // the scope dying is routine, and reporting it would bury the real recoveries this
             // whole use case exists to surface.
             try {
-                recover(match, inactivityMillis, now)
-                recovered++
+                if (recover(match, inactivityMillis, now)) recovered++
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -62,8 +63,17 @@ internal class RecoverAbandonedMatchesUseCaseImpl(
         match: Match,
         inactivityMillis: Long,
         now: Long,
-    ) {
+    ): Boolean {
         val foundAs = match.status
+        val finishAt = match.safeFinishTimeAt(now)
+        if (finishAt == null) {
+            // No timestamp we would trust to date the finish. Writing `now` here is exactly what
+            // the cap exists to prevent, so the match is left alone and reported instead: a stuck
+            // setting is recoverable, a player credited with seven hours of play is not.
+            reportUndatable(match, foundAs, inactivityMillis)
+            return false
+        }
+
         val pendingCount = match.pendingSubstitutionCount()
 
         if (foundAs == MatchStatus.TIMEOUT) {
@@ -73,14 +83,29 @@ internal class RecoverAbandonedMatchesUseCaseImpl(
             endTimeout(match.id, match.timeoutStartTimeMillis)
         }
 
-        finishMatch(match.id, match.finishTimeCappedTo(now))
+        finishMatch(match.id, finishAt)
+
+        // "It did not throw" is not "it finished". FinishMatchUseCase returns silently when the
+        // match has been deleted meanwhile, or when it is no longer in a state it can finish —
+        // which is reachable here, since endTimeout is silent too when the match already left
+        // TIMEOUT. Taking that for success would empty the queue of a match that is still running
+        // and report a recovery that never happened, so read the match back instead of inferring.
+        if (!match.id.reachedFinished()) {
+            crashReporter.log(
+                "RecoverAbandonedMatches: ${match.id} did not reach FINISHED; leaving its queue untouched",
+            )
+            return false
+        }
 
         // Only once the finish went through: a match left running with its queue already emptied
         // would be worse than the orphan, and the next cold start would retry this one anyway.
         clearPendingSubstitutions(match.id)
 
         report(match, foundAs, inactivityMillis, pendingCount)
+        return true
     }
+
+    private suspend fun String.reachedFinished(): Boolean = getMatchById(this).first()?.status == MatchStatus.FINISHED
 
     /**
      * Reads the queue before it is emptied — an orphan that still had scheduled changes is exactly
@@ -97,13 +122,33 @@ internal class RecoverAbandonedMatchesUseCaseImpl(
             0
         }
 
+    /**
+     * A match that qualified as abandoned but carries no timestamp we would trust to date its
+     * finish. Reported rather than finished, so the corrupt state shows up in Crashlytics instead
+     * of turning into corrupt statistics.
+     */
+    private fun reportUndatable(
+        match: Match,
+        foundAs: MatchStatus,
+        inactivityMillis: Long,
+    ) {
+        val message =
+            "Abandoned match left alone, no timestamp to date its finish: matchId=${match.id}, " +
+                "foundAs=${foundAs.name}, inactiveForMinutes=${inactivityMillis.toMinutes()}"
+        crashReporter.setCustomKey(KEY_MATCH_ID, match.id)
+        crashReporter.setCustomKey(KEY_STATUS, foundAs.name)
+        crashReporter.setCustomKey(KEY_INACTIVITY_MINUTES, inactivityMillis.toMinutes())
+        crashReporter.log(message)
+        crashReporter.recordException(AbandonedMatchRecoveredException(message))
+    }
+
     private fun report(
         match: Match,
         foundAs: MatchStatus,
         inactivityMillis: Long,
         pendingCount: Int,
     ) {
-        val inactivityMinutes = (inactivityMillis / MILLIS_PER_MINUTE).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        val inactivityMinutes = inactivityMillis.toMinutes()
         crashReporter.setCustomKey(KEY_MATCH_ID, match.id)
         crashReporter.setCustomKey(KEY_STATUS, foundAs.name)
         crashReporter.setCustomKey(KEY_INACTIVITY_MINUTES, inactivityMinutes)
@@ -149,22 +194,38 @@ internal class RecoverAbandonedMatchesUseCaseImpl(
     }
 
     /**
-     * The instant to finish at, never the clock of right now.
+     * The instant to finish at, or null when nothing on the match can date it safely.
      *
      * `FinishMatchUseCase` uses what it is given to close the running period and to settle the
      * elapsed time of every player whose timer was still going. Handed the real current time, a
-     * 25-minute match recovered six hours later would record six hours of play for each starter.
+     * 25-minute match recovered six hours later would record six hours of play for each starter,
+     * and would stretch an already closed period to match. So the clock of right now is never an
+     * answer here — not even as a fallback, which is where a cap like this one usually leaks.
      *
-     * A paused match needs no guesswork: its period is already closed and no player timer is
-     * running, so the instant of the pause reproduces the stored times exactly. A running one is
-     * capped at the nominal end of its period — still an approximation, since nobody knows the
-     * minute the process died, but bounded by something physically possible.
+     * In order of how much they are worth trusting:
+     * - A running period: the nominal end of that period. Still an approximation, since nobody
+     *   knows the minute the process died, but bounded by something physically possible.
+     * - Otherwise the end of the last closed period: for a paused match that is the instant of the
+     *   pause, which reproduces the stored times exactly, since no player timer is running.
+     * - Otherwise the scheduled kick-off plus the full nominal length of the match: the latest
+     *   moment it could plausibly have ended.
+     * - Nothing usable at all: null. The caller leaves the match alone and reports it.
+     *
+     * The floor matters as much as the cap. [EndTimeoutUseCase] restarts the players' timers at
+     * the instant the timeout began, and a timeout asked for in stoppage time starts *after* the
+     * nominal end of its period — so without the floor the finish would land before those timers
+     * started and quietly subtract playing time from everyone on the pitch.
      */
-    private fun Match.finishTimeCappedTo(now: Long): Long =
-        when (status) {
-            MatchStatus.PAUSED -> periods.lastOrNull { it.endTimeMillis > 0L }?.endTimeMillis ?: now
-            else -> activePeriod()?.let { minOf(now, it.startTimeMillis + it.periodDuration) } ?: now
-        }
+    private fun Match.safeFinishTimeAt(now: Long): Long? {
+        val candidate =
+            activePeriod()?.let { it.startTimeMillis + it.periodDuration }
+                ?: periods.lastOrNull { it.endTimeMillis > 0L }?.endTimeMillis
+                ?: dateTime?.takeIf { it > 0L }?.let { it + periodType.numberOfPeriods * periodType.duration }
+                ?: return null
+        return minOf(now, candidate).coerceAtLeast(lastActivityAt() ?: candidate)
+    }
+
+    private fun Long.toMinutes(): Int = (this / MILLIS_PER_MINUTE).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
 
     private fun Match.activePeriod(): MatchPeriod? = periods.lastOrNull { it.startTimeMillis > 0L && it.endTimeMillis == 0L }
 

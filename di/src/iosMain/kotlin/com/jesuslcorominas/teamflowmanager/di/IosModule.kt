@@ -28,7 +28,9 @@ import com.jesuslcorominas.teamflowmanager.viewmodel.SplashViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamListViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.TeamViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.createMatchViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.AppCoroutineScope
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.TimeTicker
+import com.jesuslcorominas.teamflowmanager.viewmodel.utils.createAppCoroutineScope
 import com.jesuslcorominas.teamflowmanager.viewmodel.utils.createTimeTicker
 import kotlinx.cinterop.ExperimentalForeignApi
 import org.koin.core.KoinApplication
@@ -51,6 +53,7 @@ val iosModule =
         single<TimeProvider> { IosTimeProvider() }
         single<MatchReportPdfExporter> { IosMatchReportPdfExporterImpl() }
         factory { createTimeTicker(get()) } bind TimeTicker::class
+        single { createAppCoroutineScope() } bind AppCoroutineScope::class
 
         // ── ViewModels (no-param) ────────────────────────────────────────────────
 
@@ -64,6 +67,7 @@ val iosModule =
                 isNotificationPermissionGranted = get(),
                 getActiveViewRole = get(),
                 recoverAbandonedMatches = get(),
+                appScope = get(),
             )
         }
         factory {
