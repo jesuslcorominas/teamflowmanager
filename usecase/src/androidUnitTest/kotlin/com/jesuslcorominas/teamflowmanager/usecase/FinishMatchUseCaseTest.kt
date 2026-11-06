@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
@@ -16,6 +17,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -52,7 +55,7 @@ class FinishMatchUseCaseTest {
             finishMatchUseCase.invoke(matchId, System.currentTimeMillis())
 
             // Then
-            coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
+            coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
             coVerify(exactly = 0) { playerTimeRepository.resetAllPlayerTimes() }
         }
 
@@ -69,7 +72,7 @@ class FinishMatchUseCaseTest {
             finishMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
+            coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
             coVerify(exactly = 0) { playerTimeRepository.resetAllPlayerTimes() }
         }
 
@@ -92,11 +95,7 @@ class FinishMatchUseCaseTest {
             finishMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify {
-                matchRepository.updateMatch(
-                    match { it.status == MatchStatus.FINISHED }
-                )
-            }
+            coVerify { matchRepository.updateMatchState(matchId, MatchStatus.FINISHED, any(), null) }
             coVerify {
                 playerTimeHistoryRepository.insertPlayerTimeHistory(
                     match { it.playerId == "1" && it.matchId == matchId && it.elapsedTimeMillis == 3000L }
@@ -124,11 +123,7 @@ class FinishMatchUseCaseTest {
             finishMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify {
-                matchRepository.updateMatch(
-                    match { it.status == MatchStatus.FINISHED }
-                )
-            }
+            coVerify { matchRepository.updateMatchState(matchId, MatchStatus.FINISHED, any(), null) }
             coVerify { playerTimeRepository.resetAllPlayerTimes() }
         }
 
@@ -226,7 +221,7 @@ class FinishMatchUseCaseTest {
         finishMatchUseCase.invoke(matchId, currentTime)
 
         // Then
-        coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
+        coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
         coVerify(exactly = 0) { playerTimeRepository.resetAllPlayerTimes() }
     }
 
@@ -242,7 +237,7 @@ class FinishMatchUseCaseTest {
         finishMatchUseCase.invoke(matchId, currentTime)
 
         // Then
-        coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
+        coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
         coVerify(exactly = 0) { playerTimeRepository.resetAllPlayerTimes() }
     }
 
@@ -272,7 +267,7 @@ class FinishMatchUseCaseTest {
         finishMatchUseCase.invoke(matchId, currentTime)
 
         // Then - match finishes even without any started period
-        coVerify { matchRepository.updateMatch(match { it.status == MatchStatus.FINISHED }) }
+        coVerify { matchRepository.updateMatchState(matchId, MatchStatus.FINISHED, any(), null) }
         coVerify { playerTimeRepository.resetAllPlayerTimes() }
     }
 
@@ -314,7 +309,7 @@ class FinishMatchUseCaseTest {
         finishMatchUseCase.invoke(matchId, currentTime)
 
         // Then - the match was still finished and operation completed
-        coVerify { matchRepository.updateMatchWithOperationId(any(), any()) }
+        coVerify { matchOperationRepository.commitOperation(any()) }
     }
 
     private fun createMatch(id: String, status: MatchStatus, currentTime: Long): Match {
@@ -334,4 +329,79 @@ class FinishMatchUseCaseTest {
             ),
         )
     }
+
+    // -----------------------------------------------------------------------------------------
+    // Regression test — #416: error handling
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * #416 — Verifies that when the atomic write fails during match finish, the operation is marked
+     * FAILED and lastCompletedOperationId is NOT advanced.
+     *
+     * Regression: currently there is no try/catch around the write path, so an exception
+     * propagates without marking the operation FAILED. This test fails until T004 wraps
+     * commitOperation in a try/catch that calls updateOperation(FAILED) on error.
+     */
+    @Test
+    fun `#416 when commitOperation throws during finish, operation is marked FAILED and lastCompletedOperationId is not advanced`() =
+        runTest {
+            // Given
+            val matchId = "1"
+            val currentTime = System.currentTimeMillis()
+            val operationId = "op1"
+            val match = createMatch(matchId, MatchStatus.IN_PROGRESS, currentTime)
+            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
+
+            // The atomic write fails
+            coEvery { matchOperationRepository.commitOperation(any()) } throws RuntimeException("Firestore write failed")
+
+            // When — exception is expected to propagate
+            var caughtException: Throwable? = null
+            try {
+                finishMatchUseCase.invoke(matchId, currentTime)
+            } catch (e: RuntimeException) {
+                caughtException = e
+            }
+
+            // Then — operation is marked FAILED; lastCompletedOperationId is NOT advanced
+            coVerify(exactly = 1) {
+                matchOperationRepository.updateOperation(
+                    match { it.id == operationId && it.status == MatchOperationStatus.FAILED },
+                )
+            }
+            coVerify(exactly = 0) { matchRepository.updateLastCompletedOperationId(any(), any()) }
+            @Suppress("DEPRECATION")
+            coVerify(exactly = 0) { matchRepository.updateMatchWithOperationId(any(), any()) }
+            assertTrue("exception must propagate to caller", caughtException != null)
+        }
+
+    // -----------------------------------------------------------------------------------------
+    // P2a — double-failure: updateOperation itself throws after commitOperation throws
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    fun `P2a when both commitOperation and updateOperation throw, original exception propagates`() =
+        runTest {
+            // Given
+            val matchId = "1"
+            val currentTime = System.currentTimeMillis()
+            val match = createMatch(matchId, MatchStatus.IN_PROGRESS, currentTime)
+            every { matchRepository.getMatchById(matchId) } returns flowOf(match)
+            every { playerTimeRepository.getPlayerTimesByMatch(any()) } returns flowOf(emptyList())
+            coEvery { matchOperationRepository.commitOperation(any()) } throws RuntimeException("commit failed")
+            coEvery { matchOperationRepository.updateOperation(any()) } throws RuntimeException("update failed")
+
+            // When — only the original exception propagates, secondary is suppressed
+            var caughtException: Throwable? = null
+            try {
+                finishMatchUseCase.invoke(matchId, currentTime)
+            } catch (e: RuntimeException) {
+                caughtException = e
+            }
+
+            // Then
+            assertNotNull("original exception must propagate", caughtException)
+            assertTrue("original exception message", caughtException!!.message == "commit failed")
+        }
 }

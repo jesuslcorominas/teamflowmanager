@@ -22,6 +22,7 @@ import com.jesuslcorominas.teamflowmanager.data.core.repository.PlayerTimeReposi
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PreferencesRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.PresidentNotificationRepositoryImpl
 import com.jesuslcorominas.teamflowmanager.data.core.repository.TeamRepositoryImpl
+import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
 import com.jesuslcorominas.teamflowmanager.usecase.repository.AccountRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.AuthRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.ClubMemberRepository
@@ -60,7 +61,12 @@ internal val repositoryModule =
 
         singleOf(::MatchRepositoryImpl) bind MatchRepository::class
 
-        singleOf(::MatchOperationRepositoryImpl) bind MatchOperationRepository::class
+        // currentTimeProvider delegates to TimeProvider so the same server-synced clock is used
+        // everywhere. Tests inject their own lambda via the constructor directly.
+        single<MatchOperationRepository> {
+            val timeProvider = get<TimeProvider>()
+            MatchOperationRepositoryImpl(get()) { timeProvider.getCurrentTime() }
+        }
 
         singleOf(::PlayerTimeRepositoryImpl) bind PlayerTimeRepository::class
 

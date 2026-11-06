@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationType
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
@@ -58,13 +59,13 @@ internal class FinishMatchUseCaseImpl(
                 }
             }
 
-            // Step 2: Update match to mark it as finished (without operation ID yet)
-            val finishedMatch =
-                match.copy(
-                    periods = periods,
-                    status = MatchStatus.FINISHED,
-                )
-            matchRepository.updateMatch(finishedMatch)
+            // Step 2: Update match state — partial write of status and periods only (#417).
+            matchRepository.updateMatchState(
+                matchId = matchId,
+                status = MatchStatus.FINISHED,
+                periods = periods,
+                pauseCount = null,
+            )
 
             // Step 3: Get player times for this match and save history
             val playerTimes =
@@ -115,16 +116,30 @@ internal class FinishMatchUseCaseImpl(
                 e.printStackTrace()
             }
 
-            // Step 5: Mark operation as COMPLETED
-            val completedOperation =
-                operation.copy(
-                    id = operationId,
-                    status = MatchOperationStatus.COMPLETED,
+            // Step 5: Commit atomically — marks operation COMPLETED and updates lastCompletedOperationId
+            val commit =
+                MatchOperationCommit(
+                    matchId = matchId,
+                    operation = operation.copy(id = operationId, status = MatchOperationStatus.COMPLETED),
+                    playerTimes = emptyList(),
+                    lastCompletedOperationId = operationId,
                 )
-            matchOperationRepository.updateOperation(completedOperation)
 
-            // Step 6: Update match with lastCompletedOperationId
-            matchRepository.updateMatchWithOperationId(finishedMatch, operationId)
+            try {
+                matchOperationRepository.commitOperation(commit)
+            } catch (e: Exception) {
+                // Mark the operation as FAILED so the sweep can clean it up. If this secondary write
+                // also fails, suppress it and re-throw the original exception so the caller always
+                // receives the root cause (P2a).
+                try {
+                    matchOperationRepository.updateOperation(
+                        operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
+                    )
+                } catch (updateEx: Exception) {
+                    println("MatchOperation: could not mark operation $operationId as FAILED: ${updateEx.message}")
+                }
+                throw e
+            }
         } catch (e: Exception) {
             println("FinishMatchUseCase: Unexpected error finishing match: ${e.message}")
             e.printStackTrace()

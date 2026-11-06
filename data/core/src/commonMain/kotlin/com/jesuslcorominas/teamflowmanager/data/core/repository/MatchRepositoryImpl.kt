@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.core.repository
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import kotlinx.coroutines.flow.Flow
@@ -153,11 +154,28 @@ internal class MatchRepositoryImpl(
         }
     }
 
+    @Suppress("DEPRECATION")
     override suspend fun updateMatchWithOperationId(
         match: Match,
         operationId: String,
     ) {
         val updatedMatch = match.copy(lastCompletedOperationId = operationId)
         matchDataSource.updateMatch(updatedMatch)
+    }
+
+    override suspend fun updateLastCompletedOperationId(
+        matchId: String,
+        operationId: String,
+    ) {
+        matchDataSource.updateLastCompletedOperationId(matchId, operationId)
+    }
+
+    override suspend fun updateMatchState(
+        matchId: String,
+        status: MatchStatus,
+        periods: List<MatchPeriod>,
+        pauseCount: Int?,
+    ) {
+        matchDataSource.updateMatchState(matchId, status, periods, pauseCount)
     }
 }

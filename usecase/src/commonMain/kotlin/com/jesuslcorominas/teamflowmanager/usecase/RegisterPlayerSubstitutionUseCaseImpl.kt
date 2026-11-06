@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.DiscardedSubstitution
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperation
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationType
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
@@ -13,20 +14,22 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
-import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerSubstitutionRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import kotlinx.coroutines.flow.first
 
 internal class RegisterPlayerSubstitutionUseCaseImpl(
     private val matchRepository: MatchRepository,
     private val playerTimeRepository: PlayerTimeRepository,
-    private val playerSubstitutionRepository: PlayerSubstitutionRepository,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
     private val matchOperationRepository: MatchOperationRepository,
 ) : RegisterPlayerSubstitutionUseCase {
     /**
-     * Registers a batch of substitutions under a SINGLE operation id, so that N changes never
-     * produce N visible intermediate states.
+     * Registers a batch of substitutions under a SINGLE atomic operation, so that N changes
+     * never produce N visible intermediate states (#423).
+     *
+     * All PlayerTime records (substituted out, substituted in, remaining on pitch) and the
+     * lastCompletedOperationId are written in one WriteBatch via [MatchOperationRepository.commitOperation].
+     * If the commit fails the operation is marked FAILED and the exception is re-propagated (#416).
      */
     override suspend fun invoke(
         matchId: String,
@@ -70,6 +73,7 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
                 teamId = match.teamId,
                 type = MatchOperationType.SUBSTITUTION,
                 status = MatchOperationStatus.IN_PROGRESS,
+                createdAt = currentTimeMillis,
             )
         val operationId = matchOperationRepository.createOperation(operation)
 
@@ -77,21 +81,23 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         val playerOutIds = validPairs.map { it.playerOutId }
         val playerInIds = validPairs.map { it.playerInId }
 
-        // Step 2: Substitute out every leaving player in one call - sets ON_BENCH status
-        playerTimeRepository.substituteOutPlayersBatchWithOperationId(
-            matchId = matchId,
-            playerIds = playerOutIds,
-            currentTimeMillis = currentTimeMillis,
-            operationId = operationId,
-        )
+        // Step 2: Compute outgoing player times without writing
+        val playerOutTimes =
+            playerTimeRepository.prepareSubstituteOutPlayersBatch(
+                matchId = matchId,
+                playerIds = playerOutIds,
+                currentTimeMillis = currentTimeMillis,
+                operationId = operationId,
+            )
 
-        // Step 3: Start timers for every incoming player in one call
-        playerTimeRepository.startTimersBatchWithOperationId(
-            matchId = matchId,
-            playerIds = playerInIds,
-            currentTimeMillis = currentTimeMillis,
-            operationId = operationId,
-        )
+        // Step 3: Compute incoming player times without writing
+        val playerInTimes =
+            playerTimeRepository.prepareStartTimersBatch(
+                matchId = matchId,
+                playerIds = playerInIds,
+                currentTimeMillis = currentTimeMillis,
+                operationId = operationId,
+            )
 
         // Step 4: Refresh the operationId of the remaining players still on the pitch, so the UI
         // filter (lastOperationId == match.lastCompletedOperationId) keeps showing them. Only the
@@ -99,18 +105,21 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
         // player was on the pitch, so none of them can be written twice in the same operation.
         val substitutedOutPlayerIds = playerOutIds.toSet()
         val otherPlayingPlayers = playingPlayerIds.filterNot { it in substitutedOutPlayerIds }
-        if (otherPlayingPlayers.isNotEmpty()) {
-            playerTimeRepository.startTimersBatchWithOperationId(
-                matchId = matchId,
-                playerIds = otherPlayingPlayers,
-                currentTimeMillis = currentTimeMillis,
-                operationId = operationId,
-            )
-        }
+        val otherTimes =
+            if (otherPlayingPlayers.isNotEmpty()) {
+                playerTimeRepository.prepareStartTimersBatch(
+                    matchId = matchId,
+                    playerIds = otherPlayingPlayers,
+                    currentTimeMillis = currentTimeMillis,
+                    operationId = operationId,
+                )
+            } else {
+                emptyList()
+            }
 
-        // Step 5: Record one substitution per valid pair, all sharing operationId and elapsed time
-        validPairs.forEach { pair ->
-            playerSubstitutionRepository.insertSubstitution(
+        // Step 5: Build substitution records (all sharing operationId and elapsed time)
+        val playerSubstitutions =
+            validPairs.map { pair ->
                 PlayerSubstitution(
                     matchId = matchId,
                     playerOutId = pair.playerOutId,
@@ -118,23 +127,34 @@ internal class RegisterPlayerSubstitutionUseCaseImpl(
                     substitutionTimeMillis = currentTimeMillis,
                     matchElapsedTimeMillis = matchElapsedTime,
                     operationId = operationId,
-                ),
+                )
+            }
+
+        // Step 6: Commit all changes atomically in a single WriteBatch
+        val commit =
+            MatchOperationCommit(
+                matchId = matchId,
+                operation = operation.copy(id = operationId, status = MatchOperationStatus.COMPLETED),
+                playerTimes = playerOutTimes + playerInTimes + otherTimes,
+                substitutions = playerSubstitutions,
+                lastCompletedOperationId = operationId,
             )
+
+        try {
+            matchOperationRepository.commitOperation(commit)
+        } catch (e: Exception) {
+            // Mark the operation as FAILED so the sweep can clean it up. If this secondary write
+            // also fails, suppress it and re-throw the original exception so the caller always
+            // receives the root cause (P2a).
+            try {
+                matchOperationRepository.updateOperation(
+                    operation.copy(id = operationId, status = MatchOperationStatus.FAILED),
+                )
+            } catch (updateEx: Exception) {
+                println("MatchOperation: could not mark operation $operationId as FAILED: ${updateEx.message}")
+            }
+            throw e
         }
-
-        // Step 6: Mark operation as COMPLETED
-        matchOperationRepository.updateOperation(
-            operation.copy(
-                id = operationId,
-                status = MatchOperationStatus.COMPLETED,
-            ),
-        )
-
-        // Step 7: Update match's lastCompletedOperationId
-        matchRepository.updateMatchWithOperationId(
-            match = match.copy(lastCompletedOperationId = operationId),
-            operationId = operationId,
-        )
 
         return selection
     }

@@ -150,3 +150,19 @@ fun MatchPeriod.toFirestoreModel(): MatchPeriodFirestoreModel =
         startTimeMillis = startTimeMillis,
         endTimeMillis = endTimeMillis,
     )
+
+/**
+ * Converts a [MatchPeriod] to a plain [Map] using the same field names as [MatchPeriodFirestoreModel]
+ * so that a partial update written to Firestore is byte-for-byte identical to what a full
+ * `.set(toFirestoreModel())` would store for the periods array.
+ *
+ * Both [MatchFirestoreDataSourceImpl] and [MatchOperationFirestoreDataSourceImpl] need this mapping;
+ * keeping it here (next to [MatchPeriodFirestoreModel]) provides a single source of truth.
+ */
+internal fun MatchPeriod.toPeriodUpdateMap(): Map<String, Any> =
+    mapOf(
+        "periodNumber" to periodNumber,
+        "periodDuration" to periodDuration,
+        "startTimeMillis" to startTimeMillis,
+        "endTimeMillis" to endTimeMillis,
+    )
