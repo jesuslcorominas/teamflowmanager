@@ -226,7 +226,7 @@ Dos caminos. El automático solo está disponible una vez mergeada la #448.
 
 1. En el repositorio, lanzar el flujo de release:
    ```
-   /publish
+   /release-app
    ```
    Pide la versión (por ejemplo `0.8.0`) y las notas, crea la rama `release/*`,
    sube el AAB a alpha y abre una PR hacia `main`.

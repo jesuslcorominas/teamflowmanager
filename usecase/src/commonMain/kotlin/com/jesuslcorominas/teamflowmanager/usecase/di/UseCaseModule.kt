@@ -67,6 +67,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.ObservePendingSubstitu
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ObserveSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PausePlayerTimerForMatchPauseUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.RecoverAbandonedMatchesUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegenerateInvitationCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterGoalUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.RegisterPlayerSubstitutionUseCase
@@ -167,6 +168,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.ObservePendingSubstitutionsUs
 import com.jesuslcorominas.teamflowmanager.usecase.ObserveSubstitutionModeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PauseMatchUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.PausePlayerTimerForMatchPauseUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.RecoverAbandonedMatchesUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegenerateInvitationCodeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterGoalUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.RegisterPlayerSubstitutionUseCaseImpl
@@ -254,6 +256,7 @@ internal val useCaseInternalModule =
         singleOf(::StartTimeoutUseCaseImpl) bind StartTimeoutUseCase::class
         singleOf(::EndTimeoutUseCaseImpl) bind EndTimeoutUseCase::class
         singleOf(::FinishMatchUseCaseImpl) bind FinishMatchUseCase::class
+        singleOf(::RecoverAbandonedMatchesUseCaseImpl) bind RecoverAbandonedMatchesUseCase::class
         singleOf(::GetMatchSummaryUseCaseImpl) bind GetMatchSummaryUseCase::class
         singleOf(::GetMatchTimelineUseCaseImpl) bind GetMatchTimelineUseCase::class
 

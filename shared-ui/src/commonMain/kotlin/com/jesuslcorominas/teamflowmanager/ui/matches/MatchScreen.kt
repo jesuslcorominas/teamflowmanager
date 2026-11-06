@@ -152,6 +152,9 @@ import teamflowmanager.shared_ui.generated.resources.stop_match_early_title
 import teamflowmanager.shared_ui.generated.resources.substitution_discard_subject_either
 import teamflowmanager.shared_ui.generated.resources.substitution_result_applied_header
 import teamflowmanager.shared_ui.generated.resources.substitution_result_discarded_header
+import teamflowmanager.shared_ui.generated.resources.substitution_result_failed_manual_body
+import teamflowmanager.shared_ui.generated.resources.substitution_result_failed_resume_body
+import teamflowmanager.shared_ui.generated.resources.substitution_result_failed_title
 import teamflowmanager.shared_ui.generated.resources.substitution_result_manual_title
 import teamflowmanager.shared_ui.generated.resources.substitution_result_pair
 import teamflowmanager.shared_ui.generated.resources.substitution_result_pair_discarded
@@ -203,21 +206,39 @@ fun MatchScreen(
     // would race, and the cleanup losing that race would swallow a fresh result.
     //
     // The cleanup exists because on iOS the ViewModel is cached in the root ViewModelStore and is
-    // never cleared on back navigation, so a conflict or a result left behind would pop up again
-    // on re-entry. Same LaunchedEffect(Unit) pattern the project already uses for this.
+    // never cleared on back navigation, so a conflict left behind would pop up again on re-entry.
+    // Same LaunchedEffect(Unit) pattern the project already uses for this.
+    //
+    // It no longer consumes the batch result, and this effect running again is exactly why. An
+    // Activity recreation with the process alive — a rotation, or a change to the system font
+    // size — runs this a second time against a ViewModel that outlived it, and a dialog the coach
+    // has not answered yet has to survive that. The cleanup cannot tell a recreation from a fresh
+    // entry; leaving the dialog's result alone makes the question moot, because the only thing
+    // that clears it is the coach having closed it.
+    //
+    // Process death is a different matter and is not covered: the ViewModel goes with it. Doing
+    // so would need a Saver or persistence, which is the surface option 2 was chosen to avoid.
     LaunchedEffect(Unit) {
         viewModel.dismissPlayerAlreadyScheduled()
-        viewModel.consumeLastSubstitutionResult()
         viewModel.lastSubstitutionResult.collect { result ->
             if (result == null) return@collect
-            // Consumed before it is painted: the dialog is driven by screen-local state, so
-            // holding it in the ViewModel would only leave it there to reappear later.
-            viewModel.consumeLastSubstitutionResult()
             when (presentationFor(result)) {
+                // Left in the ViewModel until the coach closes the dialog. That is what makes it
+                // survive a recreation, and it matters most for the batch that runs on resume:
+                // nobody was watching, its discarded cards are already gone from the store, and
+                // this dialog is the only record of it that will ever exist.
                 SubstitutionResultPresentation.DIALOG -> substitutionResultDialog = result
+                // Consumed as soon as it is routed, not once the snackbar has been seen. Holding
+                // it for the few seconds the snackbar lasts buys almost nothing — a transient
+                // message is no great loss to a recreation — and costs two real problems: leaving
+                // the screen mid-snackbar would strand the result, which on iOS survives in the
+                // root ViewModelStore and announces an old batch again on re-entry; and consuming
+                // afterwards would discard whatever is published by then, which could be a dialog
+                // the screen has not shown yet.
                 SubstitutionResultPresentation.SNACKBAR -> {
                     appliedSnackbarCount = result.applied.size
                     appliedSnackbarSeq++
+                    viewModel.consumeLastSubstitutionResult()
                 }
             }
         }
@@ -347,7 +368,12 @@ fun MatchScreen(
         substitutionResultDialog?.let { result ->
             SubstitutionResultDialog(
                 result = result,
-                onDismiss = { substitutionResultDialog = null },
+                // Closing it is the coach saying they have read it, and the only thing that
+                // discards the result. Up to here a rotation re-collects it and paints it again.
+                onDismiss = {
+                    substitutionResultDialog = null
+                    viewModel.consumeLastSubstitutionResult()
+                },
             )
         }
 
@@ -1602,6 +1628,11 @@ private fun SubstitutionProgressIndicator() {
  * A run triggered on resume gets its own wording, not a variant of the manual one: it happened
  * while the coach was not looking, and its discarded cards are deleted from the store before this
  * is ever painted, so this dialog is the only record that will remain of the team having changed.
+ *
+ * A failed batch has no lists to print — the app does not know what, if anything, got through — so
+ * it gets a title and a paragraph instead. Its resume wording has to do more work than the manual
+ * one: nobody watched the queue fail, so without being told, the coach would go on assuming their
+ * team had changed at the break.
  */
 @Composable
 private fun SubstitutionResultDialog(
@@ -1616,10 +1647,10 @@ private fun SubstitutionResultDialog(
             Text(
                 text =
                     stringResource(
-                        if (isResume) {
-                            Res.string.substitution_result_resume_title
-                        } else {
-                            Res.string.substitution_result_manual_title
+                        when {
+                            result.failed -> Res.string.substitution_result_failed_title
+                            isResume -> Res.string.substitution_result_resume_title
+                            else -> Res.string.substitution_result_manual_title
                         },
                     ),
                 style = MaterialTheme.typography.titleLarge,
@@ -1627,6 +1658,21 @@ private fun SubstitutionResultDialog(
         },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                if (result.failed) {
+                    Text(
+                        text =
+                            stringResource(
+                                if (isResume) {
+                                    Res.string.substitution_result_failed_resume_body
+                                } else {
+                                    Res.string.substitution_result_failed_manual_body
+                                },
+                            ),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    return@Column
+                }
+
                 if (isResume) {
                     Text(
                         text = stringResource(Res.string.substitution_result_resume_intro),
