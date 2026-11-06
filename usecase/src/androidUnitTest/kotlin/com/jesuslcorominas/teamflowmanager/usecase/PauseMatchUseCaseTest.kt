@@ -12,7 +12,6 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
-import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -22,13 +21,11 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 class PauseMatchUseCaseTest {
-    private lateinit var matchRepository: MatchRepository
     private lateinit var matchOperationRepository: MatchOperationRepository
     private lateinit var getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase
     private lateinit var playerTimeRepository: PlayerTimeRepository
@@ -37,13 +34,11 @@ class PauseMatchUseCaseTest {
 
     @Before
     fun setup() {
-        matchRepository = mockk(relaxed = true)
         matchOperationRepository = mockk(relaxed = true)
         getAllPlayerTimesUseCase = mockk(relaxed = true)
         playerTimeRepository = mockk(relaxed = true)
         getMatchByIdUseCase = mockk(relaxed = true)
         pauseMatchUseCase = PauseMatchUseCaseImpl(
-            matchRepository = matchRepository,
             matchOperationRepository = matchOperationRepository,
             getAllPlayerTimesUseCase = getAllPlayerTimesUseCase,
             playerTimeRepository = playerTimeRepository,
@@ -64,7 +59,7 @@ class PauseMatchUseCaseTest {
             pauseMatchUseCase.invoke(matchId, currentTime)
 
             // Then
-            coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
             coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
@@ -82,7 +77,6 @@ class PauseMatchUseCaseTest {
 
             // Then — P2b: guard runs before createOperation so no orphaned operation is left
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
-            coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
             coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
@@ -110,12 +104,26 @@ class PauseMatchUseCaseTest {
             // Then — state travels in the commit, not via a separate updateMatchState call
             coVerify { playerTimeRepository.preparePauseTimersBatch(matchId, listOf("1", "2"), currentTime, "op1") }
             coVerify { matchOperationRepository.commitOperation(any()) }
-            coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
 
             val commit = commitSlot.captured
             assertNotNull("commit must carry matchState", commit.matchState)
             assertEquals(MatchStatus.PAUSED, commit.matchState!!.status)
             assertEquals("pauseCount must be incremented", match.pauseCount + 1, commit.matchState!!.pauseCount)
+
+            // Periods: period 1 (the first not-yet-finished one) must carry endTimeMillis = currentTime.
+            // Period 2 (startTimeMillis == 0) must remain untouched.
+            val periods = commit.matchState!!.periods
+            assertNotNull("commit matchState must carry periods", periods)
+            assertEquals(
+                "period 1 endTimeMillis must equal currentTime",
+                currentTime,
+                periods!![0].endTimeMillis,
+            )
+            assertEquals(
+                "period 2 must remain unchanged (endTimeMillis == 0)",
+                0L,
+                periods[1].endTimeMillis,
+            )
         }
 
     @Test
@@ -140,7 +148,6 @@ class PauseMatchUseCaseTest {
 
             // Then — state travels in the commit, not via a separate updateMatchState call
             coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any(), any()) }
-            coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
 
             val commit = commitSlot.captured
             assertNotNull("commit must carry matchState", commit.matchState)
@@ -165,7 +172,6 @@ class PauseMatchUseCaseTest {
 
             // Then — state travels in the commit, not via a separate updateMatchState call
             coVerify(exactly = 0) { playerTimeRepository.pauseTimersBatchWithOperationId(any(), any(), any(), any()) }
-            coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
 
             val commit = commitSlot.captured
             assertNotNull("commit must carry matchState", commit.matchState)
@@ -221,15 +227,13 @@ class PauseMatchUseCaseTest {
                 caughtException = e
             }
 
-            // Then — operation is marked FAILED; lastCompletedOperationId is NOT advanced
+            // Then — operation is marked FAILED; lastCompletedOperationId is NOT advanced via
+            // any separate repository call (it only moves inside the atomic batch, which failed).
             coVerify(exactly = 1) {
                 matchOperationRepository.updateOperation(
                     match { it.id == operationId && it.status == MatchOperationStatus.FAILED },
                 )
             }
-            coVerify(exactly = 0) { matchRepository.updateLastCompletedOperationId(any(), any()) }
-            @Suppress("DEPRECATION")
-            coVerify(exactly = 0) { matchRepository.updateMatchWithOperationId(any(), any()) }
             assertTrue("exception must propagate to caller", caughtException != null)
         }
 
@@ -243,8 +247,13 @@ class PauseMatchUseCaseTest {
      * the commit, any failure in [commitOperation] leaves the match document untouched —
      * preventing the non-idempotent increment that feeds [Match.canPause].
      */
+    /**
+     * The use case no longer holds a MatchRepository, so it cannot write match state on its
+     * own: that guarantee is structural and needs no test. What this does fix is the spec's
+     * decision against automatic retries, which would duplicate a half-applied operation.
+     */
     @Test
-    fun `P1 when commitOperation throws during pause, pauseCount is not persisted independently`() =
+    fun `a failed commit during pause is not retried automatically`() =
         runTest {
             // Given
             val matchId = "1"
@@ -262,8 +271,8 @@ class PauseMatchUseCaseTest {
             } catch (_: RuntimeException) {
             }
 
-            // Then — no separate updateMatchState call was made; state only travels in the batch
-            coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
+            // Then — only commitOperation was attempted; it failed so no state is persisted
+            coVerify(exactly = 1) { matchOperationRepository.commitOperation(any()) }
         }
 
     // -----------------------------------------------------------------------------------------
@@ -357,6 +366,5 @@ class PauseMatchUseCaseTest {
 
             // Then — no orphaned IN_PROGRESS operation is created
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
-            coVerify(exactly = 0) { matchRepository.updateMatchState(any(), any(), any(), any()) }
         }
 }

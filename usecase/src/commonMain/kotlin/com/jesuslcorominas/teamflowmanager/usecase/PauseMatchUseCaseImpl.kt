@@ -11,12 +11,10 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.PauseMatchUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
-import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import kotlinx.coroutines.flow.first
 
 internal class PauseMatchUseCaseImpl(
-    private val matchRepository: MatchRepository,
     private val matchOperationRepository: MatchOperationRepository,
     private val getAllPlayerTimesUseCase: GetAllPlayerTimesUseCase,
     private val playerTimeRepository: PlayerTimeRepository,
