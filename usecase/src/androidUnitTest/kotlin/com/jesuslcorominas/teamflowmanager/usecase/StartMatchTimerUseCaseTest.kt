@@ -1,6 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationCommit
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchOperationStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
@@ -8,18 +10,21 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.GetAllPlayerTimesUseCa
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetMatchByIdUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
 import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchOperationRepository
-import com.jesuslcorominas.teamflowmanager.usecase.repository.MatchRepository
 import com.jesuslcorominas.teamflowmanager.usecase.repository.PlayerTimeRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 class StartMatchTimerUseCaseTest {
-    private lateinit var matchRepository: MatchRepository
     private lateinit var matchOperationRepository: MatchOperationRepository
     private lateinit var playerTimeRepository: PlayerTimeRepository
     private lateinit var getMatchByIdUseCase: GetMatchByIdUseCase
@@ -28,13 +33,11 @@ class StartMatchTimerUseCaseTest {
 
     @Before
     fun setup() {
-        matchRepository = mockk(relaxed = true)
         matchOperationRepository = mockk(relaxed = true)
         playerTimeRepository = mockk(relaxed = true)
         getMatchByIdUseCase = mockk(relaxed = true)
         getAllPlayerTimesUseCase = mockk(relaxed = true)
         startMatchTimerUseCase = StartMatchTimerUseCaseImpl(
-            matchRepository = matchRepository,
             matchOperationRepository = matchOperationRepository,
             playerTimeRepository = playerTimeRepository,
             getMatchByIdUseCase = getMatchByIdUseCase,
@@ -56,7 +59,6 @@ class StartMatchTimerUseCaseTest {
 
             // Then
             coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
-            coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
             coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
@@ -70,16 +72,34 @@ class StartMatchTimerUseCaseTest {
             val match = createScheduledMatch(matchId, startingLineupIds = startingLineup)
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
 
+            val commitSlot = slot<MatchOperationCommit>()
+            coEvery { matchOperationRepository.commitOperation(capture(commitSlot)) } returns Unit
+
             // When
             startMatchTimerUseCase.invoke(matchId, currentTime)
 
-            // Then
-            coVerify {
-                matchRepository.updateMatch(
-                    match { it.status == MatchStatus.IN_PROGRESS }
-                )
-            }
-            coVerify { playerTimeRepository.startTimersBatchWithOperationId(matchId, startingLineup, currentTime, "op1") }
+            // Then — state travels in the commit, not via a separate updateMatchState call
+            coVerify { playerTimeRepository.prepareStartTimersBatch(matchId, startingLineup, currentTime, "op1") }
+            coVerify { matchOperationRepository.commitOperation(any()) }
+
+            val commit = commitSlot.captured
+            assertNotNull("commit must carry matchState", commit.matchState)
+            assertEquals(MatchStatus.IN_PROGRESS, commit.matchState!!.status)
+            assertNull("pauseCount must be null for start", commit.matchState!!.pauseCount)
+
+            // Periods: period 1 must carry startTimeMillis = currentTime; period 2 unchanged.
+            val periods = commit.matchState!!.periods
+            assertNotNull("commit matchState must carry periods", periods)
+            assertEquals(
+                "period 1 startTimeMillis must equal currentTime",
+                currentTime,
+                periods!![0].startTimeMillis,
+            )
+            assertEquals(
+                "period 2 must remain unchanged (startTimeMillis == 0)",
+                0L,
+                periods[1].startTimeMillis,
+            )
         }
 
     @Test
@@ -91,16 +111,32 @@ class StartMatchTimerUseCaseTest {
             val match = createScheduledMatch(matchId, startingLineupIds = emptyList())
             coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
 
+            val commitSlot = slot<MatchOperationCommit>()
+            coEvery { matchOperationRepository.commitOperation(capture(commitSlot)) } returns Unit
+
             // When
             startMatchTimerUseCase.invoke(matchId, currentTime)
 
-            // Then
-            coVerify {
-                matchRepository.updateMatch(
-                    match { it.status == MatchStatus.IN_PROGRESS }
-                )
-            }
+            // Then — state travels in the commit, not via a separate updateMatchState call
             coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
+
+            val commit = commitSlot.captured
+            assertNotNull("commit must carry matchState", commit.matchState)
+            assertEquals(MatchStatus.IN_PROGRESS, commit.matchState!!.status)
+
+            // Periods: period 1 must carry startTimeMillis = currentTime; period 2 unchanged.
+            val periods = commit.matchState!!.periods
+            assertNotNull("commit matchState must carry periods", periods)
+            assertEquals(
+                "period 1 startTimeMillis must equal currentTime",
+                currentTime,
+                periods!![0].startTimeMillis,
+            )
+            assertEquals(
+                "period 2 must remain unchanged (startTimeMillis == 0)",
+                0L,
+                periods[1].startTimeMillis,
+            )
         }
 
     @Test
@@ -128,8 +164,8 @@ class StartMatchTimerUseCaseTest {
             // When
             startMatchTimerUseCase.invoke(matchId, currentTime)
 
-            // Then
-            coVerify(exactly = 0) { matchRepository.updateMatch(any()) }
+            // Then — P2b: guard runs before createOperation so no orphaned operation is left
+            coVerify(exactly = 0) { matchOperationRepository.createOperation(any()) }
             coVerify(exactly = 0) { playerTimeRepository.startTimersBatchWithOperationId(any(), any(), any(), any()) }
         }
 
@@ -150,4 +186,130 @@ class StartMatchTimerUseCaseTest {
             ),
         )
     }
+
+    // -----------------------------------------------------------------------------------------
+    // Regression test — #416: error handling
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * #416 — Verifies that when the atomic write fails during match start, the operation is marked
+     * FAILED and lastCompletedOperationId is NOT advanced.
+     */
+    @Test
+    fun `#416 when commitOperation throws during start, operation is marked FAILED and lastCompletedOperationId is not advanced`() =
+        runTest {
+            // Given
+            val matchId = "1"
+            val currentTime = 1000L
+            val operationId = "op1"
+            val match = createScheduledMatch(matchId, startingLineupIds = listOf("player1"))
+            coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
+
+            // The atomic write fails
+            coEvery { matchOperationRepository.commitOperation(any()) } throws RuntimeException("Firestore write failed")
+
+            // When — exception is expected to propagate
+            var caughtException: Throwable? = null
+            try {
+                startMatchTimerUseCase.invoke(matchId, currentTime)
+            } catch (e: RuntimeException) {
+                caughtException = e
+            }
+
+            // Then — operation is marked FAILED; lastCompletedOperationId is NOT advanced via
+            // any separate repository call (it only moves inside the atomic batch, which failed).
+            coVerify(exactly = 1) {
+                matchOperationRepository.updateOperation(
+                    match { it.id == operationId && it.status == MatchOperationStatus.FAILED },
+                )
+            }
+            assertTrue("exception must propagate to caller", caughtException != null)
+        }
+
+    // -----------------------------------------------------------------------------------------
+    // P1 — atomicity: if commitOperation throws, no match state is persisted
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * P1 (atomicity) — when the batch commit fails during match start, the match state
+     * (status and periods) must NOT be persisted independently. Because [updateMatchState] is no
+     * longer called before the commit, any failure in [commitOperation] leaves the match
+     * document untouched.
+     */
+    /**
+     * The use case no longer holds a MatchRepository, so it cannot write match state on its
+     * own: that guarantee is structural and needs no test. What this does fix is the spec's
+     * decision against automatic retries, which would duplicate a half-applied operation.
+     */
+    @Test
+    fun `a failed commit during start is not retried automatically`() =
+        runTest {
+            // Given
+            val matchId = "1"
+            val currentTime = 1000L
+            val match = createScheduledMatch(matchId, startingLineupIds = listOf("player1"))
+            coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
+            coEvery { matchOperationRepository.commitOperation(any()) } throws RuntimeException("batch failed")
+
+            // When
+            try {
+                startMatchTimerUseCase.invoke(matchId, currentTime)
+            } catch (_: RuntimeException) {
+            }
+
+            // Then — only commitOperation was attempted; it failed so no state is persisted
+            coVerify(exactly = 1) { matchOperationRepository.commitOperation(any()) }
+        }
+
+    // -----------------------------------------------------------------------------------------
+    // P2a — double-failure: updateOperation itself throws after commitOperation throws
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    fun `P2a when both commitOperation and updateOperation throw, original exception propagates`() =
+        runTest {
+            // Given
+            val matchId = "1"
+            val currentTime = 1000L
+            val match = createScheduledMatch(matchId, startingLineupIds = listOf("player1"))
+            coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
+            coEvery { matchOperationRepository.commitOperation(any()) } throws RuntimeException("commit failed")
+            coEvery { matchOperationRepository.updateOperation(any()) } throws RuntimeException("update failed")
+
+            // When — only the original exception propagates, secondary is suppressed
+            var caughtException: Throwable? = null
+            try {
+                startMatchTimerUseCase.invoke(matchId, currentTime)
+            } catch (e: RuntimeException) {
+                caughtException = e
+            }
+
+            // Then
+            assertNotNull("original exception must propagate", caughtException)
+            assertTrue("original exception message", caughtException!!.message == "commit failed")
+        }
+
+    // -----------------------------------------------------------------------------------------
+    // P1 — createdAt: operation is stamped with the caller's currentTimeMillis
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    fun `P1 operation createdAt equals currentTimeMillis passed to invoke`() =
+        runTest {
+            // Given
+            val matchId = "1"
+            val currentTime = 42000L
+            val match = createScheduledMatch(matchId)
+            coEvery { getMatchByIdUseCase(matchId) } returns flowOf(match)
+
+            // When
+            startMatchTimerUseCase.invoke(matchId, currentTime)
+
+            // Then — the MatchOperation created has createdAt == currentTime
+            coVerify {
+                matchOperationRepository.createOperation(
+                    match { it.createdAt == currentTime },
+                )
+            }
+        }
 }

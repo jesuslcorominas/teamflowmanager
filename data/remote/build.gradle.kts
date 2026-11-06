@@ -70,6 +70,8 @@ kotlin {
                 implementation(libs.mockk)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.turbine)
+                // MockEngine for the Ktor-based AccountDeletionDataSourceImpl (commonMain).
+                implementation(libs.ktor.client.mock)
             }
         }
     }

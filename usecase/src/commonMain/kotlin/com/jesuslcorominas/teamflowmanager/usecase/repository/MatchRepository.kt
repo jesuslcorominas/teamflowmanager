@@ -1,6 +1,8 @@
 package com.jesuslcorominas.teamflowmanager.usecase.repository
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import kotlinx.coroutines.flow.Flow
 
 interface MatchRepository {
@@ -50,10 +52,51 @@ interface MatchRepository {
     suspend fun unarchiveMatch(matchId: String)
 
     /**
-     * Updates the match with a specific operation ID to track atomic operations
+     * Updates the match with a specific operation ID to track atomic operations.
+     *
+     * @deprecated Use [updateLastCompletedOperationId] instead. That method does a partial field
+     * update and avoids overwriting concurrent writes on other fields (#417).
      */
+    @Deprecated(
+        message = "Use updateLastCompletedOperationId for partial field update to avoid lost updates (#417).",
+        replaceWith = ReplaceWith("updateLastCompletedOperationId(match.id, operationId)"),
+    )
     suspend fun updateMatchWithOperationId(
         match: Match,
         operationId: String,
+    )
+
+    /**
+     * Writes only the [Match.lastCompletedOperationId] field, leaving all other fields untouched.
+     *
+     * This is a targeted partial-field update — not a full document replace — so it cannot
+     * overwrite concurrent writes on other fields (e.g. a goal registered from another device at
+     * the same time). Callers must prefer this over [updateMatch] whenever the only intent is to
+     * advance the completed operation pointer (#417).
+     *
+     * @param matchId     The ID of the match to update.
+     * @param operationId The operation ID to write into [Match.lastCompletedOperationId].
+     */
+    suspend fun updateLastCompletedOperationId(
+        matchId: String,
+        operationId: String,
+    )
+
+    /**
+     * Writes only [Match.status], [Match.periods] and optionally [Match.pauseCount], leaving all
+     * other fields (including [Match.lastCompletedOperationId]) untouched.
+     *
+     * Callers must prefer this over [updateMatch] whenever the intent is to advance match state
+     * (start, pause, resume, finish) without overwriting concurrent writes on other fields such
+     * as a goal registered from another device at the same time (#417).
+     *
+     * [pauseCount] is optional — only the pause operation changes it. Pass `null` to leave the
+     * field untouched in the backing store.
+     */
+    suspend fun updateMatchState(
+        matchId: String,
+        status: MatchStatus,
+        periods: List<MatchPeriod>,
+        pauseCount: Int?,
     )
 }

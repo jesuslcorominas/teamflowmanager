@@ -7,7 +7,9 @@ import com.jesuslcorominas.teamflowmanager.data.core.datasource.MatchDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.MatchFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toPeriodUpdateMap
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
+import com.jesuslcorominas.teamflowmanager.domain.model.MatchPeriod
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchStatus
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -264,5 +266,47 @@ class MatchFirestoreDataSourceImpl(
 
     override suspend fun clearLocalData() {
         // No-op for remote data source
+    }
+
+    override suspend fun updateLastCompletedOperationId(
+        matchId: String,
+        operationId: String,
+    ) {
+        try {
+            firestore.collection(MATCHES_COLLECTION)
+                .document(matchId)
+                .update("lastCompletedOperationId", operationId)
+                .await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    override suspend fun updateMatchState(
+        matchId: String,
+        status: MatchStatus,
+        periods: List<MatchPeriod>,
+        pauseCount: Int?,
+    ) {
+        try {
+            val fields =
+                mutableMapOf<String, Any>(
+                    "status" to status.name,
+                    "periods" to periods.map { it.toPeriodUpdateMap() },
+                )
+            if (pauseCount != null) {
+                fields["pauseCount"] = pauseCount
+            }
+            firestore.collection(MATCHES_COLLECTION)
+                .document(matchId)
+                .update(fields)
+                .await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw e
+        }
     }
 }

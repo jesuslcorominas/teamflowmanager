@@ -154,44 +154,7 @@ internal class PlayerTimeRepositoryImpl(
         operationId: String,
     ) {
         if (playerIds.isEmpty()) return
-
-        val allCurrentTimes = playerTimeDataSource.getPlayerTimesByMatch(matchId).first()
-        val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
-
-        val playerTimesToUpsert =
-            playerIds.map { playerId ->
-                val currentPlayerTime = currentTimesMap[playerId]
-                currentPlayerTime?.copy(
-                    matchId = matchId,
-                    // If the player was already running, accumulate the delta before resetting
-                    // lastStartTimeMillis. Without this, re-stamping the timer for "other playing
-                    // players" during a substitution would lose all time accumulated since the
-                    // last start.
-                    elapsedTimeMillis =
-                        run {
-                            val startTime = currentPlayerTime.lastStartTimeMillis
-                            if (currentPlayerTime.isRunning && startTime != null) {
-                                currentPlayerTime.elapsedTimeMillis + (currentTimeMillis - startTime)
-                            } else {
-                                currentPlayerTime.elapsedTimeMillis
-                            }
-                        },
-                    isRunning = true,
-                    lastStartTimeMillis = currentTimeMillis,
-                    status = PlayerTimeStatus.PLAYING,
-                    lastOperationId = operationId,
-                )
-                    ?: PlayerTime(
-                        matchId = matchId,
-                        playerId = playerId,
-                        elapsedTimeMillis = 0L,
-                        isRunning = true,
-                        lastStartTimeMillis = currentTimeMillis,
-                        status = PlayerTimeStatus.PLAYING,
-                        lastOperationId = operationId,
-                    )
-            }
-
+        val playerTimesToUpsert = prepareStartTimersBatch(matchId, playerIds, currentTimeMillis, operationId)
         playerTimeDataSource.batchUpsertPlayerTimes(playerTimesToUpsert)
     }
 
@@ -202,29 +165,7 @@ internal class PlayerTimeRepositoryImpl(
         operationId: String,
     ) {
         if (playerIds.isEmpty()) return
-
-        val allCurrentTimes = playerTimeDataSource.getPlayerTimesByMatch(matchId).first()
-        val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
-
-        // Only pause player timers that are currently running - players on the bench don't need to be paused
-        val playerTimesToUpsert =
-            playerIds.mapNotNull { playerId ->
-                val currentPlayerTime = currentTimesMap[playerId]
-                if (currentPlayerTime != null && currentPlayerTime.isRunning) {
-                    val lastStartTime = currentPlayerTime.lastStartTimeMillis ?: currentTimeMillis
-                    val additionalTime = currentTimeMillis - lastStartTime
-                    currentPlayerTime.copy(
-                        elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
-                        isRunning = false,
-                        lastStartTimeMillis = lastStartTime,
-                        status = PlayerTimeStatus.PAUSED,
-                        lastOperationId = operationId,
-                    )
-                } else {
-                    null
-                }
-            }
-
+        val playerTimesToUpsert = preparePauseTimersBatch(matchId, playerIds, currentTimeMillis, operationId)
         if (playerTimesToUpsert.isNotEmpty()) {
             playerTimeDataSource.batchUpsertPlayerTimes(playerTimesToUpsert)
         }
@@ -237,31 +178,114 @@ internal class PlayerTimeRepositoryImpl(
         operationId: String,
     ) {
         if (playerIds.isEmpty()) return
+        val playerTimesToUpsert = prepareSubstituteOutPlayersBatch(matchId, playerIds, currentTimeMillis, operationId)
+        if (playerTimesToUpsert.isNotEmpty()) {
+            playerTimeDataSource.batchUpsertPlayerTimes(playerTimesToUpsert)
+        }
+    }
+
+    override suspend fun prepareStartTimersBatch(
+        matchId: String,
+        playerIds: List<String>,
+        currentTimeMillis: Long,
+        operationId: String,
+    ): List<PlayerTime> {
+        if (playerIds.isEmpty()) return emptyList()
+
+        val allCurrentTimes = playerTimeDataSource.getPlayerTimesByMatch(matchId).first()
+        val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
+
+        return playerIds.map { playerId ->
+            val currentPlayerTime = currentTimesMap[playerId]
+            currentPlayerTime?.copy(
+                matchId = matchId,
+                // If the player was already running, accumulate the delta before resetting
+                // lastStartTimeMillis. Without this, re-stamping the timer for "other playing
+                // players" during a substitution would lose all time accumulated since the
+                // last start.
+                elapsedTimeMillis =
+                    run {
+                        val startTime = currentPlayerTime.lastStartTimeMillis
+                        if (currentPlayerTime.isRunning && startTime != null) {
+                            currentPlayerTime.elapsedTimeMillis + (currentTimeMillis - startTime)
+                        } else {
+                            currentPlayerTime.elapsedTimeMillis
+                        }
+                    },
+                isRunning = true,
+                lastStartTimeMillis = currentTimeMillis,
+                status = PlayerTimeStatus.PLAYING,
+                lastOperationId = operationId,
+            )
+                ?: PlayerTime(
+                    matchId = matchId,
+                    playerId = playerId,
+                    elapsedTimeMillis = 0L,
+                    isRunning = true,
+                    lastStartTimeMillis = currentTimeMillis,
+                    status = PlayerTimeStatus.PLAYING,
+                    lastOperationId = operationId,
+                )
+        }
+    }
+
+    override suspend fun preparePauseTimersBatch(
+        matchId: String,
+        playerIds: List<String>,
+        currentTimeMillis: Long,
+        operationId: String,
+    ): List<PlayerTime> {
+        if (playerIds.isEmpty()) return emptyList()
+
+        val allCurrentTimes = playerTimeDataSource.getPlayerTimesByMatch(matchId).first()
+        val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
+
+        // Only pause player timers that are currently running - players on the bench don't need to be paused
+        return playerIds.mapNotNull { playerId ->
+            val currentPlayerTime = currentTimesMap[playerId]
+            if (currentPlayerTime != null && currentPlayerTime.isRunning) {
+                val lastStartTime = currentPlayerTime.lastStartTimeMillis ?: currentTimeMillis
+                val additionalTime = currentTimeMillis - lastStartTime
+                currentPlayerTime.copy(
+                    elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
+                    isRunning = false,
+                    lastStartTimeMillis = lastStartTime,
+                    status = PlayerTimeStatus.PAUSED,
+                    lastOperationId = operationId,
+                )
+            } else {
+                null
+            }
+        }
+    }
+
+    override suspend fun prepareSubstituteOutPlayersBatch(
+        matchId: String,
+        playerIds: List<String>,
+        currentTimeMillis: Long,
+        operationId: String,
+    ): List<PlayerTime> {
+        if (playerIds.isEmpty()) return emptyList()
 
         val allCurrentTimes = playerTimeDataSource.getPlayerTimesByMatch(matchId).first()
         val currentTimesMap = allCurrentTimes.associateBy { it.playerId }
 
         // Mark substituted-out players as ON_BENCH so they won't restart when match resumes
-        val playerTimesToUpsert =
-            playerIds.mapNotNull { playerId ->
-                val currentPlayerTime = currentTimesMap[playerId]
-                if (currentPlayerTime != null && currentPlayerTime.isRunning) {
-                    val lastStartTime = currentPlayerTime.lastStartTimeMillis ?: currentTimeMillis
-                    val additionalTime = currentTimeMillis - lastStartTime
-                    currentPlayerTime.copy(
-                        elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
-                        isRunning = false,
-                        lastStartTimeMillis = null,
-                        status = PlayerTimeStatus.ON_BENCH,
-                        lastOperationId = operationId,
-                    )
-                } else {
-                    null
-                }
+        return playerIds.mapNotNull { playerId ->
+            val currentPlayerTime = currentTimesMap[playerId]
+            if (currentPlayerTime != null && currentPlayerTime.isRunning) {
+                val lastStartTime = currentPlayerTime.lastStartTimeMillis ?: currentTimeMillis
+                val additionalTime = currentTimeMillis - lastStartTime
+                currentPlayerTime.copy(
+                    elapsedTimeMillis = currentPlayerTime.elapsedTimeMillis + additionalTime,
+                    isRunning = false,
+                    lastStartTimeMillis = null,
+                    status = PlayerTimeStatus.ON_BENCH,
+                    lastOperationId = operationId,
+                )
+            } else {
+                null
             }
-
-        if (playerTimesToUpsert.isNotEmpty()) {
-            playerTimeDataSource.batchUpsertPlayerTimes(playerTimesToUpsert)
         }
     }
 }

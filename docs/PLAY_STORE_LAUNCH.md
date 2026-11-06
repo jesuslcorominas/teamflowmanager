@@ -160,7 +160,7 @@ TeamFlow Manager no incluye publicidad ni compras dentro de la aplicación, y no
 vende tus datos a terceros.
 ```
 
-> La landing page de `teamflowmanager.app` describía la app como de voleibol.
+> La landing page de `teamflow-manager-897a3.web.app` describía la app como de voleibol.
 > Era un texto heredado: el dominio está en `TeamType` (FOOTBALL_5, FOOTBALL_7,
 > FOOTBALL_8, FOOTBALL_11) y el periodo por defecto es de 2 × 25 min o
 > 4 × 12:30, propio del fútbol base. Corregido junto con esta guía.
@@ -192,15 +192,23 @@ traducidas antes de ofrecerla.
 
 | Campo de Play Console | Valor |
 |---|---|
-| Política de privacidad | `https://teamflowmanager.app/privacy.html` |
-| Términos de uso | `https://teamflowmanager.app/terms.html` |
-| Borrado de cuenta (URL) | `https://teamflowmanager.app/delete-account.html` |
-| Email de contacto | `privacidad@teamflowmanager.app` |
+| Política de privacidad | `https://teamflow-manager-897a3.web.app/privacy.html` |
+| Términos de uso | `https://teamflow-manager-897a3.web.app/terms.html` |
+| Borrado de cuenta (URL) | `https://teamflow-manager-897a3.web.app/delete-account.html` |
+| Email de contacto | `jesuslcorominas@gmail.com` |
 
-> Las tres páginas se sirven desde Firebase Hosting y requieren
-> `firebase deploy --only hosting,functions` antes de darlas de alta en la ficha:
-> Play valida que la URL responda. Verificar también que el buzón
-> `privacidad@teamflowmanager.app` existe y se lee.
+> Las tres páginas se sirven desde Firebase Hosting en el proyecto de producción
+> `teamflow-manager-897a3`, y requieren `firebase deploy --only hosting
+> --project teamflow-manager-897a3` antes de darlas de alta en la ficha: Play
+> valida que la URL responda.
+>
+> El correo es el que ya figura en la ficha de Play. Antes se usaba
+> `privacidad@teamflowmanager.app`, que no podía existir porque ese dominio no
+> está registrado.
+>
+> La app no tiene dominio propio. Si algún día se registra uno, hay que
+> cambiarlo aquí, en las páginas de `firebase-functions/public/`, en el
+> `AndroidManifest.xml` y en `createShortLink`.
 
 ---
 
@@ -239,6 +247,6 @@ que no ha llegado a Play.
 2. Desplegar hosting y functions para que las URLs legales respondan.
 3. Rellenar Data Safety, acceso a la app, público objetivo y clasificación.
 4. Preparar gráficos y capturas, y subir la ficha.
-5. Lanzar una `release/*` con `/publish`. Al mergear su PR a `main`, el job
+5. Lanzar una `release/*` con `/release-app`. Al mergear su PR a `main`, el job
    `promote` publica en producción al 10 % de los usuarios (sección 7).
 6. Vigilar Crashlytics un par de días y escalar el rollout desde Play Console.

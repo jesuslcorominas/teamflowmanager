@@ -51,7 +51,7 @@ interface PlayerTimeRepository {
     )
 
     /**
-     * Start timers for multiple players with an operation ID for atomic operations
+     * Start timers for multiple players with an operation ID for atomic operations.
      * @param matchId The ID of the current match — used to scope records to this match
      * @param playerIds List of player IDs to start timers for
      * @param currentTimeMillis The current time in milliseconds
@@ -65,7 +65,7 @@ interface PlayerTimeRepository {
     )
 
     /**
-     * Pause timers for multiple players with an operation ID for atomic operations
+     * Pause timers for multiple players with an operation ID for atomic operations.
      * @param matchId The ID of the current match — used to scope records to this match
      * @param playerIds List of player IDs to pause timers for
      * @param currentTimeMillis The current time in milliseconds
@@ -92,6 +92,57 @@ interface PlayerTimeRepository {
         currentTimeMillis: Long,
         operationId: String,
     )
+
+    /**
+     * Computes the [PlayerTime] records that [startTimersBatchWithOperationId] would write,
+     * but returns them without persisting anything. Use this to build a [MatchOperationCommit]
+     * before the atomic write.
+     * @param matchId The ID of the current match
+     * @param playerIds List of player IDs to start timers for
+     * @param currentTimeMillis The current time in milliseconds
+     * @param operationId The operation ID that will be stamped on each record
+     * @return The list of computed [PlayerTime] records, ready to include in the commit
+     */
+    suspend fun prepareStartTimersBatch(
+        matchId: String,
+        playerIds: List<String>,
+        currentTimeMillis: Long,
+        operationId: String,
+    ): List<PlayerTime>
+
+    /**
+     * Computes the [PlayerTime] records that [pauseTimersBatchWithOperationId] would write,
+     * but returns them without persisting anything. Use this to build a [MatchOperationCommit]
+     * before the atomic write.
+     * @param matchId The ID of the current match
+     * @param playerIds List of player IDs to pause timers for
+     * @param currentTimeMillis The current time in milliseconds
+     * @param operationId The operation ID that will be stamped on each record
+     * @return The list of computed [PlayerTime] records, ready to include in the commit
+     */
+    suspend fun preparePauseTimersBatch(
+        matchId: String,
+        playerIds: List<String>,
+        currentTimeMillis: Long,
+        operationId: String,
+    ): List<PlayerTime>
+
+    /**
+     * Computes the [PlayerTime] records that [substituteOutPlayersBatchWithOperationId] would
+     * write, but returns them without persisting anything. Use this to build a
+     * [MatchOperationCommit] before the atomic write.
+     * @param matchId The ID of the current match
+     * @param playerIds List of player IDs being substituted out
+     * @param currentTimeMillis The current time in milliseconds
+     * @param operationId The operation ID that will be stamped on each record
+     * @return The list of computed [PlayerTime] records, ready to include in the commit
+     */
+    suspend fun prepareSubstituteOutPlayersBatch(
+        matchId: String,
+        playerIds: List<String>,
+        currentTimeMillis: Long,
+        operationId: String,
+    ): List<PlayerTime>
 
     suspend fun resetAllPlayerTimes()
 }

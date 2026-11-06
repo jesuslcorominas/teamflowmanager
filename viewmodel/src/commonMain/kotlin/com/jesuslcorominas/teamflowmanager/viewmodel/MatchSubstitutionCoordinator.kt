@@ -17,12 +17,14 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.RemovePendingSubstitut
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
@@ -328,10 +330,32 @@ internal class MatchSubstitutionCoordinator(
         } catch (e: Exception) {
             // Reported, then swallowed. Not rethrown like performSubstitution does: that would
             // take down the app over a failed batch, and here nothing has been lost — no card was
-            // unscheduled, so the coach can simply press again. Going unreported was the actual
-            // problem; this path was the only substitution route invisible to diagnostics.
+            // unscheduled, so the coach can simply press again. That last claim holds only because
+            // the removes above sit after the use case call, and MatchSubstitutionCoordinatorTest
+            // has a case named for exactly that, so reordering them turns a comment that would
+            // quietly become a lie into a red test.
             crashReporter.recordException(e)
             crashReporter.log("Error running scheduled substitutions (trigger=$trigger): ${e.message}")
+
+            // Not rethrowing is not the same as saying nothing. Without this the coach saw the
+            // spinner come and go, the cards sit exactly where they were, and no explanation —
+            // from the outside, indistinguishable from the button being broken.
+            //
+            // Not published if this coroutine was itself cancelled. CancellationException is an
+            // Exception and lands here too, and the result now outlives the call, so a batch
+            // abandoned because the screen went away would leave a failure waiting to greet
+            // whoever opens the match next. Asking the context rather than the exception's type
+            // is deliberate: a withTimeout inside the use case also throws a
+            // CancellationException, and that one is a genuine failure worth reporting.
+            if (currentCoroutineContext().isActive) {
+                _lastSubstitutionResult.value =
+                    SubstitutionExecutionResult(
+                        trigger = trigger,
+                        applied = emptyList(),
+                        discarded = emptyList(),
+                        failed = true,
+                    )
+            }
         } finally {
             _isSubstitutionInProgress.value = false
         }

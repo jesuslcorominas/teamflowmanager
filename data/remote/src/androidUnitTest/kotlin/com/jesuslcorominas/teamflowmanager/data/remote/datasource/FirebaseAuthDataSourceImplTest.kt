@@ -6,6 +6,7 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GetTokenResult
 import com.google.firebase.auth.GoogleAuthProvider
 import io.mockk.coEvery
 import io.mockk.every
@@ -165,5 +166,72 @@ class FirebaseAuthDataSourceImplTest {
 
         // Should not throw - it's a no-op
         dataSource.saveUserToFirestore(user)
+    }
+
+    @Test
+    fun `givenAuthenticatedUser_whenGetIdToken_thenReturnsRefreshedToken`() = runTest {
+        // Given
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        val mockTask = mockk<Task<GetTokenResult>>()
+        val mockTokenResult = mockk<GetTokenResult>()
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.getIdToken(true) } returns mockTask
+        coEvery { mockTask.await() } returns mockTokenResult
+        every { mockTokenResult.token } returns "fresh-id-token"
+
+        // When
+        val token = dataSource.getIdToken()
+
+        // Then
+        assertEquals("fresh-id-token", token)
+        verify(exactly = 1) { mockUser.getIdToken(true) }
+    }
+
+    @Test
+    fun `givenNoAuthenticatedUser_whenGetIdToken_thenReturnsNull`() = runTest {
+        // Given
+        every { mockAuth.currentUser } returns null
+
+        // When
+        val token = dataSource.getIdToken()
+
+        // Then
+        assertNull(token)
+        verify { mockAuth.currentUser }
+    }
+
+    @Test
+    fun `givenTokenResultWithoutToken_whenGetIdToken_thenReturnsNull`() = runTest {
+        // Given
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        val mockTask = mockk<Task<GetTokenResult>>()
+        val mockTokenResult = mockk<GetTokenResult>()
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.getIdToken(true) } returns mockTask
+        coEvery { mockTask.await() } returns mockTokenResult
+        every { mockTokenResult.token } returns null
+
+        // When
+        val token = dataSource.getIdToken()
+
+        // Then
+        assertNull(token)
+    }
+
+    @Test
+    fun `givenRefreshFails_whenGetIdToken_thenReturnsNull`() = runTest {
+        // Given
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        val mockTask = mockk<Task<GetTokenResult>>()
+        every { mockAuth.currentUser } returns mockUser
+        every { mockUser.getIdToken(true) } returns mockTask
+        coEvery { mockTask.await() } throws RuntimeException("network error")
+
+        // When
+        val token = dataSource.getIdToken()
+
+        // Then
+        assertNull(token)
+        verify(exactly = 1) { mockUser.getIdToken(true) }
     }
 }
