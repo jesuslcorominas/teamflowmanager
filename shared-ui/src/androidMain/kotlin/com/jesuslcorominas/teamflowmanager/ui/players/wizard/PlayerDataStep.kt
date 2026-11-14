@@ -64,7 +64,6 @@ import teamflowmanager.shared_ui.generated.resources.first_name_required
 import teamflowmanager.shared_ui.generated.resources.gallery
 import teamflowmanager.shared_ui.generated.resources.is_captain
 import teamflowmanager.shared_ui.generated.resources.last_name
-import teamflowmanager.shared_ui.generated.resources.last_name_required
 import teamflowmanager.shared_ui.generated.resources.next
 import teamflowmanager.shared_ui.generated.resources.number
 import teamflowmanager.shared_ui.generated.resources.number_required
@@ -98,7 +97,6 @@ actual fun PlayerDataStep(
     var showImageOptions by remember { mutableStateOf(false) }
 
     var firstNameError by remember { mutableStateOf<String?>(null) }
-    var lastNameError by remember { mutableStateOf<String?>(null) }
     var numberError by remember { mutableStateOf<String?>(null) }
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -120,7 +118,6 @@ actual fun PlayerDataStep(
         }
 
     val firstNameRequired = stringResource(Res.string.first_name_required)
-    val lastNameRequired = stringResource(Res.string.last_name_required)
     val numberRequired = stringResource(Res.string.number_required)
 
     val validateAndNext = {
@@ -129,10 +126,9 @@ actual fun PlayerDataStep(
         number = number.trim()
 
         firstNameError = if (firstName.isBlank()) firstNameRequired else null
-        lastNameError = if (lastName.isBlank()) lastNameRequired else null
         numberError = if (number.isBlank()) numberRequired else null
 
-        if (firstNameError == null && lastNameError == null && numberError == null) {
+        if (firstNameError == null && numberError == null) {
             onDataChanged(firstName, lastName, number, isCaptain, imageUri)
             onNext()
         }
@@ -160,7 +156,8 @@ actual fun PlayerDataStep(
                         .let { if (isImageUploadEnabled) it.clickable { showImageOptions = true } else it },
                 contentAlignment = Alignment.Center,
             ) {
-                val contentDescription = "${stringResource(Res.string.player_image)} $firstName $lastName"
+                val playerName = listOf(firstName, lastName).filter { it.isNotBlank() }.joinToString(" ")
+                val contentDescription = "${stringResource(Res.string.player_image)} $playerName"
 
                 imageUri?.let { fullUrl ->
                     var downloadUrl by remember { mutableStateOf<String?>(null) }
@@ -225,16 +222,8 @@ actual fun PlayerDataStep(
             value = lastName,
             onValueChange = {
                 lastName = it
-                lastNameError = null
             },
             label = { Text(stringResource(Res.string.last_name)) },
-            isError = lastNameError != null,
-            supportingText =
-                if (lastNameError != null) {
-                    { Text(lastNameError!!) }
-                } else {
-                    null
-                },
             keyboardOptions =
                 KeyboardOptions(
                     imeAction = ImeAction.Next,

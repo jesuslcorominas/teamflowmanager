@@ -96,8 +96,7 @@
     <string name="delete_player_message">Are you sure you want to delete %1$s from the roster?</string>
     <string name="first_name">First Name</string>
     <string name="first_name_required">First name is required</string>
-    <string name="last_name">Last Name</string>
-    <string name="last_name_required">Last name is required</string>
+    <string name="last_name">Last Name (optional)</string>
     <string name="number">Number</string>
     <string name="number_required">Number is required</string>
     <string name="is_captain">Team Captain</string>
