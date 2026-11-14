@@ -15,6 +15,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.AppBackHandler
 import com.jesuslcorominas.teamflowmanager.ui.components.IosBackButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.players.components.dialog.CaptainConfirmationDialog
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.CaptainConfirmationState
@@ -62,7 +63,14 @@ fun PlayerWizardScreen(
                 LaunchedEffect(Unit) { onNavigateBack() }
             }
             is PlayerWizardUiState.Ready -> {
-                Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            // The shell only applies the top inset; the bottom clearance
+                            // (system navigation bar, bottom bar, FAB) is exposed here.
+                            .padding(bottom = LocalContentBottomPadding.current),
+                ) {
                     when (currentStep) {
                         PlayerWizardStep.PLAYER_DATA -> {
                             PlayerDataStep(
