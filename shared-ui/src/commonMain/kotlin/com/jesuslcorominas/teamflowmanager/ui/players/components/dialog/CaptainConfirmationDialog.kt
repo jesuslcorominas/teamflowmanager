@@ -32,10 +32,8 @@ fun CaptainConfirmationDialog(
         message =
             stringResource(
                 Res.string.captain_confirm_message,
-                state.currentCaptain.firstName,
-                state.currentCaptain.lastName,
-                state.newCaptain.firstName,
-                state.newCaptain.lastName,
+                state.currentCaptain.displayName,
+                state.newCaptain.displayName,
             ),
         confirmText = stringResource(Res.string.yes),
         dismissText = stringResource(Res.string.cancel),
@@ -57,10 +55,8 @@ fun CaptainConfirmationDialog(
             Text(
                 stringResource(
                     Res.string.captain_replace_with_matches_message,
-                    state.currentCaptain.firstName,
-                    state.currentCaptain.lastName,
-                    state.newCaptain.firstName,
-                    state.newCaptain.lastName,
+                    state.currentCaptain.displayName,
+                    state.newCaptain.displayName,
                     state.matchCount,
                 ),
             )
@@ -89,8 +85,7 @@ fun CaptainConfirmationDialog(
         message =
             stringResource(
                 Res.string.captain_remove_message,
-                state.player.firstName,
-                state.player.lastName,
+                state.player.displayName,
             ),
         confirmText = stringResource(Res.string.yes),
         dismissText = stringResource(Res.string.cancel),
@@ -112,8 +107,7 @@ fun CaptainConfirmationDialog(
             Text(
                 stringResource(
                     Res.string.captain_remove_with_matches_message,
-                    state.player.firstName,
-                    state.player.lastName,
+                    state.player.displayName,
                     state.matchCount,
                 ),
             )

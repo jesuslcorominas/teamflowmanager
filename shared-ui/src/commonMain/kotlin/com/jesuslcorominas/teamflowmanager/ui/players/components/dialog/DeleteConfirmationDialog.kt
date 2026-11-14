@@ -22,7 +22,7 @@ fun DeleteConfirmationDialog(
         confirmText = stringResource(Res.string.delete),
         dismissText = stringResource(Res.string.cancel),
         title = stringResource(Res.string.delete_player_title),
-        message = stringResource(Res.string.delete_player_message, player.firstName, player.lastName),
+        message = stringResource(Res.string.delete_player_message, player.displayName),
         isDestructive = true,
     )
 }
