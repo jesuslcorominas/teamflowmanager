@@ -56,7 +56,7 @@ fun TeamDetailContent(
         if (captain != null) {
             InfoRow(
                 label = stringResource(Res.string.team_captain),
-                value = "${captain.firstName} ${captain.lastName} (#${captain.number})",
+                value = "${captain.displayName} (#${captain.number})",
             )
         }
     }

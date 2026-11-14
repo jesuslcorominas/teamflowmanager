@@ -113,7 +113,7 @@ class PdfExporterImpl(private val context: Context) : PdfExporter {
             yPosition += LINE_HEIGHT * 2
         } else {
             exportData.topScorers.take(10).forEachIndexed { index, scorer ->
-                val playerName = "${scorer.player.firstName} ${scorer.player.lastName}"
+                val playerName = scorer.player.displayName
                 val text =
                     context.getString(
                         com.jesuslcorominas.teamflowmanager.R.string.pdf_scorer_format,
@@ -399,7 +399,7 @@ class PdfExporterImpl(private val context: Context) : PdfExporter {
 
         val textY = yPosition + (TABLE_ROW_HEIGHT / 2) + (BODY_SIZE / 2)
 
-        val playerName = "${stat.player.firstName} ${stat.player.lastName}"
+        val playerName = stat.player.displayName
         canvas.drawText(playerName, tableLeft + 5, textY, textPaint)
 
         xPos = tableLeft + col1Width

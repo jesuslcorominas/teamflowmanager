@@ -46,7 +46,7 @@ fun SubstitutionCard(substitution: SubstitutionItem) {
             ) {
                 PlayerSubstitution(
                     modifier = Modifier.weight(1f),
-                    name = "${substitution.playerIn.firstName} ${substitution.playerIn.lastName}",
+                    name = substitution.playerIn.displayName,
                     number = substitution.playerIn.number,
                     playerIn = true,
                 )
@@ -60,7 +60,7 @@ fun SubstitutionCard(substitution: SubstitutionItem) {
 
                 PlayerSubstitution(
                     modifier = Modifier.weight(1f),
-                    name = "${substitution.playerOut.firstName} ${substitution.playerOut.lastName}",
+                    name = substitution.playerOut.displayName,
                     number = substitution.playerOut.number,
                     playerIn = false,
                 )

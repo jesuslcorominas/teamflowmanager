@@ -192,7 +192,7 @@ fun MatchCreationWizardScreen(
             message =
                 stringResource(
                     Res.string.make_default_captain_message,
-                    "${captainForDialog!!.firstName} ${captainForDialog!!.lastName}",
+                    captainForDialog!!.displayName,
                 ),
             confirmText = stringResource(Res.string.yes),
             dismissText = stringResource(Res.string.no),

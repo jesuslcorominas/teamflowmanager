@@ -93,7 +93,7 @@ private fun StartingLineupCard(event: TimelineEvent.StartingLineup) {
         Column(verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01)) {
             event.players.forEach { player ->
                 Text(
-                    text = "${player.number}. ${player.firstName} ${player.lastName}",
+                    text = "${player.number}. ${player.displayName}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -120,7 +120,7 @@ private fun GoalScoredCard(event: TimelineEvent.GoalScored) {
             if (!event.isOpponentGoal) {
                 event.scorer?.let {
                     Text(
-                        text = "${it.firstName} ${it.lastName}",
+                        text = it.displayName,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                     )
@@ -168,7 +168,7 @@ private fun SubstitutionEventCard(event: TimelineEvent.Substitution) {
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
-                    text = "${event.playerIn.firstName} ${event.playerIn.lastName}",
+                    text = event.playerIn.displayName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = SubstitutionGreen,
                 )
@@ -184,7 +184,7 @@ private fun SubstitutionEventCard(event: TimelineEvent.Substitution) {
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
-                    text = "${event.playerOut.firstName} ${event.playerOut.lastName}",
+                    text = event.playerOut.displayName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = SubstitutionRed,
                 )
