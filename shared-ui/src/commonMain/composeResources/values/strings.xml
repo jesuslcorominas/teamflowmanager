@@ -191,7 +191,7 @@
     <string name="number_of_periods">Number of Periods</string>
     <string name="two_halves">2 Halves</string>
     <string name="four_quarters">4 Quarters</string>
-    <string name="fixed_period_format">2 halves of %d min</string>
+    <string name="fixed_period_format">2 halves of %1$d min</string>
     <string name="search_match_placeholder">Search matches by opponent or place</string>
 
     <!-- Match Status -->
@@ -278,19 +278,19 @@
     <!-- Match Creation Wizard -->
     <string name="wizard_step_general_data">General Data</string>
     <string name="squad_callup_title">Select Squad Call-Up</string>
-    <string name="squad_callup_subtitle">Select players for this match (minimum %s)</string>
-    <string name="squad_callup_count">Selected: %s players</string>
+    <string name="squad_callup_subtitle">Select players for this match (minimum %1$s)</string>
+    <string name="squad_callup_count">Selected: %1$s players</string>
     <string name="squad_callup_select_all">Select All</string>
     <string name="squad_callup_no_goalkeeper_warning">No goalkeeper selected</string>
     <string name="squad_callup_no_goalkeeper_message">You haven\'t selected any goalkeeper for the squad. Do you want to continue anyway?</string>
     <string name="captain_selection_title">Select Captain</string>
     <string name="captain_selection_subtitle">Choose the captain for this match</string>
     <string name="make_default_captain_title">Make Default Captain?</string>
-    <string name="make_default_captain_message">%s has been captain for the last 2 matches. Would you like to make them the default captain? This will auto-select them for future matches.</string>
+    <string name="make_default_captain_message">%1$s has been captain for the last 2 matches. Would you like to make them the default captain? This will auto-select them for future matches.</string>
     <string name="starting_lineup_title">Select Initial Lineup</string>
-    <string name="starting_lineup_subtitle">Select exactly %s players to start</string>
-    <string name="starting_lineup_count">Selected: %s/%s players</string>
-    <string name="starting_lineup_max_error">You can only select up to %s players</string>
+    <string name="starting_lineup_subtitle">Select exactly %1$s players to start</string>
+    <string name="starting_lineup_count">Selected: %1$s/%2$s players</string>
+    <string name="starting_lineup_max_error">You can only select up to %1$s players</string>
     <string name="starting_lineup_no_goalkeeper_warning">No goalkeeper in starting lineup</string>
     <string name="starting_lineup_no_goalkeeper_message">You haven\'t selected a goalkeeper in the starting lineup. Do you want to continue anyway?</string>
 
@@ -321,7 +321,7 @@
 
     <!-- PDF Export -->
     <string name="pdf_team_stats_title">Team Statistics</string>
-    <string name="pdf_date_label">Date: %s</string>
+    <string name="pdf_date_label">Date: %1$s</string>
     <string name="pdf_player_stats_section">Player Statistics</string>
     <string name="pdf_no_player_data">No player data available</string>
     <string name="pdf_header_player">PLAYER</string>
