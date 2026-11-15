@@ -182,7 +182,7 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
             drawTableBorders(ctx, y, ROW_H, tableW)
         }
         val font = UIFont.systemFontOfSize(SMALL_SIZE)
-        val name = "${report.player.firstName} ${report.player.lastName}"
+        val name = report.player.displayName
         val values =
             listOf(
                 "${report.number}",
@@ -320,7 +320,7 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
                 if (event.isOpponentGoal) {
                     "Gol rival $score"
                 } else {
-                    val scorer = event.scorer?.let { "${it.firstName} ${it.lastName}" } ?: "Gol en propia"
+                    val scorer = event.scorer?.displayName ?: "Gol en propia"
                     "Gol: $scorer $score"
                 }
             }

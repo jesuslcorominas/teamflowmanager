@@ -135,13 +135,13 @@ class PlayerViewModel(
                 val isNewPlayer = player.id.isBlank()
 
                 if (isNewPlayer) {
-                    crashReporter.log("Creating new player: ${player.firstName} ${player.lastName}")
+                    crashReporter.log("Creating new player: ${player.displayName}")
                     addPlayerUseCase.invoke(player)
 
                     analyticsTracker.logEvent(
                         AnalyticsEvent.PLAYER_CREATED,
                         mapOf(
-                            AnalyticsParam.PLAYER_NAME to "${player.firstName} ${player.lastName}",
+                            AnalyticsParam.PLAYER_NAME to player.displayName,
                             AnalyticsParam.PLAYER_NUMBER to player.number.toString(),
                             AnalyticsParam.PLAYER_POSITION to player.positions.joinToString(),
                         ),

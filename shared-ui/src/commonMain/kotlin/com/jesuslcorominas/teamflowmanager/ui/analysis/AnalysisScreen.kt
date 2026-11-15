@@ -186,7 +186,7 @@ private fun PlayerTimeChart(
     ) {
         items(playerStats) { stat ->
             HorizontalBar(
-                label = "${stat.player.firstName} ${stat.player.lastName}",
+                label = stat.player.displayName,
                 valueLabel = label,
                 value = stat.totalTimeMinutes,
                 maxValue = maxValue,
@@ -210,7 +210,7 @@ private fun PlayerGoalChart(
     ) {
         items(playerStats) { stat ->
             HorizontalBar(
-                label = "${stat.player.firstName} ${stat.player.lastName}",
+                label = stat.player.displayName,
                 valueLabel = label,
                 value = stat.totalGoals.toDouble(),
                 maxValue = maxValue,
