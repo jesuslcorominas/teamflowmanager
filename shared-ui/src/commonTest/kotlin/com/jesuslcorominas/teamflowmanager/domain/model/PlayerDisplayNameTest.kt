@@ -23,7 +23,7 @@ class PlayerDisplayNameTest {
     }
 
     @Test
-    fun `omits the surname when it is empty, without a trailing space`() {
+    fun `omits the surname when it is empty without leaving a trailing space`() {
         assertEquals("Javi", player("Javi", "").displayName)
     }
 
