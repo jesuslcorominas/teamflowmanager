@@ -20,6 +20,7 @@ import com.jesuslcorominas.teamflowmanager.ui.components.AppBackHandler
 import com.jesuslcorominas.teamflowmanager.ui.components.IosBackButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardUiState
 import com.jesuslcorominas.teamflowmanager.viewmodel.MatchCreationWizardViewModel
@@ -71,7 +72,15 @@ fun MatchCreationWizardScreen(
             is MatchCreationWizardUiState.Loading -> Loading()
             is MatchCreationWizardUiState.Saving -> Loading()
             is MatchCreationWizardUiState.Ready -> {
-                Column(modifier = Modifier.fillMaxSize().padding(horizontal = TFMSpacing.spacing02)) {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = TFMSpacing.spacing02)
+                            // The shell only applies the top inset; the bottom clearance
+                            // (system navigation bar, bottom bar, FAB) is exposed here.
+                            .padding(bottom = LocalContentBottomPadding.current),
+                ) {
                     when (currentStep) {
                         WizardStep.GENERAL_DATA -> {
                             GeneralDataStep(
@@ -183,7 +192,7 @@ fun MatchCreationWizardScreen(
             message =
                 stringResource(
                     Res.string.make_default_captain_message,
-                    "${captainForDialog!!.firstName} ${captainForDialog!!.lastName}",
+                    captainForDialog!!.displayName,
                 ),
             confirmText = stringResource(Res.string.yes),
             dismissText = stringResource(Res.string.no),

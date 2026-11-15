@@ -93,23 +93,22 @@
     <string name="add_player_title">Añadir Jugador</string>
     <string name="edit_player_title">Editar Jugador</string>
     <string name="delete_player_title">Eliminar Jugador</string>
-    <string name="delete_player_message">¿Estás seguro de que quieres eliminar a %1$s %2$s de la plantilla?</string>
+    <string name="delete_player_message">¿Estás seguro de que quieres eliminar a %1$s de la plantilla?</string>
     <string name="first_name">Nombre</string>
     <string name="first_name_required">El nombre es obligatorio</string>
-    <string name="last_name">Apellido</string>
-    <string name="last_name_required">El apellido es obligatorio</string>
+    <string name="last_name">Apellido (opcional)</string>
     <string name="number">Dorsal</string>
     <string name="number_required">El dorsal es obligatorio</string>
     <string name="is_captain">Capitán del Equipo</string>
     <string name="team_captain">Capitán</string>
     <string name="captain_confirm_title">¿Cambiar Capitán del Equipo?</string>
-    <string name="captain_confirm_message">%1$s %2$s es actualmente el capitán del equipo. Si eliges a %3$s %4$s, ocupará su lugar. ¿Deseas continuar?</string>
-    <string name="captain_replace_with_matches_message">%1$s %2$s es actualmente el capitán del equipo. Si eliges a %3$s %4$s, ocupará su lugar. Hay %5$s partidos programados. ¿Quieres actualizar el capitán en esos partidos?</string>
+    <string name="captain_confirm_message">%1$s es actualmente el capitán del equipo. Si eliges a %2$s, ocupará su lugar. ¿Deseas continuar?</string>
+    <string name="captain_replace_with_matches_message">%1$s es actualmente el capitán del equipo. Si eliges a %2$s, ocupará su lugar. Hay %3$s partidos programados. ¿Quieres actualizar el capitán en esos partidos?</string>
     <string name="update_captain_in_matches">Actualizar capitán en partidos</string>
     <string name="keep_current_captain_in_matches">Mantener capitán actual en partidos</string>
     <string name="captain_remove_title">¿Quitar Capitán del Equipo?</string>
-    <string name="captain_remove_message">%1$s %2$s ya no será el capitán del equipo. Se seleccionará el capitán para cada partido. ¿Continuar?</string>
-    <string name="captain_remove_with_matches_message">%1$s %2$s ya no será el capitán del equipo. Hay %3$s partidos programados. ¿Qué quieres hacer?</string>
+    <string name="captain_remove_message">%1$s ya no será el capitán del equipo. Se seleccionará el capitán para cada partido. ¿Continuar?</string>
+    <string name="captain_remove_with_matches_message">%1$s ya no será el capitán del equipo. Hay %2$s partidos programados. ¿Qué quieres hacer?</string>
     <string name="keep_captain_for_matches">Mantener como capitán en partidos programados</string>
     <string name="remove_captain_from_matches">Eliminar de partidos programados</string>
 
@@ -191,7 +190,7 @@
     <string name="number_of_periods">Nº de Tiempos</string>
     <string name="two_halves">2 Partes</string>
     <string name="four_quarters">4 Cuartos</string>
-    <string name="fixed_period_format">2 partes de %d min</string>
+    <string name="fixed_period_format">2 partes de %1$d min</string>
     <string name="search_match_placeholder">Busca por oponente o ubicación</string>
 
     <!-- Match Status -->
@@ -278,19 +277,19 @@
     <!-- Match Creation Wizard -->
     <string name="wizard_step_general_data">Datos Generales</string>
     <string name="squad_callup_title">Seleccionar Convocatoria</string>
-    <string name="squad_callup_subtitle">Selecciona los jugadores para este partido (mínimo %s)</string>
-    <string name="squad_callup_count">Seleccionados: %s jugadores</string>
+    <string name="squad_callup_subtitle">Selecciona los jugadores para este partido (mínimo %1$s)</string>
+    <string name="squad_callup_count">Seleccionados: %1$s jugadores</string>
     <string name="squad_callup_select_all">Seleccionar Todos</string>
     <string name="squad_callup_no_goalkeeper_warning">No hay portero seleccionado</string>
     <string name="squad_callup_no_goalkeeper_message">No has seleccionado ningún portero en la convocatoria. ¿Deseas continuar de todos modos?</string>
     <string name="captain_selection_title">Seleccionar Capitán</string>
     <string name="captain_selection_subtitle">Elige el capitán para este partido</string>
     <string name="make_default_captain_title">¿Hacer Capitán por Defecto?</string>
-    <string name="make_default_captain_message">%s ha sido capitán en los últimos 2 partidos. ¿Te gustaría hacerlo capitán por defecto? Se seleccionará automáticamente en futuros partidos.</string>
+    <string name="make_default_captain_message">%1$s ha sido capitán en los últimos 2 partidos. ¿Te gustaría hacerlo capitán por defecto? Se seleccionará automáticamente en futuros partidos.</string>
     <string name="starting_lineup_title">Seleccionar Alineación Inicial</string>
-    <string name="starting_lineup_subtitle">Selecciona exactamente %s jugadores para comenzar</string>
-    <string name="starting_lineup_count">Seleccionados: %s/%s jugadores</string>
-    <string name="starting_lineup_max_error">Solo puedes seleccionar hasta %s jugadores</string>
+    <string name="starting_lineup_subtitle">Selecciona exactamente %1$s jugadores para comenzar</string>
+    <string name="starting_lineup_count">Seleccionados: %1$s/%2$s jugadores</string>
+    <string name="starting_lineup_max_error">Solo puedes seleccionar hasta %1$s jugadores</string>
     <string name="starting_lineup_no_goalkeeper_warning">No hay portero en la alineación inicial</string>
     <string name="starting_lineup_no_goalkeeper_message">No has seleccionado un portero en la alineación inicial. ¿Deseas continuar de todos modos?</string>
 
@@ -328,7 +327,7 @@
 
     <!-- PDF Export -->
     <string name="pdf_team_stats_title">Estadísticas del Equipo</string>
-    <string name="pdf_date_label">Fecha: %s</string>
+    <string name="pdf_date_label">Fecha: %1$s</string>
     <string name="pdf_player_stats_section">Estadísticas de Jugadores</string>
     <string name="pdf_no_player_data">No hay datos de jugadores disponibles</string>
     <string name="pdf_header_player">JUGADOR</string>

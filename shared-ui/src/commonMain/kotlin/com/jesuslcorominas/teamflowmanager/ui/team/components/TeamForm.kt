@@ -248,7 +248,7 @@ fun TeamForm(
                         players.map {
                             object : SelectableItem {
                                 override val id = it.id
-                                override val label = "${it.firstName} ${it.lastName}"
+                                override val label = it.displayName
                             }
                         }
 

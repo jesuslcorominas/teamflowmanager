@@ -295,7 +295,7 @@ class PlayerWizardViewModel(
                 val isNewPlayer = player.id.isEmpty()
 
                 crashReporter.log(
-                    "Saving player via wizard: ${player.firstName} ${player.lastName}, isNew: $isNewPlayer",
+                    "Saving player via wizard: ${player.displayName}, isNew: $isNewPlayer",
                 )
 
                 if (isNewPlayer) {
@@ -304,7 +304,7 @@ class PlayerWizardViewModel(
                     analyticsTracker.logEvent(
                         AnalyticsEvent.PLAYER_CREATED,
                         mapOf(
-                            AnalyticsParam.PLAYER_NAME to "${player.firstName} ${player.lastName}",
+                            AnalyticsParam.PLAYER_NAME to player.displayName,
                             AnalyticsParam.PLAYER_NUMBER to player.number.toString(),
                             AnalyticsParam.WIZARD_TYPE to "player_wizard",
                         ),

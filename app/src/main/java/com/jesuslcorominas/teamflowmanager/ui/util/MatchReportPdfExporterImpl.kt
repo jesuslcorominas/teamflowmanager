@@ -669,7 +669,7 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
                     "${context.getString(R.string.timeline_opponent_goal)} $scoreText"
                 } else {
                     val scorerName =
-                        event.scorer?.let { "${it.firstName} ${it.lastName}" }
+                        event.scorer?.displayName
                             ?: context.getString(R.string.own_goal_option)
                     "${context.getString(R.string.timeline_goal)}: $scorerName $scoreText"
                 }
@@ -858,7 +858,7 @@ class MatchReportPdfExporterImpl(private val context: Context) : MatchReportPdfE
         xPos += colNumber
 
         textPaint.textAlign = Paint.Align.LEFT
-        val playerName = "${playerReport.player.firstName} ${playerReport.player.lastName}"
+        val playerName = playerReport.player.displayName
         canvas.drawText(playerName, xPos + 5, singleLineTextY, textPaint)
         xPos += colName
 

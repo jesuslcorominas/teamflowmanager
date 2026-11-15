@@ -46,7 +46,6 @@ import teamflowmanager.shared_ui.generated.resources.first_name
 import teamflowmanager.shared_ui.generated.resources.first_name_required
 import teamflowmanager.shared_ui.generated.resources.is_captain
 import teamflowmanager.shared_ui.generated.resources.last_name
-import teamflowmanager.shared_ui.generated.resources.last_name_required
 import teamflowmanager.shared_ui.generated.resources.next
 import teamflowmanager.shared_ui.generated.resources.number
 import teamflowmanager.shared_ui.generated.resources.number_required
@@ -74,11 +73,9 @@ actual fun PlayerDataStep(
     var isCaptain by remember(initialIsCaptain) { mutableStateOf(initialIsCaptain) }
 
     var firstNameError by remember { mutableStateOf<String?>(null) }
-    var lastNameError by remember { mutableStateOf<String?>(null) }
     var numberError by remember { mutableStateOf<String?>(null) }
 
     val firstNameRequired = stringResource(Res.string.first_name_required)
-    val lastNameRequired = stringResource(Res.string.last_name_required)
     val numberRequired = stringResource(Res.string.number_required)
 
     val validateAndNext = {
@@ -87,10 +84,9 @@ actual fun PlayerDataStep(
         number = number.trim()
 
         firstNameError = if (firstName.isBlank()) firstNameRequired else null
-        lastNameError = if (lastName.isBlank()) lastNameRequired else null
         numberError = if (number.isBlank()) numberRequired else null
 
-        if (firstNameError == null && lastNameError == null && numberError == null) {
+        if (firstNameError == null && numberError == null) {
             onDataChanged(firstName, lastName, number, isCaptain, initialImageUri)
             onNext()
         }
@@ -163,16 +159,8 @@ actual fun PlayerDataStep(
             value = lastName,
             onValueChange = {
                 lastName = it
-                lastNameError = null
             },
             label = { Text(stringResource(Res.string.last_name)) },
-            isError = lastNameError != null,
-            supportingText =
-                if (lastNameError != null) {
-                    { Text(lastNameError!!) }
-                } else {
-                    null
-                },
             keyboardOptions =
                 KeyboardOptions(
                     imeAction = ImeAction.Next,

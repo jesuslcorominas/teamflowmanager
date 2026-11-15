@@ -117,7 +117,7 @@ fun PlayerItem(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "${player.firstName} ${player.lastName}",
+                        text = player.displayName,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

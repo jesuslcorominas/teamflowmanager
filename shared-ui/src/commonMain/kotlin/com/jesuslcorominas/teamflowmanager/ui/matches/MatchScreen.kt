@@ -925,7 +925,7 @@ internal fun aggregateScorers(events: List<TimelineEvent>): ScorerAggregation {
                 if (player == null) {
                     unknownScorerCount++
                 } else {
-                    val name = "${player.firstName} ${player.lastName}"
+                    val name = player.displayName
                     val current = scorerMap[player.id]
                     scorerMap[player.id] = ScorerEntry(name, (current?.count ?: 0) + 1)
                 }
@@ -1258,7 +1258,7 @@ private fun GoalScorerSelectionDialog(
                 items(players) { player ->
                     ScorerItem(
                         number = player.number.toString(),
-                        name = "${player.firstName} ${player.lastName}",
+                        name = player.displayName,
                         onScorerSelected = { onGoal(player.id) },
                     )
                 }
@@ -1709,9 +1709,9 @@ private fun SubstitutionResultDialog(
                                 stringResource(
                                     Res.string.substitution_result_pair_discarded,
                                     discarded.substitution.playerOut.number,
-                                    "${discarded.substitution.playerOut.firstName} ${discarded.substitution.playerOut.lastName}",
+                                    discarded.substitution.playerOut.displayName,
                                     discarded.substitution.playerIn.number,
-                                    "${discarded.substitution.playerIn.firstName} ${discarded.substitution.playerIn.lastName}",
+                                    discarded.substitution.playerIn.displayName,
                                     discardReasonText(discarded),
                                 ),
                             style = MaterialTheme.typography.bodyMedium,
@@ -1740,9 +1740,9 @@ private fun discardReasonText(discarded: DiscardedSubstitutionItem): String {
     val subject =
         when (discardReasonSubject(discarded.reason)) {
             DiscardReasonSubject.PLAYER_OUT ->
-                "${substitution.playerOut.firstName} ${substitution.playerOut.lastName}"
+                substitution.playerOut.displayName
             DiscardReasonSubject.PLAYER_IN ->
-                "${substitution.playerIn.firstName} ${substitution.playerIn.lastName}"
+                substitution.playerIn.displayName
             DiscardReasonSubject.EITHER -> stringResource(Res.string.substitution_discard_subject_either)
         }
     return stringResource(discardReasonRes(discarded.reason), subject)
@@ -1753,7 +1753,7 @@ private fun substitutionPairText(item: PendingSubstitutionItem): String =
     stringResource(
         Res.string.substitution_result_pair,
         item.playerOut.number,
-        "${item.playerOut.firstName} ${item.playerOut.lastName}",
+        item.playerOut.displayName,
         item.playerIn.number,
-        "${item.playerIn.firstName} ${item.playerIn.lastName}",
+        item.playerIn.displayName,
     )
