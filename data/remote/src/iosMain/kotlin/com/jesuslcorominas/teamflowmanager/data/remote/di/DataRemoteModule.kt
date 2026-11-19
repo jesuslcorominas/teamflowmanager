@@ -48,9 +48,11 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.app
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
+import dev.gitlive.firebase.ios
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.plugins.HttpTimeout
+import kotlinx.cinterop.ExperimentalForeignApi
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -119,5 +121,13 @@ actual val dataRemoteModule: Module =
 /**
  * Base URL of this project's Cloud Functions, derived from the Firebase app so
  * dev and prod builds each hit their own project.
+ *
+ * Reads the native FIROptions instead of gitlive's `Firebase.app.options`, whose iOS
+ * getter force-unwraps `databaseURL` and throws because the plists have no DATABASE_URL.
  */
-private fun functionsBaseUrl(): String = "https://us-central1-${Firebase.app.options.projectId}.cloudfunctions.net/"
+@OptIn(ExperimentalForeignApi::class)
+private fun functionsBaseUrl(): String {
+    val projectId = Firebase.app.ios.options.projectID
+        ?: error("PROJECT_ID missing from GoogleService-Info.plist")
+    return "https://us-central1-$projectId.cloudfunctions.net/"
+}
