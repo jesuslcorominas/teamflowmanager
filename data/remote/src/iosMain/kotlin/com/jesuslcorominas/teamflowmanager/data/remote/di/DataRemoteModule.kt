@@ -127,7 +127,8 @@ actual val dataRemoteModule: Module =
  */
 @OptIn(ExperimentalForeignApi::class)
 private fun functionsBaseUrl(): String {
-    val projectId = Firebase.app.ios.options.projectID
-        ?: error("PROJECT_ID missing from GoogleService-Info.plist")
+    val projectId =
+        Firebase.app.ios.options.projectID
+            ?: error("PROJECT_ID missing from GoogleService-Info.plist")
     return "https://us-central1-$projectId.cloudfunctions.net/"
 }
