@@ -4,6 +4,7 @@ import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.ios
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
+import platform.Foundation.NSNull
 import platform.Foundation.NSNumber
 
 /**
@@ -14,7 +15,7 @@ import platform.Foundation.NSNumber
  * datasources used to drop every document silently (#503). Android reads the native map
  * (`DocumentSnapshot.getData()`); this is the iOS equivalent, feeding the same shared parsers.
  *
- * Native `NSNumber` values are unboxed to Kotlin [Boolean], [Double] or [Long] so the parsers'
+ * `NSNull` becomes Kotlin `null` and native `NSNumber` values are unboxed to Kotlin [Boolean], [Double] or [Long] so the parsers'
  * `as? Number` / `as? Boolean` checks behave like on Android.
  */
 @OptIn(ExperimentalForeignApi::class)
@@ -23,6 +24,9 @@ internal fun DocumentSnapshot.rawData(): Map<String, Any?>? = ios.data()?.entrie
 @OptIn(ExperimentalForeignApi::class)
 private fun Any?.toKotlinValue(): Any? =
     when (this) {
+        // Firestore null fields arrive as [NSNull null]; without this, `?.toString()` in the
+        // parsers would yield "<null>" instead of null (e.g. scorerId of an own/opponent goal).
+        is NSNull -> null
         is NSNumber ->
             when (objCType?.toKString()) {
                 // Firestore booleans are CFBoolean, whose objCType is "c".
