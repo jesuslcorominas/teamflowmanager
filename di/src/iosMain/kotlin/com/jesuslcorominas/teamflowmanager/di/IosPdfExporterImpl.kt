@@ -6,7 +6,15 @@ package com.jesuslcorominas.teamflowmanager.di
 import com.jesuslcorominas.teamflowmanager.domain.model.ExportData
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerExportStats
 import com.jesuslcorominas.teamflowmanager.domain.utils.PdfExporter
-import kotlinx.cinterop.useContents
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.MARGIN
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.PAGE_H
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.PAGE_W
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.SECTION_SIZE
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.drawSectionTitle
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.drawText
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.formatDate
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.measureWidth
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.newTempPdfPath
 import platform.CoreGraphics.CGContextAddLineToPoint
 import platform.CoreGraphics.CGContextFillRect
 import platform.CoreGraphics.CGContextMoveToPoint
@@ -15,16 +23,11 @@ import platform.CoreGraphics.CGContextSetFillColorWithColor
 import platform.CoreGraphics.CGContextSetLineWidth
 import platform.CoreGraphics.CGContextSetStrokeColorWithColor
 import platform.CoreGraphics.CGContextStrokePath
-import platform.CoreGraphics.CGPointMake
 import platform.CoreGraphics.CGRectMake
-import platform.Foundation.NSDate
-import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSMutableData
-import platform.Foundation.NSString
-import platform.Foundation.NSTemporaryDirectory
 import platform.posix.time
-import platform.UIKit.* // UIKit categories on NSString (drawAtPoint, sizeWithAttributes) and UIGraphics PDF API
+import platform.UIKit.* // UIFont, UIColor and the UIGraphics PDF API
 
 /**
  * iOS counterpart of the Android `PdfExporterImpl`: renders the team statistics (player table,
@@ -33,20 +36,13 @@ import platform.UIKit.* // UIKit categories on NSString (drawAtPoint, sizeWithAt
  */
 internal class IosPdfExporterImpl : PdfExporter {
     companion object {
-        private const val PAGE_W = 595.0
-        private const val PAGE_H = 842.0
-        private const val MARGIN = 40.0
         private const val LINE_H = 18.0
         private const val TITLE_SIZE = 18.0
-        private const val SECTION_SIZE = 13.0
         private const val BODY_SIZE = 10.0
         private const val ROW_H = 22.0
         private const val HEADER_ROW_H = 24.0
         private const val MAX_TOP_SCORERS = 10
         private const val MAX_NAME_LENGTH = 30
-
-        /** Seconds between the Unix epoch (1970) and NSDate's reference date (2001). */
-        private const val REFERENCE_DATE_OFFSET_SECS = 978307200.0
 
         /** Column widths as a fraction of the table width: Jugador, Conv, Jug, T.Total, T.Medio, Goles. */
         private val COLUMN_RATIOS = listOf(0.35, 0.10, 0.10, 0.20, 0.15, 0.10)
@@ -123,7 +119,7 @@ internal class IosPdfExporterImpl : PdfExporter {
 
             UIGraphicsEndPDFContext()
 
-            val filePath = NSTemporaryDirectory() + "estadisticas_${time(null)}.pdf"
+            val filePath = newTempPdfPath("estadisticas")
             val saved = NSFileManager.defaultManager().createFileAtPath(filePath, contents = data, attributes = null)
             if (saved) filePath else null
         } catch (_: Exception) {
@@ -147,18 +143,6 @@ internal class IosPdfExporterImpl : PdfExporter {
     ): Double {
         drawText(text, MARGIN, y, UIFont.systemFontOfSize(BODY_SIZE))
         return y + LINE_H
-    }
-
-    private fun drawSectionTitle(
-        text: String,
-        y: Double,
-    ): Double {
-        UIGraphicsGetCurrentContext()?.let { ctx ->
-            CGContextSetFillColorWithColor(ctx, UIColor(red = 0.0, green = 0.2, blue = 0.4, alpha = 1.0).CGColor)
-            CGContextFillRect(ctx, CGRectMake(MARGIN, y - 2.0, PAGE_W - MARGIN * 2, SECTION_SIZE + 6.0))
-        }
-        drawText(text, MARGIN + 4.0, y, UIFont.boldSystemFontOfSize(SECTION_SIZE), UIColor.whiteColor)
-        return y + SECTION_SIZE + 8.0
     }
 
     private fun drawPlayerTableHeader(y: Double): Double {
@@ -238,29 +222,6 @@ internal class IosPdfExporterImpl : PdfExporter {
         CGContextAddLineToPoint(ctx, x2, y2)
     }
 
-    private fun drawText(
-        text: String,
-        x: Double,
-        y: Double,
-        font: UIFont,
-        color: UIColor = UIColor.blackColor,
-    ) {
-        val attrs =
-            mapOf<Any?, Any>(
-                NSFontAttributeName to font,
-                NSForegroundColorAttributeName to color,
-            )
-        (text as NSString).drawAtPoint(CGPointMake(x, y), withAttributes = attrs)
-    }
-
-    private fun measureWidth(
-        text: String,
-        font: UIFont,
-    ): Double {
-        val attrs = mapOf<Any?, Any>(NSFontAttributeName to font)
-        return (text as NSString).sizeWithAttributes(attrs).useContents { width }
-    }
-
     // ── Format helpers ────────────────────────────────────────────────────
 
     /** Same output as Android's `PdfExporterImpl.formatTime`: "1h 05m 03s", "5m 03s" or "42s". */
@@ -276,15 +237,5 @@ internal class IosPdfExporterImpl : PdfExporter {
             minutes > 0 -> "${minutes}m ${ss}s"
             else -> "${seconds}s"
         }
-    }
-
-    private fun formatDate(
-        epochMillis: Long,
-        pattern: String,
-    ): String {
-        val date = NSDate(timeIntervalSinceReferenceDate = epochMillis / 1000.0 - REFERENCE_DATE_OFFSET_SECS)
-        val formatter = NSDateFormatter()
-        formatter.dateFormat = pattern
-        return formatter.stringFromDate(date)
     }
 }
