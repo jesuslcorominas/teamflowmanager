@@ -53,10 +53,10 @@ jobs:
             exit 0
           fi
 
-          # El job de iOS cubre todo lo que se compila para iOS: los módulos KMP enteros
-          # (commonMain incluido, que el filtro del build completo no mira), iosApp, el
-          # build de Gradle y este workflow. Solo se lo saltan las PRs de app/ (Android
-          # puro), documentación, funciones de Firebase y similares.
+          # The iOS job covers everything compiled for iOS: the whole KMP modules
+          # (commonMain included, which the full-build filter ignores), iosApp, the Gradle
+          # build and this workflow. Only PRs touching app/ (pure Android), docs, Firebase
+          # functions and the like skip it.
           IOS_PATTERN='^(iosApp|shared-ui|domain|usecase|data|viewmodel|di)/|^gradle/|^gradle\.properties$|(^|/)build\.gradle\.kts$|^settings\.gradle\.kts$|^scripts/ci/|^\.github/workflows/pr-checks\.yml$'
           if echo "$FILES" | grep -qE "$IOS_PATTERN"; then
             echo "needs_ios_build=true" >> $GITHUB_OUTPUT
@@ -267,22 +267,22 @@ jobs:
           retention-days: 7
 
   # ─────────────────────────────────────────────────────────────
-  # iOS: tests nativos de Kotlin y compilación de iosApp con xcodebuild.
+  # iOS: Kotlin/Native tests and an xcodebuild build of iosApp.
   #
-  # `Full build (macOS)` ejecuta `./gradlew build`, que compila los targets iOS de Kotlin
-  # pero nunca el proyecto Xcode: ni CocoaPods, ni Swift, ni el enlazado del framework
-  # `shared` con los pods. Este job sí lo hace, para el simulador y sin firmar, y corre
-  # también cuando la PR solo toca commonMain (ver `needs_ios_build` en `scope`).
+  # `Full build (macOS)` runs `./gradlew build`, which compiles the Kotlin iOS targets but
+  # never the Xcode project: no CocoaPods, no Swift, no linking of the `shared` framework
+  # against the pods. This job does, for the simulator and unsigned, and it also runs when
+  # a PR only touches commonMain (see `needs_ios_build` in `scope`).
   #
-  # Es bloqueante en ci-gate: una PR que rompe la compilación de iOS no se mergea.
+  # It is blocking in ci-gate: a PR that breaks the iOS build cannot be merged.
   #
-  # Tiempo: el peor caso es en frío (sin caché), con la descarga del toolchain de
-  # Kotlin/Native y la compilación de los pods de Firestore en C++. El timeout de 75 min
-  # lo acota.
+  # Timing: the worst case is a cold run (no cache), dominated by the Kotlin/Native
+  # toolchain download and the C++ compilation of the Firestore pods. The first cold run
+  # (PR #504) took ~40 min. The 75-minute timeout bounds it.
   #
-  # Firma y TestFlight (#501): añadir aquí los pasos de certificados/perfiles y un
-  # `xcodebuild archive` para generic/platform=iOS después de "Build iosApp", y sustituir
-  # los plists de placeholder por los reales desde secretos.
+  # Signing and TestFlight (#501): add the certificate/profile steps and an
+  # `xcodebuild archive` for generic/platform=iOS after "Build iosApp", and replace the
+  # placeholder plists with the real ones from secrets.
   # ─────────────────────────────────────────────────────────────
   ios-build:
     name: iOS build (simulator)
@@ -299,9 +299,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Igual que en build-macos: restore y save separados para que la caché se escriba
-      # aunque el job falle o se corte por timeout. Clave propia (`ios-build-`) para no
-      # pisar la caché del build completo, que corre en paralelo.
+      # Same as build-macos: restore and save are split so the cache is written even when
+      # the job fails or times out. Own key prefix (`ios-build-`) so it does not clash with
+      # the full-build cache, which runs in parallel.
       - name: Restore Gradle and Kotlin/Native caches
         id: gradle-cache
         uses: actions/cache/restore@v4
@@ -323,9 +323,9 @@ jobs:
             ~/Library/Caches/CocoaPods
           key: ios-pods-${{ hashFiles('iosApp/Podfile.lock') }}
 
-      # Los pods de Firestore se compilan desde fuente (gRPC, abseil, BoringSSL en C++) y
-      # son la parte más lenta del build de Xcode. DerivedData guarda esos objetos; la ruta
-      # es fija dentro del runner para que Xcode los reutilice de forma incremental.
+      # The Firestore pods build from source (gRPC, abseil, BoringSSL in C++) and are the
+      # slowest part of the Xcode build. DerivedData keeps those objects; its path is fixed
+      # on the runner so Xcode can reuse them incrementally.
       - name: Restore Xcode DerivedData
         id: dd-cache
         uses: actions/cache/restore@v4
@@ -340,15 +340,15 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      # Gradle configura todos los proyectos, :app incluido, aunque aquí solo se compile iOS.
+      # Gradle configures every project, :app included, even though only iOS is built here.
       - name: Restore google-services.json
         run: |
           mkdir -p app/src/dev app/src/prod
           echo "${{ secrets.GOOGLE_SERVICES_DEV }}"  | base64 --decode > app/src/dev/google-services.json
           echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 --decode > app/src/prod/google-services.json
 
-      # El proyecto Xcode referencia los GoogleService-Info*.plist como recursos y están
-      # gitignorados. Para compilar basta con que existan: ver el script.
+      # The Xcode project lists GoogleService-Info*.plist as resources and they are
+      # gitignored. Building only needs them to exist: see the script.
       - name: Write placeholder GoogleService-Info plists
         run: scripts/ci/write-placeholder-google-service-plists.sh
 
@@ -364,13 +364,13 @@ jobs:
           LANG: en_US.UTF-8
         run: pod install
 
-      # La fase de build "Compile Kotlin Framework" del proyecto llama a
-      # `./gradlew :iosApp:embedAndSignAppleFrameworkForXcode`, así que esto compila
-      # también el framework `shared` y lo enlaza con los pods.
+      # The project's "Compile Kotlin Framework" build phase calls
+      # `./gradlew :iosApp:embedAndSignAppleFrameworkForXcode`, so this also builds the
+      # `shared` framework and links it against the pods.
       #
-      # ARCHS=arm64: con `generic/platform=iOS Simulator` Xcode compila también x86_64, lo
-      # que duplica la compilación en C++ de Firestore/gRPC y no tiene sentido aquí: Kotlin
-      # solo produce iosSimulatorArm64 y el runner es Apple Silicon.
+      # ARCHS=arm64: with `generic/platform=iOS Simulator` Xcode also builds x86_64, which
+      # doubles the Firestore/gRPC C++ compilation and is pointless here: Kotlin only
+      # produces iosSimulatorArm64 and the runner is Apple Silicon.
       - name: Build iosApp (simulator, unsigned)
         run: |
           xcodebuild build \
