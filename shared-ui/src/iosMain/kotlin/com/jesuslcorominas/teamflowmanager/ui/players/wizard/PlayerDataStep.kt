@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.players.wizard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -93,7 +95,12 @@ actual fun PlayerDataStep(
     }
 
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                // The iOS number pad has no action key, so ImeAction.Done never fires for the
+                // jersey number. Tapping outside the fields dismisses the keyboard instead.
+                .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         Text(
