@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.ui.components.icon.FlipIcon
 
@@ -46,10 +48,14 @@ fun BottomNavItem(
                 ),
             label = "",
         )
+        // The floating pill leaves each item narrower than the label of the selected tab
+        // ("Notificaciones" did not fit), so let the column take the label's own width and
+        // draw it centred over the gap between items instead of cutting it.
         Column(
             modifier =
                 Modifier
-                    .height(animatedHeight),
+                    .height(animatedHeight)
+                    .wrapContentWidth(unbounded = true),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -69,6 +75,8 @@ fun BottomNavItem(
                 Text(
                     text = label,
                     maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Visible,
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
