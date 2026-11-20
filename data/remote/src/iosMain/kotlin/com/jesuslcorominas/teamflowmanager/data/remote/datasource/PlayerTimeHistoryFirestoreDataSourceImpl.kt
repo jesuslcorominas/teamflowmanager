@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeHistoryDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeHistoryDocument
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.rawData
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTimeHistory
 import dev.gitlive.firebase.auth.FirebaseAuth
@@ -61,14 +62,16 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
                             try {
-                                val rawData = doc.data<Map<String, Any?>>()
+                                val rawData = doc.rawData() ?: return@mapNotNull null
                                 val rawMatchId = rawData["matchId"]?.toString() ?: ""
                                 parsePlayerTimeHistoryDocument(rawData, doc.id, playerId, rawMatchId)
-                            } catch (_: Exception) {
+                            } catch (e: Exception) {
+                                logFirestoreRead("PlayerTimeHistory", "parse failed for doc ${doc.id}", e)
                                 null
                             }
                         }
                     }.catch { e ->
+                        logFirestoreRead("PlayerTimeHistory", "query failed", e)
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                     }
             emitAll(newHistory)
@@ -81,11 +84,12 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                 if (!doc.exists) {
                     null
                 } else {
-                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                    doc.rawData()?.get("teamId") as? String
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                logFirestoreRead("PlayerTimeHistory", "teamId lookup for match $matchId failed", e)
                 null
             }
 
@@ -98,6 +102,7 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
             }
             val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
+                logFirestoreRead("PlayerTimeHistory", "team unresolved for match $matchId")
                 emit(emptyList())
                 return@flow
             }
@@ -109,14 +114,16 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
                             try {
-                                val rawData = doc.data<Map<String, Any?>>()
+                                val rawData = doc.rawData() ?: return@mapNotNull null
                                 val rawPlayerId = rawData["playerId"]?.toString() ?: ""
                                 parsePlayerTimeHistoryDocument(rawData, doc.id, rawPlayerId, matchId)
-                            } catch (_: Exception) {
+                            } catch (e: Exception) {
+                                logFirestoreRead("PlayerTimeHistory", "parse failed for doc ${doc.id}", e)
                                 null
                             }
                         }
                     }.catch { e ->
+                        logFirestoreRead("PlayerTimeHistory", "query failed", e)
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                     }
             emitAll(newHistory)
@@ -142,15 +149,17 @@ class PlayerTimeHistoryFirestoreDataSourceImpl(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
                         try {
-                            val rawData = doc.data<Map<String, Any?>>()
+                            val rawData = doc.rawData() ?: return@mapNotNull null
                             val rawPlayerId = rawData["playerId"]?.toString() ?: ""
                             val rawMatchId = rawData["matchId"]?.toString() ?: ""
                             parsePlayerTimeHistoryDocument(rawData, doc.id, rawPlayerId, rawMatchId)
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
+                            logFirestoreRead("PlayerTimeHistory", "parse failed for doc ${doc.id}", e)
                             null
                         }
                     }
                 }.catch { e ->
+                    logFirestoreRead("PlayerTimeHistory", "query failed", e)
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                 },
             )
