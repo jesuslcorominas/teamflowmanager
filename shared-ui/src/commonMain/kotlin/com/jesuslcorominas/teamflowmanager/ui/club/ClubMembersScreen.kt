@@ -205,7 +205,7 @@ private fun MemberCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = member.roles.joinToString(", "),
+                    text = clubRolesLabel(member.roles),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
