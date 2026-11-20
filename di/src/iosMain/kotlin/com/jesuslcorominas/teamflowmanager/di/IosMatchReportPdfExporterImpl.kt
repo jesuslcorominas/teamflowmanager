@@ -6,7 +6,14 @@ package com.jesuslcorominas.teamflowmanager.di
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
 import com.jesuslcorominas.teamflowmanager.domain.utils.MatchReportPdfExporter
-import kotlinx.cinterop.useContents
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.MARGIN
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.PAGE_H
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.PAGE_W
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.drawSectionTitle
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.drawText
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.formatDate
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.measureWidth
+import com.jesuslcorominas.teamflowmanager.di.IosPdfDrawing.newTempPdfPath
 import platform.CoreGraphics.CGContextAddLineToPoint
 import platform.CoreGraphics.CGContextFillRect
 import platform.CoreGraphics.CGContextMoveToPoint
@@ -14,25 +21,15 @@ import platform.CoreGraphics.CGContextSetFillColorWithColor
 import platform.CoreGraphics.CGContextSetLineWidth
 import platform.CoreGraphics.CGContextSetStrokeColorWithColor
 import platform.CoreGraphics.CGContextStrokePath
-import platform.CoreGraphics.CGPointMake
 import platform.CoreGraphics.CGRectMake
-import platform.Foundation.NSDate
-import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSMutableData
-import platform.Foundation.NSString
-import platform.Foundation.NSTemporaryDirectory
-import platform.posix.time
-import platform.UIKit.* // UIKit categories on NSString/NSAttributedString (drawAtPoint, drawInRect, sizeWithAttributes, etc.)
+import platform.UIKit.* // UIFont, UIColor and the UIGraphics PDF API
 
 internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
     companion object {
-        private const val PAGE_W = 595.0
-        private const val PAGE_H = 842.0
-        private const val MARGIN = 40.0
         private const val LINE_H = 18.0
         private const val TITLE_SIZE = 18.0
-        private const val SECTION_SIZE = 13.0
         private const val BODY_SIZE = 10.0
         private const val SMALL_SIZE = 8.5
         private const val ROW_H = 20.0
@@ -52,7 +49,7 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
             y += LINE_H
 
             val match = matchReportData.match
-            val dateStr = match.dateTime?.let { formatDate(it) } ?: "-"
+            val dateStr = match.dateTime?.let { formatDate(it, "dd/MM/yyyy HH:mm") } ?: "-"
 
             y = drawSectionTitle("Información del Partido", y)
             y += LINE_H * 0.5
@@ -95,9 +92,7 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
 
             // Save to temp dir
             val opponentClean = match.opponent.replace(" ", "_").replace("/", "-")
-            val ts = time(null)
-            val fileName = "partido_${opponentClean}_$ts.pdf"
-            val filePath = NSTemporaryDirectory() + fileName
+            val filePath = newTempPdfPath("partido_$opponentClean")
             NSFileManager.defaultManager().createFileAtPath(filePath, contents = data, attributes = null)
             filePath
         } catch (_: Exception) {
@@ -115,19 +110,6 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
         val width = measureWidth(text, font)
         drawText(text, (PAGE_W - width) / 2, y, font)
         return y + TITLE_SIZE + LINE_H * 0.3
-    }
-
-    private fun drawSectionTitle(
-        text: String,
-        y: Double,
-    ): Double {
-        val ctx = UIGraphicsGetCurrentContext()
-        if (ctx != null) {
-            CGContextSetFillColorWithColor(ctx, UIColor(red = 0.0, green = 0.2, blue = 0.4, alpha = 1.0).CGColor)
-            CGContextFillRect(ctx, CGRectMake(MARGIN, y - 2.0, PAGE_W - MARGIN * 2, SECTION_SIZE + 6.0))
-        }
-        drawText(text, MARGIN + 4.0, y, UIFont.boldSystemFontOfSize(SECTION_SIZE), UIColor.whiteColor)
-        return y + SECTION_SIZE + 8.0
     }
 
     private fun drawLabelValue(
@@ -263,32 +245,6 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
         CGContextStrokePath(cgCtx)
     }
 
-    // ── Text helpers ──────────────────────────────────────────────────────
-
-    private fun drawText(
-        text: String,
-        x: Double,
-        y: Double,
-        font: UIFont,
-        color: UIColor = UIColor.blackColor,
-    ) {
-        val attrs =
-            mapOf<Any?, Any>(
-                NSFontAttributeName to font,
-                NSForegroundColorAttributeName to color,
-            )
-        // Use NSString UIKit category: drawAtPoint:withAttributes: (2-param version)
-        (text as NSString).drawAtPoint(CGPointMake(x, y), withAttributes = attrs)
-    }
-
-    private fun measureWidth(
-        text: String,
-        font: UIFont,
-    ): Double {
-        val attrs = mapOf<Any?, Any>(NSFontAttributeName to font)
-        return (text as NSString).sizeWithAttributes(attrs).useContents { width }
-    }
-
     // ── Format helpers ────────────────────────────────────────────────────
 
     private fun formatTime(millis: Long): String {
@@ -297,16 +253,6 @@ internal class IosMatchReportPdfExporterImpl : MatchReportPdfExporter {
     }
 
     private fun formatTimeMinutes(millis: Long): String = "${millis / 60000}'"
-
-    private fun formatDate(millis: Long): String {
-        // NSDate constructor takes timeIntervalSinceReferenceDate (Jan 1 2001).
-        // Offset from Unix epoch (Jan 1 1970) = 978307200 seconds.
-        val secsSinceRef = millis / 1000.0 - 978307200.0
-        val date = NSDate(timeIntervalSinceReferenceDate = secsSinceRef)
-        val fmt = NSDateFormatter()
-        fmt.dateFormat = "dd/MM/yyyy HH:mm"
-        return fmt.stringFromDate(date)
-    }
 
     private fun timelineEventText(event: TimelineEvent): String =
         when (event) {

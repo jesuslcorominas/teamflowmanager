@@ -5,6 +5,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.config.FeatureFlags
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
 import com.jesuslcorominas.teamflowmanager.domain.utils.MatchReportPdfExporter
+import com.jesuslcorominas.teamflowmanager.domain.utils.PdfExporter
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
 import com.jesuslcorominas.teamflowmanager.viewmodel.AcceptTeamInvitationViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.AnalysisViewModel
@@ -43,6 +44,7 @@ import platform.posix.time
  * - No-op AnalyticsTracker and CrashReporter (Firebase Analytics/Crashlytics for iOS is KMP-17+)
  * - Compile-time FeatureFlags (Firebase Remote Config for iOS is not wired yet)
  * - iOS TimeProvider backed by POSIX time()
+ * - UIKit PDF exporters for the match report and the team statistics
  * - Factory registrations for all ViewModels (no viewModel {} DSL on iOS — uses factory {})
  */
 val iosModule =
@@ -52,6 +54,7 @@ val iosModule =
         single<CrashReporter> { NoOpCrashReporter() }
         single<TimeProvider> { IosTimeProvider() }
         single<MatchReportPdfExporter> { IosMatchReportPdfExporterImpl() }
+        single<PdfExporter> { IosPdfExporterImpl() }
         factory { createTimeTicker(get()) } bind TimeTicker::class
         single { createAppCoroutineScope() } bind AppCoroutineScope::class
 
