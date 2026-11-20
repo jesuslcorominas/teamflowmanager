@@ -10,3 +10,15 @@ target 'iosApp' do
   # KMP-17: Google Sign-In for iOS
   pod 'GoogleSignIn', '~> 8.0'
 end
+
+# Recent Xcode releases (27.x) reject pod targets whose deployment target is below the
+# SDK minimum, and several Firebase / GoogleSignIn transitive pods still declare 9.0-13.0.
+# Align every pod with the app's own minimum so `xcodebuild` works without passing
+# IPHONEOS_DEPLOYMENT_TARGET on the command line (locally and in CI).
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+    end
+  end
+end
