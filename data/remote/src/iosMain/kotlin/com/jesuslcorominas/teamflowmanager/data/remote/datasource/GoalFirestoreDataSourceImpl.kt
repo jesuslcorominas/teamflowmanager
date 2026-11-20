@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.GoalDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseGoalDocument
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.rawData
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.Goal
 import dev.gitlive.firebase.auth.FirebaseAuth
@@ -48,11 +49,12 @@ class GoalFirestoreDataSourceImpl(
                 if (!doc.exists) {
                     null
                 } else {
-                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                    doc.rawData()?.get("teamId") as? String
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                logFirestoreRead("Goal", "teamId lookup for match $matchId failed", e)
                 null
             }
 
@@ -65,6 +67,7 @@ class GoalFirestoreDataSourceImpl(
             }
             val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
+                logFirestoreRead("Goal", "team unresolved for match $matchId")
                 emit(emptyList())
                 return@flow
             }
@@ -76,12 +79,14 @@ class GoalFirestoreDataSourceImpl(
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
                             try {
-                                parseGoalDocument(doc.data<Map<String, Any?>>(), doc.id, matchId)
-                            } catch (_: Exception) {
+                                parseGoalDocument(doc.rawData(), doc.id, matchId)
+                            } catch (e: Exception) {
+                                logFirestoreRead("Goal", "parse failed for doc ${doc.id}", e)
                                 null
                             }
                         }
                     }.catch { e ->
+                        logFirestoreRead("Goal", "query failed", e)
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                     }
             emitAll(newGoals)
@@ -107,14 +112,16 @@ class GoalFirestoreDataSourceImpl(
                 snapshots.map { qs ->
                     qs.documents.mapNotNull { doc ->
                         try {
-                            val rawData = doc.data<Map<String, Any?>>()
+                            val rawData = doc.rawData() ?: return@mapNotNull null
                             val rawMatchId = rawData["matchId"]?.toString() ?: ""
                             parseGoalDocument(rawData, doc.id, rawMatchId)
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
+                            logFirestoreRead("Goal", "parse failed for doc ${doc.id}", e)
                             null
                         }
                     }
                 }.catch { e ->
+                    logFirestoreRead("Goal", "query failed", e)
                     if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                 },
             )

@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerTimeDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.PlayerTimeFirestoreModel
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parsePlayerTimeDocument
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.rawData
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerTime
@@ -89,11 +90,12 @@ class PlayerTimeFirestoreDataSourceImpl(
                 if (!doc.exists) {
                     null
                 } else {
-                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                    doc.rawData()?.get("teamId") as? String
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                logFirestoreRead("PlayerTime", "teamId lookup for match $matchId failed", e)
                 null
             }
 
@@ -106,6 +108,7 @@ class PlayerTimeFirestoreDataSourceImpl(
             }
             val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
+                logFirestoreRead("PlayerTime", "team unresolved for match $matchId")
                 emit(emptyList())
                 return@flow
             }
@@ -117,12 +120,14 @@ class PlayerTimeFirestoreDataSourceImpl(
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
                             try {
-                                parsePlayerTimeDocument(doc.data<Map<String, Any?>>(), matchId)
-                            } catch (_: Exception) {
+                                parsePlayerTimeDocument(doc.rawData(), matchId)
+                            } catch (e: Exception) {
+                                logFirestoreRead("PlayerTime", "parse failed for doc ${doc.id}", e)
                                 null
                             }
                         }
                     }.catch { e ->
+                        logFirestoreRead("PlayerTime", "query failed", e)
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                     }
             emitAll(newTimes)

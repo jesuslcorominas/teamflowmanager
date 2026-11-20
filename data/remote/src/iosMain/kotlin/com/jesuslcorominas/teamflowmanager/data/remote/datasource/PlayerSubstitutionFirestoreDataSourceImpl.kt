@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.PlayerSubstitutionDataSource
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.parseSubstitutionDocument
+import com.jesuslcorominas.teamflowmanager.data.remote.firestore.rawData
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toFirestoreModel
 import com.jesuslcorominas.teamflowmanager.domain.model.PlayerSubstitution
 import dev.gitlive.firebase.auth.FirebaseAuth
@@ -48,11 +49,12 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                 if (!doc.exists) {
                     null
                 } else {
-                    doc.data<Map<String, Any?>>()["teamId"] as? String
+                    doc.rawData()?.get("teamId") as? String
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                logFirestoreRead("Substitution", "teamId lookup for match $matchId failed", e)
                 null
             }
 
@@ -65,6 +67,7 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
             }
             val teamDocId = getTeamDocumentIdOrFromMatch(matchId)
             if (teamDocId == null) {
+                logFirestoreRead("Substitution", "team unresolved for match $matchId")
                 emit(emptyList())
                 return@flow
             }
@@ -76,12 +79,14 @@ class PlayerSubstitutionFirestoreDataSourceImpl(
                     .map { qs ->
                         qs.documents.mapNotNull { doc ->
                             try {
-                                parseSubstitutionDocument(doc.data<Map<String, Any?>>(), doc.id, matchId)
-                            } catch (_: Exception) {
+                                parseSubstitutionDocument(doc.rawData(), doc.id, matchId)
+                            } catch (e: Exception) {
+                                logFirestoreRead("Substitution", "parse failed for doc ${doc.id}", e)
                                 null
                             }
                         }
                     }.catch { e ->
+                        logFirestoreRead("Substitution", "query failed", e)
                         if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                     }
             emitAll(newSubs)
