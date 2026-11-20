@@ -44,6 +44,9 @@
     <string name="join_club_success_title">Welcome to the Club!</string>
     <string name="join_club_success_message">You have successfully joined %1$s</string>
     <string name="join_club_success_role">Your role: %1$s</string>
+    <string name="club_role_president">President</string>
+    <string name="club_role_coach">Coach</string>
+    <string name="club_role_staff">Staff</string>
     <string name="join_club_success_team_linked">Your existing team has been linked to this club</string>
     <string name="join_club_redirecting">You will be redirected automatically in a few seconds…</string>
     <string name="join_club_continue">Continue</string>
