@@ -80,16 +80,20 @@ internal fun IosNavHost(
             )
 
         is IosDestination.PlayerWizard ->
-            PlayerWizardScreen(
-                playerId = dest.playerId,
-                onNavigateBack = { navController.popBackStack() },
-            )
+            IosWizardRoute(scopedViewModels = true) {
+                PlayerWizardScreen(
+                    playerId = dest.playerId,
+                    onNavigateBack = { navController.popBackStack() },
+                )
+            }
 
         is IosDestination.MatchWizard ->
-            MatchCreationWizardScreen(
-                matchId = dest.matchId,
-                onNavigateBack = { navController.popBackStack() },
-            )
+            IosWizardRoute(scopedViewModels = true) {
+                MatchCreationWizardScreen(
+                    matchId = dest.matchId,
+                    onNavigateBack = { navController.popBackStack() },
+                )
+            }
 
         is IosDestination.PresidentTeamDetail ->
             PresidentTeamDetailScreen(
