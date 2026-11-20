@@ -88,7 +88,7 @@ internal fun IosNavHost(
             }
 
         is IosDestination.MatchWizard ->
-            IosWizardRoute {
+            IosWizardRoute(scopedViewModels = true) {
                 MatchCreationWizardScreen(
                     matchId = dest.matchId,
                     onNavigateBack = { navController.popBackStack() },
