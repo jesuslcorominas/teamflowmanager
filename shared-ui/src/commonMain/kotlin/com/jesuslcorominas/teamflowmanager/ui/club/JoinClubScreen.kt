@@ -90,7 +90,7 @@ fun JoinClubScreen(
                 paddingValues = paddingValues,
                 clubName = successState.result.club.name,
                 hasOrphanTeam = successState.result.orphanTeam != null,
-                role = successState.result.clubMember.roles.joinToString(", "),
+                role = clubRolesLabel(successState.result.clubMember.roles),
             ) {
                 viewModel.resetState()
                 onClubJoined()
