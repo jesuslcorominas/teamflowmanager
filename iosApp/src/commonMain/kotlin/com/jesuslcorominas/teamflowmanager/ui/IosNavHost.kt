@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -11,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.jesuslcorominas.teamflowmanager.IosDestination
 import com.jesuslcorominas.teamflowmanager.IosNavController
+import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
@@ -33,6 +35,8 @@ import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamListScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
+import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun IosNavHost(
@@ -42,6 +46,21 @@ internal fun IosNavHost(
 ) {
     var matchTitle: String? by remember { mutableStateOf(null) }
     var presidentMatchTitle: String? by remember { mutableStateOf(null) }
+
+    // Same as AndroidAppShell: switching role swaps the whole bottom bar, so the current
+    // destination belongs to the role just left. Land on the first tab of the new role and
+    // drop the old back stack.
+    val mainViewModel: MainViewModel = koinViewModel()
+    LaunchedEffect(Unit) {
+        mainViewModel.roleSwitches.collect { role ->
+            val landing =
+                when (role) {
+                    ActiveViewRole.President -> IosDestination.TeamList
+                    ActiveViewRole.Coach -> IosDestination.Matches
+                }
+            navController.navigateClearing(landing)
+        }
+    }
 
     when (val dest = navController.current) {
         // ── Full-screen routes (no MainScreen shell) ──────────────────────
@@ -58,7 +77,9 @@ internal fun IosNavHost(
         is IosDestination.Login ->
             LoginScreen(
                 onSignInWithGoogle = onSignInWithGoogle,
-                onLoginSuccess = { navController.navigateClearing(IosDestination.Matches) },
+                // Like Android, go back through the splash: it is the one that picks the landing
+                // screen from the user's roles and the stored view, not Matches for everyone.
+                onLoginSuccess = { navController.navigateClearing(IosDestination.Splash) },
             )
 
         is IosDestination.ClubSelection ->

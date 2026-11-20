@@ -51,6 +51,9 @@ import teamflowmanager.shared_ui.generated.resources.archived_matches
 import teamflowmanager.shared_ui.generated.resources.create_team_title
 import teamflowmanager.shared_ui.generated.resources.edit_team_title
 import teamflowmanager.shared_ui.generated.resources.matches_title
+import teamflowmanager.shared_ui.generated.resources.nav_club_settings
+import teamflowmanager.shared_ui.generated.resources.nav_notifications
+import teamflowmanager.shared_ui.generated.resources.nav_staff
 import teamflowmanager.shared_ui.generated.resources.players_title
 import teamflowmanager.shared_ui.generated.resources.search_match_placeholder
 import teamflowmanager.shared_ui.generated.resources.settings_title
@@ -251,6 +254,9 @@ internal fun Route.toTitle(teamMode: String? = null): String? =
         Route.ArchivedMatches -> stringResource(Res.string.archived_matches)
         Route.Analysis -> stringResource(Res.string.analysis_title)
         Route.Settings -> stringResource(Res.string.settings_title)
+        Route.ClubMembers -> stringResource(Res.string.nav_staff)
+        Route.PresidentNotifications -> stringResource(Res.string.nav_notifications)
+        Route.ClubSettings -> stringResource(Res.string.nav_club_settings)
         Route.Match -> null
         else -> null
     }
