@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.matches.wizard
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -67,122 +68,125 @@ fun MatchCreationWizardScreen(
         wizardViewModel.requestBack(onNavigateBack)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        when (val state = uiState) {
-            is MatchCreationWizardUiState.Loading -> Loading()
-            is MatchCreationWizardUiState.Saving -> Loading()
-            is MatchCreationWizardUiState.Ready -> {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = TFMSpacing.spacing02)
-                            // The shell only applies the top inset; the bottom clearance
-                            // (system navigation bar, bottom bar, FAB) is exposed here.
-                            .padding(bottom = LocalContentBottomPadding.current),
-                ) {
-                    when (currentStep) {
-                        WizardStep.GENERAL_DATA -> {
-                            GeneralDataStep(
-                                initialOpponent = wizardViewModel.getOpponent(),
-                                initialLocation = wizardViewModel.getLocation(),
-                                initialDate = wizardViewModel.getDate(),
-                                initialTime = wizardViewModel.getTime(),
-                                initialNumberOfPeriods = wizardViewModel.getNumberOfPeriods(),
-                                onDataChanged = { opponent, location, date, time, numberOfPeriods ->
-                                    wizardViewModel.setGeneralData(opponent, location, date, time, numberOfPeriods)
-                                },
-                                homeGround = homeGround,
-                                periodTypeSelectable = wizardViewModel.isPeriodTypeSelectable(),
-                                periodDurationMinutes = wizardViewModel.getPeriodDurationMinutes(),
-                                onNext = { wizardViewModel.goToNextStep() },
-                                onCancel = { wizardViewModel.requestBack(onNavigateBack) },
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .padding(TFMSpacing.spacing04),
-                            )
-                        }
+    // iOS draws the back arrow in its own row so the step title starts below it (#515).
+    // On Android IosBackButton emits nothing, so the content Box takes the full height as before.
+    Column(modifier = Modifier.fillMaxSize()) {
+        IosBackButton(onBack = { wizardViewModel.requestBack(onNavigateBack) })
+        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            when (val state = uiState) {
+                is MatchCreationWizardUiState.Loading -> Loading()
+                is MatchCreationWizardUiState.Saving -> Loading()
+                is MatchCreationWizardUiState.Ready -> {
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = TFMSpacing.spacing02)
+                                // The shell only applies the top inset; the bottom clearance
+                                // (system navigation bar, bottom bar, FAB) is exposed here.
+                                .padding(bottom = LocalContentBottomPadding.current),
+                    ) {
+                        when (currentStep) {
+                            WizardStep.GENERAL_DATA -> {
+                                GeneralDataStep(
+                                    initialOpponent = wizardViewModel.getOpponent(),
+                                    initialLocation = wizardViewModel.getLocation(),
+                                    initialDate = wizardViewModel.getDate(),
+                                    initialTime = wizardViewModel.getTime(),
+                                    initialNumberOfPeriods = wizardViewModel.getNumberOfPeriods(),
+                                    onDataChanged = { opponent, location, date, time, numberOfPeriods ->
+                                        wizardViewModel.setGeneralData(opponent, location, date, time, numberOfPeriods)
+                                    },
+                                    homeGround = homeGround,
+                                    periodTypeSelectable = wizardViewModel.isPeriodTypeSelectable(),
+                                    periodDurationMinutes = wizardViewModel.getPeriodDurationMinutes(),
+                                    onNext = { wizardViewModel.goToNextStep() },
+                                    onCancel = { wizardViewModel.requestBack(onNavigateBack) },
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .padding(TFMSpacing.spacing04),
+                                )
+                            }
 
-                        WizardStep.SQUAD_CALLUP -> {
-                            SquadCallUpStep(
-                                players = state.players,
-                                selectedPlayerIds = wizardViewModel.getSquadCallUpIds(),
-                                minPlayers = wizardViewModel.getTeamTypePlayerCount(),
-                                onSelectionChanged = { playerIds ->
-                                    wizardViewModel.setSquadCallUp(playerIds)
-                                },
-                                onNext = {
-                                    wizardViewModel.goToNextStep()
-                                    scope.launch { wizardViewModel.loadDefaultCaptainIfExists() }
-                                },
-                                onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .padding(TFMSpacing.spacing04),
-                            )
-                        }
+                            WizardStep.SQUAD_CALLUP -> {
+                                SquadCallUpStep(
+                                    players = state.players,
+                                    selectedPlayerIds = wizardViewModel.getSquadCallUpIds(),
+                                    minPlayers = wizardViewModel.getTeamTypePlayerCount(),
+                                    onSelectionChanged = { playerIds ->
+                                        wizardViewModel.setSquadCallUp(playerIds)
+                                    },
+                                    onNext = {
+                                        wizardViewModel.goToNextStep()
+                                        scope.launch { wizardViewModel.loadDefaultCaptainIfExists() }
+                                    },
+                                    onPrevious = { wizardViewModel.goToPreviousStep() },
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .padding(TFMSpacing.spacing04),
+                                )
+                            }
 
-                        WizardStep.CAPTAIN -> {
-                            val squadPlayers = state.players.filter { it.id in wizardViewModel.getSquadCallUpIds() }
-                            CaptainSelectionStep(
-                                players = squadPlayers,
-                                selectedCaptainId = wizardViewModel.getCaptainId(),
-                                onCaptainChanged = { captainId ->
-                                    wizardViewModel.setCaptain(captainId)
-                                },
-                                onNext = {
-                                    scope.launch {
-                                        val (shouldAsk, player) = wizardViewModel.checkIfShouldAskForDefaultCaptain()
-                                        if (shouldAsk && player != null) {
-                                            captainForDialog = player
-                                            showDefaultCaptainDialog = true
-                                        } else {
-                                            wizardViewModel.goToNextStep()
+                            WizardStep.CAPTAIN -> {
+                                val squadPlayers = state.players.filter { it.id in wizardViewModel.getSquadCallUpIds() }
+                                CaptainSelectionStep(
+                                    players = squadPlayers,
+                                    selectedCaptainId = wizardViewModel.getCaptainId(),
+                                    onCaptainChanged = { captainId ->
+                                        wizardViewModel.setCaptain(captainId)
+                                    },
+                                    onNext = {
+                                        scope.launch {
+                                            val (shouldAsk, player) = wizardViewModel.checkIfShouldAskForDefaultCaptain()
+                                            if (shouldAsk && player != null) {
+                                                captainForDialog = player
+                                                showDefaultCaptainDialog = true
+                                            } else {
+                                                wizardViewModel.goToNextStep()
+                                            }
                                         }
-                                    }
-                                },
-                                onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .padding(TFMSpacing.spacing04),
-                            )
-                        }
+                                    },
+                                    onPrevious = { wizardViewModel.goToPreviousStep() },
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .padding(TFMSpacing.spacing04),
+                                )
+                            }
 
-                        WizardStep.STARTING_LINEUP -> {
-                            val squadPlayers = state.players.filter { it.id in wizardViewModel.getSquadCallUpIds() }
-                            StartingLineupStep(
-                                players = squadPlayers,
-                                selectedPlayerIds = wizardViewModel.getStartingLineupIds(),
-                                captainId = wizardViewModel.getCaptainId(),
-                                hasGoalkeepersInSquad = wizardViewModel.hasGoalkeepersInSquad(),
-                                requiredPlayers = wizardViewModel.getTeamTypePlayerCount(),
-                                onSelectionChanged = { playerIds ->
-                                    wizardViewModel.setStartingLineup(playerIds)
-                                },
-                                onCreate = {
-                                    if (wizardViewModel.isEditMode()) {
-                                        wizardViewModel.updateMatch { onNavigateBack() }
-                                    } else {
-                                        val match = wizardViewModel.buildMatch()
-                                        wizardViewModel.createMatch(match) { onNavigateBack() }
-                                    }
-                                },
-                                onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .padding(TFMSpacing.spacing04),
-                            )
+                            WizardStep.STARTING_LINEUP -> {
+                                val squadPlayers = state.players.filter { it.id in wizardViewModel.getSquadCallUpIds() }
+                                StartingLineupStep(
+                                    players = squadPlayers,
+                                    selectedPlayerIds = wizardViewModel.getStartingLineupIds(),
+                                    captainId = wizardViewModel.getCaptainId(),
+                                    hasGoalkeepersInSquad = wizardViewModel.hasGoalkeepersInSquad(),
+                                    requiredPlayers = wizardViewModel.getTeamTypePlayerCount(),
+                                    onSelectionChanged = { playerIds ->
+                                        wizardViewModel.setStartingLineup(playerIds)
+                                    },
+                                    onCreate = {
+                                        if (wizardViewModel.isEditMode()) {
+                                            wizardViewModel.updateMatch { onNavigateBack() }
+                                        } else {
+                                            val match = wizardViewModel.buildMatch()
+                                            wizardViewModel.createMatch(match) { onNavigateBack() }
+                                        }
+                                    },
+                                    onPrevious = { wizardViewModel.goToPreviousStep() },
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .padding(TFMSpacing.spacing04),
+                                )
+                            }
                         }
                     }
                 }
             }
         }
-
-        IosBackButton(onBack = { wizardViewModel.requestBack(onNavigateBack) })
     }
 
     // Default captain dialog
