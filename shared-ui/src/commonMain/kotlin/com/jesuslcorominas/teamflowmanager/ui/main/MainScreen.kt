@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -116,13 +117,18 @@ fun MainScreen(
     val density = LocalDensity.current
     val bottomNavHeightDp: Dp = with(density) { bottomNavHeightPx.toDp() }
 
-    // Content bottom padding: enough space so the last item can scroll
-    // fully above the FAB (bar + gap + FAB height + gap above FAB).
+    // Content bottom padding, same rule as AndroidAppShell:
+    // - FAB: enough space so the last item can scroll fully above the FAB
+    //   (bar + gap + FAB height + gap above FAB).
+    // - Bottom bar only: the bar height (it already includes the nav-bar inset).
+    // - No bottom bar: only the system navigation-bar inset. bottomNavHeightDp keeps the
+    //   last measured bar height even when the bar is not shown, so it must not be used here.
+    val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val contentBottomPadding =
-        if (uiConfig?.showFab == true) {
-            bottomNavHeightDp + FabBarGap + FabHeight + FabContentGap
-        } else {
-            bottomNavHeightDp
+        when {
+            uiConfig?.showFab == true -> bottomNavHeightDp + FabBarGap + FabHeight + FabContentGap
+            uiConfig?.showBottomBar == true -> bottomNavHeightDp
+            else -> navBarPadding
         }
 
     // Back-press controller: lets child screens (e.g. TeamScreen in edit mode)

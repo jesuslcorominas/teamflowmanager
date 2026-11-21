@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.ui.players.wizard
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,93 +57,96 @@ fun PlayerWizardScreen(
         wizardViewModel.requestBack(onNavigateBack)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        when (uiState) {
-            is PlayerWizardUiState.Loading -> Loading()
-            is PlayerWizardUiState.Error -> {
-                LaunchedEffect(Unit) { onNavigateBack() }
-            }
-            is PlayerWizardUiState.Ready -> {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            // The shell only applies the top inset; the bottom clearance
-                            // (system navigation bar, bottom bar, FAB) is exposed here.
-                            .padding(bottom = LocalContentBottomPadding.current),
-                ) {
-                    when (currentStep) {
-                        PlayerWizardStep.PLAYER_DATA -> {
-                            PlayerDataStep(
-                                initialFirstName = wizardViewModel.getFirstName(),
-                                initialLastName = wizardViewModel.getLastName(),
-                                initialNumber = wizardViewModel.getNumber(),
-                                initialIsCaptain = wizardViewModel.getIsCaptain(),
-                                initialImageUri = wizardViewModel.getImageUri(),
-                                isImageUploadEnabled = wizardViewModel.isImageUploadEnabled,
-                                onDataChanged = { firstName, lastName, number, isCaptain, imageUri ->
-                                    wizardViewModel.setPlayerData(firstName, lastName, number, isCaptain, imageUri)
-                                },
-                                onNext = { wizardViewModel.goToNextStep() },
-                                onCancel = { wizardViewModel.requestBack(onNavigateBack) },
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .padding(TFMSpacing.spacing04),
-                            )
-                        }
-                        PlayerWizardStep.POSITIONS -> {
-                            PlayerPositionsStep(
-                                initialPositions = wizardViewModel.getSelectedPositions(),
-                                onPositionsChanged = { positions -> wizardViewModel.setPositions(positions) },
-                                onSave = { wizardViewModel.savePlayer(onSuccess = onNavigateBack) },
-                                onPrevious = { wizardViewModel.goToPreviousStep() },
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .padding(TFMSpacing.spacing04),
-                            )
+    // iOS draws the back arrow in its own row so the step title starts below it (#515).
+    // On Android IosBackButton emits nothing, so the content Box takes the full height as before.
+    Column(modifier = Modifier.fillMaxSize()) {
+        IosBackButton(onBack = { wizardViewModel.requestBack(onNavigateBack) })
+        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            when (uiState) {
+                is PlayerWizardUiState.Loading -> Loading()
+                is PlayerWizardUiState.Error -> {
+                    LaunchedEffect(Unit) { onNavigateBack() }
+                }
+                is PlayerWizardUiState.Ready -> {
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                // The shell only applies the top inset; the bottom clearance
+                                // (system navigation bar, bottom bar, FAB) is exposed here.
+                                .padding(bottom = LocalContentBottomPadding.current),
+                    ) {
+                        when (currentStep) {
+                            PlayerWizardStep.PLAYER_DATA -> {
+                                PlayerDataStep(
+                                    initialFirstName = wizardViewModel.getFirstName(),
+                                    initialLastName = wizardViewModel.getLastName(),
+                                    initialNumber = wizardViewModel.getNumber(),
+                                    initialIsCaptain = wizardViewModel.getIsCaptain(),
+                                    initialImageUri = wizardViewModel.getImageUri(),
+                                    isImageUploadEnabled = wizardViewModel.isImageUploadEnabled,
+                                    onDataChanged = { firstName, lastName, number, isCaptain, imageUri ->
+                                        wizardViewModel.setPlayerData(firstName, lastName, number, isCaptain, imageUri)
+                                    },
+                                    onNext = { wizardViewModel.goToNextStep() },
+                                    onCancel = { wizardViewModel.requestBack(onNavigateBack) },
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .padding(TFMSpacing.spacing04),
+                                )
+                            }
+                            PlayerWizardStep.POSITIONS -> {
+                                PlayerPositionsStep(
+                                    initialPositions = wizardViewModel.getSelectedPositions(),
+                                    onPositionsChanged = { positions -> wizardViewModel.setPositions(positions) },
+                                    onSave = { wizardViewModel.savePlayer(onSuccess = onNavigateBack) },
+                                    onPrevious = { wizardViewModel.goToPreviousStep() },
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .padding(TFMSpacing.spacing04),
+                                )
+                            }
                         }
                     }
-                }
 
-                when (val state = captainConfirmationState) {
-                    is CaptainConfirmationState.ConfirmReplace ->
-                        CaptainConfirmationDialog(
-                            state = state,
-                            onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
-                            onDismiss = { wizardViewModel.cancelCaptainChange() },
-                        )
-                    is CaptainConfirmationState.ConfirmReplaceWithMatches ->
-                        CaptainConfirmationDialog(
-                            state = state,
-                            onConfirm = {
-                                    keepInMatches ->
-                                wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack)
-                            },
-                            onDismiss = { wizardViewModel.cancelCaptainChange() },
-                        )
-                    is CaptainConfirmationState.ConfirmRemove ->
-                        CaptainConfirmationDialog(
-                            state = state,
-                            onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
-                            onDismiss = { wizardViewModel.cancelCaptainChange() },
-                        )
-                    is CaptainConfirmationState.ConfirmRemoveWithMatches ->
-                        CaptainConfirmationDialog(
-                            state = state,
-                            onConfirm = {
-                                    keepInMatches ->
-                                wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack)
-                            },
-                            onDismiss = { wizardViewModel.cancelCaptainChange() },
-                        )
-                    is CaptainConfirmationState.None -> {}
+                    when (val state = captainConfirmationState) {
+                        is CaptainConfirmationState.ConfirmReplace ->
+                            CaptainConfirmationDialog(
+                                state = state,
+                                onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
+                                onDismiss = { wizardViewModel.cancelCaptainChange() },
+                            )
+                        is CaptainConfirmationState.ConfirmReplaceWithMatches ->
+                            CaptainConfirmationDialog(
+                                state = state,
+                                onConfirm = {
+                                        keepInMatches ->
+                                    wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack)
+                                },
+                                onDismiss = { wizardViewModel.cancelCaptainChange() },
+                            )
+                        is CaptainConfirmationState.ConfirmRemove ->
+                            CaptainConfirmationDialog(
+                                state = state,
+                                onConfirm = { wizardViewModel.confirmCaptainChange(onSuccess = onNavigateBack) },
+                                onDismiss = { wizardViewModel.cancelCaptainChange() },
+                            )
+                        is CaptainConfirmationState.ConfirmRemoveWithMatches ->
+                            CaptainConfirmationDialog(
+                                state = state,
+                                onConfirm = {
+                                        keepInMatches ->
+                                    wizardViewModel.confirmCaptainChange(keepInMatches, onSuccess = onNavigateBack)
+                                },
+                                onDismiss = { wizardViewModel.cancelCaptainChange() },
+                            )
+                        is CaptainConfirmationState.None -> {}
+                    }
                 }
             }
         }
-
-        IosBackButton(onBack = { wizardViewModel.requestBack(onNavigateBack) })
     }
 
     if (showExitDialog) {
