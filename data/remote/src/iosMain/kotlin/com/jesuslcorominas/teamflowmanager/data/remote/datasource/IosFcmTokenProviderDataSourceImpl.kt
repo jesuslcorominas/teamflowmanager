@@ -14,7 +14,7 @@ import platform.Foundation.NSLog
  * Like the Android implementation, a failure yields an empty token: the sync use case
  * skips empty tokens and retries on the next launch or login.
  */
-class IosFcmTokenProviderDataSourceImpl : FcmTokenProviderDataSource {
+internal class IosFcmTokenProviderDataSourceImpl : FcmTokenProviderDataSource {
     override suspend fun getToken(): String =
         try {
             Firebase.messaging.getToken()

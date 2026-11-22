@@ -14,7 +14,7 @@ import platform.Foundation.NSError
  * caller, as `subscribeToTopic(...).await()` does on Android.
  */
 @OptIn(ExperimentalForeignApi::class)
-class IosNotificationTopicDataSourceImpl : NotificationTopicDataSource {
+internal class IosNotificationTopicDataSourceImpl : NotificationTopicDataSource {
     override suspend fun subscribe(topic: String) = awaitTopicOperation { completion -> Firebase.messaging.ios.subscribeToTopic(topic, completion) }
 
     override suspend fun unsubscribe(topic: String) = awaitTopicOperation { completion -> Firebase.messaging.ios.unsubscribeFromTopic(topic, completion) }

@@ -24,7 +24,7 @@ import kotlin.concurrent.AtomicInt
  * The permission itself is requested by `AppDelegate` at launch (as `MainActivity`
  * does on Android) and, on login, through `LoginScreen.onRequestNotificationPermission`.
  */
-class IosNotificationPermissionDataSourceImpl : NotificationPermissionDataSource {
+internal class IosNotificationPermissionDataSourceImpl : NotificationPermissionDataSource {
     override fun isGranted(): Boolean {
         val granted = AtomicInt(NOT_ANSWERED)
         val semaphore = dispatch_semaphore_create(0)
