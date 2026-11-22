@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.login
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -22,10 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -81,6 +86,10 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val accountExistsMessage = stringResource(Res.string.account_exists_with_other_provider)
+    // Which button started the sign-in, so the spinner shows where the user tapped.
+    // Android only has Google, so there it always stays on the Google button.
+    var appleSignInInProgress by remember { mutableStateOf(false) }
+    val isLoading = uiState is UiState.Loading
 
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -149,6 +158,7 @@ fun LoginScreen(
 
                 OutlinedButton(
                     onClick = {
+                        appleSignInInProgress = false
                         scope.launch {
                             try {
                                 val idToken = onSignInWithGoogle()
@@ -160,13 +170,13 @@ fun LoginScreen(
                             }
                         }
                     },
-                    enabled = uiState !is UiState.Loading,
+                    enabled = !isLoading,
                     modifier =
                         Modifier
                             .fillMaxWidth()
                             .height(48.dp),
                 ) {
-                    if (uiState is UiState.Loading) {
+                    if (isLoading && !appleSignInInProgress) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
@@ -189,16 +199,36 @@ fun LoginScreen(
                 if (onSignInWithApple != null && appleSignInButton != null) {
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    appleSignInButton(uiState !is UiState.Loading) {
-                        scope.launch {
-                            try {
-                                // null: the user dismissed Apple's sheet, nothing to report.
-                                val credential = onSignInWithApple() ?: return@launch
-                                viewModel.signInWithApple(credential)
-                            } catch (e: Exception) {
-                                snackbarHostState.showSnackbar(
-                                    e.message ?: "Error al iniciar sesión",
-                                )
+                    if (isLoading && appleSignInInProgress) {
+                        // Apple's native button cannot show progress, so while the
+                        // Firebase sign-in runs it is swapped for a look-alike with a spinner.
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                                    .background(Color.Black, RoundedCornerShape(24.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White,
+                            )
+                        }
+                    } else {
+                        appleSignInButton(!isLoading) {
+                            appleSignInInProgress = true
+                            scope.launch {
+                                try {
+                                    // null: the user dismissed Apple's sheet, nothing to report.
+                                    val credential = onSignInWithApple() ?: return@launch
+                                    viewModel.signInWithApple(credential)
+                                } catch (e: Exception) {
+                                    snackbarHostState.showSnackbar(
+                                        e.message ?: "Error al iniciar sesión",
+                                    )
+                                }
                             }
                         }
                     }
