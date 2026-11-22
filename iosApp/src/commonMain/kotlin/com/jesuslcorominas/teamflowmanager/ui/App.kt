@@ -10,6 +10,7 @@ import com.jesuslcorominas.teamflowmanager.ui.theme.LightColorScheme
 fun App(
     onSignInWithGoogle: suspend () -> String = { throw NotImplementedError("KMP-17") },
     onShareFile: (String) -> Unit = {},
+    onRequestNotificationPermission: (onResult: (Boolean) -> Unit) -> Unit = { it(false) },
 ) {
     MaterialTheme(colorScheme = LightColorScheme) {
         val navController = remember { IosNavController() }
@@ -17,6 +18,7 @@ fun App(
             navController = navController,
             onSignInWithGoogle = onSignInWithGoogle,
             onShareFile = onShareFile,
+            onRequestNotificationPermission = onRequestNotificationPermission,
         )
     }
 }
