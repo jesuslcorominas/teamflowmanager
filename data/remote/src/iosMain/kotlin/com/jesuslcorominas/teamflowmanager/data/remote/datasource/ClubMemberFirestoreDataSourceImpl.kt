@@ -5,8 +5,10 @@ import com.jesuslcorominas.teamflowmanager.data.remote.firestore.ClubMemberFires
 import com.jesuslcorominas.teamflowmanager.data.remote.firestore.toDomain
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import dev.gitlive.firebase.firestore.FirebaseFirestoreException
 import dev.gitlive.firebase.firestore.where
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -35,6 +37,11 @@ class ClubMemberFirestoreDataSourceImpl(
                             null
                         }
                     }
+                }.catch { e ->
+                    // Like Android, a listener error degrades to "no member". Signing out makes
+                    // Firestore end the open listeners with a permission error; rethrowing it
+                    // reached the collecting coroutine uncaught and aborted the app (#526).
+                    if (e is FirebaseFirestoreException) emit(null) else throw e
                 },
             )
         }
@@ -54,6 +61,8 @@ class ClubMemberFirestoreDataSourceImpl(
                             null
                         }
                     }
+                }.catch { e ->
+                    if (e is FirebaseFirestoreException) emit(emptyList()) else throw e
                 },
             )
         }
