@@ -48,6 +48,7 @@ fun MainViewController(): UIViewController {
         ComposeUIViewController(configure = { enforceStrictPlistSanityCheck = false }) {
             App(
                 onSignInWithGoogle = { GoogleSignInBridge.signIn() },
+                onRequestNotificationPermission = ::requestPushPermission,
                 onShareFile = { filePath ->
                     val fileUrl = NSURL.fileURLWithPath(filePath)
                     val activityVC =
