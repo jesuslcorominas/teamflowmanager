@@ -1,9 +1,11 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -24,8 +27,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.ui.components.bottomnav.BottomNavItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
@@ -164,6 +169,33 @@ fun FloatingBottomBar(
             )
         }
     }
+}
+
+private val FadeHeight = 32.dp // extra height above the nav bar for the gradient fade
+
+/**
+ * Transparent → surface gradient behind a floating bottom bar: it covers the bar zone plus
+ * [FadeHeight] above it, so list content fades out as it scrolls under the bar.
+ * [barHeight] must already include the system navigation-bar inset.
+ */
+@Composable
+fun BottomBarFade(
+    barHeight: Dp,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(barHeight + FadeHeight)
+                .background(
+                    Brush.verticalGradient(
+                        0.00f to Color.Transparent,
+                        0.40f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                        1.00f to MaterialTheme.colorScheme.surface,
+                    ),
+                ),
+    )
 }
 
 private fun Route.toIcon(): ImageVector? =

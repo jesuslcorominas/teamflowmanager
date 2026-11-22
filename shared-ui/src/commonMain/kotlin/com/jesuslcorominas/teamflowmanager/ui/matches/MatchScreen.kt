@@ -92,12 +92,12 @@ import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
-import com.jesuslcorominas.teamflowmanager.ui.main.BottomBarFade
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalFloatingBottomBar
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.PendingSubstitutionCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
+import com.jesuslcorominas.teamflowmanager.ui.navigation.BottomBarFade
 import com.jesuslcorominas.teamflowmanager.ui.navigation.FloatingBottomBar
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
@@ -671,6 +671,7 @@ private fun FloatingMatchActions(
                 .fillMaxWidth()
                 // Cancel SuccessState's side padding so the bar and its fade get the same side
                 // margins as on the main screen; the list restores it with its content padding.
+                // The content is placed outside this Box's bounds: no ancestor may clip.
                 .layout { measurable, constraints ->
                     val extra = TFMSpacing.spacing04.roundToPx() * 2
                     val placeable =
