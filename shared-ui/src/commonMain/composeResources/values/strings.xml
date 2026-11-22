@@ -64,7 +64,7 @@
     <string name="delete_account_message">This cannot be undone. Your account, your club memberships and the teams, players, matches, photos and history that are left with no one to own them will be deleted permanently. Clubs with other members carry on: ownership passes to another member.</string>
     <string name="delete_account_confirm">Delete permanently</string>
     <string name="delete_account_in_progress">Deleting your account\u2026</string>
-    <string name="delete_account_error">Your account could not be deleted. Try again, and write to privacidad@teamflowmanager.app if it keeps failing.</string>
+    <string name="delete_account_error">Your account could not be deleted. Try again, and write to jesuslcorominas@gmail.com if it keeps failing.</string>
     <string name="settings_legal_section">Legal</string>
     <string name="settings_privacy_policy">Privacy policy</string>
     <string name="settings_terms_of_use">Terms of use</string>

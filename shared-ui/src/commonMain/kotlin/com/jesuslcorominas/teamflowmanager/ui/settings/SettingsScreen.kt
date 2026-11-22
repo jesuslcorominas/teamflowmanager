@@ -94,8 +94,8 @@ import teamflowmanager.shared_ui.generated.resources.user_name_unknown
  * Google Play requires the privacy policy to be reachable from inside the app as
  * well as from the store listing.
  */
-private const val PRIVACY_POLICY_URL = "https://teamflowmanager.app/privacy.html"
-private const val TERMS_OF_USE_URL = "https://teamflowmanager.app/terms.html"
+private const val PRIVACY_POLICY_URL = "https://teamflow-manager-897a3.web.app/privacy.html"
+private const val TERMS_OF_USE_URL = "https://teamflow-manager-897a3.web.app/terms.html"
 
 @Composable
 fun SettingsScreen(
