@@ -57,6 +57,8 @@ fun AppleSignInButton(
 private class ButtonTarget(
     private val action: () -> Unit,
 ) : NSObject() {
+    // Wired by name through NSSelectorFromString("onTap") above: renaming this
+    // method without updating that string breaks the button at runtime only.
     @ObjCAction
     fun onTap() = action()
 }
