@@ -126,6 +126,7 @@ firebase-config-ktx = { group = "com.google.firebase", name = "firebase-config-k
 # GitLive Firebase KMP SDK (iOS)
 gitlive-firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "gitliveFirebase" }
 gitlive-firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "gitliveFirebase" }
+gitlive-firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = "gitliveFirebase" }
 
 # Ktor Darwin engine (iOS)
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }

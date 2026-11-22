@@ -110,8 +110,14 @@ actual val dataRemoteModule: Module =
         single<ImageStorageDataSource> { NoOpImageStorageDataSource() }
         single<DynamicLinkDataSource> { NoOpDynamicLinkDataSource() }
 
-        // FCM stubs — replace with real implementations when APNs is configured
-        singleOf(::IosFcmDataSourceImpl) bind FcmDataSource::class
+        // Push notifications (FCM over APNs)
+        single<FcmDataSource> {
+            IosFcmDataSourceImpl(
+                firestore = get(),
+                httpClient = get(),
+                functionsBaseUrl = functionsBaseUrl(),
+            )
+        }
         singleOf(::IosFcmTokenProviderDataSourceImpl) bind FcmTokenProviderDataSource::class
         singleOf(::IosNotificationTopicDataSourceImpl) bind NotificationTopicDataSource::class
         singleOf(::IosNotificationPermissionDataSourceImpl) bind NotificationPermissionDataSource::class

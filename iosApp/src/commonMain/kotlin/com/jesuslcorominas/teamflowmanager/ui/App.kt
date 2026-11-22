@@ -13,6 +13,7 @@ fun App(
     onShareFile: (String) -> Unit = {},
     onSignInWithApple: (suspend () -> AppleSignInCredential?)? = null,
     appleSignInButton: (@Composable (enabled: Boolean, onClick: () -> Unit) -> Unit)? = null,
+    onRequestNotificationPermission: (onResult: (Boolean) -> Unit) -> Unit = { it(false) },
 ) {
     MaterialTheme(colorScheme = LightColorScheme) {
         val navController = remember { IosNavController() }
@@ -22,6 +23,7 @@ fun App(
             onShareFile = onShareFile,
             onSignInWithApple = onSignInWithApple,
             appleSignInButton = appleSignInButton,
+            onRequestNotificationPermission = onRequestNotificationPermission,
         )
     }
 }

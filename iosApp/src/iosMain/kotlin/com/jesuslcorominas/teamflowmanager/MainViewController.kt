@@ -50,6 +50,7 @@ fun MainViewController(): UIViewController {
                 onSignInWithGoogle = { GoogleSignInBridge.signIn() },
                 onSignInWithApple = { AppleSignInBridge.signIn() },
                 appleSignInButton = { enabled, onClick -> AppleSignInButton(enabled = enabled, onClick = onClick) },
+                onRequestNotificationPermission = ::requestPushPermission,
                 onShareFile = { filePath ->
                     val fileUrl = NSURL.fileURLWithPath(filePath)
                     val activityVC =

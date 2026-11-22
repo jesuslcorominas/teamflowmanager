@@ -36,6 +36,7 @@ import com.jesuslcorominas.teamflowmanager.ui.settings.SettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.splash.SplashScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamListScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
+import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -46,6 +47,7 @@ internal fun IosNavHost(
     onShareFile: (String) -> Unit,
     onSignInWithApple: (suspend () -> AppleSignInCredential?)? = null,
     appleSignInButton: (@Composable (enabled: Boolean, onClick: () -> Unit) -> Unit)? = null,
+    onRequestNotificationPermission: (onResult: (Boolean) -> Unit) -> Unit,
 ) {
     var matchTitle: String? by remember { mutableStateOf(null) }
     var presidentMatchTitle: String? by remember { mutableStateOf(null) }
@@ -77,15 +79,23 @@ internal fun IosNavHost(
                 onNavigateToMatches = { navController.navigateClearing(IosDestination.Matches) },
             )
 
-        is IosDestination.Login ->
+        is IosDestination.Login -> {
+            val loginViewModel: LoginViewModel = koinViewModel()
             LoginScreen(
+                viewModel = loginViewModel,
                 onSignInWithGoogle = onSignInWithGoogle,
                 onSignInWithApple = onSignInWithApple,
                 appleSignInButton = appleSignInButton,
                 // Like Android, go back through the splash: it is the one that picks the landing
                 // screen from the user's roles and the stored view, not Matches for everyone.
                 onLoginSuccess = { navController.navigateClearing(IosDestination.Splash) },
+                // Without notification permission the login waits for this answer before it
+                // navigates, so it has to be wired: a null callback would leave it loading.
+                onRequestNotificationPermission = {
+                    onRequestNotificationPermission(loginViewModel::onNotificationPermissionResult)
+                },
             )
+        }
 
         is IosDestination.ClubSelection ->
             ClubSelectionScreen(

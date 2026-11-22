@@ -51,6 +51,7 @@ kotlin {
             dependencies {
                 implementation(libs.gitlive.firebase.auth)
                 implementation(libs.gitlive.firebase.firestore)
+                implementation(libs.gitlive.firebase.messaging)
                 implementation(libs.ktor.client.darwin)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
@@ -113,7 +114,7 @@ android {
 }
 
 // The dev.gitlive:firebase-* artifacts are cinterop wrappers over the FirebaseCore,
-// FirebaseAuth and FirebaseFirestore Objective-C frameworks. This project supplies those
+// FirebaseAuth, FirebaseFirestore and FirebaseMessaging Objective-C frameworks. This project supplies those
 // frameworks through CocoaPods in iosApp.xcworkspace (iosApp/Pods/ is gitignored), not
 // through the Gradle build, so Gradle has no framework search path for them. Linking the
 // iOS *executable* for this module therefore fails with `ld: framework 'FirebaseCore' not
