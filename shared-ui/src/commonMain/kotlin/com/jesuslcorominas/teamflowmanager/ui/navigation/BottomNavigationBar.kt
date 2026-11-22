@@ -1,8 +1,11 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,6 +18,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -23,8 +27,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.ui.components.bottomnav.BottomNavItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.BackgroundContrast
@@ -57,6 +63,91 @@ fun BottomNavigationBar(
             listOf(Route.Matches, Route.Players, Route.Analysis, Route.Team)
         }
 
+    FloatingBottomBar(
+        modifier = modifier,
+        containerColor = BackgroundContrast,
+    ) {
+        items.forEach { route ->
+            val icon: ImageVector? = route.toIcon()
+            val label: String? = route.toLabel()
+
+            val selected =
+                when {
+                    route is Route.Players && Route.fromValue(currentRoute) is Route.Players -> true
+                    route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
+                    route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
+                    route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
+                    route is Route.ClubSettings && Route.fromValue(currentRoute) is Route.ClubSettings -> true
+                    route is Route.PresidentNotifications && Route.fromValue(currentRoute) is Route.PresidentNotifications -> true
+                    route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
+                    route is Route.Matches && (
+                        Route.fromValue(currentRoute) is Route.Matches ||
+                            Route.fromValue(currentRoute) is Route.ArchivedMatches
+                    ) -> true
+                    else -> false
+                }
+
+            NavigationBarItem(
+                alwaysShowLabel = false,
+                icon = {
+                    if (label != null && icon != null) {
+                        if (route is Route.PresidentNotifications && unreadNotificationsCount > 0) {
+                            BadgedBox(
+                                badge = {
+                                    Badge { Text(text = unreadNotificationsCount.toString()) }
+                                },
+                            ) {
+                                BottomNavItem(
+                                    iconVector = icon,
+                                    label = label,
+                                    isSelected = selected,
+                                )
+                            }
+                        } else {
+                            BottomNavItem(
+                                iconVector = icon,
+                                label = label,
+                                isSelected = selected,
+                            )
+                        }
+                    }
+                },
+                selected = selected,
+                onClick = {
+                    if (!selected) {
+                        val destination =
+                            when (route) {
+                                is Route.Team -> route.createRoute(Route.Team.MODE_VIEW)
+                                else -> route.createRoute()
+                            }
+                        onNavigate(destination)
+                    }
+                },
+                colors =
+                    NavigationBarItemDefaults.colors(
+                        selectedIconColor = ContentContrast,
+                        unselectedIconColor = PrimaryLight,
+                        selectedTextColor = ContentContrast,
+                        unselectedTextColor = PrimaryLight,
+                        indicatorColor = Primary,
+                    ),
+            )
+        }
+    }
+}
+
+/**
+ * Floating pill container shared by the main screen's navigation bar and the match screen's
+ * action bar, so both keep the same height, margins, shape, elevation and bottom placement.
+ * Only the background colour and the row content differ. The caller adds the system
+ * navigation-bar inset to [modifier].
+ */
+@Composable
+fun FloatingBottomBar(
+    containerColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
     Box(
         modifier =
             modifier
@@ -68,82 +159,43 @@ fun BottomNavigationBar(
             shape = RoundedCornerShape(32.dp),
             tonalElevation = 4.dp,
             shadowElevation = 16.dp,
-            color = BackgroundContrast,
+            color = containerColor,
         ) {
             NavigationBar(
                 modifier = Modifier.padding(horizontal = 8.dp),
                 containerColor = Color.Transparent,
                 windowInsets = WindowInsets(0),
-            ) {
-                items.forEach { route ->
-                    val icon: ImageVector? = route.toIcon()
-                    val label: String? = route.toLabel()
-
-                    val selected =
-                        when {
-                            route is Route.Players && Route.fromValue(currentRoute) is Route.Players -> true
-                            route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
-                            route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
-                            route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
-                            route is Route.ClubSettings && Route.fromValue(currentRoute) is Route.ClubSettings -> true
-                            route is Route.PresidentNotifications && Route.fromValue(currentRoute) is Route.PresidentNotifications -> true
-                            route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
-                            route is Route.Matches && (
-                                Route.fromValue(currentRoute) is Route.Matches ||
-                                    Route.fromValue(currentRoute) is Route.ArchivedMatches
-                            ) -> true
-                            else -> false
-                        }
-
-                    NavigationBarItem(
-                        alwaysShowLabel = false,
-                        icon = {
-                            if (label != null && icon != null) {
-                                if (route is Route.PresidentNotifications && unreadNotificationsCount > 0) {
-                                    BadgedBox(
-                                        badge = {
-                                            Badge { Text(text = unreadNotificationsCount.toString()) }
-                                        },
-                                    ) {
-                                        BottomNavItem(
-                                            iconVector = icon,
-                                            label = label,
-                                            isSelected = selected,
-                                        )
-                                    }
-                                } else {
-                                    BottomNavItem(
-                                        iconVector = icon,
-                                        label = label,
-                                        isSelected = selected,
-                                    )
-                                }
-                            }
-                        },
-                        selected = selected,
-                        onClick = {
-                            if (!selected) {
-                                val destination =
-                                    when (route) {
-                                        is Route.Team -> route.createRoute(Route.Team.MODE_VIEW)
-                                        else -> route.createRoute()
-                                    }
-                                onNavigate(destination)
-                            }
-                        },
-                        colors =
-                            NavigationBarItemDefaults.colors(
-                                selectedIconColor = ContentContrast,
-                                unselectedIconColor = PrimaryLight,
-                                selectedTextColor = ContentContrast,
-                                unselectedTextColor = PrimaryLight,
-                                indicatorColor = Primary,
-                            ),
-                    )
-                }
-            }
+                content = content,
+            )
         }
     }
+}
+
+private val FadeHeight = 32.dp // extra height above the nav bar for the gradient fade
+
+/**
+ * Transparent → surface gradient behind a floating bottom bar: it covers the bar zone plus
+ * [FadeHeight] above it, so list content fades out as it scrolls under the bar.
+ * [barHeight] must already include the system navigation-bar inset.
+ */
+@Composable
+fun BottomBarFade(
+    barHeight: Dp,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(barHeight + FadeHeight)
+                .background(
+                    Brush.verticalGradient(
+                        0.00f to Color.Transparent,
+                        0.40f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                        1.00f to MaterialTheme.colorScheme.surface,
+                    ),
+                ),
+    )
 }
 
 private fun Route.toIcon(): ImageVector? =

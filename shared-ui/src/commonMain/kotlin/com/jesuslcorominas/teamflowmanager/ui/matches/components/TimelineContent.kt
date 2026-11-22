@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.model.PeriodType
 import com.jesuslcorominas.teamflowmanager.domain.model.TimelineEvent
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.theme.Primary
 import com.jesuslcorominas.teamflowmanager.ui.theme.SubstitutionGreen
 import com.jesuslcorominas.teamflowmanager.ui.theme.SubstitutionRed
@@ -62,7 +63,13 @@ fun TimelineContent(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(TFMSpacing.spacing04),
+        contentPadding =
+            PaddingValues(
+                start = TFMSpacing.spacing04,
+                top = TFMSpacing.spacing04,
+                end = TFMSpacing.spacing04,
+                bottom = TFMSpacing.spacing04 + LocalContentBottomPadding.current,
+            ),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         items(events) { event ->
