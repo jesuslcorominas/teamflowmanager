@@ -421,7 +421,6 @@
     <!-- Pending Team Assignment Strings -->
     <string name="pending_team_title">Asignación de equipo pendiente</string>
     <string name="pending_team_message">Tu cuenta ha sido verificada. Por favor, espera a que el presidente del club te asigne a un equipo.</string>
-    <string name="pending_team_sign_out">Cerrar sesión</string>
 
     <!-- Assign Coach Dialog -->
     <string name="assign_coach_button">Asignar entrenador</string>

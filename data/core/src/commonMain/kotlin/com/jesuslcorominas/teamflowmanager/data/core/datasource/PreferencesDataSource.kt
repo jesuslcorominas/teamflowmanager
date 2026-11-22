@@ -20,4 +20,10 @@ interface PreferencesDataSource {
     fun getSubstitutionMode(): String?
 
     fun setSubstitutionMode(mode: String)
+
+    /**
+     * Removes the values tied to the signed-in account (active view role, default captain).
+     * Device-wide settings stay, so the next account starts clean without losing them.
+     */
+    fun clearAccountData()
 }

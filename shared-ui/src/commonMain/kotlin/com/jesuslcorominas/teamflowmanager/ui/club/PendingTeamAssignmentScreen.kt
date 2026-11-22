@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,12 +18,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
+import com.jesuslcorominas.teamflowmanager.ui.components.SignInWithAnotherAccount
 import com.jesuslcorominas.teamflowmanager.viewmodel.PendingTeamAssignmentViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.pending_team_message
-import teamflowmanager.shared_ui.generated.resources.pending_team_sign_out
 import teamflowmanager.shared_ui.generated.resources.pending_team_title
 
 @Composable
@@ -66,8 +65,6 @@ fun PendingTeamAssignmentScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = viewModel::signOut) {
-            Text(stringResource(Res.string.pending_team_sign_out))
-        }
+        SignInWithAnotherAccount(onClick = viewModel::signOut)
     }
 }

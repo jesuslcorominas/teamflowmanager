@@ -13,6 +13,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -21,7 +24,10 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
+import com.jesuslcorominas.teamflowmanager.ui.components.SignInWithAnotherAccount
+import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSelectionViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
 import teamflowmanager.shared_ui.generated.resources.club_selection_subtitle
 import teamflowmanager.shared_ui.generated.resources.club_selection_title
@@ -32,8 +38,19 @@ import teamflowmanager.shared_ui.generated.resources.join_club
 fun ClubSelectionScreen(
     onCreateClub: () -> Unit,
     onJoinClub: () -> Unit,
+    onSignOut: () -> Unit,
+    viewModel: ClubSelectionViewModel = koinViewModel(),
 ) {
     TrackScreenView(screenName = ScreenName.CLUB_SELECTION, screenClass = "ClubSelectionScreen")
+
+    val signOutComplete by viewModel.signOutComplete.collectAsState()
+
+    LaunchedEffect(signOutComplete) {
+        if (signOutComplete) {
+            viewModel.clearSignOutComplete()
+            onSignOut()
+        }
+    }
 
     Scaffold { paddingValues ->
         Column(
@@ -98,6 +115,10 @@ fun ClubSelectionScreen(
                     fontWeight = FontWeight.Medium,
                 )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SignInWithAnotherAccount(onClick = viewModel::signOut)
         }
     }
 }
