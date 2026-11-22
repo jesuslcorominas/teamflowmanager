@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.navigation
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -57,6 +58,91 @@ fun BottomNavigationBar(
             listOf(Route.Matches, Route.Players, Route.Analysis, Route.Team)
         }
 
+    FloatingBottomBar(
+        modifier = modifier,
+        containerColor = BackgroundContrast,
+    ) {
+        items.forEach { route ->
+            val icon: ImageVector? = route.toIcon()
+            val label: String? = route.toLabel()
+
+            val selected =
+                when {
+                    route is Route.Players && Route.fromValue(currentRoute) is Route.Players -> true
+                    route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
+                    route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
+                    route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
+                    route is Route.ClubSettings && Route.fromValue(currentRoute) is Route.ClubSettings -> true
+                    route is Route.PresidentNotifications && Route.fromValue(currentRoute) is Route.PresidentNotifications -> true
+                    route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
+                    route is Route.Matches && (
+                        Route.fromValue(currentRoute) is Route.Matches ||
+                            Route.fromValue(currentRoute) is Route.ArchivedMatches
+                    ) -> true
+                    else -> false
+                }
+
+            NavigationBarItem(
+                alwaysShowLabel = false,
+                icon = {
+                    if (label != null && icon != null) {
+                        if (route is Route.PresidentNotifications && unreadNotificationsCount > 0) {
+                            BadgedBox(
+                                badge = {
+                                    Badge { Text(text = unreadNotificationsCount.toString()) }
+                                },
+                            ) {
+                                BottomNavItem(
+                                    iconVector = icon,
+                                    label = label,
+                                    isSelected = selected,
+                                )
+                            }
+                        } else {
+                            BottomNavItem(
+                                iconVector = icon,
+                                label = label,
+                                isSelected = selected,
+                            )
+                        }
+                    }
+                },
+                selected = selected,
+                onClick = {
+                    if (!selected) {
+                        val destination =
+                            when (route) {
+                                is Route.Team -> route.createRoute(Route.Team.MODE_VIEW)
+                                else -> route.createRoute()
+                            }
+                        onNavigate(destination)
+                    }
+                },
+                colors =
+                    NavigationBarItemDefaults.colors(
+                        selectedIconColor = ContentContrast,
+                        unselectedIconColor = PrimaryLight,
+                        selectedTextColor = ContentContrast,
+                        unselectedTextColor = PrimaryLight,
+                        indicatorColor = Primary,
+                    ),
+            )
+        }
+    }
+}
+
+/**
+ * Floating pill container shared by the main screen's navigation bar and the match screen's
+ * action bar, so both keep the same height, margins, shape, elevation and bottom placement.
+ * Only the background colour and the row content differ. The caller adds the system
+ * navigation-bar inset to [modifier].
+ */
+@Composable
+fun FloatingBottomBar(
+    containerColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
     Box(
         modifier =
             modifier
@@ -68,80 +154,14 @@ fun BottomNavigationBar(
             shape = RoundedCornerShape(32.dp),
             tonalElevation = 4.dp,
             shadowElevation = 16.dp,
-            color = BackgroundContrast,
+            color = containerColor,
         ) {
             NavigationBar(
                 modifier = Modifier.padding(horizontal = 8.dp),
                 containerColor = Color.Transparent,
                 windowInsets = WindowInsets(0),
-            ) {
-                items.forEach { route ->
-                    val icon: ImageVector? = route.toIcon()
-                    val label: String? = route.toLabel()
-
-                    val selected =
-                        when {
-                            route is Route.Players && Route.fromValue(currentRoute) is Route.Players -> true
-                            route is Route.Team && Route.fromValue(currentRoute) is Route.Team -> true
-                            route is Route.TeamList && Route.fromValue(currentRoute) is Route.TeamList -> true
-                            route is Route.ClubMembers && Route.fromValue(currentRoute) is Route.ClubMembers -> true
-                            route is Route.ClubSettings && Route.fromValue(currentRoute) is Route.ClubSettings -> true
-                            route is Route.PresidentNotifications && Route.fromValue(currentRoute) is Route.PresidentNotifications -> true
-                            route is Route.Analysis && Route.fromValue(currentRoute) is Route.Analysis -> true
-                            route is Route.Matches && (
-                                Route.fromValue(currentRoute) is Route.Matches ||
-                                    Route.fromValue(currentRoute) is Route.ArchivedMatches
-                            ) -> true
-                            else -> false
-                        }
-
-                    NavigationBarItem(
-                        alwaysShowLabel = false,
-                        icon = {
-                            if (label != null && icon != null) {
-                                if (route is Route.PresidentNotifications && unreadNotificationsCount > 0) {
-                                    BadgedBox(
-                                        badge = {
-                                            Badge { Text(text = unreadNotificationsCount.toString()) }
-                                        },
-                                    ) {
-                                        BottomNavItem(
-                                            iconVector = icon,
-                                            label = label,
-                                            isSelected = selected,
-                                        )
-                                    }
-                                } else {
-                                    BottomNavItem(
-                                        iconVector = icon,
-                                        label = label,
-                                        isSelected = selected,
-                                    )
-                                }
-                            }
-                        },
-                        selected = selected,
-                        onClick = {
-                            if (!selected) {
-                                val destination =
-                                    when (route) {
-                                        is Route.Team -> route.createRoute(Route.Team.MODE_VIEW)
-                                        else -> route.createRoute()
-                                    }
-                                onNavigate(destination)
-                            }
-                        },
-                        colors =
-                            NavigationBarItemDefaults.colors(
-                                selectedIconColor = ContentContrast,
-                                unselectedIconColor = PrimaryLight,
-                                selectedTextColor = ContentContrast,
-                                unselectedTextColor = PrimaryLight,
-                                indicatorColor = Primary,
-                            ),
-                    )
-                }
-            }
+                content = content,
+            )
         }
     }
 }

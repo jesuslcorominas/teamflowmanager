@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,9 +67,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.domain.model.Match
@@ -87,10 +92,13 @@ import com.jesuslcorominas.teamflowmanager.ui.components.card.MatchTimeCard
 import com.jesuslcorominas.teamflowmanager.ui.components.dialog.AppAlertDialog
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderBy
 import com.jesuslcorominas.teamflowmanager.ui.components.form.PlayerSortOrderSelector
+import com.jesuslcorominas.teamflowmanager.ui.main.BottomBarFade
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
+import com.jesuslcorominas.teamflowmanager.ui.main.LocalFloatingBottomBar
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.PendingSubstitutionCard
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.PlayerActivityChart
 import com.jesuslcorominas.teamflowmanager.ui.matches.components.TimelineContent
+import com.jesuslcorominas.teamflowmanager.ui.navigation.FloatingBottomBar
 import com.jesuslcorominas.teamflowmanager.ui.players.components.PlayerItem
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.DiscardedSubstitutionItem
@@ -198,6 +206,8 @@ fun MatchScreen(
     var currentSortOrder: PlayerSortOrderBy by remember { mutableStateOf(PlayerSortOrderBy.BY_ACTIVE_FIRST) }
 
     val snackbarHostState = remember { SnackbarHostState() }
+    // Height of the floating action bar (iOS shell only), so the snackbar shows above it.
+    var floatingBarHeight by remember { mutableStateOf(0.dp) }
     var substitutionResultDialog: SubstitutionExecutionResult? by remember { mutableStateOf(null) }
     var appliedSnackbarCount by remember { mutableIntStateOf(0) }
     var appliedSnackbarSeq by remember { mutableIntStateOf(0) }
@@ -298,6 +308,7 @@ fun MatchScreen(
                         onAddOpponentGoal = { viewModel.showOpponentGoalDialog() },
                         onBeginMatch = { viewModel.beginMatch(state.match.id) },
                         onTitleChange = onTitleChange,
+                        onFloatingBarHeightChange = { floatingBarHeight = it },
                     )
 
                 is MatchUiState.Finished -> {
@@ -382,7 +393,7 @@ fun MatchScreen(
             modifier =
                 Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = LocalContentBottomPadding.current),
+                    .padding(bottom = maxOf(floatingBarHeight, LocalContentBottomPadding.current)),
         )
 
         if (isSubstitutionInProgress) {
@@ -433,6 +444,7 @@ private fun SuccessState(
     onAddOpponentGoal: () -> Unit,
     onBeginMatch: () -> Unit,
     onTitleChange: (String?) -> Unit,
+    onFloatingBarHeightChange: (Dp) -> Unit,
 ) {
     LaunchedEffect(state.match.id, state.match.teamName, state.match.opponent) {
         onTitleChange("${state.match.teamName} - ${state.match.opponent}")
@@ -446,7 +458,8 @@ private fun SuccessState(
                 .padding(
                     start = TFMSpacing.spacing04,
                     end = TFMSpacing.spacing04,
-                    bottom = TFMSpacing.spacing02,
+                    // With the floating bar the list runs to the bottom edge, under the bar.
+                    bottom = if (usesFloatingBar(state, readOnly)) 0.dp else TFMSpacing.spacing02,
                 ),
     ) {
         MatchDetailContent(
@@ -470,9 +483,21 @@ private fun SuccessState(
             onAddGoal = onAddGoal,
             onAddOpponentGoal = onAddOpponentGoal,
             onBeginMatch = onBeginMatch,
+            onFloatingBarHeightChange = onFloatingBarHeightChange,
         )
     }
 }
+
+/**
+ * The iOS shell draws its bottom bars as floating pills ([LocalFloatingBottomBar]). There, once
+ * the match has started, the action buttons float over the player list in the same container as
+ * the main navigation bar. Android keeps the docked button row.
+ */
+@Composable
+private fun usesFloatingBar(
+    state: MatchUiState.Success,
+    readOnly: Boolean,
+): Boolean = LocalFloatingBottomBar.current && !readOnly && state.match.isStarted
 
 @Composable
 private fun MatchDetailContent(
@@ -496,6 +521,7 @@ private fun MatchDetailContent(
     onAddGoal: () -> Unit,
     onAddOpponentGoal: () -> Unit,
     onBeginMatch: () -> Unit,
+    onFloatingBarHeightChange: (Dp) -> Unit,
 ) {
     var showScorersPopup by remember { mutableStateOf(false) }
 
@@ -541,43 +567,147 @@ private fun MatchDetailContent(
         )
 
         // Player list — click-based substitution (no drag-drop in KMP-23)
-        LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
-        ) {
-            items(
-                items = state.playerTimes.sortedBy(currentSortOrder, state.match),
-                key = { it.player.id },
-            ) { playerTimeItem ->
-                val isPlaying = isOnPitchForDisplay(substitutionMode, state.match, playerTimeItem)
-                PlayerItem(
-                    modifier =
-                        Modifier.animateItem(
-                            fadeInSpec = spring(stiffness = Spring.StiffnessLow),
-                            placementSpec = spring(),
-                            fadeOutSpec = tween(durationMillis = 300),
-                        ),
-                    player = playerTimeItem.player,
-                    showPositions = false,
-                    isPlaying = isPlaying,
-                    timeMillis = playerTimeItem.timeMillis,
-                    showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
-                    showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
-                    isSelected = selectedPlayerOut == playerTimeItem.player.id,
-                    onClick =
-                        if (canSelectPlayerForSubstitution(substitutionMode, state.match, readOnly)) {
-                            { onPlayerClick(playerTimeItem.player.id) }
-                        } else {
-                            null
-                        },
-                )
+        val playerList: @Composable (Modifier, PaddingValues) -> Unit = { listModifier, contentPadding ->
+            LazyColumn(
+                modifier = listModifier,
+                contentPadding = contentPadding,
+                verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
+            ) {
+                items(
+                    items = state.playerTimes.sortedBy(currentSortOrder, state.match),
+                    key = { it.player.id },
+                ) { playerTimeItem ->
+                    val isPlaying = isOnPitchForDisplay(substitutionMode, state.match, playerTimeItem)
+                    PlayerItem(
+                        modifier =
+                            Modifier.animateItem(
+                                fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                placementSpec = spring(),
+                                fadeOutSpec = tween(durationMillis = 300),
+                            ),
+                        player = playerTimeItem.player,
+                        showPositions = false,
+                        isPlaying = isPlaying,
+                        timeMillis = playerTimeItem.timeMillis,
+                        showCaptainBadge = playerTimeItem.player.id == state.match.captainId,
+                        showGoalkeeperBadge = playerTimeItem.player.positions.any { it == Position.Goalkeeper },
+                        isSelected = selectedPlayerOut == playerTimeItem.player.id,
+                        onClick =
+                            if (canSelectPlayerForSubstitution(substitutionMode, state.match, readOnly)) {
+                                { onPlayerClick(playerTimeItem.player.id) }
+                            } else {
+                                null
+                            },
+                    )
+                }
             }
         }
 
-        if (!readOnly) {
-            Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+        if (usesFloatingBar(state, readOnly)) {
+            FloatingMatchActions(
+                modifier = Modifier.weight(1f),
+                state = state,
+                playerList = playerList,
+                onSaveMatch = onSaveMatch,
+                onPauseMatch = onPauseMatch,
+                onResumeMatch = onResumeMatch,
+                onStartTimeout = onStartTimeout,
+                onEndTimeout = onEndTimeout,
+                onAddGoal = onAddGoal,
+                onAddOpponentGoal = onAddOpponentGoal,
+                onFloatingBarHeightChange = onFloatingBarHeightChange,
+            )
+        } else {
+            playerList(Modifier.weight(1f).fillMaxSize(), PaddingValues())
 
-            BottomButtons(
+            if (!readOnly) {
+                Spacer(modifier = Modifier.padding(TFMSpacing.spacing02))
+
+                BottomButtons(
+                    state = state,
+                    onSaveMatch = onSaveMatch,
+                    onPauseMatch = onPauseMatch,
+                    onResumeMatch = onResumeMatch,
+                    onStartTimeout = onStartTimeout,
+                    onEndTimeout = onEndTimeout,
+                    onAddGoal = onAddGoal,
+                    onAddOpponentGoal = onAddOpponentGoal,
+                    onBeginMatch = onBeginMatch,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * iOS layout: the player list fills the area edge to edge and scrolls under the action bar,
+ * which reuses the main navigation bar's container ([FloatingBottomBar]) and fade
+ * ([BottomBarFade]) on the surface colour. The list pads its end by the bar's measured height
+ * so the last card can always scroll clear of it.
+ */
+@Composable
+private fun FloatingMatchActions(
+    modifier: Modifier,
+    state: MatchUiState.Success,
+    playerList: @Composable (Modifier, PaddingValues) -> Unit,
+    onSaveMatch: () -> Unit,
+    onPauseMatch: () -> Unit,
+    onResumeMatch: () -> Unit,
+    onStartTimeout: () -> Unit,
+    onEndTimeout: () -> Unit,
+    onAddGoal: () -> Unit,
+    onAddOpponentGoal: () -> Unit,
+    onFloatingBarHeightChange: (Dp) -> Unit,
+) {
+    var barHeightPx by remember { mutableIntStateOf(0) }
+    val barHeight = with(LocalDensity.current) { barHeightPx.toDp() }
+
+    LaunchedEffect(barHeight) { onFloatingBarHeightChange(barHeight) }
+    DisposableEffect(Unit) { onDispose { onFloatingBarHeightChange(0.dp) } }
+
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                // Cancel SuccessState's side padding so the bar and its fade get the same side
+                // margins as on the main screen; the list restores it with its content padding.
+                .layout { measurable, constraints ->
+                    val extra = TFMSpacing.spacing04.roundToPx() * 2
+                    val placeable =
+                        measurable.measure(
+                            constraints.copy(
+                                minWidth = constraints.minWidth + extra,
+                                maxWidth = constraints.maxWidth + extra,
+                            ),
+                        )
+                    layout(constraints.maxWidth, placeable.height) { placeable.place(-extra / 2, 0) }
+                },
+    ) {
+        playerList(
+            Modifier.fillMaxSize(),
+            PaddingValues(
+                start = TFMSpacing.spacing04,
+                end = TFMSpacing.spacing04,
+                bottom = barHeight + TFMSpacing.spacing02,
+            ),
+        )
+
+        if (barHeight > 0.dp) {
+            BottomBarFade(
+                barHeight = barHeight,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+
+        FloatingBottomBar(
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .onSizeChanged { barHeightPx = it.height }
+                    .padding(bottom = LocalContentBottomPadding.current),
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            MatchActionButtons(
                 state = state,
                 onSaveMatch = onSaveMatch,
                 onPauseMatch = onPauseMatch,
@@ -586,7 +716,6 @@ private fun MatchDetailContent(
                 onEndTimeout = onEndTimeout,
                 onAddGoal = onAddGoal,
                 onAddOpponentGoal = onAddOpponentGoal,
-                onBeginMatch = onBeginMatch,
             )
         }
     }
@@ -668,62 +797,15 @@ private fun BottomButtons(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
             ) {
-                GoalButton(
-                    modifier = Modifier.weight(1F),
-                    enabled = state.match.isInProgress,
+                MatchActionButtons(
+                    state = state,
+                    onSaveMatch = onSaveMatch,
+                    onPauseMatch = onPauseMatch,
+                    onResumeMatch = onResumeMatch,
+                    onStartTimeout = onStartTimeout,
+                    onEndTimeout = onEndTimeout,
                     onAddGoal = onAddGoal,
-                )
-
-                TimeoutButton(
-                    enabled = state.match.isInProgress || state.match.status == MatchStatus.TIMEOUT,
-                    isTimeout = state.match.status == MatchStatus.TIMEOUT,
-                    onClick = if (state.match.status == MatchStatus.TIMEOUT) onEndTimeout else onStartTimeout,
-                )
-
-                AppIconButton(
-                    imageVector =
-                        if (state.match.isInProgress || state.match.status == MatchStatus.TIMEOUT) {
-                            Icons.Filled.Pause
-                        } else {
-                            Icons.Filled.PlayArrow
-                        },
-                    contentDescription =
-                        stringResource(
-                            if (state.match.isInProgress) {
-                                Res.string.pause_match_button
-                            } else {
-                                Res.string.resume_match_button
-                            },
-                        ),
-                    tint =
-                        if ((state.match.canPause() && state.match.isInProgress) || state.match.status == MatchStatus.PAUSED) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                        },
-                    enabled =
-                        if (state.match.status == MatchStatus.TIMEOUT) {
-                            false
-                        } else if (state.match.isInProgress) {
-                            state.match.canPause()
-                        } else {
-                            true
-                        },
-                    onClick = if (state.match.isInProgress) onPauseMatch else onResumeMatch,
-                )
-
-                AppIconButton(
-                    imageVector = Icons.Filled.Stop,
-                    contentDescription = stringResource(Res.string.finish_match_button),
-                    tint = MaterialTheme.colorScheme.error,
-                    onClick = onSaveMatch,
-                )
-
-                GoalButton(
-                    modifier = Modifier.weight(1F),
-                    enabled = state.match.isInProgress,
-                    isOpponent = true,
-                    onAddGoal = onAddOpponentGoal,
+                    onAddOpponentGoal = onAddOpponentGoal,
                 )
             }
         }
@@ -737,6 +819,76 @@ private fun BottomButtons(
             Text(text = stringResource(Res.string.begin_match))
         }
     }
+}
+
+@Composable
+private fun RowScope.MatchActionButtons(
+    state: MatchUiState.Success,
+    onSaveMatch: () -> Unit,
+    onPauseMatch: () -> Unit,
+    onResumeMatch: () -> Unit,
+    onStartTimeout: () -> Unit,
+    onEndTimeout: () -> Unit,
+    onAddGoal: () -> Unit,
+    onAddOpponentGoal: () -> Unit,
+) {
+    GoalButton(
+        modifier = Modifier.weight(1F),
+        enabled = state.match.isInProgress,
+        onAddGoal = onAddGoal,
+    )
+
+    TimeoutButton(
+        enabled = state.match.isInProgress || state.match.status == MatchStatus.TIMEOUT,
+        isTimeout = state.match.status == MatchStatus.TIMEOUT,
+        onClick = if (state.match.status == MatchStatus.TIMEOUT) onEndTimeout else onStartTimeout,
+    )
+
+    AppIconButton(
+        imageVector =
+            if (state.match.isInProgress || state.match.status == MatchStatus.TIMEOUT) {
+                Icons.Filled.Pause
+            } else {
+                Icons.Filled.PlayArrow
+            },
+        contentDescription =
+            stringResource(
+                if (state.match.isInProgress) {
+                    Res.string.pause_match_button
+                } else {
+                    Res.string.resume_match_button
+                },
+            ),
+        tint =
+            if ((state.match.canPause() && state.match.isInProgress) || state.match.status == MatchStatus.PAUSED) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            },
+        enabled =
+            if (state.match.status == MatchStatus.TIMEOUT) {
+                false
+            } else if (state.match.isInProgress) {
+                state.match.canPause()
+            } else {
+                true
+            },
+        onClick = if (state.match.isInProgress) onPauseMatch else onResumeMatch,
+    )
+
+    AppIconButton(
+        imageVector = Icons.Filled.Stop,
+        contentDescription = stringResource(Res.string.finish_match_button),
+        tint = MaterialTheme.colorScheme.error,
+        onClick = onSaveMatch,
+    )
+
+    GoalButton(
+        modifier = Modifier.weight(1F),
+        enabled = state.match.isInProgress,
+        isOpponent = true,
+        onAddGoal = onAddOpponentGoal,
+    )
 }
 
 @Composable

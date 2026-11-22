@@ -67,6 +67,31 @@ private val FabContentGap = 16.dp // gap between last list item and FAB bottom
 private val FadeHeight = 32.dp // extra height above the nav bar for the gradient fade
 
 /**
+ * Transparent → surface gradient behind a floating bottom bar: it covers the bar zone plus
+ * [FadeHeight] above it, so list content fades out as it scrolls under the bar.
+ * [barHeight] must already include the system navigation-bar inset.
+ */
+@Composable
+internal fun BottomBarFade(
+    barHeight: Dp,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(barHeight + FadeHeight)
+                .background(
+                    Brush.verticalGradient(
+                        0.00f to Color.Transparent,
+                        0.40f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                        1.00f to MaterialTheme.colorScheme.surface,
+                    ),
+                ),
+    )
+}
+
+/**
  * Shared MainScreen shell for iOS.
  *
  * Layout:
@@ -138,6 +163,7 @@ fun MainScreen(
     CompositionLocalProvider(
         LocalSearchState provides searchState,
         LocalContentBottomPadding provides contentBottomPadding,
+        LocalFloatingBottomBar provides true,
         LocalBackPressController provides backPressController,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -178,19 +204,9 @@ fun MainScreen(
             // Gradient overlay: transparent → surface color, covering the bar zone + FadeHeight above.
             // Invisible over a white/surface background; fades out cards as they enter the nav-bar zone.
             if (uiConfig?.showBottomBar == true && bottomNavHeightDp > 0.dp) {
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .height(bottomNavHeightDp + FadeHeight)
-                            .background(
-                                Brush.verticalGradient(
-                                    0.00f to Color.Transparent,
-                                    0.40f to MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                                    1.00f to MaterialTheme.colorScheme.surface,
-                                ),
-                            ),
+                BottomBarFade(
+                    barHeight = bottomNavHeightDp,
+                    modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
 

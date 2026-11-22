@@ -29,3 +29,9 @@ val LocalSearchState =
     }
 
 val LocalContentBottomPadding = compositionLocalOf { 0.dp }
+
+/**
+ * Whether the app shell draws its bottom bars as floating pills over the content. Only the iOS
+ * shell ([MainScreen]) provides `true`; screens shared with Android keep their docked layout.
+ */
+val LocalFloatingBottomBar = compositionLocalOf { false }
