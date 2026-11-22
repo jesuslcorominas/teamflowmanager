@@ -66,6 +66,13 @@ internal class PreferencesLocalDataSourceImpl(
             .apply()
     }
 
+    override fun clearAccountData() {
+        sharedPreferences.edit()
+            .remove(KEY_ACTIVE_VIEW_ROLE)
+            .remove(KEY_DEFAULT_CAPTAIN_ID)
+            .apply()
+    }
+
     companion object {
         private const val PREFS_NAME = "teamflowmanager_preferences"
         private const val KEY_SHOW_INVALID_SUBSTITUTION_ALERT = "show_invalid_substitution_alert"

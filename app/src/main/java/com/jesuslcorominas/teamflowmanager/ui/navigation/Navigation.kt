@@ -120,6 +120,11 @@ fun Navigation(
                 onJoinClub = {
                     navController.navigate(Route.JoinClub.createRoute())
                 },
+                onSignOut = {
+                    navController.navigate(Route.Login.createRoute()) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
 

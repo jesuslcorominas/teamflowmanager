@@ -25,6 +25,8 @@ sealed class IosDestination {
 
     data object JoinClub : IosDestination()
 
+    data object PendingTeamAssignment : IosDestination()
+
     data object TeamList : IosDestination()
 
     data class Team(val mode: String) : IosDestination()
