@@ -58,4 +58,9 @@ internal class PreferencesRepositoryImpl(
     }
 
     override fun observeSubstitutionMode(): Flow<String?> = substitutionMode.asStateFlow()
+
+    override fun clearAccountData() {
+        preferencesDataSource.clearAccountData()
+        activeViewRole.value = null
+    }
 }

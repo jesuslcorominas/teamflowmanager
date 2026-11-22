@@ -19,6 +19,7 @@ import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSettingsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.CreateClubScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.JoinClubScreen
+import com.jesuslcorominas.teamflowmanager.ui.club.PendingTeamAssignmentScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.PresidentNotificationsScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.PresidentTeamDetailScreen
 import com.jesuslcorominas.teamflowmanager.ui.invitation.AcceptTeamInvitationScreen
@@ -72,7 +73,7 @@ internal fun IosNavHost(
             SplashScreen(
                 onNavigateToLogin = { navController.navigateClearing(IosDestination.Login) },
                 onNavigateToClubSelection = { navController.navigateClearing(IosDestination.ClubSelection) },
-                onNavigateToAwaitTeam = { navController.navigateClearing(IosDestination.ClubSelection) },
+                onNavigateToAwaitTeam = { navController.navigateClearing(IosDestination.PendingTeamAssignment) },
                 onNavigateToTeamList = { navController.navigateClearing(IosDestination.TeamList) },
                 onNavigateToMatches = { navController.navigateClearing(IosDestination.Matches) },
             )
@@ -97,6 +98,13 @@ internal fun IosNavHost(
             ClubSelectionScreen(
                 onCreateClub = { navController.navigate(IosDestination.CreateClub) },
                 onJoinClub = { navController.navigate(IosDestination.JoinClub) },
+                onSignOut = { navController.navigateClearing(IosDestination.Login) },
+            )
+
+        is IosDestination.PendingTeamAssignment ->
+            PendingTeamAssignmentScreen(
+                onTeamAssigned = { navController.navigateClearing(IosDestination.Matches) },
+                onSignOut = { navController.navigateClearing(IosDestination.Login) },
             )
 
         is IosDestination.CreateClub ->

@@ -26,4 +26,7 @@ interface PreferencesRepository {
 
     /** Emits the stored substitution mode and every later change made through [setSubstitutionMode]. */
     fun observeSubstitutionMode(): Flow<String?>
+
+    /** Removes the values tied to the signed-in account; device-wide settings stay. */
+    fun clearAccountData()
 }

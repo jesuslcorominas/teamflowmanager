@@ -47,6 +47,11 @@ internal class PreferencesLocalDataSourceImpl : PreferencesDataSource {
         defaults.setObject(mode, KEY_SUBSTITUTION_MODE)
     }
 
+    override fun clearAccountData() {
+        defaults.removeObjectForKey(KEY_ACTIVE_VIEW_ROLE)
+        defaults.removeObjectForKey(KEY_DEFAULT_CAPTAIN_ID)
+    }
+
     companion object {
         private const val KEY_SHOW_INVALID_SUBSTITUTION_ALERT = "show_invalid_substitution_alert"
         private const val KEY_DEFAULT_CAPTAIN_ID = "default_captain_id"

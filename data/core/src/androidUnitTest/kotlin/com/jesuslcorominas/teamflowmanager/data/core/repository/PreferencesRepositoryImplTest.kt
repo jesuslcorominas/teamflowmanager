@@ -226,4 +226,27 @@ class PreferencesRepositoryImplTest {
             // Then
             assertEquals(listOf(null, "LIVE", "SCHEDULED"), emissions)
         }
+
+    // --- clearAccountData ---
+
+    @Test
+    fun `givenAStoredRole_whenClearAccountData_thenDelegatesAndEmitsNull`() =
+        runTest {
+            // Given
+            every { preferencesDataSource.getActiveViewRole() } returns "PRESIDENT"
+            val seededRepository = PreferencesRepositoryImpl(preferencesDataSource)
+            val emissions = mutableListOf<String?>()
+            backgroundScope.launch {
+                seededRepository.observeActiveViewRole().collect { emissions.add(it) }
+            }
+            runCurrent()
+
+            // When
+            seededRepository.clearAccountData()
+            runCurrent()
+
+            // Then — the next account must not inherit the previous role
+            verify { preferencesDataSource.clearAccountData() }
+            assertEquals(listOf("PRESIDENT", null), emissions)
+        }
 }
