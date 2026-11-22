@@ -2,9 +2,12 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 
 import app.cash.turbine.test
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.model.AccountExistsWithDifferentProviderException
+import com.jesuslcorominas.teamflowmanager.domain.model.AppleSignInCredential
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResolvePendingCoachAssignmentsForUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithAppleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import io.mockk.coEvery
@@ -30,6 +33,7 @@ class LoginViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var signInWithGoogleUseCase: SignInWithGoogleUseCase
+    private lateinit var signInWithAppleUseCase: SignInWithAppleUseCase
     private lateinit var syncFcmTokenUseCase: SyncFcmTokenUseCase
     private lateinit var isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase
     private lateinit var analyticsTracker: AnalyticsTracker
@@ -47,6 +51,7 @@ class LoginViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         signInWithGoogleUseCase = mockk()
+        signInWithAppleUseCase = mockk()
         syncFcmTokenUseCase = mockk(relaxed = true)
         isNotificationPermissionGranted = mockk()
         analyticsTracker = mockk(relaxed = true)
@@ -54,6 +59,7 @@ class LoginViewModelTest {
         every { isNotificationPermissionGranted() } returns true
         viewModel = LoginViewModel(
             signInWithGoogleUseCase = signInWithGoogleUseCase,
+            signInWithAppleUseCase = signInWithAppleUseCase,
             syncFcmTokenUseCase = syncFcmTokenUseCase,
             isNotificationPermissionGranted = isNotificationPermissionGranted,
             analyticsTracker = analyticsTracker,
@@ -194,4 +200,44 @@ class LoginViewModelTest {
 
             coVerify(exactly = 0) { syncFcmTokenUseCase(any(), any(), any()) }
         }
+
+    @Test
+    fun `signInWithApple should emit Success and log the apple method`() = runTest(testDispatcher) {
+        val credential = AppleSignInCredential(idToken = "apple_id_token", rawNonce = "nonce", fullName = "Test User")
+        coEvery { signInWithAppleUseCase(credential) } returns Result.success(testUser)
+
+        viewModel.signInWithApple(credential)
+        advanceUntilIdle()
+
+        assertEquals(LoginViewModel.UiState.Success, viewModel.uiState.value)
+        coVerify { signInWithAppleUseCase(credential) }
+        verify { analyticsTracker.setUserId(testUser.id) }
+        verify { analyticsTracker.logEvent("login", match { it["method"] == "apple" }) }
+    }
+
+    @Test
+    fun `signInWithApple should emit AccountExistsWithOtherProvider on email collision`() = runTest(testDispatcher) {
+        val credential = AppleSignInCredential(idToken = "apple_id_token", rawNonce = "nonce")
+        coEvery { signInWithAppleUseCase(credential) } returns
+            Result.failure(AccountExistsWithDifferentProviderException())
+
+        viewModel.signInWithApple(credential)
+        advanceUntilIdle()
+
+        assertEquals(LoginViewModel.UiState.AccountExistsWithOtherProvider, viewModel.uiState.value)
+        verify { analyticsTracker.logEvent("login_error", match { it["method"] == "apple" }) }
+    }
+
+    @Test
+    fun `signInWithApple should emit Error on other failures`() = runTest(testDispatcher) {
+        val credential = AppleSignInCredential(idToken = "apple_id_token", rawNonce = "nonce")
+        coEvery { signInWithAppleUseCase(credential) } returns Result.failure(Exception("Invalid nonce"))
+
+        viewModel.signInWithApple(credential)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state is LoginViewModel.UiState.Error)
+        assertEquals("Invalid nonce", (state as LoginViewModel.UiState.Error).message)
+    }
 }

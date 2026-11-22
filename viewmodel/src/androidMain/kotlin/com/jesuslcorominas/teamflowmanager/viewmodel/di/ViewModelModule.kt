@@ -60,6 +60,7 @@ val viewModelModule =
         viewModel {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
+                signInWithAppleUseCase = get(),
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),

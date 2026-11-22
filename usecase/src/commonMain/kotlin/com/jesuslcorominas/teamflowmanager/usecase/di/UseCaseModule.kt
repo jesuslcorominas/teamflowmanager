@@ -84,6 +84,7 @@ import com.jesuslcorominas.teamflowmanager.domain.usecase.SetPlayerAsCaptainUseC
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetShouldShowInvalidSubstitutionAlertUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SetSubstitutionModeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ShouldShowInvalidSubstitutionAlertUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithAppleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignOutUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.StartMatchTimerUseCase
@@ -185,6 +186,7 @@ import com.jesuslcorominas.teamflowmanager.usecase.SetPlayerAsCaptainUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetShouldShowInvalidSubstitutionAlertUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SetSubstitutionModeUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.ShouldShowInvalidSubstitutionAlertUseCaseImpl
+import com.jesuslcorominas.teamflowmanager.usecase.SignInWithAppleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignInWithGoogleUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.SignOutUseCaseImpl
 import com.jesuslcorominas.teamflowmanager.usecase.StartMatchTimerUseCaseImpl
@@ -292,6 +294,7 @@ internal val useCaseInternalModule =
         // Auth use cases
         singleOf(::GetCurrentUserUseCaseImpl) bind GetCurrentUserUseCase::class
         singleOf(::SignInWithGoogleUseCaseImpl) bind SignInWithGoogleUseCase::class
+        singleOf(::SignInWithAppleUseCaseImpl) bind SignInWithAppleUseCase::class
         singleOf(::SignOutUseCaseImpl) bind SignOutUseCase::class
         singleOf(::DeleteAccountUseCaseImpl) bind DeleteAccountUseCase::class
 

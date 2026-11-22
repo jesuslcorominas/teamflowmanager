@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
+import com.jesuslcorominas.teamflowmanager.domain.model.AppleSignInCredential
 import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
@@ -40,6 +41,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
+import teamflowmanager.shared_ui.generated.resources.account_exists_with_other_provider
 import teamflowmanager.shared_ui.generated.resources.app_name
 import teamflowmanager.shared_ui.generated.resources.ic_google
 import teamflowmanager.shared_ui.generated.resources.login_subtitle
@@ -52,6 +54,11 @@ import teamflowmanager.shared_ui.generated.resources.sign_in_with_google
  * sign-in flow (CredentialManager on Android, GIDSignIn on iOS) and returns
  * the Google ID token. The screen calls viewModel.signInWithGoogle(idToken)
  * once the token is obtained.
+ *
+ * Sign in with Apple is iOS only: [onSignInWithApple] runs the native flow and
+ * returns the credential, or null when the user dismisses Apple's sheet, and
+ * [appleSignInButton] draws Apple's own button. Both default to null, which
+ * leaves the screen exactly as it is on Android.
  */
 @Composable
 fun LoginScreen(
@@ -65,12 +72,15 @@ fun LoginScreen(
      * Pass null on platforms where notification permission is not applicable (iOS).
      */
     onRequestNotificationPermission: (() -> Unit)? = null,
+    onSignInWithApple: (suspend () -> AppleSignInCredential?)? = null,
+    appleSignInButton: (@Composable (enabled: Boolean, onClick: () -> Unit) -> Unit)? = null,
 ) {
     TrackScreenView(screenName = ScreenName.LOGIN, screenClass = "LoginScreen")
 
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val accountExistsMessage = stringResource(Res.string.account_exists_with_other_provider)
 
     LaunchedEffect(uiState) {
         when (uiState) {
@@ -80,6 +90,10 @@ fun LoginScreen(
             }
             is UiState.Error -> {
                 snackbarHostState.showSnackbar((uiState as UiState.Error).message)
+                viewModel.resetState()
+            }
+            is UiState.AccountExistsWithOtherProvider -> {
+                snackbarHostState.showSnackbar(accountExistsMessage)
                 viewModel.resetState()
             }
             else -> {}
@@ -169,6 +183,24 @@ fun LoginScreen(
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium,
                         )
+                    }
+                }
+
+                if (onSignInWithApple != null && appleSignInButton != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    appleSignInButton(uiState !is UiState.Loading) {
+                        scope.launch {
+                            try {
+                                // null: the user dismissed Apple's sheet, nothing to report.
+                                val credential = onSignInWithApple() ?: return@launch
+                                viewModel.signInWithApple(credential)
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar(
+                                    e.message ?: "Error al iniciar sesión",
+                                )
+                            }
+                        }
                     }
                 }
             }

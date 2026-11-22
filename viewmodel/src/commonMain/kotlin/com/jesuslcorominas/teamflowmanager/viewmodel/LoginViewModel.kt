@@ -3,9 +3,12 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.model.AccountExistsWithDifferentProviderException
+import com.jesuslcorominas.teamflowmanager.domain.model.AppleSignInCredential
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.ResolvePendingCoachAssignmentsForUserUseCase
+import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithAppleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SignInWithGoogleUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.SyncFcmTokenUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -18,6 +21,7 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
+    private val signInWithAppleUseCase: SignInWithAppleUseCase,
     private val syncFcmTokenUseCase: SyncFcmTokenUseCase,
     private val isNotificationPermissionGranted: IsNotificationPermissionGrantedUseCase,
     private val analyticsTracker: AnalyticsTracker,
@@ -46,6 +50,12 @@ class LoginViewModel(
         data object Success : UiState
 
         data class Error(val message: String) : UiState
+
+        /**
+         * The identity's email already has an account created with another
+         * provider. The screen tells the user to sign in with that one.
+         */
+        data object AccountExistsWithOtherProvider : UiState
     }
 
     sealed interface UiEvent {
@@ -53,15 +63,27 @@ class LoginViewModel(
     }
 
     fun signInWithGoogle(idToken: String) {
+        signIn(method = "google") { signInWithGoogleUseCase(idToken) }
+    }
+
+    /** iOS only: Android never shows the Sign in with Apple button. */
+    fun signInWithApple(credential: AppleSignInCredential) {
+        signIn(method = "apple") { signInWithAppleUseCase(credential) }
+    }
+
+    private fun signIn(
+        method: String,
+        block: suspend () -> Result<User>,
+    ) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-            signInWithGoogleUseCase(idToken)
+            block()
                 .onSuccess { user ->
                     analyticsTracker.setUserId(user.id)
                     analyticsTracker.logEvent(
                         "login",
                         mapOf(
-                            "method" to "google",
+                            "method" to method,
                             "is_new_user" to "unknown",
                         ),
                     )
@@ -71,11 +93,16 @@ class LoginViewModel(
                     analyticsTracker.logEvent(
                         "login_error",
                         mapOf(
-                            "method" to "google",
+                            "method" to method,
                             "error" to (exception.message ?: "Unknown error"),
                         ),
                     )
-                    _uiState.value = UiState.Error(exception.message ?: "Error al iniciar sesión")
+                    _uiState.value =
+                        if (exception is AccountExistsWithDifferentProviderException) {
+                            UiState.AccountExistsWithOtherProvider
+                        } else {
+                            UiState.Error(exception.message ?: "Error al iniciar sesión")
+                        }
                 }
         }
     }

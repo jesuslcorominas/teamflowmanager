@@ -32,7 +32,7 @@ class DeleteAccountUseCaseTest {
     }
 
     @Test
-    fun `deletes the fcm token, then the account, then signs out`() =
+    fun `deletes the fcm token, revokes provider tokens, then the account, then signs out`() =
         runTest {
             every { authRepository.getCurrentUser() } returns flowOf(user)
             coEvery { accountRepository.deleteAccount() } returns Result.success(Unit)
@@ -42,6 +42,7 @@ class DeleteAccountUseCaseTest {
             assertTrue(result.isSuccess)
             coVerifyOrder {
                 deleteFcmTokenUseCase("user123")
+                authRepository.revokeSignInProviderTokens()
                 accountRepository.deleteAccount()
                 authRepository.signOut()
             }
@@ -86,5 +87,31 @@ class DeleteAccountUseCaseTest {
             assertTrue(result.isSuccess)
             coVerify { accountRepository.deleteAccount() }
             coVerify { authRepository.signOut() }
+        }
+
+    @Test
+    fun `when revoking provider tokens fails, the account is still deleted`() =
+        runTest {
+            every { authRepository.getCurrentUser() } returns flowOf(user)
+            coEvery { authRepository.revokeSignInProviderTokens() } returns Result.failure(IllegalStateException("not configured"))
+            coEvery { accountRepository.deleteAccount() } returns Result.success(Unit)
+
+            val result = useCase()
+
+            assertTrue(result.isSuccess)
+            coVerify { accountRepository.deleteAccount() }
+        }
+
+    @Test
+    fun `when revoking provider tokens throws, the account is still deleted`() =
+        runTest {
+            every { authRepository.getCurrentUser() } returns flowOf(user)
+            coEvery { authRepository.revokeSignInProviderTokens() } throws RuntimeException("boom")
+            coEvery { accountRepository.deleteAccount() } returns Result.success(Unit)
+
+            val result = useCase()
+
+            assertTrue(result.isSuccess)
+            coVerify { accountRepository.deleteAccount() }
         }
 }
