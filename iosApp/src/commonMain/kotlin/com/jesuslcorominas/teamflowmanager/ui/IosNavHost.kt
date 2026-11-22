@@ -45,6 +45,7 @@ internal fun IosNavHost(
     onSignInWithGoogle: suspend () -> String,
     onShareFile: (String) -> Unit,
     onRequestNotificationPermission: (onResult: (Boolean) -> Unit) -> Unit,
+    onSignedOut: () -> Unit,
 ) {
     var matchTitle: String? by remember { mutableStateOf(null) }
     var presidentMatchTitle: String? by remember { mutableStateOf(null) }
@@ -221,7 +222,10 @@ internal fun IosNavHost(
 
                         is IosDestination.Settings ->
                             SettingsScreen(
-                                onSignOut = { navController.navigateClearing(IosDestination.Login) },
+                                onSignOut = {
+                                    navController.navigateClearing(IosDestination.Login)
+                                    onSignedOut()
+                                },
                             )
 
                         is IosDestination.TeamList ->
