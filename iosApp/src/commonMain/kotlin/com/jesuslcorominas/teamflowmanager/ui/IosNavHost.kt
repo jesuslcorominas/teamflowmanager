@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import com.jesuslcorominas.teamflowmanager.IosDestination
 import com.jesuslcorominas.teamflowmanager.IosNavController
 import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
+import com.jesuslcorominas.teamflowmanager.domain.model.AppleSignInCredential
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubSelectionScreen
@@ -43,6 +44,8 @@ internal fun IosNavHost(
     navController: IosNavController,
     onSignInWithGoogle: suspend () -> String,
     onShareFile: (String) -> Unit,
+    onSignInWithApple: (suspend () -> AppleSignInCredential?)? = null,
+    appleSignInButton: (@Composable (enabled: Boolean, onClick: () -> Unit) -> Unit)? = null,
 ) {
     var matchTitle: String? by remember { mutableStateOf(null) }
     var presidentMatchTitle: String? by remember { mutableStateOf(null) }
@@ -77,6 +80,8 @@ internal fun IosNavHost(
         is IosDestination.Login ->
             LoginScreen(
                 onSignInWithGoogle = onSignInWithGoogle,
+                onSignInWithApple = onSignInWithApple,
+                appleSignInButton = appleSignInButton,
                 // Like Android, go back through the splash: it is the one that picks the landing
                 // screen from the user's roles and the stored view, not Matches for everyone.
                 onLoginSuccess = { navController.navigateClearing(IosDestination.Splash) },

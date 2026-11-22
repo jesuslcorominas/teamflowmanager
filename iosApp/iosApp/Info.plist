@@ -4,6 +4,13 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>es</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>TeamFlow Manager</string>
 	<key>CFBundleExecutable</key>

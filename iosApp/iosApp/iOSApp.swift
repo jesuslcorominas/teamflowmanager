@@ -5,6 +5,10 @@ import GoogleSignIn
 
 @main
 struct iOSApp: App {
+    // Kept alive here: the Kotlin bridge holds it, but the ASAuthorizationController
+    // delegate must outlive any single request.
+    private let appleSignInCallback = AppleSignInCallbackImpl()
+
     init() {
         #if DEBUG
         FirebaseApp.configure()
@@ -23,6 +27,8 @@ struct iOSApp: App {
         MainViewControllerKt.doInitKoinIos()
         // KMP-17: register the native Google Sign-In handler
         GoogleSignInBridge.shared.callback = GoogleSignInCallbackImpl()
+        // #499: register the native Sign in with Apple handler (login and token revocation)
+        AppleSignInBridge.shared.callback = appleSignInCallback
     }
 
     var body: some Scene {

@@ -40,7 +40,7 @@ import com.jesuslcorominas.teamflowmanager.di.initKoinIos as diInitKoinIos
  *
  * Swift sees `init` as a keyword so Kotlin/Native adds the `do` prefix automatically.
  */
-fun initKoinIos() = diInitKoinIos()
+fun initKoinIos() = diInitKoinIos(appleCredentialRevoker = AppleSignInBridge)
 
 fun MainViewController(): UIViewController {
     var vc: UIViewController? = null
@@ -48,6 +48,8 @@ fun MainViewController(): UIViewController {
         ComposeUIViewController(configure = { enforceStrictPlistSanityCheck = false }) {
             App(
                 onSignInWithGoogle = { GoogleSignInBridge.signIn() },
+                onSignInWithApple = { AppleSignInBridge.signIn() },
+                appleSignInButton = { enabled, onClick -> AppleSignInButton(enabled = enabled, onClick = onClick) },
                 onShareFile = { filePath ->
                     val fileUrl = NSURL.fileURLWithPath(filePath)
                     val activityVC =
