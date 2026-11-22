@@ -1103,7 +1103,11 @@ private fun ScorersTabContent(events: List<TimelineEvent>) {
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(horizontal = TFMSpacing.spacing04),
-            contentPadding = PaddingValues(top = TFMSpacing.spacing03, bottom = TFMSpacing.spacing04),
+            contentPadding =
+                PaddingValues(
+                    top = TFMSpacing.spacing03,
+                    bottom = TFMSpacing.spacing04 + LocalContentBottomPadding.current,
+                ),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing02),
         ) {
             items(scorers, key = { it.name }) { entry ->
@@ -1226,7 +1230,11 @@ private fun SummaryTabContent(
             Modifier
                 .fillMaxSize()
                 .padding(horizontal = TFMSpacing.spacing04),
-        contentPadding = PaddingValues(top = TFMSpacing.spacing03, bottom = TFMSpacing.spacing04),
+        contentPadding =
+            PaddingValues(
+                top = TFMSpacing.spacing03,
+                bottom = TFMSpacing.spacing04 + LocalContentBottomPadding.current,
+            ),
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
         item {
@@ -1283,8 +1291,10 @@ private fun StatisticsTabContent(
             modifier = Modifier.fillMaxSize(),
             contentPadding =
                 PaddingValues(
-                    horizontal = TFMSpacing.spacing04,
-                    vertical = TFMSpacing.spacing03,
+                    start = TFMSpacing.spacing04,
+                    top = TFMSpacing.spacing03,
+                    end = TFMSpacing.spacing04,
+                    bottom = TFMSpacing.spacing03 + LocalContentBottomPadding.current,
                 ),
             verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
         ) {
