@@ -2,6 +2,7 @@ package com.jesuslcorominas.teamflowmanager.usecase
 
 import com.jesuslcorominas.teamflowmanager.domain.model.Club
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubNotFoundException
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
@@ -56,6 +57,13 @@ class JoinClubByCodeUseCaseTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `givenClubNotFound_whenInvoke_thenThrowIllegalArgumentException`() = runTest {
+        coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
+        coEvery { clubRepository.getClubByInvitationCode("INVALID") } returns null
+        useCase.invoke("INVALID")
+    }
+
+    @Test(expected = ClubNotFoundException::class)
+    fun `givenClubNotFound_whenInvoke_thenThrowClubNotFoundException`() = runTest {
         coEvery { getCurrentUser() } returns flowOf(authenticatedUser)
         coEvery { clubRepository.getClubByInvitationCode("INVALID") } returns null
         useCase.invoke("INVALID")

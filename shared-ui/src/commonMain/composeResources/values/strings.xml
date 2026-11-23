@@ -42,6 +42,7 @@
     <string name="join_club_button">Join Club</string>
     <string name="join_club_loading">Joining club…</string>
     <string name="join_club_error">Failed to join club. Please try again.</string>
+    <string name="join_club_error_not_found">No club matches that invitation code</string>
     <string name="join_club_success_title">Welcome to the Club!</string>
     <string name="join_club_success_message">You have successfully joined %1$s</string>
     <string name="join_club_success_role">Your role: %1$s</string>

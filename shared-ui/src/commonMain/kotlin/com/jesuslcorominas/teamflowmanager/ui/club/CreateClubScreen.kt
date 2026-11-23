@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.club
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
+import com.jesuslcorominas.teamflowmanager.ui.components.IosBackButton
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubNameError
 import com.jesuslcorominas.teamflowmanager.viewmodel.CreateClubViewModel
@@ -48,6 +50,7 @@ import teamflowmanager.shared_ui.generated.resources.club_name_error_too_short
 import teamflowmanager.shared_ui.generated.resources.club_name_label
 import teamflowmanager.shared_ui.generated.resources.create_club_button
 import teamflowmanager.shared_ui.generated.resources.create_club_continue
+import teamflowmanager.shared_ui.generated.resources.create_club_error
 import teamflowmanager.shared_ui.generated.resources.create_club_redirecting
 import teamflowmanager.shared_ui.generated.resources.create_club_subtitle
 import teamflowmanager.shared_ui.generated.resources.create_club_success_message
@@ -57,12 +60,14 @@ import teamflowmanager.shared_ui.generated.resources.create_club_title
 @Composable
 fun CreateClubScreen(
     onClubCreated: () -> Unit,
+    onNavigateBack: () -> Unit = {},
     viewModel: CreateClubViewModel = koinViewModel(),
 ) {
     TrackScreenView(screenName = ScreenName.CREATE_CLUB, screenClass = "CreateClubScreen")
 
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val errorMessage = stringResource(Res.string.create_club_error)
 
     LaunchedEffect(uiState) {
         when (val state = uiState) {
@@ -72,7 +77,8 @@ fun CreateClubScreen(
                 onClubCreated()
             }
             is CreateClubViewModel.UiState.Error -> {
-                snackbarHostState.showSnackbar(state.message)
+                // The exception text is English and technical: show a translated message.
+                snackbarHostState.showSnackbar(errorMessage)
                 viewModel.resetState()
             }
             else -> {}
@@ -88,7 +94,14 @@ fun CreateClubScreen(
                 onClubCreated()
             }
         } else {
-            CreateClubForm(paddingValues = paddingValues, viewModel = viewModel)
+            Box(modifier = Modifier.fillMaxSize()) {
+                CreateClubForm(paddingValues = paddingValues, viewModel = viewModel)
+                // iOS has no system back button: without it the user is stuck here.
+                // No-op on Android (system back handles it).
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    IosBackButton(onBack = onNavigateBack)
+                }
+            }
         }
     }
 }

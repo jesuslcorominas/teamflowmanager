@@ -30,7 +30,7 @@ class FirebaseAuthDataSourceImpl(
                 User(
                     id = it.uid,
                     email = it.email,
-                    displayName = it.displayName,
+                    displayName = resolveDisplayName(it.displayName, it.email),
                     photoUrl = it.photoURL,
                 )
             }
@@ -52,7 +52,7 @@ class FirebaseAuthDataSourceImpl(
                 User(
                     id = firebaseUser.uid,
                     email = firebaseUser.email,
-                    displayName = firebaseUser.displayName,
+                    displayName = resolveDisplayName(firebaseUser.displayName, firebaseUser.email),
                     photoUrl = firebaseUser.photoURL,
                 ),
             )
@@ -81,7 +81,11 @@ class FirebaseAuthDataSourceImpl(
                 User(
                     id = signedIn.uid,
                     email = signedIn.email,
-                    displayName = signedIn.displayName ?: credential.fullName?.takeIf { it.isNotBlank() },
+                    displayName =
+                        resolveDisplayName(
+                            signedIn.displayName ?: credential.fullName?.takeIf { it.isNotBlank() },
+                            signedIn.email,
+                        ),
                     photoUrl = signedIn.photoURL,
                 ),
             )
@@ -95,6 +99,20 @@ class FirebaseAuthDataSourceImpl(
             Result.failure(e)
         }
     }
+
+    /**
+     * Creating or joining a club and accepting an invitation require a display name.
+     * Apple sends the name only on the first authorisation, and the user may not share
+     * it at all, so an Apple account can have none: fall back to the local part of the
+     * email (the relay address when the user hides it). Not stored on the profile, so
+     * a real name is never overwritten.
+     */
+    private fun resolveDisplayName(
+        displayName: String?,
+        email: String?,
+    ): String? =
+        displayName?.trim()?.takeIf { it.isNotEmpty() }
+            ?: email?.substringBefore('@')?.trim()?.takeIf { it.isNotEmpty() }
 
     /**
      * Apple sends the user's name only the first time they authorise the app, so

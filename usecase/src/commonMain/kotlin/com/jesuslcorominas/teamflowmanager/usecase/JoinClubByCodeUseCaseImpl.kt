@@ -1,5 +1,6 @@
 package com.jesuslcorominas.teamflowmanager.usecase
 
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubNotFoundException
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubResult
@@ -43,7 +44,7 @@ internal class JoinClubByCodeUseCaseImpl(
         // Find club by invitation code
         val club =
             clubRepository.getClubByInvitationCode(invitationCode)
-                ?: throw IllegalArgumentException("Club not found with invitation code: $invitationCode")
+                ?: throw ClubNotFoundException(invitationCode)
 
         // Get orphan teams (teams without clubId) for current user
         val orphanTeams = teamRepository.getOrphanTeams(currentUser.id)

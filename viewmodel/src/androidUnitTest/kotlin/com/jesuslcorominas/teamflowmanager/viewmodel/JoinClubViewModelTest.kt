@@ -3,6 +3,7 @@ package com.jesuslcorominas.teamflowmanager.viewmodel
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.model.Club
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubNotFoundException
 import com.jesuslcorominas.teamflowmanager.domain.model.Team
 import com.jesuslcorominas.teamflowmanager.domain.model.TeamType
 import com.jesuslcorominas.teamflowmanager.domain.model.User
@@ -180,6 +181,32 @@ class JoinClubViewModelTest {
         advanceUntilIdle()
 
         assertEquals(JoinClubViewModel.UiState.Error("Network error"), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `joinClub should set CLUB_NOT_FOUND error when the code matches no club`() = runTest {
+        val code = "QWERTY"
+        coEvery { joinClubByCodeUseCase.invoke(code) } throws ClubNotFoundException(code)
+        viewModel.onInvitationCodeChanged(code)
+
+        viewModel.joinClub()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as JoinClubViewModel.UiState.Error
+        assertEquals(JoinClubError.CLUB_NOT_FOUND, state.error)
+    }
+
+    @Test
+    fun `joinClub should set GENERIC error on any other exception`() = runTest {
+        val code = "ABC123"
+        coEvery { joinClubByCodeUseCase.invoke(code) } throws IllegalArgumentException("User email is required to join a club")
+        viewModel.onInvitationCodeChanged(code)
+
+        viewModel.joinClub()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as JoinClubViewModel.UiState.Error
+        assertEquals(JoinClubError.GENERIC, state.error)
     }
 
     @Test

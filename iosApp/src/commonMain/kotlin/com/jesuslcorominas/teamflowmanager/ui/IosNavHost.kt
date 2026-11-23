@@ -112,11 +112,13 @@ internal fun IosNavHost(
                 onClubCreated = {
                     navController.navigateClearing(IosDestination.Team(Route.Team.MODE_CREATE))
                 },
+                onNavigateBack = { navController.popBackStack() },
             )
 
         is IosDestination.JoinClub ->
             JoinClubScreen(
                 onClubJoined = { navController.navigateClearing(IosDestination.Splash) },
+                onNavigateBack = { navController.popBackStack() },
             )
 
         is IosDestination.PlayerWizard ->
