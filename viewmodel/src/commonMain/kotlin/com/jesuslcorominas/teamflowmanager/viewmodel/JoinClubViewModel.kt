@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsEvent
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsParam
 import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
+import com.jesuslcorominas.teamflowmanager.domain.model.ClubNotFoundException
 import com.jesuslcorominas.teamflowmanager.domain.usecase.GetCurrentUserUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.IsNotificationPermissionGrantedUseCase
 import com.jesuslcorominas.teamflowmanager.domain.usecase.JoinClubByCodeUseCase
@@ -21,6 +22,12 @@ enum class InvitationCodeError {
     CODE_TOO_SHORT,
     CODE_TOO_LONG,
     INVALID_FORMAT,
+}
+
+/** Why joining failed, so the screen can show a translated message. */
+enum class JoinClubError {
+    CLUB_NOT_FOUND,
+    GENERIC,
 }
 
 private const val MIN_INVITATION_CODE_LENGTH = 6
@@ -49,7 +56,10 @@ class JoinClubViewModel(
 
         data class Success(val result: JoinClubResult) : UiState
 
-        data class Error(val message: String) : UiState
+        data class Error(
+            val message: String,
+            val error: JoinClubError = JoinClubError.GENERIC,
+        ) : UiState
     }
 
     fun onInvitationCodeChanged(code: String) {
@@ -119,7 +129,8 @@ class JoinClubViewModel(
                         AnalyticsParam.INVITATION_CODE to code,
                     ),
                 )
-                _uiState.value = UiState.Error(e.message ?: "Failed to join club")
+                val error = if (e is ClubNotFoundException) JoinClubError.CLUB_NOT_FOUND else JoinClubError.GENERIC
+                _uiState.value = UiState.Error(e.message ?: "Failed to join club", error)
             }
         }
     }

@@ -42,6 +42,7 @@
     <string name="join_club_button">Unirse al Club</string>
     <string name="join_club_loading">Uniéndose al club…</string>
     <string name="join_club_error">Error al unirse al club. Por favor, inténtalo de nuevo.</string>
+    <string name="join_club_error_not_found">No hay ningún club con ese código de invitación</string>
     <string name="join_club_success_title">¡Bienvenido al Club!</string>
     <string name="join_club_success_message">Te has unido correctamente a %1$s</string>
     <string name="join_club_success_role">Tu rol: %1$s</string>

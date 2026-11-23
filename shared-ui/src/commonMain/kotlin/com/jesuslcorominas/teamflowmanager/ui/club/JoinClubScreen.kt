@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.ui.club
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -34,8 +35,10 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.TeamFlowManagerIcon
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
+import com.jesuslcorominas.teamflowmanager.ui.components.IosBackButton
 import com.jesuslcorominas.teamflowmanager.ui.components.form.AppTextField
 import com.jesuslcorominas.teamflowmanager.viewmodel.InvitationCodeError
+import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubError
 import com.jesuslcorominas.teamflowmanager.viewmodel.JoinClubViewModel
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
@@ -48,6 +51,8 @@ import teamflowmanager.shared_ui.generated.resources.invitation_code_error_too_s
 import teamflowmanager.shared_ui.generated.resources.invitation_code_label
 import teamflowmanager.shared_ui.generated.resources.join_club_button
 import teamflowmanager.shared_ui.generated.resources.join_club_continue
+import teamflowmanager.shared_ui.generated.resources.join_club_error
+import teamflowmanager.shared_ui.generated.resources.join_club_error_not_found
 import teamflowmanager.shared_ui.generated.resources.join_club_redirecting
 import teamflowmanager.shared_ui.generated.resources.join_club_subtitle
 import teamflowmanager.shared_ui.generated.resources.join_club_success_message
@@ -59,12 +64,15 @@ import teamflowmanager.shared_ui.generated.resources.join_club_title
 @Composable
 fun JoinClubScreen(
     onClubJoined: () -> Unit,
+    onNavigateBack: () -> Unit = {},
     viewModel: JoinClubViewModel = koinViewModel(),
 ) {
     TrackScreenView(screenName = ScreenName.JOIN_CLUB, screenClass = "JoinClubScreen")
 
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val genericErrorMessage = stringResource(Res.string.join_club_error)
+    val clubNotFoundMessage = stringResource(Res.string.join_club_error_not_found)
 
     LaunchedEffect(uiState) {
         when (val state = uiState) {
@@ -74,7 +82,13 @@ fun JoinClubScreen(
                 onClubJoined()
             }
             is JoinClubViewModel.UiState.Error -> {
-                snackbarHostState.showSnackbar(state.message)
+                // The exception text is English and technical: show a translated message.
+                snackbarHostState.showSnackbar(
+                    when (state.error) {
+                        JoinClubError.CLUB_NOT_FOUND -> clubNotFoundMessage
+                        JoinClubError.GENERIC -> genericErrorMessage
+                    },
+                )
                 viewModel.resetState()
             }
             else -> {}
@@ -96,7 +110,14 @@ fun JoinClubScreen(
                 onClubJoined()
             }
         } else {
-            JoinClubForm(paddingValues = paddingValues, viewModel = viewModel)
+            Box(modifier = Modifier.fillMaxSize()) {
+                JoinClubForm(paddingValues = paddingValues, viewModel = viewModel)
+                // iOS has no system back button: without it the user is stuck here.
+                // No-op on Android (system back handles it).
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    IosBackButton(onBack = onNavigateBack)
+                }
+            }
         }
     }
 }
