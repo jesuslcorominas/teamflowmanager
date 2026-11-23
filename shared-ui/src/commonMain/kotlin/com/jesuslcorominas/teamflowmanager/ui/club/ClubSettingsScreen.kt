@@ -36,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,10 +50,15 @@ import androidx.compose.ui.unit.dp
 import com.jesuslcorominas.teamflowmanager.domain.analytics.ScreenName
 import com.jesuslcorominas.teamflowmanager.ui.analytics.TrackScreenView
 import com.jesuslcorominas.teamflowmanager.ui.components.AppBackHandler
+import com.jesuslcorominas.teamflowmanager.ui.components.IosBackButton
 import com.jesuslcorominas.teamflowmanager.ui.components.Loading
+import com.jesuslcorominas.teamflowmanager.ui.components.rememberShareTextAction
 import com.jesuslcorominas.teamflowmanager.ui.main.LocalContentBottomPadding
 import com.jesuslcorominas.teamflowmanager.ui.theme.TFMSpacing
 import com.jesuslcorominas.teamflowmanager.viewmodel.ClubSettingsViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import teamflowmanager.shared_ui.generated.resources.Res
@@ -80,18 +86,18 @@ private val FabBarGap = 16.dp
 @Composable
 fun ClubSettingsScreen(
     viewModel: ClubSettingsViewModel = koinViewModel(),
-    onShareCode: (String) -> Unit = {},
+    onShareCode: (String) -> Unit = rememberShareTextAction(),
 ) {
     TrackScreenView(screenName = ScreenName.CLUB_SETTINGS, screenClass = "ClubSettingsScreen")
 
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val clipboard = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
     val contentBottomPadding = LocalContentBottomPadding.current
 
     val savedMessage = stringResource(Res.string.club_settings_saved)
     val copiedMessage = stringResource(Res.string.invitation_code_copied)
-    var codeCopied by remember { mutableStateOf(false) }
 
     AppBackHandler(enabled = uiState.isEditing && !uiState.showExitDialog) {
         viewModel.onCancelEdit()
@@ -101,13 +107,6 @@ fun ClubSettingsScreen(
         if (uiState.saved) {
             snackbarHostState.showSnackbar(savedMessage)
             viewModel.resetSavedState()
-        }
-    }
-
-    LaunchedEffect(codeCopied) {
-        if (codeCopied) {
-            codeCopied = false
-            snackbarHostState.showSnackbar(copiedMessage)
         }
     }
 
@@ -144,9 +143,9 @@ fun ClubSettingsScreen(
             contentBottomPadding
         }
 
-    val onCopyCode = {
+    val onCopyCode: () -> Unit = {
         clipboard.setText(AnnotatedString(uiState.invitationCode))
-        codeCopied = true
+        scope.showReplacingSnackbar(snackbarHostState, copiedMessage)
     }
     val onRegenerate = viewModel::onRegenerateCode
 
@@ -163,6 +162,7 @@ fun ClubSettingsScreen(
                         onNameChange = viewModel::onNameChange,
                         onHomeGroundChange = viewModel::onHomeGroundChange,
                         onSave = viewModel::onSave,
+                        onCancel = viewModel::onCancelEdit,
                         contentBottomPadding = contentBottomPadding,
                         onCopyCode = onCopyCode,
                         onShareCode = { onShareCode(uiState.invitationCode) },
@@ -258,6 +258,7 @@ private fun ClubEditForm(
     onNameChange: (String) -> Unit,
     onHomeGroundChange: (String) -> Unit,
     onSave: () -> Unit,
+    onCancel: () -> Unit,
     contentBottomPadding: Dp,
     onCopyCode: () -> Unit,
     onShareCode: () -> Unit,
@@ -283,6 +284,10 @@ private fun ClubEditForm(
                 .padding(TFMSpacing.spacing04)
                 .verticalScroll(rememberScrollState()),
     ) {
+        // iOS has no system back button and Club is a root tab, so the only way to leave the
+        // edit form without saving is this button. No-op on Android (system back handles it).
+        IosBackButton(onBack = onCancel)
+
         OutlinedTextField(
             value = uiState.name,
             onValueChange = onNameChange,
@@ -457,3 +462,19 @@ private fun RegenerateConfirmDialog(
         },
     )
 }
+
+/**
+ * Shows [message] in [hostState], dismissing the snackbar currently on screen first so a repeated
+ * action (copying the invitation code twice) shows its feedback again instead of queueing it.
+ *
+ * Launched from the click handler rather than from a `LaunchedEffect` keyed on a flag: resetting
+ * that flag restarted the effect and cancelled the snackbar before it was shown.
+ */
+internal fun CoroutineScope.showReplacingSnackbar(
+    hostState: SnackbarHostState,
+    message: String,
+): Job =
+    launch {
+        hostState.currentSnackbarData?.dismiss()
+        hostState.showSnackbar(message)
+    }
