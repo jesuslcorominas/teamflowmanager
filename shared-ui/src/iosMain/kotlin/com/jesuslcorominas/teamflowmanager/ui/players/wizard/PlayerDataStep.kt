@@ -140,12 +140,15 @@ actual fun PlayerDataStep(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
-                Text(
-                    text = stringResource(Res.string.tap_to_add_photo),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                // No picker on iOS yet (#360), so the hint only shows if one is ever offered.
+                if (isImageUploadEnabled) {
+                    Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
+                    Text(
+                        text = stringResource(Res.string.tap_to_add_photo),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(TFMSpacing.spacing02))

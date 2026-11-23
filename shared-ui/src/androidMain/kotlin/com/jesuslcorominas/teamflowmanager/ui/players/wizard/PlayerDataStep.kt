@@ -159,7 +159,7 @@ actual fun PlayerDataStep(
                 val playerName = listOf(firstName, lastName).filter { it.isNotBlank() }.joinToString(" ")
                 val contentDescription = "${stringResource(Res.string.player_image)} $playerName"
 
-                imageUri?.let { fullUrl ->
+                imageUri?.takeIf { PLAYER_PHOTO_ENABLED }?.let { fullUrl ->
                     var downloadUrl by remember { mutableStateOf<String?>(null) }
                     LaunchedEffect(imageUri) {
                         val storageRef = FirebaseStorage.getInstance().getReferenceFromUrl(fullUrl)
