@@ -22,6 +22,9 @@ class TeamFirestoreDataSourceImpl(
 ) : TeamDataSource {
     companion object {
         private const val TEAMS_COLLECTION = "teams"
+        private const val CLUB_ID_FIELD = "clubId"
+        private const val ASSIGNED_COACH_ID_FIELD = "assignedCoachId"
+        private const val PENDING_COACH_EMAIL_FIELD = "pendingCoachEmail"
     }
 
     private suspend fun currentUserId(): String? = firebaseAuth.currentUser?.uid
@@ -130,8 +133,12 @@ class TeamFirestoreDataSourceImpl(
         }
     }
 
-    // Write operations — not implemented for iOS Phase 2 MVP
-    override suspend fun insertTeam(team: Team) = throw NotImplementedError("insertTeam not implemented for iOS Phase 2")
+    // Write operations mirror the Android implementation: same collection, document ids and fields.
+    override suspend fun insertTeam(team: Team) {
+        checkNotNull(currentUserId()) { "User must be authenticated to create a team" }
+        // Auto-generated document id. The model's id is @Transient, as Android's @DocumentId.
+        firestore.collection(TEAMS_COLLECTION).document.set(team.toFirestoreModel())
+    }
 
     override suspend fun updateTeam(team: Team) {
         val docId =
@@ -144,23 +151,34 @@ class TeamFirestoreDataSourceImpl(
     override suspend fun updateTeamClubId(
         teamId: String,
         clubId: String,
-    ) = throw NotImplementedError("updateTeamClubId not implemented for iOS Phase 2")
+    ) {
+        require(teamId.isNotBlank()) { "Team ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
+        // Merge, as Android, so it succeeds even if the document does not have every field yet.
+        firestore.collection(TEAMS_COLLECTION).document(teamId).set(mapOf(CLUB_ID_FIELD to clubId), merge = true)
+    }
 
     override suspend fun updateTeamCoachId(
         teamId: String,
         coachId: String,
-    ) = throw NotImplementedError("updateTeamCoachId not implemented for iOS Phase 2")
+    ) {
+        require(teamId.isNotBlank()) { "Team ID cannot be blank" }
+        require(coachId.isNotBlank()) { "Coach ID cannot be blank" }
+        firestore.collection(TEAMS_COLLECTION).document(teamId).update(ASSIGNED_COACH_ID_FIELD to coachId)
+    }
 
     override suspend fun updateTeamPendingCoachEmail(
         teamId: String,
         email: String?,
     ) {
         require(teamId.isNotBlank()) { "Team ID cannot be blank" }
-        firestore.collection("teams").document(teamId).update("pendingCoachEmail" to email)
+        firestore.collection(TEAMS_COLLECTION).document(teamId).update(PENDING_COACH_EMAIL_FIELD to email)
     }
 
     override suspend fun clearTeamCoach(teamId: String) {
         require(teamId.isNotBlank()) { "Team ID cannot be blank" }
-        firestore.collection("teams").document(teamId).update("coachId" to null, "pendingCoachEmail" to null)
+        // Same field as Android: the document stores the coach as assignedCoachId. Writing "coachId"
+        // left a stray field and, for a president, the security rules rejected the update.
+        firestore.collection(TEAMS_COLLECTION).document(teamId).update(ASSIGNED_COACH_ID_FIELD to null)
     }
 }

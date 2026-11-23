@@ -19,6 +19,7 @@ class ClubMemberFirestoreDataSourceImpl(
 ) : ClubMemberDataSource {
     companion object {
         private const val CLUB_MEMBERS_COLLECTION = "clubMembers"
+        private const val ROLES_FIELD = "roles"
     }
 
     override fun getClubMemberByUserId(userId: String): Flow<ClubMember?> =
@@ -81,26 +82,72 @@ class ClubMemberFirestoreDataSourceImpl(
             null
         }
 
-    // Write operations — not implemented for iOS Phase 2 MVP
+    // Write operations mirror the Android implementation. The document id is always
+    // "userId_clubId": the Firestore security rules require that format.
     override suspend fun createOrUpdateClubMember(
         userId: String,
         name: String,
         email: String,
         clubId: String,
         roles: List<String>,
-    ): ClubMember = throw NotImplementedError("createOrUpdateClubMember not implemented for iOS Phase 2")
+    ): ClubMember {
+        require(userId.isNotBlank()) { "User ID cannot be blank" }
+        require(name.isNotBlank()) { "Name cannot be blank" }
+        require(email.isNotBlank()) { "Email cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
+        require(roles.isNotEmpty()) { "Roles cannot be empty" }
+
+        val clubMemberId = clubMemberId(userId, clubId)
+        val model =
+            ClubMemberFirestoreModel(
+                id = clubMemberId,
+                userId = userId,
+                name = name,
+                email = email,
+                clubId = clubId,
+                roles = roles,
+            )
+        firestore.collection(CLUB_MEMBERS_COLLECTION).document(clubMemberId).set(model)
+        return model.toDomain()
+    }
 
     override suspend fun updateClubMemberRoles(
         userId: String,
         clubId: String,
         roles: List<String>,
-    ) = throw NotImplementedError("updateClubMemberRoles not implemented for iOS Phase 2")
+    ) {
+        require(userId.isNotBlank()) { "User ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
+        require(roles.isNotEmpty()) { "Roles cannot be empty" }
+
+        firestore.collection(CLUB_MEMBERS_COLLECTION)
+            .document(clubMemberId(userId, clubId))
+            .update(ROLES_FIELD to roles)
+    }
 
     override suspend fun addClubMemberRole(
         userId: String,
         clubId: String,
         role: String,
-    ) = throw NotImplementedError("addClubMemberRole not implemented for iOS Phase 2")
+    ) {
+        require(userId.isNotBlank()) { "User ID cannot be blank" }
+        require(clubId.isNotBlank()) { "Club ID cannot be blank" }
+        require(role.isNotBlank()) { "Role cannot be blank" }
+
+        val docRef = firestore.collection(CLUB_MEMBERS_COLLECTION).document(clubMemberId(userId, clubId))
+        val doc = docRef.get()
+        check(doc.exists) { "ClubMember not found for userId: $userId in club: $clubId" }
+
+        val currentRoles = doc.data<ClubMemberFirestoreModel>().roles
+        if (role !in currentRoles) {
+            docRef.update(ROLES_FIELD to currentRoles + role)
+        }
+    }
+
+    private fun clubMemberId(
+        userId: String,
+        clubId: String,
+    ): String = "${userId}_$clubId"
 
     override suspend fun removeClubMember(
         userId: String,

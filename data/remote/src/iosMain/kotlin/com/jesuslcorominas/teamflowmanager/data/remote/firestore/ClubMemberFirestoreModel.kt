@@ -2,10 +2,12 @@ package com.jesuslcorominas.teamflowmanager.data.remote.firestore
 
 import com.jesuslcorominas.teamflowmanager.domain.model.ClubMember
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 data class ClubMemberFirestoreModel(
-    val id: String = "",
+    // Not written to the document, like Android's @DocumentId: reads copy in doc.id.
+    @Transient val id: String = "",
     val userId: String = "",
     val name: String = "",
     val email: String = "",
