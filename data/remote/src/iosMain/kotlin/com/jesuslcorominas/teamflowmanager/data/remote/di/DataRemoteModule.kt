@@ -68,7 +68,9 @@ actual val dataRemoteModule: Module =
         singleOf(::FirestoreTransactionRunner) bind TransactionRunner::class
 
         // Auth
-        singleOf(::FirebaseAuthDataSourceImpl) bind AuthDataSource::class
+        // The Apple revoker is registered by the iOS app (it needs the native
+        // AuthenticationServices flow); getOrNull keeps this module usable without it.
+        single<AuthDataSource> { FirebaseAuthDataSourceImpl(get(), getOrNull()) }
 
         // Cloud Functions over HTTP. Ktorfit is generated for Android only, so
         // iOS talks to the same endpoints through a plain Ktor client.

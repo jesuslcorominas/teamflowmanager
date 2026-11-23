@@ -4,6 +4,7 @@ import com.jesuslcorominas.teamflowmanager.domain.analytics.AnalyticsTracker
 import com.jesuslcorominas.teamflowmanager.domain.analytics.CrashReporter
 import com.jesuslcorominas.teamflowmanager.domain.config.FeatureFlags
 import com.jesuslcorominas.teamflowmanager.domain.model.MatchReportData
+import com.jesuslcorominas.teamflowmanager.domain.utils.AppleCredentialRevoker
 import com.jesuslcorominas.teamflowmanager.domain.utils.MatchReportPdfExporter
 import com.jesuslcorominas.teamflowmanager.domain.utils.PdfExporter
 import com.jesuslcorominas.teamflowmanager.domain.utils.TimeProvider
@@ -76,6 +77,7 @@ val iosModule =
         factory {
             LoginViewModel(
                 signInWithGoogleUseCase = get(),
+                signInWithAppleUseCase = get(),
                 syncFcmTokenUseCase = get(),
                 isNotificationPermissionGranted = get(),
                 analyticsTracker = get(),
@@ -309,7 +311,16 @@ val iosModule =
  *   import TeamflowmanagerDi
  *   IosModuleKt.doInitKoinIos()
  */
-fun initKoinIos(): KoinApplication = initKoin(additionalModules = listOf(iosModule))
+fun initKoinIos(appleCredentialRevoker: AppleCredentialRevoker? = null): KoinApplication =
+    initKoin(
+        additionalModules =
+            listOfNotNull(
+                iosModule,
+                // Native Sign in with Apple revocation lives in the app module (it drives
+                // AuthenticationServices), so the app hands it in here.
+                appleCredentialRevoker?.let { revoker -> module { single<AppleCredentialRevoker> { revoker } } },
+            ),
+    )
 
 // ── Private iOS stub implementations ─────────────────────────────────────────
 

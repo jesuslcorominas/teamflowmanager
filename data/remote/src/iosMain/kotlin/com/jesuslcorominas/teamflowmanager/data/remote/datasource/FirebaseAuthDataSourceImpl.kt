@@ -1,14 +1,29 @@
 package com.jesuslcorominas.teamflowmanager.data.remote.datasource
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
+import com.jesuslcorominas.teamflowmanager.domain.model.AccountExistsWithDifferentProviderException
+import com.jesuslcorominas.teamflowmanager.domain.model.AppleSignInCredential
 import com.jesuslcorominas.teamflowmanager.domain.model.User
+import com.jesuslcorominas.teamflowmanager.domain.utils.AppleCredentialRevoker
 import dev.gitlive.firebase.auth.FirebaseAuth
+import dev.gitlive.firebase.auth.FirebaseAuthUserCollisionException
+import dev.gitlive.firebase.auth.FirebaseUser
 import dev.gitlive.firebase.auth.GoogleAuthProvider
+import dev.gitlive.firebase.auth.OAuthProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import platform.Foundation.NSLog
 import kotlin.coroutines.cancellation.CancellationException
 
-class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthDataSource {
+class FirebaseAuthDataSourceImpl(
+    private val firebaseAuth: FirebaseAuth,
+    /** Native Sign in with Apple revocation; null when the app did not register one. */
+    private val appleCredentialRevoker: AppleCredentialRevoker? = null,
+) : AuthDataSource {
+    private companion object {
+        const val APPLE_PROVIDER_ID = "apple.com"
+    }
+
     override fun getCurrentUser(): Flow<User?> =
         firebaseAuth.authStateChanged.map { firebaseUser ->
             firebaseUser?.let {
@@ -42,6 +57,84 @@ class FirebaseAuthDataSourceImpl(private val firebaseAuth: FirebaseAuth) : AuthD
                 ),
             )
         } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun signInWithApple(credential: AppleSignInCredential): Result<User> {
+        return try {
+            val oauthCredential =
+                OAuthProvider.credential(
+                    providerId = APPLE_PROVIDER_ID,
+                    idToken = credential.idToken,
+                    rawNonce = credential.rawNonce,
+                )
+            val authResult = firebaseAuth.signInWithCredential(oauthCredential)
+            val firebaseUser =
+                authResult.user
+                    ?: return Result.failure(Exception("Firebase user is null after sign in"))
+            storeNameOnFirstSignIn(firebaseUser, credential.fullName)
+            // Read back from currentUser: updateProfile does not refresh the
+            // instance returned by signInWithCredential on every SDK version.
+            val signedIn = firebaseAuth.currentUser ?: firebaseUser
+            Result.success(
+                User(
+                    id = signedIn.uid,
+                    email = signedIn.email,
+                    displayName = signedIn.displayName ?: credential.fullName?.takeIf { it.isNotBlank() },
+                    photoUrl = signedIn.photoURL,
+                ),
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: FirebaseAuthUserCollisionException) {
+            // Same email already registered with Google. Accounts are not linked
+            // automatically; the UI asks the user to sign in with Google instead.
+            Result.failure(AccountExistsWithDifferentProviderException(e))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Apple sends the user's name only the first time they authorise the app, so
+     * it is stored on the Firebase profile then. Best effort: failing to store it
+     * must not fail the sign-in.
+     */
+    private suspend fun storeNameOnFirstSignIn(
+        firebaseUser: FirebaseUser,
+        fullName: String?,
+    ) {
+        val name = fullName?.trim()?.takeIf { it.isNotEmpty() } ?: return
+        if (!firebaseUser.displayName.isNullOrBlank()) return
+        try {
+            firebaseUser.updateProfile(displayName = name)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            NSLog("TeamFlowManager: could not store the Apple display name: %@", e.message ?: e.toString())
+        }
+    }
+
+    override suspend fun revokeSignInProviderTokens(): Result<Unit> {
+        val user = firebaseAuth.currentUser ?: return Result.success(Unit)
+        if (user.providerData.none { it.providerId == APPLE_PROVIDER_ID }) return Result.success(Unit)
+
+        val revoker = appleCredentialRevoker
+        if (revoker == null) {
+            NSLog("TeamFlowManager: Sign in with Apple revocation skipped, no revoker registered")
+            return Result.failure(IllegalStateException("No Apple credential revoker registered"))
+        }
+        return try {
+            revoker.revoke().onFailure { e ->
+                // Expected until the Sign in with Apple key is configured on the
+                // Firebase Apple provider. Logged, never shown: the deletion goes on.
+                NSLog("TeamFlowManager: Sign in with Apple token revocation failed: %@", e.message ?: e.toString())
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            NSLog("TeamFlowManager: Sign in with Apple token revocation failed: %@", e.message ?: e.toString())
             Result.failure(e)
         }
     }

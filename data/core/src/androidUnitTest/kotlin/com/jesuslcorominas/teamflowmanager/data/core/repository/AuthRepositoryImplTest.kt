@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager.data.core.repository
 
 import com.jesuslcorominas.teamflowmanager.data.core.datasource.AuthDataSource
+import com.jesuslcorominas.teamflowmanager.domain.model.AppleSignInCredential
 import com.jesuslcorominas.teamflowmanager.domain.model.User
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -79,6 +80,32 @@ class AuthRepositoryImplTest {
 
         assertTrue(result.isFailure)
         assertEquals(exception, result.exceptionOrNull())
+    }
+
+    // --- signInWithApple ---
+
+    @Test
+    fun `givenAppleCredential_whenSignInWithApple_thenDelegatesToDataSource`() = runTest {
+        val credential = AppleSignInCredential(idToken = "apple-id-token", rawNonce = "nonce")
+        val user = createUser()
+        coEvery { authDataSource.signInWithApple(credential) } returns Result.success(user)
+
+        val result = repository.signInWithApple(credential)
+
+        assertEquals(user, result.getOrNull())
+        coVerify { authDataSource.signInWithApple(credential) }
+    }
+
+    // --- revokeSignInProviderTokens ---
+
+    @Test
+    fun `whenRevokeSignInProviderTokens_thenDelegatesToDataSource`() = runTest {
+        coEvery { authDataSource.revokeSignInProviderTokens() } returns Result.success(Unit)
+
+        val result = repository.revokeSignInProviderTokens()
+
+        assertTrue(result.isSuccess)
+        coVerify { authDataSource.revokeSignInProviderTokens() }
     }
 
     // --- signOut ---

@@ -4,6 +4,7 @@
     <!-- Login -->
     <string name="login_subtitle">Manage your team in an easy way</string>
     <string name="sign_in_with_google">Continue with Google</string>
+    <string name="account_exists_with_other_provider">An account with this email already exists. Sign in with Google.</string>
 
     <!-- Club Selection -->
     <string name="club_selection_title">Welcome!</string>

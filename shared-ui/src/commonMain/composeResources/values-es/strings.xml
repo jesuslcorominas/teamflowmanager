@@ -4,6 +4,7 @@
     <!-- Login -->
     <string name="login_subtitle">Gestiona tu equipo de forma sencilla</string>
     <string name="sign_in_with_google">Continuar con Google</string>
+    <string name="account_exists_with_other_provider">Ya hay una cuenta con este email. Inicia sesión con Google.</string>
 
     <!-- Club Selection -->
     <string name="club_selection_title">¡Bienvenido!</string>

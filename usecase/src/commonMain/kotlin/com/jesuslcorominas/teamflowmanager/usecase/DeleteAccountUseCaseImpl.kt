@@ -23,6 +23,13 @@ internal class DeleteAccountUseCaseImpl(
         // undeliverable anyway once the account is gone.
         runCatching { deleteFcmTokenUseCase(user.id) }
 
+        // Sign in with Apple tokens must be revoked when the account goes away
+        // (App Store guideline 5.1.1(v)). It needs the user still signed in, so it
+        // runs before the cascade. Best effort as well: a revocation that cannot
+        // be done (provider not configured, user dismissed Apple's sheet, no
+        // network) is logged by the data layer and must not block the deletion.
+        runCatching { authRepository.revokeSignInProviderTokens() }
+
         return accountRepository
             .deleteAccount()
             // The auth record is already gone server-side; this clears the cached
