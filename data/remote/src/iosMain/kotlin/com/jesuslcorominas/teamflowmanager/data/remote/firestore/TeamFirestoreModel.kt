@@ -14,6 +14,7 @@ data class TeamFirestoreModel(
     val captainId: String? = null,
     val teamType: Int = TeamType.FOOTBALL_5.players,
     val assignedCoachId: String? = null,
+    val pendingCoachEmail: String? = null,
     val clubId: String? = null,
 )
 
@@ -26,6 +27,7 @@ fun TeamFirestoreModel.toDomain(): Team =
         captainId = captainId,
         teamType = TeamType.fromPlayers(teamType),
         coachId = assignedCoachId,
+        pendingCoachEmail = pendingCoachEmail?.takeIf { it.isNotEmpty() },
         clubId = clubId?.takeIf { it.isNotEmpty() },
     )
 
