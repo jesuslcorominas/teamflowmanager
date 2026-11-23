@@ -21,7 +21,7 @@
 </header>
 
 <main>
-  <p class="updated">Última actualización: 19 de octubre de 2026</p>
+  <p class="updated">Última actualización: 23 de noviembre de 2026</p>
 
   <p>
     Esta política explica qué datos personales trata <strong>TeamFlow Manager</strong> (la
@@ -66,7 +66,7 @@
       <tr>
         <td data-label="Categoría">Datos de cuenta</td>
         <td data-label="Datos">Dirección de correo electrónico, nombre visible, foto de perfil e identificador de usuario</td>
-        <td data-label="Origen">Tu cuenta de Google, al iniciar sesión con Google Sign-In a través de Firebase Authentication</td>
+        <td data-label="Origen">El proveedor con el que inicias sesión a través de Firebase Authentication: tu cuenta de Google (Google Sign-In) o tu Apple ID (Iniciar sesión con Apple, solo en iOS)</td>
       </tr>
       <tr>
         <td data-label="Categoría">Datos de club y equipo</td>
@@ -95,6 +95,15 @@
       </tr>
     </tbody>
   </table>
+  <h3>Inicio de sesión con Apple</h3>
+  <p>
+    Si inicias sesión con Apple, Apple solo nos facilita un identificador de usuario, tu nombre y
+    tu dirección de correo electrónico, y solo si aceptas compartirlos. Puedes elegir la opción
+    <strong>«Ocultar mi correo electrónico»</strong>: en ese caso recibimos una dirección aleatoria
+    de reenvío de Apple (del tipo <em>@privaterelay.appleid.com</em>) en lugar de tu correo real, y
+    Apple reenvía a tu buzón los mensajes que lleguen a ella. Usamos esos datos únicamente para crear
+    y mantener tu cuenta. Apple no nos facilita fotografía de perfil.
+  </p>
   <p>
     <strong>No tratamos</strong> datos de categorías especiales (salud, origen étnico, convicciones,
     etc.), ni datos de pago, ni datos de geolocalización precisa. La aplicación no incluye
@@ -173,7 +182,9 @@
     La aplicación se apoya en servicios de <strong>Google Ireland Limited</strong> y
     <strong>Google LLC</strong> (plataforma Firebase y Google Cloud), que actúan como encargados del
     tratamiento por cuenta del responsable, en virtud de las Condiciones de Tratamiento de Datos de
-    Google Cloud. Los servicios utilizados son:
+    Google Cloud. Si inicias sesión con Apple, <strong>Apple</strong> interviene además como
+    proveedor de identidad, conforme a su propia política de privacidad. Los servicios utilizados
+    son:
   </p>
   <table>
     <thead>
@@ -185,7 +196,7 @@
     <tbody>
       <tr>
         <td data-label="Servicio">Firebase Authentication</td>
-        <td data-label="Para qué">Identificación mediante Google Sign-In</td>
+        <td data-label="Para qué">Identificación mediante Google Sign-In o Iniciar sesión con Apple</td>
       </tr>
       <tr>
         <td data-label="Servicio">Cloud Firestore</td>
@@ -265,6 +276,7 @@
   <p>El borrado es irreversible y afecta a lo siguiente:</p>
   <ul>
     <li>Se eliminan tu cuenta de autenticación, tu perfil, tu pertenencia a clubes, tus preferencias de notificación y los tokens de tus dispositivos.</li>
+    <li>Si iniciaste sesión con Apple y eliminas la cuenta desde la aplicación, se pide además a Apple que revoque la autorización que diste a TeamFlow Manager en tu Apple ID; con ella deja de funcionar la dirección de reenvío de «Ocultar mi correo electrónico». También puedes retirarla tú en cualquier momento desde los ajustes de tu Apple ID, en el apartado de apps que usan «Iniciar sesión con Apple».</li>
     <li>Los clubes de los que eres propietario y que tienen <strong>más miembros</strong> siguen existiendo: la propiedad pasa a otro miembro, porque los datos del club también son de esas personas. Los equipos que entrenabas quedan sin entrenador asignado, a disposición del club.</li>
     <li>Los clubes de los que eres <strong>el único miembro</strong> se eliminan por completo, junto con sus equipos, jugadores, fotografías, partidos, tiempos de juego, sustituciones, goles e histórico.</li>
     <li>Los equipos que no pertenecen a ningún club se eliminan por completo, con todos sus datos.</li>
