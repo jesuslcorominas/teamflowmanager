@@ -1,5 +1,7 @@
 package com.jesuslcorominas.teamflowmanager
 
+import androidx.compose.ui.uikit.ComposeUIViewControllerConfiguration
+import androidx.compose.ui.uikit.OnFocusBehavior
 import androidx.compose.ui.window.ComposeUIViewController
 import com.jesuslcorominas.teamflowmanager.ui.App
 import platform.Foundation.NSURL
@@ -44,13 +46,24 @@ fun initKoinIos() = diInitKoinIos(appleCredentialRevoker = AppleSignInBridge)
 
 fun MainViewController(): UIViewController {
     var vc: UIViewController? = null
+    var configuration: ComposeUIViewControllerConfiguration? = null
     val result =
-        ComposeUIViewController(configure = { enforceStrictPlistSanityCheck = false }) {
+        ComposeUIViewController(
+            configure = {
+                enforceStrictPlistSanityCheck = false
+                configuration = this
+            },
+        ) {
             App(
                 onSignInWithGoogle = { GoogleSignInBridge.signIn() },
                 onSignInWithApple = { AppleSignInBridge.signIn() },
                 appleSignInButton = { enabled, onClick -> AppleSignInButton(enabled = enabled, onClick = onClick) },
                 onRequestNotificationPermission = ::requestPushPermission,
+                // Read by the controller each time the keyboard shows, so it can change per screen.
+                onKeyboardShiftsScreenChange = { shifts ->
+                    configuration?.onFocusBehavior =
+                        if (shifts) OnFocusBehavior.FocusableAboveKeyboard else OnFocusBehavior.DoNothing
+                },
                 onShareFile = { filePath ->
                     val fileUrl = NSURL.fileURLWithPath(filePath)
                     val activityVC =

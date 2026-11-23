@@ -84,6 +84,7 @@ fun MainScreen(
     currentRoute: String?,
     teamMode: String? = null,
     dynamicTitle: String? = null,
+    unreadNotificationsCount: Int = 0,
     viewModel: MainViewModel = koinViewModel(),
     onBackNavigate: () -> Unit = {},
     onSettingsNavigate: () -> Unit = {},
@@ -189,6 +190,8 @@ fun MainScreen(
                             .navigationBarsPadding(),
                     currentRoute = currentRoute,
                     isPresident = isPresident,
+                    // Same rule as AndroidAppShell: the badge only belongs to the president bar.
+                    unreadNotificationsCount = if (isPresident) unreadNotificationsCount else 0,
                     onNavigate = onBottomNavNavigate,
                 )
             }

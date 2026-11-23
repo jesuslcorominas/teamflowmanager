@@ -3,16 +3,25 @@ package com.jesuslcorominas.teamflowmanager.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+
+/**
+ * Turns the iOS "move the whole screen above the keyboard" behaviour on (true) or off (false).
+ *
+ * The UIViewController owns that setting, so App receives the switch from MainViewController.
+ */
+internal val LocalKeyboardShiftsScreen = staticCompositionLocalOf<(Boolean) -> Unit> { {} }
 
 /**
  * Hosts a full-screen wizard route (outside the MainScreen shell) on iOS.
@@ -22,17 +31,27 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
  * - When [scopedViewModels] is true, provides a ViewModelStore that lives only while the
  *   route is shown. iOS has no NavBackStackEntry per screen, so koinViewModel() would
  *   otherwise reuse the instance cached in the root store across openings.
+ * - Keeps the header in place when the keyboard opens (#539). By default the iOS host moves the
+ *   whole screen up until the focused field clears the keyboard, which pushed the back arrow
+ *   under the status bar. While the wizard is shown that is turned off, and the content area
+ *   shrinks above the keyboard instead (imePadding), so the fields stay visible.
  */
 @Composable
 internal fun IosWizardRoute(
     scopedViewModels: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    val setKeyboardShiftsScreen = LocalKeyboardShiftsScreen.current
+    DisposableEffect(setKeyboardShiftsScreen) {
+        setKeyboardShiftsScreen(false)
+        onDispose { setKeyboardShiftsScreen(true) }
+    }
     Box(
         modifier =
             Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars),
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .imePadding(),
     ) {
         if (scopedViewModels) {
             val owner =

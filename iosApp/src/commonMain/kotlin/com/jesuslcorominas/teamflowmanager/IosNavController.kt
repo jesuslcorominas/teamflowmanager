@@ -1,6 +1,7 @@
 package com.jesuslcorominas.teamflowmanager
 
 import androidx.compose.runtime.mutableStateListOf
+import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 
 /**
  * All navigable destinations in the iOS app.
@@ -74,6 +75,28 @@ class IosNavController {
     fun navigateClearing(destination: IosDestination) {
         backStack.clear()
         backStack.add(destination)
+    }
+
+    /**
+     * Lands on the first tab of [role] and drops the back stack of the role just left.
+     *
+     * Ignored while Settings is on screen. Settings only commits a role change when it is left,
+     * so a change seen while it is still showing comes from the sign-out (or the account
+     * deletion) clearing the stored role. Navigating then would take Settings off screen before
+     * it reports the finished sign-out, and leave the user on an empty screen of the previous
+     * account instead of the login (#540).
+     *
+     * @return whether it navigated.
+     */
+    fun navigateForRoleSwitch(role: ActiveViewRole): Boolean {
+        if (current is IosDestination.Settings) return false
+        val landing =
+            when (role) {
+                ActiveViewRole.President -> IosDestination.TeamList
+                ActiveViewRole.Coach -> IosDestination.Matches
+            }
+        navigateClearing(landing)
+        return true
     }
 
     /**
