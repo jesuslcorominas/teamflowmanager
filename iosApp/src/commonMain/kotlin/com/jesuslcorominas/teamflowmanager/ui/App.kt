@@ -23,13 +23,14 @@ fun App(
     onSignInWithApple: (suspend () -> AppleSignInCredential?)? = null,
     appleSignInButton: (@Composable (enabled: Boolean, onClick: () -> Unit) -> Unit)? = null,
     onRequestNotificationPermission: (onResult: (Boolean) -> Unit) -> Unit = { it(false) },
+    onKeyboardShiftsScreenChange: (Boolean) -> Unit = {},
 ) {
     MaterialTheme(colorScheme = LightColorScheme) {
         val navController = remember { IosNavController() }
         // Bumped on sign-out to throw away every ViewModel of the session that just ended.
         var session by remember { mutableIntStateOf(0) }
         key(session) {
-            SessionViewModelStore {
+            SessionViewModelStore(onKeyboardShiftsScreenChange) {
                 IosNavHost(
                     navController = navController,
                     onSignInWithGoogle = onSignInWithGoogle,
@@ -54,7 +55,10 @@ fun App(
  * same reset from popUpTo(0) when it navigates to the login screen.
  */
 @Composable
-private fun SessionViewModelStore(content: @Composable () -> Unit) {
+private fun SessionViewModelStore(
+    onKeyboardShiftsScreenChange: (Boolean) -> Unit,
+    content: @Composable () -> Unit,
+) {
     val owner =
         remember {
             object : ViewModelStoreOwner {
@@ -64,7 +68,10 @@ private fun SessionViewModelStore(content: @Composable () -> Unit) {
     DisposableEffect(owner) {
         onDispose { owner.viewModelStore.clear() }
     }
-    CompositionLocalProvider(LocalViewModelStoreOwner provides owner) {
+    CompositionLocalProvider(
+        LocalViewModelStoreOwner provides owner,
+        LocalKeyboardShiftsScreen provides onKeyboardShiftsScreenChange,
+    ) {
         content()
     }
 }

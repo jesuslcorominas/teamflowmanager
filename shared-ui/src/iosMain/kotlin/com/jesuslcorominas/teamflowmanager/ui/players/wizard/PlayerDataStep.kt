@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -103,111 +105,120 @@ actual fun PlayerDataStep(
                 .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
         verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
     ) {
-        Text(
-            text = stringResource(Res.string.player_data_step_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
+        // Scrolls when the keyboard leaves less room than the form needs (#539): the wizard
+        // shrinks above the keyboard instead of moving up, and the buttons stay below the fields.
+        Column(
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(TFMSpacing.spacing03),
+        ) {
+            Text(
+                text = stringResource(Res.string.player_data_step_title),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
 
-        Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+            Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
 
-        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    modifier = Modifier.size(60.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(60.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
+                Text(
+                    text = stringResource(Res.string.tap_to_add_photo),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            Spacer(modifier = Modifier.height(TFMSpacing.spacing01))
-            Text(
-                text = stringResource(Res.string.tap_to_add_photo),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
+
+            AppTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = firstName,
+                onValueChange = {
+                    firstName = it
+                    firstNameError = null
+                },
+                label = { Text(stringResource(Res.string.first_name)) },
+                isError = firstNameError != null,
+                supportingText =
+                    if (firstNameError != null) {
+                        { Text(firstNameError!!) }
+                    } else {
+                        null
+                    },
+                keyboardOptions =
+                    KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                        capitalization = KeyboardCapitalization.Words,
+                    ),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             )
-        }
 
-        Spacer(modifier = Modifier.height(TFMSpacing.spacing02))
-
-        AppTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = firstName,
-            onValueChange = {
-                firstName = it
-                firstNameError = null
-            },
-            label = { Text(stringResource(Res.string.first_name)) },
-            isError = firstNameError != null,
-            supportingText =
-                if (firstNameError != null) {
-                    { Text(firstNameError!!) }
-                } else {
-                    null
+            AppTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = lastName,
+                onValueChange = {
+                    lastName = it
                 },
-            keyboardOptions =
-                KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                    capitalization = KeyboardCapitalization.Words,
-                ),
-            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-        )
+                label = { Text(stringResource(Res.string.last_name)) },
+                keyboardOptions =
+                    KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                        capitalization = KeyboardCapitalization.Words,
+                    ),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+            )
 
-        AppTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = lastName,
-            onValueChange = {
-                lastName = it
-            },
-            label = { Text(stringResource(Res.string.last_name)) },
-            keyboardOptions =
-                KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                    capitalization = KeyboardCapitalization.Words,
-                ),
-            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-        )
-
-        AppTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = number,
-            onValueChange = {
-                    newValue ->
-                if (newValue.all { it.isDigit() }) {
-                    number = newValue
-                    numberError = null
-                }
-            },
-            label = { Text(stringResource(Res.string.number)) },
-            isError = numberError != null,
-            supportingText =
-                if (numberError != null) {
-                    { Text(numberError!!) }
-                } else {
-                    null
+            AppTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = number,
+                onValueChange = {
+                        newValue ->
+                    if (newValue.all { it.isDigit() }) {
+                        number = newValue
+                        numberError = null
+                    }
                 },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-        )
+                label = { Text(stringResource(Res.string.number)) },
+                isError = numberError != null,
+                supportingText =
+                    if (numberError != null) {
+                        { Text(numberError!!) }
+                    } else {
+                        null
+                    },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            )
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = TFMSpacing.spacing01),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
-        ) {
-            Checkbox(checked = isCaptain, onCheckedChange = { isCaptain = it })
-            Text(text = stringResource(Res.string.is_captain), style = MaterialTheme.typography.bodyMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = TFMSpacing.spacing01),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TFMSpacing.spacing01),
+            ) {
+                Checkbox(checked = isCaptain, onCheckedChange = { isCaptain = it })
+                Text(text = stringResource(Res.string.is_captain), style = MaterialTheme.typography.bodyMedium)
+            }
         }
-
-        Spacer(modifier = Modifier.weight(1f))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             OutlinedButton(onClick = onCancel) { Text(stringResource(Res.string.cancel)) }

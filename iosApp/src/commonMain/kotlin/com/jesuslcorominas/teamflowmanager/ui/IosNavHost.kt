@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.jesuslcorominas.teamflowmanager.IosDestination
 import com.jesuslcorominas.teamflowmanager.IosNavController
-import com.jesuslcorominas.teamflowmanager.domain.model.ActiveViewRole
 import com.jesuslcorominas.teamflowmanager.domain.model.AppleSignInCredential
 import com.jesuslcorominas.teamflowmanager.ui.analysis.AnalysisScreen
 import com.jesuslcorominas.teamflowmanager.ui.club.ClubMembersScreen
@@ -39,6 +39,7 @@ import com.jesuslcorominas.teamflowmanager.ui.team.TeamListScreen
 import com.jesuslcorominas.teamflowmanager.ui.team.TeamScreen
 import com.jesuslcorominas.teamflowmanager.viewmodel.LoginViewModel
 import com.jesuslcorominas.teamflowmanager.viewmodel.MainViewModel
+import com.jesuslcorominas.teamflowmanager.viewmodel.PresidentNotificationsViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -56,17 +57,11 @@ internal fun IosNavHost(
 
     // Same as AndroidAppShell: switching role swaps the whole bottom bar, so the current
     // destination belongs to the role just left. Land on the first tab of the new role and
-    // drop the old back stack.
+    // drop the old back stack. The sign-out also emits here, when it clears the stored role;
+    // navigateForRoleSwitch ignores that one so Settings can still take the user to the login.
     val mainViewModel: MainViewModel = koinViewModel()
     LaunchedEffect(Unit) {
-        mainViewModel.roleSwitches.collect { role ->
-            val landing =
-                when (role) {
-                    ActiveViewRole.President -> IosDestination.TeamList
-                    ActiveViewRole.Coach -> IosDestination.Matches
-                }
-            navController.navigateClearing(landing)
-        }
+        mainViewModel.roleSwitches.collect { role -> navController.navigateForRoleSwitch(role) }
     }
 
     when (val dest = navController.current) {
@@ -158,6 +153,8 @@ internal fun IosNavHost(
                     matchId = dest.matchId,
                     readOnly = true,
                     onTitleChange = { presidentMatchTitle = it },
+                    // Same as the coach route: without it the report is generated and dropped (#535).
+                    onExportReady = { filePath -> onShareFile(filePath) },
                 )
             }
 
@@ -178,10 +175,17 @@ internal fun IosNavHost(
             val teamMode = if (dest is IosDestination.Team) dest.mode else null
             val dynamicTitle = if (dest is IosDestination.Match) matchTitle else null
 
+            // Created here and not at the top of the host: it reads the club membership once, so
+            // it has to be created after the login, like AndroidAppShell. The Notifications screen
+            // gets this same instance from the session store (#536).
+            val notificationsViewModel: PresidentNotificationsViewModel = koinViewModel()
+            val unreadNotificationsCount by notificationsViewModel.unreadCount.collectAsState()
+
             MainScreen(
                 currentRoute = routeString,
                 teamMode = teamMode,
                 dynamicTitle = dynamicTitle,
+                unreadNotificationsCount = unreadNotificationsCount,
                 onBackNavigate = { navController.popBackStack() },
                 onSettingsNavigate = { navController.navigate(IosDestination.Settings) },
                 onFabClick = {
