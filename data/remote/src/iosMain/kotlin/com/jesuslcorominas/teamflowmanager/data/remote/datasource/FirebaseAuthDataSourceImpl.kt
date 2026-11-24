@@ -130,7 +130,8 @@ class FirebaseAuthDataSourceImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            NSLog("TeamFlowManager: could not store the Apple display name: %@", e.message ?: e.toString())
+            // No varargs: passing a Kotlin String through NSLog's C varargs crashes (SIGSEGV).
+            NSLog("TeamFlowManager: could not store the Apple display name: ${e.message ?: e.toString()}".replace("%", "%%"))
         }
     }
 
@@ -147,12 +148,12 @@ class FirebaseAuthDataSourceImpl(
             revoker.revoke().onFailure { e ->
                 // Expected until the Sign in with Apple key is configured on the
                 // Firebase Apple provider. Logged, never shown: the deletion goes on.
-                NSLog("TeamFlowManager: Sign in with Apple token revocation failed: %@", e.message ?: e.toString())
+                NSLog("TeamFlowManager: Sign in with Apple token revocation failed: ${e.message ?: e.toString()}".replace("%", "%%"))
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            NSLog("TeamFlowManager: Sign in with Apple token revocation failed: %@", e.message ?: e.toString())
+            NSLog("TeamFlowManager: Sign in with Apple token revocation failed: ${e.message ?: e.toString()}".replace("%", "%%"))
             Result.failure(e)
         }
     }
